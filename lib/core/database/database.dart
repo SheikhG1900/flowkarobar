@@ -1,0 +1,233 @@
+import 'dart:io';
+import 'package:drift/drift.dart';
+import 'package:drift/native.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as p;
+import 'package:sqlite3/sqlite3.dart' as sqlite3_lib;
+import 'package:sqlite3_flutter_libs/sqlite3_flutter_libs.dart';
+
+part 'database.g.dart';
+
+// Tables
+class Categories extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get name => text().withLength(min: 1, max: 100)();
+  TextColumn get icon => text().nullable()();
+  TextColumn get color => text().nullable()();
+  TextColumn get type => text()(); // 'EXPENSE' or 'INCOME'
+  BoolColumn get isDefault => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+}
+
+class Contacts extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get name => text().withLength(min: 1, max: 200)();
+  TextColumn get phone => text().nullable()();
+  TextColumn get email => text().nullable()();
+  TextColumn get notes => text().nullable()();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+}
+
+class Transactions extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  RealColumn get amount => real()();
+  TextColumn get type => text()(); // 'EXPENSE' or 'INCOME'
+  IntColumn get categoryId => integer().nullable().references(Categories, #id)();
+  IntColumn get contactId => integer().nullable().references(Contacts, #id)();
+  TextColumn get description => text().nullable()();
+  DateTimeColumn get date => dateTime()();
+  
+  // Linked transaction fields
+  IntColumn get linkedReceivableId => integer().nullable().references(Receivables, #id)();
+  IntColumn get linkedPayableId => integer().nullable().references(Payables, #id)();
+  TextColumn get paidRelationship => text().nullable()(); // 'PAID_FOR' or 'PAID_BY' or null
+  
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+}
+
+class Receivables extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get contactId => integer().references(Contacts, #id)();
+  RealColumn get amount => real()();
+  TextColumn get description => text().nullable()();
+  DateTimeColumn get date => dateTime()();
+  DateTimeColumn get dueDate => dateTime().nullable()();
+  TextColumn get status => text().withDefault(const Constant('PENDING'))(); // 'PENDING', 'RECEIVED', 'CANCELLED'
+  
+  // Linked transaction fields
+  IntColumn get linkedExpenseId => integer().nullable().references(Transactions, #id)();
+  IntColumn get linkedIncomeId => integer().nullable().references(Transactions, #id)();
+  BoolColumn get autoCreateIncome => boolean().withDefault(const Constant(true))();
+  
+  // Offline shared transaction
+  TextColumn get externalLinkId => text().nullable().unique()(); // "tx_8f7a3b"
+  
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+}
+
+class Payables extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get contactId => integer().references(Contacts, #id)();
+  RealColumn get amount => real()();
+  TextColumn get description => text().nullable()();
+  DateTimeColumn get date => dateTime()();
+  DateTimeColumn get dueDate => dateTime().nullable()();
+  TextColumn get status => text().withDefault(const Constant('PENDING'))(); // 'PENDING', 'PAID', 'CANCELLED'
+  
+  // Linked transaction fields
+  IntColumn get linkedExpenseId => integer().nullable().references(Transactions, #id)();
+  BoolColumn get autoCreateExpense => boolean().withDefault(const Constant(false))();
+  
+  // Offline shared transaction
+  TextColumn get externalLinkId => text().nullable().unique()(); // "tx_8f7a3b"
+  
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+}
+
+class Reminders extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get type => text()(); // 'RECEIVABLE' or 'PAYABLE'
+  IntColumn get referenceId => integer()(); // ID of receivable or payable
+  DateTimeColumn get reminderDate => dateTime()();
+  BoolColumn get isTriggered => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+}
+
+class WhatsAppQueue extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get contactId => integer().references(Contacts, #id)();
+  TextColumn get message => text()();
+  TextColumn get deepLink => text().nullable()();
+  TextColumn get status => text().withDefault(const Constant('PENDING'))(); // 'PENDING', 'SENT', 'FAILED'
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+}
+
+class CategoryUsageStats extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get categoryId => integer().references(Categories, #id)();
+  IntColumn get usageCount => integer().withDefault(const Constant(0))();
+  DateTimeColumn get lastUsed => dateTime().nullable()();
+}
+
+class ContactUsageStats extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get contactId => integer().references(Contacts, #id)();
+  IntColumn get usageCount => integer().withDefault(const Constant(0))();
+  DateTimeColumn get lastUsed => dateTime().nullable()();
+}
+
+class UserPreferences extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get key => text().unique()();
+  TextColumn get value => text()();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+}
+
+class SyncLog extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  DateTimeColumn get lastBackup => dateTime().nullable()();
+  DateTimeColumn get lastRestore => dateTime().nullable()();
+  TextColumn get driveFileId => text().nullable()();
+  TextColumn get status => text().nullable()();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+}
+
+@DriftDatabase(tables: [
+  Categories,
+  Contacts,
+  Transactions,
+  Receivables,
+  Payables,
+  Reminders,
+  WhatsAppQueue,
+  CategoryUsageStats,
+  ContactUsageStats,
+  UserPreferences,
+  SyncLog,
+])
+class AppDatabase extends _$AppDatabase {
+  AppDatabase() : super(_openConnection());
+
+  @override
+  int get schemaVersion => 1;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+        onCreate: (Migrator m) async {
+          await m.createAll();
+          await _insertDefaultCategories();
+        },
+        onUpgrade: (Migrator m, int from, int to) async {
+          // Handle future migrations here
+        },
+      );
+
+  Future<void> _insertDefaultCategories() async {
+    // Default expense categories
+    final expenseCategories = [
+      ('Food', '🍔', '#FF5252', 'EXPENSE'),
+      ('Transport', '🚗', '#FF6F00', 'EXPENSE'),
+      ('Shopping', '🛍️', '#E91E63', 'EXPENSE'),
+      ('Bills', '💡', '#9C27B0', 'EXPENSE'),
+      ('Entertainment', '🎬', '#3F51B5', 'EXPENSE'),
+      ('Health', '🏥', '#00BCD4', 'EXPENSE'),
+      ('Education', '📚', '#4CAF50', 'EXPENSE'),
+      ('Other', '📦', '#757575', 'EXPENSE'),
+    ];
+
+    // Default income categories
+    final incomeCategories = [
+      ('Salary', '💰', '#4CAF50', 'INCOME'),
+      ('Business', '💼', '#2196F3', 'INCOME'),
+      ('Investment', '📈', '#00BCD4', 'INCOME'),
+      ('Gift', '🎁', '#E91E63', 'INCOME'),
+      ('Other', '📦', '#757575', 'INCOME'),
+    ];
+
+    for (final cat in expenseCategories) {
+      await into(categories).insert(
+        CategoriesCompanion.insert(
+          name: cat.$1,
+          icon: Value(cat.$2),
+          color: Value(cat.$3),
+          type: cat.$4,
+          isDefault: const Value(true),
+        ),
+      );
+    }
+
+    for (final cat in incomeCategories) {
+      await into(categories).insert(
+        CategoriesCompanion.insert(
+          name: cat.$1,
+          icon: Value(cat.$2),
+          color: Value(cat.$3),
+          type: cat.$4,
+          isDefault: const Value(true),
+        ),
+      );
+    }
+  }
+}
+
+LazyDatabase _openConnection() {
+  return LazyDatabase(() async {
+    final dbFolder = await getApplicationDocumentsDirectory();
+    final file = File(p.join(dbFolder.path, 'flowpaisa.db'));
+
+    // Setup sqlite3 for Android
+    if (Platform.isAndroid) {
+      await applyWorkaroundToOpenSqlite3OnOldAndroidVersions();
+    }
+
+    final cachebase = (await getTemporaryDirectory()).path;
+    sqlite3_lib.sqlite3.tempDirectory = cachebase;
+
+    return NativeDatabase.createInBackground(file);
+  });
+}
+

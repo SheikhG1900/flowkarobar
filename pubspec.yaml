@@ -1,0 +1,96 @@
+name: flowpaisa
+description: FlowPaisa - Complete personal finance & cash flow manager. Track expenses, incomes, receivables, payables with linked transactions, receipt scanning, and WhatsApp integration.
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.1.5 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # State Management
+  flutter_riverpod: ^3.1.0
+  riverpod_annotation: ^4.0.0
+  
+  # Database
+  drift: ^2.14.0
+  sqlite3: ^2.1.0
+  sqlite3_flutter_libs: ^0.5.0
+  path_provider: ^2.1.0
+  path: ^1.8.3
+  
+  # Internationalization
+  flutter_localizations:
+    sdk: flutter
+  intl: any
+  google_fonts: ^6.3.0
+  
+  # Firebase (Language requests + analytics)
+  firebase_core: ^4.3.0
+  cloud_firestore: ^6.1.1
+  
+  # Google APIs & Auth
+  google_sign_in: ^7.2.0
+  googleapis: ^15.0.0
+  googleapis_auth: ^2.0.0
+  extension_google_sign_in_as_googleapis_auth: ^3.0.0
+  
+  # Security & Encryption
+  flutter_secure_storage: ^10.0.0
+  encrypt: ^5.0.3
+  crypto: ^3.0.3
+  
+  # Notifications & Background
+  flutter_local_notifications: ^19.5.0
+  workmanager: ^0.9.0+3
+  timezone: ^0.10.1
+  
+  # Shared Transactions
+  uuid: ^4.2.2
+  url_launcher: ^6.2.0
+  
+  # Receipt Scanning (AI-Powered OCR)
+  google_mlkit_text_recognition: ^0.15.0
+  image_picker: ^1.0.7
+  image: ^4.1.0
+  
+  # UI & Charts
+  fl_chart: ^1.1.1
+  
+  # Export
+  csv: ^6.0.0
+  pdf: ^3.10.0
+  printing: ^5.11.0
+  
+  # Contacts
+  flutter_contacts: ^1.1.7+1  # Modern replacement for contacts_service
+  
+  # In-App Purchase
+  in_app_purchase: ^3.1.13
+  
+  # Utils
+  share_plus: ^12.0.1
+  cupertino_icons: ^1.0.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  build_runner: ^2.4.0
+  riverpod_generator: ^4.0.0+1
+  drift_dev: ^2.13.0
+  riverpod_lint: ^3.1.0
+  flutter_lints: ^6.0.0
+
+dependency_overrides:
+  win32: ^5.15.0  # Fix compatibility with Dart 3.10.4
+
+flutter:
+  uses-material-design: true
+  generate: true
+  
+  # Assets
+  # assets:
+  #   - assets/images/

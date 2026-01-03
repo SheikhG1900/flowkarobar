@@ -1,0 +1,38 @@
+{
+  "@@locale": "en",
+  "appName": "FlowPaisa",
+  "@appName": {
+    "description": "The name of the application"
+  },
+  "addTransaction": "Add Transaction",
+  "expense": "Expense",
+  "income": "Income",
+  "receivable": "Receivable",
+  "payable": "Payable",
+  "amount": "Amount",
+  "description": "Description",
+  "category": "Category",
+  "contact": "Contact",
+  "date": "Date",
+  "save": "Save",
+  "cancel": "Cancel",
+  "delete": "Delete",
+  "edit": "Edit",
+  "dashboard": "Dashboard",
+  "transactions": "Transactions",
+  "analytics": "Analytics",
+  "settings": "Settings",
+  "paidFor": "Paid FOR",
+  "paidBy": "Paid BY",
+  "pending": "Pending",
+  "settled": "Settled",
+  "sendReminder": "Send Reminder",
+  "scanReceipt": "Scan Receipt",
+  "export": "Export",
+  "backup": "Backup",
+  "restore": "Restore",
+  "premium": "Premium",
+  "free": "Free"
+}
+
+
