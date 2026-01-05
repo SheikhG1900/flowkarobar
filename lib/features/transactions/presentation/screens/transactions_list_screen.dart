@@ -168,7 +168,10 @@ class TransactionsListScreen extends ConsumerWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(20),
+          bottomRight: Radius.circular(20),
+        ), // Diagonal beveled
         border: Border.all(
           color: isExpense 
             ? AppColors.expenseColor.withValues(alpha: isDark ? 0.3 / 1.0 : 0.15 / 1.0)

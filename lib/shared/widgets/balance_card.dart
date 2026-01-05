@@ -37,7 +37,10 @@ class BalanceCard extends StatelessWidget {
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
           gradient: AppColors.primaryGradient,
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(24),
+            bottomRight: Radius.circular(24),
+          ), // Diagonal beveled
           boxShadow: [
             BoxShadow(
               color: AppColors.brightCyan.withValues(alpha: 0.4 / 1.0),
@@ -135,7 +138,10 @@ class BalanceCard extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.15),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(12),
+          bottomRight: Radius.circular(12),
+        ), // Diagonal beveled
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -207,7 +213,10 @@ class CompactBalanceCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         gradient: gradient ?? AppColors.secondaryGradient,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(16),
+          bottomRight: Radius.circular(16),
+        ), // Diagonal beveled
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

@@ -172,13 +172,12 @@ class _DashboardTab extends ConsumerWidget {
               background: Stack(
                 fit: StackFit.expand,
                 children: [
-                  // Gradient Background
+                  // Gradient Background with Beveled Corner (bottom-right only)
                   Container(
                     decoration: const BoxDecoration(
                       gradient: AppColors.primaryGradient,
                       borderRadius: BorderRadius.only(
-                        bottomLeft: Radius.circular(30),
-                        bottomRight: Radius.circular(30),
+                        bottomRight: Radius.circular(40), // Beveled corner
                       ),
                     ),
                   ),
@@ -196,8 +195,7 @@ class _DashboardTab extends ConsumerWidget {
                         end: Alignment.bottomCenter,
                       ),
                       borderRadius: const BorderRadius.only(
-                        bottomLeft: Radius.circular(30),
-                        bottomRight: Radius.circular(30),
+                        bottomRight: Radius.circular(40), // Beveled corner
                       ),
                     ),
                   ),
@@ -218,7 +216,10 @@ class _DashboardTab extends ConsumerWidget {
                               decoration: BoxDecoration(
                                 color:
                                     Colors.white.withValues(alpha: 0.2 / 1.0),
-                                borderRadius: BorderRadius.circular(14),
+                                borderRadius: const BorderRadius.only(
+                                  topLeft: Radius.circular(14),
+                                  bottomRight: Radius.circular(14),
+                                ), // Diagonal beveled
                                 boxShadow: [
                                   BoxShadow(
                                     color: Colors.black
@@ -331,7 +332,10 @@ class _DashboardTab extends ConsumerWidget {
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
                               gradient: AppColors.primaryGradient,
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: const BorderRadius.only(
+                                topLeft: Radius.circular(12),
+                                bottomRight: Radius.circular(12),
+                              ), // Diagonal beveled
                             ),
                             child: const Icon(Icons.water_drop,
                                 color: Colors.white, size: 20),
@@ -415,7 +419,10 @@ class _DashboardTab extends ConsumerWidget {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.15 / 1.0),
-        borderRadius: BorderRadius.circular(16), // More rounded
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(16),
+          bottomRight: Radius.circular(16),
+        ), // Diagonal beveled
         border: Border.all(
           color: Colors.white.withValues(alpha: 0.1 / 1.0),
           width: 1,
@@ -430,7 +437,10 @@ class _DashboardTab extends ConsumerWidget {
                 padding: const EdgeInsets.all(6), // Larger padding
                 decoration: BoxDecoration(
                   color: bgColor,
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(8),
+                    bottomRight: Radius.circular(8),
+                  ), // Diagonal beveled
                 ),
                 child: Icon(icon, color: color, size: 18), // Larger icon
               ),
@@ -606,7 +616,10 @@ class _DashboardTab extends ConsumerWidget {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(16),
+                  bottomRight: Radius.circular(16),
+                ), // Diagonal beveled
                 border: Border.all(
                   color: isExpense
                       ? AppColors.expenseColor.withValues(alpha: 0.2 / 1.0)
@@ -633,7 +646,10 @@ class _DashboardTab extends ConsumerWidget {
                     gradient: isExpense
                         ? AppColors.expenseGradient
                         : AppColors.incomeGradient,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(12),
+                      bottomRight: Radius.circular(12),
+                    ), // Diagonal beveled
                   ),
                   child: Icon(
                     isExpense
@@ -698,7 +714,10 @@ class _QuickActionButton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
         decoration: BoxDecoration(
           gradient: gradient,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(20),
+            bottomRight: Radius.circular(20),
+          ), // Diagonal beveled
           boxShadow: [
             // Bottom shadow for depth
             BoxShadow(

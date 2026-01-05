@@ -190,14 +190,17 @@ class AppTheme {
         ),
       ),
 
-      // Cards with modern rounded style and elevation
+      // Cards with diagonal beveled border (top-left + bottom-right)
       cardTheme: CardThemeData(
         elevation: 2,
         color: AppColors.lightCard,
         shadowColor: AppColors.lightBorder,
         surfaceTintColor: Colors.transparent,
         shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(20)),
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(20),
+            bottomRight: Radius.circular(20),
+          ),
         ),
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       ),
@@ -350,14 +353,17 @@ class AppTheme {
         ),
       ),
 
-      // Cards with elevation
+      // Cards with diagonal beveled border (top-left + bottom-right)
       cardTheme: CardThemeData(
         elevation: 4,
         color: AppColors.darkCard,
         shadowColor: Colors.black.withValues(alpha: 0.3 / 1.0),
         surfaceTintColor: Colors.transparent,
         shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(20)),
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(20),
+            bottomRight: Radius.circular(20),
+          ),
         ),
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       ),

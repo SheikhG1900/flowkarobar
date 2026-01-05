@@ -129,10 +129,13 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
             children: [
               // Amount Input (Large & Prominent)
               Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: theme.cardColor,
-                  borderRadius: BorderRadius.circular(24),
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: theme.cardColor,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(24),
+                  bottomRight: Radius.circular(24),
+                ), // Diagonal beveled
                   boxShadow: [
                     BoxShadow(
                       color: (isExpense ? AppColors.expenseColor : AppColors.incomeColor)
@@ -244,10 +247,13 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                 onTap: _selectDate,
                 borderRadius: BorderRadius.circular(12),
                 child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.surface,
-                    borderRadius: BorderRadius.circular(12),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surface,
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(12),
+                    bottomRight: Radius.circular(12),
+                  ), // Diagonal beveled
                     border: Border.all(color: theme.dividerColor),
                   ),
                   child: Row(
@@ -335,7 +341,10 @@ class _TypeButton extends StatelessWidget {
         decoration: BoxDecoration(
           gradient: isSelected ? gradient : null,
           color: isSelected ? null : theme.colorScheme.surface,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(16),
+            bottomRight: Radius.circular(16),
+          ), // Diagonal beveled
           border: Border.all(
             color: isSelected ? Colors.transparent : theme.dividerColor,
             width: 1.5,
