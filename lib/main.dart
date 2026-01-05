@@ -219,7 +219,7 @@ class _DashboardTab extends ConsumerWidget {
                               padding: const EdgeInsets.all(10),
                               decoration: BoxDecoration(
                                 color:
-                                    Colors.white.withValues(alpha: 0.2 / 1.0),
+                                    Colors.black.withValues(alpha: 0.3 / 1.0),
                                 borderRadius: const BorderRadius.only(
                                   topLeft: Radius.circular(14),
                                   bottomRight: Radius.circular(14),
@@ -422,7 +422,7 @@ class _DashboardTab extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.15 / 1.0),
+        color: Colors.black.withValues(alpha: 0.15 / 1.0),
         borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(16),
           bottomRight: Radius.circular(16),
