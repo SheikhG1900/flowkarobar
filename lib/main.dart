@@ -6,6 +6,9 @@ import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/constants/app_constants.dart';
 import 'package:flowpaisa/features/transactions/presentation/screens/transactions_list_screen.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
+import 'package:flowpaisa/features/dashboard/presentation/providers/dashboard_provider.dart';
+import 'package:flowpaisa/features/receivables/presentation/screens/receivables_list_screen.dart';
+import 'package:flowpaisa/features/payables/presentation/screens/payables_list_screen.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -154,7 +157,9 @@ class _DashboardTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+
+    // Watch dashboard statistics
+    final dashboardStatsAsync = ref.watch(dashboardStatsProvider);
 
     return Scaffold(
       body: CustomScrollView(
@@ -263,48 +268,130 @@ class _DashboardTab extends ConsumerWidget {
                           ),
                         ),
                         const SizedBox(height: 8),
-                        Text(
-                          '₹15,420.50',
-                          style: theme.textTheme.displayMedium?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            height: 1.1,
-                            fontSize: 42, // Larger amount
-                            shadows: AppTheme.textShadow(
-                                blurMultiplier: 4.0), // blurRadius 8 / 2 = 4
+                        dashboardStatsAsync.when(
+                          data: (stats) => Text(
+                            '₹${stats.totalBalance.toStringAsFixed(2)}',
+                            style: theme.textTheme.displayMedium?.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              height: 1.1,
+                              fontSize: 42, // Larger amount
+                              shadows: AppTheme.textShadow(
+                                  blurMultiplier: 4.0), // blurRadius 8 / 2 = 4
+                            ),
+                          ),
+                          loading: () => Text(
+                            '₹0.00',
+                            style: theme.textTheme.displayMedium?.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              height: 1.1,
+                              fontSize: 42,
+                              shadows: AppTheme.textShadow(blurMultiplier: 4.0),
+                            ),
+                          ),
+                          error: (_, __) => Text(
+                            '₹0.00',
+                            style: theme.textTheme.displayMedium?.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              height: 1.1,
+                              fontSize: 42,
+                              shadows: AppTheme.textShadow(blurMultiplier: 4.0),
+                            ),
                           ),
                         ),
                         const SizedBox(height: 24),
 
                         // Income/Expense Chips
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _buildStatChip(
-                                context,
-                                icon: Icons.arrow_downward_rounded,
-                                label: 'Income',
-                                amount: 25000,
-                                color: Colors.white,
-                                bgColor: Colors.greenAccent
-                                    .withValues(alpha: 0.25 / 1.0),
-                                textColor: Colors.greenAccent.shade100,
+                        dashboardStatsAsync.when(
+                          data: (stats) => Row(
+                            children: [
+                              Expanded(
+                                child: _buildStatChip(
+                                  context,
+                                  icon: Icons.arrow_downward_rounded,
+                                  label: 'Income',
+                                  amount: stats.totalIncome,
+                                  color: Colors.white,
+                                  bgColor: Colors.greenAccent
+                                      .withValues(alpha: 0.25 / 1.0),
+                                  textColor: Colors.greenAccent.shade100,
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: _buildStatChip(
-                                context,
-                                icon: Icons.arrow_upward_rounded,
-                                label: 'Expense',
-                                amount: 9579.50,
-                                color: Colors.white,
-                                bgColor: Colors.orangeAccent
-                                    .withValues(alpha: 0.25 / 1.0),
-                                textColor: Colors.orangeAccent.shade100,
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: _buildStatChip(
+                                  context,
+                                  icon: Icons.arrow_upward_rounded,
+                                  label: 'Expense',
+                                  amount: stats.totalExpense,
+                                  color: Colors.white,
+                                  bgColor: Colors.orangeAccent
+                                      .withValues(alpha: 0.25 / 1.0),
+                                  textColor: Colors.orangeAccent.shade100,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
+                          loading: () => Row(
+                            children: [
+                              Expanded(
+                                child: _buildStatChip(
+                                  context,
+                                  icon: Icons.arrow_downward_rounded,
+                                  label: 'Income',
+                                  amount: 0.0,
+                                  color: Colors.white,
+                                  bgColor: Colors.greenAccent
+                                      .withValues(alpha: 0.25 / 1.0),
+                                  textColor: Colors.greenAccent.shade100,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: _buildStatChip(
+                                  context,
+                                  icon: Icons.arrow_upward_rounded,
+                                  label: 'Expense',
+                                  amount: 0.0,
+                                  color: Colors.white,
+                                  bgColor: Colors.orangeAccent
+                                      .withValues(alpha: 0.25 / 1.0),
+                                  textColor: Colors.orangeAccent.shade100,
+                                ),
+                              ),
+                            ],
+                          ),
+                          error: (_, __) => Row(
+                            children: [
+                              Expanded(
+                                child: _buildStatChip(
+                                  context,
+                                  icon: Icons.arrow_downward_rounded,
+                                  label: 'Income',
+                                  amount: 0.0,
+                                  color: Colors.white,
+                                  bgColor: Colors.greenAccent
+                                      .withValues(alpha: 0.25 / 1.0),
+                                  textColor: Colors.greenAccent.shade100,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: _buildStatChip(
+                                  context,
+                                  icon: Icons.arrow_upward_rounded,
+                                  label: 'Expense',
+                                  amount: 0.0,
+                                  color: Colors.white,
+                                  bgColor: Colors.orangeAccent
+                                      .withValues(alpha: 0.25 / 1.0),
+                                  textColor: Colors.orangeAccent.shade100,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
@@ -525,6 +612,43 @@ class _DashboardTab extends ConsumerWidget {
                   },
                 ),
               ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _QuickActionButton(
+                  icon: Icons.account_balance_wallet_outlined,
+                  label: 'Receivables',
+                  gradient: AppColors.receivableGradient,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ReceivablesListScreen(),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _QuickActionButton(
+                  icon: Icons.payment_outlined,
+                  label: 'Payables',
+                  gradient: AppColors.payableGradient,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const PayablesListScreen(),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              Expanded(child: Container()), // Empty space for symmetry
             ],
           ),
         ],

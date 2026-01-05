@@ -5,6 +5,9 @@ import 'package:drift/drift.dart' as drift;
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
+import 'package:flowpaisa/features/receivables/presentation/providers/receivables_provider.dart';
+import 'package:flowpaisa/features/payables/presentation/providers/payables_provider.dart';
+import 'package:flowpaisa/shared/providers/database_provider.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 
@@ -25,6 +28,11 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
   DateTime _selectedDate = DateTime.now();
   bool _isLoading = false;
 
+  // Linked transaction fields
+  int? _selectedContactId;
+  String? _paidRelationship; // 'PAID_FOR' or 'PAID_BY' or null
+  bool _createLinkedEntry = false;
+
   @override
   void dispose() {
     _amountController.dispose();
@@ -42,25 +50,82 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     });
 
     try {
-      final repository = ref.read(transactionsRepositoryProvider);
-      final transaction = TransactionsCompanion(
-        amount: drift.Value(double.parse(_amountController.text)),
-        type: drift.Value(_selectedType),
-        description: drift.Value(_descriptionController.text.isEmpty
-            ? null
-            : _descriptionController.text),
-        date: drift.Value(_selectedDate),
-        createdAt: drift.Value(DateTime.now()),
-        updatedAt: drift.Value(DateTime.now()),
-      );
+      final transactionRepository = ref.read(transactionsRepositoryProvider);
+      final database = ref.read(databaseProvider);
 
-      await repository.createTransaction(transaction);
+      final amount = double.parse(_amountController.text);
+      final description = _descriptionController.text.isEmpty
+          ? null
+          : _descriptionController.text;
+
+      await database.transaction(() async {
+        // Create the main transaction
+        final transactionId = await transactionRepository.createTransaction(
+          TransactionsCompanion(
+            amount: drift.Value(amount),
+            type: drift.Value(_selectedType),
+            contactId: drift.Value(_selectedContactId),
+            description: drift.Value(description),
+            date: drift.Value(_selectedDate),
+            paidRelationship: drift.Value(_paidRelationship),
+            createdAt: drift.Value(DateTime.now()),
+            updatedAt: drift.Value(DateTime.now()),
+          ),
+        );
+
+        // Create linked entries based on paid relationship
+        if (_createLinkedEntry && _selectedContactId != null) {
+          if (_paidRelationship == 'PAID_FOR' && _selectedType == 'EXPENSE') {
+            // Create a receivable (money you're owed)
+            final receivablesRepository =
+                ref.read(receivablesRepositoryProvider);
+            await receivablesRepository.createReceivable(
+              ReceivablesCompanion(
+                contactId: drift.Value(_selectedContactId!),
+                amount: drift.Value(amount),
+                description: drift.Value(description),
+                date: drift.Value(_selectedDate),
+                status: const drift.Value('PENDING'),
+                linkedExpenseId: drift.Value(transactionId),
+                autoCreateIncome: const drift.Value(true),
+                createdAt: drift.Value(DateTime.now()),
+                updatedAt: drift.Value(DateTime.now()),
+              ),
+            );
+          } else if (_paidRelationship == 'PAID_BY' &&
+              _selectedType == 'EXPENSE') {
+            // This shouldn't happen - if someone else paid, it's not an expense
+            // It should be recorded as a payable from the beginning
+          } else if (_paidRelationship == 'PAID_FOR' &&
+              _selectedType == 'INCOME') {
+            // If you received money that you'll pay back, create a payable
+            final payablesRepository = ref.read(payablesRepositoryProvider);
+            await payablesRepository.createPayable(
+              PayablesCompanion(
+                contactId: drift.Value(_selectedContactId!),
+                amount: drift.Value(amount),
+                description: drift.Value(description),
+                date: drift.Value(_selectedDate),
+                status: const drift.Value('PENDING'),
+                linkedExpenseId: drift.Value(null),
+                autoCreateExpense: const drift.Value(true),
+                createdAt: drift.Value(DateTime.now()),
+                updatedAt: drift.Value(DateTime.now()),
+              ),
+            );
+          }
+        }
+      });
 
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Transaction added successfully'),
+          SnackBar(
+            content: Text(
+              _createLinkedEntry
+                  ? 'Transaction and linked entry added successfully'
+                  : 'Transaction added successfully',
+            ),
             backgroundColor: Colors.green,
           ),
         );
@@ -247,7 +312,65 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                 maxLines: 2,
                 textCapitalization: TextCapitalization.sentences,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 24),
+
+              // Paid Relationship Section (Linked Transactions)
+              if (_selectedType == 'EXPENSE') ...[
+                Text(
+                  'Paid Relationship',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _RelationshipButton(
+                        label: 'Paid FOR',
+                        subtitle: 'I will receive back',
+                        icon: Icons.account_balance_wallet,
+                        isSelected: _paidRelationship == 'PAID_FOR',
+                        onTap: () {
+                          setState(() {
+                            if (_paidRelationship == 'PAID_FOR') {
+                              _paidRelationship = null;
+                              _createLinkedEntry = false;
+                            } else {
+                              _paidRelationship = 'PAID_FOR';
+                              _createLinkedEntry = true;
+                              _selectedContactId = 1; // TODO: Contact selection
+                            }
+                          });
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _RelationshipButton(
+                        label: 'Paid BY',
+                        subtitle: 'Someone paid for me',
+                        icon: Icons.person_outline,
+                        isSelected: _paidRelationship == 'PAID_BY',
+                        onTap: () {
+                          setState(() {
+                            if (_paidRelationship == 'PAID_BY') {
+                              _paidRelationship = null;
+                              _createLinkedEntry = false;
+                            } else {
+                              _paidRelationship = 'PAID_BY';
+                              _createLinkedEntry =
+                                  false; // Don't create linked entry for PAID_BY
+                              _selectedContactId = 1; // TODO: Contact selection
+                            }
+                          });
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+              ],
 
               // Date Selector
               InkWell(
@@ -385,6 +508,90 @@ class _TypeButton extends StatelessWidget {
                 color: isSelected ? Colors.white : theme.colorScheme.onSurface,
                 fontWeight: FontWeight.w600,
               ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// Relationship Button Widget for Paid FOR/BY selection
+class _RelationshipButton extends StatelessWidget {
+  final String label;
+  final String subtitle;
+  final IconData icon;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _RelationshipButton({
+    required this.label,
+    required this.subtitle,
+    required this.icon,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: const BorderRadius.only(
+        topLeft: Radius.circular(16),
+        bottomRight: Radius.circular(16),
+      ),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          gradient: isSelected ? AppColors.receivableGradient : null,
+          color: isSelected ? null : theme.colorScheme.surfaceContainerHighest,
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(16),
+            bottomRight: Radius.circular(16),
+          ),
+          border: Border.all(
+            color: isSelected ? AppColors.receivableColor : theme.dividerColor,
+            width: isSelected ? 2 : 1,
+          ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: AppColors.receivableColor.withOpacity(0.3),
+                    blurRadius: 12,
+                    offset: const Offset(0, 6),
+                  ),
+                ]
+              : null,
+        ),
+        child: Column(
+          children: [
+            Icon(
+              icon,
+              color: isSelected
+                  ? Colors.white
+                  : theme.colorScheme.onSurfaceVariant,
+              size: 28,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              style: theme.textTheme.titleSmall?.copyWith(
+                color: isSelected ? Colors.white : theme.colorScheme.onSurface,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              subtitle,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: isSelected
+                    ? Colors.white.withValues(alpha: 0.9 / 1.0)
+                    : theme.colorScheme.onSurfaceVariant,
+                fontSize: 11,
+              ),
+              textAlign: TextAlign.center,
             ),
           ],
         ),
