@@ -12,14 +12,15 @@ class AddTransactionScreen extends ConsumerStatefulWidget {
   const AddTransactionScreen({super.key});
 
   @override
-  ConsumerState<AddTransactionScreen> createState() => _AddTransactionScreenState();
+  ConsumerState<AddTransactionScreen> createState() =>
+      _AddTransactionScreenState();
 }
 
 class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
   final _formKey = GlobalKey<FormState>();
   final _amountController = TextEditingController();
   final _descriptionController = TextEditingController();
-  
+
   String _selectedType = 'EXPENSE';
   DateTime _selectedDate = DateTime.now();
   bool _isLoading = false;
@@ -129,16 +130,18 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
             children: [
               // Amount Input (Large & Prominent)
               Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: theme.cardColor,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(24),
-                  bottomRight: Radius.circular(24),
-                ), // Diagonal beveled
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: theme.cardColor,
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(24),
+                    bottomRight: Radius.circular(24),
+                  ), // Diagonal beveled
                   boxShadow: [
                     BoxShadow(
-                      color: (isExpense ? AppColors.expenseColor : AppColors.incomeColor)
+                      color: (isExpense
+                              ? AppColors.expenseColor
+                              : AppColors.incomeColor)
                           .withOpacity(0.1),
                       blurRadius: 20,
                       offset: const Offset(0, 10),
@@ -160,7 +163,9 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                       textAlign: TextAlign.center,
                       style: theme.textTheme.displayLarge?.copyWith(
                         fontWeight: FontWeight.bold,
-                        color: isExpense ? AppColors.expenseColor : AppColors.incomeColor,
+                        color: isExpense
+                            ? AppColors.expenseColor
+                            : AppColors.incomeColor,
                       ),
                       decoration: InputDecoration(
                         prefixText: '₹ ',
@@ -173,9 +178,11 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                           color: Colors.grey.withOpacity(0.3),
                         ),
                       ),
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
                       inputFormatters: [
-                        FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
+                        FilteringTextInputFormatter.allow(
+                            RegExp(r'^\d+\.?\d{0,2}')),
                       ],
                       validator: (value) {
                         if (value == null || value.isEmpty) {
@@ -194,7 +201,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                 ),
               ),
               const SizedBox(height: 24),
-              
+
               // Type Selection (Gradient Buttons)
               Row(
                 children: [
@@ -247,13 +254,13 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                 onTap: _selectDate,
                 borderRadius: BorderRadius.circular(12),
                 child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surface,
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(12),
-                    bottomRight: Radius.circular(12),
-                  ), // Diagonal beveled
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surface,
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(12),
+                      bottomRight: Radius.circular(12),
+                    ), // Diagonal beveled
                     border: Border.all(color: theme.dividerColor),
                   ),
                   child: Row(
@@ -301,7 +308,9 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
               GradientButton(
                 label: _isLoading ? 'Saving...' : l10n.save,
                 onPressed: _isLoading ? null : _saveTransaction,
-                gradient: isExpense ? AppColors.expenseGradient : AppColors.incomeGradient,
+                gradient: isExpense
+                    ? AppColors.expenseGradient
+                    : AppColors.incomeGradient,
                 isLoading: _isLoading,
                 icon: _isLoading ? null : Icons.check,
               ),
@@ -332,7 +341,7 @@ class _TypeButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
@@ -364,7 +373,9 @@ class _TypeButton extends StatelessWidget {
           children: [
             Icon(
               icon,
-              color: isSelected ? Colors.white : theme.colorScheme.onSurfaceVariant,
+              color: isSelected
+                  ? Colors.white
+                  : theme.colorScheme.onSurfaceVariant,
               size: 20,
             ),
             const SizedBox(width: 8),

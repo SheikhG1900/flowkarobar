@@ -174,28 +174,32 @@ class _DashboardTab extends ConsumerWidget {
                 children: [
                   // Gradient Background with Beveled Corner (bottom-right only)
                   Container(
-                    decoration: const BoxDecoration(
+                    decoration: const ShapeDecoration(
                       gradient: AppColors.primaryGradient,
-                      borderRadius: BorderRadius.only(
-                        bottomRight: Radius.circular(40), // Beveled corner
+                      shape: BeveledRectangleBorder(
+                        borderRadius: BorderRadius.only(
+                          bottomRight: Radius.circular(
+                              40), // This will now create a diagonal "cut"
+                        ),
                       ),
                     ),
                   ),
                   // Dark Overlay for Contrast
                   Container(
-                    decoration: BoxDecoration(
+                    decoration: ShapeDecoration(
                       gradient: LinearGradient(
                         colors: [
-                          Colors.black
-                              .withValues(alpha: 0.3 / 1.0), // Darker top
-                          Colors.black
-                              .withValues(alpha: 0.1 / 1.0), // Lighter bottom
+                          Colors.black.withValues(alpha: 0.3),
+                          Colors.black.withValues(alpha: 0.1),
                         ],
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                       ),
-                      borderRadius: const BorderRadius.only(
-                        bottomRight: Radius.circular(40), // Beveled corner
+                      shape: const BeveledRectangleBorder(
+                        borderRadius: BorderRadius.only(
+                          bottomRight: Radius.circular(
+                              40), // This creates the "cut" effect
+                        ),
                       ),
                     ),
                   ),

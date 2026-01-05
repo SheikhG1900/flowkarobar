@@ -79,7 +79,7 @@ class TransactionsListScreen extends ConsumerWidget {
             itemBuilder: (context, index) {
               final dateKey = groupedTransactions.keys.elementAt(index);
               final dateTransactions = groupedTransactions[dateKey]!;
-              
+
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -94,11 +94,11 @@ class TransactionsListScreen extends ConsumerWidget {
                       ),
                     ),
                   ),
-                  
+
                   // Transactions for this date
                   ...dateTransactions.map((transaction) {
                     final isExpense = transaction.type == 'EXPENSE';
-                    
+
                     return _buildTransactionCard(
                       context,
                       transaction: transaction,
@@ -153,18 +153,24 @@ class TransactionsListScreen extends ConsumerWidget {
   }) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: isExpense 
-            ? isDark
-                ? [const Color(0xFF2A2038), AppColors.darkCard] // Purple tint
-                : [const Color(0xFFFFF1F2), const Color(0xFFFFF5F5)] // Light pink shades
-            : isDark
-                ? [const Color(0xFF1A2E2A), AppColors.darkCard] // Green tint
-                : [const Color(0xFFF0FDF4), const Color(0xFFF0F9FF)], // Light green-blue shades
+          colors: isExpense
+              ? isDark
+                  ? [const Color(0xFF2A2038), AppColors.darkCard] // Purple tint
+                  : [
+                      const Color(0xFFFFF1F2),
+                      const Color(0xFFFFF5F5)
+                    ] // Light pink shades
+              : isDark
+                  ? [const Color(0xFF1A2E2A), AppColors.darkCard] // Green tint
+                  : [
+                      const Color(0xFFF0FDF4),
+                      const Color(0xFFF0F9FF)
+                    ], // Light green-blue shades
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -173,9 +179,11 @@ class TransactionsListScreen extends ConsumerWidget {
           bottomRight: Radius.circular(20),
         ), // Diagonal beveled
         border: Border.all(
-          color: isExpense 
-            ? AppColors.expenseColor.withValues(alpha: isDark ? 0.3 / 1.0 : 0.15 / 1.0)
-            : AppColors.incomeColor.withValues(alpha: isDark ? 0.3 / 1.0 : 0.15 / 1.0),
+          color: isExpense
+              ? AppColors.expenseColor
+                  .withValues(alpha: isDark ? 0.3 / 1.0 : 0.15 / 1.0)
+              : AppColors.incomeColor
+                  .withValues(alpha: isDark ? 0.3 / 1.0 : 0.15 / 1.0),
           width: 1.5,
         ),
         boxShadow: [
@@ -193,21 +201,24 @@ class TransactionsListScreen extends ConsumerWidget {
           width: 56,
           height: 56,
           decoration: BoxDecoration(
-            gradient: isExpense ? AppColors.expenseGradient : AppColors.incomeGradient,
+            gradient: isExpense
+                ? AppColors.expenseGradient
+                : AppColors.incomeGradient,
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: (isExpense ? AppColors.expenseColor : AppColors.incomeColor)
-                    .withValues(alpha: 0.4 / 1.0),
+                color:
+                    (isExpense ? AppColors.expenseColor : AppColors.incomeColor)
+                        .withValues(alpha: 0.4 / 1.0),
                 blurRadius: 12,
                 offset: const Offset(0, 4),
               ),
             ],
           ),
           child: Icon(
-            isExpense 
-              ? Icons.shopping_bag_outlined 
-              : Icons.account_balance_wallet_outlined,
+            isExpense
+                ? Icons.shopping_bag_outlined
+                : Icons.account_balance_wallet_outlined,
             color: Colors.white,
             size: 28,
           ),
@@ -219,14 +230,14 @@ class TransactionsListScreen extends ConsumerWidget {
           ),
         ),
         subtitle: transaction.categoryId != null
-          ? Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: Text(
-                'Category', // TODO: Load actual category name
-                style: theme.textTheme.bodySmall,
-              ),
-            )
-          : null,
+            ? Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Text(
+                  'Category', // TODO: Load actual category name
+                  style: theme.textTheme.bodySmall,
+                ),
+              )
+            : null,
         trailing: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.end,
@@ -234,7 +245,8 @@ class TransactionsListScreen extends ConsumerWidget {
             Text(
               '${isExpense ? '-' : '+'} ₹${transaction.amount.toStringAsFixed(2)}',
               style: theme.textTheme.titleLarge?.copyWith(
-                color: isExpense ? AppColors.expenseColor : AppColors.incomeColor,
+                color:
+                    isExpense ? AppColors.expenseColor : AppColors.incomeColor,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -247,4 +259,3 @@ class TransactionsListScreen extends ConsumerWidget {
     );
   }
 }
-
