@@ -171,8 +171,8 @@ class _DashboardTab extends ConsumerWidget {
             pinned: true,
             stretch: true,
             elevation: 0,
-            backgroundColor: AppColors.darkBackground
-                .withValues(alpha: 0.9 / 1.0), // Darker header
+            backgroundColor: theme.scaffoldBackgroundColor
+                .withValues(alpha: 0.9 / 1.0), // Adapts to light/dark mode
             flexibleSpace: FlexibleSpaceBar(
               background: Stack(
                 fit: StackFit.expand,
@@ -432,10 +432,10 @@ class _DashboardTab extends ConsumerWidget {
                                 color: Colors.white, size: 20),
                           ),
                           const SizedBox(width: 12),
-                          const Text(
+                          Text(
                             'FlowPaisa',
                             style: TextStyle(
-                              color: Colors.white,
+                              color: theme.colorScheme.onSurface,
                               fontWeight: FontWeight.bold,
                               fontSize: 20,
                             ),
@@ -449,15 +449,19 @@ class _DashboardTab extends ConsumerWidget {
             ),
             actions: [
               IconButton(
-                icon: const Icon(Icons.notifications_outlined,
-                    color: Colors.white),
+                icon: Icon(
+                  Icons.notifications_outlined,
+                  color: theme.colorScheme.onSurface,
+                ),
                 onPressed: () {
                   // TODO: Notifications
                 },
               ),
               IconButton(
-                icon: const Icon(Icons.account_circle_outlined,
-                    color: Colors.white),
+                icon: Icon(
+                  Icons.account_circle_outlined,
+                  color: theme.colorScheme.onSurface,
+                ),
                 onPressed: () {
                   // TODO: Profile
                 },
