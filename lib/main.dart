@@ -104,15 +104,18 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
 
-  Color _getIndicatorColorForTab(int index) {
+  Color _getSectionColor(int index) {
     switch (index) {
+      case 0: // Dashboard
+        return AppColors.dashboardSectionColor;
       case 1: // Transactions
         return AppColors.transactionsSectionColor;
-      case 0: // Dashboard
       case 2: // Analytics
+        return AppColors.analyticsSectionColor;
       case 3: // Settings
+        return AppColors.settingsSectionColor;
       default:
-        return AppColors.brightCyan; // Default primary color
+        return AppColors.brightCyan;
     }
   }
 
@@ -133,32 +136,59 @@ class _HomeScreenState extends State<HomeScreen> {
         index: _selectedIndex,
         children: screens,
       ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _selectedIndex,
-        onDestinationSelected: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-        },
-        indicatorColor: _getIndicatorColorForTab(_selectedIndex),
-        destinations: [
-          NavigationDestination(
-            icon: const Icon(Icons.dashboard),
-            label: l10n.dashboard,
+      bottomNavigationBar: Theme(
+        data: Theme.of(context).copyWith(
+          navigationBarTheme: NavigationBarThemeData(
+            indicatorColor: _getSectionColor(_selectedIndex).withValues(alpha: 0.15),
+            iconTheme: WidgetStateProperty.resolveWith((states) {
+              if (states.contains(WidgetState.selected)) {
+                return IconThemeData(color: _getSectionColor(_selectedIndex));
+              }
+              return IconThemeData(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              );
+            }),
+            labelTextStyle: WidgetStateProperty.resolveWith((states) {
+              if (states.contains(WidgetState.selected)) {
+                return TextStyle(
+                  color: _getSectionColor(_selectedIndex),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                );
+              }
+              return TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                fontSize: 12,
+              );
+            }),
           ),
-          NavigationDestination(
-            icon: const Icon(Icons.receipt_long),
-            label: l10n.transactions,
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.analytics),
-            label: l10n.analytics,
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.settings),
-            label: l10n.settings,
-          ),
-        ],
+        ),
+        child: NavigationBar(
+          selectedIndex: _selectedIndex,
+          onDestinationSelected: (index) {
+            setState(() {
+              _selectedIndex = index;
+            });
+          },
+          destinations: [
+            NavigationDestination(
+              icon: const Icon(Icons.dashboard),
+              label: l10n.dashboard,
+            ),
+            NavigationDestination(
+              icon: const Icon(Icons.receipt_long),
+              label: l10n.transactions,
+            ),
+            NavigationDestination(
+              icon: const Icon(Icons.analytics),
+              label: l10n.analytics,
+            ),
+            NavigationDestination(
+              icon: const Icon(Icons.settings),
+              label: l10n.settings,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -674,7 +704,7 @@ class _DashboardTab extends ConsumerWidget {
                   _QuickActionButton(
                     icon: Icons.bar_chart_rounded,
                     label: 'Analytics',
-                    gradient: AppColors.expenseGradient,
+                    gradient: AppColors.analyticsSectionGradient,
                     onTap: () {
                       // TODO: Analytics screen
                     },
