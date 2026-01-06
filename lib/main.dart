@@ -578,78 +578,93 @@ class _DashboardTab extends ConsumerWidget {
                 ),
           ),
           const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: _QuickActionButton(
-                  icon: Icons.add,
-                  label: 'Add',
-                  gradient: AppColors.primaryGradient,
-                  onTap: () {
-                    // TODO: Add transaction
-                  },
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _QuickActionButton(
-                  icon: Icons.document_scanner_outlined,
-                  label: 'Scan',
-                  gradient: AppColors.secondaryGradient,
-                  onTap: () {
-                    // TODO: Scan receipt
-                  },
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _QuickActionButton(
-                  icon: Icons.sync_alt,
-                  label: 'Split',
-                  gradient: AppColors.incomeGradient,
-                  onTap: () {
-                    // TODO: Split transaction
-                  },
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: _QuickActionButton(
-                  icon: Icons.account_balance_wallet_outlined,
-                  label: 'Receivables',
-                  gradient: AppColors.receivableGradient,
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const ReceivablesListScreen(),
-                      ),
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _QuickActionButton(
-                  icon: Icons.payment_outlined,
-                  label: 'Payables',
-                  gradient: AppColors.payableGradient,
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const PayablesListScreen(),
-                      ),
-                    );
-                  },
-                ),
-              ),
-              Expanded(child: Container()), // Empty space for symmetry
-            ],
+          // Grid layout for quick actions (responsive)
+          LayoutBuilder(
+            builder: (context, constraints) {
+              // Calculate optimal item width based on available space
+              const double minItemWidth = 100; // Minimum width per item
+              final double availableWidth = constraints.maxWidth;
+
+              // Calculate how many items can fit
+              int crossAxisCount = (availableWidth / minItemWidth).floor();
+              crossAxisCount =
+                  crossAxisCount.clamp(2, 6); // Min 2, Max 6 columns
+
+              // Calculate actual item width
+              final double itemWidth = availableWidth / crossAxisCount;
+              final double childAspectRatio =
+                  itemWidth / 110; // Height is fixed at ~110px
+
+              return GridView.count(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisCount: crossAxisCount,
+                mainAxisSpacing: 10,
+                crossAxisSpacing: 10,
+                childAspectRatio: childAspectRatio,
+                children: [
+                  _QuickActionButton(
+                    icon: Icons.add,
+                    label: 'Add',
+                    gradient: AppColors.primaryGradient,
+                    onTap: () {
+                      // TODO: Add transaction
+                    },
+                  ),
+                  _QuickActionButton(
+                    icon: Icons.document_scanner_outlined,
+                    label: 'Scan',
+                    gradient: AppColors.secondaryGradient,
+                    onTap: () {
+                      // TODO: Scan receipt
+                    },
+                  ),
+                  _QuickActionButton(
+                    icon: Icons.sync_alt,
+                    label: 'Split',
+                    gradient: AppColors.incomeGradient,
+                    onTap: () {
+                      // TODO: Split transaction
+                    },
+                  ),
+                  _QuickActionButton(
+                    icon: Icons.account_balance_wallet_outlined,
+                    label: 'Receivables',
+                    fontSizeMultiplier: 0.82,
+                    gradient: AppColors.receivableGradient,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ReceivablesListScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  _QuickActionButton(
+                    icon: Icons.payment_outlined,
+                    label: 'Payables',
+                    gradient: AppColors.payableGradient,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const PayablesListScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  _QuickActionButton(
+                    icon: Icons.bar_chart_rounded,
+                    label: 'Analytics',
+                    gradient: AppColors.expenseGradient,
+                    onTap: () {
+                      // TODO: Analytics screen
+                    },
+                  ),
+                ],
+              );
+            },
           ),
         ],
       ),
@@ -825,6 +840,7 @@ class _QuickActionButton extends StatelessWidget {
   final IconData icon;
   final String label;
   final Gradient gradient;
+  final double fontSizeMultiplier;
   final VoidCallback onTap;
 
   const _QuickActionButton({
@@ -832,6 +848,7 @@ class _QuickActionButton extends StatelessWidget {
     required this.label,
     required this.gradient,
     required this.onTap,
+    this.fontSizeMultiplier = 1.0,
   });
 
   @override
@@ -839,7 +856,7 @@ class _QuickActionButton extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 10),
         decoration: BoxDecoration(
           gradient: gradient,
           borderRadius: const BorderRadius.only(
@@ -867,7 +884,7 @@ class _QuickActionButton extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: Colors.white.withValues(alpha: 0.2 / 1.0),
                 shape: BoxShape.circle,
@@ -879,15 +896,15 @@ class _QuickActionButton extends StatelessWidget {
                   ),
                 ],
               ),
-              child: Icon(icon, color: Colors.white, size: 28),
+              child: Icon(icon, color: Colors.white, size: 24),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 8),
             Text(
               label,
-              style: const TextStyle(
+              style: TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.w700,
-                fontSize: 14,
+                fontSize: 14 * fontSizeMultiplier,
                 letterSpacing: 0.5,
                 shadows: [
                   Shadow(
