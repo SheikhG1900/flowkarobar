@@ -104,6 +104,18 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
 
+  Color _getIndicatorColorForTab(int index) {
+    switch (index) {
+      case 1: // Transactions
+        return AppColors.transactionsSectionColor;
+      case 0: // Dashboard
+      case 2: // Analytics
+      case 3: // Settings
+      default:
+        return AppColors.brightCyan; // Default primary color
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -128,6 +140,7 @@ class _HomeScreenState extends State<HomeScreen> {
             _selectedIndex = index;
           });
         },
+        indicatorColor: _getIndicatorColorForTab(_selectedIndex),
         destinations: [
           NavigationDestination(
             icon: const Icon(Icons.dashboard),
@@ -610,7 +623,7 @@ class _DashboardTab extends ConsumerWidget {
                   _QuickActionButton(
                     icon: Icons.add,
                     label: 'Add',
-                    gradient: AppColors.primaryGradient,
+                    gradient: AppColors.transactionsSectionGradient,
                     onTap: () {
                       // TODO: Add transaction
                     },
@@ -635,7 +648,7 @@ class _DashboardTab extends ConsumerWidget {
                     icon: Icons.account_balance_wallet_outlined,
                     label: 'Receivables',
                     fontSizeMultiplier: 0.82,
-                    gradient: AppColors.receivableGradient,
+                    gradient: AppColors.receivablesSectionGradient,
                     onTap: () {
                       Navigator.push(
                         context,
@@ -648,7 +661,7 @@ class _DashboardTab extends ConsumerWidget {
                   _QuickActionButton(
                     icon: Icons.payment_outlined,
                     label: 'Payables',
-                    gradient: AppColors.payableGradient,
+                    gradient: AppColors.payablesSectionGradient,
                     onTap: () {
                       Navigator.push(
                         context,

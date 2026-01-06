@@ -49,7 +49,7 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
           _buildReceivablesList('RECEIVED'),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.push(
             context,
@@ -58,8 +58,9 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
             ),
           );
         },
-        icon: const Icon(Icons.add),
-        label: const Text('Add Receivable'),
+        backgroundColor: AppColors.receivablesSectionColor,
+        foregroundColor: Colors.white,
+        child: const Icon(Icons.add),
       ),
     );
   }

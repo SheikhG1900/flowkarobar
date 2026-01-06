@@ -49,7 +49,7 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
           _buildPayablesList('PAID'),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.push(
             context,
@@ -58,8 +58,9 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
             ),
           );
         },
-        icon: const Icon(Icons.add),
-        label: const Text('Add Payable'),
+        backgroundColor: AppColors.payablesSectionColor,
+        foregroundColor: Colors.white,
+        child: const Icon(Icons.add),
       ),
     );
   }

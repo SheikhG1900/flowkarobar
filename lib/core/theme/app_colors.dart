@@ -82,8 +82,32 @@ class AppColors {
   // Transaction Type Colors (for icons and indicators)
   static const incomeColor = Color(0xFF10B981);
   static const expenseColor = Color(0xFFFF7043); // Warm orange instead of shocking pink
-  static const receivableColor = Color(0xFF00D4FF); // Bright cyan
-  static const payableColor = Color(0xFFFBBF24);
+  static const receivableColor = Color(0xFF22D3EE); // Cyan
+  static const payableColor = Color(0xFFFBBF24); // Amber
+  
+  // Section Colors (for FABs, tabs, and quick actions)
+  static const transactionsSectionColor = Color(0xFF00B8FF); // Electric Blue
+  static const receivablesSectionColor = Color(0xFF10B981); // Success Green
+  static const payablesSectionColor = Color(0xFFFF9A76); // Warm Orange
+  
+  // Section Gradients
+  static const transactionsSectionGradient = LinearGradient(
+    colors: [Color(0xFF00D4FF), Color(0xFF0088CC)], // Primary gradient
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+  
+  static const receivablesSectionGradient = LinearGradient(
+    colors: [Color(0xFF10B981), Color(0xFF059669)], // Green gradient
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+  
+  static const payablesSectionGradient = LinearGradient(
+    colors: [Color(0xFFFF9A76), Color(0xFFFF7043)], // Orange gradient
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
   
   // Gradient overlays for glassmorphism
   static LinearGradient glassGradient(bool isDark) {
