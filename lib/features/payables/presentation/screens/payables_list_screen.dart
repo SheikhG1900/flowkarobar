@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/database/database.dart';
+import 'package:flowpaisa/features/payables/data/payables_repository.dart';
 import 'package:flowpaisa/features/payables/presentation/providers/payables_provider.dart';
 import 'package:flowpaisa/features/payables/presentation/screens/add_payable_screen.dart';
 import 'package:intl/intl.dart';
@@ -10,8 +11,7 @@ class PayablesListScreen extends ConsumerStatefulWidget {
   const PayablesListScreen({super.key});
 
   @override
-  ConsumerState<PayablesListScreen> createState() =>
-      _PayablesListScreenState();
+  ConsumerState<PayablesListScreen> createState() => _PayablesListScreenState();
 }
 
 class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
@@ -67,7 +67,8 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
   }
 
   Widget _buildPayablesList(String status) {
-    final payablesAsync = ref.watch(payablesByStatusProvider(status));
+    final payablesAsync =
+        ref.watch(payablesWithContactsByStatusProvider(status));
 
     return payablesAsync.when(
       data: (payables) {
@@ -123,9 +124,11 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
     );
   }
 
-  Widget _buildPayableCard(Payable payable) {
+  Widget _buildPayableCard(PayableWithContact item) {
     final theme = Theme.of(context);
     final dateFormat = DateFormat.yMMMd();
+    final payable = item.payable;
+    final contact = item.contact;
     final isPending = payable.status == 'PENDING';
 
     return Container(
@@ -154,92 +157,132 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
           ),
         ],
       ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.all(16),
-        leading: Container(
-          width: 56,
-          height: 56,
-          decoration: BoxDecoration(
-            gradient: AppColors.payableGradient,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.payableColor.withValues(alpha: 0.4 / 1.0),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
-            ],
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: isPending ? () => _showMarkAsPaidDialog(payable) : null,
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(20),
+            bottomRight: Radius.circular(20),
           ),
-          child: const Icon(
-            Icons.payment_outlined,
-            color: Colors.white,
-            size: 28,
-          ),
-        ),
-        title: Text(
-          payable.description ?? 'Payable',
-          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 4),
-            Text(dateFormat.format(payable.date)),
-            if (payable.dueDate != null) ...[
-              const SizedBox(height: 4),
-              Row(
-                children: [
-                  Icon(
-                    Icons.calendar_today,
-                    size: 14,
-                    color: theme.colorScheme.onSurfaceVariant,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    gradient: AppColors.getContactGradient(contact?.name ?? ''),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.getContactColor(contact?.name ?? '')
+                            .withValues(alpha: 0.4 / 1.0),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 4),
-                  Text(
-                    'Due: ${dateFormat.format(payable.dueDate!)}',
-                    style: TextStyle(
-                      color: theme.colorScheme.onSurfaceVariant,
-                      fontSize: 12,
+                  alignment: Alignment.center,
+                  child: Text(
+                    contact?.name.isNotEmpty == true
+                        ? contact!.name[0].toUpperCase()
+                        : '?',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                ],
-              ),
-            ],
-          ],
-        ),
-        trailing: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Text(
-              '₹${payable.amount.toStringAsFixed(2)}',
-              style: const TextStyle(
-                color: AppColors.payableColor,
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-              ),
-            ),
-            if (isPending) ...[
-              const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.red.withValues(alpha: 0.2 / 1.0),
-                  borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Text(
-                  'Pending',
-                  style: TextStyle(
-                    color: Colors.red,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        payable.description ?? 'Payable',
+                        style: const TextStyle(
+                            fontWeight: FontWeight.w600, fontSize: 16),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        contact?.name ?? 'Unknown Contact',
+                        style: TextStyle(
+                          color: theme.colorScheme.onSurface,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        dateFormat.format(payable.date),
+                        style: TextStyle(
+                          color: theme.colorScheme.onSurfaceVariant,
+                          fontSize: 12,
+                        ),
+                      ),
+                      if (payable.dueDate != null) ...[
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.calendar_today,
+                              size: 14,
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              'Due: ${dateFormat.format(payable.dueDate!)}',
+                              style: TextStyle(
+                                color: theme.colorScheme.onSurfaceVariant,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ],
                   ),
                 ),
-              ),
-            ],
-          ],
+                const SizedBox(width: 16),
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      '₹${payable.amount.toStringAsFixed(2)}',
+                      style: const TextStyle(
+                        color: AppColors.payableColor,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                      ),
+                    ),
+                    if (isPending) ...[
+                      const SizedBox(height: 4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.red.withValues(alpha: 0.2 / 1.0),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Text(
+                          'Pending',
+                          style: TextStyle(
+                            color: Colors.red,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ],
+            ),
+          ),
         ),
-        onTap: isPending ? () => _showMarkAsPaidDialog(payable) : null,
       ),
     );
   }
@@ -291,4 +334,3 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
     );
   }
 }
-

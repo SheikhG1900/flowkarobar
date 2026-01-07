@@ -168,11 +168,11 @@ class _ContactCard extends StatelessWidget {
                 width: 50,
                 height: 50,
                 decoration: BoxDecoration(
-                  gradient: AppColors.primaryGradient,
+                  gradient: AppColors.getContactGradient(contact.name),
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.brightCyan.withValues(alpha: 0.3),
+                      color: AppColors.getContactColor(contact.name).withValues(alpha: 0.3),
                       blurRadius: 8,
                       offset: const Offset(0, 4),
                     ),

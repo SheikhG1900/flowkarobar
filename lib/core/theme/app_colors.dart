@@ -191,5 +191,45 @@ class AppColors {
     blurRadius: blur * shadowBlurMultiplier,
     offset: Offset(0, offsetY),
   );
+
+  // Generate a consistent color from a seed string (e.g. contact name)
+  static Color getContactColor(String seed) {
+    if (seed.isEmpty) return brightCyan;
+    
+    final int hash = seed.hashCode;
+    final List<Color> colors = [
+      const Color(0xFFF44336), // Red
+      const Color(0xFFE91E63), // Pink
+      const Color(0xFF9C27B0), // Purple
+      const Color(0xFF673AB7), // Deep Purple
+      const Color(0xFF3F51B5), // Indigo
+      const Color(0xFF2196F3), // Blue
+      const Color(0xFF03A9F4), // Light Blue
+      const Color(0xFF00BCD4), // Cyan
+      const Color(0xFF009688), // Teal
+      const Color(0xFF4CAF50), // Green
+      const Color(0xFF8BC34A), // Light Green
+      const Color(0xFFFFC107), // Amber
+      const Color(0xFFFF9800), // Orange
+      const Color(0xFFFF5722), // Deep Orange
+      const Color(0xFF795548), // Brown
+      const Color(0xFF607D8B), // Blue Grey
+    ];
+    
+    return colors[hash.abs() % colors.length];
+  }
+
+  // Generate a gradient from a seed string
+  static LinearGradient getContactGradient(String seed) {
+    final color = getContactColor(seed);
+    return LinearGradient(
+      colors: [
+        color,
+        color.withValues(alpha: 0.7), // Slightly lighter/transparent
+      ],
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+    );
+  }
 }
 

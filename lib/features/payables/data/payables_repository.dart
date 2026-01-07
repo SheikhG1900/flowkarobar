@@ -29,6 +29,31 @@ class PayablesRepository {
         _database.contacts.id.equalsExp(_database.payables.contactId),
       ),
     ]);
+    
+    // Default order
+    query.orderBy([OrderingTerm.desc(_database.payables.date)]);
+
+    return query.watch().map((rows) {
+      return rows.map((row) {
+        return PayableWithContact(
+          payable: row.readTable(_database.payables),
+          contact: row.readTableOrNull(_database.contacts),
+        );
+      }).toList();
+    });
+  }
+
+  /// Watch payables with contact information filtered by status
+  Stream<List<PayableWithContact>> watchPayablesWithContactsByStatus(String status) {
+    final query = _database.select(_database.payables).join([
+      leftOuterJoin(
+        _database.contacts,
+        _database.contacts.id.equalsExp(_database.payables.contactId),
+      ),
+    ]);
+
+    query.where(_database.payables.status.equals(status));
+    query.orderBy([OrderingTerm.desc(_database.payables.date)]);
 
     return query.watch().map((rows) {
       return rows.map((row) {

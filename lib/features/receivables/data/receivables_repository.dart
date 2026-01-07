@@ -30,6 +30,31 @@ class ReceivablesRepository {
       ),
     ]);
 
+    // Default order
+    query.orderBy([OrderingTerm.desc(_database.receivables.date)]);
+
+    return query.watch().map((rows) {
+      return rows.map((row) {
+        return ReceivableWithContact(
+          receivable: row.readTable(_database.receivables),
+          contact: row.readTableOrNull(_database.contacts),
+        );
+      }).toList();
+    });
+  }
+
+  /// Watch receivables with contact information filtered by status
+  Stream<List<ReceivableWithContact>> watchReceivablesWithContactsByStatus(String status) {
+    final query = _database.select(_database.receivables).join([
+      leftOuterJoin(
+        _database.contacts,
+        _database.contacts.id.equalsExp(_database.receivables.contactId),
+      ),
+    ]);
+
+    query.where(_database.receivables.status.equals(status));
+    query.orderBy([OrderingTerm.desc(_database.receivables.date)]);
+
     return query.watch().map((rows) {
       return rows.map((row) {
         return ReceivableWithContact(

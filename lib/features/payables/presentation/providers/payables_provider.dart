@@ -36,6 +36,13 @@ final totalPendingPayablesProvider = FutureProvider<double>((ref) {
   return repository.getTotalPendingPayables();
 });
 
+// Watch payables with contacts by status
+final payablesWithContactsByStatusProvider =
+    StreamProvider.family<List<PayableWithContact>, String>((ref, status) {
+  final repository = ref.watch(payablesRepositoryProvider);
+  return repository.watchPayablesWithContactsByStatus(status);
+});
+
 // Watch pending payables
 final pendingPayablesProvider = StreamProvider<List<Payable>>((ref) {
   final repository = ref.watch(payablesRepositoryProvider);
