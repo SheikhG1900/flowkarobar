@@ -12,7 +12,7 @@ class TransactionsListScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    final transactionsAsync = ref.watch(allTransactionsProvider);
+    final transactionsAsync = ref.watch(transactionsWithCategoryProvider);
     final theme = Theme.of(context);
 
     return Scaffold(
@@ -67,10 +67,10 @@ class TransactionsListScreen extends ConsumerWidget {
 
           // Group transactions by date
           final groupedTransactions = <String, List>{};
-          for (final transaction in transactions) {
-            final dateKey = DateFormat.yMMMd().format(transaction.date);
+          for (final item in transactions) {
+            final dateKey = DateFormat.yMMMd().format(item.transaction.date);
             groupedTransactions.putIfAbsent(dateKey, () => []);
-            groupedTransactions[dateKey]!.add(transaction);
+            groupedTransactions[dateKey]!.add(item);
           }
 
           return ListView.builder(
@@ -96,12 +96,12 @@ class TransactionsListScreen extends ConsumerWidget {
                   ),
 
                   // Transactions for this date
-                  ...dateTransactions.map((transaction) {
-                    final isExpense = transaction.type == 'EXPENSE';
+                  ...dateTransactions.map((item) {
+                    final isExpense = item.transaction.type == 'EXPENSE';
 
                     return _buildTransactionCard(
                       context,
-                      transaction: transaction,
+                      item: item,
                       isExpense: isExpense,
                     );
                   }),
@@ -149,49 +149,42 @@ class TransactionsListScreen extends ConsumerWidget {
 
   Widget _buildTransactionCard(
     BuildContext context, {
-    required dynamic transaction,
+    required dynamic item, // TransactionWithCategory
     required bool isExpense,
   }) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final transaction = item.transaction;
+    final category = item.category;
+
+    // Resolve category color and icon
+    Color categoryColor;
+    if (category?.color != null) {
+      try {
+        categoryColor =
+            Color(int.parse(category!.color!.replaceAll('#', '0xFF')));
+      } catch (_) {
+        categoryColor =
+            isExpense ? AppColors.expenseColor : AppColors.incomeColor;
+      }
+    } else {
+      categoryColor =
+          isExpense ? AppColors.expenseColor : AppColors.incomeColor;
+    }
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: isExpense
-              ? isDark
-                  ? [const Color(0xFF2A2038), AppColors.darkCard] // Purple tint
-                  : [
-                      const Color(0xFFFFF1F2),
-                      const Color(0xFFFFF5F5)
-                    ] // Light pink shades
-              : isDark
-                  ? [const Color(0xFF1A2E2A), AppColors.darkCard] // Green tint
-                  : [
-                      const Color(0xFFF0FDF4),
-                      const Color(0xFFF0F9FF)
-                    ], // Light green-blue shades
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(20),
-          bottomRight: Radius.circular(20),
-        ), // Diagonal beveled
+        color: theme.cardColor,
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: isExpense
-              ? AppColors.expenseColor
-                  .withValues(alpha: isDark ? 0.3 / 1.0 : 0.15 / 1.0)
-              : AppColors.incomeColor
-                  .withValues(alpha: isDark ? 0.3 / 1.0 : 0.15 / 1.0),
-          width: 1.5,
+          color: categoryColor.withValues(alpha: isDark ? 0.2 : 0.1),
+          width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: (isExpense ? AppColors.expenseColor : AppColors.incomeColor)
-                .withValues(alpha: isDark ? 0.2 / 1.0 : 0.12 / 1.0),
-            blurRadius: isDark ? 12 : 8,
+            color: categoryColor.withValues(alpha: isDark ? 0.05 : 0.08),
+            blurRadius: 12,
             offset: const Offset(0, 4),
           ),
         ],
@@ -199,30 +192,18 @@ class TransactionsListScreen extends ConsumerWidget {
       child: ListTile(
         contentPadding: const EdgeInsets.all(16),
         leading: Container(
-          width: 56,
-          height: 56,
+          width: 50,
+          height: 50,
           decoration: BoxDecoration(
-            gradient: isExpense
-                ? AppColors.expenseGradient
-                : AppColors.incomeGradient,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color:
-                    (isExpense ? AppColors.expenseColor : AppColors.incomeColor)
-                        .withValues(alpha: 0.4 / 1.0),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
-            ],
+            color: categoryColor.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: categoryColor.withValues(alpha: 0.3),
+              width: 1,
+            ),
           ),
-          child: Icon(
-            isExpense
-                ? Icons.shopping_bag_outlined
-                : Icons.account_balance_wallet_outlined,
-            color: Colors.white,
-            size: 28,
-          ),
+          alignment: Alignment.center,
+          child: _buildCategoryIcon(category?.icon, categoryColor, isExpense),
         ),
         title: Text(
           transaction.description ?? (isExpense ? 'Expense' : 'Income'),
@@ -230,33 +211,50 @@ class TransactionsListScreen extends ConsumerWidget {
             fontWeight: FontWeight.w600,
           ),
         ),
-        subtitle: transaction.categoryId != null
-            ? Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: Text(
-                  'Category', // TODO: Load actual category name
-                  style: theme.textTheme.bodySmall,
-                ),
-              )
-            : null,
-        trailing: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Text(
-              '${isExpense ? '-' : '+'} ₹${transaction.amount.toStringAsFixed(2)}',
-              style: theme.textTheme.titleLarge?.copyWith(
-                color:
-                    isExpense ? AppColors.expenseColor : AppColors.incomeColor,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
+        subtitle: Text(
+          category?.name ?? 'Uncategorized',
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+        trailing: Text(
+          '${isExpense ? '-' : '+'} ₹${transaction.amount.toStringAsFixed(2)}',
+          style: theme.textTheme.titleLarge?.copyWith(
+            color: isExpense ? AppColors.expenseColor : AppColors.incomeColor,
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+          ),
         ),
         onTap: () {
           // TODO: Navigate to transaction details
         },
       ),
+    );
+  }
+
+  Widget _buildCategoryIcon(String? iconString, Color color, bool isExpense) {
+    if (iconString == null) {
+      return Icon(
+        isExpense ? Icons.money_off : Icons.attach_money,
+        color: color,
+        size: 24,
+      );
+    }
+
+    // Try to parse as integer (code point for IconData)
+    final int? codePoint = int.tryParse(iconString);
+    if (codePoint != null) {
+      return Icon(
+        IconData(codePoint, fontFamily: 'MaterialIcons'),
+        color: color,
+        size: 24,
+      );
+    }
+
+    // Fallback to text (emoji)
+    return Text(
+      iconString,
+      style: const TextStyle(fontSize: 24),
     );
   }
 }

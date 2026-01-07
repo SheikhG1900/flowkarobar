@@ -88,8 +88,8 @@ class AppColors {
   // Section Colors (for FABs, tabs, and quick actions)
   static const dashboardSectionColor = Color(0xFF00D4FF); // Bright Cyan
   static const transactionsSectionColor = Color(0xFF00B8FF); // Electric Blue
-  static const receivablesSectionColor = Color(0xFF10B981); // Success Green
-  static const payablesSectionColor = Color(0xFFFF9A76); // Warm Orange
+  static const receivablesSectionColor = Color(0xFF22D3EE); // Cyan
+  static const payablesSectionColor = Color(0xFFFBBF24); // Amber
   static const analyticsSectionColor = Color(0xFF8B5CF6); // Purple
   static const settingsSectionColor = Color(0xFF64748B); // Slate Gray
   
@@ -107,13 +107,13 @@ class AppColors {
   );
   
   static const receivablesSectionGradient = LinearGradient(
-    colors: [Color(0xFF10B981), Color(0xFF059669)], // Green gradient
+    colors: [Color(0xFF22D3EE), Color(0xFF0EA5E9)], // Cyan gradient
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
   
   static const payablesSectionGradient = LinearGradient(
-    colors: [Color(0xFFFF9A76), Color(0xFFFF7043)], // Orange gradient
+    colors: [Color(0xFFFBBF24), Color(0xFFF59E0B)], // Amber gradient
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );

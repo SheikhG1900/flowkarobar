@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
+import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/features/payables/presentation/providers/payables_provider.dart';
 import 'package:flowpaisa/features/payables/presentation/screens/add_payable_screen.dart';
 import 'package:intl/intl.dart';
@@ -122,7 +123,7 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
     );
   }
 
-  Widget _buildPayableCard(payable) {
+  Widget _buildPayableCard(Payable payable) {
     final theme = Theme.of(context);
     final dateFormat = DateFormat.yMMMd();
     final isPending = payable.status == 'PENDING';
@@ -243,7 +244,7 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
     );
   }
 
-  void _showMarkAsPaidDialog(payable) {
+  void _showMarkAsPaidDialog(Payable payable) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -262,7 +263,7 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
               try {
                 final repository = ref.read(payablesRepositoryProvider);
                 await repository.markAsPaid(payable.id);
-                if (mounted) {
+                if (context.mounted) {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
@@ -272,7 +273,7 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
                   );
                 }
               } catch (e) {
-                if (mounted) {
+                if (context.mounted) {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
+import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/features/receivables/presentation/providers/receivables_provider.dart';
 import 'package:flowpaisa/features/receivables/presentation/screens/add_receivable_screen.dart';
 import 'package:intl/intl.dart';
@@ -122,7 +123,7 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
     );
   }
 
-  Widget _buildReceivableCard(receivable) {
+  Widget _buildReceivableCard(Receivable receivable) {
     final theme = Theme.of(context);
     final dateFormat = DateFormat.yMMMd();
     final isPending = receivable.status == 'PENDING';
@@ -245,7 +246,7 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
     );
   }
 
-  void _showMarkAsReceivedDialog(receivable) {
+  void _showMarkAsReceivedDialog(Receivable receivable) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -264,7 +265,7 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
               try {
                 final repository = ref.read(receivablesRepositoryProvider);
                 await repository.markAsReceived(receivable.id);
-                if (mounted) {
+                if (context.mounted) {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
@@ -274,7 +275,7 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
                   );
                 }
               } catch (e) {
-                if (mounted) {
+                if (context.mounted) {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(

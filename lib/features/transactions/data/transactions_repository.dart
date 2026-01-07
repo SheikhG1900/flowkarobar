@@ -97,6 +97,36 @@ class TransactionsRepository {
           ..orderBy([(t) => OrderingTerm.desc(t.date)]))
         .watch();
   }
+
+  // Watch transactions with category details
+  Stream<List<TransactionWithCategory>> watchTransactionsWithCategory() {
+    final query = _database.select(_database.transactions).join([
+      leftOuterJoin(
+        _database.categories,
+        _database.categories.id.equalsExp(_database.transactions.categoryId),
+      ),
+    ])
+      ..orderBy([OrderingTerm.desc(_database.transactions.date)]);
+
+    return query.watch().map((rows) {
+      return rows.map((row) {
+        return TransactionWithCategory(
+          transaction: row.readTable(_database.transactions),
+          category: row.readTableOrNull(_database.categories),
+        );
+      }).toList();
+    });
+  }
+}
+
+class TransactionWithCategory {
+  final Transaction transaction;
+  final Category? category;
+
+  TransactionWithCategory({
+    required this.transaction,
+    this.category,
+  });
 }
 
 

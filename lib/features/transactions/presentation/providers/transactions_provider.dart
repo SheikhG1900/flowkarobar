@@ -15,6 +15,12 @@ final allTransactionsProvider = StreamProvider<List<Transaction>>((ref) {
   return repository.watchAllTransactions();
 });
 
+// Watch transactions with category details
+final transactionsWithCategoryProvider = StreamProvider<List<TransactionWithCategory>>((ref) {
+  final repository = ref.watch(transactionsRepositoryProvider);
+  return repository.watchTransactionsWithCategory();
+});
+
 // Watch transactions by date range
 final transactionsByDateRangeProvider = StreamProvider.family<List<Transaction>, DateRange>(
   (ref, dateRange) {

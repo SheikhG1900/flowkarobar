@@ -5,6 +5,7 @@ import 'package:drift/drift.dart' as drift;
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/features/payables/presentation/providers/payables_provider.dart';
+import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
 
 class AddPayableScreen extends ConsumerStatefulWidget {
@@ -24,6 +25,9 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
   bool _autoCreateExpense = false;
   bool _isLoading = false;
 
+  Contact? _selectedContact;
+  int? _selectedContactId;
+
   @override
   void dispose() {
     _amountController.dispose();
@@ -36,6 +40,16 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
       return;
     }
 
+    if (_selectedContactId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select a contact'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     setState(() {
       _isLoading = true;
     });
@@ -43,7 +57,7 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
     try {
       final repository = ref.read(payablesRepositoryProvider);
       final payable = PayablesCompanion(
-        contactId: const drift.Value(1), // TODO: Add contact selection
+        contactId: drift.Value(_selectedContactId!),
         amount: drift.Value(double.parse(_amountController.text)),
         description: drift.Value(_descriptionController.text.isEmpty
             ? null
@@ -115,6 +129,93 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
     }
   }
 
+  void _showContactPicker() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      isScrollControlled: true,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.7,
+        minChildSize: 0.5,
+        maxChildSize: 0.9,
+        expand: false,
+        builder: (context, scrollController) => Consumer(
+          builder: (context, ref, _) {
+            final contactsAsync = ref.watch(contactsListProvider);
+            
+            return Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Text(
+                    'Select Contact',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                ),
+                Expanded(
+                  child: contactsAsync.when(
+                    data: (contacts) {
+                      if (contacts.isEmpty) {
+                        return const Center(
+                          child: Text('No contacts found. Add one from Settings.'),
+                        );
+                      }
+                      return ListView.builder(
+                        controller: scrollController,
+                        itemCount: contacts.length,
+                        itemBuilder: (context, index) {
+                          final contact = contacts[index];
+                          return ListTile(
+                            leading: Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                gradient: AppColors.primaryGradient,
+                                shape: BoxShape.circle,
+                              ),
+                              alignment: Alignment.center,
+                              child: Text(
+                                contact.name.isNotEmpty ? contact.name[0].toUpperCase() : '?',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            title: Text(contact.name),
+                            subtitle: contact.phone != null ? Text(contact.phone!) : null,
+                            onTap: () {
+                              setState(() {
+                                _selectedContact = contact;
+                                _selectedContactId = contact.id;
+                              });
+                              Navigator.pop(context);
+                            },
+                            selected: _selectedContactId == contact.id,
+                            trailing: _selectedContactId == contact.id
+                                ? const Icon(Icons.check_circle, color: AppColors.brightCyan)
+                                : null,
+                          );
+                        },
+                      );
+                    },
+                    loading: () => const Center(child: CircularProgressIndicator()),
+                    error: (e, s) => Center(child: Text('Error: $e')),
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -131,7 +232,7 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              AppColors.payableColor.withOpacity(0.05),
+              AppColors.payableColor.withValues(alpha: 0.05),
               Colors.transparent
             ],
             begin: Alignment.topCenter,
@@ -154,7 +255,7 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.payableColor.withOpacity(0.1),
+                      color: AppColors.payableColor.withValues(alpha: 0.1),
                       blurRadius: 20,
                       offset: const Offset(0, 10),
                     ),
@@ -210,6 +311,77 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
                       ],
                     ),
                   ],
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // Contact Selector
+              InkWell(
+                onTap: _showContactPicker,
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surface,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: _selectedContact != null 
+                          ? AppColors.payableColor 
+                          : theme.dividerColor,
+                      width: _selectedContact != null ? 1.5 : 1,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          gradient: _selectedContact != null ? AppColors.payableGradient : null,
+                          color: _selectedContact == null ? theme.colorScheme.surfaceContainerHighest : null,
+                          shape: BoxShape.circle,
+                        ),
+                        alignment: Alignment.center,
+                        child: _selectedContact != null
+                            ? Text(
+                                _selectedContact!.name[0].toUpperCase(),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              )
+                            : Icon(
+                                Icons.person_outline,
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                      ),
+                      const SizedBox(width: 16),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Contact',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            _selectedContact?.name ?? 'Select Contact',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: _selectedContact != null ? FontWeight.bold : FontWeight.normal,
+                              color: _selectedContact != null 
+                                  ? theme.colorScheme.onSurface 
+                                  : theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const Spacer(),
+                      const Icon(Icons.arrow_forward_ios, size: 16),
+                    ],
+                  ),
                 ),
               ),
 

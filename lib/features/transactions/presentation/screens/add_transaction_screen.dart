@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:drift/drift.dart' as drift;
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
-import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
-import 'package:flowpaisa/features/receivables/presentation/providers/receivables_provider.dart';
-import 'package:flowpaisa/features/payables/presentation/providers/payables_provider.dart';
-import 'package:flowpaisa/shared/providers/database_provider.dart';
+import 'package:flowpaisa/features/transactions/presentation/providers/transaction_service_provider.dart';
+import 'package:flowpaisa/features/categories/presentation/providers/categories_provider.dart';
+import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 
@@ -27,6 +25,10 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
   String _selectedType = 'EXPENSE';
   DateTime _selectedDate = DateTime.now();
   bool _isLoading = false;
+
+  // Selected entities
+  Category? _selectedCategory;
+  Contact? _selectedContact;
 
   // Linked transaction fields
   int? _selectedContactId;
@@ -50,72 +52,23 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     });
 
     try {
-      final transactionRepository = ref.read(transactionsRepositoryProvider);
-      final database = ref.read(databaseProvider);
+      final transactionService = ref.read(transactionServiceProvider);
 
       final amount = double.parse(_amountController.text);
       final description = _descriptionController.text.isEmpty
           ? null
           : _descriptionController.text;
 
-      await database.transaction(() async {
-        // Create the main transaction
-        final transactionId = await transactionRepository.createTransaction(
-          TransactionsCompanion(
-            amount: drift.Value(amount),
-            type: drift.Value(_selectedType),
-            contactId: drift.Value(_selectedContactId),
-            description: drift.Value(description),
-            date: drift.Value(_selectedDate),
-            paidRelationship: drift.Value(_paidRelationship),
-            createdAt: drift.Value(DateTime.now()),
-            updatedAt: drift.Value(DateTime.now()),
-          ),
-        );
-
-        // Create linked entries based on paid relationship
-        if (_createLinkedEntry && _selectedContactId != null) {
-          if (_paidRelationship == 'PAID_FOR' && _selectedType == 'EXPENSE') {
-            // Create a receivable (money you're owed)
-            final receivablesRepository =
-                ref.read(receivablesRepositoryProvider);
-            await receivablesRepository.createReceivable(
-              ReceivablesCompanion(
-                contactId: drift.Value(_selectedContactId!),
-                amount: drift.Value(amount),
-                description: drift.Value(description),
-                date: drift.Value(_selectedDate),
-                status: const drift.Value('PENDING'),
-                linkedExpenseId: drift.Value(transactionId),
-                autoCreateIncome: const drift.Value(true),
-                createdAt: drift.Value(DateTime.now()),
-                updatedAt: drift.Value(DateTime.now()),
-              ),
-            );
-          } else if (_paidRelationship == 'PAID_BY' &&
-              _selectedType == 'EXPENSE') {
-            // This shouldn't happen - if someone else paid, it's not an expense
-            // It should be recorded as a payable from the beginning
-          } else if (_paidRelationship == 'PAID_FOR' &&
-              _selectedType == 'INCOME') {
-            // If you received money that you'll pay back, create a payable
-            final payablesRepository = ref.read(payablesRepositoryProvider);
-            await payablesRepository.createPayable(
-              PayablesCompanion(
-                contactId: drift.Value(_selectedContactId!),
-                amount: drift.Value(amount),
-                description: drift.Value(description),
-                date: drift.Value(_selectedDate),
-                status: const drift.Value('PENDING'),
-                linkedExpenseId: drift.Value(null),
-                autoCreateExpense: const drift.Value(true),
-                createdAt: drift.Value(DateTime.now()),
-                updatedAt: drift.Value(DateTime.now()),
-              ),
-            );
-          }
-        }
-      });
+      await transactionService.createTransaction(
+        amount: amount,
+        type: _selectedType,
+        date: _selectedDate,
+        description: description,
+        contactId: _selectedContactId,
+        categoryId: _selectedCategory?.id,
+        paidRelationship: _paidRelationship,
+        createLinkedEntry: _createLinkedEntry,
+      );
 
       if (mounted) {
         Navigator.pop(context);
@@ -163,6 +116,177 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     }
   }
 
+  void _showCategoryPicker() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      isScrollControlled: true,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.7,
+        minChildSize: 0.5,
+        maxChildSize: 0.9,
+        expand: false,
+        builder: (context, scrollController) => Consumer(
+          builder: (context, ref, _) {
+            final categoriesAsync = ref.watch(categoriesByTypeProvider(_selectedType));
+            
+            return Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Text(
+                    'Select Category',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                ),
+                Expanded(
+                  child: categoriesAsync.when(
+                    data: (categories) {
+                      if (categories.isEmpty) {
+                        return Center(
+                          child: Text('No ${_selectedType.toLowerCase()} categories found'),
+                        );
+                      }
+                      return ListView.builder(
+                        controller: scrollController,
+                        itemCount: categories.length,
+                        itemBuilder: (context, index) {
+                          final category = categories[index];
+                          final color = category.color != null 
+                              ? Color(int.parse(category.color!.replaceAll('#', '0xFF'))) 
+                              : (_selectedType == 'EXPENSE' ? AppColors.expenseColor : AppColors.incomeColor);
+                          
+                          return ListTile(
+                            leading: Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: color.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: color.withValues(alpha: 0.3)),
+                              ),
+                              alignment: Alignment.center,
+                              child: _buildCategoryIcon(category.icon, color: color),
+                            ),
+                            title: Text(category.name),
+                            onTap: () {
+                              setState(() {
+                                _selectedCategory = category;
+                              });
+                              Navigator.pop(context);
+                            },
+                            selected: _selectedCategory?.id == category.id,
+                            trailing: _selectedCategory?.id == category.id
+                                ? Icon(Icons.check_circle, color: color)
+                                : null,
+                          );
+                        },
+                      );
+                    },
+                    loading: () => const Center(child: CircularProgressIndicator()),
+                    error: (e, s) => Center(child: Text('Error: $e')),
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  void _showContactPicker() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      isScrollControlled: true,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.7,
+        minChildSize: 0.5,
+        maxChildSize: 0.9,
+        expand: false,
+        builder: (context, scrollController) => Consumer(
+          builder: (context, ref, _) {
+            final contactsAsync = ref.watch(contactsListProvider);
+            
+            return Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Text(
+                    'Select Contact',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                ),
+                Expanded(
+                  child: contactsAsync.when(
+                    data: (contacts) {
+                      if (contacts.isEmpty) {
+                        return const Center(
+                          child: Text('No contacts found. Add one from Settings.'),
+                        );
+                      }
+                      return ListView.builder(
+                        controller: scrollController,
+                        itemCount: contacts.length,
+                        itemBuilder: (context, index) {
+                          final contact = contacts[index];
+                          return ListTile(
+                            leading: Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                gradient: AppColors.primaryGradient,
+                                shape: BoxShape.circle,
+                              ),
+                              alignment: Alignment.center,
+                              child: Text(
+                                contact.name.isNotEmpty ? contact.name[0].toUpperCase() : '?',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            title: Text(contact.name),
+                            subtitle: contact.phone != null ? Text(contact.phone!) : null,
+                            onTap: () {
+                              setState(() {
+                                _selectedContact = contact;
+                                _selectedContactId = contact.id;
+                              });
+                              Navigator.pop(context);
+                            },
+                            selected: _selectedContactId == contact.id,
+                            trailing: _selectedContactId == contact.id
+                                ? const Icon(Icons.check_circle, color: AppColors.brightCyan)
+                                : null,
+                          );
+                        },
+                      );
+                    },
+                    loading: () => const Center(child: CircularProgressIndicator()),
+                    error: (e, s) => Center(child: Text('Error: $e')),
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -182,8 +306,8 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: isExpense
-                ? [AppColors.expenseColor.withOpacity(0.05), Colors.transparent]
-                : [AppColors.incomeColor.withOpacity(0.05), Colors.transparent],
+                ? [AppColors.expenseColor.withValues(alpha: 0.05), Colors.transparent]
+                : [AppColors.incomeColor.withValues(alpha: 0.05), Colors.transparent],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
@@ -207,7 +331,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                       color: (isExpense
                               ? AppColors.expenseColor
                               : AppColors.incomeColor)
-                          .withOpacity(0.1),
+                          .withValues(alpha: 0.1),
                       blurRadius: 20,
                       offset: const Offset(0, 10),
                     ),
@@ -240,7 +364,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                         border: InputBorder.none,
                         hintText: '0.00',
                         hintStyle: theme.textTheme.displayLarge?.copyWith(
-                          color: Colors.grey.withOpacity(0.3),
+                          color: Colors.grey.withValues(alpha: 0.3),
                         ),
                       ),
                       keyboardType:
@@ -301,6 +425,159 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
               ),
               const SizedBox(height: 24),
 
+              // Category Selector
+              InkWell(
+                onTap: _showCategoryPicker,
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surface,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: _selectedCategory != null 
+                          ? (_selectedType == 'EXPENSE' ? AppColors.expenseColor : AppColors.incomeColor)
+                          : theme.dividerColor,
+                      width: _selectedCategory != null ? 1.5 : 1,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: _selectedCategory?.color != null 
+                              ? Color(int.parse(_selectedCategory!.color!.replaceAll('#', '0xFF'))).withValues(alpha: 0.1)
+                              : theme.colorScheme.surfaceContainerHighest,
+                          borderRadius: BorderRadius.circular(10),
+                          border: _selectedCategory?.color != null 
+                              ? Border.all(
+                                  color: Color(int.parse(_selectedCategory!.color!.replaceAll('#', '0xFF'))).withValues(alpha: 0.3),
+                                )
+                              : null,
+                        ),
+                        alignment: Alignment.center,
+                        child: _buildCategoryIcon(
+                          _selectedCategory?.icon,
+                          color: _selectedCategory?.color != null
+                              ? Color(int.parse(_selectedCategory!.color!.replaceAll('#', '0xFF')))
+                              : null,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Category',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            _selectedCategory?.name ?? 'Select Category',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: _selectedCategory != null ? FontWeight.bold : FontWeight.normal,
+                              color: _selectedCategory != null 
+                                  ? theme.colorScheme.onSurface 
+                                  : theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const Spacer(),
+                      const Icon(Icons.arrow_forward_ios, size: 16),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Contact Selector (Optional)
+              InkWell(
+                onTap: _showContactPicker,
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surface,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: _selectedContact != null 
+                          ? AppColors.brightCyan 
+                          : theme.dividerColor,
+                      width: _selectedContact != null ? 1.5 : 1,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          gradient: _selectedContact != null ? AppColors.primaryGradient : null,
+                          color: _selectedContact == null ? theme.colorScheme.surfaceContainerHighest : null,
+                          shape: BoxShape.circle,
+                        ),
+                        alignment: Alignment.center,
+                        child: _selectedContact != null
+                            ? Text(
+                                _selectedContact!.name[0].toUpperCase(),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              )
+                            : Icon(
+                                Icons.person_outline,
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                      ),
+                      const SizedBox(width: 16),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Contact (Optional)',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            _selectedContact?.name ?? 'Select Contact',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: _selectedContact != null ? FontWeight.bold : FontWeight.normal,
+                              color: _selectedContact != null 
+                                  ? theme.colorScheme.onSurface 
+                                  : theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (_selectedContact != null) ...[
+                        const Spacer(),
+                        IconButton(
+                          icon: const Icon(Icons.close, size: 20),
+                          onPressed: () {
+                            setState(() {
+                              _selectedContact = null;
+                              _selectedContactId = null;
+                            });
+                          },
+                        ),
+                      ] else ...[
+                        const Spacer(),
+                        const Icon(Icons.arrow_forward_ios, size: 16),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+
               // Description
               TextFormField(
                 controller: _descriptionController,
@@ -331,15 +608,20 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                         subtitle: 'I will receive back',
                         icon: Icons.account_balance_wallet,
                         isSelected: _paidRelationship == 'PAID_FOR',
+                        gradient: AppColors.receivableGradient,
+                        color: AppColors.receivableColor,
                         onTap: () {
                           setState(() {
                             if (_paidRelationship == 'PAID_FOR') {
                               _paidRelationship = null;
                               _createLinkedEntry = false;
                             } else {
+                              if (_selectedContact == null) {
+                                _showContactPicker(); // Prompt for contact if not selected
+                                return;
+                              }
                               _paidRelationship = 'PAID_FOR';
                               _createLinkedEntry = true;
-                              _selectedContactId = 1; // TODO: Contact selection
                             }
                           });
                         },
@@ -352,16 +634,20 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                         subtitle: 'Someone paid for me',
                         icon: Icons.person_outline,
                         isSelected: _paidRelationship == 'PAID_BY',
+                        gradient: AppColors.payableGradient,
+                        color: AppColors.payableColor,
                         onTap: () {
                           setState(() {
                             if (_paidRelationship == 'PAID_BY') {
                               _paidRelationship = null;
                               _createLinkedEntry = false;
                             } else {
+                              if (_selectedContact == null) {
+                                _showContactPicker(); // Prompt for contact if not selected
+                                return;
+                              }
                               _paidRelationship = 'PAID_BY';
-                              _createLinkedEntry =
-                                  false; // Don't create linked entry for PAID_BY
-                              _selectedContactId = 1; // TODO: Contact selection
+                              _createLinkedEntry = false;
                             }
                           });
                         },
@@ -443,6 +729,30 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
       ),
     );
   }
+
+  Widget _buildCategoryIcon(String? iconString, {Color? color}) {
+    if (iconString == null) {
+      return Icon(
+        Icons.category_outlined,
+        color: color ?? Theme.of(context).colorScheme.onSurfaceVariant,
+        size: 24,
+      );
+    }
+    
+    final int? codePoint = int.tryParse(iconString);
+    if (codePoint != null) {
+      return Icon(
+        IconData(codePoint, fontFamily: 'MaterialIcons'),
+        color: color,
+        size: 24,
+      );
+    }
+    
+    return Text(
+      iconString,
+      style: const TextStyle(fontSize: 20),
+    );
+  }
 }
 
 /// Type Selection Button
@@ -484,7 +794,7 @@ class _TypeButton extends StatelessWidget {
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: gradient.colors.first.withOpacity(0.3),
+                    color: gradient.colors.first.withValues(alpha: 0.3),
                     blurRadius: 12,
                     offset: const Offset(0, 6),
                   ),
@@ -523,6 +833,8 @@ class _RelationshipButton extends StatelessWidget {
   final IconData icon;
   final bool isSelected;
   final VoidCallback onTap;
+  final Gradient gradient;
+  final Color color;
 
   const _RelationshipButton({
     required this.label,
@@ -530,6 +842,8 @@ class _RelationshipButton extends StatelessWidget {
     required this.icon,
     required this.isSelected,
     required this.onTap,
+    required this.gradient,
+    required this.color,
   });
 
   @override
@@ -545,20 +859,20 @@ class _RelationshipButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          gradient: isSelected ? AppColors.receivableGradient : null,
+          gradient: isSelected ? gradient : null,
           color: isSelected ? null : theme.colorScheme.surfaceContainerHighest,
           borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(16),
             bottomRight: Radius.circular(16),
           ),
           border: Border.all(
-            color: isSelected ? AppColors.receivableColor : theme.dividerColor,
+            color: isSelected ? color : theme.dividerColor,
             width: isSelected ? 2 : 1,
           ),
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: AppColors.receivableColor.withOpacity(0.3),
+                    color: color.withValues(alpha: 0.3),
                     blurRadius: 12,
                     offset: const Offset(0, 6),
                   ),

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/material.dart' show Icons;
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:path_provider/path_provider.dart';
@@ -169,23 +170,23 @@ class AppDatabase extends _$AppDatabase {
   Future<void> _insertDefaultCategories() async {
     // Default expense categories
     final expenseCategories = [
-      ('Food', '🍔', '#FF5252', 'EXPENSE'),
-      ('Transport', '🚗', '#FF6F00', 'EXPENSE'),
-      ('Shopping', '🛍️', '#E91E63', 'EXPENSE'),
-      ('Bills', '💡', '#9C27B0', 'EXPENSE'),
-      ('Entertainment', '🎬', '#3F51B5', 'EXPENSE'),
-      ('Health', '🏥', '#00BCD4', 'EXPENSE'),
-      ('Education', '📚', '#4CAF50', 'EXPENSE'),
-      ('Other', '📦', '#757575', 'EXPENSE'),
+      ('Food', Icons.restaurant.codePoint.toString(), '#FF5252', 'EXPENSE'),
+      ('Transport', Icons.directions_car.codePoint.toString(), '#FF6F00', 'EXPENSE'),
+      ('Shopping', Icons.shopping_bag.codePoint.toString(), '#E91E63', 'EXPENSE'),
+      ('Bills', Icons.receipt_long.codePoint.toString(), '#9C27B0', 'EXPENSE'),
+      ('Entertainment', Icons.movie.codePoint.toString(), '#3F51B5', 'EXPENSE'),
+      ('Health', Icons.local_hospital.codePoint.toString(), '#00BCD4', 'EXPENSE'),
+      ('Education', Icons.school.codePoint.toString(), '#4CAF50', 'EXPENSE'),
+      ('Other', Icons.category.codePoint.toString(), '#757575', 'EXPENSE'),
     ];
 
     // Default income categories
     final incomeCategories = [
-      ('Salary', '💰', '#4CAF50', 'INCOME'),
-      ('Business', '💼', '#2196F3', 'INCOME'),
-      ('Investment', '📈', '#00BCD4', 'INCOME'),
-      ('Gift', '🎁', '#E91E63', 'INCOME'),
-      ('Other', '📦', '#757575', 'INCOME'),
+      ('Salary', Icons.account_balance_wallet.codePoint.toString(), '#4CAF50', 'INCOME'),
+      ('Business', Icons.business_center.codePoint.toString(), '#2196F3', 'INCOME'),
+      ('Investment', Icons.trending_up.codePoint.toString(), '#00BCD4', 'INCOME'),
+      ('Gift', Icons.card_giftcard.codePoint.toString(), '#E91E63', 'INCOME'),
+      ('Other', Icons.category.codePoint.toString(), '#757575', 'INCOME'),
     ];
 
     for (final cat in expenseCategories) {

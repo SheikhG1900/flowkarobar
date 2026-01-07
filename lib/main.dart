@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flowpaisa/core/theme/app_theme.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/constants/app_constants.dart';
 import 'package:flowpaisa/features/transactions/presentation/screens/transactions_list_screen.dart';
+import 'package:flowpaisa/features/transactions/presentation/screens/add_transaction_screen.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
 import 'package:flowpaisa/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:flowpaisa/features/receivables/presentation/screens/receivables_list_screen.dart';
 import 'package:flowpaisa/features/payables/presentation/screens/payables_list_screen.dart';
+import 'package:flowpaisa/features/contacts/presentation/screens/contacts_list_screen.dart';
+import 'package:flowpaisa/features/categories/presentation/screens/categories_list_screen.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -16,6 +20,15 @@ import 'package:intl/intl.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Enable Edge-to-Edge mode
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      systemNavigationBarColor: Colors.transparent,
+    ),
+  );
 
   // Initialize Firebase
   try {
@@ -132,64 +145,113 @@ class _HomeScreenState extends State<HomeScreen> {
     ];
 
     return Scaffold(
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: screens,
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          if (constraints.maxWidth < 600) {
+            // Mobile Layout
+            return IndexedStack(
+              index: _selectedIndex,
+              children: screens,
+            );
+          } else {
+            // Tablet/Desktop Layout
+            return Row(
+              children: [
+                NavigationRail(
+                  selectedIndex: _selectedIndex,
+                  onDestinationSelected: (index) {
+                    setState(() {
+                      _selectedIndex = index;
+                    });
+                  },
+                  labelType: NavigationRailLabelType.all,
+                  destinations: [
+                    NavigationRailDestination(
+                      icon: const Icon(Icons.dashboard),
+                      label: Text(l10n.dashboard),
+                    ),
+                    NavigationRailDestination(
+                      icon: const Icon(Icons.receipt_long),
+                      label: Text(l10n.transactions),
+                    ),
+                    NavigationRailDestination(
+                      icon: const Icon(Icons.analytics),
+                      label: Text(l10n.analytics),
+                    ),
+                    NavigationRailDestination(
+                      icon: const Icon(Icons.settings),
+                      label: Text(l10n.settings),
+                    ),
+                  ],
+                ),
+                const VerticalDivider(thickness: 1, width: 1),
+                Expanded(
+                  child: IndexedStack(
+                    index: _selectedIndex,
+                    children: screens,
+                  ),
+                ),
+              ],
+            );
+          }
+        },
       ),
-      bottomNavigationBar: Theme(
-        data: Theme.of(context).copyWith(
-          navigationBarTheme: NavigationBarThemeData(
-            indicatorColor: _getSectionColor(_selectedIndex).withValues(alpha: 0.15),
-            iconTheme: WidgetStateProperty.resolveWith((states) {
-              if (states.contains(WidgetState.selected)) {
-                return IconThemeData(color: _getSectionColor(_selectedIndex));
-              }
-              return IconThemeData(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              );
-            }),
-            labelTextStyle: WidgetStateProperty.resolveWith((states) {
-              if (states.contains(WidgetState.selected)) {
-                return TextStyle(
-                  color: _getSectionColor(_selectedIndex),
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                );
-              }
-              return TextStyle(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                fontSize: 12,
-              );
-            }),
-          ),
-        ),
-        child: NavigationBar(
-          selectedIndex: _selectedIndex,
-          onDestinationSelected: (index) {
-            setState(() {
-              _selectedIndex = index;
-            });
-          },
-          destinations: [
-            NavigationDestination(
-              icon: const Icon(Icons.dashboard),
-              label: l10n.dashboard,
-            ),
-            NavigationDestination(
-              icon: const Icon(Icons.receipt_long),
-              label: l10n.transactions,
-            ),
-            NavigationDestination(
-              icon: const Icon(Icons.analytics),
-              label: l10n.analytics,
-            ),
-            NavigationDestination(
-              icon: const Icon(Icons.settings),
-              label: l10n.settings,
-            ),
-          ],
-        ),
-      ),
+      bottomNavigationBar: MediaQuery.of(context).size.width < 600
+          ? Theme(
+              data: Theme.of(context).copyWith(
+                navigationBarTheme: NavigationBarThemeData(
+                  indicatorColor: _getSectionColor(_selectedIndex).withValues(alpha: 0.15),
+                  iconTheme: WidgetStateProperty.resolveWith((states) {
+                    if (states.contains(WidgetState.selected)) {
+                      return IconThemeData(color: _getSectionColor(_selectedIndex));
+                    }
+                    return IconThemeData(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    );
+                  }),
+                  labelTextStyle: WidgetStateProperty.resolveWith((states) {
+                    if (states.contains(WidgetState.selected)) {
+                      return TextStyle(
+                        color: _getSectionColor(_selectedIndex),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      );
+                    }
+                    return TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      fontSize: 12,
+                    );
+                  }),
+                ),
+              ),
+              child: NavigationBar(
+                selectedIndex: _selectedIndex,
+                onDestinationSelected: (index) {
+                  setState(() {
+                    _selectedIndex = index;
+                  });
+                },
+                destinations: [
+                  NavigationDestination(
+                    icon: const Icon(Icons.dashboard),
+                    label: l10n.dashboard,
+                  ),
+                  NavigationDestination(
+                    icon: const Icon(Icons.receipt_long),
+                    label: l10n.transactions,
+                  ),
+                  NavigationDestination(
+                    icon: const Icon(Icons.analytics),
+                    label: l10n.analytics,
+                  ),
+                  NavigationDestination(
+                    icon: const Icon(Icons.settings),
+                    label: l10n.settings,
+                  ),
+                ],
+              ),
+            )
+          : null,
     );
   }
 }
@@ -655,7 +717,12 @@ class _DashboardTab extends ConsumerWidget {
                     label: 'Add',
                     gradient: AppColors.transactionsSectionGradient,
                     onTap: () {
-                      // TODO: Add transaction
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const AddTransactionScreen(),
+                        ),
+                      );
                     },
                   ),
                   _QuickActionButton(
@@ -743,7 +810,7 @@ class _DashboardTab extends ConsumerWidget {
   }
 
   Widget _buildRecentTransactions(BuildContext context, WidgetRef ref) {
-    final transactionsAsync = ref.watch(allTransactionsProvider);
+    final transactionsAsync = ref.watch(transactionsWithCategoryProvider);
 
     return transactionsAsync.when(
       data: (transactions) {
@@ -787,41 +854,38 @@ class _DashboardTab extends ConsumerWidget {
           itemCount: recentTransactions.length,
           padding: EdgeInsets.zero,
           itemBuilder: (context, index) {
-            final transaction = recentTransactions[index];
+            final item = recentTransactions[index];
+            final transaction = item.transaction;
+            final category = item.category;
             final isExpense = transaction.type == 'EXPENSE';
             final dateFormat = DateFormat.MMMd();
             final theme = Theme.of(context);
+            final isDark = theme.brightness == Brightness.dark;
+
+            // Resolve category color
+            Color categoryColor;
+            if (category?.color != null) {
+              try {
+                categoryColor = Color(int.parse(category!.color!.replaceAll('#', '0xFF')));
+              } catch (_) {
+                categoryColor = isExpense ? AppColors.expenseColor : AppColors.incomeColor;
+              }
+            } else {
+              categoryColor = isExpense ? AppColors.expenseColor : AppColors.incomeColor;
+            }
 
             return Container(
               margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: isExpense
-                      ? theme.brightness == Brightness.dark
-                          ? [const Color(0xFF2A2038), AppColors.darkCard]
-                          : [const Color(0xFFFFF1F2), const Color(0xFFFFF5F5)]
-                      : theme.brightness == Brightness.dark
-                          ? [const Color(0xFF1A2E2A), AppColors.darkCard]
-                          : [const Color(0xFFF0FDF4), const Color(0xFFF0F9FF)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(16),
-                  bottomRight: Radius.circular(16),
-                ), // Diagonal beveled
+                color: theme.cardColor,
+                borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: isExpense
-                      ? AppColors.expenseColor.withValues(alpha: 0.2 / 1.0)
-                      : AppColors.incomeColor.withValues(alpha: 0.2 / 1.0),
-                  width: 1.5,
+                  color: categoryColor.withValues(alpha: isDark ? 0.2 : 0.1),
+                  width: 1,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: (isExpense
-                            ? AppColors.expenseColor
-                            : AppColors.incomeColor)
-                        .withValues(alpha: 0.15 / 1.0),
+                    color: categoryColor.withValues(alpha: isDark ? 0.05 : 0.08),
                     blurRadius: 8,
                     offset: const Offset(0, 3),
                   ),
@@ -833,21 +897,11 @@ class _DashboardTab extends ConsumerWidget {
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                    gradient: isExpense
-                        ? AppColors.expenseGradient
-                        : AppColors.incomeGradient,
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(12),
-                      bottomRight: Radius.circular(12),
-                    ), // Diagonal beveled
+                    color: categoryColor.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Icon(
-                    isExpense
-                        ? Icons.shopping_bag_outlined
-                        : Icons.account_balance_wallet_outlined,
-                    color: Colors.white,
-                    size: 24,
-                  ),
+                  alignment: Alignment.center,
+                  child: _buildCategoryIcon(category?.icon, categoryColor, isExpense),
                 ),
                 title: Text(
                   transaction.description ?? (isExpense ? 'Expense' : 'Income'),
@@ -879,6 +933,32 @@ class _DashboardTab extends ConsumerWidget {
         padding: const EdgeInsets.all(32),
         child: Text('Error: ${error.toString()}'),
       ),
+    );
+  }
+
+  Widget _buildCategoryIcon(String? iconString, Color color, bool isExpense) {
+    if (iconString == null) {
+      return Icon(
+        isExpense ? Icons.shopping_bag_outlined : Icons.account_balance_wallet_outlined,
+        color: color,
+        size: 24,
+      );
+    }
+    
+    // Try to parse as integer (code point for IconData)
+    final int? codePoint = int.tryParse(iconString);
+    if (codePoint != null) {
+      return Icon(
+        IconData(codePoint, fontFamily: 'MaterialIcons'),
+        color: color,
+        size: 24,
+      );
+    }
+    
+    // Fallback to text (emoji) for legacy data
+    return Text(
+      iconString,
+      style: const TextStyle(fontSize: 24),
     );
   }
 }
@@ -1012,6 +1092,35 @@ class _SettingsTab extends StatelessWidget {
       ),
       body: ListView(
         children: [
+          ListTile(
+            leading: const Icon(Icons.people_outline),
+            title: const Text('Contacts'),
+            subtitle: const Text('Manage your contacts'),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const ContactsListScreen(),
+                ),
+              );
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.category_outlined),
+            title: const Text('Categories'),
+            subtitle: const Text('Manage expense & income categories'),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const CategoriesListScreen(),
+                ),
+              );
+            },
+          ),
+          const Divider(),
           ListTile(
             leading: const Icon(Icons.language),
             title: const Text('Language'),

@@ -29,8 +29,8 @@ class GlassCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final defaultColor = isDark
-        ? Colors.white.withOpacity(0.05)
-        : Colors.white.withOpacity(0.7);
+        ? Colors.white.withValues(alpha: 0.05)
+        : Colors.white.withValues(alpha: 0.7);
 
     return Container(
       margin: margin,
@@ -45,7 +45,7 @@ class GlassCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(borderRadius),
               border: border ??
                   Border.all(
-                    color: Colors.white.withOpacity(isDark ? 0.1 : 0.2),
+                    color: Colors.white.withValues(alpha: isDark ? 0.1 : 0.2),
                     width: borderWidth,
                   ),
             ),
@@ -100,19 +100,19 @@ class GlassMorphContainer extends StatelessWidget {
                   LinearGradient(
                     colors: isDark
                         ? [
-                            Colors.white.withOpacity(0.08),
-                            Colors.white.withOpacity(0.04),
+                            Colors.white.withValues(alpha: 0.08),
+                            Colors.white.withValues(alpha: 0.04),
                           ]
                         : [
-                            Colors.white.withOpacity(0.8),
-                            Colors.white.withOpacity(0.4),
+                            Colors.white.withValues(alpha: 0.8),
+                            Colors.white.withValues(alpha: 0.4),
                           ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
               borderRadius: BorderRadius.circular(borderRadius),
               border: Border.all(
-                color: Colors.white.withOpacity(isDark ? 0.1 : 0.25),
+                color: Colors.white.withValues(alpha: isDark ? 0.1 : 0.25),
                 width: 1.5,
               ),
             ),
