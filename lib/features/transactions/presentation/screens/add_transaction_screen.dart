@@ -294,7 +294,6 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     final isExpense = _selectedType == 'EXPENSE';
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: Text(l10n.addTransaction),
         leading: IconButton(
