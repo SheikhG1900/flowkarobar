@@ -38,6 +38,9 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
         title: const Text('Receivables'),
         bottom: TabBar(
           controller: _tabController,
+          indicatorColor: AppColors.receivableColor,
+          labelColor: AppColors.receivableColor,
+          unselectedLabelColor: Theme.of(context).colorScheme.onSurfaceVariant,
           tabs: const [
             Tab(text: 'Pending'),
             Tab(text: 'Received'),
@@ -68,7 +71,9 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
   }
 
   Widget _buildReceivablesList(String status) {
-    final receivablesAsync = ref.watch(receivablesWithContactsByStatusProvider(status));
+    final receivablesAsync =
+        ref.watch(receivablesWithContactsByStatusProvider(status));
+    final theme = Theme.of(context);
 
     return receivablesAsync.when(
       data: (receivables) {
@@ -81,39 +86,67 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
                   status == 'PENDING'
                       ? Icons.hourglass_empty
                       : Icons.check_circle_outline,
-                  size: 120,
+                  size: 100,
                   color: Colors.grey[300],
                 ),
                 const SizedBox(height: 24),
                 Text(
                   status == 'PENDING'
                       ? 'No pending receivables'
-                      : 'No received payments yet',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: Colors.grey[600],
-                        fontWeight: FontWeight.w600,
-                      ),
+                      : 'No received payments',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    color: Colors.grey[600],
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 const SizedBox(height: 12),
                 Text(
                   status == 'PENDING'
-                      ? 'Add a receivable to track money you\'re owed'
+                      ? 'Add a receivable to track money owed to you'
                       : 'Mark pending receivables as received',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Colors.grey[500],
-                      ),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: Colors.grey[500],
+                  ),
                 ),
               ],
             ),
           );
         }
 
+        // Group by Date
+        final groupedReceivables = <String, List<ReceivableWithContact>>{};
+        for (final item in receivables) {
+          final dateKey = DateFormat.yMMMd().format(item.receivable.date);
+          groupedReceivables.putIfAbsent(dateKey, () => []);
+          groupedReceivables[dateKey]!.add(item);
+        }
+
         return ListView.builder(
           padding: const EdgeInsets.only(bottom: 80),
-          itemCount: receivables.length,
+          itemCount: groupedReceivables.length,
           itemBuilder: (context, index) {
-            final receivable = receivables[index];
-            return _buildReceivableCard(receivable);
+            final dateKey = groupedReceivables.keys.elementAt(index);
+            final dateItems = groupedReceivables[dateKey]!;
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Date Header
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
+                  child: Text(
+                    dateKey,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ),
+                // Items
+                ...dateItems.map((item) => _buildReceivableCard(item)),
+              ],
+            );
           },
         );
       },
@@ -126,7 +159,7 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
 
   Widget _buildReceivableCard(ReceivableWithContact item) {
     final theme = Theme.of(context);
-    final dateFormat = DateFormat.yMMMd();
+    final isDark = theme.brightness == Brightness.dark;
     final receivable = item.receivable;
     final contact = item.contact;
     final isPending = receivable.status == 'PENDING';
@@ -134,24 +167,15 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: theme.brightness == Brightness.dark
-              ? [const Color(0xFF1A2E3A), AppColors.darkCard]
-              : [const Color(0xFFE0F7FA), const Color(0xFFE1F5FE)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(20),
-          bottomRight: Radius.circular(20),
-        ),
+        color: theme.cardColor,
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: AppColors.receivableColor.withValues(alpha: 0.3 / 1.0),
-          width: 1.5,
+          color: AppColors.receivableColor.withValues(alpha: isDark ? 0.2 : 0.1),
+          width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: AppColors.receivableColor.withValues(alpha: 0.15 / 1.0),
+            color: AppColors.receivableColor.withValues(alpha: isDark ? 0.05 : 0.08),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -160,28 +184,25 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: isPending
-              ? () => _showMarkAsReceivedDialog(receivable)
-              : null,
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(20),
-            bottomRight: Radius.circular(20),
-          ),
+          onTap: isPending ? () => _showMarkAsReceivedDialog(receivable) : null,
+          borderRadius: BorderRadius.circular(20),
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Row(
               children: [
+                // Contact Avatar
                 Container(
-                  width: 56,
-                  height: 56,
+                  width: 50,
+                  height: 50,
                   decoration: BoxDecoration(
                     gradient: AppColors.getContactGradient(contact?.name ?? ''),
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.getContactColor(contact?.name ?? '').withValues(alpha: 0.4 / 1.0),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
+                        color: AppColors.getContactColor(contact?.name ?? '')
+                            .withValues(alpha: 0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
                       ),
                     ],
                   ),
@@ -192,52 +213,53 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
                         : '?',
                     style: const TextStyle(
                       color: Colors.white,
-                      fontSize: 24,
+                      fontSize: 22,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
                 const SizedBox(width: 16),
+                
+                // Details
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        receivable.description ?? 'Receivable',
-                        style: const TextStyle(
-                            fontWeight: FontWeight.w600, fontSize: 16),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        contact?.name ?? 'Unknown Contact',
-                        style: TextStyle(
-                          color: theme.colorScheme.onSurface,
-                          fontWeight: FontWeight.w500,
+                        contact?.name ?? 'Unknown',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        dateFormat.format(receivable.date),
-                        style: TextStyle(
-                          color: theme.colorScheme.onSurfaceVariant,
-                          fontSize: 12,
+                      if (receivable.description != null &&
+                          receivable.description!.isNotEmpty)
+                        Text(
+                          receivable.description!,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                      ),
                       if (receivable.dueDate != null) ...[
                         const SizedBox(height: 4),
                         Row(
                           children: [
                             Icon(
-                              Icons.calendar_today,
-                              size: 14,
-                              color: theme.colorScheme.onSurfaceVariant,
+                              Icons.event,
+                              size: 12,
+                              color: isPending
+                                  ? Colors.orange
+                                  : theme.colorScheme.onSurfaceVariant,
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              'Due: ${dateFormat.format(receivable.dueDate!)}',
-                              style: TextStyle(
-                                color: theme.colorScheme.onSurfaceVariant,
-                                fontSize: 12,
+                              'Due: ${DateFormat.yMMMd().format(receivable.dueDate!)}',
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: isPending
+                                    ? Colors.orange
+                                    : theme.colorScheme.onSurfaceVariant,
+                                fontWeight: isPending ? FontWeight.bold : null,
                               ),
                             ),
                           ],
@@ -246,38 +268,37 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
                     ],
                   ),
                 ),
-                const SizedBox(width: 16),
+
+                // Amount
                 Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
                       '₹${receivable.amount.toStringAsFixed(2)}',
-                      style: const TextStyle(
+                      style: theme.textTheme.titleLarge?.copyWith(
                         color: AppColors.receivableColor,
                         fontWeight: FontWeight.bold,
                         fontSize: 18,
                       ),
                     ),
-                    if (isPending) ...[
-                      const SizedBox(height: 4),
+                    if (isPending)
                       Container(
+                        margin: const EdgeInsets.only(top: 4),
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 4),
+                            horizontal: 8, vertical: 2),
                         decoration: BoxDecoration(
-                          color: Colors.orange.withValues(alpha: 0.2 / 1.0),
-                          borderRadius: BorderRadius.circular(8),
+                          color: AppColors.receivableColor.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(6),
                         ),
-                        child: const Text(
-                          'Pending',
+                        child: Text(
+                          'PENDING',
                           style: TextStyle(
-                            color: Colors.orange,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
+                            color: AppColors.receivableColor,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
                       ),
-                    ],
                   ],
                 ),
               ],
@@ -293,9 +314,40 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Mark as Received'),
-        content: Text(
-          'Mark ₹${receivable.amount.toStringAsFixed(2)} as received?\n\n'
-          '${receivable.autoCreateIncome ? 'An income transaction will be automatically created.' : ''}',
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Have you received the payment of ₹${receivable.amount.toStringAsFixed(2)}?',
+            ),
+            if (receivable.autoCreateIncome) ...[
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.incomeColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: AppColors.incomeColor.withValues(alpha: 0.3),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.info_outline,
+                        size: 20, color: AppColors.incomeColor),
+                    const SizedBox(width: 8),
+                    const Expanded(
+                      child: Text(
+                        'This will also create an Income transaction.',
+                        style: TextStyle(fontSize: 12),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
         ),
         actions: [
           TextButton(
@@ -328,11 +380,13 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
                 }
               }
             },
-            child: const Text('Mark as Received'),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.receivableColor,
+            ),
+            child: const Text('Confirm'),
           ),
         ],
       ),
     );
   }
 }
-

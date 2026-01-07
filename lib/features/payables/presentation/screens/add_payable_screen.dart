@@ -22,7 +22,7 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
 
   DateTime _selectedDate = DateTime.now();
   DateTime? _dueDate;
-  bool _autoCreateExpense = false;
+  bool _autoCreateExpense = true; // Default to true for convenience
   bool _isLoading = false;
 
   Contact? _selectedContact;
@@ -161,8 +161,22 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
                   child: contactsAsync.when(
                     data: (contacts) {
                       if (contacts.isEmpty) {
-                        return const Center(
-                          child: Text('No contacts found. Add one from Settings.'),
+                        return Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.person_off_outlined, size: 48, color: Colors.grey),
+                              const SizedBox(height: 16),
+                              const Text('No contacts found'),
+                              TextButton(
+                                onPressed: () {
+                                  // TODO: Add contact navigation
+                                  Navigator.pop(context);
+                                },
+                                child: const Text('Add Contact in Settings'),
+                              ),
+                            ],
+                          ),
                         );
                       }
                       return ListView.builder(
@@ -175,7 +189,7 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
                               width: 40,
                               height: 40,
                               decoration: BoxDecoration(
-                                gradient: AppColors.primaryGradient,
+                                gradient: AppColors.getContactGradient(contact.name),
                                 shape: BoxShape.circle,
                               ),
                               alignment: Alignment.center,
@@ -198,7 +212,7 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
                             },
                             selected: _selectedContactId == contact.id,
                             trailing: _selectedContactId == contact.id
-                                ? const Icon(Icons.check_circle, color: AppColors.brightCyan)
+                                ? const Icon(Icons.check_circle, color: AppColors.payableColor)
                                 : null,
                           );
                         },
@@ -244,7 +258,7 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
           child: ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              // Amount Input
+              // Amount Input (Large & Prominent)
               Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
@@ -262,53 +276,51 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
                   ],
                 ),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Amount',
-                      style: theme.textTheme.labelLarge?.copyWith(
+                      'How much?',
+                      style: theme.textTheme.titleMedium?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Text(
-                          '₹',
-                          style: theme.textTheme.displaySmall?.copyWith(
-                            color: AppColors.payableColor,
-                            fontWeight: FontWeight.bold,
-                          ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _amountController,
+                      autofocus: true,
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.displayLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.payableColor,
+                      ),
+                      decoration: InputDecoration(
+                        prefixText: '₹ ',
+                        prefixStyle: theme.textTheme.displayMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
                         ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: TextFormField(
-                            controller: _amountController,
-                            keyboardType: const TextInputType.numberWithOptions(
-                                decimal: true),
-                            inputFormatters: [
-                              FilteringTextInputFormatter.allow(
-                                  RegExp(r'^\d*\.?\d{0,2}')),
-                            ],
-                            style: theme.textTheme.displaySmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                            decoration: const InputDecoration(
-                              hintText: '0.00',
-                              border: InputBorder.none,
-                            ),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Please enter an amount';
-                              }
-                              if (double.tryParse(value) == null) {
-                                return 'Please enter a valid number';
-                              }
-                              return null;
-                            },
-                          ),
+                        border: InputBorder.none,
+                        hintText: '0.00',
+                        hintStyle: theme.textTheme.displayLarge?.copyWith(
+                          color: Colors.grey.withValues(alpha: 0.3),
                         ),
+                      ),
+                      keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true),
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(
+                            RegExp(r'^\d+\.?\d{0,2}')),
                       ],
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter an amount';
+                        }
+                        if (double.tryParse(value) == null) {
+                          return 'Please enter a valid number';
+                        }
+                        if (double.parse(value) <= 0) {
+                          return 'Amount must be greater than 0';
+                        }
+                        return null;
+                      },
                     ),
                   ],
                 ),
@@ -338,7 +350,9 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
                         width: 40,
                         height: 40,
                         decoration: BoxDecoration(
-                          gradient: _selectedContact != null ? AppColors.payableGradient : null,
+                          gradient: _selectedContact != null 
+                              ? AppColors.getContactGradient(_selectedContact!.name)
+                              : null,
                           color: _selectedContact == null ? theme.colorScheme.surfaceContainerHighest : null,
                           shape: BoxShape.circle,
                         ),
@@ -392,7 +406,7 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
                 controller: _descriptionController,
                 decoration: const InputDecoration(
                   labelText: 'Description',
-                  hintText: 'e.g., Electricity bill',
+                  hintText: 'e.g., Internet bill',
                   prefixIcon: Icon(Icons.description_outlined),
                 ),
                 textCapitalization: TextCapitalization.sentences,
@@ -419,7 +433,7 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          gradient: AppColors.payableGradient,
+                          gradient: AppColors.secondaryGradient,
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: const Icon(
@@ -475,7 +489,7 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          gradient: AppColors.expenseGradient,
+                          gradient: AppColors.payableGradient,
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: const Icon(
@@ -526,16 +540,25 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
               // Auto-create expense option
               SwitchListTile(
                 value: _autoCreateExpense,
+                activeColor: AppColors.payableColor,
                 onChanged: (value) {
                   setState(() {
                     _autoCreateExpense = value;
                   });
                 },
-                title: const Text('Auto-create expense when paid'),
+                title: const Text('Auto-create expense'),
                 subtitle: const Text(
-                  'Automatically record an expense transaction when marked as paid',
+                  'Record as expense when marked as paid',
+                  style: TextStyle(fontSize: 12),
                 ),
-                secondary: const Icon(Icons.payment),
+                secondary: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.expenseColor.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.payment, color: AppColors.expenseColor),
+                ),
               ),
 
               const SizedBox(height: 32),
@@ -555,5 +578,3 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
     );
   }
 }
-
-
