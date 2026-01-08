@@ -3,7 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
 import 'package:flowpaisa/features/contacts/presentation/screens/add_contact_screen.dart';
-import 'package:flowpaisa/shared/widgets/glass_card.dart';
+
+// Provider to get transactions for a contact
+// Note: We'll fetch this from the database directly in a future iteration
+// For now, we'll just show the stats
 
 class ContactDetailsScreen extends ConsumerWidget {
   final int contactId;
@@ -16,256 +19,340 @@ class ContactDetailsScreen extends ConsumerWidget {
     final statsAsync = ref.watch(contactStatisticsProvider(contactId));
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Contact Details'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.edit),
-            onPressed: () {
-              statsAsync.whenData((stats) {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => AddContactScreen(contactToEdit: stats.contact),
-                  ),
-                );
-              });
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.delete_outline),
-            color: AppColors.error,
-            onPressed: () => _showDeleteDialog(context, ref),
-          ),
-        ],
-      ),
       body: statsAsync.when(
         data: (stats) {
           final contact = stats.contact;
           final netBalance = stats.netBalance;
           final isPositive = netBalance >= 0;
 
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                // Profile Header
-                Container(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    gradient: AppColors.primaryGradient,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.brightCyan.withValues(alpha: 0.3),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    contact.name.isNotEmpty ? contact.name[0].toUpperCase() : '?',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 32,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  contact.name,
-                  style: theme.textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                if (contact.phone != null) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    contact.phone!,
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-                const SizedBox(height: 24),
-
-                // Net Balance Card
-                GlassCard(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
+          return CustomScrollView(
+            slivers: [
+              // Sliver App Bar with Avatar
+              SliverAppBar(
+                expandedHeight: 280,
+                pinned: true,
+                stretch: true,
+                backgroundColor: theme.scaffoldBackgroundColor,
+                flexibleSpace: FlexibleSpaceBar(
+                  background: Stack(
+                    fit: StackFit.expand,
                     children: [
-                      Text(
-                        'Net Balance',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
+                      // Gradient Background
+                      Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              AppColors.getContactColor(contact.name).withValues(alpha: 0.2),
+                              theme.scaffoldBackgroundColor,
+                            ],
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                          ),
                         ),
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        '₹${netBalance.abs().toStringAsFixed(2)}',
-                        style: theme.textTheme.displaySmall?.copyWith(
-                          color: netBalance == 0
-                              ? theme.colorScheme.onSurface
-                              : (isPositive ? AppColors.receivableColor : AppColors.payableColor),
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        netBalance == 0
-                            ? 'Settled'
-                            : (isPositive ? 'You will receive' : 'You will pay'),
-                        style: TextStyle(
-                          color: netBalance == 0
-                              ? theme.colorScheme.onSurfaceVariant
-                              : (isPositive ? AppColors.receivableColor : AppColors.payableColor),
-                          fontWeight: FontWeight.w500,
+                      // Content
+                      Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const SizedBox(height: 40),
+                            Hero(
+                              tag: 'contact_avatar_${contact.id}',
+                              child: Container(
+                                width: 100,
+                                height: 100,
+                                decoration: BoxDecoration(
+                                  gradient: AppColors.getContactGradient(contact.name),
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: AppColors.getContactColor(contact.name).withValues(alpha: 0.4),
+                                      blurRadius: 20,
+                                      offset: const Offset(0, 8),
+                                    ),
+                                  ],
+                                  border: Border.all(color: Colors.white, width: 4),
+                                ),
+                                alignment: Alignment.center,
+                                child: Text(
+                                  contact.name.isNotEmpty ? contact.name[0].toUpperCase() : '?',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 40,
+                                    decoration: TextDecoration.none,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              contact.name,
+                              style: theme.textTheme.headlineSmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            if (contact.phone != null && contact.phone!.isNotEmpty) ...[
+                              const SizedBox(height: 4),
+                              Text(
+                                contact.phone!,
+                                style: theme.textTheme.bodyLarge?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 16),
-
-                // Stats Row
-                Row(
-                  children: [
-                    // Receivable Stats
-                    Expanded(
-                      child: GlassCard(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Icon(Icons.arrow_downward,
-                                    size: 16, color: AppColors.receivableColor),
-                                const SizedBox(width: 4),
-                                Text(
-                                  'Receivable',
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: theme.colorScheme.onSurfaceVariant,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              '₹${stats.totalReceivable.toStringAsFixed(2)}',
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.receivableColor,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              '${stats.receivablesCount} pending',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
-                              ),
-                            ),
-                          ],
+                actions: [
+                  IconButton(
+                    icon: const Icon(Icons.edit),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => AddContactScreen(contactToEdit: contact),
                         ),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    // Payable Stats
-                    Expanded(
-                      child: GlassCard(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Icon(Icons.arrow_upward,
-                                    size: 16, color: AppColors.payableColor),
-                                const SizedBox(width: 4),
-                                Text(
-                                  'Payable',
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: theme.colorScheme.onSurfaceVariant,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              '₹${stats.totalPayable.toStringAsFixed(2)}',
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.payableColor,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              '${stats.payablesCount} pending',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-
-                // Info Section
-                if (contact.email != null || contact.notes != null) ...[
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      'Information',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                      );
+                    },
                   ),
-                  const SizedBox(height: 12),
-                  if (contact.email != null && contact.email!.isNotEmpty)
-                    ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      leading: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.surfaceContainerHighest,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Icon(Icons.email_outlined),
-                      ),
-                      title: Text(contact.email!),
-                      subtitle: const Text('Email'),
-                    ),
-                  if (contact.notes != null && contact.notes!.isNotEmpty)
-                    ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      leading: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.surfaceContainerHighest,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Icon(Icons.note_alt_outlined),
-                      ),
-                      title: Text(contact.notes!),
-                      subtitle: const Text('Address / Notes'),
-                    ),
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline),
+                    color: AppColors.error,
+                    onPressed: () => _showDeleteDialog(context, ref),
+                  ),
                 ],
-              ],
-            ),
+              ),
+
+              // Content Body
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Net Balance Card
+                      Container(
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          gradient: isPositive 
+                              ? AppColors.receivableGradient 
+                              : AppColors.payableGradient,
+                          borderRadius: BorderRadius.circular(24),
+                          boxShadow: [
+                            BoxShadow(
+                              color: (isPositive ? AppColors.receivableColor : AppColors.payableColor)
+                                  .withValues(alpha: 0.3),
+                              blurRadius: 16,
+                              offset: const Offset(0, 8),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Net Balance',
+                                  style: TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  '₹${netBalance.abs().toStringAsFixed(2)}',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 32,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.2),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                netBalance == 0
+                                    ? 'Settled'
+                                    : (isPositive ? 'Receivable' : 'Payable'),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Stats Row
+                      Row(
+                        children: [
+                          // Receivable Stats
+                          Expanded(
+                            child: _buildStatCard(
+                              context,
+                              title: 'Receivable',
+                              amount: stats.totalReceivable,
+                              count: stats.receivablesCount,
+                              color: AppColors.receivableColor,
+                              icon: Icons.arrow_downward,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          // Payable Stats
+                          Expanded(
+                            child: _buildStatCard(
+                              context,
+                              title: 'Payable',
+                              amount: stats.totalPayable,
+                              count: stats.payablesCount,
+                              color: AppColors.payableColor,
+                              icon: Icons.arrow_upward,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+
+                      // Info Section
+                      if (contact.email != null || contact.notes != null) ...[
+                        Text(
+                          'Information',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: theme.cardColor,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: theme.dividerColor.withValues(alpha: 0.5)),
+                          ),
+                          child: Column(
+                            children: [
+                              if (contact.email != null && contact.email!.isNotEmpty)
+                                ListTile(
+                                  leading: Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: theme.colorScheme.surfaceContainerHighest,
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: const Icon(Icons.email_outlined, size: 20),
+                                  ),
+                                  title: Text(contact.email!),
+                                  subtitle: const Text('Email'),
+                                ),
+                              if (contact.notes != null && contact.notes!.isNotEmpty)
+                                ListTile(
+                                  leading: Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: theme.colorScheme.surfaceContainerHighest,
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: const Icon(Icons.note_alt_outlined, size: 20),
+                                  ),
+                                  title: Text(contact.notes!),
+                                  subtitle: const Text('Notes'),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 80), // Bottom padding
+                    ],
+                  ),
+                ),
+              ),
+            ],
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stack) => Center(child: Text('Error: $error')),
+      ),
+    );
+  }
+
+  Widget _buildStatCard(
+    BuildContext context, {
+    required String title,
+    required double amount,
+    required int count,
+    required Color color,
+    required IconData icon,
+  }) {
+    final theme = Theme.of(context);
+    
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.cardColor,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(icon, size: 16, color: color),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                title,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            '₹${amount.toStringAsFixed(2)}',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '$count pending',
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -319,4 +406,3 @@ class ContactDetailsScreen extends ConsumerWidget {
     );
   }
 }
-

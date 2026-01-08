@@ -26,10 +26,14 @@ class _AddContactScreenState extends ConsumerState<AddContactScreen> {
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: widget.contactToEdit?.name ?? '');
-    _phoneController = TextEditingController(text: widget.contactToEdit?.phone ?? '');
-    _emailController = TextEditingController(text: widget.contactToEdit?.email ?? '');
-    _notesController = TextEditingController(text: widget.contactToEdit?.notes ?? '');
+    _nameController =
+        TextEditingController(text: widget.contactToEdit?.name ?? '');
+    _phoneController =
+        TextEditingController(text: widget.contactToEdit?.phone ?? '');
+    _emailController =
+        TextEditingController(text: widget.contactToEdit?.email ?? '');
+    _notesController =
+        TextEditingController(text: widget.contactToEdit?.notes ?? '');
   }
 
   @override
@@ -49,9 +53,15 @@ class _AddContactScreenState extends ConsumerState<AddContactScreen> {
     try {
       final repository = ref.read(contactsRepositoryProvider);
       final name = _nameController.text.trim();
-      final phone = _phoneController.text.trim().isEmpty ? null : _phoneController.text.trim();
-      final email = _emailController.text.trim().isEmpty ? null : _emailController.text.trim();
-      final notes = _notesController.text.trim().isEmpty ? null : _notesController.text.trim();
+      final phone = _phoneController.text.trim().isEmpty
+          ? null
+          : _phoneController.text.trim();
+      final email = _emailController.text.trim().isEmpty
+          ? null
+          : _emailController.text.trim();
+      final notes = _notesController.text.trim().isEmpty
+          ? null
+          : _notesController.text.trim();
 
       if (widget.contactToEdit != null) {
         // Update existing
@@ -103,9 +113,12 @@ class _AddContactScreenState extends ConsumerState<AddContactScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Determine gradient based on name input or default
+    
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.contactToEdit != null ? 'Edit Contact' : 'Add Contact'),
+        title:
+            Text(widget.contactToEdit != null ? 'Edit Contact' : 'Add Contact'),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -114,27 +127,48 @@ class _AddContactScreenState extends ConsumerState<AddContactScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Avatar Placeholder
+              // Avatar Preview
               Center(
-                child: Container(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).cardColor,
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: AppColors.brightCyan.withValues(alpha: 0.3),
-                      width: 2,
-                    ),
-                  ),
-                  child: Icon(
-                    Icons.person,
-                    size: 40,
-                    color: AppColors.brightCyan,
-                  ),
+                child: ValueListenableBuilder(
+                  valueListenable: _nameController,
+                  builder: (context, TextEditingValue value, child) {
+                    final name = value.text.trim();
+                    final gradient = name.isNotEmpty
+                        ? AppColors.getContactGradient(name)
+                        : AppColors.primaryGradient;
+                    
+                    return Container(
+                      width: 100,
+                      height: 100,
+                      decoration: BoxDecoration(
+                        gradient: gradient,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: gradient.colors.first.withValues(alpha: 0.3),
+                            blurRadius: 16,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
+                        border: Border.all(
+                          color: Colors.white,
+                          width: 4,
+                        ),
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        name.isNotEmpty ? name[0].toUpperCase() : '?',
+                        style: const TextStyle(
+                          fontSize: 40,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 32),
 
               // Name Field
               TextFormField(
@@ -142,7 +176,6 @@ class _AddContactScreenState extends ConsumerState<AddContactScreen> {
                 decoration: const InputDecoration(
                   labelText: 'Name',
                   prefixIcon: Icon(Icons.person_outline),
-                  border: OutlineInputBorder(),
                 ),
                 textCapitalization: TextCapitalization.words,
                 validator: (value) {
@@ -160,7 +193,6 @@ class _AddContactScreenState extends ConsumerState<AddContactScreen> {
                 decoration: const InputDecoration(
                   labelText: 'Phone Number (Optional)',
                   prefixIcon: Icon(Icons.phone_outlined),
-                  border: OutlineInputBorder(),
                 ),
                 keyboardType: TextInputType.phone,
               ),
@@ -172,7 +204,6 @@ class _AddContactScreenState extends ConsumerState<AddContactScreen> {
                 decoration: const InputDecoration(
                   labelText: 'Email (Optional)',
                   prefixIcon: Icon(Icons.email_outlined),
-                  border: OutlineInputBorder(),
                 ),
                 keyboardType: TextInputType.emailAddress,
               ),
@@ -184,7 +215,6 @@ class _AddContactScreenState extends ConsumerState<AddContactScreen> {
                 decoration: const InputDecoration(
                   labelText: 'Address / Notes (Optional)',
                   prefixIcon: Icon(Icons.note_alt_outlined),
-                  border: OutlineInputBorder(),
                 ),
                 maxLines: 2,
               ),
@@ -192,7 +222,9 @@ class _AddContactScreenState extends ConsumerState<AddContactScreen> {
 
               // Submit Button
               GradientButton(
-                label: widget.contactToEdit != null ? 'Update Contact' : 'Save Contact',
+                label: widget.contactToEdit != null
+                    ? 'Update Contact'
+                    : 'Save Contact',
                 gradient: AppColors.primaryGradient,
                 isLoading: _isLoading,
                 onPressed: _saveContact,
@@ -204,4 +236,3 @@ class _AddContactScreenState extends ConsumerState<AddContactScreen> {
     );
   }
 }
-
