@@ -5,6 +5,7 @@ import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/features/payables/data/payables_repository.dart';
 import 'package:flowpaisa/features/payables/presentation/providers/payables_provider.dart';
 import 'package:flowpaisa/features/payables/presentation/screens/add_payable_screen.dart';
+import 'package:flowpaisa/features/whatsapp/presentation/providers/whatsapp_provider.dart';
 import 'package:intl/intl.dart';
 
 class PayablesListScreen extends ConsumerStatefulWidget {
@@ -267,7 +268,7 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
                   ),
                 ),
 
-                // Amount
+                // Amount and Actions
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
@@ -279,24 +280,52 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
                         fontSize: 18,
                       ),
                     ),
-                    if (isPending)
-                      Container(
-                        margin: const EdgeInsets.only(top: 4),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: AppColors.payableColor.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          'PENDING',
-                          style: TextStyle(
-                            color: AppColors.payableColor,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
+                    const SizedBox(height: 4),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (isPending)
+                          Container(
+                            margin: const EdgeInsets.only(right: 8),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color:
+                                  AppColors.payableColor.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              'PENDING',
+                              style: TextStyle(
+                                color: AppColors.payableColor,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
+                        if (isPending &&
+                            contact?.phone != null &&
+                            contact!.phone!.isNotEmpty)
+                          InkWell(
+                            onTap: () =>
+                                _sendWhatsAppReminder(payable, contact),
+                            borderRadius: BorderRadius.circular(8),
+                            child: Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF25D366)
+                                    .withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Icon(
+                                Icons.chat,
+                                size: 16,
+                                color: Color(0xFF25D366),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
                   ],
                 ),
               ],
@@ -305,6 +334,57 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
         ),
       ),
     );
+  }
+
+  Future<void> _sendWhatsAppReminder(Payable payable, Contact? contact) async {
+    if (contact == null || contact.phone == null || contact.phone!.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No phone number available for this contact'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    try {
+      final whatsAppService = ref.read(whatsAppServiceProvider);
+      final message = whatsAppService.formatPayableReminder(
+        contactName: contact.name,
+        amount: payable.amount,
+        description: payable.description ?? '',
+        dueDate: payable.dueDate,
+      );
+
+      final success =
+          await whatsAppService.sendMessage(contact.phone!, message);
+
+      if (success && mounted) {
+        // Optionally queue it for tracking
+        final queueRepo = ref.read(whatsAppQueueRepositoryProvider);
+        final queueId = await queueRepo.queueMessage(
+          contactId: contact.id,
+          message: message,
+        );
+        await queueRepo.markAsSent(queueId);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Opening WhatsApp...'),
+            backgroundColor: Color(0xFF25D366),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   void _showMarkAsPaidDialog(Payable payable) {
