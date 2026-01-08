@@ -32,38 +32,6 @@ class _AddCategoryScreenState extends ConsumerState<AddCategoryScreen> {
   // Smart Suggestions
   List<IconData> _suggestedIcons = [];
 
-  final List<IconData> _icons = [
-    // General & Food
-    Icons.restaurant, Icons.lunch_dining, Icons.local_cafe, Icons.local_bar,
-    Icons.local_pizza, Icons.fastfood, Icons.kitchen, Icons.cake,
-    
-    // Transport & Travel
-    Icons.directions_car, Icons.directions_bus, Icons.flight, Icons.train,
-    Icons.directions_bike, Icons.local_taxi, Icons.local_gas_station, Icons.commute,
-    
-    // Shopping & Lifestyle
-    Icons.shopping_bag, Icons.shopping_cart, Icons.checkroom, Icons.local_mall,
-    Icons.card_giftcard, Icons.redeem, Icons.diamond, Icons.watch,
-    
-    // Housing & Bills
-    Icons.home, Icons.apartment, Icons.lightbulb, Icons.water_drop,
-    Icons.wifi, Icons.phone_android, Icons.tv, Icons.router,
-    Icons.build, Icons.cleaning_services, Icons.security, Icons.chair,
-    
-    // Entertainment & Health
-    Icons.movie, Icons.sports_esports, Icons.music_note, Icons.fitness_center,
-    Icons.pool, Icons.spa, Icons.local_hospital, Icons.medical_services,
-    Icons.medication, Icons.healing, Icons.pets, Icons.child_care,
-    
-    // Education & Work
-    Icons.school, Icons.menu_book, Icons.work, Icons.business_center,
-    Icons.computer, Icons.attach_money, Icons.account_balance, Icons.trending_up,
-    
-    // Other
-    Icons.category, Icons.receipt_long, Icons.article, Icons.description,
-    Icons.savings, Icons.account_balance_wallet, Icons.credit_card, Icons.dashboard,
-  ];
-
   final List<Color> _colors = [
     const Color(0xFFFF5252), // Red
     const Color(0xFFFF6F00), // Amber
@@ -79,6 +47,7 @@ class _AddCategoryScreenState extends ConsumerState<AddCategoryScreen> {
     const Color(0xFFFFC107), // Yellow
     const Color(0xFF795548), // Brown
     const Color(0xFF607D8B), // Blue Grey
+    const Color(0xFF212121), // Black/Grey
   ];
 
   @override
@@ -103,8 +72,6 @@ class _AddCategoryScreenState extends ConsumerState<AddCategoryScreen> {
     if (suggestions.isNotEmpty && _suggestedIcons != suggestions) {
       setState(() {
         _suggestedIcons = suggestions;
-        // Optional: Auto-select the first suggestion if default hasn't been changed?
-        // Let's not override user selection automatically unless it's the very first time.
       });
     } else if (suggestions.isEmpty && _suggestedIcons.isNotEmpty) {
       setState(() {
@@ -370,7 +337,7 @@ class _AddCategoryScreenState extends ConsumerState<AddCategoryScreen> {
               ),
               const SizedBox(height: 12),
               Container(
-                height: 200,
+                height: 300, // Increased height for more icons
                 decoration: BoxDecoration(
                   border: Border.all(color: Theme.of(context).dividerColor),
                   borderRadius: BorderRadius.circular(12),
@@ -382,9 +349,9 @@ class _AddCategoryScreenState extends ConsumerState<AddCategoryScreen> {
                     crossAxisSpacing: 8,
                     mainAxisSpacing: 8,
                   ),
-                  itemCount: _icons.length,
+                  itemCount: IconHelper.allIcons.length,
                   itemBuilder: (context, index) {
-                    final icon = _icons[index];
+                    final icon = IconHelper.allIcons[index];
                     final isSelected = _selectedIcon == icon.codePoint.toString();
                     
                     return GestureDetector(
