@@ -157,6 +157,10 @@ class TransactionsListScreen extends ConsumerWidget {
     final transaction = item.transaction;
     final category = item.category;
 
+    // Check if it's a "credit" transaction (Paid BY or Will Receive)
+    final isCredit = transaction.paidRelationship == 'PAID_BY' || 
+                     transaction.paidRelationship == 'WILL_RECEIVE';
+
     // Resolve category color and icon
     Color categoryColor;
     if (category?.color != null) {
@@ -172,19 +176,23 @@ class TransactionsListScreen extends ConsumerWidget {
           isExpense ? AppColors.expenseColor : AppColors.incomeColor;
     }
 
+    // Apply dull effect if credit
+    final displayColor = isCredit ? categoryColor.withValues(alpha: 0.5) : categoryColor;
+    final textColor = isCredit ? theme.colorScheme.onSurface.withValues(alpha: 0.6) : theme.colorScheme.onSurface;
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       decoration: BoxDecoration(
-        color: theme.cardColor,
+        color: theme.cardColor.withValues(alpha: isCredit ? 0.6 : 1.0),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: categoryColor.withValues(alpha: isDark ? 0.2 : 0.1),
+          color: displayColor.withValues(alpha: isDark ? 0.2 : 0.1),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: categoryColor.withValues(alpha: isDark ? 0.05 : 0.08),
-            blurRadius: 12,
+            color: displayColor.withValues(alpha: isDark ? 0.05 : 0.08),
+            blurRadius: isCredit ? 4 : 12,
             offset: const Offset(0, 4),
           ),
         ],
@@ -195,32 +203,71 @@ class TransactionsListScreen extends ConsumerWidget {
           width: 50,
           height: 50,
           decoration: BoxDecoration(
-            color: categoryColor.withValues(alpha: 0.1),
+            color: displayColor.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
-              color: categoryColor.withValues(alpha: 0.3),
+              color: displayColor.withValues(alpha: 0.3),
               width: 1,
             ),
           ),
           alignment: Alignment.center,
-          child: _buildCategoryIcon(category?.icon, categoryColor, isExpense),
+          child: _buildCategoryIcon(category?.icon, displayColor, isExpense),
         ),
         title: Text(
           transaction.description ?? (isExpense ? 'Expense' : 'Income'),
           style: theme.textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.w600,
+            color: textColor,
+            decoration: isCredit ? null : null, // Could add strikethrough if cancelled
           ),
         ),
-        subtitle: Text(
-          category?.name ?? 'Uncategorized',
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              category?.name ?? 'Uncategorized',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant.withValues(alpha: isCredit ? 0.5 : 1.0),
+              ),
+            ),
+            if (isCredit) ...[
+              const SizedBox(height: 4),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.access_time, 
+                      size: 10, 
+                      color: theme.colorScheme.onSurfaceVariant
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      transaction.paidRelationship == 'PAID_BY' 
+                          ? 'Paid by others' 
+                          : 'Receive later',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        fontSize: 10,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
         ),
         trailing: Text(
           '${isExpense ? '-' : '+'} ₹${transaction.amount.toStringAsFixed(2)}',
           style: theme.textTheme.titleLarge?.copyWith(
-            color: isExpense ? AppColors.expenseColor : AppColors.incomeColor,
+            color: isExpense 
+                ? (isCredit ? AppColors.expenseColor.withValues(alpha: 0.5) : AppColors.expenseColor)
+                : (isCredit ? AppColors.incomeColor.withValues(alpha: 0.5) : AppColors.incomeColor),
             fontWeight: FontWeight.bold,
             fontSize: 18,
           ),

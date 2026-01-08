@@ -30,30 +30,47 @@ class DashboardStats {
 final dashboardStatsProvider = StreamProvider<DashboardStats>((ref) {
   // Get the transactions repository
   final repository = ref.watch(transactionsRepositoryProvider);
-  
+
   // Watch all transactions and calculate stats
   return repository.watchAllTransactions().map((transactions) {
-    // Calculate totals from transactions
-    double totalIncome = 0.0;
-    double totalExpense = 0.0;
+    // Calculate totals
+    // stats*: Used for "Income" and "Expense" display (Visual totals)
+    // cash*: Used for "Balance" calculation (Actual cash on hand)
+
+    double statsIncome = 0.0;
+    double statsExpense = 0.0;
+
+    double cashIncome = 0.0;
+    double cashExpense = 0.0;
 
     for (final transaction in transactions) {
       if (transaction.type == 'INCOME') {
-        totalIncome += transaction.amount;
+        statsIncome += transaction.amount;
+
+        // If WILL_RECEIVE, it's accrued income (Receivable) but NO cash entered wallet yet.
+        if (transaction.paidRelationship != 'WILL_RECEIVE') {
+          cashIncome += transaction.amount;
+        }
       } else if (transaction.type == 'EXPENSE') {
-        totalExpense += transaction.amount;
+        statsExpense += transaction.amount;
+
+        // If PAID_BY someone else, it's an expense record but NO cash left wallet yet.
+        // So exclude from cashExpense calculation.
+        if (transaction.paidRelationship != 'PAID_BY') {
+          cashExpense += transaction.amount;
+        }
       }
     }
 
-    final totalBalance = totalIncome - totalExpense;
+    final totalBalance = cashIncome - cashExpense;
 
     // Get recent transactions (last 5)
     final recentTransactions = transactions.take(5).toList();
 
     return DashboardStats(
       totalBalance: totalBalance,
-      totalIncome: totalIncome,
-      totalExpense: totalExpense,
+      totalIncome: statsIncome,
+      totalExpense: statsExpense,
       recentTransactions: recentTransactions,
     );
   });
@@ -94,4 +111,3 @@ final totalExpenseProvider = Provider<double>((ref) {
         error: (_, __) => 0.0,
       );
 });
-

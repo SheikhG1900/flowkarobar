@@ -32,7 +32,8 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
 
   // Linked transaction fields
   int? _selectedContactId;
-  String? _paidRelationship; // 'PAID_FOR' or 'PAID_BY' or null
+  String?
+      _paidRelationship; // 'PAID_FOR', 'PAID_BY', 'RECEIVED_FROM', 'WILL_RECEIVE' or null
   bool _createLinkedEntry = false;
 
   @override
@@ -44,6 +45,16 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
 
   Future<void> _saveTransaction() async {
     if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    if (_createLinkedEntry && _selectedContact == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select a contact for linked transaction'),
+          backgroundColor: Colors.red,
+        ),
+      );
       return;
     }
 
@@ -303,6 +314,22 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     );
   }
 
+  void _handleRelationshipChange(String? value) {
+    setState(() {
+      if (_paidRelationship == value) {
+        _paidRelationship = null;
+        _createLinkedEntry = false;
+      } else {
+        if (_selectedContact == null) {
+          _showContactPicker();
+          return;
+        }
+        _paidRelationship = value;
+        _createLinkedEntry = true;
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -424,6 +451,9 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                       onTap: () {
                         setState(() {
                           _selectedType = 'EXPENSE';
+                          // Reset relationship when type changes
+                          _paidRelationship = null;
+                          _createLinkedEntry = false;
                         });
                       },
                     ),
@@ -438,6 +468,9 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                       onTap: () {
                         setState(() {
                           _selectedType = 'INCOME';
+                          // Reset relationship when type changes
+                          _paidRelationship = null;
+                          _createLinkedEntry = false;
                         });
                       },
                     ),
@@ -603,6 +636,8 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                             setState(() {
                               _selectedContact = null;
                               _selectedContactId = null;
+                              _paidRelationship = null;
+                              _createLinkedEntry = false;
                             });
                           },
                         ),
@@ -648,21 +683,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                         isSelected: _paidRelationship == 'PAID_FOR',
                         gradient: AppColors.receivableGradient,
                         color: AppColors.receivableColor,
-                        onTap: () {
-                          setState(() {
-                            if (_paidRelationship == 'PAID_FOR') {
-                              _paidRelationship = null;
-                              _createLinkedEntry = false;
-                            } else {
-                              if (_selectedContact == null) {
-                                _showContactPicker(); // Prompt for contact if not selected
-                                return;
-                              }
-                              _paidRelationship = 'PAID_FOR';
-                              _createLinkedEntry = true;
-                            }
-                          });
-                        },
+                        onTap: () => _handleRelationshipChange('PAID_FOR'),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -674,21 +695,43 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                         isSelected: _paidRelationship == 'PAID_BY',
                         gradient: AppColors.payableGradient,
                         color: AppColors.payableColor,
-                        onTap: () {
-                          setState(() {
-                            if (_paidRelationship == 'PAID_BY') {
-                              _paidRelationship = null;
-                              _createLinkedEntry = false;
-                            } else {
-                              if (_selectedContact == null) {
-                                _showContactPicker(); // Prompt for contact if not selected
-                                return;
-                              }
-                              _paidRelationship = 'PAID_BY';
-                              _createLinkedEntry = false;
-                            }
-                          });
-                        },
+                        onTap: () => _handleRelationshipChange('PAID_BY'),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+              ] else if (_selectedType == 'INCOME') ...[
+                Text(
+                  'Received Relationship',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _RelationshipButton(
+                        label: 'I Owe',
+                        subtitle: 'Received loan',
+                        icon: Icons.download,
+                        isSelected: _paidRelationship == 'RECEIVED_FROM',
+                        gradient: AppColors.payableGradient,
+                        color: AppColors.payableColor,
+                        onTap: () => _handleRelationshipChange('RECEIVED_FROM'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _RelationshipButton(
+                        label: 'Will Receive',
+                        subtitle: 'Receive later',
+                        icon: Icons.schedule,
+                        isSelected: _paidRelationship == 'WILL_RECEIVE',
+                        gradient: AppColors.receivableGradient,
+                        color: AppColors.receivableColor,
+                        onTap: () => _handleRelationshipChange('WILL_RECEIVE'),
                       ),
                     ),
                   ],
