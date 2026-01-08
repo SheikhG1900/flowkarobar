@@ -6,6 +6,7 @@ import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transaction_service_provider.dart';
 import 'package:flowpaisa/features/categories/presentation/providers/categories_provider.dart';
 import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
+import 'package:flowpaisa/features/categories/presentation/screens/add_category_screen.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 
@@ -198,53 +199,153 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
               children: [
                 Padding(
                   padding: const EdgeInsets.all(16),
-                  child: Text(
-                    'Select Category',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Select Category',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                      ),
+                      TextButton.icon(
+                        onPressed: () async {
+                          // Navigate to Add Category Screen
+                          // If coming from Scan, pass the initial name
+                          final newCategory = await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => AddCategoryScreen(
+                                initialName: widget.initialCategoryName,
+                                initialType: _selectedType,
+                              ),
+                            ),
+                          );
+
+                          if (newCategory != null && newCategory is Category) {
+                            setState(() {
+                              _selectedCategory = newCategory;
+                            });
+                            Navigator.pop(context); // Close picker
+                          }
+                        },
+                        icon: const Icon(Icons.add),
+                        label: const Text('Add New'),
+                      ),
+                    ],
                   ),
                 ),
                 Expanded(
                   child: categoriesAsync.when(
                     data: (categoriesWithUsage) {
-                      if (categoriesWithUsage.isEmpty) {
-                        return Center(
-                          child: Text(
-                              'No ${_selectedType.toLowerCase()} categories found'),
-                        );
-                      }
-
-                      // Auto-select if we have an initial name and haven't selected yet
-                      if (_selectedCategory == null &&
-                          widget.initialCategoryName != null) {
-                        // Check if we can find a match by keyword logic
-                        // This is a "late binding" attempt
+                      // Check if suggested category exists in list
+                      bool suggestedExists = false;
+                      if (widget.initialCategoryName != null) {
                         try {
-                          final match = categoriesWithUsage.firstWhere(
+                          categoriesWithUsage.firstWhere(
                             (c) =>
                                 c.category.name.toUpperCase() ==
-                                    widget.initialCategoryName!.toUpperCase() ||
-                                (widget.initialCategoryName == 'Food' &&
-                                    (c.category.name == 'Food' ||
-                                        c.category.name == 'Dining')) ||
-                                (widget.initialCategoryName == 'Transport' &&
-                                    (c.category.name == 'Transport' ||
-                                        c.category.name == 'Fuel')) ||
-                                (widget.initialCategoryName == 'Groceries' &&
-                                    (c.category.name == 'Groceries' ||
-                                        c.category.name == 'Shopping')),
+                                widget.initialCategoryName!.toUpperCase(),
                           );
-                          // Can't setState during build, but we can highlight it.
-                          // Actually, let's just let the user pick. The logic is tricky here.
+                          suggestedExists = true;
                         } catch (_) {}
+                      }
+
+                      if (categoriesWithUsage.isEmpty) {
+                        return Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                  'No ${_selectedType.toLowerCase()} categories found'),
+                              const SizedBox(height: 16),
+                              if (widget.initialCategoryName != null)
+                                FilledButton.icon(
+                                  onPressed: () async {
+                                    final newCategory = await Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => AddCategoryScreen(
+                                          initialName:
+                                              widget.initialCategoryName,
+                                          initialType: _selectedType,
+                                        ),
+                                      ),
+                                    );
+                                    if (newCategory != null &&
+                                        newCategory is Category) {
+                                      setState(() {
+                                        _selectedCategory = newCategory;
+                                      });
+                                      Navigator.pop(context);
+                                    }
+                                  },
+                                  icon: const Icon(Icons.add),
+                                  label: Text(
+                                      'Create "${widget.initialCategoryName}"'),
+                                ),
+                            ],
+                          ),
+                        );
                       }
 
                       return ListView.builder(
                         controller: scrollController,
-                        itemCount: categoriesWithUsage.length,
+                        itemCount: categoriesWithUsage.length +
+                            (widget.initialCategoryName != null &&
+                                    !suggestedExists
+                                ? 1
+                                : 0),
                         itemBuilder: (context, index) {
-                          final item = categoriesWithUsage[index];
+                          // Show "Create Suggested" button as first item if it doesn't exist
+                          if (widget.initialCategoryName != null &&
+                              !suggestedExists &&
+                              index == 0) {
+                            return ListTile(
+                              leading: Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  color: AppColors.brightCyan
+                                      .withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border:
+                                      Border.all(color: AppColors.brightCyan),
+                                ),
+                                alignment: Alignment.center,
+                                child: const Icon(Icons.add,
+                                    color: AppColors.brightCyan),
+                              ),
+                              title: Text(
+                                  'Create "${widget.initialCategoryName}"'),
+                              subtitle: const Text('Tap to add this category'),
+                              onTap: () async {
+                                final newCategory = await Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => AddCategoryScreen(
+                                      initialName: widget.initialCategoryName,
+                                      initialType: _selectedType,
+                                    ),
+                                  ),
+                                );
+                                if (newCategory != null &&
+                                    newCategory is Category) {
+                                  setState(() {
+                                    _selectedCategory = newCategory;
+                                  });
+                                  Navigator.pop(context);
+                                }
+                              },
+                            );
+                          }
+
+                          final actualIndex =
+                              (widget.initialCategoryName != null &&
+                                      !suggestedExists)
+                                  ? index - 1
+                                  : index;
+                          final item = categoriesWithUsage[actualIndex];
                           final category = item.category;
                           final usage = item.usageCount;
 
@@ -274,7 +375,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 // Show "Frequent" tag for top used categories if usage > 0
-                                if (index < 3 && usage > 0)
+                                if (actualIndex < 3 && usage > 0)
                                   Container(
                                     margin: const EdgeInsets.only(right: 8),
                                     padding: const EdgeInsets.symmetric(

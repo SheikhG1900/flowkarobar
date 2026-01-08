@@ -5,9 +5,17 @@ import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/features/categories/presentation/providers/categories_provider.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
+import 'package:flowpaisa/core/utils/icon_helper.dart';
 
 class AddCategoryScreen extends ConsumerStatefulWidget {
-  const AddCategoryScreen({super.key});
+  final String? initialName;
+  final String? initialType;
+
+  const AddCategoryScreen({
+    super.key,
+    this.initialName,
+    this.initialType,
+  });
 
   @override
   ConsumerState<AddCategoryScreen> createState() => _AddCategoryScreenState();
@@ -20,6 +28,9 @@ class _AddCategoryScreenState extends ConsumerState<AddCategoryScreen> {
   String _selectedIcon = '58668'; // Default to Icons.restaurant
   Color _selectedColor = AppColors.expenseColor;
   bool _isLoading = false;
+  
+  // Smart Suggestions
+  List<IconData> _suggestedIcons = [];
 
   final List<IconData> _icons = [
     // General & Food
@@ -73,11 +84,46 @@ class _AddCategoryScreenState extends ConsumerState<AddCategoryScreen> {
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController();
+    _nameController = TextEditingController(text: widget.initialName);
+    if (widget.initialType != null) {
+      _selectedType = widget.initialType!;
+      _updateColorForType();
+    }
+    
+    // Initial suggestions check
+    if (widget.initialName != null && widget.initialName!.isNotEmpty) {
+      _updateSuggestions();
+    }
+
+    _nameController.addListener(_updateSuggestions);
+  }
+
+  void _updateSuggestions() {
+    final suggestions = IconHelper.getSuggestedIcons(_nameController.text);
+    if (suggestions.isNotEmpty && _suggestedIcons != suggestions) {
+      setState(() {
+        _suggestedIcons = suggestions;
+        // Optional: Auto-select the first suggestion if default hasn't been changed?
+        // Let's not override user selection automatically unless it's the very first time.
+      });
+    } else if (suggestions.isEmpty && _suggestedIcons.isNotEmpty) {
+      setState(() {
+        _suggestedIcons = [];
+      });
+    }
+  }
+  
+  void _updateColorForType() {
+    if (_selectedType == 'INCOME' && _selectedColor == AppColors.expenseColor) {
+      _selectedColor = AppColors.incomeColor;
+    } else if (_selectedType == 'EXPENSE' && _selectedColor == AppColors.incomeColor) {
+      _selectedColor = AppColors.expenseColor;
+    }
   }
 
   @override
   void dispose() {
+    _nameController.removeListener(_updateSuggestions);
     _nameController.dispose();
     super.dispose();
   }
@@ -90,7 +136,7 @@ class _AddCategoryScreenState extends ConsumerState<AddCategoryScreen> {
     try {
       final repository = ref.read(categoriesRepositoryProvider);
       
-      await repository.createCategory(
+      final categoryId = await repository.createCategory(
         CategoriesCompanion(
           name: drift.Value(_nameController.text.trim()),
           icon: drift.Value(_selectedIcon),
@@ -99,9 +145,12 @@ class _AddCategoryScreenState extends ConsumerState<AddCategoryScreen> {
           isDefault: const drift.Value(false),
         ),
       );
+      
+      // Fetch the created category to return it
+      final newCategory = await repository.getCategoryById(categoryId);
 
       if (mounted) {
-        Navigator.pop(context);
+        Navigator.pop(context, newCategory); // Return the created category
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Category added successfully'),
@@ -156,12 +205,7 @@ class _AddCategoryScreenState extends ConsumerState<AddCategoryScreen> {
                 onSelectionChanged: (Set<String> newSelection) {
                   setState(() {
                     _selectedType = newSelection.first;
-                    // Auto-update color based on type if it matches default
-                    if (_selectedType == 'INCOME' && _selectedColor == AppColors.expenseColor) {
-                      _selectedColor = AppColors.incomeColor;
-                    } else if (_selectedType == 'EXPENSE' && _selectedColor == AppColors.incomeColor) {
-                      _selectedColor = AppColors.expenseColor;
-                    }
+                    _updateColorForType();
                   });
                 },
                 style: ButtonStyle(
@@ -225,6 +269,61 @@ class _AddCategoryScreenState extends ConsumerState<AddCategoryScreen> {
                 },
               ),
               const SizedBox(height: 24),
+              
+              // Smart Suggestions
+              if (_suggestedIcons.isNotEmpty) ...[
+                Row(
+                  children: [
+                    Icon(Icons.auto_awesome, size: 16, color: Theme.of(context).colorScheme.primary),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Suggested Icons',
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        color: Theme.of(context).colorScheme.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                SizedBox(
+                  height: 60,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: _suggestedIcons.length,
+                    itemBuilder: (context, index) {
+                      final icon = _suggestedIcons[index];
+                      final isSelected = _selectedIcon == icon.codePoint.toString();
+                      
+                      return GestureDetector(
+                        onTap: () => setState(() => _selectedIcon = icon.codePoint.toString()),
+                        child: Container(
+                          width: 50,
+                          margin: const EdgeInsets.only(right: 8),
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? Theme.of(context).colorScheme.primaryContainer
+                                : Theme.of(context).colorScheme.surfaceContainerHighest,
+                            borderRadius: BorderRadius.circular(12),
+                            border: isSelected
+                                ? Border.all(color: Theme.of(context).colorScheme.primary)
+                                : null,
+                          ),
+                          alignment: Alignment.center,
+                          child: Icon(
+                            icon,
+                            size: 24,
+                            color: isSelected
+                                ? Theme.of(context).colorScheme.primary
+                                : Theme.of(context).colorScheme.onSurface,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(height: 24),
+              ],
 
               // Color Picker
               Text(
@@ -266,7 +365,7 @@ class _AddCategoryScreenState extends ConsumerState<AddCategoryScreen> {
 
               // Icon Picker
               Text(
-                'Icon',
+                'All Icons',
                 style: Theme.of(context).textTheme.titleMedium,
               ),
               const SizedBox(height: 12),
