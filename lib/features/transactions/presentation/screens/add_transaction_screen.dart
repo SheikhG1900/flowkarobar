@@ -131,8 +131,9 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
         expand: false,
         builder: (context, scrollController) => Consumer(
           builder: (context, ref, _) {
-            final categoriesAsync = ref.watch(categoriesByTypeProvider(_selectedType));
-            
+            final categoriesAsync =
+                ref.watch(categoriesByTypeProvider(_selectedType));
+
             return Column(
               children: [
                 Padding(
@@ -149,7 +150,8 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                     data: (categories) {
                       if (categories.isEmpty) {
                         return Center(
-                          child: Text('No ${_selectedType.toLowerCase()} categories found'),
+                          child: Text(
+                              'No ${_selectedType.toLowerCase()} categories found'),
                         );
                       }
                       return ListView.builder(
@@ -157,10 +159,13 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                         itemCount: categories.length,
                         itemBuilder: (context, index) {
                           final category = categories[index];
-                          final color = category.color != null 
-                              ? Color(int.parse(category.color!.replaceAll('#', '0xFF'))) 
-                              : (_selectedType == 'EXPENSE' ? AppColors.expenseColor : AppColors.incomeColor);
-                          
+                          final color = category.color != null
+                              ? Color(int.parse(
+                                  category.color!.replaceAll('#', '0xFF')))
+                              : (_selectedType == 'EXPENSE'
+                                  ? AppColors.expenseColor
+                                  : AppColors.incomeColor);
+
                           return ListTile(
                             leading: Container(
                               width: 40,
@@ -168,10 +173,12 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                               decoration: BoxDecoration(
                                 color: color.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(8),
-                                border: Border.all(color: color.withValues(alpha: 0.3)),
+                                border: Border.all(
+                                    color: color.withValues(alpha: 0.3)),
                               ),
                               alignment: Alignment.center,
-                              child: _buildCategoryIcon(category.icon, color: color),
+                              child: _buildCategoryIcon(category.icon,
+                                  color: color),
                             ),
                             title: Text(category.name),
                             onTap: () {
@@ -188,7 +195,8 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                         },
                       );
                     },
-                    loading: () => const Center(child: CircularProgressIndicator()),
+                    loading: () =>
+                        const Center(child: CircularProgressIndicator()),
                     error: (e, s) => Center(child: Text('Error: $e')),
                   ),
                 ),
@@ -216,7 +224,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
         builder: (context, scrollController) => Consumer(
           builder: (context, ref, _) {
             final contactsAsync = ref.watch(contactsListProvider);
-            
+
             return Column(
               children: [
                 Padding(
@@ -233,7 +241,8 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                     data: (contacts) {
                       if (contacts.isEmpty) {
                         return const Center(
-                          child: Text('No contacts found. Add one from Settings.'),
+                          child:
+                              Text('No contacts found. Add one from Settings.'),
                         );
                       }
                       return ListView.builder(
@@ -246,12 +255,15 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                               width: 40,
                               height: 40,
                               decoration: BoxDecoration(
-                                gradient: AppColors.primaryGradient,
+                                gradient:
+                                    AppColors.getContactGradient(contact.name),
                                 shape: BoxShape.circle,
                               ),
                               alignment: Alignment.center,
                               child: Text(
-                                contact.name.isNotEmpty ? contact.name[0].toUpperCase() : '?',
+                                contact.name.isNotEmpty
+                                    ? contact.name[0].toUpperCase()
+                                    : '?',
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
@@ -259,7 +271,9 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                               ),
                             ),
                             title: Text(contact.name),
-                            subtitle: contact.phone != null ? Text(contact.phone!) : null,
+                            subtitle: contact.phone != null
+                                ? Text(contact.phone!)
+                                : null,
                             onTap: () {
                               setState(() {
                                 _selectedContact = contact;
@@ -269,13 +283,15 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                             },
                             selected: _selectedContactId == contact.id,
                             trailing: _selectedContactId == contact.id
-                                ? const Icon(Icons.check_circle, color: AppColors.brightCyan)
+                                ? const Icon(Icons.check_circle,
+                                    color: AppColors.brightCyan)
                                 : null,
                           );
                         },
                       );
                     },
-                    loading: () => const Center(child: CircularProgressIndicator()),
+                    loading: () =>
+                        const Center(child: CircularProgressIndicator()),
                     error: (e, s) => Center(child: Text('Error: $e')),
                   ),
                 ),
@@ -305,8 +321,14 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: isExpense
-                ? [AppColors.expenseColor.withValues(alpha: 0.05), Colors.transparent]
-                : [AppColors.incomeColor.withValues(alpha: 0.05), Colors.transparent],
+                ? [
+                    AppColors.expenseColor.withValues(alpha: 0.05),
+                    Colors.transparent
+                  ]
+                : [
+                    AppColors.incomeColor.withValues(alpha: 0.05),
+                    Colors.transparent
+                  ],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
@@ -434,8 +456,10 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                     color: theme.colorScheme.surface,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: _selectedCategory != null 
-                          ? (_selectedType == 'EXPENSE' ? AppColors.expenseColor : AppColors.incomeColor)
+                      color: _selectedCategory != null
+                          ? (_selectedType == 'EXPENSE'
+                              ? AppColors.expenseColor
+                              : AppColors.incomeColor)
                           : theme.dividerColor,
                       width: _selectedCategory != null ? 1.5 : 1,
                     ),
@@ -446,13 +470,18 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                         width: 40,
                         height: 40,
                         decoration: BoxDecoration(
-                          color: _selectedCategory?.color != null 
-                              ? Color(int.parse(_selectedCategory!.color!.replaceAll('#', '0xFF'))).withValues(alpha: 0.1)
+                          color: _selectedCategory?.color != null
+                              ? Color(int.parse(_selectedCategory!.color!
+                                      .replaceAll('#', '0xFF')))
+                                  .withValues(alpha: 0.1)
                               : theme.colorScheme.surfaceContainerHighest,
                           borderRadius: BorderRadius.circular(10),
-                          border: _selectedCategory?.color != null 
+                          border: _selectedCategory?.color != null
                               ? Border.all(
-                                  color: Color(int.parse(_selectedCategory!.color!.replaceAll('#', '0xFF'))).withValues(alpha: 0.3),
+                                  color: Color(int.parse(_selectedCategory!
+                                          .color!
+                                          .replaceAll('#', '0xFF')))
+                                      .withValues(alpha: 0.3),
                                 )
                               : null,
                         ),
@@ -460,7 +489,8 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                         child: _buildCategoryIcon(
                           _selectedCategory?.icon,
                           color: _selectedCategory?.color != null
-                              ? Color(int.parse(_selectedCategory!.color!.replaceAll('#', '0xFF')))
+                              ? Color(int.parse(_selectedCategory!.color!
+                                  .replaceAll('#', '0xFF')))
                               : null,
                         ),
                       ),
@@ -478,9 +508,11 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                           Text(
                             _selectedCategory?.name ?? 'Select Category',
                             style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: _selectedCategory != null ? FontWeight.bold : FontWeight.normal,
-                              color: _selectedCategory != null 
-                                  ? theme.colorScheme.onSurface 
+                              fontWeight: _selectedCategory != null
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                              color: _selectedCategory != null
+                                  ? theme.colorScheme.onSurface
                                   : theme.colorScheme.onSurfaceVariant,
                             ),
                           ),
@@ -504,8 +536,8 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                     color: theme.colorScheme.surface,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: _selectedContact != null 
-                          ? AppColors.brightCyan 
+                      color: _selectedContact != null
+                          ? AppColors.brightCyan
                           : theme.dividerColor,
                       width: _selectedContact != null ? 1.5 : 1,
                     ),
@@ -516,8 +548,13 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                         width: 40,
                         height: 40,
                         decoration: BoxDecoration(
-                          gradient: _selectedContact != null ? AppColors.primaryGradient : null,
-                          color: _selectedContact == null ? theme.colorScheme.surfaceContainerHighest : null,
+                          gradient: _selectedContact != null
+                              ? AppColors.getContactGradient(
+                                  _selectedContact!.name)
+                              : null,
+                          color: _selectedContact == null
+                              ? theme.colorScheme.surfaceContainerHighest
+                              : null,
                           shape: BoxShape.circle,
                         ),
                         alignment: Alignment.center,
@@ -548,9 +585,11 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                           Text(
                             _selectedContact?.name ?? 'Select Contact',
                             style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: _selectedContact != null ? FontWeight.bold : FontWeight.normal,
-                              color: _selectedContact != null 
-                                  ? theme.colorScheme.onSurface 
+                              fontWeight: _selectedContact != null
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                              color: _selectedContact != null
+                                  ? theme.colorScheme.onSurface
                                   : theme.colorScheme.onSurfaceVariant,
                             ),
                           ),
@@ -737,7 +776,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
         size: 24,
       );
     }
-    
+
     final int? codePoint = int.tryParse(iconString);
     if (codePoint != null) {
       return Icon(
@@ -746,7 +785,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
         size: 24,
       );
     }
-    
+
     return Text(
       iconString,
       style: const TextStyle(fontSize: 20),
