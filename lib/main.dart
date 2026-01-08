@@ -14,6 +14,7 @@ import 'package:flowpaisa/features/payables/presentation/screens/payables_list_s
 import 'package:flowpaisa/features/contacts/presentation/screens/contacts_list_screen.dart';
 import 'package:flowpaisa/features/categories/presentation/screens/categories_list_screen.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flowpaisa/features/analytics/presentation/screens/analytics_screen.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:intl/intl.dart';
@@ -140,7 +141,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final List<Widget> screens = [
       _DashboardTab(),
       const TransactionsListScreen(),
-      _AnalyticsTab(),
+      const AnalyticsScreen(),
       _SettingsTab(),
     ];
 
@@ -1049,39 +1050,9 @@ class _QuickActionButton extends StatelessWidget {
   }
 }
 
-class _AnalyticsTab extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.analytics),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.analytics, size: 100, color: Colors.grey[300]),
-            const SizedBox(height: 20),
-            Text(
-              'Analytics Coming Soon',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Charts and insights will appear here',
-              style: Theme.of(context).textTheme.bodyMedium,
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class _SettingsTab extends StatelessWidget {
+  const _SettingsTab();
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
