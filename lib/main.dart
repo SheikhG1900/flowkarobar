@@ -7,6 +7,7 @@ import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/constants/app_constants.dart';
 import 'package:flowpaisa/features/transactions/presentation/screens/transactions_list_screen.dart';
 import 'package:flowpaisa/features/transactions/presentation/screens/add_transaction_screen.dart';
+import 'package:flowpaisa/features/receipt_scan/presentation/screens/scan_receipt_screen.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
 import 'package:flowpaisa/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:flowpaisa/features/receivables/presentation/screens/receivables_list_screen.dart';
@@ -201,10 +202,12 @@ class _HomeScreenState extends State<HomeScreen> {
           ? Theme(
               data: Theme.of(context).copyWith(
                 navigationBarTheme: NavigationBarThemeData(
-                  indicatorColor: _getSectionColor(_selectedIndex).withValues(alpha: 0.15),
+                  indicatorColor:
+                      _getSectionColor(_selectedIndex).withValues(alpha: 0.15),
                   iconTheme: WidgetStateProperty.resolveWith((states) {
                     if (states.contains(WidgetState.selected)) {
-                      return IconThemeData(color: _getSectionColor(_selectedIndex));
+                      return IconThemeData(
+                          color: _getSectionColor(_selectedIndex));
                     }
                     return IconThemeData(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -731,7 +734,12 @@ class _DashboardTab extends ConsumerWidget {
                     label: 'Scan',
                     gradient: AppColors.secondaryGradient,
                     onTap: () {
-                      // TODO: Scan receipt
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ScanReceiptScreen(),
+                        ),
+                      );
                     },
                   ),
                   _QuickActionButton(
@@ -867,12 +875,15 @@ class _DashboardTab extends ConsumerWidget {
             Color categoryColor;
             if (category?.color != null) {
               try {
-                categoryColor = Color(int.parse(category!.color!.replaceAll('#', '0xFF')));
+                categoryColor =
+                    Color(int.parse(category!.color!.replaceAll('#', '0xFF')));
               } catch (_) {
-                categoryColor = isExpense ? AppColors.expenseColor : AppColors.incomeColor;
+                categoryColor =
+                    isExpense ? AppColors.expenseColor : AppColors.incomeColor;
               }
             } else {
-              categoryColor = isExpense ? AppColors.expenseColor : AppColors.incomeColor;
+              categoryColor =
+                  isExpense ? AppColors.expenseColor : AppColors.incomeColor;
             }
 
             return Container(
@@ -886,7 +897,8 @@ class _DashboardTab extends ConsumerWidget {
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: categoryColor.withValues(alpha: isDark ? 0.05 : 0.08),
+                    color:
+                        categoryColor.withValues(alpha: isDark ? 0.05 : 0.08),
                     blurRadius: 8,
                     offset: const Offset(0, 3),
                   ),
@@ -902,7 +914,8 @@ class _DashboardTab extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   alignment: Alignment.center,
-                  child: _buildCategoryIcon(category?.icon, categoryColor, isExpense),
+                  child: _buildCategoryIcon(
+                      category?.icon, categoryColor, isExpense),
                 ),
                 title: Text(
                   transaction.description ?? (isExpense ? 'Expense' : 'Income'),
@@ -940,12 +953,14 @@ class _DashboardTab extends ConsumerWidget {
   Widget _buildCategoryIcon(String? iconString, Color color, bool isExpense) {
     if (iconString == null) {
       return Icon(
-        isExpense ? Icons.shopping_bag_outlined : Icons.account_balance_wallet_outlined,
+        isExpense
+            ? Icons.shopping_bag_outlined
+            : Icons.account_balance_wallet_outlined,
         color: color,
         size: 24,
       );
     }
-    
+
     // Try to parse as integer (code point for IconData)
     final int? codePoint = int.tryParse(iconString);
     if (codePoint != null) {
@@ -955,7 +970,7 @@ class _DashboardTab extends ConsumerWidget {
         size: 24,
       );
     }
-    
+
     // Fallback to text (emoji) for legacy data
     return Text(
       iconString,

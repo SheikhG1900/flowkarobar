@@ -225,8 +225,8 @@ class TransactionsListScreen extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              category?.name ?? 'Uncategorized',
-              style: theme.textTheme.bodySmall?.copyWith(
+          category?.name ?? 'Uncategorized',
+          style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant.withValues(alpha: isCredit ? 0.5 : 1.0),
               ),
             ),
@@ -253,8 +253,8 @@ class TransactionsListScreen extends ConsumerWidget {
                           : 'Receive later',
                       style: theme.textTheme.labelSmall?.copyWith(
                         fontSize: 10,
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
                     ),
                   ],
                 ),
