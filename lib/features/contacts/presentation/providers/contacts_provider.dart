@@ -20,6 +20,12 @@ final contactsWithUsageProvider = StreamProvider<List<ContactWithUsage>>((ref) {
   return repository.watchContactsWithUsage();
 });
 
+// Smart contacts provider (alias for contactsWithUsageProvider for clarity)
+final smartContactsProvider = StreamProvider<List<ContactWithUsage>>((ref) {
+  final repository = ref.watch(contactsRepositoryProvider);
+  return repository.watchContactsWithUsage();
+});
+
 // Search provider
 final contactsSearchProvider = StreamProvider.family<List<Contact>, String>((ref, query) {
   final repository = ref.watch(contactsRepositoryProvider);
@@ -34,4 +40,3 @@ final contactStatisticsProvider = FutureProvider.family<ContactStatistics, int>(
   final repository = ref.watch(contactsRepositoryProvider);
   return repository.getContactStatistics(contactId);
 });
-

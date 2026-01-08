@@ -142,8 +142,9 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
         expand: false,
         builder: (context, scrollController) => Consumer(
           builder: (context, ref, _) {
+            // Use Smart Provider (Sorted by Usage)
             final categoriesAsync =
-                ref.watch(categoriesByTypeProvider(_selectedType));
+                ref.watch(smartCategoriesProvider(_selectedType));
 
             return Column(
               children: [
@@ -158,8 +159,8 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                 ),
                 Expanded(
                   child: categoriesAsync.when(
-                    data: (categories) {
-                      if (categories.isEmpty) {
+                    data: (categoriesWithUsage) {
+                      if (categoriesWithUsage.isEmpty) {
                         return Center(
                           child: Text(
                               'No ${_selectedType.toLowerCase()} categories found'),
@@ -167,9 +168,12 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                       }
                       return ListView.builder(
                         controller: scrollController,
-                        itemCount: categories.length,
+                        itemCount: categoriesWithUsage.length,
                         itemBuilder: (context, index) {
-                          final category = categories[index];
+                          final item = categoriesWithUsage[index];
+                          final category = item.category;
+                          final usage = item.usageCount;
+
                           final color = category.color != null
                               ? Color(int.parse(
                                   category.color!.replaceAll('#', '0xFF')))
@@ -192,6 +196,32 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                                   color: color),
                             ),
                             title: Text(category.name),
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                // Show "Frequent" tag for top used categories if usage > 0
+                                if (index < 3 && usage > 0)
+                                  Container(
+                                    margin: const EdgeInsets.only(right: 8),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: color.withValues(alpha: 0.1),
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: Text(
+                                      'Frequent',
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        color: color,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                if (_selectedCategory?.id == category.id)
+                                  Icon(Icons.check_circle, color: color),
+                              ],
+                            ),
                             onTap: () {
                               setState(() {
                                 _selectedCategory = category;
@@ -199,9 +229,6 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                               Navigator.pop(context);
                             },
                             selected: _selectedCategory?.id == category.id,
-                            trailing: _selectedCategory?.id == category.id
-                                ? Icon(Icons.check_circle, color: color)
-                                : null,
                           );
                         },
                       );
@@ -234,7 +261,8 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
         expand: false,
         builder: (context, scrollController) => Consumer(
           builder: (context, ref, _) {
-            final contactsAsync = ref.watch(contactsListProvider);
+            // Use Smart Provider (Sorted by Usage)
+            final contactsAsync = ref.watch(smartContactsProvider);
 
             return Column(
               children: [
@@ -249,8 +277,8 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                 ),
                 Expanded(
                   child: contactsAsync.when(
-                    data: (contacts) {
-                      if (contacts.isEmpty) {
+                    data: (contactsWithUsage) {
+                      if (contactsWithUsage.isEmpty) {
                         return const Center(
                           child:
                               Text('No contacts found. Add one from Settings.'),
@@ -258,9 +286,12 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                       }
                       return ListView.builder(
                         controller: scrollController,
-                        itemCount: contacts.length,
+                        itemCount: contactsWithUsage.length,
                         itemBuilder: (context, index) {
-                          final contact = contacts[index];
+                          final item = contactsWithUsage[index];
+                          final contact = item.contact;
+                          final usage = item.usageCount;
+
                           return ListTile(
                             leading: Container(
                               width: 40,
@@ -285,6 +316,36 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                             subtitle: contact.phone != null
                                 ? Text(contact.phone!)
                                 : null,
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                // Show "Frequent" tag for top used contacts if usage > 0
+                                if (index < 3 && usage > 0)
+                                  Container(
+                                    margin: const EdgeInsets.only(right: 8),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: AppColors
+                                          .primaryGradient.colors.first
+                                          .withValues(alpha: 0.1),
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: Text(
+                                      'Frequent',
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        color: AppColors
+                                            .primaryGradient.colors.first,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                if (_selectedContactId == contact.id)
+                                  const Icon(Icons.check_circle,
+                                      color: AppColors.brightCyan),
+                              ],
+                            ),
                             onTap: () {
                               setState(() {
                                 _selectedContact = contact;
@@ -293,10 +354,6 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                               Navigator.pop(context);
                             },
                             selected: _selectedContactId == contact.id,
-                            trailing: _selectedContactId == contact.id
-                                ? const Icon(Icons.check_circle,
-                                    color: AppColors.brightCyan)
-                                : null,
                           );
                         },
                       );

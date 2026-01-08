@@ -25,9 +25,8 @@ final categoriesWithUsageProvider = StreamProvider.family<List<CategoryWithUsage
   return repository.watchCategoriesWithUsage(type);
 });
 
-// Helper for icon data (mapping string <-> IconData)
-// We'll use a simple map for now, or store code points
-// The database stores icon as int (code point) or string.
-// Let's assume int codePoint for now as per Drift schema usually,
-// but let's check the schema.
-
+// Smart categories provider (alias for categoriesWithUsageProvider for clarity)
+final smartCategoriesProvider = StreamProvider.family<List<CategoryWithUsage>, String>((ref, type) {
+  final repository = ref.watch(categoriesRepositoryProvider);
+  return repository.watchCategoriesWithUsage(type);
+});

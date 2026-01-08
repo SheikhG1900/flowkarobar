@@ -4,9 +4,13 @@ import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/features/transactions/data/transactions_repository.dart';
 import 'package:flowpaisa/features/receivables/data/receivables_repository.dart';
 import 'package:flowpaisa/features/payables/data/payables_repository.dart';
+import 'package:flowpaisa/features/categories/data/categories_repository.dart';
+import 'package:flowpaisa/features/contacts/data/contacts_repository.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
 import 'package:flowpaisa/features/receivables/presentation/providers/receivables_provider.dart';
 import 'package:flowpaisa/features/payables/presentation/providers/payables_provider.dart';
+import 'package:flowpaisa/features/categories/presentation/providers/categories_provider.dart';
+import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
 import 'package:flowpaisa/shared/providers/database_provider.dart';
 
 final transactionServiceProvider = Provider<TransactionService>((ref) {
@@ -15,6 +19,8 @@ final transactionServiceProvider = Provider<TransactionService>((ref) {
     transactionsRepository: ref.watch(transactionsRepositoryProvider),
     receivablesRepository: ref.watch(receivablesRepositoryProvider),
     payablesRepository: ref.watch(payablesRepositoryProvider),
+    categoriesRepository: ref.watch(categoriesRepositoryProvider),
+    contactsRepository: ref.watch(contactsRepositoryProvider),
   );
 });
 
@@ -23,12 +29,16 @@ class TransactionService {
   final TransactionsRepository transactionsRepository;
   final ReceivablesRepository receivablesRepository;
   final PayablesRepository payablesRepository;
+  final CategoriesRepository categoriesRepository;
+  final ContactsRepository contactsRepository;
 
   TransactionService({
     required this.database,
     required this.transactionsRepository,
     required this.receivablesRepository,
     required this.payablesRepository,
+    required this.categoriesRepository,
+    required this.contactsRepository,
   });
 
   Future<void> createTransaction({
@@ -58,7 +68,15 @@ class TransactionService {
         ),
       );
 
-      // 2. Create linked entries based on logic
+      // 2. Increment usage counts
+      if (categoryId != null) {
+        await categoriesRepository.incrementUsageCount(categoryId);
+      }
+      if (contactId != null) {
+        await contactsRepository.incrementUsageCount(contactId);
+      }
+
+      // 3. Create linked entries based on logic
       if (createLinkedEntry && contactId != null) {
         // --- EXPENSE LOGIC ---
         if (type == 'EXPENSE') {
