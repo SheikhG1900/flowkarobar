@@ -16,6 +16,7 @@ import 'package:flowpaisa/features/contacts/presentation/screens/contacts_list_s
 import 'package:flowpaisa/features/categories/presentation/screens/categories_list_screen.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flowpaisa/features/analytics/presentation/screens/analytics_screen.dart';
+import 'package:flowpaisa/features/backup/presentation/screens/backup_screen.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:intl/intl.dart';
@@ -1128,10 +1129,15 @@ class _SettingsTab extends StatelessWidget {
           ListTile(
             leading: const Icon(Icons.backup),
             title: Text(l10n.backup),
-            subtitle: const Text('Last backup: Never'),
+            subtitle: const Text('Google Drive Backup & Restore'),
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
             onTap: () {
-              // TODO: Backup settings
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const BackupScreen(),
+                ),
+              );
             },
           ),
           ListTile(

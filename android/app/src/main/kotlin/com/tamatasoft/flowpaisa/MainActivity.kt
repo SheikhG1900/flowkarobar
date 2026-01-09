@@ -1,4 +1,4 @@
-package com.flowpaisa.flowpaisa
+package com.tamatasoft.flowpaisa
 
 import io.flutter.embedding.android.FlutterActivity
 

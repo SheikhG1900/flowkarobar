@@ -9,6 +9,8 @@ buildscript {
         // Use AGP 8.1.4 which is compatible with Java 17
         classpath 'com.android.tools.build:gradle:8.9.1'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        // Add the Google services Gradle plugin
+        classpath 'com.google.gms:google-services:4.4.4'
     }
 }
 
