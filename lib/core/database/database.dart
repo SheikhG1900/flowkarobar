@@ -40,8 +40,9 @@ class Transactions extends Table {
   DateTimeColumn get date => dateTime()();
   
   // Linked transaction fields
-  IntColumn get linkedReceivableId => integer().nullable().references(Receivables, #id)();
-  IntColumn get linkedPayableId => integer().nullable().references(Payables, #id)();
+  // Note: removing .references() to avoid circular dependency with Receivables/Payables tables
+  IntColumn get linkedReceivableId => integer().nullable()();
+  IntColumn get linkedPayableId => integer().nullable()();
   TextColumn get paidRelationship => text().nullable()(); // 'PAID_FOR' or 'PAID_BY' or null
   
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();

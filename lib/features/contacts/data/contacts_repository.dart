@@ -160,6 +160,29 @@ class ContactsRepository {
     }).toList();
   }
 
+  /// Find contact by phone or create if not exists
+  Future<int> findOrCreateContactByPhone({
+    required String phone,
+    required String name,
+  }) async {
+    // Clean phone number
+    final cleanPhone = phone.replaceAll(RegExp(r'[^\d+]'), '');
+    
+    // Try to find existing contact
+    final existingContact = await getContactByPhone(cleanPhone);
+    if (existingContact != null) {
+      return existingContact.id;
+    }
+
+    // Create new contact
+    return await createContact(
+      ContactsCompanion(
+        name: Value(name),
+        phone: Value(cleanPhone),
+      ),
+    );
+  }
+
   /// Get contact statistics
   Future<ContactStatistics> getContactStatistics(int contactId) async {
     final contact = await getContactById(contactId);

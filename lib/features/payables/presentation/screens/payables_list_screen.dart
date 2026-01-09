@@ -5,6 +5,7 @@ import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/features/payables/data/payables_repository.dart';
 import 'package:flowpaisa/features/payables/presentation/providers/payables_provider.dart';
 import 'package:flowpaisa/features/payables/presentation/screens/add_payable_screen.dart';
+import 'package:flowpaisa/features/payables/presentation/widgets/payable_share_button.dart';
 import 'package:flowpaisa/features/whatsapp/presentation/providers/whatsapp_provider.dart';
 import 'package:intl/intl.dart';
 
@@ -303,6 +304,14 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
                               ),
                             ),
                           ),
+                        SizedBox(
+                          width: 32,
+                          height: 32,
+                          child: PayableShareButton(
+                            payable: payable,
+                            contact: contact,
+                          ),
+                        ),
                         if (isPending &&
                             contact?.phone != null &&
                             contact!.phone!.isNotEmpty)

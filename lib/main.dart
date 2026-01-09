@@ -27,6 +27,7 @@ import 'package:flowpaisa/features/settings/presentation/providers/settings_prov
 import 'package:flowpaisa/features/transactions/presentation/screens/export_screen.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flowpaisa/core/utils/deep_link_handler.dart';
 import 'package:intl/intl.dart';
 
 void main() async {
@@ -120,15 +121,27 @@ class _FlowPaisaAppState extends ConsumerState<FlowPaisaApp> {
   }
 }
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends ConsumerState<HomeScreen> {
   int _selectedIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize deep link handler after first frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        final deepLinkHandler = ref.read(deepLinkHandlerProvider);
+        deepLinkHandler.initialize(context, ref);
+      }
+    });
+  }
 
   Color _getSectionColor(int index) {
     switch (index) {

@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:flowpaisa/core/database/database.dart';
+import 'package:flowpaisa/features/contacts/data/contacts_repository.dart';
 
 class ReceivablesRepository {
   final AppDatabase _database;
@@ -154,6 +155,41 @@ class ReceivablesRepository {
     return (_database.select(_database.receivables)
           ..where((r) => r.externalLinkId.equals(externalLinkId)))
         .getSingleOrNull();
+  }
+
+  /// Check if external link ID already exists
+  Future<bool> checkIfExternalLinkExists(String externalLinkId) async {
+    final receivable = await getReceivableByExternalLinkId(externalLinkId);
+    return receivable != null;
+  }
+
+  /// Import receivable from shared link
+  Future<int> importFromSharedLink(dynamic sharedData) async {
+    // Import shared data (dynamic type for flexibility with SharedData classes)
+    // Extract contact ID or create contact
+    int? contactId;
+    
+    if (sharedData.contactPhone != null && sharedData.contactPhone!.isNotEmpty) {
+      // Find or create contact
+      final contactsRepo = ContactsRepository(_database);
+      contactId = await contactsRepo.findOrCreateContactByPhone(
+        phone: sharedData.contactPhone!,
+        name: sharedData.contactName ?? 'Unknown',
+      );
+    }
+
+    return await createReceivable(
+      ReceivablesCompanion(
+        contactId: Value(contactId!),
+        amount: Value(sharedData.amount),
+        description: Value(sharedData.description),
+        date: Value(sharedData.date),
+        dueDate: Value(sharedData.dueDate),
+        status: const Value('PENDING'),
+        externalLinkId: Value(sharedData.externalLinkId),
+        autoCreateIncome: const Value(true),
+      ),
+    );
   }
 }
 

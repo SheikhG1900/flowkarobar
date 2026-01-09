@@ -5,6 +5,7 @@ import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/features/receivables/data/receivables_repository.dart';
 import 'package:flowpaisa/features/receivables/presentation/providers/receivables_provider.dart';
 import 'package:flowpaisa/features/receivables/presentation/screens/add_receivable_screen.dart';
+import 'package:flowpaisa/features/receivables/presentation/widgets/receivable_share_button.dart';
 import 'package:flowpaisa/features/whatsapp/presentation/providers/whatsapp_provider.dart';
 import 'package:intl/intl.dart';
 
@@ -304,6 +305,14 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
                               ),
                             ),
                           ),
+                        SizedBox(
+                          width: 32,
+                          height: 32,
+                          child: ReceivableShareButton(
+                            receivable: receivable,
+                            contact: contact,
+                          ),
+                        ),
                         if (isPending && contact?.phone != null && contact!.phone!.isNotEmpty)
                           InkWell(
                             onTap: () => _sendWhatsAppReminder(receivable, contact),

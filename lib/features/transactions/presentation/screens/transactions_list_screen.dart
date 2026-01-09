@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
 import 'package:flowpaisa/features/transactions/presentation/screens/add_transaction_screen.dart';
+import 'package:flowpaisa/features/transactions/presentation/widgets/transaction_share_button.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:intl/intl.dart';
 
@@ -262,15 +263,25 @@ class TransactionsListScreen extends ConsumerWidget {
             ],
           ],
         ),
-        trailing: Text(
-          '${isExpense ? '-' : '+'} ₹${transaction.amount.toStringAsFixed(2)}',
-          style: theme.textTheme.titleLarge?.copyWith(
-            color: isExpense 
-                ? (isCredit ? AppColors.expenseColor.withValues(alpha: 0.5) : AppColors.expenseColor)
-                : (isCredit ? AppColors.incomeColor.withValues(alpha: 0.5) : AppColors.incomeColor),
-            fontWeight: FontWeight.bold,
-            fontSize: 18,
-          ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              '${isExpense ? '-' : '+'} ₹${transaction.amount.toStringAsFixed(2)}',
+              style: theme.textTheme.titleLarge?.copyWith(
+                color: isExpense 
+                    ? (isCredit ? AppColors.expenseColor.withValues(alpha: 0.5) : AppColors.expenseColor)
+                    : (isCredit ? AppColors.incomeColor.withValues(alpha: 0.5) : AppColors.incomeColor),
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
+            ),
+            TransactionShareButton(
+              transaction: transaction,
+              category: category,
+              contact: null, // TODO: Fetch contact if contactId exists
+            ),
+          ],
         ),
         onTap: () {
           // TODO: Navigate to transaction details

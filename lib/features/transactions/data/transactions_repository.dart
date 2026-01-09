@@ -45,6 +45,27 @@ class TransactionsRepository {
     return _database.into(_database.transactions).insert(transaction);
   }
 
+  // Helper method to create transaction with individual parameters
+  Future<int> createTransactionSimple({
+    required double amount,
+    required String type,
+    String? description,
+    required DateTime date,
+    int? categoryId,
+    int? contactId,
+  }) {
+    return createTransaction(
+      TransactionsCompanion(
+        amount: Value(amount),
+        type: Value(type),
+        description: Value(description),
+        date: Value(date),
+        categoryId: Value(categoryId),
+        contactId: Value(contactId),
+      ),
+    );
+  }
+
   // Update transaction
   Future<bool> updateTransaction(Transaction transaction) {
     return _database.update(_database.transactions).replace(transaction);

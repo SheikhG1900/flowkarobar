@@ -1,0 +1,202 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flowpaisa/core/database/database.dart';
+import 'package:flowpaisa/features/whatsapp/domain/deep_link_service.dart';
+import 'package:flowpaisa/features/whatsapp/domain/models/shared_data_models.dart';
+import 'package:flowpaisa/features/whatsapp/domain/whatsapp_service.dart';
+import 'package:flowpaisa/features/whatsapp/presentation/providers/whatsapp_provider.dart';
+
+class ReceivableShareButton extends ConsumerWidget {
+  final Receivable receivable;
+  final Contact? contact;
+
+  const ReceivableShareButton({
+    Key? key,
+    required this.receivable,
+    this.contact,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return IconButton(
+      icon: const Icon(Icons.share),
+      onPressed: () => _showShareOptions(context, ref),
+      tooltip: 'Share Payment Request',
+    );
+  }
+
+  void _showShareOptions(BuildContext context, WidgetRef ref) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => _ShareOptionsSheet(
+        receivable: receivable,
+        contact: contact,
+        ref: ref,
+      ),
+    );
+  }
+}
+
+class _ShareOptionsSheet extends StatefulWidget {
+  final Receivable receivable;
+  final Contact? contact;
+  final WidgetRef ref;
+
+  const _ShareOptionsSheet({
+    required this.receivable,
+    this.contact,
+    required this.ref,
+  });
+
+  @override
+  State<_ShareOptionsSheet> createState() => _ShareOptionsSheetState();
+}
+
+class _ShareOptionsSheetState extends State<_ShareOptionsSheet> {
+  bool _isSharing = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Share Payment Request',
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+          const SizedBox(height: 16),
+          ListTile(
+            leading: const Icon(Icons.chat, color: Colors.green),
+            title: const Text('Share via WhatsApp'),
+            subtitle: widget.contact != null && widget.contact!.phone != null
+                ? Text('To ${widget.contact!.name}')
+                : const Text('Choose contact'),
+            onTap: _isSharing ? null : () => _shareViaWhatsApp(context),
+          ),
+          ListTile(
+            leading: const Icon(Icons.link),
+            title: const Text('Copy Link'),
+            subtitle: const Text('Copy deep link to clipboard'),
+            onTap: _isSharing ? null : () => _copyLink(context),
+          ),
+          if (_isSharing)
+            const Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Center(
+                child: CircularProgressIndicator(),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _shareViaWhatsApp(BuildContext context) async {
+    setState(() => _isSharing = true);
+
+    try {
+      final deepLinkService = DeepLinkService();
+      final whatsAppService = widget.ref.read(whatsAppServiceProvider);
+
+      // Use existing externalLinkId or generate new one
+      final externalLinkId = widget.receivable.externalLinkId ?? 
+          deepLinkService.generateExternalLinkId();
+
+      // Create share data
+      final shareData = ReceivableShareData(
+        amount: widget.receivable.amount,
+        description: widget.receivable.description,
+        date: widget.receivable.date,
+        dueDate: widget.receivable.dueDate,
+        contactName: widget.contact?.name,
+        contactPhone: widget.contact?.phone,
+        externalLinkId: externalLinkId,
+      );
+
+      // Share via WhatsApp
+      await whatsAppService.shareReceivableWithLink(
+        receivable: shareData,
+        contactPhone: widget.contact?.phone,
+      );
+
+      if (context.mounted) {
+        Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Opening WhatsApp...'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to share: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSharing = false);
+      }
+    }
+  }
+
+  Future<void> _copyLink(BuildContext context) async {
+    setState(() => _isSharing = true);
+
+    try {
+      final deepLinkService = DeepLinkService();
+
+      // Use existing externalLinkId or generate new one
+      final externalLinkId = widget.receivable.externalLinkId ?? 
+          deepLinkService.generateExternalLinkId();
+
+      // Create share data
+      final shareData = ReceivableShareData(
+        amount: widget.receivable.amount,
+        description: widget.receivable.description,
+        date: widget.receivable.date,
+        dueDate: widget.receivable.dueDate,
+        contactName: widget.contact?.name,
+        contactPhone: widget.contact?.phone,
+        externalLinkId: externalLinkId,
+      );
+
+      // Generate link
+      final link = deepLinkService.generateReceivableLink(shareData);
+
+      // Copy to clipboard
+      await Clipboard.setData(ClipboardData(text: link));
+
+      if (context.mounted) {
+        Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Link copied to clipboard!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to copy link: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSharing = false);
+      }
+    }
+  }
+}

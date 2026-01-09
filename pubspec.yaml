@@ -51,6 +51,7 @@ dependencies:
   # Shared Transactions
   uuid: ^4.2.2
   url_launcher: ^6.2.0
+  app_links: ^6.0.0
   
   # Receipt Scanning (AI-Powered OCR)
   google_mlkit_text_recognition: ^0.15.0
