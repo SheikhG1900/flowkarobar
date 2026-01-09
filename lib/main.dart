@@ -29,6 +29,11 @@ import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flowpaisa/core/utils/deep_link_handler.dart';
 import 'package:intl/intl.dart';
+import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
+import 'package:flowpaisa/shared/widgets/premium_badge.dart';
+
+import 'package:flowpaisa/shared/providers/shared_preferences_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -42,6 +47,9 @@ void main() async {
     ),
   );
 
+  // Initialize SharedPreferences
+  final prefs = await SharedPreferences.getInstance();
+
   // Initialize Firebase
   try {
     await Firebase.initializeApp();
@@ -54,8 +62,11 @@ void main() async {
   await _initializeFonts();
 
   runApp(
-    const ProviderScope(
-      child: FlowPaisaApp(),
+    ProviderScope(
+      overrides: [
+        sharedPreferencesProvider.overrideWithValue(prefs),
+      ],
+      child: const FlowPaisaApp(),
     ),
   );
 }
@@ -290,6 +301,7 @@ class _DashboardTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
+    final isPremium = PremiumGate.isPremium(ref);
 
     // Watch dashboard statistics
     final dashboardStatsAsync = ref.watch(dashboardStatsProvider);
@@ -386,6 +398,10 @@ class _DashboardTab extends ConsumerWidget {
                                     AppTheme.textShadow(blurMultiplier: 2.0),
                               ),
                             ),
+                            if (isPremium) ...[
+                              const SizedBox(width: 8),
+                              const PremiumBadge(isSmall: true),
+                            ],
                           ],
                         ),
                         const SizedBox(
@@ -616,7 +632,7 @@ class _DashboardTab extends ConsumerWidget {
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 24, 16, 0),
-              child: _buildQuickActions(context, l10n),
+              child: _buildQuickActions(context, l10n, isPremium),
             ),
           ),
 
@@ -712,7 +728,7 @@ class _DashboardTab extends ConsumerWidget {
     );
   }
 
-  Widget _buildQuickActions(BuildContext context, AppLocalizations l10n) {
+  Widget _buildQuickActions(BuildContext context, AppLocalizations l10n, bool isPremium) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
@@ -815,8 +831,14 @@ class _DashboardTab extends ConsumerWidget {
                     icon: Icons.bar_chart_rounded,
                     label: 'Analytics',
                     gradient: AppColors.analyticsSectionGradient,
+                    showLock: !isPremium,
                     onTap: () {
-                      // TODO: Analytics screen
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const AnalyticsScreen(),
+                        ),
+                      );
                     },
                   ),
                 ],
@@ -1019,6 +1041,7 @@ class _QuickActionButton extends StatelessWidget {
   final Gradient gradient;
   final double fontSizeMultiplier;
   final VoidCallback onTap;
+  final bool showLock;
 
   const _QuickActionButton({
     required this.icon,
@@ -1026,6 +1049,7 @@ class _QuickActionButton extends StatelessWidget {
     required this.gradient,
     required this.onTap,
     this.fontSizeMultiplier = 1.0,
+    this.showLock = false,
   });
 
   @override
@@ -1060,20 +1084,31 @@ class _QuickActionButton extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.2 / 1.0),
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.1 / 1.0),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
+            Stack(
+              alignment: Alignment.topRight,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2 / 1.0),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.1 / 1.0),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              child: Icon(icon, color: Colors.white, size: 24),
+                  child: Icon(icon, color: Colors.white, size: 24),
+                ),
+                if (showLock)
+                  const Positioned(
+                    top: 0,
+                    right: 0,
+                    child: Icon(Icons.lock, size: 12, color: Colors.white),
+                  ),
+              ],
             ),
             const SizedBox(height: 8),
             Text(
@@ -1099,12 +1134,13 @@ class _QuickActionButton extends StatelessWidget {
   }
 }
 
-class _SettingsTab extends StatelessWidget {
+class _SettingsTab extends ConsumerWidget {
   const _SettingsTab();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
+    final isPremium = PremiumGate.isPremium(ref);
 
     return Scaffold(
       appBar: AppBar(
@@ -1171,7 +1207,13 @@ class _SettingsTab extends StatelessWidget {
           ),
           ListTile(
             leading: const Icon(Icons.backup),
-            title: Text(l10n.backup),
+            title: Row(
+              children: [
+                Text(l10n.backup),
+                const SizedBox(width: 8),
+                if (!isPremium) const PremiumBadge(isSmall: true, showLock: true),
+              ],
+            ),
             subtitle: const Text('Google Drive Backup & Restore'),
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
             onTap: () {
@@ -1186,7 +1228,7 @@ class _SettingsTab extends StatelessWidget {
           ListTile(
             leading: const Icon(Icons.file_download),
             title: const Text('Export Data'),
-            subtitle: const Text('Download your data as CSV'),
+            subtitle: const Text('Download your data as CSV or PDF'),
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
             onTap: () {
               Navigator.push(
@@ -1200,7 +1242,7 @@ class _SettingsTab extends StatelessWidget {
           ListTile(
             leading: const Icon(Icons.workspace_premium),
             title: Text(l10n.premium),
-            subtitle: Text(l10n.free),
+            subtitle: Text(isPremium ? 'Premium Active' : l10n.free),
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
             onTap: () {
               Navigator.push(

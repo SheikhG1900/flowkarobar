@@ -7,6 +7,8 @@ import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/features/receivables/presentation/providers/receivables_provider.dart';
 import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
+import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
+import 'package:flowpaisa/shared/widgets/limit_countdown_badge.dart';
 
 class AddReceivableScreen extends ConsumerStatefulWidget {
   const AddReceivableScreen({super.key});
@@ -37,6 +39,18 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
   }
 
   Future<void> _saveReceivable() async {
+    // Check limits first - prevent saving if limit reached, regardless of form validity
+    final isPremium = PremiumGate.isPremium(ref);
+    if (!isPremium) {
+      final limits = await PremiumGate.getReceivableLimits(ref);
+      if (!limits.canAdd) {
+        if (mounted) {
+          PremiumGate.showPremiumDialog(context);
+        }
+        return;
+      }
+    }
+
     if (!_formKey.currentState!.validate()) {
       return;
     }
@@ -72,6 +86,16 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
       );
 
       await repository.createReceivable(receivable);
+
+      // Increment usage count for free users
+      if (!PremiumGate.isPremium(ref)) {
+        await ref
+            .read(usageTrackerRepositoryProvider)
+            .incrementReceivableCount();
+      }
+
+      // Invalidate provider to refresh limits
+      ref.invalidate(receivableLimitsProvider);
 
       if (mounted) {
         Navigator.pop(context);
@@ -146,7 +170,7 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
         builder: (context, scrollController) => Consumer(
           builder: (context, ref, _) {
             final contactsAsync = ref.watch(contactsListProvider);
-            
+
             return Column(
               children: [
                 Padding(
@@ -166,7 +190,8 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Icon(Icons.person_off_outlined, size: 48, color: Colors.grey),
+                              const Icon(Icons.person_off_outlined,
+                                  size: 48, color: Colors.grey),
                               const SizedBox(height: 16),
                               const Text('No contacts found'),
                               TextButton(
@@ -190,12 +215,15 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
                               width: 40,
                               height: 40,
                               decoration: BoxDecoration(
-                                gradient: AppColors.getContactGradient(contact.name),
+                                gradient:
+                                    AppColors.getContactGradient(contact.name),
                                 shape: BoxShape.circle,
                               ),
                               alignment: Alignment.center,
                               child: Text(
-                                contact.name.isNotEmpty ? contact.name[0].toUpperCase() : '?',
+                                contact.name.isNotEmpty
+                                    ? contact.name[0].toUpperCase()
+                                    : '?',
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
@@ -203,7 +231,9 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
                               ),
                             ),
                             title: Text(contact.name),
-                            subtitle: contact.phone != null ? Text(contact.phone!) : null,
+                            subtitle: contact.phone != null
+                                ? Text(contact.phone!)
+                                : null,
                             onTap: () {
                               setState(() {
                                 _selectedContact = contact;
@@ -213,13 +243,15 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
                             },
                             selected: _selectedContactId == contact.id,
                             trailing: _selectedContactId == contact.id
-                                ? const Icon(Icons.check_circle, color: AppColors.receivableColor)
+                                ? const Icon(Icons.check_circle,
+                                    color: AppColors.receivableColor)
                                 : null,
                           );
                         },
                       );
                     },
-                    loading: () => const Center(child: CircularProgressIndicator()),
+                    loading: () =>
+                        const Center(child: CircularProgressIndicator()),
                     error: (e, s) => Center(child: Text('Error: $e')),
                   ),
                 ),
@@ -234,6 +266,7 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final limitsAsync = ref.watch(receivableLimitsProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -304,8 +337,8 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
                           color: Colors.grey.withValues(alpha: 0.3),
                         ),
                       ),
-                      keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true),
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
                       inputFormatters: [
                         FilteringTextInputFormatter.allow(
                             RegExp(r'^\d+\.?\d{0,2}')),
@@ -339,8 +372,8 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
                     color: theme.colorScheme.surface,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: _selectedContact != null 
-                          ? AppColors.receivableColor 
+                      color: _selectedContact != null
+                          ? AppColors.receivableColor
                           : theme.dividerColor,
                       width: _selectedContact != null ? 1.5 : 1,
                     ),
@@ -351,10 +384,13 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
                         width: 40,
                         height: 40,
                         decoration: BoxDecoration(
-                          gradient: _selectedContact != null 
-                              ? AppColors.getContactGradient(_selectedContact!.name)
+                          gradient: _selectedContact != null
+                              ? AppColors.getContactGradient(
+                                  _selectedContact!.name)
                               : null,
-                          color: _selectedContact == null ? theme.colorScheme.surfaceContainerHighest : null,
+                          color: _selectedContact == null
+                              ? theme.colorScheme.surfaceContainerHighest
+                              : null,
                           shape: BoxShape.circle,
                         ),
                         alignment: Alignment.center,
@@ -385,9 +421,11 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
                           Text(
                             _selectedContact?.name ?? 'Select Contact',
                             style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: _selectedContact != null ? FontWeight.bold : FontWeight.normal,
-                              color: _selectedContact != null 
-                                  ? theme.colorScheme.onSurface 
+                              fontWeight: _selectedContact != null
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                              color: _selectedContact != null
+                                  ? theme.colorScheme.onSurface
                                   : theme.colorScheme.onSurfaceVariant,
                             ),
                           ),
@@ -558,19 +596,51 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
                     color: AppColors.incomeColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Icon(Icons.monetization_on, color: AppColors.incomeColor),
+                  child: const Icon(Icons.monetization_on,
+                      color: AppColors.incomeColor),
                 ),
               ),
 
               const SizedBox(height: 32),
 
-              // Submit Button
+              // Countdown Badge (show until limit reached)
+              if (limitsAsync.asData?.value != null &&
+                  !limitsAsync.asData!.value.isUnlimited &&
+                  limitsAsync.asData!.value.canAdd)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Center(
+                    child: LimitCountdownBadge(
+                      dailyUsed: limitsAsync.asData!.value.dailyTotal -
+                          limitsAsync.asData!.value.dailyRemaining,
+                      dailyTotal: limitsAsync.asData!.value.dailyTotal,
+                      monthlyUsed: limitsAsync.asData!.value.monthlyTotal -
+                          limitsAsync.asData!.value.monthlyRemaining,
+                      monthlyTotal: limitsAsync.asData!.value.monthlyTotal,
+                    ),
+                  ),
+                ),
+
+              // Submit Button with Lock Icon (only when limit reached)
               _isLoading
                   ? const Center(child: CircularProgressIndicator())
-                  : GradientButton(
-                      label: 'Add Receivable',
-                      onPressed: _saveReceivable,
-                      gradient: AppColors.receivableGradient,
+                  : Stack(
+                      alignment: Alignment.topRight,
+                      children: [
+                        GradientButton(
+                          label: 'Add Receivable',
+                          onPressed: _saveReceivable,
+                          gradient: AppColors.receivableGradient,
+                          width: double.infinity,
+                        ),
+                        if (limitsAsync.asData?.value != null &&
+                            !limitsAsync.asData!.value.canAdd)
+                          const Padding(
+                            padding: EdgeInsets.only(top: 8, right: 8),
+                            child:
+                                Icon(Icons.lock, size: 16, color: Colors.white),
+                          ),
+                      ],
                     ),
             ],
           ),

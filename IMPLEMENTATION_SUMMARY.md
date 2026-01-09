@@ -220,7 +220,9 @@
 - Receipt scanning UI
 - Dashboard charts
 - Google Drive sync
-- In-app purchases
+
+### Recently Completed ✅
+- In-app purchases (Client-side implementation)
 
 ---
 

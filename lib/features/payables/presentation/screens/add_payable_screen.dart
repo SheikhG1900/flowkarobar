@@ -7,6 +7,8 @@ import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/features/payables/presentation/providers/payables_provider.dart';
 import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
+import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
+import 'package:flowpaisa/shared/widgets/limit_countdown_badge.dart';
 
 class AddPayableScreen extends ConsumerStatefulWidget {
   const AddPayableScreen({super.key});
@@ -36,6 +38,18 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
   }
 
   Future<void> _savePayable() async {
+    // Check limits first - prevent saving if limit reached, regardless of form validity
+    final isPremium = PremiumGate.isPremium(ref);
+    if (!isPremium) {
+      final limits = await PremiumGate.getPayableLimits(ref);
+      if (!limits.canAdd) {
+        if (mounted) {
+          PremiumGate.showPremiumDialog(context);
+        }
+        return;
+      }
+    }
+
     if (!_formKey.currentState!.validate()) {
       return;
     }
@@ -71,6 +85,14 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
       );
 
       await repository.createPayable(payable);
+
+      // Increment usage count for free users
+      if (!PremiumGate.isPremium(ref)) {
+        await ref.read(usageTrackerRepositoryProvider).incrementPayableCount();
+      }
+
+      // Invalidate provider to refresh limits
+      ref.invalidate(payableLimitsProvider);
 
       if (mounted) {
         Navigator.pop(context);
@@ -145,7 +167,7 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
         builder: (context, scrollController) => Consumer(
           builder: (context, ref, _) {
             final contactsAsync = ref.watch(contactsListProvider);
-            
+
             return Column(
               children: [
                 Padding(
@@ -165,7 +187,8 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Icon(Icons.person_off_outlined, size: 48, color: Colors.grey),
+                              const Icon(Icons.person_off_outlined,
+                                  size: 48, color: Colors.grey),
                               const SizedBox(height: 16),
                               const Text('No contacts found'),
                               TextButton(
@@ -189,12 +212,15 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
                               width: 40,
                               height: 40,
                               decoration: BoxDecoration(
-                                gradient: AppColors.getContactGradient(contact.name),
+                                gradient:
+                                    AppColors.getContactGradient(contact.name),
                                 shape: BoxShape.circle,
                               ),
                               alignment: Alignment.center,
                               child: Text(
-                                contact.name.isNotEmpty ? contact.name[0].toUpperCase() : '?',
+                                contact.name.isNotEmpty
+                                    ? contact.name[0].toUpperCase()
+                                    : '?',
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
@@ -202,7 +228,9 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
                               ),
                             ),
                             title: Text(contact.name),
-                            subtitle: contact.phone != null ? Text(contact.phone!) : null,
+                            subtitle: contact.phone != null
+                                ? Text(contact.phone!)
+                                : null,
                             onTap: () {
                               setState(() {
                                 _selectedContact = contact;
@@ -212,13 +240,15 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
                             },
                             selected: _selectedContactId == contact.id,
                             trailing: _selectedContactId == contact.id
-                                ? const Icon(Icons.check_circle, color: AppColors.payableColor)
+                                ? const Icon(Icons.check_circle,
+                                    color: AppColors.payableColor)
                                 : null,
                           );
                         },
                       );
                     },
-                    loading: () => const Center(child: CircularProgressIndicator()),
+                    loading: () =>
+                        const Center(child: CircularProgressIndicator()),
                     error: (e, s) => Center(child: Text('Error: $e')),
                   ),
                 ),
@@ -233,6 +263,7 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final limitsAsync = ref.watch(payableLimitsProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -303,8 +334,8 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
                           color: Colors.grey.withValues(alpha: 0.3),
                         ),
                       ),
-                      keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true),
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
                       inputFormatters: [
                         FilteringTextInputFormatter.allow(
                             RegExp(r'^\d+\.?\d{0,2}')),
@@ -338,8 +369,8 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
                     color: theme.colorScheme.surface,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: _selectedContact != null 
-                          ? AppColors.payableColor 
+                      color: _selectedContact != null
+                          ? AppColors.payableColor
                           : theme.dividerColor,
                       width: _selectedContact != null ? 1.5 : 1,
                     ),
@@ -350,10 +381,13 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
                         width: 40,
                         height: 40,
                         decoration: BoxDecoration(
-                          gradient: _selectedContact != null 
-                              ? AppColors.getContactGradient(_selectedContact!.name)
+                          gradient: _selectedContact != null
+                              ? AppColors.getContactGradient(
+                                  _selectedContact!.name)
                               : null,
-                          color: _selectedContact == null ? theme.colorScheme.surfaceContainerHighest : null,
+                          color: _selectedContact == null
+                              ? theme.colorScheme.surfaceContainerHighest
+                              : null,
                           shape: BoxShape.circle,
                         ),
                         alignment: Alignment.center,
@@ -384,9 +418,11 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
                           Text(
                             _selectedContact?.name ?? 'Select Contact',
                             style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: _selectedContact != null ? FontWeight.bold : FontWeight.normal,
-                              color: _selectedContact != null 
-                                  ? theme.colorScheme.onSurface 
+                              fontWeight: _selectedContact != null
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                              color: _selectedContact != null
+                                  ? theme.colorScheme.onSurface
                                   : theme.colorScheme.onSurfaceVariant,
                             ),
                           ),
@@ -557,19 +593,51 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
                     color: AppColors.expenseColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Icon(Icons.payment, color: AppColors.expenseColor),
+                  child:
+                      const Icon(Icons.payment, color: AppColors.expenseColor),
                 ),
               ),
 
               const SizedBox(height: 32),
 
-              // Submit Button
+              // Countdown Badge (show until limit reached)
+              if (limitsAsync.asData?.value != null &&
+                  !limitsAsync.asData!.value.isUnlimited &&
+                  limitsAsync.asData!.value.canAdd)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Center(
+                    child: LimitCountdownBadge(
+                      dailyUsed: limitsAsync.asData!.value.dailyTotal -
+                          limitsAsync.asData!.value.dailyRemaining,
+                      dailyTotal: limitsAsync.asData!.value.dailyTotal,
+                      monthlyUsed: limitsAsync.asData!.value.monthlyTotal -
+                          limitsAsync.asData!.value.monthlyRemaining,
+                      monthlyTotal: limitsAsync.asData!.value.monthlyTotal,
+                    ),
+                  ),
+                ),
+
+              // Submit Button with Lock Icon (only when limit reached)
               _isLoading
                   ? const Center(child: CircularProgressIndicator())
-                  : GradientButton(
-                      label: 'Add Payable',
-                      onPressed: _savePayable,
-                      gradient: AppColors.payableGradient,
+                  : Stack(
+                      alignment: Alignment.topRight,
+                      children: [
+                        GradientButton(
+                          label: 'Add Payable',
+                          onPressed: _savePayable,
+                          gradient: AppColors.payableGradient,
+                          width: double.infinity,
+                        ),
+                        if (limitsAsync.asData?.value != null &&
+                            !limitsAsync.asData!.value.canAdd)
+                          const Padding(
+                            padding: EdgeInsets.only(top: 8, right: 8),
+                            child:
+                                Icon(Icons.lock, size: 16, color: Colors.white),
+                          ),
+                      ],
                     ),
             ],
           ),

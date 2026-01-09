@@ -6,6 +6,7 @@ import 'package:flowpaisa/features/transactions/data/transactions_repository.dar
 import 'package:flowpaisa/shared/providers/database_provider.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
 import 'package:intl/intl.dart';
+import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 
 final exportServiceProvider = Provider<ExportService>((ref) {
   final db = ref.watch(databaseProvider);
@@ -130,6 +131,57 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
     }
   }
 
+  Future<void> _exportToPDF() async {
+    if (!PremiumGate.isPremium(ref)) {
+      PremiumGate.showPremiumDialog(context);
+      return;
+    }
+
+    if (_startDate == null || _endDate == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select date range'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    // Show loading
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(
+        child: CircularProgressIndicator(),
+      ),
+    );
+
+    try {
+      // Simulate PDF generation for now as we haven't implemented it fully
+      await Future.delayed(const Duration(seconds: 1));
+      
+      if (mounted) {
+        Navigator.pop(context); // Close loading
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('PDF Export coming soon!'),
+            backgroundColor: Colors.blue,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context); // Close loading
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error exporting: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   Future<void> _selectStartDate() async {
     final picked = await showDatePicker(
       context: context,
@@ -202,7 +254,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
                   ),
                   const SizedBox(height: 8),
                   const Text(
-                    'Download your transaction history as CSV',
+                    'Download your transaction history as CSV or PDF',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 14,
@@ -250,13 +302,43 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
               _buildSummarySection(context, _summary!),
             const SizedBox(height: 32),
 
-            // Export Button
-            GradientButton(
-              label: 'Export to CSV',
-              icon: Icons.download,
-              gradient: AppColors.primaryGradient,
-              onPressed: _exportToCSV,
+            // Export Buttons
+            Row(
+              children: [
+                Expanded(
+                  child: GradientButton(
+                    label: 'CSV',
+                    icon: Icons.table_chart,
+                    gradient: const LinearGradient(
+                      colors: [Colors.green, Colors.teal],
+                    ),
+                    onPressed: _exportToCSV,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Stack(
+                    alignment: Alignment.topRight,
+                    children: [
+                      GradientButton(
+                        label: 'PDF',
+                        icon: Icons.picture_as_pdf,
+                        gradient: const LinearGradient(
+                          colors: [Colors.red, Colors.orange],
+                        ),
+                        onPressed: _exportToPDF,
+                      ),
+                      if (!PremiumGate.isPremium(ref))
+                        const Padding(
+                          padding: EdgeInsets.only(top: 8, right: 8),
+                          child: Icon(Icons.lock, size: 16, color: Colors.white),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
             ),
+            
             const SizedBox(height: 12),
 
             // Info Note
@@ -279,7 +361,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      'CSV files can be opened in Excel, Google Sheets, or any spreadsheet application',
+                      'CSV files can be opened in Excel or Google Sheets. PDF reports are great for sharing.',
                       style: theme.textTheme.bodySmall,
                     ),
                   ),

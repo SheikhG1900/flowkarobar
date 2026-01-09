@@ -5,6 +5,8 @@ import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
+import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
+import 'package:flowpaisa/shared/widgets/limit_countdown_badge.dart';
 
 class AddContactScreen extends ConsumerStatefulWidget {
   final Contact? contactToEdit;
@@ -46,6 +48,20 @@ class _AddContactScreenState extends ConsumerState<AddContactScreen> {
   }
 
   Future<void> _saveContact() async {
+    // Check limits only for new contacts - call the method directly to get accurate current limits
+    if (widget.contactToEdit == null) {
+      final isPremium = PremiumGate.isPremium(ref);
+      if (!isPremium) {
+        final limits = await PremiumGate.getContactLimits(ref);
+        if (!limits.canAdd) {
+          if (mounted) {
+            PremiumGate.showPremiumDialog(context);
+          }
+          return;
+        }
+      }
+    }
+
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
@@ -113,8 +129,9 @@ class _AddContactScreenState extends ConsumerState<AddContactScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final limitsAsync = ref.watch(contactLimitsProvider);
+
     // Determine gradient based on name input or default
-    
     return Scaffold(
       appBar: AppBar(
         title:
@@ -136,7 +153,7 @@ class _AddContactScreenState extends ConsumerState<AddContactScreen> {
                     final gradient = name.isNotEmpty
                         ? AppColors.getContactGradient(name)
                         : AppColors.primaryGradient;
-                    
+
                     return Container(
                       width: 100,
                       height: 100,
@@ -220,14 +237,42 @@ class _AddContactScreenState extends ConsumerState<AddContactScreen> {
               ),
               const SizedBox(height: 32),
 
-              // Submit Button
-              GradientButton(
-                label: widget.contactToEdit != null
-                    ? 'Update Contact'
-                    : 'Save Contact',
-                gradient: AppColors.primaryGradient,
-                isLoading: _isLoading,
-                onPressed: _saveContact,
+              // Countdown Badge (Only for new contacts, show until limit reached)
+              if (widget.contactToEdit == null &&
+                  limitsAsync.asData?.value != null &&
+                  !limitsAsync.asData!.value.isUnlimited &&
+                  limitsAsync.asData!.value.canAdd)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Center(
+                    child: LimitCountdownBadge(
+                      totalUsed: limitsAsync.asData!.value.used,
+                      totalLimit: limitsAsync.asData!.value.total,
+                    ),
+                  ),
+                ),
+
+              // Submit Button with Lock Icon (Only when limit reached for new contacts)
+              Stack(
+                alignment: Alignment.topRight,
+                children: [
+                  GradientButton(
+                    label: widget.contactToEdit != null
+                        ? 'Update Contact'
+                        : 'Save Contact',
+                    gradient: AppColors.primaryGradient,
+                    isLoading: _isLoading,
+                    onPressed: _isLoading ? null : _saveContact,
+                    width: double.infinity,
+                  ),
+                  if (widget.contactToEdit == null &&
+                      limitsAsync.asData?.value != null &&
+                      !limitsAsync.asData!.value.canAdd)
+                    const Padding(
+                      padding: EdgeInsets.only(top: 8, right: 8),
+                      child: Icon(Icons.lock, size: 16, color: Colors.white),
+                    ),
+                ],
               ),
             ],
           ),

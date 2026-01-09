@@ -5,6 +5,9 @@ import 'package:intl/intl.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/features/analytics/presentation/providers/analytics_provider.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
+import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
+import 'package:flowpaisa/shared/widgets/premium_badge.dart';
+import 'dart:ui';
 
 class AnalyticsScreen extends ConsumerWidget {
   const AnalyticsScreen({super.key});
@@ -14,69 +17,150 @@ class AnalyticsScreen extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final selectedMonth = ref.watch(selectedMonthProvider);
     final theme = Theme.of(context);
+    final isPremium = PremiumGate.isPremium(ref);
 
     return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          // App Bar with Date Selector
-          SliverAppBar(
-            // Removed expandedHeight to default to toolbar + bottom
-            floating: true,
-            pinned: true,
-            backgroundColor: theme.scaffoldBackgroundColor,
-            title: Text(
-              l10n.analytics,
-              style: TextStyle(
-                color: theme.colorScheme.onSurface,
-                fontWeight: FontWeight.bold,
+      body: Stack(
+        children: [
+          CustomScrollView(
+            slivers: [
+              // App Bar with Date Selector
+              SliverAppBar(
+                // Removed expandedHeight to default to toolbar + bottom
+                floating: true,
+                pinned: true,
+                backgroundColor: theme.scaffoldBackgroundColor,
+                title: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      l10n.analytics,
+                      style: TextStyle(
+                        color: theme.colorScheme.onSurface,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    if (!isPremium) const PremiumBadge(isSmall: true, showLock: true),
+                  ],
+                ),
+                centerTitle: true,
+                bottom: PreferredSize(
+                  preferredSize: const Size.fromHeight(70),
+                  child: _MonthSelector(
+                    selectedMonth: selectedMonth,
+                    onMonthChanged: (date) {
+                      ref.read(selectedMonthProvider.notifier).update(date);
+                    },
+                  ),
+                ),
               ),
-            ),
-            centerTitle: true,
-            bottom: PreferredSize(
-              preferredSize: const Size.fromHeight(70),
-              child: _MonthSelector(
-                selectedMonth: selectedMonth,
-                onMonthChanged: (date) {
-                  ref.read(selectedMonthProvider.notifier).update(date);
-                },
+
+              // Content
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Pie Chart Section
+                      Text(
+                        'Expenses by Category',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      const _ExpensesPieChart(),
+                      
+                      const SizedBox(height: 32),
+                      
+                      // Trend Chart Section
+                      Text(
+                        'Income vs Expense Trend',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      const _TrendsBarChart(),
+                      
+                      const SizedBox(height: 80), // Bottom padding
+                    ],
+                  ),
+                ),
               ),
-            ),
+            ],
           ),
 
-          // Content
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Pie Chart Section
-                  Text(
-                    'Expenses by Category',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
+          // Premium Lock Overlay
+          if (!isPremium)
+            Positioned.fill(
+              child: ClipRect(
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+                  child: Container(
+                    color: Colors.black.withValues(alpha: 0.5),
+                    child: Center(
+                      child: Container(
+                        margin: const EdgeInsets.all(32),
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          color: theme.cardColor,
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.2),
+                              blurRadius: 20,
+                              offset: const Offset(0, 10),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
+                                gradient: LinearGradient(
+                                  colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
+                                ),
+                              ),
+                              child: const Icon(
+                                Icons.lock_outline,
+                                size: 40,
+                                color: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'Premium Feature',
+                              style: theme.textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Unlock advanced analytics, trends, and charts with Premium.',
+                              textAlign: TextAlign.center,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+                            FilledButton(
+                              onPressed: () => PremiumGate.showPremiumDialog(context),
+                              child: const Text('Unlock Premium'),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  const _ExpensesPieChart(),
-                  
-                  const SizedBox(height: 32),
-                  
-                  // Trend Chart Section
-                  Text(
-                    'Income vs Expense Trend',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  const _TrendsBarChart(),
-                  
-                  const SizedBox(height: 80), // Bottom padding
-                ],
+                ),
               ),
             ),
-          ),
         ],
       ),
     );
@@ -339,4 +423,3 @@ class _TrendsBarChart extends ConsumerWidget {
     );
   }
 }
-

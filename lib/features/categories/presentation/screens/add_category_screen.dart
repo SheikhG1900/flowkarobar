@@ -6,6 +6,8 @@ import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/features/categories/presentation/providers/categories_provider.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
 import 'package:flowpaisa/core/utils/icon_helper.dart';
+import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
+import 'package:flowpaisa/shared/widgets/limit_countdown_badge.dart';
 
 class AddCategoryScreen extends ConsumerStatefulWidget {
   final String? initialName;
@@ -28,7 +30,7 @@ class _AddCategoryScreenState extends ConsumerState<AddCategoryScreen> {
   String _selectedIcon = '58668'; // Default to Icons.restaurant
   Color _selectedColor = AppColors.expenseColor;
   bool _isLoading = false;
-  
+
   // Smart Suggestions
   List<IconData> _suggestedIcons = [];
 
@@ -58,7 +60,7 @@ class _AddCategoryScreenState extends ConsumerState<AddCategoryScreen> {
       _selectedType = widget.initialType!;
       _updateColorForType();
     }
-    
+
     // Initial suggestions check
     if (widget.initialName != null && widget.initialName!.isNotEmpty) {
       _updateSuggestions();
@@ -79,11 +81,12 @@ class _AddCategoryScreenState extends ConsumerState<AddCategoryScreen> {
       });
     }
   }
-  
+
   void _updateColorForType() {
     if (_selectedType == 'INCOME' && _selectedColor == AppColors.expenseColor) {
       _selectedColor = AppColors.incomeColor;
-    } else if (_selectedType == 'EXPENSE' && _selectedColor == AppColors.incomeColor) {
+    } else if (_selectedType == 'EXPENSE' &&
+        _selectedColor == AppColors.incomeColor) {
       _selectedColor = AppColors.expenseColor;
     }
   }
@@ -96,23 +99,36 @@ class _AddCategoryScreenState extends ConsumerState<AddCategoryScreen> {
   }
 
   Future<void> _saveCategory() async {
+    // Check limits - call the method directly to get accurate current limits
+    final isPremium = PremiumGate.isPremium(ref);
+    if (!isPremium) {
+      final limits = await PremiumGate.getCategoryLimits(ref);
+      if (!limits.canAdd) {
+        if (mounted) {
+          PremiumGate.showPremiumDialog(context);
+        }
+        return;
+      }
+    }
+
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
 
     try {
       final repository = ref.read(categoriesRepositoryProvider);
-      
+
       final categoryId = await repository.createCategory(
         CategoriesCompanion(
           name: drift.Value(_nameController.text.trim()),
           icon: drift.Value(_selectedIcon),
-          color: drift.Value('#${(_selectedColor.r * 255).toInt().toRadixString(16).padLeft(2, '0')}${(_selectedColor.g * 255).toInt().toRadixString(16).padLeft(2, '0')}${(_selectedColor.b * 255).toInt().toRadixString(16).padLeft(2, '0')}'),
+          color: drift.Value(
+              '#${(_selectedColor.r * 255).toInt().toRadixString(16).padLeft(2, '0')}${(_selectedColor.g * 255).toInt().toRadixString(16).padLeft(2, '0')}${(_selectedColor.b * 255).toInt().toRadixString(16).padLeft(2, '0')}'),
           type: drift.Value(_selectedType),
           isDefault: const drift.Value(false),
         ),
       );
-      
+
       // Fetch the created category to return it
       final newCategory = await repository.getCategoryById(categoryId);
 
@@ -143,6 +159,8 @@ class _AddCategoryScreenState extends ConsumerState<AddCategoryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final limitsAsync = ref.watch(categoryLimitsProvider);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Add Category'),
@@ -176,17 +194,19 @@ class _AddCategoryScreenState extends ConsumerState<AddCategoryScreen> {
                   });
                 },
                 style: ButtonStyle(
-                  backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
+                  backgroundColor:
+                      WidgetStateProperty.resolveWith<Color>((states) {
                     if (states.contains(WidgetState.selected)) {
-                      return _selectedType == 'EXPENSE' 
+                      return _selectedType == 'EXPENSE'
                           ? AppColors.expenseColor.withValues(alpha: 0.2)
                           : AppColors.incomeColor.withValues(alpha: 0.2);
                     }
                     return Colors.transparent;
                   }),
-                  foregroundColor: WidgetStateProperty.resolveWith<Color>((states) {
+                  foregroundColor:
+                      WidgetStateProperty.resolveWith<Color>((states) {
                     if (states.contains(WidgetState.selected)) {
-                      return _selectedType == 'EXPENSE' 
+                      return _selectedType == 'EXPENSE'
                           ? AppColors.expenseColor
                           : AppColors.incomeColor;
                     }
@@ -211,7 +231,8 @@ class _AddCategoryScreenState extends ConsumerState<AddCategoryScreen> {
                   ),
                   alignment: Alignment.center,
                   child: Icon(
-                    IconData(int.parse(_selectedIcon), fontFamily: 'MaterialIcons'),
+                    IconData(int.parse(_selectedIcon),
+                        fontFamily: 'MaterialIcons'),
                     color: _selectedColor,
                     size: 40,
                   ),
@@ -236,19 +257,20 @@ class _AddCategoryScreenState extends ConsumerState<AddCategoryScreen> {
                 },
               ),
               const SizedBox(height: 24),
-              
+
               // Smart Suggestions
               if (_suggestedIcons.isNotEmpty) ...[
                 Row(
                   children: [
-                    Icon(Icons.auto_awesome, size: 16, color: Theme.of(context).colorScheme.primary),
+                    Icon(Icons.auto_awesome,
+                        size: 16, color: Theme.of(context).colorScheme.primary),
                     const SizedBox(width: 8),
                     Text(
                       'Suggested Icons',
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        color: Theme.of(context).colorScheme.primary,
-                        fontWeight: FontWeight.bold,
-                      ),
+                            color: Theme.of(context).colorScheme.primary,
+                            fontWeight: FontWeight.bold,
+                          ),
                     ),
                   ],
                 ),
@@ -260,20 +282,26 @@ class _AddCategoryScreenState extends ConsumerState<AddCategoryScreen> {
                     itemCount: _suggestedIcons.length,
                     itemBuilder: (context, index) {
                       final icon = _suggestedIcons[index];
-                      final isSelected = _selectedIcon == icon.codePoint.toString();
-                      
+                      final isSelected =
+                          _selectedIcon == icon.codePoint.toString();
+
                       return GestureDetector(
-                        onTap: () => setState(() => _selectedIcon = icon.codePoint.toString()),
+                        onTap: () => setState(
+                            () => _selectedIcon = icon.codePoint.toString()),
                         child: Container(
                           width: 50,
                           margin: const EdgeInsets.only(right: 8),
                           decoration: BoxDecoration(
                             color: isSelected
                                 ? Theme.of(context).colorScheme.primaryContainer
-                                : Theme.of(context).colorScheme.surfaceContainerHighest,
+                                : Theme.of(context)
+                                    .colorScheme
+                                    .surfaceContainerHighest,
                             borderRadius: BorderRadius.circular(12),
                             border: isSelected
-                                ? Border.all(color: Theme.of(context).colorScheme.primary)
+                                ? Border.all(
+                                    color:
+                                        Theme.of(context).colorScheme.primary)
                                 : null,
                           ),
                           alignment: Alignment.center,
@@ -311,7 +339,9 @@ class _AddCategoryScreenState extends ConsumerState<AddCategoryScreen> {
                         color: color,
                         shape: BoxShape.circle,
                         border: _selectedColor == color
-                            ? Border.all(color: Theme.of(context).colorScheme.onSurface, width: 3)
+                            ? Border.all(
+                                color: Theme.of(context).colorScheme.onSurface,
+                                width: 3)
                             : null,
                         boxShadow: [
                           BoxShadow(
@@ -322,7 +352,8 @@ class _AddCategoryScreenState extends ConsumerState<AddCategoryScreen> {
                         ],
                       ),
                       child: _selectedColor == color
-                          ? const Icon(Icons.check, color: Colors.white, size: 20)
+                          ? const Icon(Icons.check,
+                              color: Colors.white, size: 20)
                           : null,
                     ),
                   );
@@ -352,10 +383,12 @@ class _AddCategoryScreenState extends ConsumerState<AddCategoryScreen> {
                   itemCount: IconHelper.allIcons.length,
                   itemBuilder: (context, index) {
                     final icon = IconHelper.allIcons[index];
-                    final isSelected = _selectedIcon == icon.codePoint.toString();
-                    
+                    final isSelected =
+                        _selectedIcon == icon.codePoint.toString();
+
                     return GestureDetector(
-                      onTap: () => setState(() => _selectedIcon = icon.codePoint.toString()),
+                      onTap: () => setState(
+                          () => _selectedIcon = icon.codePoint.toString()),
                       child: Container(
                         decoration: BoxDecoration(
                           color: isSelected
@@ -363,7 +396,8 @@ class _AddCategoryScreenState extends ConsumerState<AddCategoryScreen> {
                               : null,
                           borderRadius: BorderRadius.circular(8),
                           border: isSelected
-                              ? Border.all(color: Theme.of(context).colorScheme.primary)
+                              ? Border.all(
+                                  color: Theme.of(context).colorScheme.primary)
                               : null,
                         ),
                         alignment: Alignment.center,
@@ -381,14 +415,40 @@ class _AddCategoryScreenState extends ConsumerState<AddCategoryScreen> {
               ),
               const SizedBox(height: 32),
 
-              // Submit Button
-              GradientButton(
-                label: 'Save Category',
-                gradient: _selectedType == 'EXPENSE' 
-                    ? AppColors.expenseGradient 
-                    : AppColors.incomeGradient,
-                isLoading: _isLoading,
-                onPressed: _saveCategory,
+              // Countdown Badge (show until limit reached)
+              if (limitsAsync.asData?.value != null &&
+                  !limitsAsync.asData!.value.isUnlimited &&
+                  limitsAsync.asData!.value.canAdd)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Center(
+                    child: LimitCountdownBadge(
+                      totalUsed: limitsAsync.asData!.value.used,
+                      totalLimit: limitsAsync.asData!.value.total,
+                    ),
+                  ),
+                ),
+
+              // Submit Button with Lock Icon (only when limit reached)
+              Stack(
+                alignment: Alignment.topRight,
+                children: [
+                  GradientButton(
+                    label: 'Save Category',
+                    gradient: _selectedType == 'EXPENSE'
+                        ? AppColors.expenseGradient
+                        : AppColors.incomeGradient,
+                    isLoading: _isLoading,
+                    onPressed: _isLoading ? null : _saveCategory,
+                    width: double.infinity,
+                  ),
+                  if (limitsAsync.asData?.value != null &&
+                      !limitsAsync.asData!.value.canAdd)
+                    const Padding(
+                      padding: EdgeInsets.only(top: 8, right: 8),
+                      child: Icon(Icons.lock, size: 16, color: Colors.white),
+                    ),
+                ],
               ),
             ],
           ),

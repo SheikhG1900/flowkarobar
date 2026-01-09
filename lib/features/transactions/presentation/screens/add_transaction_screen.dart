@@ -9,6 +9,8 @@ import 'package:flowpaisa/features/contacts/presentation/providers/contacts_prov
 import 'package:flowpaisa/features/categories/presentation/screens/add_category_screen.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
+import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
+import 'package:flowpaisa/shared/widgets/limit_countdown_badge.dart';
 
 class AddTransactionScreen extends ConsumerStatefulWidget {
   final double? initialAmount;
@@ -63,9 +65,6 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     }
 
     // Auto-select category if name provided (needs async lookup, handled in post-frame or logic below)
-    // We'll trigger a lookup in the build or init.
-    // For simplicity, we just store the name and let user pick or try to find it.
-    // Ideally, we'd look it up here. Let's do a quick lookup using a future in post-frame.
     if (widget.initialCategoryName != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _findAndSelectCategory(widget.initialCategoryName!);
@@ -74,14 +73,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
   }
 
   Future<void> _findAndSelectCategory(String name) async {
-    // This is a bit hacky to find by name from the provider list
-    // A better way would be a repository method `getCategoryByName`
-    // For now, let's assume if the user opens the picker, it's there.
-    // Or we can try to match from the `smartCategoriesProvider` if loaded.
-
-    // Actually, let's just leave it unset or try to match if we have data.
-    // Since we don't want to block UI, we'll skip complex lookup for MVP.
-    // If the user taps "Select Category", they will see the list.
+    // Logic to select category if needed
   }
 
   @override
@@ -92,6 +84,18 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
   }
 
   Future<void> _saveTransaction() async {
+    // Check limits first - prevent saving if limit reached, regardless of form validity
+    final isPremium = PremiumGate.isPremium(ref);
+    if (!isPremium) {
+      final limits = await PremiumGate.getTransactionLimits(ref);
+      if (!limits.canAdd) {
+        if (mounted) {
+          PremiumGate.showPremiumDialog(context);
+        }
+        return;
+      }
+    }
+
     if (!_formKey.currentState!.validate()) {
       return;
     }
@@ -128,6 +132,16 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
         paidRelationship: _paidRelationship,
         createLinkedEntry: _createLinkedEntry,
       );
+
+      // Increment usage count for free users
+      if (!PremiumGate.isPremium(ref)) {
+        await ref
+            .read(usageTrackerRepositoryProvider)
+            .incrementTransactionCount();
+      }
+
+      // Invalidate limits to refresh usage count
+      ref.invalidate(transactionLimitsProvider);
 
       if (mounted) {
         // Pop to root to avoid stacking if coming from scanner
@@ -567,6 +581,9 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final isExpense = _selectedType == 'EXPENSE';
+
+    // Watch limits
+    final limitsAsync = ref.watch(transactionLimitsProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -1037,17 +1054,47 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 24),
 
-              // Save Button
-              GradientButton(
-                label: _isLoading ? 'Saving...' : l10n.save,
-                onPressed: _isLoading ? null : _saveTransaction,
-                gradient: isExpense
-                    ? AppColors.expenseGradient
-                    : AppColors.incomeGradient,
-                isLoading: _isLoading,
-                icon: _isLoading ? null : Icons.check,
+              // Countdown Badge (show until limit reached)
+              if (limitsAsync.asData?.value != null &&
+                  !limitsAsync.asData!.value.isUnlimited &&
+                  limitsAsync.asData!.value.canAdd)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Center(
+                    child: LimitCountdownBadge(
+                      dailyUsed: limitsAsync.asData!.value.dailyTotal -
+                          limitsAsync.asData!.value.dailyRemaining,
+                      dailyTotal: limitsAsync.asData!.value.dailyTotal,
+                      monthlyUsed: limitsAsync.asData!.value.monthlyTotal -
+                          limitsAsync.asData!.value.monthlyRemaining,
+                      monthlyTotal: limitsAsync.asData!.value.monthlyTotal,
+                    ),
+                  ),
+                ),
+
+              // Save Button with Lock Icon (only when limit reached)
+              Stack(
+                alignment: Alignment.topRight,
+                children: [
+                  GradientButton(
+                    label: _isLoading ? 'Saving...' : l10n.save,
+                    onPressed: _isLoading ? null : _saveTransaction,
+                    gradient: isExpense
+                        ? AppColors.expenseGradient
+                        : AppColors.incomeGradient,
+                    isLoading: _isLoading,
+                    icon: _isLoading ? null : Icons.check,
+                    width: double.infinity,
+                  ),
+                  if (limitsAsync.asData?.value != null &&
+                      !limitsAsync.asData!.value.canAdd)
+                    const Padding(
+                      padding: EdgeInsets.only(top: 8, right: 8),
+                      child: Icon(Icons.lock, size: 16, color: Colors.white),
+                    ),
+                ],
               ),
             ],
           ),
