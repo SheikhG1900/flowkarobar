@@ -11,7 +11,7 @@ class TransactionsRepository {
     return _database.select(_database.transactions).watch();
   }
 
-  // Get transactions by date range
+  // Get transactions by date range (Stream)
   Stream<List<Transaction>> watchTransactionsByDateRange(
     DateTime start,
     DateTime end,
@@ -20,6 +20,17 @@ class TransactionsRepository {
           ..where((t) => t.date.isBetweenValues(start, end))
           ..orderBy([(t) => OrderingTerm.desc(t.date)]))
         .watch();
+  }
+
+  // Get transactions by date range (Future)
+  Future<List<Transaction>> getTransactionsByDateRange(
+    DateTime start,
+    DateTime end,
+  ) {
+    return (_database.select(_database.transactions)
+          ..where((t) => t.date.isBetweenValues(start, end))
+          ..orderBy([(t) => OrderingTerm.desc(t.date)]))
+        .get();
   }
 
   // Get transaction by ID

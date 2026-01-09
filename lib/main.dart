@@ -17,6 +17,14 @@ import 'package:flowpaisa/features/categories/presentation/screens/categories_li
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flowpaisa/features/analytics/presentation/screens/analytics_screen.dart';
 import 'package:flowpaisa/features/backup/presentation/screens/backup_screen.dart';
+import 'package:flowpaisa/features/settings/presentation/screens/language_selector_screen.dart';
+import 'package:flowpaisa/features/settings/presentation/screens/theme_selector_screen.dart';
+import 'package:flowpaisa/features/settings/presentation/screens/about_screen.dart';
+import 'package:flowpaisa/features/settings/presentation/screens/profile_screen.dart';
+import 'package:flowpaisa/features/notifications/presentation/screens/notifications_screen.dart';
+import 'package:flowpaisa/features/premium/presentation/screens/premium_screen.dart';
+import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
+import 'package:flowpaisa/features/transactions/presentation/screens/export_screen.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:intl/intl.dart';
@@ -67,10 +75,12 @@ class FlowPaisaApp extends ConsumerStatefulWidget {
 }
 
 class _FlowPaisaAppState extends ConsumerState<FlowPaisaApp> {
-  final Locale _currentLocale = const Locale('en', 'US');
-
   @override
   Widget build(BuildContext context) {
+    // Watch language and theme mode from providers
+    final currentLocale = ref.watch(languageProvider);
+    final currentThemeMode = ref.watch(themeModeProvider);
+
     return MaterialApp(
       title: AppConstants.appName,
       debugShowCheckedModeBanner: false,
@@ -87,7 +97,7 @@ class _FlowPaisaAppState extends ConsumerState<FlowPaisaApp> {
         Locale('hi', 'IN'), // Hindi
         Locale('ur', 'PK'), // Urdu
       ],
-      locale: _currentLocale,
+      locale: currentLocale,
       localeResolutionCallback: (locale, supportedLocales) {
         if (locale != null) {
           for (var supportedLocale in supportedLocales) {
@@ -100,9 +110,9 @@ class _FlowPaisaAppState extends ConsumerState<FlowPaisaApp> {
       },
 
       // Theme
-      theme: AppTheme.lightTheme(_currentLocale.languageCode),
-      darkTheme: AppTheme.darkTheme(_currentLocale.languageCode),
-      themeMode: ThemeMode.system,
+      theme: AppTheme.lightTheme(currentLocale.languageCode),
+      darkTheme: AppTheme.darkTheme(currentLocale.languageCode),
+      themeMode: currentThemeMode,
 
       // Home
       home: const HomeScreen(),
@@ -564,7 +574,12 @@ class _DashboardTab extends ConsumerWidget {
                   color: theme.colorScheme.onSurface,
                 ),
                 onPressed: () {
-                  // TODO: Notifications
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const NotificationsScreen(),
+                    ),
+                  );
                 },
               ),
               IconButton(
@@ -573,7 +588,12 @@ class _DashboardTab extends ConsumerWidget {
                   color: theme.colorScheme.onSurface,
                 ),
                 onPressed: () {
-                  // TODO: Profile
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const ProfileScreen(),
+                    ),
+                  );
                 },
               ),
             ],
@@ -1114,7 +1134,12 @@ class _SettingsTab extends StatelessWidget {
             subtitle: const Text('English'),
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
             onTap: () {
-              // TODO: Language selection
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const LanguageSelectorScreen(),
+                ),
+              );
             },
           ),
           ListTile(
@@ -1123,7 +1148,12 @@ class _SettingsTab extends StatelessWidget {
             subtitle: const Text('System'),
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
             onTap: () {
-              // TODO: Theme selection
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const ThemeSelectorScreen(),
+                ),
+              );
             },
           ),
           ListTile(
@@ -1141,12 +1171,31 @@ class _SettingsTab extends StatelessWidget {
             },
           ),
           ListTile(
+            leading: const Icon(Icons.file_download),
+            title: const Text('Export Data'),
+            subtitle: const Text('Download your data as CSV'),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const ExportScreen(),
+                ),
+              );
+            },
+          ),
+          ListTile(
             leading: const Icon(Icons.workspace_premium),
             title: Text(l10n.premium),
             subtitle: Text(l10n.free),
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
             onTap: () {
-              // TODO: Premium upgrade
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const PremiumScreen(),
+                ),
+              );
             },
           ),
           const Divider(),
@@ -1155,7 +1204,12 @@ class _SettingsTab extends StatelessWidget {
             title: const Text('About'),
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
             onTap: () {
-              // TODO: About screen
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const AboutScreen(),
+                ),
+              );
             },
           ),
         ],
