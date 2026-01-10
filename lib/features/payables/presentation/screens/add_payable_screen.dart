@@ -294,10 +294,7 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
                   color: theme.cardColor,
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(24),
-                    bottomRight: Radius.circular(24),
-                  ),
+                  borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
                       color: AppColors.payableColor.withValues(alpha: 0.1),
@@ -458,10 +455,7 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: theme.colorScheme.surface,
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(12),
-                      bottomRight: Radius.circular(12),
-                    ),
+                    borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: theme.dividerColor),
                   ),
                   child: Row(
@@ -514,10 +508,7 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: theme.colorScheme.surface,
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(12),
-                      bottomRight: Radius.circular(12),
-                    ),
+                    borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: theme.dividerColor),
                   ),
                   child: Row(

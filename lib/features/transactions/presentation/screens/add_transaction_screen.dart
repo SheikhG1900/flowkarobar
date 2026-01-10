@@ -619,10 +619,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
                   color: theme.cardColor,
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(24),
-                    bottomRight: Radius.circular(24),
-                  ), // Diagonal beveled
+                  borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
                       color: (isExpense
@@ -1009,10 +1006,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: theme.colorScheme.surface,
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(12),
-                      bottomRight: Radius.circular(12),
-                    ), // Diagonal beveled
+                    borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: theme.dividerColor),
                   ),
                   child: Row(
@@ -1156,10 +1150,7 @@ class _TypeButton extends StatelessWidget {
         decoration: BoxDecoration(
           gradient: isSelected ? gradient : null,
           color: isSelected ? null : theme.colorScheme.surface,
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(16),
-            bottomRight: Radius.circular(16),
-          ), // Diagonal beveled
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isSelected ? Colors.transparent : theme.dividerColor,
             width: 1.5,
@@ -1225,19 +1216,13 @@ class _RelationshipButton extends StatelessWidget {
 
     return InkWell(
       onTap: onTap,
-      borderRadius: const BorderRadius.only(
-        topLeft: Radius.circular(16),
-        bottomRight: Radius.circular(16),
-      ),
+      borderRadius: BorderRadius.circular(16),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           gradient: isSelected ? gradient : null,
           color: isSelected ? null : theme.colorScheme.surfaceContainerHighest,
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(16),
-            bottomRight: Radius.circular(16),
-          ),
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isSelected ? color : theme.dividerColor,
             width: isSelected ? 2 : 1,

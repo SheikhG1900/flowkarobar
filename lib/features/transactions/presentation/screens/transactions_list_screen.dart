@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
+import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
 import 'package:flowpaisa/features/transactions/presentation/screens/add_transaction_screen.dart';
-import 'package:flowpaisa/features/transactions/presentation/widgets/transaction_share_button.dart';
+import 'package:flowpaisa/features/transactions/presentation/screens/edit_transaction_screen.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
+import 'package:flowpaisa/shared/widgets/swipeable_list_item.dart';
 import 'package:intl/intl.dart';
 
 class TransactionsListScreen extends ConsumerWidget {
@@ -13,7 +15,8 @@ class TransactionsListScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    final transactionsAsync = ref.watch(transactionsWithCategoryProvider);
+    // Use the new provider with ALL details (category + contact)
+    final transactionsAsync = ref.watch(transactionsWithDetailsProvider);
     final theme = Theme.of(context);
 
     return Scaffold(
@@ -74,6 +77,8 @@ class TransactionsListScreen extends ConsumerWidget {
             groupedTransactions[dateKey]!.add(item);
           }
 
+          final repository = ref.read(transactionsRepositoryProvider);
+
           return ListView.builder(
             padding: const EdgeInsets.only(bottom: 80),
             itemCount: groupedTransactions.length,
@@ -100,10 +105,36 @@ class TransactionsListScreen extends ConsumerWidget {
                   ...dateTransactions.map((item) {
                     final isExpense = item.transaction.type == 'EXPENSE';
 
-                    return _buildTransactionCard(
-                      context,
-                      item: item,
-                      isExpense: isExpense,
+                    return SwipeableListItem(
+                      onEdit: item.isLinkedEntryMarked ? null : () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => EditTransactionScreen(
+                              transaction: item.transaction,
+                              category: item.category,
+                              contact: item.contact,
+                            ),
+                          ),
+                        );
+                      },
+                      onDelete: () async {
+                        await repository.deleteTransaction(item.transaction.id);
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Transaction deleted'),
+                              backgroundColor: Colors.green,
+                            ),
+                          );
+                        }
+                      },
+                      child: _buildTransactionCard(
+                        context,
+                        ref: ref,
+                        item: item,
+                        isExpense: isExpense,
+                      ),
                     );
                   }),
                 ],
@@ -150,17 +181,19 @@ class TransactionsListScreen extends ConsumerWidget {
 
   Widget _buildTransactionCard(
     BuildContext context, {
-    required dynamic item, // TransactionWithCategory
+    required WidgetRef ref,
+    required dynamic item, // TransactionWithDetails
     required bool isExpense,
   }) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final transaction = item.transaction;
     final category = item.category;
+    final contact = item.contact;
 
-    // Check if it's a "credit" transaction (Paid BY or Will Receive)
-    final isCredit = transaction.paidRelationship == 'PAID_BY' || 
-                     transaction.paidRelationship == 'WILL_RECEIVE';
+    // Check if it's an "inactive" transaction (Paid BY or Will Receive)
+    final isInactive = transaction.paidRelationship == 'PAID_BY' || 
+                       transaction.paidRelationship == 'WILL_RECEIVE';
 
     // Resolve category color and icon
     Color categoryColor;
@@ -177,14 +210,17 @@ class TransactionsListScreen extends ConsumerWidget {
           isExpense ? AppColors.expenseColor : AppColors.incomeColor;
     }
 
-    // Apply dull effect if credit
-    final displayColor = isCredit ? categoryColor.withValues(alpha: 0.5) : categoryColor;
-    final textColor = isCredit ? theme.colorScheme.onSurface.withValues(alpha: 0.6) : theme.colorScheme.onSurface;
+    // Apply dull effect if inactive
+    final displayColor = isInactive ? categoryColor.withValues(alpha: 0.5) : categoryColor;
+    final textColor = isInactive ? theme.colorScheme.onSurface.withValues(alpha: 0.6) : theme.colorScheme.onSurface;
+
+    // Dynamic font size based on amount
+    final amountFontSize = AmountFormatter.getFontSize(transaction.amount);
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       decoration: BoxDecoration(
-        color: theme.cardColor.withValues(alpha: isCredit ? 0.6 : 1.0),
+        color: theme.cardColor.withValues(alpha: isInactive ? 0.6 : 1.0),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: displayColor.withValues(alpha: isDark ? 0.2 : 0.1),
@@ -193,7 +229,7 @@ class TransactionsListScreen extends ConsumerWidget {
         boxShadow: [
           BoxShadow(
             color: displayColor.withValues(alpha: isDark ? 0.05 : 0.08),
-            blurRadius: isCredit ? 4 : 12,
+            blurRadius: isInactive ? 4 : 12,
             offset: const Offset(0, 4),
           ),
         ],
@@ -219,43 +255,63 @@ class TransactionsListScreen extends ConsumerWidget {
           style: theme.textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.w600,
             color: textColor,
-            decoration: isCredit ? null : null, // Could add strikethrough if cancelled
+            decoration: isInactive ? null : null, // Could add strikethrough if cancelled
           ),
         ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-          category?.name ?? 'Uncategorized',
-          style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant.withValues(alpha: isCredit ? 0.5 : 1.0),
+              category?.name ?? 'Uncategorized',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant.withValues(alpha: isInactive ? 0.5 : 1.0),
               ),
+              overflow: TextOverflow.ellipsis,
             ),
-            if (isCredit) ...[
-              const SizedBox(height: 4),
+            // Contact tag - styled like payable/receivable tags
+            if (contact != null) ...[
+              const SizedBox(height: 6),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceContainerHighest,
+                  color: AppColors.getContactColor(contact.name).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(4),
+                  border: Border.all(
+                    color: AppColors.getContactColor(contact.name).withValues(alpha: 0.3),
+                    width: 1,
+                  ),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
-                      Icons.access_time, 
-                      size: 10, 
-                      color: theme.colorScheme.onSurfaceVariant
+                    Container(
+                      width: 14,
+                      height: 14,
+                      decoration: BoxDecoration(
+                        gradient: AppColors.getContactGradient(contact.name),
+                        shape: BoxShape.circle,
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        contact.name.isNotEmpty ? contact.name[0].toUpperCase() : '?',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 7,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                     const SizedBox(width: 4),
-                    Text(
-                      transaction.paidRelationship == 'PAID_BY' 
-                          ? 'Paid by others' 
-                          : 'Receive later',
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        fontSize: 10,
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
+                    Flexible(
+                      child: Text(
+                        contact.name,
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: theme.colorScheme.onSurfaceVariant,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                   ],
                 ),
@@ -263,24 +319,56 @@ class TransactionsListScreen extends ConsumerWidget {
             ],
           ],
         ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
+        trailing: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Text(
-              '${isExpense ? '-' : '+'} ₹${transaction.amount.toStringAsFixed(2)}',
+              '${isExpense ? '-' : '+'} ${AmountFormatter.formatWithCurrency(transaction.amount)}',
               style: theme.textTheme.titleLarge?.copyWith(
                 color: isExpense 
-                    ? (isCredit ? AppColors.expenseColor.withValues(alpha: 0.5) : AppColors.expenseColor)
-                    : (isCredit ? AppColors.incomeColor.withValues(alpha: 0.5) : AppColors.incomeColor),
+                    ? (isInactive ? AppColors.expenseColor.withValues(alpha: 0.5) : AppColors.expenseColor)
+                    : (isInactive ? AppColors.incomeColor.withValues(alpha: 0.5) : AppColors.incomeColor),
                 fontWeight: FontWeight.bold,
-                fontSize: 18,
+                fontSize: amountFontSize,
               ),
             ),
-            TransactionShareButton(
-              transaction: transaction,
-              category: category,
-              contact: null, // TODO: Fetch contact if contactId exists
-            ),
+            // Show status badge below amount for linked transactions
+            if (transaction.paidRelationship != null) ...[
+              const SizedBox(height: 4),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: _getStatusColor(transaction.paidRelationship!).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(4),
+                  border: Border.all(
+                    color: _getStatusColor(transaction.paidRelationship!).withValues(alpha: 0.3),
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (item.isLinkedEntryMarked) ...[
+                      Icon(
+                        Icons.check_circle,
+                        size: 10,
+                        color: _getStatusColor(transaction.paidRelationship!),
+                      ),
+                      const SizedBox(width: 3),
+                    ],
+                    Text(
+                      _getStatusLabel(transaction.paidRelationship!, item.isLinkedEntryMarked),
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: _getStatusColor(transaction.paidRelationship!),
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ],
         ),
         onTap: () {
@@ -314,5 +402,35 @@ class TransactionsListScreen extends ConsumerWidget {
       iconString,
       style: const TextStyle(fontSize: 24),
     );
+  }
+
+  Color _getStatusColor(String relationship) {
+    switch (relationship) {
+      case 'PAID_FOR':
+        return AppColors.receivableColor;
+      case 'PAID_BY':
+        return AppColors.payableColor;
+      case 'RECEIVED_FROM':
+        return AppColors.payableColor;
+      case 'WILL_RECEIVE':
+        return AppColors.receivableColor;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  String _getStatusLabel(String relationship, bool isMarked) {
+    switch (relationship) {
+      case 'PAID_FOR':
+        return isMarked ? 'Received' : 'Receivable';
+      case 'PAID_BY':
+        return isMarked ? 'Paid' : 'Payable';
+      case 'RECEIVED_FROM':
+        return isMarked ? 'Paid' : 'Payable';
+      case 'WILL_RECEIVE':
+        return isMarked ? 'Received' : 'Receivable';
+      default:
+        return '';
+    }
   }
 }

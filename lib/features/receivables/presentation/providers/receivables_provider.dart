@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/features/receivables/data/receivables_repository.dart';
+import 'package:flowpaisa/features/receivables/domain/models.dart';
 import 'package:flowpaisa/shared/providers/database_provider.dart';
 
 // Repository provider
@@ -56,3 +57,10 @@ final receivedReceivablesProvider = StreamProvider<List<Receivable>>((ref) {
   return repository.watchReceivablesByStatus('RECEIVED');
 });
 
+// Watch receivables with ALL linked data (contact + transaction + category)
+// Uses efficient JOINs to avoid N+1 query problems
+final receivablesWithLinkedDataProvider =
+    StreamProvider.family<List<ReceivableWithLinkedData>, String>((ref, status) {
+  final repository = ref.watch(receivablesRepositoryProvider);
+  return repository.watchReceivablesWithLinkedData(status);
+});

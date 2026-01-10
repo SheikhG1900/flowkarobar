@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/database/database.dart';
+import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/features/receivables/data/receivables_repository.dart';
 import 'package:flowpaisa/features/receivables/presentation/providers/receivables_provider.dart';
 import 'package:flowpaisa/features/receivables/presentation/screens/add_receivable_screen.dart';
-import 'package:flowpaisa/features/receivables/presentation/widgets/receivable_share_button.dart';
-import 'package:flowpaisa/features/whatsapp/presentation/providers/whatsapp_provider.dart';
+import 'package:flowpaisa/shared/widgets/swipeable_list_item.dart';
 import 'package:intl/intl.dart';
 
 class ReceivablesListScreen extends ConsumerStatefulWidget {
@@ -74,7 +74,7 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
 
   Widget _buildReceivablesList(String status) {
     final receivablesAsync =
-        ref.watch(receivablesWithContactsByStatusProvider(status));
+        ref.watch(receivablesWithLinkedDataProvider(status));
     final theme = Theme.of(context);
 
     return receivablesAsync.when(
@@ -116,7 +116,7 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
         }
 
         // Group by Date
-        final groupedReceivables = <String, List<ReceivableWithContact>>{};
+        final groupedReceivables = <String, List<dynamic>>{};
         for (final item in receivables) {
           final dateKey = DateFormat.yMMMd().format(item.receivable.date);
           groupedReceivables.putIfAbsent(dateKey, () => []);
@@ -146,7 +146,32 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
                   ),
                 ),
                 // Items
-                ...dateItems.map((item) => _buildReceivableCard(item)),
+                ...dateItems.map((item) {
+                  return SwipeableListItem(
+                    onEdit: () {
+                      // TODO: Navigate to edit receivable screen
+                      // Navigator.push(
+                      //   context,
+                      //   MaterialPageRoute(
+                      //     builder: (context) => EditReceivableScreen(receivableId: item.receivable.id),
+                      //   ),
+                      // );
+                    },
+                    onDelete: () async {
+                      final repository = ref.read(receivablesRepositoryProvider);
+                      await repository.deleteReceivable(item.receivable.id);
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Receivable deleted'),
+                            backgroundColor: Colors.green,
+                          ),
+                        );
+                      }
+                    },
+                    child: _buildReceivableCard(item),
+                  );
+                }),
               ],
             );
           },
@@ -159,12 +184,16 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
     );
   }
 
-  Widget _buildReceivableCard(ReceivableWithContact item) {
+  Widget _buildReceivableCard(dynamic item) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final receivable = item.receivable;
     final contact = item.contact;
+    final linkedCategory = item.linkedCategory;
     final isPending = receivable.status == 'PENDING';
+    
+    // Dynamic font size based on amount
+    final amountFontSize = AmountFormatter.getFontSize(receivable.amount);
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -271,67 +300,108 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
                   ),
                 ),
 
-                // Amount and Actions
+                // Amount and Tags
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      '₹${receivable.amount.toStringAsFixed(2)}',
+                      AmountFormatter.formatWithCurrency(receivable.amount),
                       style: theme.textTheme.titleLarge?.copyWith(
                         color: AppColors.receivableColor,
                         fontWeight: FontWeight.bold,
-                        fontSize: 18,
+                        fontSize: amountFontSize,
                       ),
                     ),
                     const SizedBox(height: 4),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (isPending)
-                          Container(
-                            margin: const EdgeInsets.only(right: 8),
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: AppColors.receivableColor.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(6),
+                    // Status badge (Receivable or Received)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: AppColors.receivableColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(
+                          color: AppColors.receivableColor.withValues(alpha: 0.3),
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (!isPending) ...[
+                            Icon(
+                              Icons.check_circle,
+                              size: 10,
+                              color: AppColors.receivableColor,
                             ),
-                            child: Text(
-                              'PENDING',
-                              style: TextStyle(
-                                color: AppColors.receivableColor,
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                              ),
+                            const SizedBox(width: 3),
+                          ],
+                          Text(
+                            isPending ? 'Receivable' : 'Received',
+                            style: TextStyle(
+                              color: AppColors.receivableColor,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
-                        SizedBox(
-                          width: 32,
-                          height: 32,
-                          child: ReceivableShareButton(
-                            receivable: receivable,
-                            contact: contact,
+                        ],
+                      ),
+                    ),
+                    // Linked category tag
+                    if (linkedCategory != null) ...[
+                      const SizedBox(height: 4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: linkedCategory.color != null
+                              ? Color(int.parse(linkedCategory.color!
+                                      .replaceAll('#', '0xFF')))
+                                  .withValues(alpha: 0.1)
+                              : AppColors.incomeColor.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(4),
+                          border: Border.all(
+                            color: linkedCategory.color != null
+                                ? Color(int.parse(linkedCategory.color!
+                                        .replaceAll('#', '0xFF')))
+                                    .withValues(alpha: 0.3)
+                                : AppColors.incomeColor.withValues(alpha: 0.3),
+                            width: 1,
                           ),
                         ),
-                        if (isPending && contact?.phone != null && contact!.phone!.isNotEmpty)
-                          InkWell(
-                            onTap: () => _sendWhatsAppReminder(receivable, contact),
-                            borderRadius: BorderRadius.circular(8),
-                            child: Container(
-                              padding: const EdgeInsets.all(4),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF25D366).withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: const Icon(
-                                Icons.chat,
-                                size: 16,
-                                color: Color(0xFF25D366),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              linkedCategory.icon != null
+                                  ? IconData(int.parse(linkedCategory.icon!),
+                                      fontFamily: 'MaterialIcons')
+                                  : Icons.category_outlined,
+                              color: linkedCategory.color != null
+                                  ? Color(int.parse(linkedCategory.color!
+                                      .replaceAll('#', '0xFF')))
+                                  : AppColors.incomeColor,
+                              size: 10,
+                            ),
+                            const SizedBox(width: 4),
+                            Flexible(
+                              child: Text(
+                                linkedCategory.name,
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: linkedCategory.color != null
+                                      ? Color(int.parse(linkedCategory.color!
+                                          .replaceAll('#', '0xFF')))
+                                      : AppColors.incomeColor,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
-                          ),
-                      ],
-                    ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ],
@@ -340,56 +410,6 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
         ),
       ),
     );
-  }
-
-  Future<void> _sendWhatsAppReminder(Receivable receivable, Contact? contact) async {
-    if (contact == null || contact.phone == null || contact.phone!.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No phone number available for this contact'),
-          backgroundColor: Colors.orange,
-        ),
-      );
-      return;
-    }
-
-    try {
-      final whatsAppService = ref.read(whatsAppServiceProvider);
-      final message = whatsAppService.formatReceivableReminder(
-        contactName: contact.name,
-        amount: receivable.amount,
-        description: receivable.description ?? '',
-        dueDate: receivable.dueDate,
-      );
-
-      final success = await whatsAppService.sendMessage(contact.phone!, message);
-      
-      if (success && mounted) {
-        // Optionally queue it for tracking
-        final queueRepo = ref.read(whatsAppQueueRepositoryProvider);
-        final queueId = await queueRepo.queueMessage(
-          contactId: contact.id,
-          message: message,
-        );
-        await queueRepo.markAsSent(queueId);
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Opening WhatsApp...'),
-            backgroundColor: Color(0xFF25D366),
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
   }
 
   void _showMarkAsReceivedDialog(Receivable receivable) {

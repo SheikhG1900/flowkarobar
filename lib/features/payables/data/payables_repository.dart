@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/features/contacts/data/contacts_repository.dart';
+import 'package:flowpaisa/features/payables/domain/models.dart';
 
 class PayablesRepository {
   final AppDatabase _database;
@@ -64,6 +65,46 @@ class PayablesRepository {
         );
       }).toList();
     });
+  }
+
+  /// Watch payables with ALL linked data (contact + linked transaction + linked category)
+  /// This method uses JOINs to fetch all related data in a single efficient query
+  Stream<List<PayableWithLinkedData>> watchPayablesWithLinkedData(String status) {
+    final query = _database.select(_database.payables).join([
+      leftOuterJoin(
+        _database.contacts,
+        _database.contacts.id.equalsExp(_database.payables.contactId),
+      ),
+      leftOuterJoin(
+        _database.transactions,
+        _database.transactions.id.equalsExp(_database.payables.linkedExpenseId),
+      ),
+      leftOuterJoin(
+        _database.categories,
+        _database.categories.id.equalsExp(_database.transactions.categoryId),
+      ),
+    ]);
+
+    query.where(_database.payables.status.equals(status));
+    query.orderBy([OrderingTerm.desc(_database.payables.date)]);
+
+    return query.watch().map((rows) {
+      return rows.map((row) {
+        return PayableWithLinkedData(
+          payable: row.readTable(_database.payables),
+          contact: row.readTableOrNull(_database.contacts),
+          linkedTransaction: row.readTableOrNull(_database.transactions),
+          linkedCategory: row.readTableOrNull(_database.categories),
+        );
+      }).toList();
+    });
+  }
+
+  /// Update payable (with companion for partial updates)
+  Future<int> updatePayableWithCompanion(int id, PayablesCompanion companion) {
+    return (_database.update(_database.payables)
+          ..where((p) => p.id.equals(id)))
+        .write(companion);
   }
 
   /// Get payable by ID

@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/features/payables/data/payables_repository.dart';
+import 'package:flowpaisa/features/payables/domain/models.dart';
 import 'package:flowpaisa/shared/providers/database_provider.dart';
 
 // Repository provider
@@ -55,3 +56,10 @@ final paidPayablesProvider = StreamProvider<List<Payable>>((ref) {
   return repository.watchPayablesByStatus('PAID');
 });
 
+// Watch payables with ALL linked data (contact + transaction + category)
+// Uses efficient JOINs to avoid N+1 query problems
+final payablesWithLinkedDataProvider =
+    StreamProvider.family<List<PayableWithLinkedData>, String>((ref, status) {
+  final repository = ref.watch(payablesRepositoryProvider);
+  return repository.watchPayablesWithLinkedData(status);
+});

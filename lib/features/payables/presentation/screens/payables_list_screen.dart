@@ -2,11 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/database/database.dart';
-import 'package:flowpaisa/features/payables/data/payables_repository.dart';
+import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/features/payables/presentation/providers/payables_provider.dart';
 import 'package:flowpaisa/features/payables/presentation/screens/add_payable_screen.dart';
-import 'package:flowpaisa/features/payables/presentation/widgets/payable_share_button.dart';
-import 'package:flowpaisa/features/whatsapp/presentation/providers/whatsapp_provider.dart';
+import 'package:flowpaisa/shared/widgets/swipeable_list_item.dart';
 import 'package:intl/intl.dart';
 
 class PayablesListScreen extends ConsumerStatefulWidget {
@@ -72,9 +71,10 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
   }
 
   Widget _buildPayablesList(String status) {
-    final payablesAsync =
-        ref.watch(payablesWithContactsByStatusProvider(status));
+    // Use new provider with linked data (contact + transaction + category)
+    final payablesAsync = ref.watch(payablesWithLinkedDataProvider(status));
     final theme = Theme.of(context);
+    final repository = ref.read(payablesRepositoryProvider);
 
     return payablesAsync.when(
       data: (payables) {
@@ -113,7 +113,7 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
         }
 
         // Group by Date
-        final groupedPayables = <String, List<PayableWithContact>>{};
+        final groupedPayables = <String, List>{};
         for (final item in payables) {
           final dateKey = DateFormat.yMMMd().format(item.payable.date);
           groupedPayables.putIfAbsent(dateKey, () => []);
@@ -143,7 +143,23 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
                   ),
                 ),
                 // Items
-                ...dateItems.map((item) => _buildPayableCard(item)),
+                ...dateItems.map((item) => SwipeableListItem(
+                      onEdit: () {
+                        // TODO: Navigate to edit screen
+                      },
+                      onDelete: () async {
+                        await repository.deletePayable(item.payable.id);
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Payable deleted'),
+                              backgroundColor: Colors.green,
+                            ),
+                          );
+                        }
+                      },
+                      child: _buildPayableCard(item),
+                    )),
               ],
             );
           },
@@ -156,12 +172,16 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
     );
   }
 
-  Widget _buildPayableCard(PayableWithContact item) {
+  Widget _buildPayableCard(dynamic item) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final payable = item.payable;
     final contact = item.contact;
+    final linkedCategory = item.linkedCategory;
     final isPending = payable.status == 'PENDING';
+
+    // Dynamic font size based on amount
+    final amountFontSize = AmountFormatter.getFontSize(payable.amount);
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -184,7 +204,12 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: isPending ? () => _showMarkAsPaidDialog(payable) : null,
+          onTap: () {
+            // TODO: Show details dialog
+            if (isPending) {
+              _showMarkAsPaidDialog(payable, contact);
+            }
+          },
           borderRadius: BorderRadius.circular(20),
           child: Padding(
             padding: const EdgeInsets.all(16),
@@ -269,72 +294,108 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
                   ),
                 ),
 
-                // Amount and Actions
+                // Amount and Tags
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      '₹${payable.amount.toStringAsFixed(2)}',
+                      AmountFormatter.formatWithCurrency(payable.amount),
                       style: theme.textTheme.titleLarge?.copyWith(
                         color: AppColors.payableColor,
                         fontWeight: FontWeight.bold,
-                        fontSize: 18,
+                        fontSize: amountFontSize,
                       ),
                     ),
                     const SizedBox(height: 4),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (isPending)
-                          Container(
-                            margin: const EdgeInsets.only(right: 8),
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 2),
-                            decoration: BoxDecoration(
-                              color:
-                                  AppColors.payableColor.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(6),
+                    // Status badge (Payable or Paid)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: AppColors.payableColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(
+                          color: AppColors.payableColor.withValues(alpha: 0.3),
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (!isPending) ...[
+                            Icon(
+                              Icons.check_circle,
+                              size: 10,
+                              color: AppColors.payableColor,
                             ),
-                            child: Text(
-                              'PENDING',
-                              style: TextStyle(
-                                color: AppColors.payableColor,
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                              ),
+                            const SizedBox(width: 3),
+                          ],
+                          Text(
+                            isPending ? 'Payable' : 'Paid',
+                            style: TextStyle(
+                              color: AppColors.payableColor,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
-                        SizedBox(
-                          width: 32,
-                          height: 32,
-                          child: PayableShareButton(
-                            payable: payable,
-                            contact: contact,
+                        ],
+                      ),
+                    ),
+                    // Linked category tag
+                    if (linkedCategory != null) ...[
+                      const SizedBox(height: 4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: linkedCategory.color != null
+                              ? Color(int.parse(linkedCategory.color!
+                                      .replaceAll('#', '0xFF')))
+                                  .withValues(alpha: 0.1)
+                              : AppColors.expenseColor.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(4),
+                          border: Border.all(
+                            color: linkedCategory.color != null
+                                ? Color(int.parse(linkedCategory.color!
+                                        .replaceAll('#', '0xFF')))
+                                    .withValues(alpha: 0.3)
+                                : AppColors.expenseColor.withValues(alpha: 0.3),
+                            width: 1,
                           ),
                         ),
-                        if (isPending &&
-                            contact?.phone != null &&
-                            contact!.phone!.isNotEmpty)
-                          InkWell(
-                            onTap: () =>
-                                _sendWhatsAppReminder(payable, contact),
-                            borderRadius: BorderRadius.circular(8),
-                            child: Container(
-                              padding: const EdgeInsets.all(4),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF25D366)
-                                    .withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: const Icon(
-                                Icons.chat,
-                                size: 16,
-                                color: Color(0xFF25D366),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              linkedCategory.icon != null
+                                  ? IconData(int.parse(linkedCategory.icon!),
+                                      fontFamily: 'MaterialIcons')
+                                  : Icons.category_outlined,
+                              color: linkedCategory.color != null
+                                  ? Color(int.parse(linkedCategory.color!
+                                      .replaceAll('#', '0xFF')))
+                                  : AppColors.expenseColor,
+                              size: 10,
+                            ),
+                            const SizedBox(width: 4),
+                            Flexible(
+                              child: Text(
+                                linkedCategory.name,
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: linkedCategory.color != null
+                                      ? Color(int.parse(linkedCategory.color!
+                                          .replaceAll('#', '0xFF')))
+                                      : AppColors.expenseColor,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
-                          ),
-                      ],
-                    ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ],
@@ -345,58 +406,7 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
     );
   }
 
-  Future<void> _sendWhatsAppReminder(Payable payable, Contact? contact) async {
-    if (contact == null || contact.phone == null || contact.phone!.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No phone number available for this contact'),
-          backgroundColor: Colors.orange,
-        ),
-      );
-      return;
-    }
-
-    try {
-      final whatsAppService = ref.read(whatsAppServiceProvider);
-      final message = whatsAppService.formatPayableReminder(
-        contactName: contact.name,
-        amount: payable.amount,
-        description: payable.description ?? '',
-        dueDate: payable.dueDate,
-      );
-
-      final success =
-          await whatsAppService.sendMessage(contact.phone!, message);
-
-      if (success && mounted) {
-        // Optionally queue it for tracking
-        final queueRepo = ref.read(whatsAppQueueRepositoryProvider);
-        final queueId = await queueRepo.queueMessage(
-          contactId: contact.id,
-          message: message,
-        );
-        await queueRepo.markAsSent(queueId);
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Opening WhatsApp...'),
-            backgroundColor: Color(0xFF25D366),
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-  }
-
-  void _showMarkAsPaidDialog(Payable payable) {
+  void _showMarkAsPaidDialog(Payable payable, Contact? contact) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(

@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:flowpaisa/core/database/database.dart';
+import 'package:flowpaisa/features/transactions/domain/models.dart';
 
 class TransactionsRepository {
   final AppDatabase _database;
@@ -148,6 +149,49 @@ class TransactionsRepository {
         );
       }).toList();
     });
+  }
+
+  // Watch transactions with ALL details (category + contact)
+  // This method uses JOINs to fetch all related data in a single efficient query
+  Stream<List<TransactionWithDetails>> watchTransactionsWithDetails() {
+    final query = _database.select(_database.transactions).join([
+      leftOuterJoin(
+        _database.categories,
+        _database.categories.id.equalsExp(_database.transactions.categoryId),
+      ),
+      leftOuterJoin(
+        _database.contacts,
+        _database.contacts.id.equalsExp(_database.transactions.contactId),
+      ),
+      leftOuterJoin(
+        _database.payables,
+        _database.payables.id.equalsExp(_database.transactions.linkedPayableId),
+      ),
+      leftOuterJoin(
+        _database.receivables,
+        _database.receivables.id.equalsExp(_database.transactions.linkedReceivableId),
+      ),
+    ])
+      ..orderBy([OrderingTerm.desc(_database.transactions.date)]);
+
+    return query.watch().map((rows) {
+      return rows.map((row) {
+        return TransactionWithDetails(
+          transaction: row.readTable(_database.transactions),
+          category: row.readTableOrNull(_database.categories),
+          contact: row.readTableOrNull(_database.contacts),
+          linkedPayable: row.readTableOrNull(_database.payables),
+          linkedReceivable: row.readTableOrNull(_database.receivables),
+        );
+      }).toList();
+    });
+  }
+
+  // Update transaction (with companion for partial updates)
+  Future<int> updateTransactionWithCompanion(int id, TransactionsCompanion companion) {
+    return (_database.update(_database.transactions)
+          ..where((t) => t.id.equals(id)))
+        .write(companion);
   }
 }
 

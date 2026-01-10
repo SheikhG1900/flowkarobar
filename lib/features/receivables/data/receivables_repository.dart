@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/features/contacts/data/contacts_repository.dart';
+import 'package:flowpaisa/features/receivables/domain/models.dart';
 
 class ReceivablesRepository {
   final AppDatabase _database;
@@ -64,6 +65,47 @@ class ReceivablesRepository {
         );
       }).toList();
     });
+  }
+
+  /// Watch receivables with ALL linked data (contact + linked transaction + linked category)
+  /// This method uses JOINs to fetch all related data in a single efficient query
+  Stream<List<ReceivableWithLinkedData>> watchReceivablesWithLinkedData(String status) {
+    final query = _database.select(_database.receivables).join([
+      leftOuterJoin(
+        _database.contacts,
+        _database.contacts.id.equalsExp(_database.receivables.contactId),
+      ),
+      leftOuterJoin(
+        _database.transactions,
+        _database.transactions.id.equalsExp(_database.receivables.linkedExpenseId) | 
+        _database.transactions.id.equalsExp(_database.receivables.linkedIncomeId),
+      ),
+      leftOuterJoin(
+        _database.categories,
+        _database.categories.id.equalsExp(_database.transactions.categoryId),
+      ),
+    ]);
+
+    query.where(_database.receivables.status.equals(status));
+    query.orderBy([OrderingTerm.desc(_database.receivables.date)]);
+
+    return query.watch().map((rows) {
+      return rows.map((row) {
+        return ReceivableWithLinkedData(
+          receivable: row.readTable(_database.receivables),
+          contact: row.readTableOrNull(_database.contacts),
+          linkedTransaction: row.readTableOrNull(_database.transactions),
+          linkedCategory: row.readTableOrNull(_database.categories),
+        );
+      }).toList();
+    });
+  }
+
+  /// Update receivable (with companion for partial updates)
+  Future<int> updateReceivableWithCompanion(int id, ReceivablesCompanion companion) {
+    return (_database.update(_database.receivables)
+          ..where((r) => r.id.equals(id)))
+        .write(companion);
   }
 
   /// Get receivable by ID

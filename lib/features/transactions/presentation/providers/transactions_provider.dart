@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/features/transactions/data/transactions_repository.dart';
+import 'package:flowpaisa/features/transactions/domain/models.dart';
 import 'package:flowpaisa/shared/providers/database_provider.dart';
 
 // Repository provider
@@ -19,6 +20,13 @@ final allTransactionsProvider = StreamProvider<List<Transaction>>((ref) {
 final transactionsWithCategoryProvider = StreamProvider<List<TransactionWithCategory>>((ref) {
   final repository = ref.watch(transactionsRepositoryProvider);
   return repository.watchTransactionsWithCategory();
+});
+
+// Watch transactions with ALL details (category + contact)
+// Uses efficient JOINs to avoid N+1 query problems
+final transactionsWithDetailsProvider = StreamProvider<List<TransactionWithDetails>>((ref) {
+  final repository = ref.watch(transactionsRepositoryProvider);
+  return repository.watchTransactionsWithDetails();
 });
 
 // Watch transactions by date range
