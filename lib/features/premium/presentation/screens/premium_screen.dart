@@ -138,9 +138,10 @@ class PremiumScreen extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const SizedBox(height: 8),
+                  // Premium Active Card (Moved to top but keep features below)
                   if (premiumState.isPremium) ...[
-                    // Premium Active Card
                     Container(
+                      margin: const EdgeInsets.only(bottom: 24),
                       padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
@@ -173,7 +174,7 @@ class PremiumScreen extends ConsumerWidget {
                           ),
                           SizedBox(height: 8),
                           Text(
-                            'Thank you for supporting FlowPaisa!',
+                            'All premium features are active',
                             style: TextStyle(
                               color: Colors.white70,
                               fontSize: 16,
@@ -182,68 +183,76 @@ class PremiumScreen extends ConsumerWidget {
                         ],
                       ),
                     ),
-                  ] else ...[
-                    // Features List
-                    _buildFeatureCard(
-                      context,
-                      icon: Icons.cloud_upload,
-                      title: 'Automatic Cloud Backup',
-                      description:
-                          'Your data is automatically backed up to Google Drive. Never lose your financial records.',
-                      color: AppColors.brightCyan,
-                    ),
-                    const SizedBox(height: 12),
+                  ],
 
-                    _buildFeatureCard(
-                      context,
-                      icon: Icons.analytics,
-                      title: 'Advanced Analytics',
-                      description:
-                          'Get detailed insights with advanced charts, trends, and financial forecasting.',
-                      color: Colors.purple,
-                    ),
-                    const SizedBox(height: 12),
+                  // Features List
+                  _buildFeatureCard(
+                    context,
+                    icon: Icons.cloud_upload,
+                    title: 'Automatic Cloud Backup',
+                    description:
+                        'Your data is automatically backed up to Google Drive. Never lose your financial records.',
+                    color: AppColors.brightCyan,
+                    isPremium: premiumState.isPremium,
+                  ),
+                  const SizedBox(height: 12),
 
-                    _buildFeatureCard(
-                      context,
-                      icon: Icons.picture_as_pdf,
-                      title: 'PDF Reports',
-                      description:
-                          'Generate beautiful PDF reports with charts and summaries for any date range.',
-                      color: Colors.red,
-                    ),
-                    const SizedBox(height: 12),
+                  _buildFeatureCard(
+                    context,
+                    icon: Icons.analytics,
+                    title: 'Advanced Analytics',
+                    description:
+                        'Get detailed insights with advanced charts, trends, and financial forecasting.',
+                    color: Colors.purple,
+                    isPremium: premiumState.isPremium,
+                  ),
+                  const SizedBox(height: 12),
 
-                    _buildFeatureCard(
-                      context,
-                      icon: Icons.all_inclusive,
-                      title: 'Unlimited Transactions',
-                      description:
-                          'No limits on the number of transactions, contacts, or categories you can create.',
-                      color: Colors.green,
-                    ),
-                    const SizedBox(height: 12),
+                  _buildFeatureCard(
+                    context,
+                    icon: Icons.picture_as_pdf,
+                    title: 'PDF Reports',
+                    description:
+                        'Generate beautiful PDF reports with charts and summaries for any date range.',
+                    color: Colors.red,
+                    isPremium: premiumState.isPremium,
+                  ),
+                  const SizedBox(height: 12),
 
-                    _buildFeatureCard(
-                      context,
-                      icon: Icons.support_agent,
-                      title: 'Priority Support',
-                      description:
-                          'Get faster responses and dedicated support for any issues or questions.',
-                      color: Colors.orange,
-                    ),
-                    const SizedBox(height: 12),
+                  _buildFeatureCard(
+                    context,
+                    icon: Icons.all_inclusive,
+                    title: 'Unlimited Transactions',
+                    description:
+                        'No limits on the number of transactions, contacts, or categories you can create.',
+                    color: Colors.green,
+                    isPremium: premiumState.isPremium,
+                  ),
+                  const SizedBox(height: 12),
 
-                    _buildFeatureCard(
-                      context,
-                      icon: Icons.new_releases,
-                      title: 'Early Access',
-                      description:
-                          'Be the first to try new features before they\'re released to everyone.',
-                      color: AppColors.primaryGradient.colors.last,
-                    ),
-                    const SizedBox(height: 32),
+                  _buildFeatureCard(
+                    context,
+                    icon: Icons.support_agent,
+                    title: 'Priority Support',
+                    description:
+                        'Get faster responses and dedicated support for any issues or questions.',
+                    color: Colors.orange,
+                    isPremium: premiumState.isPremium,
+                  ),
+                  const SizedBox(height: 12),
 
+                  _buildFeatureCard(
+                    context,
+                    icon: Icons.new_releases,
+                    title: 'Early Access',
+                    description:
+                        'Be the first to try new features before they\'re released to everyone.',
+                    color: AppColors.primaryGradient.colors.last,
+                    isPremium: premiumState.isPremium,
+                  ),
+                  const SizedBox(height: 32),
+
+                  if (!premiumState.isPremium) ...[
                     // Pricing Card
                     Container(
                       padding: const EdgeInsets.all(24),
@@ -433,13 +442,14 @@ class PremiumScreen extends ConsumerWidget {
     required String title,
     required String description,
     required Color color,
+    bool isPremium = false,
   }) {
     final theme = Theme.of(context);
 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: theme.cardColor,
+        color: isPremium ? color.withValues(alpha: 0.05) : theme.cardColor,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: color.withValues(alpha: 0.2),
@@ -468,11 +478,43 @@ class PremiumScreen extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  title,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    if (isPremium)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.green.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                              color: Colors.green.withValues(alpha: 0.2)),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.check, size: 14, color: Colors.green),
+                            SizedBox(width: 4),
+                            Text(
+                              'Active',
+                              style: TextStyle(
+                                color: Colors.green,
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
                 ),
                 const SizedBox(height: 4),
                 Text(
