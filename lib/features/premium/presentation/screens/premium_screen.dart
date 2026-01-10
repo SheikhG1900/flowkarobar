@@ -45,7 +45,7 @@ class PremiumScreen extends ConsumerWidget {
         slivers: [
           // Premium App Bar
           SliverAppBar(
-            expandedHeight: 200,
+            expandedHeight: 220,
             floating: false,
             pinned: true,
             flexibleSpace: FlexibleSpaceBar(
@@ -138,17 +138,13 @@ class PremiumScreen extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const SizedBox(height: 8),
-
                   if (premiumState.isPremium) ...[
                     // Premium Active Card
                     Container(
                       padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [
-                            Colors.green.shade400,
-                            Colors.teal.shade500
-                          ],
+                          colors: [Colors.green.shade400, Colors.teal.shade500],
                         ),
                         borderRadius: BorderRadius.circular(20),
                         boxShadow: [
@@ -258,8 +254,8 @@ class PremiumScreen extends ConsumerWidget {
                         borderRadius: BorderRadius.circular(20),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFFFFD700)
-                                .withValues(alpha: 0.3),
+                            color:
+                                const Color(0xFFFFD700).withValues(alpha: 0.3),
                             blurRadius: 20,
                             offset: const Offset(0, 8),
                           ),
@@ -307,8 +303,7 @@ class PremiumScreen extends ConsumerWidget {
                                 child: Text(
                                   'Lifetime', // Fixed text
                                   style: TextStyle(
-                                    color: Colors.white
-                                        .withValues(alpha: 0.9),
+                                    color: Colors.white.withValues(alpha: 0.9),
                                     fontSize: 16,
                                   ),
                                 ),
@@ -344,7 +339,9 @@ class PremiumScreen extends ConsumerWidget {
                           ? () {}
                           : () {
                               // For testing, we use the toggle
-                              ref.read(premiumProvider.notifier).togglePremium();
+                              ref
+                                  .read(premiumProvider.notifier)
+                                  .togglePremium();
                               // In production, use buyPremium()
                               // ref.read(premiumProvider.notifier).buyPremium();
                             },
@@ -418,7 +415,7 @@ class PremiumScreen extends ConsumerWidget {
       // This is a naive split, real world should use proper formatting
       final price = product.price; // e.g. "₹99.00"
       final currencySymbol = product.currencySymbol;
-      
+
       // Remove symbol from price string if present to get amount
       String amount = price;
       if (price.startsWith(currencySymbol)) {

@@ -1239,19 +1239,44 @@ class _SettingsTab extends ConsumerWidget {
               );
             },
           ),
-          ListTile(
-            leading: const Icon(Icons.workspace_premium),
-            title: Text(l10n.premium),
-            subtitle: Text(isPremium ? 'Premium Active' : l10n.free),
-            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const PremiumScreen(),
+          // Premium List Item
+          Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFFFFD700), // Gold
+                  Color(0xFFFFA500), // Orange
+                  Color(0xFFFF8C00), // Dark Orange
+                ],
+              ),
+            ),
+            child: ListTile(
+              leading: const Icon(Icons.workspace_premium, color: Colors.white),
+              title: Text(
+                l10n.premium,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
                 ),
-              );
-            },
+              ),
+              subtitle: Text(
+                isPremium ? 'Premium Active' : l10n.free,
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.9),
+                ),
+              ),
+              trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.white),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const PremiumScreen(),
+                  ),
+                );
+              },
+            ),
           ),
           const Divider(),
           ListTile(
