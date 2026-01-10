@@ -76,12 +76,20 @@ class SwipeableListItem extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(editIcon, color: Colors.white, size: 28),
+                  Icon(
+                    editIcon,
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.white
+                        : editBackgroundColor,
+                    size: 28,
+                  ),
                   const SizedBox(height: 4),
                   Text(
                     editLabel,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white
+                          : editBackgroundColor,
                       fontWeight: FontWeight.w600,
                       fontSize: 12,
                     ),
@@ -98,12 +106,20 @@ class SwipeableListItem extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(deleteIcon, color: Colors.white, size: 28),
+                  Icon(
+                    deleteIcon,
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.white
+                        : deleteBackgroundColor,
+                    size: 28,
+                  ),
                   const SizedBox(height: 4),
                   Text(
                     deleteLabel,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white
+                          : deleteBackgroundColor,
                       fontWeight: FontWeight.w600,
                       fontSize: 12,
                     ),

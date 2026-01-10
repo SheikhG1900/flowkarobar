@@ -132,21 +132,81 @@ class ReceivableDetailsDialog extends ConsumerWidget {
             
             const SizedBox(height: 24),
             
-            // Details Section
-            if (contact != null)
-              _buildDetailRow(
-                context,
-                icon: Icons.person,
-                label: 'Contact',
-                value: contact.name,
-                trailing: contact.phone != null
-                    ? IconButton(
-                        icon: const Icon(Icons.chat, color: Color(0xFF25D366)),
-                        onPressed: () => _sendWhatsAppMessage(context, ref, contact, receivable),
-                      )
-                    : null,
+            // Contact Header Section
+            if (contact != null) ...[
+              Row(
+                children: [
+                  Container(
+                    width: 60,
+                    height: 60,
+                    decoration: BoxDecoration(
+                      gradient: AppColors.getContactGradient(contact.name),
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.getContactColor(contact.name)
+                              .withValues(alpha: 0.3),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      contact.name.isNotEmpty ? contact.name[0].toUpperCase() : '?',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          contact.name,
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        if (contact.phone != null) ...[
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.phone,
+                                size: 16,
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                contact.phone!,
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  if (contact.phone != null)
+                    IconButton(
+                      icon: const Icon(Icons.chat, color: Color(0xFF25D366)),
+                      onPressed: () => _sendWhatsAppMessage(context, ref, contact, receivable),
+                    ),
+                ],
               ),
+              const SizedBox(height: 24),
+              const Divider(),
+              const SizedBox(height: 16),
+            ],
             
+            // Details Section
             _buildDetailRow(
               context,
               icon: Icons.calendar_today,
@@ -460,7 +520,9 @@ ${receivable.dueDate != null ? 'Due Date: ${DateFormat.yMMMd().format(receivable
 Thank you!
       ''';
 
-      final success = await whatsAppService.sendMessage(contact.phone, message);
+      // Clean phone number - remove spaces and non-digit characters except +
+      final cleanPhone = contact.phone.replaceAll(' ', '').replaceAll(RegExp(r'[^\d+]'), '');
+      final success = await whatsAppService.sendMessage(cleanPhone, message);
       
       if (success && context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

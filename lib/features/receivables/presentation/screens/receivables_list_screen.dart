@@ -268,6 +268,61 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
                           fontWeight: FontWeight.bold,
                         ),
                       ),
+                      // Linked category tag
+                      if (linkedCategory != null) ...[
+                        const SizedBox(height: 4),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: linkedCategory.color != null
+                                ? Color(int.parse(linkedCategory.color!
+                                        .replaceAll('#', '0xFF')))
+                                    .withValues(alpha: 0.1)
+                                : AppColors.incomeColor.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(4),
+                            border: Border.all(
+                              color: linkedCategory.color != null
+                                  ? Color(int.parse(linkedCategory.color!
+                                          .replaceAll('#', '0xFF')))
+                                      .withValues(alpha: 0.3)
+                                  : AppColors.incomeColor.withValues(alpha: 0.3),
+                              width: 1,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                linkedCategory.icon != null
+                                    ? IconData(int.parse(linkedCategory.icon!),
+                                        fontFamily: 'MaterialIcons')
+                                    : Icons.category_outlined,
+                                color: linkedCategory.color != null
+                                    ? Color(int.parse(linkedCategory.color!
+                                        .replaceAll('#', '0xFF')))
+                                    : AppColors.incomeColor,
+                                size: 10,
+                              ),
+                              const SizedBox(width: 4),
+                              Flexible(
+                                child: Text(
+                                  linkedCategory.name,
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: linkedCategory.color != null
+                                        ? Color(int.parse(linkedCategory.color!
+                                            .replaceAll('#', '0xFF')))
+                                        : AppColors.incomeColor,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                       if (receivable.description != null &&
                           receivable.description!.isNotEmpty)
                         Text(
@@ -353,61 +408,6 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
                         ],
                       ),
                     ),
-                    // Linked category tag
-                    if (linkedCategory != null) ...[
-                      const SizedBox(height: 4),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: linkedCategory.color != null
-                              ? Color(int.parse(linkedCategory.color!
-                                      .replaceAll('#', '0xFF')))
-                                  .withValues(alpha: 0.1)
-                              : AppColors.incomeColor.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(4),
-                          border: Border.all(
-                            color: linkedCategory.color != null
-                                ? Color(int.parse(linkedCategory.color!
-                                        .replaceAll('#', '0xFF')))
-                                    .withValues(alpha: 0.3)
-                                : AppColors.incomeColor.withValues(alpha: 0.3),
-                            width: 1,
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              linkedCategory.icon != null
-                                  ? IconData(int.parse(linkedCategory.icon!),
-                                      fontFamily: 'MaterialIcons')
-                                  : Icons.category_outlined,
-                              color: linkedCategory.color != null
-                                  ? Color(int.parse(linkedCategory.color!
-                                      .replaceAll('#', '0xFF')))
-                                  : AppColors.incomeColor,
-                              size: 10,
-                            ),
-                            const SizedBox(width: 4),
-                            Flexible(
-                              child: Text(
-                                linkedCategory.name,
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  color: linkedCategory.color != null
-                                      ? Color(int.parse(linkedCategory.color!
-                                          .replaceAll('#', '0xFF')))
-                                      : AppColors.incomeColor,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
                   ],
                 ),
               ],

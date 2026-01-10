@@ -28,7 +28,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
     final linkedPayable = item.linkedPayable;
     final linkedReceivable = item.linkedReceivable;
     final isExpense = transaction.type == 'EXPENSE';
-    
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Transaction Details'),
@@ -36,7 +36,8 @@ class TransactionDetailsDialog extends ConsumerWidget {
           // Share button
           IconButton(
             icon: const Icon(Icons.share),
-            onPressed: () => _shareTransaction(context, transaction, category, contact),
+            onPressed: () =>
+                _shareTransaction(context, transaction, category, contact),
           ),
           // Edit button (disabled if marked)
           if (!item.isLinkedEntryMarked)
@@ -75,15 +76,23 @@ class TransactionDetailsDialog extends ConsumerWidget {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: isExpense
-                      ? [AppColors.expenseColor, AppColors.expenseColor.withValues(alpha: 0.7)]
-                      : [AppColors.incomeColor, AppColors.incomeColor.withValues(alpha: 0.7)],
+                      ? [
+                          AppColors.expenseColor,
+                          AppColors.expenseColor.withValues(alpha: 0.7)
+                        ]
+                      : [
+                          AppColors.incomeColor,
+                          AppColors.incomeColor.withValues(alpha: 0.7)
+                        ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: (isExpense ? AppColors.expenseColor : AppColors.incomeColor)
+                    color: (isExpense
+                            ? AppColors.expenseColor
+                            : AppColors.incomeColor)
                         .withValues(alpha: 0.3),
                     blurRadius: 16,
                     offset: const Offset(0, 8),
@@ -105,14 +114,16 @@ class TransactionDetailsDialog extends ConsumerWidget {
                     '${isExpense ? '-' : '+'} ${AmountFormatter.formatWithCurrency(transaction.amount)}',
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: AmountFormatter.getFontSize(transaction.amount) + 6,
+                      fontSize:
+                          AmountFormatter.getFontSize(transaction.amount) + 6,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   if (transaction.paidRelationship != null) ...[
                     const SizedBox(height: 12),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(8),
@@ -126,9 +137,11 @@ class TransactionDetailsDialog extends ConsumerWidget {
                               size: 16,
                               color: Colors.white,
                             ),
-                          if (item.isLinkedEntryMarked) const SizedBox(width: 6),
+                          if (item.isLinkedEntryMarked)
+                            const SizedBox(width: 6),
                           Text(
-                            _getStatusLabel(transaction.paidRelationship!, item.isLinkedEntryMarked),
+                            _getStatusLabel(transaction.paidRelationship!,
+                                item.isLinkedEntryMarked),
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 12,
@@ -142,9 +155,176 @@ class TransactionDetailsDialog extends ConsumerWidget {
                 ],
               ),
             ),
-            
+
             const SizedBox(height: 24),
-            
+
+            // Contact & Category Header Section
+            if (contact != null || category != null) ...[
+              Row(
+                children: [
+                  // Contact Section
+                  if (contact != null) ...[
+                    Container(
+                      width: 60,
+                      height: 60,
+                      decoration: BoxDecoration(
+                        gradient: AppColors.getContactGradient(contact.name),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.getContactColor(contact.name)
+                                .withValues(alpha: 0.3),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        contact.name.isNotEmpty
+                            ? contact.name[0].toUpperCase()
+                            : '?',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            contact.name,
+                            style: theme.textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          if (contact.phone != null) ...[
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.phone,
+                                  size: 16,
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  contact.phone!,
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    if (contact.phone != null)
+                      IconButton(
+                        icon: const Icon(Icons.chat, color: Color(0xFF25D366)),
+                        onPressed: () => _sendWhatsAppMessage(
+                            context, ref, contact, transaction),
+                      ),
+                  ],
+                ],
+              ),
+              const SizedBox(height: 16),
+              // Category Section
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: category != null
+                      ? Color(int.parse(
+                              category.color!.replaceAll('#', '0xFF')))
+                          .withValues(alpha: 0.1)
+                      : (isExpense
+                              ? AppColors.expenseColor
+                              : AppColors.incomeColor)
+                          .withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: category != null
+                        ? Color(int.parse(
+                                category.color!.replaceAll('#', '0xFF')))
+                            .withValues(alpha: 0.3)
+                        : (isExpense
+                                ? AppColors.expenseColor
+                                : AppColors.incomeColor)
+                            .withValues(alpha: 0.3),
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: category != null
+                            ? Color(int.parse(
+                                    category.color!.replaceAll('#', '0xFF')))
+                                .withValues(alpha: 0.2)
+                            : (isExpense
+                                    ? AppColors.expenseColor
+                                    : AppColors.incomeColor)
+                                .withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(
+                        category != null && category.icon != null
+                            ? IconData(int.parse(category.icon!),
+                                fontFamily: 'MaterialIcons')
+                            : (isExpense
+                                ? Icons.arrow_circle_down
+                                : Icons.arrow_circle_up),
+                        color: category != null
+                            ? Color(int.parse(
+                                category.color!.replaceAll('#', '0xFF')))
+                            : (isExpense
+                                ? AppColors.expenseColor
+                                : AppColors.incomeColor),
+                        size: 28,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Category',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            category?.name ??
+                                (isExpense ? 'Expense' : 'Income'),
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: category != null
+                                  ? Color(int.parse(
+                                      category.color!.replaceAll('#', '0xFF')))
+                                  : null,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+              const Divider(),
+              const SizedBox(height: 16),
+            ],
+
             // Details Section
             _buildDetailRow(
               context,
@@ -152,41 +332,16 @@ class TransactionDetailsDialog extends ConsumerWidget {
               label: 'Date',
               value: DateFormat.yMMMd().add_jm().format(transaction.date),
             ),
-            
-            if (transaction.description != null && transaction.description!.isNotEmpty)
+
+            if (transaction.description != null &&
+                transaction.description!.isNotEmpty)
               _buildDetailRow(
                 context,
                 icon: Icons.description,
                 label: 'Description',
                 value: transaction.description!,
               ),
-            
-            if (category != null)
-              _buildDetailRow(
-                context,
-                icon: IconData(
-                  category.icon != null ? int.parse(category.icon!) : Icons.category.codePoint,
-                  fontFamily: 'MaterialIcons',
-                ),
-                label: 'Category',
-                value: category.name,
-                valueColor: Color(int.parse(category.color!.replaceAll('#', '0xFF'))),
-              ),
-            
-            if (contact != null)
-              _buildDetailRow(
-                context,
-                icon: Icons.person,
-                label: 'Contact',
-                value: contact.name,
-                trailing: contact.phone != null
-                    ? IconButton(
-                        icon: const Icon(Icons.chat, color: Color(0xFF25D366)),
-                        onPressed: () => _sendWhatsAppMessage(context, ref, contact, transaction),
-                      )
-                    : null,
-              ),
-            
+
             // Linked Entry Section
             if (linkedPayable != null || linkedReceivable != null) ...[
               const SizedBox(height: 24),
@@ -199,10 +354,8 @@ class TransactionDetailsDialog extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              
               if (linkedPayable != null)
                 _buildLinkedPayableCard(context, ref, linkedPayable),
-              
               if (linkedReceivable != null)
                 _buildLinkedReceivableCard(context, ref, linkedReceivable),
             ],
@@ -221,7 +374,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
     Widget? trailing,
   }) {
     final theme = Theme.of(context);
-    
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 12),
       child: Row(
@@ -267,10 +420,11 @@ class TransactionDetailsDialog extends ConsumerWidget {
     );
   }
 
-  Widget _buildLinkedPayableCard(BuildContext context, WidgetRef ref, dynamic payable) {
+  Widget _buildLinkedPayableCard(
+      BuildContext context, WidgetRef ref, dynamic payable) {
     final theme = Theme.of(context);
     final isPending = payable.status == 'PENDING';
-    
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -328,10 +482,11 @@ class TransactionDetailsDialog extends ConsumerWidget {
     );
   }
 
-  Widget _buildLinkedReceivableCard(BuildContext context, WidgetRef ref, dynamic receivable) {
+  Widget _buildLinkedReceivableCard(
+      BuildContext context, WidgetRef ref, dynamic receivable) {
     final theme = Theme.of(context);
     final isPending = receivable.status == 'PENDING';
-    
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -404,7 +559,8 @@ class TransactionDetailsDialog extends ConsumerWidget {
     }
   }
 
-  void _shareTransaction(BuildContext context, dynamic transaction, dynamic category, dynamic contact) {
+  void _shareTransaction(BuildContext context, dynamic transaction,
+      dynamic category, dynamic contact) {
     final isExpense = transaction.type == 'EXPENSE';
     final message = '''
 ${isExpense ? 'Expense' : 'Income'} Details
@@ -412,16 +568,18 @@ Amount: ${AmountFormatter.formatWithCurrency(transaction.amount)}
 Date: ${DateFormat.yMMMd().format(transaction.date)}
 ${category != null ? 'Category: ${category.name}\n' : ''}${contact != null ? 'Contact: ${contact.name}\n' : ''}${transaction.description != null && transaction.description.isNotEmpty ? 'Description: ${transaction.description}\n' : ''}
     ''';
-    
+
     Share.share(message);
   }
 
-  Future<void> _deleteTransaction(BuildContext context, WidgetRef ref, int transactionId) async {
+  Future<void> _deleteTransaction(
+      BuildContext context, WidgetRef ref, int transactionId) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Transaction'),
-        content: const Text('Are you sure you want to delete this transaction? This action cannot be undone.'),
+        content: const Text(
+            'Are you sure you want to delete this transaction? This action cannot be undone.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -440,7 +598,7 @@ ${category != null ? 'Category: ${category.name}\n' : ''}${contact != null ? 'Co
       try {
         final service = ref.read(transactionServiceProvider);
         await service.deleteTransaction(transactionId);
-        
+
         if (context.mounted) {
           Navigator.pop(context);
           ScaffoldMessenger.of(context).showSnackBar(
@@ -463,11 +621,12 @@ ${category != null ? 'Category: ${category.name}\n' : ''}${contact != null ? 'Co
     }
   }
 
-  Future<void> _markAsPaid(BuildContext context, WidgetRef ref, int payableId) async {
+  Future<void> _markAsPaid(
+      BuildContext context, WidgetRef ref, int payableId) async {
     try {
       final repository = ref.read(payablesRepositoryProvider);
       await repository.markAsPaid(payableId);
-      
+
       if (context.mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
@@ -489,11 +648,12 @@ ${category != null ? 'Category: ${category.name}\n' : ''}${contact != null ? 'Co
     }
   }
 
-  Future<void> _markAsReceived(BuildContext context, WidgetRef ref, int receivableId) async {
+  Future<void> _markAsReceived(
+      BuildContext context, WidgetRef ref, int receivableId) async {
     try {
       final repository = ref.read(receivablesRepositoryProvider);
       await repository.markAsReceived(receivableId);
-      
+
       if (context.mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
@@ -544,8 +704,11 @@ ${transaction.description != null && transaction.description.isNotEmpty ? 'Detai
 Thank you!
       ''';
 
-      final success = await whatsAppService.sendMessage(contact.phone, message);
-      
+      // Clean phone number - remove spaces and non-digit characters except +
+      final cleanPhone =
+          contact.phone.replaceAll(' ', '').replaceAll(RegExp(r'[^\d+]'), '');
+      final success = await whatsAppService.sendMessage(cleanPhone, message);
+
       if (success && context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(

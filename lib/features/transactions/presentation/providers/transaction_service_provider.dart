@@ -83,7 +83,7 @@ class TransactionService {
           if (paidRelationship == 'PAID_FOR') {
             // Logic: You paid FOR someone -> It's an expense for you (cash out),
             // but you expect to be paid back (Receivable).
-            await receivablesRepository.createReceivable(
+            final receivableId = await receivablesRepository.createReceivable(
               ReceivablesCompanion(
                 contactId: Value(contactId),
                 amount: Value(amount),
@@ -97,10 +97,18 @@ class TransactionService {
                 updatedAt: Value(DateTime.now()),
               ),
             );
+            // Update transaction with linked receivable ID
+            await transactionsRepository.updateTransactionWithCompanion(
+              transactionId,
+              TransactionsCompanion(
+                linkedReceivableId: Value(receivableId),
+                updatedAt: Value(DateTime.now()),
+              ),
+            );
           } else if (paidRelationship == 'PAID_BY') {
             // Logic: Someone paid FOR you -> You consumed (Expense recorded),
             // but you didn't pay cash yet. You owe them (Payable).
-            await payablesRepository.createPayable(
+            final payableId = await payablesRepository.createPayable(
               PayablesCompanion(
                 contactId: Value(contactId),
                 amount: Value(amount),
@@ -114,6 +122,14 @@ class TransactionService {
                 updatedAt: Value(DateTime.now()),
               ),
             );
+            // Update transaction with linked payable ID
+            await transactionsRepository.updateTransactionWithCompanion(
+              transactionId,
+              TransactionsCompanion(
+                linkedPayableId: Value(payableId),
+                updatedAt: Value(DateTime.now()),
+              ),
+            );
           }
         }
         // --- INCOME LOGIC ---
@@ -121,7 +137,7 @@ class TransactionService {
           if (paidRelationship == 'RECEIVED_FROM') {
             // Logic: You received money FROM someone (Loan/Advance) -> You owe them (Payable).
             // Cash Balance INCREASES (handled by DashboardProvider).
-            await payablesRepository.createPayable(
+            final payableId = await payablesRepository.createPayable(
               PayablesCompanion(
                 contactId: Value(contactId),
                 amount: Value(amount),
@@ -135,11 +151,19 @@ class TransactionService {
                 updatedAt: Value(DateTime.now()),
               ),
             );
+            // Update transaction with linked payable ID
+            await transactionsRepository.updateTransactionWithCompanion(
+              transactionId,
+              TransactionsCompanion(
+                linkedPayableId: Value(payableId),
+                updatedAt: Value(DateTime.now()),
+              ),
+            );
           } else if (paidRelationship == 'WILL_RECEIVE') {
             // Logic: You earned money but haven't received it yet (Accrued Income).
             // Cash Balance UNCHANGED (handled by DashboardProvider).
             // Create Receivable.
-            await receivablesRepository.createReceivable(
+            final receivableId = await receivablesRepository.createReceivable(
               ReceivablesCompanion(
                 contactId: Value(contactId),
                 amount: Value(amount),
@@ -150,6 +174,14 @@ class TransactionService {
                 autoCreateIncome: const Value(
                     true), // When you receive it, it becomes realized income (cash)
                 createdAt: Value(DateTime.now()),
+                updatedAt: Value(DateTime.now()),
+              ),
+            );
+            // Update transaction with linked receivable ID
+            await transactionsRepository.updateTransactionWithCompanion(
+              transactionId,
+              TransactionsCompanion(
+                linkedReceivableId: Value(receivableId),
                 updatedAt: Value(DateTime.now()),
               ),
             );
