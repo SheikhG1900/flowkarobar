@@ -117,7 +117,7 @@ class TransactionService {
                 status: const Value('PENDING'),
                 linkedExpenseId: Value(transactionId),
                 autoCreateExpense:
-                    const Value(true), // Settle debt = Cash Expense
+                    const Value(false), // Don't create new transaction, activate existing one when marked
                 createdAt: Value(DateTime.now()),
                 updatedAt: Value(DateTime.now()),
               ),
@@ -172,7 +172,7 @@ class TransactionService {
                 status: const Value('PENDING'),
                 linkedIncomeId: Value(transactionId), // Store as linked income
                 autoCreateIncome: const Value(
-                    true), // When you receive it, it becomes realized income (cash)
+                    false), // Don't create new transaction, activate existing one when marked
                 createdAt: Value(DateTime.now()),
                 updatedAt: Value(DateTime.now()),
               ),
@@ -281,7 +281,7 @@ class TransactionService {
                 date: Value(date),
                 status: const Value('PENDING'),
                 linkedExpenseId: Value(transactionId),
-                autoCreateExpense: const Value(true),
+                autoCreateExpense: const Value(false),
                 createdAt: Value(DateTime.now()),
                 updatedAt: Value(DateTime.now()),
               ),
@@ -312,7 +312,7 @@ class TransactionService {
                 date: Value(date),
                 status: const Value('PENDING'),
                 linkedIncomeId: Value(transactionId),
-                autoCreateIncome: const Value(true),
+                autoCreateIncome: const Value(false),
                 createdAt: Value(DateTime.now()),
                 updatedAt: Value(DateTime.now()),
               ),
