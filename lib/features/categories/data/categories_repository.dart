@@ -107,6 +107,25 @@ class CategoriesRepository {
     });
   }
 
+  /// Decrement category usage count
+  Future<void> decrementUsageCount(int categoryId) async {
+    await _database.transaction(() async {
+      // Check if usage stat exists
+      final existingStat = await (_database.select(_database.categoryUsageStats)
+            ..where((s) => s.categoryId.equals(categoryId)))
+          .getSingleOrNull();
+
+      if (existingStat != null && existingStat.usageCount > 0) {
+        // Update existing (don't go below 0)
+        await _database.update(_database.categoryUsageStats).replace(
+              existingStat.copyWith(
+                usageCount: existingStat.usageCount - 1,
+              ),
+            );
+      }
+    });
+  }
+
   /// Get most used categories
   Future<List<CategoryWithUsage>> getMostUsedCategories(String type, int limit) async {
     final query = _database.select(_database.categories).join([

@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
-import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
-import 'package:flowpaisa/features/receivables/data/receivables_repository.dart';
 import 'package:flowpaisa/features/receivables/presentation/providers/receivables_provider.dart';
 import 'package:flowpaisa/features/receivables/presentation/screens/add_receivable_screen.dart';
+import 'package:flowpaisa/features/receivables/presentation/widgets/receivable_details_dialog.dart';
 import 'package:flowpaisa/shared/widgets/swipeable_list_item.dart';
 import 'package:intl/intl.dart';
 
@@ -215,7 +214,14 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: isPending ? () => _showMarkAsReceivedDialog(receivable) : null,
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ReceivableDetailsDialog(item: item),
+              ),
+            );
+          },
           borderRadius: BorderRadius.circular(20),
           child: Padding(
             padding: const EdgeInsets.all(16),
@@ -412,84 +418,4 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
     );
   }
 
-  void _showMarkAsReceivedDialog(Receivable receivable) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Mark as Received'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Have you received the payment of ₹${receivable.amount.toStringAsFixed(2)}?',
-            ),
-            if (receivable.autoCreateIncome) ...[
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppColors.incomeColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: AppColors.incomeColor.withValues(alpha: 0.3),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.info_outline,
-                        size: 20, color: AppColors.incomeColor),
-                    const SizedBox(width: 8),
-                    const Expanded(
-                      child: Text(
-                        'This will also create an Income transaction.',
-                        style: TextStyle(fontSize: 12),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () async {
-              try {
-                final repository = ref.read(receivablesRepositoryProvider);
-                await repository.markAsReceived(receivable.id);
-                if (context.mounted) {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Marked as received'),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
-                }
-              } catch (e) {
-                if (context.mounted) {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Error: ${e.toString()}'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
-              }
-            },
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.receivableColor,
-            ),
-            child: const Text('Confirm'),
-          ),
-        ],
-      ),
-    );
-  }
 }

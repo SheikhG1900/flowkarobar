@@ -108,6 +108,25 @@ class ContactsRepository {
     });
   }
 
+  /// Decrement contact usage count
+  Future<void> decrementUsageCount(int contactId) async {
+    await _database.transaction(() async {
+      // Check if usage stat exists
+      final existingStat = await (_database.select(_database.contactUsageStats)
+            ..where((s) => s.contactId.equals(contactId)))
+          .getSingleOrNull();
+
+      if (existingStat != null && existingStat.usageCount > 0) {
+        // Update existing (don't go below 0)
+        await _database.update(_database.contactUsageStats).replace(
+              existingStat.copyWith(
+                usageCount: existingStat.usageCount - 1,
+              ),
+            );
+      }
+    });
+  }
+
   /// Get most used contacts
   Future<List<ContactWithUsage>> getMostUsedContacts(int limit) async {
     final query = _database.select(_database.contacts).join([

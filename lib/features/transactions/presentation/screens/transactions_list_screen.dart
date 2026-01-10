@@ -5,6 +5,7 @@ import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
 import 'package:flowpaisa/features/transactions/presentation/screens/add_transaction_screen.dart';
 import 'package:flowpaisa/features/transactions/presentation/screens/edit_transaction_screen.dart';
+import 'package:flowpaisa/features/transactions/presentation/widgets/transaction_details_dialog.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/shared/widgets/swipeable_list_item.dart';
 import 'package:intl/intl.dart';
@@ -372,7 +373,12 @@ class TransactionsListScreen extends ConsumerWidget {
           ],
         ),
         onTap: () {
-          // TODO: Navigate to transaction details
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => TransactionDetailsDialog(item: item),
+            ),
+          );
         },
       ),
     );

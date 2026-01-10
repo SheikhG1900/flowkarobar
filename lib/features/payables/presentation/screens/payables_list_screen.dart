@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
-import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/features/payables/presentation/providers/payables_provider.dart';
 import 'package:flowpaisa/features/payables/presentation/screens/add_payable_screen.dart';
+import 'package:flowpaisa/features/payables/presentation/widgets/payable_details_dialog.dart';
 import 'package:flowpaisa/shared/widgets/swipeable_list_item.dart';
 import 'package:intl/intl.dart';
 
@@ -205,10 +205,12 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
         color: Colors.transparent,
         child: InkWell(
           onTap: () {
-            // TODO: Show details dialog
-            if (isPending) {
-              _showMarkAsPaidDialog(payable, contact);
-            }
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => PayableDetailsDialog(item: item),
+              ),
+            );
           },
           borderRadius: BorderRadius.circular(20),
           child: Padding(
@@ -406,84 +408,4 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
     );
   }
 
-  void _showMarkAsPaidDialog(Payable payable, Contact? contact) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Mark as Paid'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Have you paid the amount of ₹${payable.amount.toStringAsFixed(2)}?',
-            ),
-            if (payable.autoCreateExpense) ...[
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppColors.expenseColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: AppColors.expenseColor.withValues(alpha: 0.3),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.info_outline,
-                        size: 20, color: AppColors.expenseColor),
-                    const SizedBox(width: 8),
-                    const Expanded(
-                      child: Text(
-                        'This will also create an Expense transaction.',
-                        style: TextStyle(fontSize: 12),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () async {
-              try {
-                final repository = ref.read(payablesRepositoryProvider);
-                await repository.markAsPaid(payable.id);
-                if (context.mounted) {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Marked as paid'),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
-                }
-              } catch (e) {
-                if (context.mounted) {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Error: ${e.toString()}'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
-              }
-            },
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.payableColor,
-            ),
-            child: const Text('Confirm'),
-          ),
-        ],
-      ),
-    );
-  }
 }

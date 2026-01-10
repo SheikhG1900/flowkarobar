@@ -158,4 +158,241 @@ class TransactionService {
       }
     });
   }
+
+  /// Update a transaction and sync the amount/description with linked entries
+  /// If type or relationship changes significantly, linked entries are recreated
+  Future<void> updateTransaction({
+    required int transactionId,
+    required double amount,
+    required String type,
+    required DateTime date,
+    String? description,
+    int? categoryId,
+    int? contactId,
+    String? paidRelationship,
+  }) async {
+    await database.transaction(() async {
+      // 1. Get the existing transaction to check for linked entries
+      final existingTransaction = await transactionsRepository.getTransactionById(transactionId);
+      
+      if (existingTransaction == null) {
+        throw Exception('Transaction not found');
+      }
+
+      // 2. Check if type or relationship changed (requires linked entry recreation)
+      final typeChanged = existingTransaction.type != type;
+      final relationshipChanged = existingTransaction.paidRelationship != paidRelationship;
+      final needsRecreation = (typeChanged || relationshipChanged) && 
+                              (existingTransaction.linkedPayableId != null || 
+                               existingTransaction.linkedReceivableId != null);
+
+      // 3. If significant change, delete old linked entries
+      int? oldLinkedPayableId = existingTransaction.linkedPayableId;
+      int? oldLinkedReceivableId = existingTransaction.linkedReceivableId;
+      
+      if (needsRecreation) {
+        if (existingTransaction.linkedPayableId != null) {
+          await payablesRepository.deletePayable(existingTransaction.linkedPayableId!);
+        }
+        if (existingTransaction.linkedReceivableId != null) {
+          await receivablesRepository.deleteReceivable(existingTransaction.linkedReceivableId!);
+        }
+        oldLinkedPayableId = null;
+        oldLinkedReceivableId = null;
+      }
+
+      // 4. Update the transaction
+      await transactionsRepository.updateTransactionWithCompanion(
+        transactionId,
+        TransactionsCompanion(
+          amount: Value(amount),
+          type: Value(type),
+          contactId: Value(contactId),
+          categoryId: Value(categoryId),
+          description: Value(description),
+          date: Value(date),
+          paidRelationship: Value(paidRelationship),
+          linkedPayableId: Value(oldLinkedPayableId),
+          linkedReceivableId: Value(oldLinkedReceivableId),
+          updatedAt: Value(DateTime.now()),
+        ),
+      );
+
+      // 5. Recreate linked entries if needed
+      if (needsRecreation && contactId != null && paidRelationship != null) {
+        int? newLinkedPayableId;
+        int? newLinkedReceivableId;
+
+        if (type == 'EXPENSE') {
+          if (paidRelationship == 'PAID_FOR') {
+            // Create receivable
+            newLinkedReceivableId = await receivablesRepository.createReceivable(
+              ReceivablesCompanion(
+                contactId: Value(contactId),
+                amount: Value(amount),
+                description: Value(description),
+                date: Value(date),
+                status: const Value('PENDING'),
+                linkedExpenseId: Value(transactionId),
+                autoCreateIncome: const Value(true),
+                createdAt: Value(DateTime.now()),
+                updatedAt: Value(DateTime.now()),
+              ),
+            );
+          } else if (paidRelationship == 'PAID_BY') {
+            // Create payable
+            newLinkedPayableId = await payablesRepository.createPayable(
+              PayablesCompanion(
+                contactId: Value(contactId),
+                amount: Value(amount),
+                description: Value(description),
+                date: Value(date),
+                status: const Value('PENDING'),
+                linkedExpenseId: Value(transactionId),
+                autoCreateExpense: const Value(true),
+                createdAt: Value(DateTime.now()),
+                updatedAt: Value(DateTime.now()),
+              ),
+            );
+          }
+        } else if (type == 'INCOME') {
+          if (paidRelationship == 'RECEIVED_FROM') {
+            // Create payable
+            newLinkedPayableId = await payablesRepository.createPayable(
+              PayablesCompanion(
+                contactId: Value(contactId),
+                amount: Value(amount),
+                description: Value(description),
+                date: Value(date),
+                status: const Value('PENDING'),
+                autoCreateExpense: const Value(true),
+                createdAt: Value(DateTime.now()),
+                updatedAt: Value(DateTime.now()),
+              ),
+            );
+          } else if (paidRelationship == 'WILL_RECEIVE') {
+            // Create receivable
+            newLinkedReceivableId = await receivablesRepository.createReceivable(
+              ReceivablesCompanion(
+                contactId: Value(contactId),
+                amount: Value(amount),
+                description: Value(description),
+                date: Value(date),
+                status: const Value('PENDING'),
+                linkedIncomeId: Value(transactionId),
+                autoCreateIncome: const Value(true),
+                createdAt: Value(DateTime.now()),
+                updatedAt: Value(DateTime.now()),
+              ),
+            );
+          }
+        }
+
+        // Update transaction with new linked IDs
+        if (newLinkedPayableId != null || newLinkedReceivableId != null) {
+          await transactionsRepository.updateTransactionWithCompanion(
+            transactionId,
+            TransactionsCompanion(
+              linkedPayableId: Value(newLinkedPayableId),
+              linkedReceivableId: Value(newLinkedReceivableId),
+              updatedAt: Value(DateTime.now()),
+            ),
+          );
+        }
+      }
+      // 6. If no recreation needed but linked entries exist, just sync them
+      else if (!needsRecreation) {
+        if (existingTransaction.linkedPayableId != null) {
+          final payableCompanion = PayablesCompanion(
+            amount: Value(amount),
+            description: Value(description),
+            date: Value(date),
+            updatedAt: Value(DateTime.now()),
+          );
+          if (contactId != null) {
+            await payablesRepository.updatePayableWithCompanion(
+              existingTransaction.linkedPayableId!,
+              payableCompanion.copyWith(contactId: Value(contactId)),
+            );
+          } else {
+            await payablesRepository.updatePayableWithCompanion(
+              existingTransaction.linkedPayableId!,
+              payableCompanion,
+            );
+          }
+        }
+
+        if (existingTransaction.linkedReceivableId != null) {
+          final receivableCompanion = ReceivablesCompanion(
+            amount: Value(amount),
+            description: Value(description),
+            date: Value(date),
+            updatedAt: Value(DateTime.now()),
+          );
+          if (contactId != null) {
+            await receivablesRepository.updateReceivableWithCompanion(
+              existingTransaction.linkedReceivableId!,
+              receivableCompanion.copyWith(contactId: Value(contactId)),
+            );
+          } else {
+            await receivablesRepository.updateReceivableWithCompanion(
+              existingTransaction.linkedReceivableId!,
+              receivableCompanion,
+            );
+          }
+        }
+      }
+
+      // 7. Update usage counts if categories/contacts changed
+      if (categoryId != existingTransaction.categoryId) {
+        if (existingTransaction.categoryId != null) {
+          await categoriesRepository.decrementUsageCount(existingTransaction.categoryId!);
+        }
+        if (categoryId != null) {
+          await categoriesRepository.incrementUsageCount(categoryId);
+        }
+      }
+
+      if (contactId != existingTransaction.contactId) {
+        if (existingTransaction.contactId != null) {
+          await contactsRepository.decrementUsageCount(existingTransaction.contactId!);
+        }
+        if (contactId != null) {
+          await contactsRepository.incrementUsageCount(contactId);
+        }
+      }
+    });
+  }
+
+  /// Delete a transaction and its linked entries
+  Future<void> deleteTransaction(int transactionId) async {
+    await database.transaction(() async {
+      // 1. Get the existing transaction to check for linked entries
+      final existingTransaction = await transactionsRepository.getTransactionById(transactionId);
+      
+      if (existingTransaction == null) {
+        throw Exception('Transaction not found');
+      }
+
+      // 2. Delete linked entries first
+      if (existingTransaction.linkedPayableId != null) {
+        await payablesRepository.deletePayable(existingTransaction.linkedPayableId!);
+      }
+
+      if (existingTransaction.linkedReceivableId != null) {
+        await receivablesRepository.deleteReceivable(existingTransaction.linkedReceivableId!);
+      }
+
+      // 3. Decrement usage counts
+      if (existingTransaction.categoryId != null) {
+        await categoriesRepository.decrementUsageCount(existingTransaction.categoryId!);
+      }
+      if (existingTransaction.contactId != null) {
+        await contactsRepository.decrementUsageCount(existingTransaction.contactId!);
+      }
+
+      // 4. Delete the transaction
+      await transactionsRepository.deleteTransaction(transactionId);
+    });
+  }
 }
