@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:drift/drift.dart' as drift;
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
-import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
+import 'package:flowpaisa/features/transactions/presentation/providers/transaction_service_provider.dart';
 import 'package:flowpaisa/features/categories/presentation/providers/categories_provider.dart';
 import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
@@ -41,6 +40,8 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
   Contact? _selectedContact;
   int? _selectedContactId;
 
+  String? _paidRelationship;
+
   @override
   void initState() {
     super.initState();
@@ -52,6 +53,7 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
     _selectedCategory = widget.category;
     _selectedContact = widget.contact;
     _selectedContactId = widget.transaction.contactId;
+    _paidRelationship = widget.transaction.paidRelationship;
   }
 
   @override
@@ -66,29 +68,38 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
       return;
     }
 
+    // Validate contact for linked transactions
+    if (_paidRelationship != null && _selectedContact == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select a contact for this relationship'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     setState(() {
       _isLoading = true;
     });
 
     try {
-      final repository = ref.read(transactionsRepositoryProvider);
+      final service = ref.read(transactionServiceProvider);
       final amount = double.parse(_amountController.text);
       final description = _descriptionController.text.isEmpty
           ? null
           : _descriptionController.text;
 
       // Update the transaction
-      await repository.updateTransactionWithCompanion(
-        widget.transaction.id,
-        TransactionsCompanion(
-          amount: drift.Value(amount),
-          type: drift.Value(_selectedType),
-          date: drift.Value(_selectedDate),
-          description: drift.Value(description),
-          contactId: drift.Value(_selectedContactId),
-          categoryId: drift.Value(_selectedCategory?.id),
-          updatedAt: drift.Value(DateTime.now()),
-        ),
+      await service.updateTransaction(
+        transactionId: widget.transaction.id,
+        amount: amount,
+        type: _selectedType,
+        date: _selectedDate,
+        description: description,
+        contactId: _selectedContactId,
+        categoryId: _selectedCategory?.id,
+        paidRelationship: _paidRelationship,
       );
 
       if (mounted) {
@@ -130,6 +141,30 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
       setState(() {
         _selectedDate = picked;
       });
+    }
+  }
+
+  Future<void> _handleRelationshipChange(String? value) async {
+    if (_paidRelationship == value) {
+      setState(() {
+        _paidRelationship = null;
+      });
+    } else {
+      // Logic from AddTransactionScreen to prompt for contact if missing
+      if (_selectedContact == null) {
+        // Attempt to show picker
+         _showContactPicker();
+      }
+      
+      setState(() {
+        _paidRelationship = value;
+      });
+      
+      if (_selectedContact == null && mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Please select a contact for this relationship')),
+          );
+      }
     }
   }
 
@@ -444,6 +479,8 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                       onTap: () {
                         setState(() {
                           _selectedType = 'EXPENSE';
+                          // Reset relationship when type changes
+                          _paidRelationship = null;
                         });
                       },
                     ),
@@ -458,6 +495,8 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                       onTap: () {
                         setState(() {
                           _selectedType = 'INCOME';
+                          // Reset relationship when type changes
+                          _paidRelationship = null;
                         });
                       },
                     ),
@@ -653,6 +692,81 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
               ),
               const SizedBox(height: 24),
 
+              // Paid Relationship Section (Linked Transactions)
+              if (_selectedType == 'EXPENSE') ...[
+                Text(
+                  'Paid Relationship',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _RelationshipButton(
+                        label: 'Paid FOR',
+                        subtitle: 'I will receive back',
+                        icon: Icons.account_balance_wallet,
+                        isSelected: _paidRelationship == 'PAID_FOR',
+                        gradient: AppColors.receivableGradient,
+                        color: AppColors.receivableColor,
+                        onTap: () => _handleRelationshipChange('PAID_FOR'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _RelationshipButton(
+                        label: 'Paid BY',
+                        subtitle: 'Someone paid for me',
+                        icon: Icons.person_outline,
+                        isSelected: _paidRelationship == 'PAID_BY',
+                        gradient: AppColors.payableGradient,
+                        color: AppColors.payableColor,
+                        onTap: () => _handleRelationshipChange('PAID_BY'),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+              ] else if (_selectedType == 'INCOME') ...[
+                Text(
+                  'Received Relationship',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _RelationshipButton(
+                        label: 'I Owe',
+                        subtitle: 'Received loan',
+                        icon: Icons.download,
+                        isSelected: _paidRelationship == 'RECEIVED_FROM',
+                        gradient: AppColors.payableGradient,
+                        color: AppColors.payableColor,
+                        onTap: () => _handleRelationshipChange('RECEIVED_FROM'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _RelationshipButton(
+                        label: 'Will Receive',
+                        subtitle: 'Receive later',
+                        icon: Icons.schedule,
+                        isSelected: _paidRelationship == 'WILL_RECEIVE',
+                        gradient: AppColors.receivableGradient,
+                        color: AppColors.receivableColor,
+                        onTap: () => _handleRelationshipChange('WILL_RECEIVE'),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+              ],
+
               // Date Selector
               InkWell(
                 onTap: _selectDate,
@@ -784,6 +898,88 @@ class _TypeButton extends StatelessWidget {
                 color: isSelected ? Colors.white : theme.colorScheme.onSurface,
                 fontWeight: FontWeight.w600,
               ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// Relationship Button Widget for Paid FOR/BY selection
+class _RelationshipButton extends StatelessWidget {
+  final String label;
+  final String subtitle;
+  final IconData icon;
+  final bool isSelected;
+  final VoidCallback onTap;
+  final Gradient gradient;
+  final Color color;
+
+  const _RelationshipButton({
+    required this.label,
+    required this.subtitle,
+    required this.icon,
+    required this.isSelected,
+    required this.onTap,
+    required this.gradient,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          gradient: isSelected ? gradient : null,
+          color: isSelected ? null : theme.colorScheme.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected ? color : theme.dividerColor,
+            width: isSelected ? 2 : 1,
+          ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: color.withValues(alpha: 0.3),
+                    blurRadius: 12,
+                    offset: const Offset(0, 6),
+                  ),
+                ]
+              : null,
+        ),
+        child: Column(
+          children: [
+            Icon(
+              icon,
+              color: isSelected
+                  ? Colors.white
+                  : theme.colorScheme.onSurfaceVariant,
+              size: 28,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              style: theme.textTheme.titleSmall?.copyWith(
+                color: isSelected ? Colors.white : theme.colorScheme.onSurface,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              subtitle,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: isSelected
+                    ? Colors.white.withValues(alpha: 0.9 / 1.0)
+                    : theme.colorScheme.onSurfaceVariant,
+                fontSize: 11,
+              ),
+              textAlign: TextAlign.center,
             ),
           ],
         ),

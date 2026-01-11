@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
+import 'package:flowpaisa/features/transactions/presentation/providers/transaction_service_provider.dart';
 import 'package:flowpaisa/features/transactions/presentation/screens/add_transaction_screen.dart';
 import 'package:flowpaisa/features/transactions/presentation/screens/edit_transaction_screen.dart';
 import 'package:flowpaisa/features/transactions/presentation/widgets/transaction_details_dialog.dart';
@@ -79,7 +80,7 @@ class TransactionsListScreen extends ConsumerWidget {
             groupedTransactions[dateKey]!.add(item);
           }
 
-          final repository = ref.read(transactionsRepositoryProvider);
+          final service = ref.read(transactionServiceProvider);
 
           return ListView.builder(
             padding: const EdgeInsets.only(bottom: 80),
@@ -130,14 +131,25 @@ class TransactionsListScreen extends ConsumerWidget {
                           );
                         },
                         onDelete: isRestricted ? null : () async {
-                          await repository.deleteTransaction(item.transaction.id);
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Transaction deleted'),
-                                backgroundColor: Colors.green,
-                              ),
-                            );
+                          try {
+                            await service.deleteTransaction(item.transaction.id);
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Transaction deleted'),
+                                  backgroundColor: Colors.green,
+                                ),
+                              );
+                            }
+                          } catch (e) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Error deleting transaction: $e'),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
                           }
                         },
                         child: _buildTransactionCard(
