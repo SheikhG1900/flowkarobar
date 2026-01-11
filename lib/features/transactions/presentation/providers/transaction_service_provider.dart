@@ -214,15 +214,23 @@ class TransactionService {
       // 2. Check if type or relationship changed (requires linked entry recreation)
       final typeChanged = existingTransaction.type != type;
       final relationshipChanged = existingTransaction.paidRelationship != paidRelationship;
-      final needsRecreation = (typeChanged || relationshipChanged) && 
-                              (existingTransaction.linkedPayableId != null || 
-                               existingTransaction.linkedReceivableId != null);
+      
+      // Determine if we need to DELETE old links
+      final hasOldLinks = existingTransaction.linkedPayableId != null || existingTransaction.linkedReceivableId != null;
+      final shouldDeleteOldLinks = hasOldLinks && (typeChanged || relationshipChanged);
+
+      // Determine if we need to CREATE new links
+      // We create new links if:
+      // 1. We have a valid relationship and contact
+      // 2. AND (We deleted old links OR we didn't have links before OR the relationship/type changed)
+      final hasValidNewRelationship = contactId != null && paidRelationship != null;
+      final shouldCreateNewLinks = hasValidNewRelationship && (shouldDeleteOldLinks || !hasOldLinks || relationshipChanged || typeChanged);
 
       // 3. If significant change, delete old linked entries
       int? oldLinkedPayableId = existingTransaction.linkedPayableId;
       int? oldLinkedReceivableId = existingTransaction.linkedReceivableId;
       
-      if (needsRecreation) {
+      if (shouldDeleteOldLinks) {
         if (existingTransaction.linkedPayableId != null) {
           await payablesRepository.deletePayable(existingTransaction.linkedPayableId!);
         }
@@ -251,7 +259,7 @@ class TransactionService {
       );
 
       // 5. Recreate linked entries if needed
-      if (needsRecreation && contactId != null && paidRelationship != null) {
+      if (shouldCreateNewLinks) {
         int? newLinkedPayableId;
         int? newLinkedReceivableId;
 
@@ -333,7 +341,7 @@ class TransactionService {
         }
       }
       // 6. If no recreation needed but linked entries exist, just sync them
-      else if (!needsRecreation) {
+      else if (!shouldCreateNewLinks && !shouldDeleteOldLinks) {
         if (existingTransaction.linkedPayableId != null) {
           final payableCompanion = PayablesCompanion(
             amount: Value(amount),
