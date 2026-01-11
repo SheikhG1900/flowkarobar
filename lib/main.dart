@@ -9,6 +9,7 @@ import 'package:flowpaisa/features/transactions/presentation/screens/transaction
 import 'package:flowpaisa/features/transactions/presentation/screens/add_transaction_screen.dart';
 import 'package:flowpaisa/features/receipt_scan/presentation/screens/scan_receipt_screen.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
+import 'package:flowpaisa/features/transactions/presentation/widgets/transaction_details_dialog.dart';
 import 'package:flowpaisa/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:flowpaisa/features/receivables/presentation/screens/receivables_list_screen.dart';
 import 'package:flowpaisa/features/payables/presentation/screens/payables_list_screen.dart';
@@ -793,14 +794,6 @@ class _DashboardTab extends ConsumerWidget {
                     },
                   ),
                   _QuickActionButton(
-                    icon: Icons.sync_alt,
-                    label: 'Split',
-                    gradient: AppColors.incomeGradient,
-                    onTap: () {
-                      // TODO: Split transaction
-                    },
-                  ),
-                  _QuickActionButton(
                     icon: Icons.account_balance_wallet_outlined,
                     label: 'Receivables',
                     fontSizeMultiplier: 0.82,
@@ -865,7 +858,12 @@ class _DashboardTab extends ConsumerWidget {
           ),
           TextButton(
             onPressed: () {
-              // TODO: View all transactions
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const TransactionsListScreen(),
+                ),
+              );
             },
             child: const Text('View All'),
           ),
@@ -875,7 +873,7 @@ class _DashboardTab extends ConsumerWidget {
   }
 
   Widget _buildRecentTransactions(BuildContext context, WidgetRef ref) {
-    final transactionsAsync = ref.watch(transactionsWithCategoryProvider);
+    final transactionsAsync = ref.watch(transactionsWithDetailsProvider);
 
     return transactionsAsync.when(
       data: (transactions) {
@@ -988,6 +986,14 @@ class _DashboardTab extends ConsumerWidget {
                     fontSize: 16,
                   ),
                 ),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => TransactionDetailsDialog(item: item),
+                    ),
+                  );
+                },
               ),
             );
           },

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/features/categories/presentation/providers/categories_provider.dart';
 import 'package:flowpaisa/features/categories/presentation/screens/add_category_screen.dart';
+import 'package:flowpaisa/features/categories/presentation/screens/edit_category_screen.dart';
 import 'package:flowpaisa/shared/widgets/glass_card.dart';
 
 class CategoriesListScreen extends ConsumerStatefulWidget {
@@ -115,13 +117,87 @@ class _CategoryList extends ConsumerWidget {
   }
 }
 
-class _CategoryCard extends StatelessWidget {
-  final dynamic category; // Using dynamic to avoid import issues
+class _CategoryCard extends ConsumerWidget {
+  final Category category;
 
   const _CategoryCard({required this.category});
 
+  Future<void> _showDeleteDialog(BuildContext context, WidgetRef ref) async {
+    final repository = ref.read(categoriesRepositoryProvider);
+    
+    // Check if category has transactions
+    final hasTransactions = await repository.categoryHasTransactions(category.id);
+    
+    if (!context.mounted) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Category'),
+        content: Text(
+          hasTransactions
+              ? 'This category has transactions associated with it. It will be hidden from lists but kept for historical data.'
+              : 'Are you sure you want to delete "${category.name}"? This action cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(
+              foregroundColor: AppColors.error,
+            ),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && context.mounted) {
+      try {
+        await repository.softDeleteCategory(category.id);
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                hasTransactions
+                    ? 'Category hidden successfully'
+                    : 'Category deleted successfully',
+              ),
+              backgroundColor: AppColors.success,
+            ),
+          );
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error: ${e.toString()}'),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> _editCategory(BuildContext context) async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditCategoryScreen(category: category),
+      ),
+    );
+
+    if (result == true && context.mounted) {
+      // Category was updated, list will auto-refresh via provider
+    }
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final isExpense = category.type == 'EXPENSE';
     final color = category.color != null 
@@ -130,48 +206,83 @@ class _CategoryCard extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
-      child: GlassCard(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: theme.brightness == Brightness.dark ? 0.1 : 0.15),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: color.withValues(alpha: 0.3),
-                  width: 1,
-                ),
-              ),
-              alignment: Alignment.center,
-              child: _buildCategoryIcon(category.icon, color, isExpense),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Text(
-                category.name,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-            if (category.isDefault)
+      child: Dismissible(
+        key: Key('category_${category.id}'),
+        direction: category.isDefault ? DismissDirection.none : DismissDirection.endToStart,
+        confirmDismiss: (direction) async {
+          await _showDeleteDialog(context, ref);
+          return false; // Don't auto-dismiss, we handle it manually
+        },
+        background: Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          decoration: BoxDecoration(
+            color: AppColors.error,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          alignment: Alignment.centerRight,
+          padding: const EdgeInsets.only(right: 20),
+          child: const Icon(Icons.delete, color: Colors.white),
+        ),
+        child: GlassCard(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                width: 48,
+                height: 48,
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(8),
+                  color: color.withValues(alpha: theme.brightness == Brightness.dark ? 0.1 : 0.15),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: color.withValues(alpha: 0.3),
+                    width: 1,
+                  ),
                 ),
+                alignment: Alignment.center,
+                child: _buildCategoryIcon(category.icon, color, isExpense),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
                 child: Text(
-                  'Default',
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
+                  category.name,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
-          ],
+              if (category.isDefault)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    'Default',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+              const SizedBox(width: 8),
+              // Edit button
+              IconButton(
+                icon: const Icon(Icons.edit_outlined),
+                onPressed: () => _editCategory(context),
+                tooltip: 'Edit',
+                iconSize: 20,
+              ),
+              // Delete button (only for non-default categories)
+              if (!category.isDefault)
+                IconButton(
+                  icon: const Icon(Icons.delete_outline),
+                  onPressed: () => _showDeleteDialog(context, ref),
+                  tooltip: 'Delete',
+                  iconSize: 20,
+                  color: AppColors.error,
+                ),
+            ],
+          ),
         ),
       ),
     );

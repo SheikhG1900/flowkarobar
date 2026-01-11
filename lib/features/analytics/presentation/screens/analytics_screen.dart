@@ -276,6 +276,7 @@ class _ExpensesPieChart extends ConsumerWidget {
                final color = e.category.color != null
                   ? Color(int.parse(e.category.color!.replaceAll('#', '0xFF')))
                   : AppColors.expenseColor;
+               final percentage = (e.totalAmount / total) * 100;
               return Padding(
                 padding: const EdgeInsets.symmetric(vertical: 4),
                 child: Row(
@@ -289,7 +290,33 @@ class _ExpensesPieChart extends ConsumerWidget {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    Expanded(child: Text(e.category.name)),
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Text(e.category.name),
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: color.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: color.withValues(alpha: 0.3),
+                                width: 1,
+                              ),
+                            ),
+                            child: Text(
+                              '${percentage.toStringAsFixed(1)}%',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: color,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                     Text('₹${e.totalAmount.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold)),
                   ],
                 ),

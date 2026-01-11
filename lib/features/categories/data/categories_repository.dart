@@ -6,22 +6,24 @@ class CategoriesRepository {
 
   CategoriesRepository(this._database);
 
-  /// Watch all categories
+  /// Watch all categories (excluding soft-deleted)
   Stream<List<Category>> watchAllCategories() {
     return (_database.select(_database.categories)
+          ..where((c) => c.isDeleted.equals(false))
           ..orderBy([(c) => OrderingTerm.asc(c.name)]))
         .watch();
   }
 
-  /// Watch categories by type (EXPENSE or INCOME)
+  /// Watch categories by type (EXPENSE or INCOME, excluding soft-deleted)
   Stream<List<Category>> watchCategoriesByType(String type) {
     return (_database.select(_database.categories)
           ..where((c) => c.type.equals(type))
+          ..where((c) => c.isDeleted.equals(false))
           ..orderBy([(c) => OrderingTerm.asc(c.name)]))
         .watch();
   }
 
-  /// Watch categories with usage stats (most used first)
+  /// Watch categories with usage stats (most used first, excluding soft-deleted)
   Stream<List<CategoryWithUsage>> watchCategoriesWithUsage(String type) {
     final query = _database.select(_database.categories).join([
       leftOuterJoin(
@@ -31,6 +33,7 @@ class CategoriesRepository {
       ),
     ])
       ..where(_database.categories.type.equals(type))
+      ..where(_database.categories.isDeleted.equals(false))
       ..orderBy([
         OrderingTerm.desc(
           _database.categoryUsageStats.usageCount,
@@ -62,11 +65,50 @@ class CategoriesRepository {
   }
 
   /// Update category
-  Future<bool> updateCategory(Category category) {
-    return _database.update(_database.categories).replace(category);
+  Future<bool> updateCategory(Category category) async {
+    final result = await _database.update(_database.categories).replace(category);
+    return result;
   }
 
-  /// Delete category (only if not default)
+  /// Check if category has associated transactions
+  Future<bool> categoryHasTransactions(int categoryId) async {
+    final count = await (_database.selectOnly(_database.transactions)
+          ..addColumns([_database.transactions.id.count()])
+          ..where(_database.transactions.categoryId.equals(categoryId)))
+        .getSingle();
+    
+    final transactionCount = count.read(_database.transactions.id.count()) ?? 0;
+    return transactionCount > 0;
+  }
+
+  /// Smart delete: soft-delete if transactions exist, hard-delete otherwise
+  Future<void> softDeleteCategory(int id) async {
+    final category = await getCategoryById(id);
+    if (category == null) {
+      throw Exception('Category not found');
+    }
+    
+    if (category.isDefault) {
+      throw Exception('Cannot delete default category');
+    }
+
+    // Check if category has transactions
+    final hasTransactions = await categoryHasTransactions(id);
+
+    if (hasTransactions) {
+      // Soft delete: mark as deleted
+      await (_database.update(_database.categories)
+            ..where((c) => c.id.equals(id)))
+          .write(CategoriesCompanion(isDeleted: Value(true)));
+    } else {
+      // Hard delete: remove from database
+      await (_database.delete(_database.categories)
+            ..where((c) => c.id.equals(id)))
+          .go();
+    }
+  }
+
+  /// Delete category (only if not default) - DEPRECATED, use softDeleteCategory
   Future<int> deleteCategory(int id) async {
     final category = await getCategoryById(id);
     if (category == null || category.isDefault) {
@@ -126,7 +168,7 @@ class CategoriesRepository {
     });
   }
 
-  /// Get most used categories
+  /// Get most used categories (excluding soft-deleted)
   Future<List<CategoryWithUsage>> getMostUsedCategories(String type, int limit) async {
     final query = _database.select(_database.categories).join([
       leftOuterJoin(
@@ -136,6 +178,7 @@ class CategoriesRepository {
       ),
     ])
       ..where(_database.categories.type.equals(type))
+      ..where(_database.categories.isDeleted.equals(false))
       ..orderBy([
         OrderingTerm.desc(
           _database.categoryUsageStats.usageCount,
@@ -153,7 +196,7 @@ class CategoriesRepository {
     }).toList();
   }
 
-  /// Get recently used categories
+  /// Get recently used categories (excluding soft-deleted)
   Future<List<CategoryWithUsage>> getRecentlyUsedCategories(String type, int limit) async {
     final query = _database.select(_database.categories).join([
       innerJoin(
@@ -163,6 +206,7 @@ class CategoriesRepository {
       ),
     ])
       ..where(_database.categories.type.equals(type))
+      ..where(_database.categories.isDeleted.equals(false))
       ..orderBy([
         OrderingTerm.desc(
           _database.categoryUsageStats.lastUsed,

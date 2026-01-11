@@ -60,7 +60,8 @@ final receivedReceivablesProvider = StreamProvider<List<Receivable>>((ref) {
 // Watch receivables with ALL linked data (contact + transaction + category)
 // Uses efficient JOINs to avoid N+1 query problems
 final receivablesWithLinkedDataProvider =
-    StreamProvider.family<List<ReceivableWithLinkedData>, String>((ref, status) {
+    StreamProvider.family<List<ReceivableWithLinkedData>, String>(
+        (ref, status) {
   final repository = ref.watch(receivablesRepositoryProvider);
   return repository.watchReceivablesWithLinkedData(status);
 });
