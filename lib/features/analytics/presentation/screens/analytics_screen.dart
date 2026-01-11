@@ -41,7 +41,8 @@ class AnalyticsScreen extends ConsumerWidget {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    if (!isPremium) const PremiumBadge(isSmall: true, showLock: true),
+                    if (!isPremium)
+                      const PremiumBadge(isSmall: true, showLock: true),
                   ],
                 ),
                 centerTitle: true,
@@ -64,17 +65,21 @@ class AnalyticsScreen extends ConsumerWidget {
                   ),
                 ],
                 bottom: PreferredSize(
-                  preferredSize: const Size.fromHeight(110),
+                  preferredSize: const Size.fromHeight(107),
                   child: _DateRangeSelector(
                     selectedDateRange: selectedDateRange,
                     onDateRangeChanged: (dateRange) {
-                      ref.read(selectedDateRangeProvider.notifier).updateRange(dateRange);
+                      ref
+                          .read(selectedDateRangeProvider.notifier)
+                          .updateRange(dateRange);
                     },
                     onNextPeriod: () {
                       ref.read(selectedDateRangeProvider.notifier).nextPeriod();
                     },
                     onPreviousPeriod: () {
-                      ref.read(selectedDateRangeProvider.notifier).previousPeriod();
+                      ref
+                          .read(selectedDateRangeProvider.notifier)
+                          .previousPeriod();
                     },
                   ),
                 ),
@@ -93,56 +98,56 @@ class AnalyticsScreen extends ConsumerWidget {
                         sectionIndex: 0,
                         child: _FinancialSummaryCard(),
                       ),
-                      
+
                       // Contact Summaries
                       const _CollapsibleSection(
                         title: 'Contact Summaries',
                         sectionIndex: 1,
                         child: _ContactSummariesSection(),
                       ),
-                      
+
                       // Pie Chart Section
                       const _CollapsibleSection(
                         title: 'Expenses by Category',
                         sectionIndex: 2,
                         child: _ExpensesPieChart(),
                       ),
-                      
+
                       // Trend Chart Section
                       const _CollapsibleSection(
                         title: 'Income vs Expense Trend',
                         sectionIndex: 3,
                         child: _TrendsBarChart(),
                       ),
-                      
+
                       // Payables vs Receivables Trend
                       const _CollapsibleSection(
                         title: 'Payables vs Receivables Trend',
                         sectionIndex: 4,
                         child: _PayableReceivableTrendsChart(),
                       ),
-                      
+
                       // Top Contacts by Balance
                       const _CollapsibleSection(
                         title: 'Top Contacts by Balance',
                         sectionIndex: 5,
                         child: _TopContactsChart(),
                       ),
-                      
+
                       // Payment Status Distribution
                       const _CollapsibleSection(
                         title: 'Payment Status Distribution',
                         sectionIndex: 6,
                         child: _PaymentStatusDistributionChart(),
                       ),
-                      
+
                       // Income by Category
                       const _CollapsibleSection(
                         title: 'Income by Category',
                         sectionIndex: 7,
                         child: _IncomePieChart(),
                       ),
-                      
+
                       const SizedBox(height: 80), // Bottom padding
                     ],
                   ),
@@ -182,7 +187,10 @@ class AnalyticsScreen extends ConsumerWidget {
                               decoration: const BoxDecoration(
                                 shape: BoxShape.circle,
                                 gradient: LinearGradient(
-                                  colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
+                                  colors: [
+                                    Color(0xFFFFD700),
+                                    Color(0xFFFFA500)
+                                  ],
                                 ),
                               ),
                               child: const Icon(
@@ -208,7 +216,8 @@ class AnalyticsScreen extends ConsumerWidget {
                             ),
                             const SizedBox(height: 24),
                             FilledButton(
-                              onPressed: () => PremiumGate.showPremiumDialog(context),
+                              onPressed: () =>
+                                  PremiumGate.showPremiumDialog(context),
                               child: const Text('Unlock Premium'),
                             ),
                           ],
@@ -255,7 +264,7 @@ class _DateRangeSelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Column(
@@ -278,7 +287,8 @@ class _DateRangeSelector extends StatelessWidget {
                 onTap: () {
                   final now = DateTime.now();
                   final currentQuarter = ((now.month - 1) ~/ 3) + 1;
-                  onDateRangeChanged(DateRangeState.quarter(now.year, currentQuarter));
+                  onDateRangeChanged(
+                      DateRangeState.quarter(now.year, currentQuarter));
                 },
               ),
               const SizedBox(width: 8),
@@ -304,7 +314,8 @@ class _DateRangeSelector extends StatelessWidget {
                     ),
                   );
                   if (picked != null) {
-                    onDateRangeChanged(DateRangeState.custom(picked.start, picked.end));
+                    onDateRangeChanged(
+                        DateRangeState.custom(picked.start, picked.end));
                   }
                 },
               ),
@@ -317,10 +328,13 @@ class _DateRangeSelector extends StatelessWidget {
             children: [
               IconButton(
                 icon: const Icon(Icons.chevron_left),
-                onPressed: selectedDateRange.type != DateRangeType.custom ? onPreviousPeriod : null,
+                onPressed: selectedDateRange.type != DateRangeType.custom
+                    ? onPreviousPeriod
+                    : null,
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
                   color: theme.colorScheme.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(20),
@@ -334,7 +348,9 @@ class _DateRangeSelector extends StatelessWidget {
               ),
               IconButton(
                 icon: const Icon(Icons.chevron_right),
-                onPressed: selectedDateRange.type != DateRangeType.custom ? onNextPeriod : null,
+                onPressed: selectedDateRange.type != DateRangeType.custom
+                    ? onNextPeriod
+                    : null,
               ),
             ],
           ),
@@ -358,21 +374,19 @@ class _RangeTypeChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected 
-              ? theme.colorScheme.primaryContainer 
+          color: isSelected
+              ? theme.colorScheme.primaryContainer
               : theme.colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected 
-                ? theme.colorScheme.primary 
-                : Colors.transparent,
+            color: isSelected ? theme.colorScheme.primary : Colors.transparent,
             width: 1.5,
           ),
         ),
@@ -381,8 +395,8 @@ class _RangeTypeChip extends StatelessWidget {
           style: TextStyle(
             fontSize: 12,
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-            color: isSelected 
-                ? theme.colorScheme.onPrimaryContainer 
+            color: isSelected
+                ? theme.colorScheme.onPrimaryContainer
                 : theme.colorScheme.onSurfaceVariant,
           ),
         ),
@@ -409,7 +423,8 @@ class _FinancialSummaryCard extends ConsumerWidget {
               decoration: BoxDecoration(
                 color: theme.cardColor,
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: theme.dividerColor.withValues(alpha: 0.5)),
+                border: Border.all(
+                    color: theme.dividerColor.withValues(alpha: 0.5)),
               ),
               child: Column(
                 children: [
@@ -467,8 +482,8 @@ class _FinancialSummaryCard extends ConsumerWidget {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      gradient: selectedSummary.netBalance >= 0 
-                          ? AppColors.receivableGradient 
+                      gradient: selectedSummary.netBalance >= 0
+                          ? AppColors.receivableGradient
                           : AppColors.payableGradient,
                       borderRadius: BorderRadius.circular(16),
                     ),
@@ -544,7 +559,7 @@ class _SummaryItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -615,9 +630,11 @@ class _ContactSummariesSection extends ConsumerWidget {
               padding: const EdgeInsets.all(32),
               child: Column(
                 children: [
-                  Icon(Icons.people_outline, size: 48, color: theme.disabledColor),
+                  Icon(Icons.people_outline,
+                      size: 48, color: theme.disabledColor),
                   const SizedBox(height: 8),
-                  Text('No contact activity for this period', style: TextStyle(color: theme.disabledColor)),
+                  Text('No contact activity for this period',
+                      style: TextStyle(color: theme.disabledColor)),
                 ],
               ),
             ),
@@ -628,20 +645,22 @@ class _ContactSummariesSection extends ConsumerWidget {
           children: summaries.map((summary) {
             final isPositive = summary.balance >= 0;
             final isZero = summary.balance == 0;
-            
+
             return Container(
               margin: const EdgeInsets.only(bottom: 12),
               decoration: BoxDecoration(
                 color: theme.cardColor,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: theme.dividerColor.withValues(alpha: 0.5)),
+                border: Border.all(
+                    color: theme.dividerColor.withValues(alpha: 0.5)),
               ),
               child: InkWell(
                 onTap: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => ContactDetailsScreen(contactId: summary.contact.id),
+                      builder: (context) =>
+                          ContactDetailsScreen(contactId: summary.contact.id),
                     ),
                   );
                 },
@@ -655,12 +674,15 @@ class _ContactSummariesSection extends ConsumerWidget {
                         width: 50,
                         height: 50,
                         decoration: BoxDecoration(
-                          gradient: AppColors.getContactGradient(summary.contact.name),
+                          gradient: AppColors.getContactGradient(
+                              summary.contact.name),
                           shape: BoxShape.circle,
                         ),
                         alignment: Alignment.center,
                         child: Text(
-                          summary.contact.name.isNotEmpty ? summary.contact.name[0].toUpperCase() : '?',
+                          summary.contact.name.isNotEmpty
+                              ? summary.contact.name[0].toUpperCase()
+                              : '?',
                           style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
@@ -707,26 +729,37 @@ class _ContactSummariesSection extends ConsumerWidget {
                       ),
                       // Balance
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
                         decoration: BoxDecoration(
-                          color: isZero 
+                          color: isZero
                               ? theme.colorScheme.surfaceContainerHighest
-                              : (isPositive ? AppColors.receivableColor : AppColors.payableColor).withValues(alpha: 0.1),
+                              : (isPositive
+                                      ? AppColors.receivableColor
+                                      : AppColors.payableColor)
+                                  .withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: isZero 
-                                ? theme.dividerColor 
-                                : (isPositive ? AppColors.receivableColor : AppColors.payableColor).withValues(alpha: 0.3),
+                            color: isZero
+                                ? theme.dividerColor
+                                : (isPositive
+                                        ? AppColors.receivableColor
+                                        : AppColors.payableColor)
+                                    .withValues(alpha: 0.3),
                           ),
                         ),
                         child: Text(
-                          isZero ? 'Settled' : '₹${summary.balance.abs().toStringAsFixed(0)}',
+                          isZero
+                              ? 'Settled'
+                              : '₹${summary.balance.abs().toStringAsFixed(0)}',
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
-                            color: isZero 
-                                ? theme.colorScheme.onSurfaceVariant 
-                                : (isPositive ? AppColors.receivableColor : AppColors.payableColor),
+                            color: isZero
+                                ? theme.colorScheme.onSurfaceVariant
+                                : (isPositive
+                                    ? AppColors.receivableColor
+                                    : AppColors.payableColor),
                           ),
                         ),
                       ),
@@ -760,9 +793,11 @@ class _ExpensesPieChart extends ConsumerWidget {
               padding: const EdgeInsets.all(32),
               child: Column(
                 children: [
-                  Icon(Icons.pie_chart_outline, size: 48, color: theme.disabledColor),
+                  Icon(Icons.pie_chart_outline,
+                      size: 48, color: theme.disabledColor),
                   const SizedBox(height: 8),
-                  Text('No expenses for this period', style: TextStyle(color: theme.disabledColor)),
+                  Text('No expenses for this period',
+                      style: TextStyle(color: theme.disabledColor)),
                 ],
               ),
             ),
@@ -782,9 +817,10 @@ class _ExpensesPieChart extends ConsumerWidget {
                   sections: expenses.map((e) {
                     final percentage = (e.totalAmount / total) * 100;
                     final color = e.category.color != null
-                        ? Color(int.parse(e.category.color!.replaceAll('#', '0xFF')))
+                        ? Color(int.parse(
+                            e.category.color!.replaceAll('#', '0xFF')))
                         : AppColors.expenseColor;
-                    
+
                     return PieChartSectionData(
                       color: color,
                       value: e.totalAmount,
@@ -803,10 +839,10 @@ class _ExpensesPieChart extends ConsumerWidget {
             const SizedBox(height: 16),
             // Legend
             ...expenses.take(5).map((e) {
-               final color = e.category.color != null
+              final color = e.category.color != null
                   ? Color(int.parse(e.category.color!.replaceAll('#', '0xFF')))
                   : AppColors.expenseColor;
-               final percentage = (e.totalAmount / total) * 100;
+              final percentage = (e.totalAmount / total) * 100;
               return Padding(
                 padding: const EdgeInsets.symmetric(vertical: 4),
                 child: Row(
@@ -826,7 +862,8 @@ class _ExpensesPieChart extends ConsumerWidget {
                           Text(e.category.name),
                           const SizedBox(width: 8),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 2),
                             decoration: BoxDecoration(
                               color: color.withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(12),
@@ -847,7 +884,8 @@ class _ExpensesPieChart extends ConsumerWidget {
                         ],
                       ),
                     ),
-                    Text('₹${e.totalAmount.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                    Text('₹${e.totalAmount.toStringAsFixed(2)}',
+                        style: const TextStyle(fontWeight: FontWeight.bold)),
                   ],
                 ),
               );
@@ -872,14 +910,15 @@ class _TrendsBarChart extends ConsumerWidget {
     return trendsAsync.when(
       data: (trends) {
         if (trends.every((t) => t.income == 0 && t.expense == 0)) {
-           return Center(
+          return Center(
             child: Padding(
               padding: const EdgeInsets.all(32),
               child: Column(
                 children: [
                   Icon(Icons.bar_chart, size: 48, color: theme.disabledColor),
                   const SizedBox(height: 8),
-                  Text('No data for trends', style: TextStyle(color: theme.disabledColor)),
+                  Text('No data for trends',
+                      style: TextStyle(color: theme.disabledColor)),
                 ],
               ),
             ),
@@ -916,7 +955,9 @@ class _TrendsBarChart extends ConsumerWidget {
                         TextSpan(
                           text: '₹${rod.toY.toStringAsFixed(0)}',
                           style: TextStyle(
-                            color: rodIndex == 0 ? AppColors.incomeColor : AppColors.expenseColor,
+                            color: rodIndex == 0
+                                ? AppColors.incomeColor
+                                : AppColors.expenseColor,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -932,7 +973,8 @@ class _TrendsBarChart extends ConsumerWidget {
                     showTitles: true,
                     getTitlesWidget: (value, meta) {
                       final index = value.toInt();
-                      if (index < 0 || index >= trends.length) return const Text('');
+                      if (index < 0 || index >= trends.length)
+                        return const Text('');
                       return Padding(
                         padding: const EdgeInsets.only(top: 8.0),
                         child: Text(
@@ -944,9 +986,12 @@ class _TrendsBarChart extends ConsumerWidget {
                     reservedSize: 30,
                   ),
                 ),
-                leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                leftTitles:
+                    const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                topTitles:
+                    const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                rightTitles:
+                    const AxisTitles(sideTitles: SideTitles(showTitles: false)),
               ),
               gridData: const FlGridData(show: false),
               borderData: FlBorderData(show: false),
@@ -960,13 +1005,15 @@ class _TrendsBarChart extends ConsumerWidget {
                       toY: data.income,
                       color: AppColors.incomeColor,
                       width: 12,
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+                      borderRadius:
+                          const BorderRadius.vertical(top: Radius.circular(4)),
                     ),
                     BarChartRodData(
                       toY: data.expense,
                       color: AppColors.expenseColor,
                       width: 12,
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+                      borderRadius:
+                          const BorderRadius.vertical(top: Radius.circular(4)),
                     ),
                   ],
                 );
@@ -991,7 +1038,8 @@ class _PayableReceivableTrendsChart extends ConsumerWidget {
 
     return trendsAsync.when(
       data: (trends) {
-        if (trends.every((t) => t.totalPayable == 0 && t.totalReceivable == 0)) {
+        if (trends
+            .every((t) => t.totalPayable == 0 && t.totalReceivable == 0)) {
           return Center(
             child: Padding(
               padding: const EdgeInsets.all(32),
@@ -999,7 +1047,8 @@ class _PayableReceivableTrendsChart extends ConsumerWidget {
                 children: [
                   Icon(Icons.bar_chart, size: 48, color: theme.disabledColor),
                   const SizedBox(height: 8),
-                  Text('No payable/receivable data', style: TextStyle(color: theme.disabledColor)),
+                  Text('No payable/receivable data',
+                      style: TextStyle(color: theme.disabledColor)),
                 ],
               ),
             ),
@@ -1027,12 +1076,16 @@ class _PayableReceivableTrendsChart extends ConsumerWidget {
                     final type = rodIndex == 0 ? 'Payable' : 'Receivable';
                     return BarTooltipItem(
                       '`$type\n',
-                      TextStyle(color: theme.colorScheme.onSurface, fontWeight: FontWeight.bold),
+                      TextStyle(
+                          color: theme.colorScheme.onSurface,
+                          fontWeight: FontWeight.bold),
                       children: [
                         TextSpan(
                           text: '₹${rod.toY.toStringAsFixed(0)}',
                           style: TextStyle(
-                            color: rodIndex == 0 ? AppColors.payableColor : AppColors.receivableColor,
+                            color: rodIndex == 0
+                                ? AppColors.payableColor
+                                : AppColors.receivableColor,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -1048,18 +1101,24 @@ class _PayableReceivableTrendsChart extends ConsumerWidget {
                     showTitles: true,
                     getTitlesWidget: (value, meta) {
                       final index = value.toInt();
-                      if (index < 0 || index >= trends.length) return const Text('');
+                      if (index < 0 || index >= trends.length)
+                        return const Text('');
                       return Padding(
                         padding: const EdgeInsets.only(top: 8.0),
-                        child: Text(DateFormat.MMM().format(trends[index].month), style: const TextStyle(fontSize: 10)),
+                        child: Text(
+                            DateFormat.MMM().format(trends[index].month),
+                            style: const TextStyle(fontSize: 10)),
                       );
                     },
                     reservedSize: 30,
                   ),
                 ),
-                leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                leftTitles:
+                    const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                topTitles:
+                    const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                rightTitles:
+                    const AxisTitles(sideTitles: SideTitles(showTitles: false)),
               ),
               gridData: const FlGridData(show: false),
               borderData: FlBorderData(show: false),
@@ -1069,8 +1128,18 @@ class _PayableReceivableTrendsChart extends ConsumerWidget {
                 return BarChartGroupData(
                   x: index,
                   barRods: [
-                    BarChartRodData(toY: data.totalPayable, color: AppColors.payableColor, width: 12, borderRadius: const BorderRadius.vertical(top: Radius.circular(4))),
-                    BarChartRodData(toY: data.totalReceivable, color: AppColors.receivableColor, width: 12, borderRadius: const BorderRadius.vertical(top: Radius.circular(4))),
+                    BarChartRodData(
+                        toY: data.totalPayable,
+                        color: AppColors.payableColor,
+                        width: 12,
+                        borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(4))),
+                    BarChartRodData(
+                        toY: data.totalReceivable,
+                        color: AppColors.receivableColor,
+                        width: 12,
+                        borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(4))),
                   ],
                 );
               }).toList(),
@@ -1100,9 +1169,11 @@ class _TopContactsChart extends ConsumerWidget {
               padding: const EdgeInsets.all(32),
               child: Column(
                 children: [
-                  Icon(Icons.people_outline, size: 48, color: theme.disabledColor),
+                  Icon(Icons.people_outline,
+                      size: 48, color: theme.disabledColor),
                   const SizedBox(height: 8),
-                  Text('No contact data', style: TextStyle(color: theme.disabledColor)),
+                  Text('No contact data',
+                      style: TextStyle(color: theme.disabledColor)),
                 ],
               ),
             ),
@@ -1112,9 +1183,11 @@ class _TopContactsChart extends ConsumerWidget {
         return Column(
           children: contacts.take(5).map((contact) {
             final isPositive = contact.balance >= 0;
-            final color = isPositive ? AppColors.receivableColor : AppColors.payableColor;
+            final color =
+                isPositive ? AppColors.receivableColor : AppColors.payableColor;
             final maxAmount = contacts.first.balance.abs();
-            final percentage = maxAmount > 0 ? (contact.balance.abs() / maxAmount) : 0.0;
+            final percentage =
+                maxAmount > 0 ? (contact.balance.abs() / maxAmount) : 0.0;
 
             return Padding(
               padding: const EdgeInsets.symmetric(vertical: 8),
@@ -1127,13 +1200,17 @@ class _TopContactsChart extends ConsumerWidget {
                       Expanded(
                         child: Text(
                           contact.contact.name,
-                          style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                          style: theme.textTheme.bodyMedium
+                              ?.copyWith(fontWeight: FontWeight.w600),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       Text(
                         '₹${contact.balance.abs().toStringAsFixed(0)}',
-                        style: TextStyle(fontWeight: FontWeight.bold, color: color, fontSize: 14),
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: color,
+                            fontSize: 14),
                       ),
                     ],
                   ),
@@ -1169,8 +1246,12 @@ class _PaymentStatusDistributionChart extends ConsumerWidget {
 
     return statusAsync.when(
       data: (status) {
-        final payableTotal = status.pendingPayables + status.paidPayables + status.cancelledPayables;
-        final receivableTotal = status.pendingReceivables + status.receivedReceivables + status.cancelledReceivables;
+        final payableTotal = status.pendingPayables +
+            status.paidPayables +
+            status.cancelledPayables;
+        final receivableTotal = status.pendingReceivables +
+            status.receivedReceivables +
+            status.cancelledReceivables;
 
         if (payableTotal == 0 && receivableTotal == 0) {
           return Center(
@@ -1180,7 +1261,8 @@ class _PaymentStatusDistributionChart extends ConsumerWidget {
                 children: [
                   Icon(Icons.donut_large, size: 48, color: theme.disabledColor),
                   const SizedBox(height: 8),
-                  Text('No payment status data', style: TextStyle(color: theme.disabledColor)),
+                  Text('No payment status data',
+                      style: TextStyle(color: theme.disabledColor)),
                 ],
               ),
             ),
@@ -1193,7 +1275,9 @@ class _PaymentStatusDistributionChart extends ConsumerWidget {
               Expanded(
                 child: Column(
                   children: [
-                    Text('Payables', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
+                    Text('Payables',
+                        style: theme.textTheme.titleSmall
+                            ?.copyWith(fontWeight: FontWeight.bold)),
                     const SizedBox(height: 8),
                     SizedBox(
                       height: 180,
@@ -1206,43 +1290,61 @@ class _PaymentStatusDistributionChart extends ConsumerWidget {
                               PieChartSectionData(
                                 color: Colors.orange,
                                 value: status.pendingPayables,
-                                title: '${((status.pendingPayables / payableTotal) * 100).toStringAsFixed(0)}%',
+                                title:
+                                    '${((status.pendingPayables / payableTotal) * 100).toStringAsFixed(0)}%',
                                 radius: 45,
-                                titleStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
+                                titleStyle: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white),
                               ),
                             if (status.paidPayables > 0)
                               PieChartSectionData(
                                 color: Colors.green,
                                 value: status.paidPayables,
-                                title: '${((status.paidPayables / payableTotal) * 100).toStringAsFixed(0)}%',
+                                title:
+                                    '${((status.paidPayables / payableTotal) * 100).toStringAsFixed(0)}%',
                                 radius: 45,
-                                titleStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
+                                titleStyle: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white),
                               ),
                             if (status.cancelledPayables > 0)
                               PieChartSectionData(
                                 color: Colors.grey,
                                 value: status.cancelledPayables,
-                                title: '${((status.cancelledPayables / payableTotal) * 100).toStringAsFixed(0)}%',
+                                title:
+                                    '${((status.cancelledPayables / payableTotal) * 100).toStringAsFixed(0)}%',
                                 radius: 45,
-                                titleStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
+                                titleStyle: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white),
                               ),
                           ],
                         ),
                       ),
                     ),
                     const SizedBox(height: 8),
-                    _buildStatusLegend('Pending', status.pendingPayables, Colors.orange),
-                    _buildStatusLegend('Paid', status.paidPayables, Colors.green),
-                    _buildStatusLegend('Cancelled', status.cancelledPayables, Colors.grey),
+                    _buildStatusLegend(
+                        'Pending', status.pendingPayables, Colors.orange),
+                    _buildStatusLegend(
+                        'Paid', status.paidPayables, Colors.green),
+                    _buildStatusLegend(
+                        'Cancelled', status.cancelledPayables, Colors.grey),
                   ],
                 ),
               ),
-            if (payableTotal > 0 && receivableTotal > 0) const SizedBox(width: 16),
+            if (payableTotal > 0 && receivableTotal > 0)
+              const SizedBox(width: 16),
             if (receivableTotal > 0)
               Expanded(
                 child: Column(
                   children: [
-                    Text('Receivables', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
+                    Text('Receivables',
+                        style: theme.textTheme.titleSmall
+                            ?.copyWith(fontWeight: FontWeight.bold)),
                     const SizedBox(height: 8),
                     SizedBox(
                       height: 180,
@@ -1255,34 +1357,49 @@ class _PaymentStatusDistributionChart extends ConsumerWidget {
                               PieChartSectionData(
                                 color: Colors.orange,
                                 value: status.pendingReceivables,
-                                title: '${((status.pendingReceivables / receivableTotal) * 100).toStringAsFixed(0)}%',
+                                title:
+                                    '${((status.pendingReceivables / receivableTotal) * 100).toStringAsFixed(0)}%',
                                 radius: 45,
-                                titleStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
+                                titleStyle: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white),
                               ),
                             if (status.receivedReceivables > 0)
                               PieChartSectionData(
                                 color: Colors.green,
                                 value: status.receivedReceivables,
-                                title: '${((status.receivedReceivables / receivableTotal) * 100).toStringAsFixed(0)}%',
+                                title:
+                                    '${((status.receivedReceivables / receivableTotal) * 100).toStringAsFixed(0)}%',
                                 radius: 45,
-                                titleStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
+                                titleStyle: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white),
                               ),
                             if (status.cancelledReceivables > 0)
                               PieChartSectionData(
                                 color: Colors.grey,
                                 value: status.cancelledReceivables,
-                                title: '${((status.cancelledReceivables / receivableTotal) * 100).toStringAsFixed(0)}%',
+                                title:
+                                    '${((status.cancelledReceivables / receivableTotal) * 100).toStringAsFixed(0)}%',
                                 radius: 45,
-                                titleStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
+                                titleStyle: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white),
                               ),
                           ],
                         ),
                       ),
                     ),
                     const SizedBox(height: 8),
-                    _buildStatusLegend('Pending', status.pendingReceivables, Colors.orange),
-                    _buildStatusLegend('Received', status.receivedReceivables, Colors.green),
-                    _buildStatusLegend('Cancelled', status.cancelledReceivables, Colors.grey),
+                    _buildStatusLegend(
+                        'Pending', status.pendingReceivables, Colors.orange),
+                    _buildStatusLegend(
+                        'Received', status.receivedReceivables, Colors.green),
+                    _buildStatusLegend(
+                        'Cancelled', status.cancelledReceivables, Colors.grey),
                   ],
                 ),
               ),
@@ -1301,11 +1418,16 @@ class _PaymentStatusDistributionChart extends ConsumerWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Container(width: 10, height: 10, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+          Container(
+              width: 10,
+              height: 10,
+              decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
           const SizedBox(width: 6),
           Text(label, style: const TextStyle(fontSize: 11)),
           const SizedBox(width: 4),
-          Text('₹${amount.toStringAsFixed(0)}', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+          Text('₹${amount.toStringAsFixed(0)}',
+              style:
+                  const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
         ],
       ),
     );
@@ -1328,9 +1450,11 @@ class _IncomePieChart extends ConsumerWidget {
               padding: const EdgeInsets.all(32),
               child: Column(
                 children: [
-                  Icon(Icons.pie_chart_outline, size: 48, color: theme.disabledColor),
+                  Icon(Icons.pie_chart_outline,
+                      size: 48, color: theme.disabledColor),
                   const SizedBox(height: 8),
-                  Text('No income for this period', style: TextStyle(color: theme.disabledColor)),
+                  Text('No income for this period',
+                      style: TextStyle(color: theme.disabledColor)),
                 ],
               ),
             ),
@@ -1350,15 +1474,19 @@ class _IncomePieChart extends ConsumerWidget {
                   sections: incomes.map((e) {
                     final percentage = (e.totalAmount / total) * 100;
                     final color = e.category.color != null
-                        ? Color(int.parse(e.category.color!.replaceAll('#', '0xFF')))
+                        ? Color(int.parse(
+                            e.category.color!.replaceAll('#', '0xFF')))
                         : AppColors.incomeColor;
-                    
+
                     return PieChartSectionData(
                       color: color,
                       value: e.totalAmount,
                       title: '${percentage.toStringAsFixed(0)}%',
                       radius: 50,
-                      titleStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
+                      titleStyle: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white),
                     );
                   }).toList(),
                 ),
@@ -1366,15 +1494,19 @@ class _IncomePieChart extends ConsumerWidget {
             ),
             const SizedBox(height: 16),
             ...incomes.take(5).map((e) {
-               final color = e.category.color != null
+              final color = e.category.color != null
                   ? Color(int.parse(e.category.color!.replaceAll('#', '0xFF')))
                   : AppColors.incomeColor;
-               final percentage = (e.totalAmount / total) * 100;
+              final percentage = (e.totalAmount / total) * 100;
               return Padding(
                 padding: const EdgeInsets.symmetric(vertical: 4),
                 child: Row(
                   children: [
-                    Container(width: 12, height: 12, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+                    Container(
+                        width: 12,
+                        height: 12,
+                        decoration: BoxDecoration(
+                            color: color, shape: BoxShape.circle)),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Row(
@@ -1382,21 +1514,28 @@ class _IncomePieChart extends ConsumerWidget {
                           Text(e.category.name),
                           const SizedBox(width: 8),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 2),
                             decoration: BoxDecoration(
                               color: color.withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
+                              border: Border.all(
+                                  color: color.withValues(alpha: 0.3),
+                                  width: 1),
                             ),
                             child: Text(
                               '${percentage.toStringAsFixed(1)}%',
-                              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: color),
+                              style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: color),
                             ),
                           ),
                         ],
                       ),
                     ),
-                    Text('₹${e.totalAmount.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                    Text('₹${e.totalAmount.toStringAsFixed(2)}',
+                        style: const TextStyle(fontWeight: FontWeight.bold)),
                   ],
                 ),
               );
@@ -1428,7 +1567,8 @@ class _CollapsibleSection extends StatefulWidget {
   State<_CollapsibleSection> createState() => _CollapsibleSectionState();
 }
 
-class _CollapsibleSectionState extends State<_CollapsibleSection> with SingleTickerProviderStateMixin {
+class _CollapsibleSectionState extends State<_CollapsibleSection>
+    with SingleTickerProviderStateMixin {
   late bool _isExpanded;
   late AnimationController _animationController;
   late Animation<double> _iconTurns;
@@ -1469,7 +1609,7 @@ class _CollapsibleSectionState extends State<_CollapsibleSection> with SingleTic
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     // Alternating background colors
     final backgroundColor = widget.sectionIndex % 2 == 0
         ? theme.colorScheme.surface
@@ -1494,12 +1634,14 @@ class _CollapsibleSectionState extends State<_CollapsibleSection> with SingleTic
             color: Colors.transparent,
             child: Semantics(
               button: true,
-              label: '${widget.title} section, ${_isExpanded ? 'expanded' : 'collapsed'}',
+              label:
+                  '${widget.title} section, ${_isExpanded ? 'expanded' : 'collapsed'}',
               onTap: _toggleExpanded,
               child: InkWell(
                 onTap: _toggleExpanded,
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
                   child: Row(
                     children: [
                       Expanded(
@@ -1514,7 +1656,8 @@ class _CollapsibleSectionState extends State<_CollapsibleSection> with SingleTic
                         turns: _iconTurns,
                         child: Icon(
                           Icons.keyboard_arrow_down,
-                          color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                          color: theme.colorScheme.onSurface
+                              .withValues(alpha: 0.7),
                         ),
                       ),
                     ],
