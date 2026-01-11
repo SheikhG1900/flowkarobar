@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
@@ -7,6 +7,7 @@ import 'package:flowpaisa/features/analytics/presentation/providers/analytics_pr
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/shared/widgets/premium_badge.dart';
+import 'package:flowpaisa/features/contacts/presentation/screens/contact_details_screen.dart';
 import 'dart:ui';
 
 class AnalyticsScreen extends ConsumerWidget {
@@ -15,7 +16,7 @@ class AnalyticsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    final selectedMonth = ref.watch(selectedMonthProvider);
+    final selectedDateRange = ref.watch(selectedDateRangeProvider);
     final theme = Theme.of(context);
     final isPremium = PremiumGate.isPremium(ref);
 
@@ -24,9 +25,8 @@ class AnalyticsScreen extends ConsumerWidget {
         children: [
           CustomScrollView(
             slivers: [
-              // App Bar with Date Selector
+              // App Bar with Date Range Selector
               SliverAppBar(
-                // Removed expandedHeight to default to toolbar + bottom
                 floating: true,
                 pinned: true,
                 backgroundColor: theme.scaffoldBackgroundColor,
@@ -45,12 +45,36 @@ class AnalyticsScreen extends ConsumerWidget {
                   ],
                 ),
                 centerTitle: true,
+                actions: [
+                  IconButton(
+                    icon: const Icon(Icons.refresh),
+                    onPressed: () {
+                      // Invalidate all analytics providers to refresh data
+                      ref.invalidate(financialSummaryProvider);
+                      ref.invalidate(allTimeFinancialSummaryProvider);
+                      ref.invalidate(contactSummariesProvider);
+                      ref.invalidate(expensesByCategoryProvider);
+                      ref.invalidate(monthlyTrendsProvider);
+                      ref.invalidate(payableReceivableTrendsProvider);
+                      ref.invalidate(topContactsByBalanceProvider);
+                      ref.invalidate(paymentStatusDistributionProvider);
+                      ref.invalidate(incomeByCategoryProvider);
+                    },
+                    tooltip: 'Refresh Analytics',
+                  ),
+                ],
                 bottom: PreferredSize(
-                  preferredSize: const Size.fromHeight(70),
-                  child: _MonthSelector(
-                    selectedMonth: selectedMonth,
-                    onMonthChanged: (date) {
-                      ref.read(selectedMonthProvider.notifier).update(date);
+                  preferredSize: const Size.fromHeight(110),
+                  child: _DateRangeSelector(
+                    selectedDateRange: selectedDateRange,
+                    onDateRangeChanged: (dateRange) {
+                      ref.read(selectedDateRangeProvider.notifier).updateRange(dateRange);
+                    },
+                    onNextPeriod: () {
+                      ref.read(selectedDateRangeProvider.notifier).nextPeriod();
+                    },
+                    onPreviousPeriod: () {
+                      ref.read(selectedDateRangeProvider.notifier).previousPeriod();
                     },
                   ),
                 ),
@@ -63,6 +87,30 @@ class AnalyticsScreen extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Financial Summary (Combined)
+                      Text(
+                        'Financial Summary',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      const _FinancialSummaryCard(),
+                      
+                      const SizedBox(height: 24),
+                      
+                      // Contact Summaries
+                      Text(
+                        'Contact Summaries',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      const _ContactSummariesSection(),
+                      
+                      const SizedBox(height: 32),
+                      
                       // Pie Chart Section
                       Text(
                         'Expenses by Category',
@@ -84,6 +132,54 @@ class AnalyticsScreen extends ConsumerWidget {
                       ),
                       const SizedBox(height: 16),
                       const _TrendsBarChart(),
+                      
+                      const SizedBox(height: 32),
+                      
+                      // Payables vs Receivables Trend
+                      Text(
+                        'Payables vs Receivables Trend',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      const _PayableReceivableTrendsChart(),
+                      
+                      const SizedBox(height: 32),
+                      
+                      // Top Contacts by Balance
+                      Text(
+                        'Top Contacts by Balance',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      const _TopContactsChart(),
+                      
+                      const SizedBox(height: 32),
+                      
+                      // Payment Status Distribution
+                      Text(
+                        'Payment Status Distribution',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      const _PaymentStatusDistributionChart(),
+                      
+                      const SizedBox(height: 32),
+                      
+                      // Income by Category
+                      Text(
+                        'Income by Category',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      const _IncomePieChart(),
                       
                       const SizedBox(height: 80), // Bottom padding
                     ],
@@ -167,49 +263,521 @@ class AnalyticsScreen extends ConsumerWidget {
   }
 }
 
-class _MonthSelector extends StatelessWidget {
-  final DateTime selectedMonth;
-  final Function(DateTime) onMonthChanged;
+class _DateRangeSelector extends StatelessWidget {
+  final DateRangeState selectedDateRange;
+  final Function(DateRangeState) onDateRangeChanged;
+  final VoidCallback onNextPeriod;
+  final VoidCallback onPreviousPeriod;
 
-  const _MonthSelector({
-    required this.selectedMonth,
-    required this.onMonthChanged,
+  const _DateRangeSelector({
+    required this.selectedDateRange,
+    required this.onDateRangeChanged,
+    required this.onNextPeriod,
+    required this.onPreviousPeriod,
+  });
+
+  String _getDisplayText() {
+    switch (selectedDateRange.type) {
+      case DateRangeType.month:
+        return DateFormat.yMMMM().format(selectedDateRange.startDate);
+      case DateRangeType.quarter:
+        final quarter = ((selectedDateRange.startDate.month - 1) ~/ 3) + 1;
+        return 'Q$quarter ${DateFormat.y().format(selectedDateRange.startDate)}';
+      case DateRangeType.year:
+        return DateFormat.y().format(selectedDateRange.startDate);
+      case DateRangeType.custom:
+        return ' - ';
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Column(
+        children: [
+          // Range type selector
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _RangeTypeChip(
+                label: 'Month',
+                isSelected: selectedDateRange.type == DateRangeType.month,
+                onTap: () {
+                  onDateRangeChanged(DateRangeState.currentMonth());
+                },
+              ),
+              const SizedBox(width: 8),
+              _RangeTypeChip(
+                label: 'Quarter',
+                isSelected: selectedDateRange.type == DateRangeType.quarter,
+                onTap: () {
+                  final now = DateTime.now();
+                  final currentQuarter = ((now.month - 1) ~/ 3) + 1;
+                  onDateRangeChanged(DateRangeState.quarter(now.year, currentQuarter));
+                },
+              ),
+              const SizedBox(width: 8),
+              _RangeTypeChip(
+                label: 'Year',
+                isSelected: selectedDateRange.type == DateRangeType.year,
+                onTap: () {
+                  onDateRangeChanged(DateRangeState.year(DateTime.now().year));
+                },
+              ),
+              const SizedBox(width: 8),
+              _RangeTypeChip(
+                label: 'Custom',
+                isSelected: selectedDateRange.type == DateRangeType.custom,
+                onTap: () async {
+                  final picked = await showDateRangePicker(
+                    context: context,
+                    firstDate: DateTime(2000),
+                    lastDate: DateTime(2100),
+                    initialDateRange: DateTimeRange(
+                      start: selectedDateRange.startDate,
+                      end: selectedDateRange.endDate,
+                    ),
+                  );
+                  if (picked != null) {
+                    onDateRangeChanged(DateRangeState.custom(picked.start, picked.end));
+                  }
+                },
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          // Date navigation
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.chevron_left),
+                onPressed: selectedDateRange.type != DateRangeType.custom ? onPreviousPeriod : null,
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  _getDisplayText(),
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.chevron_right),
+                onPressed: selectedDateRange.type != DateRangeType.custom ? onNextPeriod : null,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RangeTypeChip extends StatelessWidget {
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _RangeTypeChip({
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          IconButton(
-            icon: const Icon(Icons.chevron_left),
-            onPressed: () {
-              onMonthChanged(DateTime(selectedMonth.year, selectedMonth.month - 1));
-            },
+    final theme = Theme.of(context);
+    
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected 
+              ? theme.colorScheme.primaryContainer 
+              : theme.colorScheme.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected 
+                ? theme.colorScheme.primary 
+                : Colors.transparent,
+            width: 1.5,
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surfaceContainerHighest,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(
-              DateFormat.yMMMM().format(selectedMonth),
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+            color: isSelected 
+                ? theme.colorScheme.onPrimaryContainer 
+                : theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FinancialSummaryCard extends ConsumerWidget {
+  const _FinancialSummaryCard();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final selectedAsync = ref.watch(financialSummaryProvider);
+    final allTimeAsync = ref.watch(allTimeFinancialSummaryProvider);
+    final theme = Theme.of(context);
+
+    return selectedAsync.when(
+      data: (selectedSummary) {
+        return allTimeAsync.when(
+          data: (allTimeSummary) {
+            return Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: theme.cardColor,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: theme.dividerColor.withValues(alpha: 0.5)),
               ),
+              child: Column(
+                children: [
+                  // Payable vs Receivable
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _SummaryItem(
+                          title: 'Payable',
+                          selectedAmount: selectedSummary.totalPayable,
+                          allTimeAmount: allTimeSummary.totalPayable,
+                          color: AppColors.payableColor,
+                          icon: Icons.arrow_upward,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: _SummaryItem(
+                          title: 'Receivable',
+                          selectedAmount: selectedSummary.totalReceivable,
+                          allTimeAmount: allTimeSummary.totalReceivable,
+                          color: AppColors.receivableColor,
+                          icon: Icons.arrow_downward,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  // Expense vs Income
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _SummaryItem(
+                          title: 'Expenses',
+                          selectedAmount: selectedSummary.totalExpense,
+                          allTimeAmount: allTimeSummary.totalExpense,
+                          color: AppColors.expenseColor,
+                          icon: Icons.shopping_cart,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: _SummaryItem(
+                          title: 'Income',
+                          selectedAmount: selectedSummary.totalIncome,
+                          allTimeAmount: allTimeSummary.totalIncome,
+                          color: AppColors.incomeColor,
+                          icon: Icons.account_balance_wallet,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  // Net Balance
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      gradient: selectedSummary.netBalance >= 0 
+                          ? AppColors.receivableGradient 
+                          : AppColors.payableGradient,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              'Net Balance',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            Text(
+                              '₹${selectedSummary.netBalance.abs().toStringAsFixed(2)}',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            Text(
+                              'All-time: ₹${allTimeSummary.netBalance.abs().toStringAsFixed(2)}',
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.7),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (e, s) => Center(child: Text('Error: $e')),
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, s) => Center(child: Text('Error: $e')),
+    );
+  }
+}
+
+class _SummaryItem extends StatelessWidget {
+  final String title;
+  final double selectedAmount;
+  final double allTimeAmount;
+  final Color color;
+  final IconData icon;
+
+  const _SummaryItem({
+    required this.title,
+    required this.selectedAmount,
+    required this.allTimeAmount,
+    required this.color,
+    required this.icon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(icon, size: 16, color: color),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                title,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            '₹${selectedAmount.toStringAsFixed(2)}',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: color,
             ),
           ),
-          IconButton(
-            icon: const Icon(Icons.chevron_right),
-            onPressed: () {
-              onMonthChanged(DateTime(selectedMonth.year, selectedMonth.month + 1));
-            },
+          const SizedBox(height: 4),
+          Text(
+            'All: ₹${allTimeAmount.toStringAsFixed(0)}',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+            ),
           ),
         ],
       ),
+    );
+  }
+}
+
+class _ContactSummariesSection extends ConsumerWidget {
+  const _ContactSummariesSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final summariesAsync = ref.watch(contactSummariesProvider);
+    final theme = Theme.of(context);
+
+    return summariesAsync.when(
+      data: (summaries) {
+        if (summaries.isEmpty) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(32),
+              child: Column(
+                children: [
+                  Icon(Icons.people_outline, size: 48, color: theme.disabledColor),
+                  const SizedBox(height: 8),
+                  Text('No contact activity for this period', style: TextStyle(color: theme.disabledColor)),
+                ],
+              ),
+            ),
+          );
+        }
+
+        return Column(
+          children: summaries.map((summary) {
+            final isPositive = summary.balance >= 0;
+            final isZero = summary.balance == 0;
+            
+            return Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              decoration: BoxDecoration(
+                color: theme.cardColor,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: theme.dividerColor.withValues(alpha: 0.5)),
+              ),
+              child: InkWell(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ContactDetailsScreen(contactId: summary.contact.id),
+                    ),
+                  );
+                },
+                borderRadius: BorderRadius.circular(16),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      // Avatar
+                      Container(
+                        width: 50,
+                        height: 50,
+                        decoration: BoxDecoration(
+                          gradient: AppColors.getContactGradient(summary.contact.name),
+                          shape: BoxShape.circle,
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          summary.contact.name.isNotEmpty ? summary.contact.name[0].toUpperCase() : '?',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 20,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      // Details
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              summary.contact.name,
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                Text(
+                                  'P: ₹${summary.totalPayable.toStringAsFixed(0)}',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: AppColors.payableColor,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                Text(
+                                  'R: ₹${summary.totalReceivable.toStringAsFixed(0)}',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: AppColors.receivableColor,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      // Balance
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: isZero 
+                              ? theme.colorScheme.surfaceContainerHighest
+                              : (isPositive ? AppColors.receivableColor : AppColors.payableColor).withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: isZero 
+                                ? theme.dividerColor 
+                                : (isPositive ? AppColors.receivableColor : AppColors.payableColor).withValues(alpha: 0.3),
+                          ),
+                        ),
+                        child: Text(
+                          isZero ? 'Settled' : '₹${summary.balance.abs().toStringAsFixed(0)}',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: isZero 
+                                ? theme.colorScheme.onSurfaceVariant 
+                                : (isPositive ? AppColors.receivableColor : AppColors.payableColor),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, s) => Center(child: Text('Error: e')),
     );
   }
 }
@@ -232,7 +800,7 @@ class _ExpensesPieChart extends ConsumerWidget {
                 children: [
                   Icon(Icons.pie_chart_outline, size: 48, color: theme.disabledColor),
                   const SizedBox(height: 8),
-                  Text('No expenses for this month', style: TextStyle(color: theme.disabledColor)),
+                  Text('No expenses for this period', style: TextStyle(color: theme.disabledColor)),
                 ],
               ),
             ),
@@ -447,6 +1015,435 @@ class _TrendsBarChart extends ConsumerWidget {
       },
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, s) => Center(child: Text('Error: $e')),
+    );
+  }
+}
+
+class _PayableReceivableTrendsChart extends ConsumerWidget {
+  const _PayableReceivableTrendsChart();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final trendsAsync = ref.watch(payableReceivableTrendsProvider);
+    final theme = Theme.of(context);
+
+    return trendsAsync.when(
+      data: (trends) {
+        if (trends.every((t) => t.totalPayable == 0 && t.totalReceivable == 0)) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(32),
+              child: Column(
+                children: [
+                  Icon(Icons.bar_chart, size: 48, color: theme.disabledColor),
+                  const SizedBox(height: 8),
+                  Text('No payable/receivable data', style: TextStyle(color: theme.disabledColor)),
+                ],
+              ),
+            ),
+          );
+        }
+
+        double maxY = 0;
+        for (var t in trends) {
+          if (t.totalPayable > maxY) maxY = t.totalPayable;
+          if (t.totalReceivable > maxY) maxY = t.totalReceivable;
+        }
+        maxY = maxY * 1.2;
+        if (maxY == 0) maxY = 100;
+
+        return AspectRatio(
+          aspectRatio: 1.5,
+          child: BarChart(
+            BarChartData(
+              alignment: BarChartAlignment.spaceAround,
+              maxY: maxY,
+              barTouchData: BarTouchData(
+                touchTooltipData: BarTouchTooltipData(
+                  getTooltipColor: (_) => theme.cardColor,
+                  getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                    final type = rodIndex == 0 ? 'Payable' : 'Receivable';
+                    return BarTooltipItem(
+                      '`$type\n',
+                      TextStyle(color: theme.colorScheme.onSurface, fontWeight: FontWeight.bold),
+                      children: [
+                        TextSpan(
+                          text: '₹${rod.toY.toStringAsFixed(0)}',
+                          style: TextStyle(
+                            color: rodIndex == 0 ? AppColors.payableColor : AppColors.receivableColor,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ),
+              titlesData: FlTitlesData(
+                show: true,
+                bottomTitles: AxisTitles(
+                  sideTitles: SideTitles(
+                    showTitles: true,
+                    getTitlesWidget: (value, meta) {
+                      final index = value.toInt();
+                      if (index < 0 || index >= trends.length) return const Text('');
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 8.0),
+                        child: Text(DateFormat.MMM().format(trends[index].month), style: const TextStyle(fontSize: 10)),
+                      );
+                    },
+                    reservedSize: 30,
+                  ),
+                ),
+                leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+              ),
+              gridData: const FlGridData(show: false),
+              borderData: FlBorderData(show: false),
+              barGroups: trends.asMap().entries.map((entry) {
+                final index = entry.key;
+                final data = entry.value;
+                return BarChartGroupData(
+                  x: index,
+                  barRods: [
+                    BarChartRodData(toY: data.totalPayable, color: AppColors.payableColor, width: 12, borderRadius: const BorderRadius.vertical(top: Radius.circular(4))),
+                    BarChartRodData(toY: data.totalReceivable, color: AppColors.receivableColor, width: 12, borderRadius: const BorderRadius.vertical(top: Radius.circular(4))),
+                  ],
+                );
+              }).toList(),
+            ),
+          ),
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, s) => Center(child: Text('Error: `$e')),
+    );
+  }
+}
+
+class _TopContactsChart extends ConsumerWidget {
+  const _TopContactsChart();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final contactsAsync = ref.watch(topContactsByBalanceProvider);
+    final theme = Theme.of(context);
+
+    return contactsAsync.when(
+      data: (contacts) {
+        if (contacts.isEmpty) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(32),
+              child: Column(
+                children: [
+                  Icon(Icons.people_outline, size: 48, color: theme.disabledColor),
+                  const SizedBox(height: 8),
+                  Text('No contact data', style: TextStyle(color: theme.disabledColor)),
+                ],
+              ),
+            ),
+          );
+        }
+
+        return Column(
+          children: contacts.take(5).map((contact) {
+            final isPositive = contact.balance >= 0;
+            final color = isPositive ? AppColors.receivableColor : AppColors.payableColor;
+            final maxAmount = contacts.first.balance.abs();
+            final percentage = maxAmount > 0 ? (contact.balance.abs() / maxAmount) : 0.0;
+
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          contact.contact.name,
+                          style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      Text(
+                        '₹${contact.balance.abs().toStringAsFixed(0)}',
+                        style: TextStyle(fontWeight: FontWeight.bold, color: color, fontSize: 14),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: LinearProgressIndicator(
+                      value: percentage,
+                      backgroundColor: color.withValues(alpha: 0.1),
+                      valueColor: AlwaysStoppedAnimation<Color>(color),
+                      minHeight: 8,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, s) => Center(child: Text('Error: `$e')),
+    );
+  }
+}
+
+class _PaymentStatusDistributionChart extends ConsumerWidget {
+  const _PaymentStatusDistributionChart();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final statusAsync = ref.watch(paymentStatusDistributionProvider);
+    final theme = Theme.of(context);
+
+    return statusAsync.when(
+      data: (status) {
+        final payableTotal = status.pendingPayables + status.paidPayables + status.cancelledPayables;
+        final receivableTotal = status.pendingReceivables + status.receivedReceivables + status.cancelledReceivables;
+
+        if (payableTotal == 0 && receivableTotal == 0) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(32),
+              child: Column(
+                children: [
+                  Icon(Icons.donut_large, size: 48, color: theme.disabledColor),
+                  const SizedBox(height: 8),
+                  Text('No payment status data', style: TextStyle(color: theme.disabledColor)),
+                ],
+              ),
+            ),
+          );
+        }
+
+        return Row(
+          children: [
+            if (payableTotal > 0)
+              Expanded(
+                child: Column(
+                  children: [
+                    Text('Payables', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      height: 180,
+                      child: PieChart(
+                        PieChartData(
+                          sectionsSpace: 2,
+                          centerSpaceRadius: 40,
+                          sections: [
+                            if (status.pendingPayables > 0)
+                              PieChartSectionData(
+                                color: Colors.orange,
+                                value: status.pendingPayables,
+                                title: '${((status.pendingPayables / payableTotal) * 100).toStringAsFixed(0)}%',
+                                radius: 45,
+                                titleStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
+                              ),
+                            if (status.paidPayables > 0)
+                              PieChartSectionData(
+                                color: Colors.green,
+                                value: status.paidPayables,
+                                title: '${((status.paidPayables / payableTotal) * 100).toStringAsFixed(0)}%',
+                                radius: 45,
+                                titleStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
+                              ),
+                            if (status.cancelledPayables > 0)
+                              PieChartSectionData(
+                                color: Colors.grey,
+                                value: status.cancelledPayables,
+                                title: '${((status.cancelledPayables / payableTotal) * 100).toStringAsFixed(0)}%',
+                                radius: 45,
+                                titleStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    _buildStatusLegend('Pending', status.pendingPayables, Colors.orange),
+                    _buildStatusLegend('Paid', status.paidPayables, Colors.green),
+                    _buildStatusLegend('Cancelled', status.cancelledPayables, Colors.grey),
+                  ],
+                ),
+              ),
+            if (payableTotal > 0 && receivableTotal > 0) const SizedBox(width: 16),
+            if (receivableTotal > 0)
+              Expanded(
+                child: Column(
+                  children: [
+                    Text('Receivables', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      height: 180,
+                      child: PieChart(
+                        PieChartData(
+                          sectionsSpace: 2,
+                          centerSpaceRadius: 40,
+                          sections: [
+                            if (status.pendingReceivables > 0)
+                              PieChartSectionData(
+                                color: Colors.orange,
+                                value: status.pendingReceivables,
+                                title: '${((status.pendingReceivables / receivableTotal) * 100).toStringAsFixed(0)}%',
+                                radius: 45,
+                                titleStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
+                              ),
+                            if (status.receivedReceivables > 0)
+                              PieChartSectionData(
+                                color: Colors.green,
+                                value: status.receivedReceivables,
+                                title: '${((status.receivedReceivables / receivableTotal) * 100).toStringAsFixed(0)}%',
+                                radius: 45,
+                                titleStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
+                              ),
+                            if (status.cancelledReceivables > 0)
+                              PieChartSectionData(
+                                color: Colors.grey,
+                                value: status.cancelledReceivables,
+                                title: '${((status.cancelledReceivables / receivableTotal) * 100).toStringAsFixed(0)}%',
+                                radius: 45,
+                                titleStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    _buildStatusLegend('Pending', status.pendingReceivables, Colors.orange),
+                    _buildStatusLegend('Received', status.receivedReceivables, Colors.green),
+                    _buildStatusLegend('Cancelled', status.cancelledReceivables, Colors.grey),
+                  ],
+                ),
+              ),
+          ],
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, s) => Center(child: Text('Error: `$e')),
+    );
+  }
+
+  Widget _buildStatusLegend(String label, double amount, Color color) {
+    if (amount == 0) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(width: 10, height: 10, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+          const SizedBox(width: 6),
+          Text(label, style: const TextStyle(fontSize: 11)),
+          const SizedBox(width: 4),
+          Text('₹${amount.toStringAsFixed(0)}', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+        ],
+      ),
+    );
+  }
+}
+
+class _IncomePieChart extends ConsumerWidget {
+  const _IncomePieChart();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final incomesAsync = ref.watch(incomeByCategoryProvider);
+    final theme = Theme.of(context);
+
+    return incomesAsync.when(
+      data: (incomes) {
+        if (incomes.isEmpty) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(32),
+              child: Column(
+                children: [
+                  Icon(Icons.pie_chart_outline, size: 48, color: theme.disabledColor),
+                  const SizedBox(height: 8),
+                  Text('No income for this period', style: TextStyle(color: theme.disabledColor)),
+                ],
+              ),
+            ),
+          );
+        }
+
+        double total = incomes.fold(0, (sum, e) => sum + e.totalAmount);
+
+        return Column(
+          children: [
+            SizedBox(
+              height: 250,
+              child: PieChart(
+                PieChartData(
+                  sectionsSpace: 2,
+                  centerSpaceRadius: 40,
+                  sections: incomes.map((e) {
+                    final percentage = (e.totalAmount / total) * 100;
+                    final color = e.category.color != null
+                        ? Color(int.parse(e.category.color!.replaceAll('#', '0xFF')))
+                        : AppColors.incomeColor;
+                    
+                    return PieChartSectionData(
+                      color: color,
+                      value: e.totalAmount,
+                      title: '${percentage.toStringAsFixed(0)}%',
+                      radius: 50,
+                      titleStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
+                    );
+                  }).toList(),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            ...incomes.take(5).map((e) {
+               final color = e.category.color != null
+                  ? Color(int.parse(e.category.color!.replaceAll('#', '0xFF')))
+                  : AppColors.incomeColor;
+               final percentage = (e.totalAmount / total) * 100;
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Row(
+                  children: [
+                    Container(width: 12, height: 12, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Text(e.category.name),
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: color.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
+                            ),
+                            child: Text(
+                              '${percentage.toStringAsFixed(1)}%',
+                              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: color),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Text('₹${e.totalAmount.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                  ],
+                ),
+              );
+            }),
+          ],
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, s) => Center(child: Text('Error: `$e')),
     );
   }
 }

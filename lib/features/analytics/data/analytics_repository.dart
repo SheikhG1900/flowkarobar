@@ -1,4 +1,4 @@
-import 'package:drift/drift.dart';
+﻿import 'package:drift/drift.dart';
 import 'package:flowpaisa/core/database/database.dart';
 
 class AnalyticsRepository {
@@ -6,67 +6,41 @@ class AnalyticsRepository {
 
   AnalyticsRepository(this._database);
 
-  /// Get total expenses grouped by category for a specific month
   Future<List<CategoryExpense>> getExpensesByCategory(DateTime month) async {
     final startOfMonth = DateTime(month.year, month.month, 1);
     final endOfMonth = DateTime(month.year, month.month + 1, 0, 23, 59, 59);
-
     final query = _database.selectOnly(_database.transactions)
-      ..addColumns([
-        _database.transactions.categoryId,
-        _database.transactions.amount.sum(),
-      ])
+      ..addColumns([_database.transactions.categoryId, _database.transactions.amount.sum()])
       ..where(_database.transactions.date.isBetweenValues(startOfMonth, endOfMonth))
       ..where(_database.transactions.type.equals('EXPENSE'))
       ..groupBy([_database.transactions.categoryId]);
-
     final results = await query.get();
-
     final List<CategoryExpense> categoryExpenses = [];
-
     for (final row in results) {
       final categoryId = row.read(_database.transactions.categoryId);
       final totalAmount = row.read(_database.transactions.amount.sum()) ?? 0.0;
-
       if (categoryId != null && totalAmount > 0) {
-        final category = await (_database.select(_database.categories)
-              ..where((c) => c.id.equals(categoryId)))
-            .getSingleOrNull();
-
+        final category = await (_database.select(_database.categories)..where((c) => c.id.equals(categoryId))).getSingleOrNull();
         if (category != null) {
-          categoryExpenses.add(CategoryExpense(
-            category: category,
-            totalAmount: totalAmount,
-          ));
+          categoryExpenses.add(CategoryExpense(category: category, totalAmount: totalAmount));
         }
       }
     }
-
-    // Sort by amount descending
     categoryExpenses.sort((a, b) => b.totalAmount.compareTo(a.totalAmount));
     return categoryExpenses;
   }
 
-  /// Get Income vs Expense totals for the last [months] count
   Future<List<MonthlyFinancials>> getMonthlyTrends(int months) async {
     final now = DateTime.now();
     final List<MonthlyFinancials> trends = [];
-
     for (int i = months - 1; i >= 0; i--) {
       final month = DateTime(now.year, now.month - i, 1);
       final start = DateTime(month.year, month.month, 1);
       final end = DateTime(month.year, month.month + 1, 0, 23, 59, 59);
-
       final income = await _getTotalByType('INCOME', start, end);
       final expense = await _getTotalByType('EXPENSE', start, end);
-
-      trends.add(MonthlyFinancials(
-        month: start,
-        income: income,
-        expense: expense,
-      ));
+      trends.add(MonthlyFinancials(month: start, income: income, expense: expense));
     }
-
     return trends;
   }
 
@@ -76,15 +50,130 @@ class AnalyticsRepository {
           ..where(_database.transactions.type.equals(type))
           ..where(_database.transactions.date.isBetweenValues(start, end)))
         .getSingle();
-
     return result.read(_database.transactions.amount.sum()) ?? 0.0;
+  }
+
+  Future<List<ContactSummary>> getContactSummaries(DateTime start, DateTime end) async {
+    final contactsWithPayables = await (_database.selectOnly(_database.payables)
+          ..addColumns([_database.payables.contactId])
+          ..where(_database.payables.date.isBetweenValues(start, end))
+          ..groupBy([_database.payables.contactId]))
+        .get().then((rows) => rows.map((r) => r.read(_database.payables.contactId)!).toSet());
+    final contactsWithReceivables = await (_database.selectOnly(_database.receivables)
+          ..addColumns([_database.receivables.contactId])
+          ..where(_database.receivables.date.isBetweenValues(start, end))
+          ..groupBy([_database.receivables.contactId]))
+        .get().then((rows) => rows.map((r) => r.read(_database.receivables.contactId)!).toSet());
+    final allContactIds = {...contactsWithPayables, ...contactsWithReceivables};
+    if (allContactIds.isEmpty) return [];
+    final List<ContactSummary> summaries = [];
+    for (final contactId in allContactIds) {
+      final contact = await (_database.select(_database.contacts)..where((c) => c.id.equals(contactId))).getSingleOrNull();
+      if (contact == null) continue;
+      final totalPayable = await (_database.selectOnly(_database.payables)
+            ..addColumns([_database.payables.amount.sum()])
+            ..where(_database.payables.contactId.equals(contactId))
+            ..where(_database.payables.date.isBetweenValues(start, end)))
+          .getSingle().then((row) => row.read(_database.payables.amount.sum()) ?? 0.0);
+      final totalReceivable = await (_database.selectOnly(_database.receivables)
+            ..addColumns([_database.receivables.amount.sum()])
+            ..where(_database.receivables.contactId.equals(contactId))
+            ..where(_database.receivables.date.isBetweenValues(start, end)))
+          .getSingle().then((row) => row.read(_database.receivables.amount.sum()) ?? 0.0);
+      summaries.add(ContactSummary(contact: contact, totalPayable: totalPayable, totalReceivable: totalReceivable));
+    }
+    summaries.sort((a, b) => b.balance.abs().compareTo(a.balance.abs()));
+    return summaries;
+  }
+
+  Future<List<ContactSummary>> getAllTimeContactSummaries() async {
+    final contactsWithPayables = await (_database.selectOnly(_database.payables)..addColumns([_database.payables.contactId])..groupBy([_database.payables.contactId])).get().then((rows) => rows.map((r) => r.read(_database.payables.contactId)!).toSet());
+    final contactsWithReceivables = await (_database.selectOnly(_database.receivables)..addColumns([_database.receivables.contactId])..groupBy([_database.receivables.contactId])).get().then((rows) => rows.map((r) => r.read(_database.receivables.contactId)!).toSet());
+    final allContactIds = {...contactsWithPayables, ...contactsWithReceivables};
+    if (allContactIds.isEmpty) return [];
+    final List<ContactSummary> summaries = [];
+    for (final contactId in allContactIds) {
+      final contact = await (_database.select(_database.contacts)..where((c) => c.id.equals(contactId))).getSingleOrNull();
+      if (contact == null) continue;
+      final totalPayable = await (_database.selectOnly(_database.payables)..addColumns([_database.payables.amount.sum()])..where(_database.payables.contactId.equals(contactId))).getSingle().then((row) => row.read(_database.payables.amount.sum()) ?? 0.0);
+      final totalReceivable = await (_database.selectOnly(_database.receivables)..addColumns([_database.receivables.amount.sum()])..where(_database.receivables.contactId.equals(contactId))).getSingle().then((row) => row.read(_database.receivables.amount.sum()) ?? 0.0);
+      summaries.add(ContactSummary(contact: contact, totalPayable: totalPayable, totalReceivable: totalReceivable));
+    }
+    summaries.sort((a, b) => b.balance.abs().compareTo(a.balance.abs()));
+    return summaries;
+  }
+
+  Future<FinancialSummary> getFinancialSummary(DateTime start, DateTime end) async {
+    final totalPayable = await (_database.selectOnly(_database.payables)..addColumns([_database.payables.amount.sum()])..where(_database.payables.date.isBetweenValues(start, end))).getSingle().then((row) => row.read(_database.payables.amount.sum()) ?? 0.0);
+    final totalReceivable = await (_database.selectOnly(_database.receivables)..addColumns([_database.receivables.amount.sum()])..where(_database.receivables.date.isBetweenValues(start, end))).getSingle().then((row) => row.read(_database.receivables.amount.sum()) ?? 0.0);
+    final totalExpense = await _getTotalByType('EXPENSE', start, end);
+    final totalIncome = await _getTotalByType('INCOME', start, end);
+    return FinancialSummary(totalPayable: totalPayable, totalReceivable: totalReceivable, totalExpense: totalExpense, totalIncome: totalIncome);
+  }
+
+  Future<FinancialSummary> getAllTimeFinancialSummary() async {
+    final totalPayable = await (_database.selectOnly(_database.payables)..addColumns([_database.payables.amount.sum()])).getSingle().then((row) => row.read(_database.payables.amount.sum()) ?? 0.0);
+    final totalReceivable = await (_database.selectOnly(_database.receivables)..addColumns([_database.receivables.amount.sum()])).getSingle().then((row) => row.read(_database.receivables.amount.sum()) ?? 0.0);
+    final totalExpense = await (_database.selectOnly(_database.transactions)..addColumns([_database.transactions.amount.sum()])..where(_database.transactions.type.equals('EXPENSE'))).getSingle().then((row) => row.read(_database.transactions.amount.sum()) ?? 0.0);
+    final totalIncome = await (_database.selectOnly(_database.transactions)..addColumns([_database.transactions.amount.sum()])..where(_database.transactions.type.equals('INCOME'))).getSingle().then((row) => row.read(_database.transactions.amount.sum()) ?? 0.0);
+    return FinancialSummary(totalPayable: totalPayable, totalReceivable: totalReceivable, totalExpense: totalExpense, totalIncome: totalIncome);
+  }
+
+  Future<List<PayableReceivableTrend>> getPayableReceivableTrends(int months) async {
+    final now = DateTime.now();
+    final List<PayableReceivableTrend> trends = [];
+    for (int i = months - 1; i >= 0; i--) {
+      final month = DateTime(now.year, now.month - i, 1);
+      final start = DateTime(month.year, month.month, 1);
+      final end = DateTime(month.year, month.month + 1, 0, 23, 59, 59);
+      final totalPayable = await (_database.selectOnly(_database.payables)..addColumns([_database.payables.amount.sum()])..where(_database.payables.date.isBetweenValues(start, end))).getSingle().then((row) => row.read(_database.payables.amount.sum()) ?? 0.0);
+      final totalReceivable = await (_database.selectOnly(_database.receivables)..addColumns([_database.receivables.amount.sum()])..where(_database.receivables.date.isBetweenValues(start, end))).getSingle().then((row) => row.read(_database.receivables.amount.sum()) ?? 0.0);
+      trends.add(PayableReceivableTrend(month: start, totalPayable: totalPayable, totalReceivable: totalReceivable));
+    }
+    return trends;
+  }
+
+  Future<List<ContactSummary>> getTopContactsByBalance(DateTime start, DateTime end, int limit) async {
+    final summaries = await getContactSummaries(start, end);
+    return summaries.take(limit).toList();
+  }
+
+  Future<StatusDistribution> getPaymentStatusDistribution(DateTime start, DateTime end) async {
+    final pendingPayables = await (_database.selectOnly(_database.payables)..addColumns([_database.payables.amount.sum()])..where(_database.payables.date.isBetweenValues(start, end))..where(_database.payables.status.equals('PENDING'))).getSingle().then((row) => row.read(_database.payables.amount.sum()) ?? 0.0);
+    final paidPayables = await (_database.selectOnly(_database.payables)..addColumns([_database.payables.amount.sum()])..where(_database.payables.date.isBetweenValues(start, end))..where(_database.payables.status.equals('PAID'))).getSingle().then((row) => row.read(_database.payables.amount.sum()) ?? 0.0);
+    final cancelledPayables = await (_database.selectOnly(_database.payables)..addColumns([_database.payables.amount.sum()])..where(_database.payables.date.isBetweenValues(start, end))..where(_database.payables.status.equals('CANCELLED'))).getSingle().then((row) => row.read(_database.payables.amount.sum()) ?? 0.0);
+    final pendingReceivables = await (_database.selectOnly(_database.receivables)..addColumns([_database.receivables.amount.sum()])..where(_database.receivables.date.isBetweenValues(start, end))..where(_database.receivables.status.equals('PENDING'))).getSingle().then((row) => row.read(_database.receivables.amount.sum()) ?? 0.0);
+    final receivedReceivables = await (_database.selectOnly(_database.receivables)..addColumns([_database.receivables.amount.sum()])..where(_database.receivables.date.isBetweenValues(start, end))..where(_database.receivables.status.equals('RECEIVED'))).getSingle().then((row) => row.read(_database.receivables.amount.sum()) ?? 0.0);
+    final cancelledReceivables = await (_database.selectOnly(_database.receivables)..addColumns([_database.receivables.amount.sum()])..where(_database.receivables.date.isBetweenValues(start, end))..where(_database.receivables.status.equals('CANCELLED'))).getSingle().then((row) => row.read(_database.receivables.amount.sum()) ?? 0.0);
+    return StatusDistribution(pendingPayables: pendingPayables, paidPayables: paidPayables, cancelledPayables: cancelledPayables, pendingReceivables: pendingReceivables, receivedReceivables: receivedReceivables, cancelledReceivables: cancelledReceivables);
+  }
+
+  Future<List<CategoryIncome>> getIncomeByCategory(DateTime start, DateTime end) async {
+    final query = _database.selectOnly(_database.transactions)
+      ..addColumns([_database.transactions.categoryId, _database.transactions.amount.sum()])
+      ..where(_database.transactions.date.isBetweenValues(start, end))
+      ..where(_database.transactions.type.equals('INCOME'))
+      ..groupBy([_database.transactions.categoryId]);
+    final results = await query.get();
+    final List<CategoryIncome> categoryIncomes = [];
+    for (final row in results) {
+      final categoryId = row.read(_database.transactions.categoryId);
+      final totalAmount = row.read(_database.transactions.amount.sum()) ?? 0.0;
+      if (categoryId != null && totalAmount > 0) {
+        final category = await (_database.select(_database.categories)..where((c) => c.id.equals(categoryId))).getSingleOrNull();
+        if (category != null) {
+          categoryIncomes.add(CategoryIncome(category: category, totalAmount: totalAmount));
+        }
+      }
+    }
+    categoryIncomes.sort((a, b) => b.totalAmount.compareTo(a.totalAmount));
+    return categoryIncomes;
   }
 }
 
 class CategoryExpense {
   final Category category;
   final double totalAmount;
-
   CategoryExpense({required this.category, required this.totalAmount});
 }
 
@@ -92,11 +181,45 @@ class MonthlyFinancials {
   final DateTime month;
   final double income;
   final double expense;
-
-  MonthlyFinancials({
-    required this.month,
-    required this.income,
-    required this.expense,
-  });
+  MonthlyFinancials({required this.month, required this.income, required this.expense});
 }
 
+class ContactSummary {
+  final Contact contact;
+  final double totalPayable;
+  final double totalReceivable;
+  final double balance;
+  ContactSummary({required this.contact, required this.totalPayable, required this.totalReceivable}) : balance = totalReceivable - totalPayable;
+}
+
+class FinancialSummary {
+  final double totalPayable;
+  final double totalReceivable;
+  final double totalExpense;
+  final double totalIncome;
+  final double netBalance;
+  FinancialSummary({required this.totalPayable, required this.totalReceivable, required this.totalExpense, required this.totalIncome}) : netBalance = totalReceivable - totalPayable;
+}
+
+class PayableReceivableTrend {
+  final DateTime month;
+  final double totalPayable;
+  final double totalReceivable;
+  PayableReceivableTrend({required this.month, required this.totalPayable, required this.totalReceivable});
+}
+
+class StatusDistribution {
+  final double pendingPayables;
+  final double paidPayables;
+  final double cancelledPayables;
+  final double pendingReceivables;
+  final double receivedReceivables;
+  final double cancelledReceivables;
+  StatusDistribution({required this.pendingPayables, required this.paidPayables, required this.cancelledPayables, required this.pendingReceivables, required this.receivedReceivables, required this.cancelledReceivables});
+}
+
+class CategoryIncome {
+  final Category category;
+  final double totalAmount;
+  CategoryIncome({required this.category, required this.totalAmount});
+}
