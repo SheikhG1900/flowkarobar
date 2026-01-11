@@ -9,6 +9,7 @@ import 'package:flowpaisa/features/categories/presentation/providers/categories_
 import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
+import 'package:flowpaisa/shared/providers/currency_provider.dart';
 
 class EditTransactionScreen extends ConsumerStatefulWidget {
   final Transaction transaction;
@@ -330,6 +331,7 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final isExpense = _selectedType == 'EXPENSE';
+    final currencySymbol = ref.watch(currencySymbolProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -396,7 +398,7 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                             : AppColors.incomeColor,
                       ),
                       decoration: InputDecoration(
-                        prefixText: '₹ ',
+                        prefixText: '$currencySymbol ',
                         prefixStyle: theme.textTheme.displayMedium?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                         ),

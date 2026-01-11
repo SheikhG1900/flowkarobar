@@ -4615,6 +4615,387 @@ class SyncLogCompanion extends UpdateCompanion<SyncLogData> {
   }
 }
 
+class $AppCurrenciesTable extends AppCurrencies
+    with TableInfo<$AppCurrenciesTable, AppCurrency> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $AppCurrenciesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+      'id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+      'name', aliasedName, false,
+      additionalChecks:
+          GeneratedColumn.checkTextLength(minTextLength: 1, maxTextLength: 100),
+      type: DriftSqlType.string,
+      requiredDuringInsert: true);
+  static const VerificationMeta _symbolMeta = const VerificationMeta('symbol');
+  @override
+  late final GeneratedColumn<String> symbol = GeneratedColumn<String>(
+      'symbol', aliasedName, false,
+      additionalChecks:
+          GeneratedColumn.checkTextLength(minTextLength: 1, maxTextLength: 10),
+      type: DriftSqlType.string,
+      requiredDuringInsert: true);
+  static const VerificationMeta _codeMeta = const VerificationMeta('code');
+  @override
+  late final GeneratedColumn<String> code = GeneratedColumn<String>(
+      'code', aliasedName, false,
+      additionalChecks:
+          GeneratedColumn.checkTextLength(minTextLength: 3, maxTextLength: 3),
+      type: DriftSqlType.string,
+      requiredDuringInsert: true);
+  static const VerificationMeta _isDefaultMeta =
+      const VerificationMeta('isDefault');
+  @override
+  late final GeneratedColumn<bool> isDefault = GeneratedColumn<bool>(
+      'is_default', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_default" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _isActiveMeta =
+      const VerificationMeta('isActive');
+  @override
+  late final GeneratedColumn<bool> isActive = GeneratedColumn<bool>(
+      'is_active', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_active" IN (0, 1))'),
+      defaultValue: const Constant(true));
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  @override
+  List<GeneratedColumn> get $columns =>
+      [id, name, symbol, code, isDefault, isActive, createdAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'app_currencies';
+  @override
+  VerificationContext validateIntegrity(Insertable<AppCurrency> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('symbol')) {
+      context.handle(_symbolMeta,
+          symbol.isAcceptableOrUnknown(data['symbol']!, _symbolMeta));
+    } else if (isInserting) {
+      context.missing(_symbolMeta);
+    }
+    if (data.containsKey('code')) {
+      context.handle(
+          _codeMeta, code.isAcceptableOrUnknown(data['code']!, _codeMeta));
+    } else if (isInserting) {
+      context.missing(_codeMeta);
+    }
+    if (data.containsKey('is_default')) {
+      context.handle(_isDefaultMeta,
+          isDefault.isAcceptableOrUnknown(data['is_default']!, _isDefaultMeta));
+    }
+    if (data.containsKey('is_active')) {
+      context.handle(_isActiveMeta,
+          isActive.isAcceptableOrUnknown(data['is_active']!, _isActiveMeta));
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  AppCurrency map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return AppCurrency(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      name: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
+      symbol: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}symbol'])!,
+      code: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}code'])!,
+      isDefault: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_default'])!,
+      isActive: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_active'])!,
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+    );
+  }
+
+  @override
+  $AppCurrenciesTable createAlias(String alias) {
+    return $AppCurrenciesTable(attachedDatabase, alias);
+  }
+}
+
+class AppCurrency extends DataClass implements Insertable<AppCurrency> {
+  final int id;
+  final String name;
+  final String symbol;
+  final String code;
+  final bool isDefault;
+  final bool isActive;
+  final DateTime createdAt;
+  const AppCurrency(
+      {required this.id,
+      required this.name,
+      required this.symbol,
+      required this.code,
+      required this.isDefault,
+      required this.isActive,
+      required this.createdAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['name'] = Variable<String>(name);
+    map['symbol'] = Variable<String>(symbol);
+    map['code'] = Variable<String>(code);
+    map['is_default'] = Variable<bool>(isDefault);
+    map['is_active'] = Variable<bool>(isActive);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  AppCurrenciesCompanion toCompanion(bool nullToAbsent) {
+    return AppCurrenciesCompanion(
+      id: Value(id),
+      name: Value(name),
+      symbol: Value(symbol),
+      code: Value(code),
+      isDefault: Value(isDefault),
+      isActive: Value(isActive),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory AppCurrency.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return AppCurrency(
+      id: serializer.fromJson<int>(json['id']),
+      name: serializer.fromJson<String>(json['name']),
+      symbol: serializer.fromJson<String>(json['symbol']),
+      code: serializer.fromJson<String>(json['code']),
+      isDefault: serializer.fromJson<bool>(json['isDefault']),
+      isActive: serializer.fromJson<bool>(json['isActive']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'name': serializer.toJson<String>(name),
+      'symbol': serializer.toJson<String>(symbol),
+      'code': serializer.toJson<String>(code),
+      'isDefault': serializer.toJson<bool>(isDefault),
+      'isActive': serializer.toJson<bool>(isActive),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  AppCurrency copyWith(
+          {int? id,
+          String? name,
+          String? symbol,
+          String? code,
+          bool? isDefault,
+          bool? isActive,
+          DateTime? createdAt}) =>
+      AppCurrency(
+        id: id ?? this.id,
+        name: name ?? this.name,
+        symbol: symbol ?? this.symbol,
+        code: code ?? this.code,
+        isDefault: isDefault ?? this.isDefault,
+        isActive: isActive ?? this.isActive,
+        createdAt: createdAt ?? this.createdAt,
+      );
+  AppCurrency copyWithCompanion(AppCurrenciesCompanion data) {
+    return AppCurrency(
+      id: data.id.present ? data.id.value : this.id,
+      name: data.name.present ? data.name.value : this.name,
+      symbol: data.symbol.present ? data.symbol.value : this.symbol,
+      code: data.code.present ? data.code.value : this.code,
+      isDefault: data.isDefault.present ? data.isDefault.value : this.isDefault,
+      isActive: data.isActive.present ? data.isActive.value : this.isActive,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AppCurrency(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('symbol: $symbol, ')
+          ..write('code: $code, ')
+          ..write('isDefault: $isDefault, ')
+          ..write('isActive: $isActive, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, name, symbol, code, isDefault, isActive, createdAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is AppCurrency &&
+          other.id == this.id &&
+          other.name == this.name &&
+          other.symbol == this.symbol &&
+          other.code == this.code &&
+          other.isDefault == this.isDefault &&
+          other.isActive == this.isActive &&
+          other.createdAt == this.createdAt);
+}
+
+class AppCurrenciesCompanion extends UpdateCompanion<AppCurrency> {
+  final Value<int> id;
+  final Value<String> name;
+  final Value<String> symbol;
+  final Value<String> code;
+  final Value<bool> isDefault;
+  final Value<bool> isActive;
+  final Value<DateTime> createdAt;
+  const AppCurrenciesCompanion({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.symbol = const Value.absent(),
+    this.code = const Value.absent(),
+    this.isDefault = const Value.absent(),
+    this.isActive = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  });
+  AppCurrenciesCompanion.insert({
+    this.id = const Value.absent(),
+    required String name,
+    required String symbol,
+    required String code,
+    this.isDefault = const Value.absent(),
+    this.isActive = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  })  : name = Value(name),
+        symbol = Value(symbol),
+        code = Value(code);
+  static Insertable<AppCurrency> custom({
+    Expression<int>? id,
+    Expression<String>? name,
+    Expression<String>? symbol,
+    Expression<String>? code,
+    Expression<bool>? isDefault,
+    Expression<bool>? isActive,
+    Expression<DateTime>? createdAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (name != null) 'name': name,
+      if (symbol != null) 'symbol': symbol,
+      if (code != null) 'code': code,
+      if (isDefault != null) 'is_default': isDefault,
+      if (isActive != null) 'is_active': isActive,
+      if (createdAt != null) 'created_at': createdAt,
+    });
+  }
+
+  AppCurrenciesCompanion copyWith(
+      {Value<int>? id,
+      Value<String>? name,
+      Value<String>? symbol,
+      Value<String>? code,
+      Value<bool>? isDefault,
+      Value<bool>? isActive,
+      Value<DateTime>? createdAt}) {
+    return AppCurrenciesCompanion(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      symbol: symbol ?? this.symbol,
+      code: code ?? this.code,
+      isDefault: isDefault ?? this.isDefault,
+      isActive: isActive ?? this.isActive,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (symbol.present) {
+      map['symbol'] = Variable<String>(symbol.value);
+    }
+    if (code.present) {
+      map['code'] = Variable<String>(code.value);
+    }
+    if (isDefault.present) {
+      map['is_default'] = Variable<bool>(isDefault.value);
+    }
+    if (isActive.present) {
+      map['is_active'] = Variable<bool>(isActive.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AppCurrenciesCompanion(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('symbol: $symbol, ')
+          ..write('code: $code, ')
+          ..write('isDefault: $isDefault, ')
+          ..write('isActive: $isActive, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -4632,6 +5013,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $UserPreferencesTable userPreferences =
       $UserPreferencesTable(this);
   late final $SyncLogTable syncLog = $SyncLogTable(this);
+  late final $AppCurrenciesTable appCurrencies = $AppCurrenciesTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -4647,7 +5029,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         categoryUsageStats,
         contactUsageStats,
         userPreferences,
-        syncLog
+        syncLog,
+        appCurrencies
       ];
 }
 
@@ -8483,6 +8866,203 @@ typedef $$SyncLogTableProcessedTableManager = ProcessedTableManager<
     (SyncLogData, BaseReferences<_$AppDatabase, $SyncLogTable, SyncLogData>),
     SyncLogData,
     PrefetchHooks Function()>;
+typedef $$AppCurrenciesTableCreateCompanionBuilder = AppCurrenciesCompanion
+    Function({
+  Value<int> id,
+  required String name,
+  required String symbol,
+  required String code,
+  Value<bool> isDefault,
+  Value<bool> isActive,
+  Value<DateTime> createdAt,
+});
+typedef $$AppCurrenciesTableUpdateCompanionBuilder = AppCurrenciesCompanion
+    Function({
+  Value<int> id,
+  Value<String> name,
+  Value<String> symbol,
+  Value<String> code,
+  Value<bool> isDefault,
+  Value<bool> isActive,
+  Value<DateTime> createdAt,
+});
+
+class $$AppCurrenciesTableFilterComposer
+    extends Composer<_$AppDatabase, $AppCurrenciesTable> {
+  $$AppCurrenciesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get symbol => $composableBuilder(
+      column: $table.symbol, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get code => $composableBuilder(
+      column: $table.code, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isDefault => $composableBuilder(
+      column: $table.isDefault, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isActive => $composableBuilder(
+      column: $table.isActive, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+}
+
+class $$AppCurrenciesTableOrderingComposer
+    extends Composer<_$AppDatabase, $AppCurrenciesTable> {
+  $$AppCurrenciesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get symbol => $composableBuilder(
+      column: $table.symbol, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get code => $composableBuilder(
+      column: $table.code, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isDefault => $composableBuilder(
+      column: $table.isDefault, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isActive => $composableBuilder(
+      column: $table.isActive, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+}
+
+class $$AppCurrenciesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $AppCurrenciesTable> {
+  $$AppCurrenciesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get symbol =>
+      $composableBuilder(column: $table.symbol, builder: (column) => column);
+
+  GeneratedColumn<String> get code =>
+      $composableBuilder(column: $table.code, builder: (column) => column);
+
+  GeneratedColumn<bool> get isDefault =>
+      $composableBuilder(column: $table.isDefault, builder: (column) => column);
+
+  GeneratedColumn<bool> get isActive =>
+      $composableBuilder(column: $table.isActive, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $$AppCurrenciesTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $AppCurrenciesTable,
+    AppCurrency,
+    $$AppCurrenciesTableFilterComposer,
+    $$AppCurrenciesTableOrderingComposer,
+    $$AppCurrenciesTableAnnotationComposer,
+    $$AppCurrenciesTableCreateCompanionBuilder,
+    $$AppCurrenciesTableUpdateCompanionBuilder,
+    (
+      AppCurrency,
+      BaseReferences<_$AppDatabase, $AppCurrenciesTable, AppCurrency>
+    ),
+    AppCurrency,
+    PrefetchHooks Function()> {
+  $$AppCurrenciesTableTableManager(_$AppDatabase db, $AppCurrenciesTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$AppCurrenciesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$AppCurrenciesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$AppCurrenciesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<String> name = const Value.absent(),
+            Value<String> symbol = const Value.absent(),
+            Value<String> code = const Value.absent(),
+            Value<bool> isDefault = const Value.absent(),
+            Value<bool> isActive = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+          }) =>
+              AppCurrenciesCompanion(
+            id: id,
+            name: name,
+            symbol: symbol,
+            code: code,
+            isDefault: isDefault,
+            isActive: isActive,
+            createdAt: createdAt,
+          ),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            required String name,
+            required String symbol,
+            required String code,
+            Value<bool> isDefault = const Value.absent(),
+            Value<bool> isActive = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+          }) =>
+              AppCurrenciesCompanion.insert(
+            id: id,
+            name: name,
+            symbol: symbol,
+            code: code,
+            isDefault: isDefault,
+            isActive: isActive,
+            createdAt: createdAt,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$AppCurrenciesTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $AppCurrenciesTable,
+    AppCurrency,
+    $$AppCurrenciesTableFilterComposer,
+    $$AppCurrenciesTableOrderingComposer,
+    $$AppCurrenciesTableAnnotationComposer,
+    $$AppCurrenciesTableCreateCompanionBuilder,
+    $$AppCurrenciesTableUpdateCompanionBuilder,
+    (
+      AppCurrency,
+      BaseReferences<_$AppDatabase, $AppCurrenciesTable, AppCurrency>
+    ),
+    AppCurrency,
+    PrefetchHooks Function()>;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -8509,4 +9089,6 @@ class $AppDatabaseManager {
       $$UserPreferencesTableTableManager(_db, _db.userPreferences);
   $$SyncLogTableTableManager get syncLog =>
       $$SyncLogTableTableManager(_db, _db.syncLog);
+  $$AppCurrenciesTableTableManager get appCurrencies =>
+      $$AppCurrenciesTableTableManager(_db, _db.appCurrencies);
 }

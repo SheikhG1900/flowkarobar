@@ -34,12 +34,13 @@ class WhatsAppService {
     required double amount,
     required String description,
     DateTime? dueDate,
+    String currencySymbol = '₹',
   }) {
     final buffer = StringBuffer();
     buffer.writeln('Hi $contactName,');
     buffer.writeln();
     buffer.writeln('This is a friendly reminder:');
-    buffer.writeln('Amount to receive: ₹${amount.toStringAsFixed(2)}');
+    buffer.writeln('Amount to receive: $currencySymbol${amount.toStringAsFixed(2)}');
     if (description.isNotEmpty) {
       buffer.writeln('For: $description');
     }
@@ -57,12 +58,13 @@ class WhatsAppService {
     required double amount,
     required String description,
     DateTime? dueDate,
+    String currencySymbol = '₹',
   }) {
     final buffer = StringBuffer();
     buffer.writeln('Hi $contactName,');
     buffer.writeln();
     buffer.writeln('Just a reminder:');
-    buffer.writeln('Amount I owe you: ₹${amount.toStringAsFixed(2)}');
+    buffer.writeln('Amount I owe you: $currencySymbol${amount.toStringAsFixed(2)}');
     if (description.isNotEmpty) {
       buffer.writeln('For: $description');
     }
@@ -107,6 +109,7 @@ class WhatsAppService {
   Future<bool> shareTransactionWithLink({
     required TransactionShareData transaction,
     String? contactPhone,
+    required String currencySymbol,
   }) async {
     try {
       // Generate deep link
@@ -116,7 +119,7 @@ class WhatsAppService {
       final buffer = StringBuffer();
       buffer.writeln('📝 ${transaction.transactionType == "EXPENSE" ? "Expense" : "Income"} Transaction');
       buffer.writeln();
-      buffer.writeln('Amount: ₹${transaction.amount.toStringAsFixed(2)}');
+      buffer.writeln('Amount: $currencySymbol${transaction.amount.toStringAsFixed(2)}');
       if (transaction.description != null && transaction.description!.isNotEmpty) {
         buffer.writeln('Description: ${transaction.description}');
       }
@@ -152,6 +155,7 @@ class WhatsAppService {
   Future<bool> shareReceivableWithLink({
     required ReceivableShareData receivable,
     String? contactPhone,
+    required String currencySymbol,
   }) async {
     try {
       // Generate deep link
@@ -161,7 +165,7 @@ class WhatsAppService {
       final buffer = StringBuffer();
       buffer.writeln('💰 Payment Request');
       buffer.writeln();
-      buffer.writeln('Amount to receive: ₹${receivable.amount.toStringAsFixed(2)}');
+      buffer.writeln('Amount to receive: $currencySymbol${receivable.amount.toStringAsFixed(2)}');
       if (receivable.description != null && receivable.description!.isNotEmpty) {
         buffer.writeln('For: ${receivable.description}');
       }
@@ -195,6 +199,7 @@ class WhatsAppService {
   Future<bool> sharePayableWithLink({
     required PayableShareData payable,
     String? contactPhone,
+    required String currencySymbol,
   }) async {
     try {
       // Generate deep link
@@ -204,7 +209,7 @@ class WhatsAppService {
       final buffer = StringBuffer();
       buffer.writeln('📋 Payment Acknowledgment');
       buffer.writeln();
-      buffer.writeln('Amount I owe: ₹${payable.amount.toStringAsFixed(2)}');
+      buffer.writeln('Amount I owe: $currencySymbol${payable.amount.toStringAsFixed(2)}');
       if (payable.description != null && payable.description!.isNotEmpty) {
         buffer.writeln('For: ${payable.description}');
       }

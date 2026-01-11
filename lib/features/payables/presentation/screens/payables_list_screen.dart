@@ -7,6 +7,7 @@ import 'package:flowpaisa/features/payables/presentation/screens/add_payable_scr
 import 'package:flowpaisa/features/payables/presentation/widgets/payable_details_dialog.dart';
 import 'package:flowpaisa/shared/widgets/swipeable_list_item.dart';
 import 'package:intl/intl.dart';
+import 'package:flowpaisa/shared/providers/currency_provider.dart';
 
 class PayablesListScreen extends ConsumerStatefulWidget {
   const PayablesListScreen({super.key});
@@ -33,6 +34,7 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
 
   @override
   Widget build(BuildContext context) {
+    final currencySymbol = ref.watch(currencySymbolProvider);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Payables'),
@@ -75,6 +77,7 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
     final payablesAsync = ref.watch(payablesWithLinkedDataProvider(status));
     final theme = Theme.of(context);
     final repository = ref.read(payablesRepositoryProvider);
+    final currencySymbol = ref.watch(currencySymbolProvider);
 
     return payablesAsync.when(
       data: (payables) {
@@ -167,7 +170,7 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
                           );
                         }
                       },
-                      child: _buildPayableCard(item),
+                      child: _buildPayableCard(item, currencySymbol),
                     ),
                   );
                 }),
@@ -183,7 +186,7 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
     );
   }
 
-  Widget _buildPayableCard(dynamic item) {
+  Widget _buildPayableCard(dynamic item, String currencySymbol) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final payable = item.payable;
@@ -366,7 +369,7 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      AmountFormatter.formatWithCurrency(payable.amount),
+                      AmountFormatter.formatWithCurrency(payable.amount, currencySymbol),
                       style: theme.textTheme.titleLarge?.copyWith(
                         color: AppColors.payableColor,
                         fontWeight: FontWeight.bold,

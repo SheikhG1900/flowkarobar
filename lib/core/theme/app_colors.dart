@@ -45,6 +45,7 @@ class AppColors {
   static const brightCyan = Color(0xFF00D4FF);
   static const deepBlue = Color(0xFF0088CC);
   static const electricBlue = Color(0xFF00B8FF);
+  static const secondaryColor = Color(0xFF00B8FF); // Secondary brand color
   static const teal = Color(0xFF00B8A3);
   static const successGreen = Color(0xFF10B981);
   static const warningOrange = Color(0xFFFF9A76);

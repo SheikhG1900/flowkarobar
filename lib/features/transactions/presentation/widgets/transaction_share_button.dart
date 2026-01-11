@@ -6,6 +6,7 @@ import 'package:flowpaisa/features/whatsapp/domain/deep_link_service.dart';
 import 'package:flowpaisa/features/whatsapp/domain/models/shared_data_models.dart';
 import 'package:flowpaisa/features/whatsapp/domain/whatsapp_service.dart';
 import 'package:flowpaisa/features/whatsapp/presentation/providers/whatsapp_provider.dart';
+import 'package:flowpaisa/shared/providers/currency_provider.dart';
 
 class TransactionShareButton extends ConsumerWidget {
   final Transaction transaction;
@@ -106,6 +107,7 @@ class _ShareOptionsSheetState extends State<_ShareOptionsSheet> {
     try {
       final deepLinkService = DeepLinkService();
       final whatsAppService = widget.ref.read(whatsAppServiceProvider);
+      final currencySymbol = widget.ref.read(currencySymbolProvider);
 
       // Create share data
       final shareData = TransactionShareData(
@@ -123,6 +125,7 @@ class _ShareOptionsSheetState extends State<_ShareOptionsSheet> {
       await whatsAppService.shareTransactionWithLink(
         transaction: shareData,
         contactPhone: widget.contact?.phone,
+        currencySymbol: currencySymbol,
       );
 
       if (context.mounted) {

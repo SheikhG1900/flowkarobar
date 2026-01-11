@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
+import 'package:flowpaisa/shared/providers/currency_provider.dart';
 import 'package:intl/intl.dart';
 
 /// Balance Card with Gradient Background
 /// Hero card displaying total balance with income/expense breakdown
-class BalanceCard extends StatelessWidget {
+class BalanceCard extends ConsumerWidget {
   final double balance;
   final double income;
   final double expense;
-  final String currency;
   final VoidCallback? onTap;
   final bool showDetails;
 
@@ -17,14 +18,14 @@ class BalanceCard extends StatelessWidget {
     required this.balance,
     required this.income,
     required this.expense,
-    this.currency = '₹',
     this.onTap,
     this.showDetails = true,
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final currency = ref.watch(currencySymbolProvider);
     final numberFormat = NumberFormat.currency(
       symbol: currency,
       decimalDigits: 2,
@@ -187,23 +188,22 @@ class BalanceCard extends StatelessWidget {
 
 /// Compact Balance Card
 /// Smaller version for inline displays
-class CompactBalanceCard extends StatelessWidget {
+class CompactBalanceCard extends ConsumerWidget {
   final double balance;
-  final String currency;
   final String label;
   final Gradient? gradient;
 
   const CompactBalanceCard({
     super.key,
     required this.balance,
-    this.currency = '₹',
     this.label = 'Balance',
     this.gradient,
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final currency = ref.watch(currencySymbolProvider);
     final numberFormat = NumberFormat.currency(
       symbol: currency,
       decimalDigits: 2,
@@ -246,4 +246,3 @@ class CompactBalanceCard extends StatelessWidget {
     );
   }
 }
-

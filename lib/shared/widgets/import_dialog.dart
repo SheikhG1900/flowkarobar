@@ -8,6 +8,7 @@ import 'package:flowpaisa/features/transactions/data/transactions_repository.dar
 import 'package:flowpaisa/features/contacts/data/contacts_repository.dart';
 import 'package:flowpaisa/shared/providers/database_provider.dart';
 import 'package:drift/drift.dart' as drift;
+import 'package:flowpaisa/shared/providers/currency_provider.dart';
 
 class ImportDialog extends ConsumerStatefulWidget {
   final SharedData sharedData;
@@ -128,6 +129,7 @@ class _ImportDialogState extends ConsumerState<ImportDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final currencySymbol = ref.watch(currencySymbolProvider);
     return AlertDialog(
       title: Row(
         children: [
@@ -240,16 +242,18 @@ class _ImportDialogState extends ConsumerState<ImportDialog> {
   }
 
   Widget _buildDataPreview() {
+    final currencySymbol = ref.watch(currencySymbolProvider);
+    
     if (widget.sharedData is TransactionShareData) {
-      return _buildTransactionPreview(widget.sharedData as TransactionShareData);
+      return _buildTransactionPreview(widget.sharedData as TransactionShareData, currencySymbol);
     } else if (widget.sharedData is ReceivableShareData) {
-      return _buildReceivablePreview(widget.sharedData as ReceivableShareData);
+      return _buildReceivablePreview(widget.sharedData as ReceivableShareData, currencySymbol);
     } else {
-      return _buildPayablePreview(widget.sharedData as PayableShareData);
+      return _buildPayablePreview(widget.sharedData as PayableShareData, currencySymbol);
     }
   }
 
-  Widget _buildTransactionPreview(TransactionShareData data) {
+  Widget _buildTransactionPreview(TransactionShareData data, String currencySymbol) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -265,7 +269,7 @@ class _ImportDialogState extends ConsumerState<ImportDialog> {
           const SizedBox(height: 12),
         ],
         _buildDetailRow('Type', data.transactionType),
-        _buildDetailRow('Amount', '₹${data.amount.toStringAsFixed(2)}'),
+        _buildDetailRow('Amount', '$currencySymbol${data.amount.toStringAsFixed(2)}'),
         if (data.description != null && data.description!.isNotEmpty)
           _buildDetailRow('Description', data.description!),
         if (data.categoryName != null)
@@ -277,7 +281,7 @@ class _ImportDialogState extends ConsumerState<ImportDialog> {
     );
   }
 
-  Widget _buildReceivablePreview(ReceivableShareData data) {
+  Widget _buildReceivablePreview(ReceivableShareData data, String currencySymbol) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -292,7 +296,7 @@ class _ImportDialogState extends ConsumerState<ImportDialog> {
           ),
           const SizedBox(height: 12),
         ],
-        _buildDetailRow('Amount', '₹${data.amount.toStringAsFixed(2)}'),
+        _buildDetailRow('Amount', '$currencySymbol${data.amount.toStringAsFixed(2)}'),
         if (data.description != null && data.description!.isNotEmpty)
           _buildDetailRow('Description', data.description!),
         if (data.contactName != null)
@@ -304,7 +308,7 @@ class _ImportDialogState extends ConsumerState<ImportDialog> {
     );
   }
 
-  Widget _buildPayablePreview(PayableShareData data) {
+  Widget _buildPayablePreview(PayableShareData data, String currencySymbol) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -319,7 +323,7 @@ class _ImportDialogState extends ConsumerState<ImportDialog> {
           ),
           const SizedBox(height: 12),
         ],
-        _buildDetailRow('Amount', '₹${data.amount.toStringAsFixed(2)}'),
+        _buildDetailRow('Amount', '$currencySymbol${data.amount.toStringAsFixed(2)}'),
         if (data.description != null && data.description!.isNotEmpty)
           _buildDetailRow('Description', data.description!),
         if (data.contactName != null)

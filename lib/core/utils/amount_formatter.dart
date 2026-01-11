@@ -38,7 +38,7 @@ class AmountFormatter {
   }
 
   /// Get formatted text with currency symbol
-  static String formatWithCurrency(double amount, {String currency = '₹'}) {
+  static String formatWithCurrency(double amount, String currency) {
     return '$currency${formatAmount(amount)}';
   }
 }

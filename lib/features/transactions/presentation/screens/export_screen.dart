@@ -7,6 +7,7 @@ import 'package:flowpaisa/shared/providers/database_provider.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
 import 'package:intl/intl.dart';
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
+import 'package:flowpaisa/shared/providers/currency_provider.dart';
 
 final exportServiceProvider = Provider<ExportService>((ref) {
   final db = ref.watch(databaseProvider);
@@ -22,6 +23,7 @@ class ExportScreen extends ConsumerStatefulWidget {
 }
 
 class _ExportScreenState extends ConsumerState<ExportScreen> {
+  String get currencySymbol => ref.watch(currencySymbolProvider);
   DateTime? _startDate;
   DateTime? _endDate;
   ExportSummary? _summary;
@@ -479,7 +481,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
               _buildSummaryRow(
                 context,
                 'Income',
-                '₹${summary.totalIncome.toStringAsFixed(2)}',
+                '$currencySymbol${summary.totalIncome.toStringAsFixed(2)}',
                 Icons.arrow_downward,
                 AppColors.incomeColor,
               ),
@@ -487,7 +489,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
               _buildSummaryRow(
                 context,
                 'Expense',
-                '₹${summary.totalExpense.toStringAsFixed(2)}',
+                '$currencySymbol${summary.totalExpense.toStringAsFixed(2)}',
                 Icons.arrow_upward,
                 AppColors.expenseColor,
               ),
@@ -495,7 +497,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
               _buildSummaryRow(
                 context,
                 'Net Balance',
-                '₹${summary.netBalance.toStringAsFixed(2)}',
+                '$currencySymbol${summary.netBalance.toStringAsFixed(2)}',
                 Icons.account_balance_wallet,
                 summary.netBalance >= 0 ? Colors.green : Colors.red,
               ),

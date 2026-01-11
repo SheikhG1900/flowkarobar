@@ -9,6 +9,7 @@ import 'package:flowpaisa/features/transactions/presentation/widgets/transaction
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/shared/widgets/swipeable_list_item.dart';
 import 'package:intl/intl.dart';
+import 'package:flowpaisa/shared/providers/currency_provider.dart';
 
 class TransactionsListScreen extends ConsumerWidget {
   const TransactionsListScreen({super.key});
@@ -19,6 +20,7 @@ class TransactionsListScreen extends ConsumerWidget {
     // Use the new provider with ALL details (category + contact)
     final transactionsAsync = ref.watch(transactionsWithDetailsProvider);
     final theme = Theme.of(context);
+    final currencySymbol = ref.watch(currencySymbolProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -197,6 +199,7 @@ class TransactionsListScreen extends ConsumerWidget {
     required bool isExpense,
   }) {
     final theme = Theme.of(context);
+    final currencySymbol = ref.watch(currencySymbolProvider);
     final isDark = theme.brightness == Brightness.dark;
     final transaction = item.transaction;
     final category = item.category;
@@ -335,7 +338,7 @@ class TransactionsListScreen extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Text(
-              '${isExpense ? '-' : '+'} ${AmountFormatter.formatWithCurrency(transaction.amount)}',
+                          '${isExpense ? '-' : '+'} ${AmountFormatter.formatWithCurrency(transaction.amount, currencySymbol)}',
               style: theme.textTheme.titleLarge?.copyWith(
                 color: isExpense 
                     ? (isInactive ? AppColors.expenseColor.withValues(alpha: 0.5) : AppColors.expenseColor)

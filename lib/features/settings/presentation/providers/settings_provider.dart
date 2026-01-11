@@ -114,7 +114,7 @@ class UserProfileState {
   UserProfileState({
     this.name,
     this.email,
-    this.currency = '₹',
+    this.currency = 'INR',
     this.dateFormat = 'dd/MM/yyyy',
   });
 

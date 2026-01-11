@@ -24,13 +24,29 @@ class UserPreferencesRepository {
 
   // Set a preference value
   Future<void> setPreference(String key, String value) async {
-    await _db.into(_db.userPreferences).insertOnConflictUpdate(
-          UserPreferencesCompanion(
-            key: Value(key),
-            value: Value(value),
-            updatedAt: Value(DateTime.now()),
-          ),
-        );
+    // Check if preference exists
+    final existing = await getPreference(key);
+    
+    if (existing != null) {
+      // Update existing preference
+      await (_db.update(_db.userPreferences)
+            ..where((tbl) => tbl.key.equals(key)))
+          .write(
+        UserPreferencesCompanion(
+          value: Value(value),
+          updatedAt: Value(DateTime.now()),
+        ),
+      );
+    } else {
+      // Insert new preference
+      await _db.into(_db.userPreferences).insert(
+            UserPreferencesCompanion(
+              key: Value(key),
+              value: Value(value),
+              updatedAt: Value(DateTime.now()),
+            ),
+          );
+    }
   }
 
   // Delete a preference
@@ -64,7 +80,7 @@ class UserPreferencesRepository {
   // Currency Preference
   Future<String> getCurrency() async {
     final value = await getPreference(keyCurrency);
-    return value ?? '₹'; // Default to Indian Rupee
+    return value ?? 'INR'; // Default to Indian Rupee
   }
 
   Future<void> setCurrency(String currency) async {

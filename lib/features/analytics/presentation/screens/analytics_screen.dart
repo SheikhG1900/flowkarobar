@@ -8,6 +8,7 @@ import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/shared/widgets/premium_badge.dart';
 import 'package:flowpaisa/features/contacts/presentation/screens/contact_details_screen.dart';
+import 'package:flowpaisa/shared/providers/currency_provider.dart';
 import 'dart:ui';
 
 class AnalyticsScreen extends ConsumerWidget {
@@ -19,6 +20,7 @@ class AnalyticsScreen extends ConsumerWidget {
     final selectedDateRange = ref.watch(selectedDateRangeProvider);
     final theme = Theme.of(context);
     final isPremium = PremiumGate.isPremium(ref);
+    final currencySymbol = ref.watch(currencySymbolProvider);
 
     return Scaffold(
       body: Stack(
@@ -413,6 +415,7 @@ class _FinancialSummaryCard extends ConsumerWidget {
     final selectedAsync = ref.watch(financialSummaryProvider);
     final allTimeAsync = ref.watch(allTimeFinancialSummaryProvider);
     final theme = Theme.of(context);
+    final currencySymbol = ref.watch(currencySymbolProvider);
 
     return selectedAsync.when(
       data: (selectedSummary) {
@@ -501,7 +504,7 @@ class _FinancialSummaryCard extends ConsumerWidget {
                               ),
                             ),
                             Text(
-                              '₹${selectedSummary.netBalance.abs().toStringAsFixed(2)}',
+                              '$currencySymbol${selectedSummary.netBalance.abs().toStringAsFixed(2)}',
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 24,
@@ -515,7 +518,7 @@ class _FinancialSummaryCard extends ConsumerWidget {
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: [
                             Text(
-                              'All-time: ₹${allTimeSummary.netBalance.abs().toStringAsFixed(2)}',
+                              'All-time: $currencySymbol${allTimeSummary.netBalance.abs().toStringAsFixed(2)}',
                               style: TextStyle(
                                 color: Colors.white.withValues(alpha: 0.7),
                                 fontSize: 12,
@@ -541,7 +544,7 @@ class _FinancialSummaryCard extends ConsumerWidget {
   }
 }
 
-class _SummaryItem extends StatelessWidget {
+class _SummaryItem extends ConsumerWidget {
   final String title;
   final double selectedAmount;
   final double allTimeAmount;
@@ -557,8 +560,9 @@ class _SummaryItem extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final currencySymbol = ref.watch(currencySymbolProvider);
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -592,7 +596,7 @@ class _SummaryItem extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            '₹${selectedAmount.toStringAsFixed(2)}',
+            '$currencySymbol${selectedAmount.toStringAsFixed(2)}',
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
@@ -601,7 +605,7 @@ class _SummaryItem extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            'All: ₹${allTimeAmount.toStringAsFixed(0)}',
+            'All: $currencySymbol${allTimeAmount.toStringAsFixed(0)}',
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w500,
@@ -621,6 +625,7 @@ class _ContactSummariesSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final summariesAsync = ref.watch(contactSummariesProvider);
     final theme = Theme.of(context);
+    final currencySymbol = ref.watch(currencySymbolProvider);
 
     return summariesAsync.when(
       data: (summaries) {
@@ -706,7 +711,7 @@ class _ContactSummariesSection extends ConsumerWidget {
                             Row(
                               children: [
                                 Text(
-                                  'P: ₹${summary.totalPayable.toStringAsFixed(0)}',
+                                  'P: $currencySymbol${summary.totalPayable.toStringAsFixed(0)}',
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: AppColors.payableColor,
@@ -715,7 +720,7 @@ class _ContactSummariesSection extends ConsumerWidget {
                                 ),
                                 const SizedBox(width: 16),
                                 Text(
-                                  'R: ₹${summary.totalReceivable.toStringAsFixed(0)}',
+                                  'R: $currencySymbol${summary.totalReceivable.toStringAsFixed(0)}',
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: AppColors.receivableColor,
@@ -751,7 +756,7 @@ class _ContactSummariesSection extends ConsumerWidget {
                         child: Text(
                           isZero
                               ? 'Settled'
-                              : '₹${summary.balance.abs().toStringAsFixed(0)}',
+                              : '$currencySymbol${summary.balance.abs().toStringAsFixed(0)}',
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
@@ -783,6 +788,7 @@ class _ExpensesPieChart extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final expensesAsync = ref.watch(expensesByCategoryProvider);
+    final currencySymbol = ref.watch(currencySymbolProvider);
     final theme = Theme.of(context);
 
     return expensesAsync.when(
@@ -884,7 +890,7 @@ class _ExpensesPieChart extends ConsumerWidget {
                         ],
                       ),
                     ),
-                    Text('₹${e.totalAmount.toStringAsFixed(2)}',
+                    Text('$currencySymbol${e.totalAmount.toStringAsFixed(2)}',
                         style: const TextStyle(fontWeight: FontWeight.bold)),
                   ],
                 ),
@@ -905,6 +911,7 @@ class _TrendsBarChart extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final trendsAsync = ref.watch(monthlyTrendsProvider);
+    final currencySymbol = ref.watch(currencySymbolProvider);
     final theme = Theme.of(context);
 
     return trendsAsync.when(
@@ -953,7 +960,7 @@ class _TrendsBarChart extends ConsumerWidget {
                       ),
                       children: [
                         TextSpan(
-                          text: '₹${rod.toY.toStringAsFixed(0)}',
+                          text: '$currencySymbol${rod.toY.toStringAsFixed(0)}',
                           style: TextStyle(
                             color: rodIndex == 0
                                 ? AppColors.incomeColor
@@ -1034,6 +1041,7 @@ class _PayableReceivableTrendsChart extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final trendsAsync = ref.watch(payableReceivableTrendsProvider);
+    final currencySymbol = ref.watch(currencySymbolProvider);
     final theme = Theme.of(context);
 
     return trendsAsync.when(
@@ -1081,7 +1089,7 @@ class _PayableReceivableTrendsChart extends ConsumerWidget {
                           fontWeight: FontWeight.bold),
                       children: [
                         TextSpan(
-                          text: '₹${rod.toY.toStringAsFixed(0)}',
+                          text: '$currencySymbol${rod.toY.toStringAsFixed(0)}',
                           style: TextStyle(
                             color: rodIndex == 0
                                 ? AppColors.payableColor
@@ -1159,6 +1167,7 @@ class _TopContactsChart extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final contactsAsync = ref.watch(topContactsByBalanceProvider);
+    final currencySymbol = ref.watch(currencySymbolProvider);
     final theme = Theme.of(context);
 
     return contactsAsync.when(
@@ -1206,7 +1215,7 @@ class _TopContactsChart extends ConsumerWidget {
                         ),
                       ),
                       Text(
-                        '₹${contact.balance.abs().toStringAsFixed(0)}',
+                        '$currencySymbol${contact.balance.abs().toStringAsFixed(0)}',
                         style: TextStyle(
                             fontWeight: FontWeight.bold,
                             color: color,
@@ -1243,6 +1252,7 @@ class _PaymentStatusDistributionChart extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final statusAsync = ref.watch(paymentStatusDistributionProvider);
     final theme = Theme.of(context);
+    final currencySymbol = ref.watch(currencySymbolProvider);
 
     return statusAsync.when(
       data: (status) {
@@ -1327,12 +1337,12 @@ class _PaymentStatusDistributionChart extends ConsumerWidget {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    _buildStatusLegend(
-                        'Pending', status.pendingPayables, Colors.orange),
-                    _buildStatusLegend(
-                        'Paid', status.paidPayables, Colors.green),
-                    _buildStatusLegend(
-                        'Cancelled', status.cancelledPayables, Colors.grey),
+                    _buildStatusLegend('Pending', status.pendingPayables,
+                        Colors.orange, currencySymbol),
+                    _buildStatusLegend('Paid', status.paidPayables,
+                        Colors.green, currencySymbol),
+                    _buildStatusLegend('Cancelled', status.cancelledPayables,
+                        Colors.grey, currencySymbol),
                   ],
                 ),
               ),
@@ -1394,12 +1404,12 @@ class _PaymentStatusDistributionChart extends ConsumerWidget {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    _buildStatusLegend(
-                        'Pending', status.pendingReceivables, Colors.orange),
-                    _buildStatusLegend(
-                        'Received', status.receivedReceivables, Colors.green),
-                    _buildStatusLegend(
-                        'Cancelled', status.cancelledReceivables, Colors.grey),
+                    _buildStatusLegend('Pending', status.pendingReceivables,
+                        Colors.orange, currencySymbol),
+                    _buildStatusLegend('Received', status.receivedReceivables,
+                        Colors.green, currencySymbol),
+                    _buildStatusLegend('Cancelled', status.cancelledReceivables,
+                        Colors.grey, currencySymbol),
                   ],
                 ),
               ),
@@ -1411,7 +1421,8 @@ class _PaymentStatusDistributionChart extends ConsumerWidget {
     );
   }
 
-  Widget _buildStatusLegend(String label, double amount, Color color) {
+  Widget _buildStatusLegend(
+      String label, double amount, Color color, String currencySymbol) {
     if (amount == 0) return const SizedBox.shrink();
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
@@ -1425,7 +1436,7 @@ class _PaymentStatusDistributionChart extends ConsumerWidget {
           const SizedBox(width: 6),
           Text(label, style: const TextStyle(fontSize: 11)),
           const SizedBox(width: 4),
-          Text('₹${amount.toStringAsFixed(0)}',
+          Text('$currencySymbol${amount.toStringAsFixed(0)}',
               style:
                   const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
         ],
@@ -1440,6 +1451,7 @@ class _IncomePieChart extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final incomesAsync = ref.watch(incomeByCategoryProvider);
+    final currencySymbol = ref.watch(currencySymbolProvider);
     final theme = Theme.of(context);
 
     return incomesAsync.when(
@@ -1534,7 +1546,7 @@ class _IncomePieChart extends ConsumerWidget {
                         ],
                       ),
                     ),
-                    Text('₹${e.totalAmount.toStringAsFixed(2)}',
+                    Text('$currencySymbol${e.totalAmount.toStringAsFixed(2)}',
                         style: const TextStyle(fontWeight: FontWeight.bold)),
                   ],
                 ),

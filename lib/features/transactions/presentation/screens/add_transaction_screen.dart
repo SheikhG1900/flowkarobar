@@ -12,6 +12,7 @@ import 'package:flowpaisa/shared/widgets/gradient_button.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/shared/widgets/limit_countdown_badge.dart';
+import 'package:flowpaisa/shared/providers/currency_provider.dart';
 
 class AddTransactionScreen extends ConsumerStatefulWidget {
   final double? initialAmount;
@@ -598,6 +599,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final isExpense = _selectedType == 'EXPENSE';
+    final currencySymbol = ref.watch(currencySymbolProvider);
 
     // Watch limits
     final limitsAsync = ref.watch(transactionLimitsProvider);
@@ -669,7 +671,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                             : AppColors.incomeColor,
                       ),
                       decoration: InputDecoration(
-                        prefixText: '₹ ',
+                        prefixText: '$currencySymbol ',
                         prefixStyle: theme.textTheme.displayMedium?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                         ),

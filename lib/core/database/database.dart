@@ -155,6 +155,16 @@ class SyncLog extends Table {
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 }
 
+class AppCurrencies extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get name => text().withLength(min: 1, max: 100)();
+  TextColumn get symbol => text().withLength(min: 1, max: 10)();
+  TextColumn get code => text().withLength(min: 3, max: 3)();
+  BoolColumn get isDefault => boolean().withDefault(const Constant(false))();
+  BoolColumn get isActive => boolean().withDefault(const Constant(true))();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+}
+
 @DriftDatabase(tables: [
   Categories,
   Contacts,
@@ -167,18 +177,20 @@ class SyncLog extends Table {
   ContactUsageStats,
   UserPreferences,
   SyncLog,
+  AppCurrencies,
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
         onCreate: (Migrator m) async {
           await m.createAll();
           await _insertDefaultCategories();
+          await _insertDefaultCurrencies();
         },
         onUpgrade: (Migrator m, int from, int to) async {
           // Migration from version 1 to 2: Add paidDate and receivedDate fields
@@ -193,6 +205,11 @@ class AppDatabase extends _$AppDatabase {
           // Migration from version 3 to 4: Add isDeleted field to categories
           if (from <= 3) {
             await m.addColumn(categories, categories.isDeleted);
+          }
+          // Migration from version 4 to 5: Add AppCurrencies table
+          if (from <= 4) {
+            await m.createTable(appCurrencies);
+            await _insertDefaultCurrencies();
           }
         },
       );
@@ -268,6 +285,26 @@ class AppDatabase extends _$AppDatabase {
           icon: Value(cat.$2),
           color: Value(cat.$3),
           type: cat.$4,
+          isDefault: const Value(true),
+        ),
+      );
+    }
+  }
+
+  Future<void> _insertDefaultCurrencies() async {
+    // Default currencies
+    final defaultCurrencies = [
+      ('US Dollar', '\$', 'USD'),
+      ('Indian Rupee', '₹', 'INR'),
+      ('Pakistani Rupee', 'Rs', 'PKR'),
+    ];
+
+    for (final curr in defaultCurrencies) {
+      await into(appCurrencies).insert(
+        AppCurrenciesCompanion.insert(
+          name: curr.$1,
+          symbol: curr.$2,
+          code: curr.$3,
           isDefault: const Value(true),
         ),
       );

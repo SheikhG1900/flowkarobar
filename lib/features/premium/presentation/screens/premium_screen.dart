@@ -288,7 +288,7 @@ class PremiumScreen extends ConsumerWidget {
                               Text(
                                 _getProductPrice(premiumState.products)
                                         ?.currencySymbol ??
-                                    '₹',
+                                    '\$',
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 24,

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
 import 'package:flowpaisa/features/contacts/presentation/screens/add_contact_screen.dart';
+import 'package:flowpaisa/shared/providers/currency_provider.dart';
 
 // Provider to get transactions for a contact
 // Note: We'll fetch this from the database directly in a future iteration
@@ -17,6 +18,7 @@ class ContactDetailsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final statsAsync = ref.watch(contactStatisticsProvider(contactId));
+    final currencySymbol = ref.watch(currencySymbolProvider);
 
     return Scaffold(
       body: statsAsync.when(
@@ -167,7 +169,7 @@ class ContactDetailsScreen extends ConsumerWidget {
                                 ),
                                 const SizedBox(height: 8),
                                 Text(
-                                  '₹${netBalance.abs().toStringAsFixed(2)}',
+                                  '$currencySymbol${netBalance.abs().toStringAsFixed(2)}',
                                   style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 32,
@@ -210,6 +212,7 @@ class ContactDetailsScreen extends ConsumerWidget {
                               count: stats.receivablesCount,
                               color: AppColors.receivableColor,
                               icon: Icons.arrow_downward,
+                              currencySymbol: currencySymbol,
                             ),
                           ),
                           const SizedBox(width: 16),
@@ -222,6 +225,7 @@ class ContactDetailsScreen extends ConsumerWidget {
                               count: stats.payablesCount,
                               color: AppColors.payableColor,
                               icon: Icons.arrow_upward,
+                              currencySymbol: currencySymbol,
                             ),
                           ),
                         ],
@@ -296,6 +300,7 @@ class ContactDetailsScreen extends ConsumerWidget {
     required int count,
     required Color color,
     required IconData icon,
+    required String currencySymbol,
   }) {
     final theme = Theme.of(context);
     
@@ -338,7 +343,7 @@ class ContactDetailsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            '₹${amount.toStringAsFixed(2)}',
+            '$currencySymbol${amount.toStringAsFixed(2)}',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,

@@ -281,7 +281,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     // TODO: Show currency selector
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                        content: Text('Currently only ₹ (INR) is supported'),
+                        content: Text('Go to Settings > Currencies to change currency'),
                         duration: Duration(seconds: 2),
                       ),
                     );

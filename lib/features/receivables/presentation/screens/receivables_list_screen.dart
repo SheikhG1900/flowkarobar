@@ -7,6 +7,7 @@ import 'package:flowpaisa/features/receivables/presentation/screens/add_receivab
 import 'package:flowpaisa/features/receivables/presentation/widgets/receivable_details_dialog.dart';
 import 'package:flowpaisa/shared/widgets/swipeable_list_item.dart';
 import 'package:intl/intl.dart';
+import 'package:flowpaisa/shared/providers/currency_provider.dart';
 
 class ReceivablesListScreen extends ConsumerStatefulWidget {
   const ReceivablesListScreen({super.key});
@@ -34,6 +35,7 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
 
   @override
   Widget build(BuildContext context) {
+    final currencySymbol = ref.watch(currencySymbolProvider);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Receivables'),
@@ -75,6 +77,7 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
     final receivablesAsync =
         ref.watch(receivablesWithLinkedDataProvider(status));
     final theme = Theme.of(context);
+    final currencySymbol = ref.watch(currencySymbolProvider);
 
     return receivablesAsync.when(
       data: (receivables) {
@@ -176,7 +179,7 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
                           );
                         }
                       },
-                      child: _buildReceivableCard(item),
+                      child: _buildReceivableCard(item, currencySymbol),
                     ),
                   );
                 }),
@@ -192,7 +195,7 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
     );
   }
 
-  Widget _buildReceivableCard(dynamic item) {
+  Widget _buildReceivableCard(dynamic item, String currencySymbol) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final receivable = item.receivable;
@@ -374,7 +377,7 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      AmountFormatter.formatWithCurrency(receivable.amount),
+                      AmountFormatter.formatWithCurrency(receivable.amount, currencySymbol),
                       style: theme.textTheme.titleLarge?.copyWith(
                         color: AppColors.receivableColor,
                         fontWeight: FontWeight.bold,

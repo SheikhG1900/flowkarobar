@@ -10,6 +10,7 @@ import 'package:flowpaisa/features/contacts/presentation/screens/add_contact_scr
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/shared/widgets/limit_countdown_badge.dart';
+import 'package:flowpaisa/shared/providers/currency_provider.dart';
 
 class AddReceivableScreen extends ConsumerStatefulWidget {
   const AddReceivableScreen({super.key});
@@ -269,6 +270,7 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final limitsAsync = ref.watch(receivableLimitsProvider);
+    final currencySymbol = ref.watch(currencySymbolProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -326,7 +328,7 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
                         color: AppColors.receivableColor,
                       ),
                       decoration: InputDecoration(
-                        prefixText: '₹ ',
+                        prefixText: '$currencySymbol ',
                         prefixStyle: theme.textTheme.displayMedium?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
