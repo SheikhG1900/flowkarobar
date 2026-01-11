@@ -136,13 +136,13 @@ class _CurrencyCard extends ConsumerWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: SwipeableListItem(
-        enableEdit: !currency.isDefault,
+        enableEdit: true,
         enableDelete: !currency.isDefault,
         editBackgroundColor: color,
         deleteBackgroundColor: AppColors.error,
         borderRadius: 16,
         backgroundMargin: const EdgeInsets.only(bottom: 12),
-        onEdit: currency.isDefault ? null : () {
+        onEdit: () {
           Navigator.push(
             context,
             MaterialPageRoute(

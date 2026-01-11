@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:drift/drift.dart' as drift;
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
+import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/features/currencies/presentation/providers/currencies_provider.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
 
@@ -18,8 +19,18 @@ class _AddCurrencyScreenState extends ConsumerState<AddCurrencyScreen> {
   final _nameController = TextEditingController();
   final _symbolController = TextEditingController();
   final _codeController = TextEditingController();
+  int _decimalPlaces = 2;
 
   bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Add listeners to update preview instantly
+    _nameController.addListener(() => setState(() {}));
+    _symbolController.addListener(() => setState(() {}));
+    _codeController.addListener(() => setState(() {}));
+  }
 
   @override
   void dispose() {
@@ -46,6 +57,7 @@ class _AddCurrencyScreenState extends ConsumerState<AddCurrencyScreen> {
           name: _nameController.text,
           symbol: _symbolController.text,
           code: _codeController.text.toUpperCase(),
+          decimalPlaces: drift.Value(_decimalPlaces),
           isDefault: const drift.Value(false),
         ),
       );
@@ -158,6 +170,32 @@ class _AddCurrencyScreenState extends ConsumerState<AddCurrencyScreen> {
                 return null;
               },
             ),
+            const SizedBox(height: 16),
+
+            // Decimal Places Selector
+            DropdownButtonFormField<int>(
+              value: _decimalPlaces,
+              decoration: InputDecoration(
+                labelText: 'Decimal Places',
+                helperText: 'Number of digits after decimal point',
+                prefixIcon: const Icon(Icons.numbers),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              items: const [
+                DropdownMenuItem(value: 0, child: Text('0 (No decimals)')),
+                DropdownMenuItem(value: 1, child: Text('1 decimal place')),
+                DropdownMenuItem(value: 2, child: Text('2 decimal places')),
+              ],
+              onChanged: (value) {
+                if (value != null) {
+                  setState(() {
+                    _decimalPlaces = value;
+                  });
+                }
+              },
+            ),
             const SizedBox(height: 24),
 
             // Preview
@@ -222,9 +260,18 @@ class _AddCurrencyScreenState extends ConsumerState<AddCurrencyScreen> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'Example: ${_symbolController.text.isEmpty ? '?' : _symbolController.text}1,234.56',
+                    'Positive: ${AmountFormatter.formatWithCurrency(1234.56, _symbolController.text.isEmpty ? '?' : _symbolController.text, _decimalPlaces)}',
                     style: theme.textTheme.bodyLarge?.copyWith(
                       fontWeight: FontWeight.w600,
+                      color: AppColors.success,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Negative: -${AmountFormatter.formatWithCurrency(567.89, _symbolController.text.isEmpty ? '?' : _symbolController.text, _decimalPlaces)}',
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.error,
                     ),
                   ),
                 ],

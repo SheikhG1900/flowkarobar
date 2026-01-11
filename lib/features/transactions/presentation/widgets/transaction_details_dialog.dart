@@ -23,8 +23,13 @@ class TransactionDetailsDialog extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final currencySymbol = ref.watch(currencySymbolProvider);
+    final currencyAsync = ref.watch(currentCurrencyProvider);
+    final currency = currencyAsync.value;
     final transaction = item.transaction;
+    
+    if (currency == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
     final category = item.category;
     final contact = item.contact;
     final linkedPayable = item.linkedPayable;
@@ -114,7 +119,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    '${isExpense ? '-' : '+'} ${AmountFormatter.formatWithCurrency(transaction.amount, currencySymbol)}',
+                    '${isExpense ? '-' : '+'} ${AmountFormatter.formatWithCurrency(transaction.amount, currency.symbol, currency.decimalPlaces)}',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize:
@@ -634,11 +639,11 @@ class TransactionDetailsDialog extends ConsumerWidget {
 
   void _shareTransaction(BuildContext context, WidgetRef ref, dynamic transaction,
       dynamic category, dynamic contact) {
-    final currencySymbol = ref.read(currencySymbolProvider);
+    final currency = ref.read(currentCurrencyProvider).value!;
     final isExpense = transaction.type == 'EXPENSE';
     final message = '''
 ${isExpense ? 'Expense' : 'Income'} Details
-Amount: ${AmountFormatter.formatWithCurrency(transaction.amount, currencySymbol)}
+Amount: ${AmountFormatter.formatWithCurrency(transaction.amount, currency.symbol, currency.decimalPlaces)}
 Date: ${DateFormat.yMMMd().format(transaction.date)}
 ${category != null ? 'Category: ${category.name}\n' : ''}${contact != null ? 'Contact: ${contact.name}\n' : ''}${transaction.description != null && transaction.description.isNotEmpty ? 'Description: ${transaction.description}\n' : ''}
     ''';
@@ -767,12 +772,12 @@ ${category != null ? 'Category: ${category.name}\n' : ''}${contact != null ? 'Co
 
     try {
       final whatsAppService = ref.read(whatsAppServiceProvider);
-      final currencySymbol = ref.read(currencySymbolProvider);
+      final currency = ref.read(currentCurrencyProvider).value!;
       final isExpense = transaction.type == 'EXPENSE';
       final message = '''
 Hi ${contact.name},
 
-This is regarding the ${isExpense ? 'expense' : 'income'} of ${AmountFormatter.formatWithCurrency(transaction.amount, currencySymbol)} on ${DateFormat.yMMMd().format(transaction.date)}.
+This is regarding the ${isExpense ? 'expense' : 'income'} of ${AmountFormatter.formatWithCurrency(transaction.amount, currency.symbol, currency.decimalPlaces)} on ${DateFormat.yMMMd().format(transaction.date)}.
 
 ${transaction.description != null && transaction.description.isNotEmpty ? 'Details: ${transaction.description}' : ''}
 

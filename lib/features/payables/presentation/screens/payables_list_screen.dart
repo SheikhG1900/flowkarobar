@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/features/payables/presentation/providers/payables_provider.dart';
@@ -34,7 +35,6 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
 
   @override
   Widget build(BuildContext context) {
-    final currencySymbol = ref.watch(currencySymbolProvider);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Payables'),
@@ -77,7 +77,11 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
     final payablesAsync = ref.watch(payablesWithLinkedDataProvider(status));
     final theme = Theme.of(context);
     final repository = ref.read(payablesRepositoryProvider);
-    final currencySymbol = ref.watch(currencySymbolProvider);
+    final currency = ref.watch(currentCurrencyProvider).value;
+    
+    if (currency == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
 
     return payablesAsync.when(
       data: (payables) {
@@ -170,7 +174,7 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
                           );
                         }
                       },
-                      child: _buildPayableCard(item, currencySymbol),
+                      child: _buildPayableCard(item, currency),
                     ),
                   );
                 }),
@@ -186,7 +190,7 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
     );
   }
 
-  Widget _buildPayableCard(dynamic item, String currencySymbol) {
+  Widget _buildPayableCard(dynamic item, AppCurrency currency) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final payable = item.payable;
@@ -369,7 +373,7 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      AmountFormatter.formatWithCurrency(payable.amount, currencySymbol),
+                      AmountFormatter.formatWithCurrency(payable.amount, currency.symbol, currency.decimalPlaces),
                       style: theme.textTheme.titleLarge?.copyWith(
                         color: AppColors.payableColor,
                         fontWeight: FontWeight.bold,

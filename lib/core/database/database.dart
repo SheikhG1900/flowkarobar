@@ -160,6 +160,7 @@ class AppCurrencies extends Table {
   TextColumn get name => text().withLength(min: 1, max: 100)();
   TextColumn get symbol => text().withLength(min: 1, max: 10)();
   TextColumn get code => text().withLength(min: 3, max: 3)();
+  IntColumn get decimalPlaces => integer().withDefault(const Constant(2))();
   BoolColumn get isDefault => boolean().withDefault(const Constant(false))();
   BoolColumn get isActive => boolean().withDefault(const Constant(true))();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
@@ -183,7 +184,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -210,6 +211,10 @@ class AppDatabase extends _$AppDatabase {
           if (from <= 4) {
             await m.createTable(appCurrencies);
             await _insertDefaultCurrencies();
+          }
+          // Migration from version 5 to 6: Add decimalPlaces to AppCurrencies
+          if (from <= 5) {
+            await m.addColumn(appCurrencies, appCurrencies.decimalPlaces);
           }
         },
       );
@@ -292,11 +297,12 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<void> _insertDefaultCurrencies() async {
-    // Default currencies
+    // Default currencies with decimal places
+    // (name, symbol, code, decimalPlaces)
     final defaultCurrencies = [
-      ('US Dollar', '\$', 'USD'),
-      ('Indian Rupee', '₹', 'INR'),
-      ('Pakistani Rupee', 'Rs', 'PKR'),
+      ('US Dollar', '\$', 'USD', 2),
+      ('Indian Rupee', '₹', 'INR', 0),
+      ('Pakistani Rupee', 'Rs.', 'PKR', 0),
     ];
 
     for (final curr in defaultCurrencies) {
@@ -305,6 +311,7 @@ class AppDatabase extends _$AppDatabase {
           name: curr.$1,
           symbol: curr.$2,
           code: curr.$3,
+          decimalPlaces: Value(curr.$4),
           isDefault: const Value(true),
         ),
       );

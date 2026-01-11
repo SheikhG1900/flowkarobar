@@ -20,10 +20,15 @@ class ReceivableDetailsDialog extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final currencySymbol = ref.watch(currencySymbolProvider);
+    final currencyAsync = ref.watch(currentCurrencyProvider);
+    final currency = currencyAsync.value;
     final receivable = item.receivable;
     final contact = item.contact;
     final linkedTransaction = item.linkedTransaction;
+    
+    if (currency == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
     final linkedCategory = item.linkedCategory;
     final isPending = receivable.status == 'PENDING';
     
@@ -94,10 +99,10 @@ class ReceivableDetailsDialog extends ConsumerWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    AmountFormatter.formatWithCurrency(receivable.amount, currencySymbol),
+                    AmountFormatter.formatWithCurrency(receivable.amount, currency.symbol, currency.decimalPlaces),
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: AmountFormatter.getFontSize(receivable.amount) + 6,
+                      fontSize: AmountFormatter.getFontSize(receivable.amount, decimalPlaces: currency.decimalPlaces) + 6,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -331,7 +336,7 @@ class ReceivableDetailsDialog extends ConsumerWidget {
 
   Widget _buildLinkedTransactionCard(BuildContext context, WidgetRef ref, dynamic transaction, dynamic category) {
     final theme = Theme.of(context);
-    final currencySymbol = ref.read(currencySymbolProvider);
+    final currency = ref.read(currentCurrencyProvider).value!;
     final isExpense = transaction.type == 'EXPENSE';
     final categoryColor = Color(int.parse(category.color!.replaceAll('#', '0xFF')));
     
@@ -385,7 +390,7 @@ class ReceivableDetailsDialog extends ConsumerWidget {
                 ),
               ),
               Text(
-                '${isExpense ? '-' : '+'} ${AmountFormatter.formatWithCurrency(transaction.amount, currencySymbol)}',
+                '${isExpense ? '-' : '+'} ${AmountFormatter.formatWithCurrency(transaction.amount, currency.symbol, currency.decimalPlaces)}',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -414,10 +419,10 @@ class ReceivableDetailsDialog extends ConsumerWidget {
   }
 
   void _shareReceivable(BuildContext context, WidgetRef ref, dynamic receivable, dynamic contact) {
-    final currencySymbol = ref.read(currencySymbolProvider);
+    final currency = ref.read(currentCurrencyProvider).value!;
     final message = '''
 Receivable Details
-Amount: ${AmountFormatter.formatWithCurrency(receivable.amount, currencySymbol)}
+Amount: ${AmountFormatter.formatWithCurrency(receivable.amount, currency.symbol, currency.decimalPlaces)}
 Contact: ${contact?.name ?? 'Unknown'}
 Date: ${DateFormat.yMMMd().format(receivable.date)}
 ${receivable.dueDate != null ? 'Due Date: ${DateFormat.yMMMd().format(receivable.dueDate)}\n' : ''}${receivable.description != null && receivable.description.isNotEmpty ? 'Description: ${receivable.description}\n' : ''}Status: ${receivable.status == 'PENDING' ? 'Pending' : 'Received'}
@@ -505,7 +510,7 @@ ${receivable.dueDate != null ? 'Due Date: ${DateFormat.yMMMd().format(receivable
     dynamic contact,
     dynamic receivable,
   ) async {
-    final currencySymbol = ref.read(currencySymbolProvider);
+    final currency = ref.read(currentCurrencyProvider).value!;
     if (contact.phone == null || contact.phone.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -521,7 +526,7 @@ ${receivable.dueDate != null ? 'Due Date: ${DateFormat.yMMMd().format(receivable
       final message = '''
 Hi ${contact.name},
 
-This is a reminder regarding the receivable amount of ${AmountFormatter.formatWithCurrency(receivable.amount, currencySymbol)} dated ${DateFormat.yMMMd().format(receivable.date)}.
+This is a reminder regarding the receivable amount of ${AmountFormatter.formatWithCurrency(receivable.amount, currency.symbol, currency.decimalPlaces)} dated ${DateFormat.yMMMd().format(receivable.date)}.
 
 ${receivable.dueDate != null ? 'Due Date: ${DateFormat.yMMMd().format(receivable.dueDate)}\n' : ''}${receivable.description != null && receivable.description.isNotEmpty ? 'Details: ${receivable.description}\n' : ''}
 Thank you!

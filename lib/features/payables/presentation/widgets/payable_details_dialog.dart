@@ -20,10 +20,15 @@ class PayableDetailsDialog extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final currencySymbol = ref.watch(currencySymbolProvider);
+    final currencyAsync = ref.watch(currentCurrencyProvider);
+    final currency = currencyAsync.value;
     final payable = item.payable;
     final contact = item.contact;
     final linkedTransaction = item.linkedTransaction;
+    
+    if (currency == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
     final linkedCategory = item.linkedCategory;
     final isPending = payable.status == 'PENDING';
     
@@ -94,10 +99,10 @@ class PayableDetailsDialog extends ConsumerWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    AmountFormatter.formatWithCurrency(payable.amount, currencySymbol),
+                    AmountFormatter.formatWithCurrency(payable.amount, currency.symbol, currency.decimalPlaces),
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: AmountFormatter.getFontSize(payable.amount) + 6,
+                      fontSize: AmountFormatter.getFontSize(payable.amount, decimalPlaces: currency.decimalPlaces) + 6,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -331,7 +336,7 @@ class PayableDetailsDialog extends ConsumerWidget {
 
   Widget _buildLinkedTransactionCard(BuildContext context, WidgetRef ref, dynamic transaction, dynamic category) {
     final theme = Theme.of(context);
-    final currencySymbol = ref.read(currencySymbolProvider);
+    final currency = ref.read(currentCurrencyProvider).value!;
     final isExpense = transaction.type == 'EXPENSE';
     final categoryColor = Color(int.parse(category.color!.replaceAll('#', '0xFF')));
     
@@ -385,7 +390,7 @@ class PayableDetailsDialog extends ConsumerWidget {
                 ),
               ),
               Text(
-                '${isExpense ? '-' : '+'} ${AmountFormatter.formatWithCurrency(transaction.amount, currencySymbol)}',
+                '${isExpense ? '-' : '+'} ${AmountFormatter.formatWithCurrency(transaction.amount, currency.symbol, currency.decimalPlaces)}',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -414,10 +419,10 @@ class PayableDetailsDialog extends ConsumerWidget {
   }
 
   void _sharePayable(BuildContext context, WidgetRef ref, dynamic payable, dynamic contact) {
-    final currencySymbol = ref.read(currencySymbolProvider);
+    final currency = ref.read(currentCurrencyProvider).value!;
     final message = '''
 Payable Details
-Amount: ${AmountFormatter.formatWithCurrency(payable.amount, currencySymbol)}
+Amount: ${AmountFormatter.formatWithCurrency(payable.amount, currency.symbol, currency.decimalPlaces)}
 Contact: ${contact?.name ?? 'Unknown'}
 Date: ${DateFormat.yMMMd().format(payable.date)}
 ${payable.dueDate != null ? 'Due Date: ${DateFormat.yMMMd().format(payable.dueDate)}\n' : ''}${payable.description != null && payable.description.isNotEmpty ? 'Description: ${payable.description}\n' : ''}Status: ${payable.status == 'PENDING' ? 'Pending' : 'Paid'}
@@ -505,7 +510,7 @@ ${payable.dueDate != null ? 'Due Date: ${DateFormat.yMMMd().format(payable.dueDa
     dynamic contact,
     dynamic payable,
   ) async {
-    final currencySymbol = ref.read(currencySymbolProvider);
+    final currency = ref.read(currentCurrencyProvider).value!;
     if (contact.phone == null || contact.phone.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -521,7 +526,7 @@ ${payable.dueDate != null ? 'Due Date: ${DateFormat.yMMMd().format(payable.dueDa
       final message = '''
 Hi ${contact.name},
 
-This is a reminder regarding the payable amount of ${AmountFormatter.formatWithCurrency(payable.amount, currencySymbol)} dated ${DateFormat.yMMMd().format(payable.date)}.
+This is a reminder regarding the payable amount of ${AmountFormatter.formatWithCurrency(payable.amount, currency.symbol, currency.decimalPlaces)} dated ${DateFormat.yMMMd().format(payable.date)}.
 
 ${payable.dueDate != null ? 'Due Date: ${DateFormat.yMMMd().format(payable.dueDate)}\n' : ''}${payable.description != null && payable.description.isNotEmpty ? 'Details: ${payable.description}\n' : ''}
 Thank you!

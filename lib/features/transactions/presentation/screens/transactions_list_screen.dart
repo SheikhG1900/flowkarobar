@@ -20,7 +20,6 @@ class TransactionsListScreen extends ConsumerWidget {
     // Use the new provider with ALL details (category + contact)
     final transactionsAsync = ref.watch(transactionsWithDetailsProvider);
     final theme = Theme.of(context);
-    final currencySymbol = ref.watch(currencySymbolProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -199,8 +198,12 @@ class TransactionsListScreen extends ConsumerWidget {
     required bool isExpense,
   }) {
     final theme = Theme.of(context);
-    final currencySymbol = ref.watch(currencySymbolProvider);
+    final currency = ref.watch(currentCurrencyProvider).value;
     final isDark = theme.brightness == Brightness.dark;
+    
+    if (currency == null) {
+      return const SizedBox.shrink();
+    }
     final transaction = item.transaction;
     final category = item.category;
     final contact = item.contact;
@@ -338,7 +341,7 @@ class TransactionsListScreen extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Text(
-                          '${isExpense ? '-' : '+'} ${AmountFormatter.formatWithCurrency(transaction.amount, currencySymbol)}',
+                          '${isExpense ? '-' : '+'} ${AmountFormatter.formatWithCurrency(transaction.amount, currency.symbol, currency.decimalPlaces)}',
               style: theme.textTheme.titleLarge?.copyWith(
                 color: isExpense 
                     ? (isInactive ? AppColors.expenseColor.withValues(alpha: 0.5) : AppColors.expenseColor)

@@ -4654,6 +4654,14 @@ class $AppCurrenciesTable extends AppCurrencies
           GeneratedColumn.checkTextLength(minTextLength: 3, maxTextLength: 3),
       type: DriftSqlType.string,
       requiredDuringInsert: true);
+  static const VerificationMeta _decimalPlacesMeta =
+      const VerificationMeta('decimalPlaces');
+  @override
+  late final GeneratedColumn<int> decimalPlaces = GeneratedColumn<int>(
+      'decimal_places', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(2));
   static const VerificationMeta _isDefaultMeta =
       const VerificationMeta('isDefault');
   @override
@@ -4684,7 +4692,7 @@ class $AppCurrenciesTable extends AppCurrencies
       defaultValue: currentDateAndTime);
   @override
   List<GeneratedColumn> get $columns =>
-      [id, name, symbol, code, isDefault, isActive, createdAt];
+      [id, name, symbol, code, decimalPlaces, isDefault, isActive, createdAt];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -4716,6 +4724,12 @@ class $AppCurrenciesTable extends AppCurrencies
     } else if (isInserting) {
       context.missing(_codeMeta);
     }
+    if (data.containsKey('decimal_places')) {
+      context.handle(
+          _decimalPlacesMeta,
+          decimalPlaces.isAcceptableOrUnknown(
+              data['decimal_places']!, _decimalPlacesMeta));
+    }
     if (data.containsKey('is_default')) {
       context.handle(_isDefaultMeta,
           isDefault.isAcceptableOrUnknown(data['is_default']!, _isDefaultMeta));
@@ -4745,6 +4759,8 @@ class $AppCurrenciesTable extends AppCurrencies
           .read(DriftSqlType.string, data['${effectivePrefix}symbol'])!,
       code: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}code'])!,
+      decimalPlaces: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}decimal_places'])!,
       isDefault: attachedDatabase.typeMapping
           .read(DriftSqlType.bool, data['${effectivePrefix}is_default'])!,
       isActive: attachedDatabase.typeMapping
@@ -4765,6 +4781,7 @@ class AppCurrency extends DataClass implements Insertable<AppCurrency> {
   final String name;
   final String symbol;
   final String code;
+  final int decimalPlaces;
   final bool isDefault;
   final bool isActive;
   final DateTime createdAt;
@@ -4773,6 +4790,7 @@ class AppCurrency extends DataClass implements Insertable<AppCurrency> {
       required this.name,
       required this.symbol,
       required this.code,
+      required this.decimalPlaces,
       required this.isDefault,
       required this.isActive,
       required this.createdAt});
@@ -4783,6 +4801,7 @@ class AppCurrency extends DataClass implements Insertable<AppCurrency> {
     map['name'] = Variable<String>(name);
     map['symbol'] = Variable<String>(symbol);
     map['code'] = Variable<String>(code);
+    map['decimal_places'] = Variable<int>(decimalPlaces);
     map['is_default'] = Variable<bool>(isDefault);
     map['is_active'] = Variable<bool>(isActive);
     map['created_at'] = Variable<DateTime>(createdAt);
@@ -4795,6 +4814,7 @@ class AppCurrency extends DataClass implements Insertable<AppCurrency> {
       name: Value(name),
       symbol: Value(symbol),
       code: Value(code),
+      decimalPlaces: Value(decimalPlaces),
       isDefault: Value(isDefault),
       isActive: Value(isActive),
       createdAt: Value(createdAt),
@@ -4809,6 +4829,7 @@ class AppCurrency extends DataClass implements Insertable<AppCurrency> {
       name: serializer.fromJson<String>(json['name']),
       symbol: serializer.fromJson<String>(json['symbol']),
       code: serializer.fromJson<String>(json['code']),
+      decimalPlaces: serializer.fromJson<int>(json['decimalPlaces']),
       isDefault: serializer.fromJson<bool>(json['isDefault']),
       isActive: serializer.fromJson<bool>(json['isActive']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
@@ -4822,6 +4843,7 @@ class AppCurrency extends DataClass implements Insertable<AppCurrency> {
       'name': serializer.toJson<String>(name),
       'symbol': serializer.toJson<String>(symbol),
       'code': serializer.toJson<String>(code),
+      'decimalPlaces': serializer.toJson<int>(decimalPlaces),
       'isDefault': serializer.toJson<bool>(isDefault),
       'isActive': serializer.toJson<bool>(isActive),
       'createdAt': serializer.toJson<DateTime>(createdAt),
@@ -4833,6 +4855,7 @@ class AppCurrency extends DataClass implements Insertable<AppCurrency> {
           String? name,
           String? symbol,
           String? code,
+          int? decimalPlaces,
           bool? isDefault,
           bool? isActive,
           DateTime? createdAt}) =>
@@ -4841,6 +4864,7 @@ class AppCurrency extends DataClass implements Insertable<AppCurrency> {
         name: name ?? this.name,
         symbol: symbol ?? this.symbol,
         code: code ?? this.code,
+        decimalPlaces: decimalPlaces ?? this.decimalPlaces,
         isDefault: isDefault ?? this.isDefault,
         isActive: isActive ?? this.isActive,
         createdAt: createdAt ?? this.createdAt,
@@ -4851,6 +4875,9 @@ class AppCurrency extends DataClass implements Insertable<AppCurrency> {
       name: data.name.present ? data.name.value : this.name,
       symbol: data.symbol.present ? data.symbol.value : this.symbol,
       code: data.code.present ? data.code.value : this.code,
+      decimalPlaces: data.decimalPlaces.present
+          ? data.decimalPlaces.value
+          : this.decimalPlaces,
       isDefault: data.isDefault.present ? data.isDefault.value : this.isDefault,
       isActive: data.isActive.present ? data.isActive.value : this.isActive,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
@@ -4864,6 +4891,7 @@ class AppCurrency extends DataClass implements Insertable<AppCurrency> {
           ..write('name: $name, ')
           ..write('symbol: $symbol, ')
           ..write('code: $code, ')
+          ..write('decimalPlaces: $decimalPlaces, ')
           ..write('isDefault: $isDefault, ')
           ..write('isActive: $isActive, ')
           ..write('createdAt: $createdAt')
@@ -4872,8 +4900,8 @@ class AppCurrency extends DataClass implements Insertable<AppCurrency> {
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, name, symbol, code, isDefault, isActive, createdAt);
+  int get hashCode => Object.hash(
+      id, name, symbol, code, decimalPlaces, isDefault, isActive, createdAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -4882,6 +4910,7 @@ class AppCurrency extends DataClass implements Insertable<AppCurrency> {
           other.name == this.name &&
           other.symbol == this.symbol &&
           other.code == this.code &&
+          other.decimalPlaces == this.decimalPlaces &&
           other.isDefault == this.isDefault &&
           other.isActive == this.isActive &&
           other.createdAt == this.createdAt);
@@ -4892,6 +4921,7 @@ class AppCurrenciesCompanion extends UpdateCompanion<AppCurrency> {
   final Value<String> name;
   final Value<String> symbol;
   final Value<String> code;
+  final Value<int> decimalPlaces;
   final Value<bool> isDefault;
   final Value<bool> isActive;
   final Value<DateTime> createdAt;
@@ -4900,6 +4930,7 @@ class AppCurrenciesCompanion extends UpdateCompanion<AppCurrency> {
     this.name = const Value.absent(),
     this.symbol = const Value.absent(),
     this.code = const Value.absent(),
+    this.decimalPlaces = const Value.absent(),
     this.isDefault = const Value.absent(),
     this.isActive = const Value.absent(),
     this.createdAt = const Value.absent(),
@@ -4909,6 +4940,7 @@ class AppCurrenciesCompanion extends UpdateCompanion<AppCurrency> {
     required String name,
     required String symbol,
     required String code,
+    this.decimalPlaces = const Value.absent(),
     this.isDefault = const Value.absent(),
     this.isActive = const Value.absent(),
     this.createdAt = const Value.absent(),
@@ -4920,6 +4952,7 @@ class AppCurrenciesCompanion extends UpdateCompanion<AppCurrency> {
     Expression<String>? name,
     Expression<String>? symbol,
     Expression<String>? code,
+    Expression<int>? decimalPlaces,
     Expression<bool>? isDefault,
     Expression<bool>? isActive,
     Expression<DateTime>? createdAt,
@@ -4929,6 +4962,7 @@ class AppCurrenciesCompanion extends UpdateCompanion<AppCurrency> {
       if (name != null) 'name': name,
       if (symbol != null) 'symbol': symbol,
       if (code != null) 'code': code,
+      if (decimalPlaces != null) 'decimal_places': decimalPlaces,
       if (isDefault != null) 'is_default': isDefault,
       if (isActive != null) 'is_active': isActive,
       if (createdAt != null) 'created_at': createdAt,
@@ -4940,6 +4974,7 @@ class AppCurrenciesCompanion extends UpdateCompanion<AppCurrency> {
       Value<String>? name,
       Value<String>? symbol,
       Value<String>? code,
+      Value<int>? decimalPlaces,
       Value<bool>? isDefault,
       Value<bool>? isActive,
       Value<DateTime>? createdAt}) {
@@ -4948,6 +4983,7 @@ class AppCurrenciesCompanion extends UpdateCompanion<AppCurrency> {
       name: name ?? this.name,
       symbol: symbol ?? this.symbol,
       code: code ?? this.code,
+      decimalPlaces: decimalPlaces ?? this.decimalPlaces,
       isDefault: isDefault ?? this.isDefault,
       isActive: isActive ?? this.isActive,
       createdAt: createdAt ?? this.createdAt,
@@ -4969,6 +5005,9 @@ class AppCurrenciesCompanion extends UpdateCompanion<AppCurrency> {
     if (code.present) {
       map['code'] = Variable<String>(code.value);
     }
+    if (decimalPlaces.present) {
+      map['decimal_places'] = Variable<int>(decimalPlaces.value);
+    }
     if (isDefault.present) {
       map['is_default'] = Variable<bool>(isDefault.value);
     }
@@ -4988,6 +5027,7 @@ class AppCurrenciesCompanion extends UpdateCompanion<AppCurrency> {
           ..write('name: $name, ')
           ..write('symbol: $symbol, ')
           ..write('code: $code, ')
+          ..write('decimalPlaces: $decimalPlaces, ')
           ..write('isDefault: $isDefault, ')
           ..write('isActive: $isActive, ')
           ..write('createdAt: $createdAt')
@@ -8872,6 +8912,7 @@ typedef $$AppCurrenciesTableCreateCompanionBuilder = AppCurrenciesCompanion
   required String name,
   required String symbol,
   required String code,
+  Value<int> decimalPlaces,
   Value<bool> isDefault,
   Value<bool> isActive,
   Value<DateTime> createdAt,
@@ -8882,6 +8923,7 @@ typedef $$AppCurrenciesTableUpdateCompanionBuilder = AppCurrenciesCompanion
   Value<String> name,
   Value<String> symbol,
   Value<String> code,
+  Value<int> decimalPlaces,
   Value<bool> isDefault,
   Value<bool> isActive,
   Value<DateTime> createdAt,
@@ -8907,6 +8949,9 @@ class $$AppCurrenciesTableFilterComposer
 
   ColumnFilters<String> get code => $composableBuilder(
       column: $table.code, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get decimalPlaces => $composableBuilder(
+      column: $table.decimalPlaces, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<bool> get isDefault => $composableBuilder(
       column: $table.isDefault, builder: (column) => ColumnFilters(column));
@@ -8939,6 +8984,10 @@ class $$AppCurrenciesTableOrderingComposer
   ColumnOrderings<String> get code => $composableBuilder(
       column: $table.code, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<int> get decimalPlaces => $composableBuilder(
+      column: $table.decimalPlaces,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<bool> get isDefault => $composableBuilder(
       column: $table.isDefault, builder: (column) => ColumnOrderings(column));
 
@@ -8969,6 +9018,9 @@ class $$AppCurrenciesTableAnnotationComposer
 
   GeneratedColumn<String> get code =>
       $composableBuilder(column: $table.code, builder: (column) => column);
+
+  GeneratedColumn<int> get decimalPlaces => $composableBuilder(
+      column: $table.decimalPlaces, builder: (column) => column);
 
   GeneratedColumn<bool> get isDefault =>
       $composableBuilder(column: $table.isDefault, builder: (column) => column);
@@ -9010,6 +9062,7 @@ class $$AppCurrenciesTableTableManager extends RootTableManager<
             Value<String> name = const Value.absent(),
             Value<String> symbol = const Value.absent(),
             Value<String> code = const Value.absent(),
+            Value<int> decimalPlaces = const Value.absent(),
             Value<bool> isDefault = const Value.absent(),
             Value<bool> isActive = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
@@ -9019,6 +9072,7 @@ class $$AppCurrenciesTableTableManager extends RootTableManager<
             name: name,
             symbol: symbol,
             code: code,
+            decimalPlaces: decimalPlaces,
             isDefault: isDefault,
             isActive: isActive,
             createdAt: createdAt,
@@ -9028,6 +9082,7 @@ class $$AppCurrenciesTableTableManager extends RootTableManager<
             required String name,
             required String symbol,
             required String code,
+            Value<int> decimalPlaces = const Value.absent(),
             Value<bool> isDefault = const Value.absent(),
             Value<bool> isActive = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
@@ -9037,6 +9092,7 @@ class $$AppCurrenciesTableTableManager extends RootTableManager<
             name: name,
             symbol: symbol,
             code: code,
+            decimalPlaces: decimalPlaces,
             isDefault: isDefault,
             isActive: isActive,
             createdAt: createdAt,

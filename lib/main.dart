@@ -36,6 +36,7 @@ import 'package:flowpaisa/shared/widgets/premium_badge.dart';
 
 import 'package:flowpaisa/shared/providers/shared_preferences_provider.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
+import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
@@ -305,10 +306,18 @@ class _DashboardTab extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final isPremium = PremiumGate.isPremium(ref);
-    final currencySymbol = ref.watch(currencySymbolProvider);
+    final currencyAsync = ref.watch(currentCurrencyProvider);
+    final currency = currencyAsync.value;
 
     // Watch dashboard statistics
     final dashboardStatsAsync = ref.watch(dashboardStatsProvider);
+
+    // Show loading if currency is not yet loaded
+    if (currency == null) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
 
     return Scaffold(
       body: CustomScrollView(
@@ -423,7 +432,7 @@ class _DashboardTab extends ConsumerWidget {
                         const SizedBox(height: 8),
                         dashboardStatsAsync.when(
                           data: (stats) => Text(
-                            '$currencySymbol${stats.totalBalance.toStringAsFixed(2)}',
+                            AmountFormatter.formatWithCurrency(stats.totalBalance, currency.symbol, currency.decimalPlaces),
                             style: theme.textTheme.displayMedium?.copyWith(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
@@ -434,7 +443,7 @@ class _DashboardTab extends ConsumerWidget {
                             ),
                           ),
                           loading: () => Text(
-                            '${currencySymbol}0.00',
+                            AmountFormatter.formatWithCurrency(0, currency.symbol, currency.decimalPlaces),
                             style: theme.textTheme.displayMedium?.copyWith(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
@@ -444,7 +453,7 @@ class _DashboardTab extends ConsumerWidget {
                             ),
                           ),
                           error: (_, __) => Text(
-                            '${currencySymbol}0.00',
+                            AmountFormatter.formatWithCurrency(0, currency.symbol, currency.decimalPlaces),
                             style: theme.textTheme.displayMedium?.copyWith(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
@@ -470,7 +479,8 @@ class _DashboardTab extends ConsumerWidget {
                                   bgColor: Colors.greenAccent
                                       .withValues(alpha: 0.25 / 1.0),
                                   textColor: Colors.greenAccent.shade100,
-                                  currencySymbol: currencySymbol,
+                                  currencySymbol: currency.symbol,
+                                  decimalPlaces: currency.decimalPlaces,
                                 ),
                               ),
                               const SizedBox(width: 12),
@@ -484,7 +494,8 @@ class _DashboardTab extends ConsumerWidget {
                                   bgColor: Colors.orangeAccent
                                       .withValues(alpha: 0.25 / 1.0),
                                   textColor: Colors.orangeAccent.shade100,
-                                  currencySymbol: currencySymbol,
+                                  currencySymbol: currency.symbol,
+                                  decimalPlaces: currency.decimalPlaces,
                                 ),
                               ),
                             ],
@@ -501,7 +512,8 @@ class _DashboardTab extends ConsumerWidget {
                                   bgColor: Colors.greenAccent
                                       .withValues(alpha: 0.25 / 1.0),
                                   textColor: Colors.greenAccent.shade100,
-                                  currencySymbol: currencySymbol,
+                                  currencySymbol: currency.symbol,
+                                  decimalPlaces: currency.decimalPlaces,
                                 ),
                               ),
                               const SizedBox(width: 12),
@@ -515,7 +527,8 @@ class _DashboardTab extends ConsumerWidget {
                                   bgColor: Colors.orangeAccent
                                       .withValues(alpha: 0.25 / 1.0),
                                   textColor: Colors.orangeAccent.shade100,
-                                  currencySymbol: currencySymbol,
+                                  currencySymbol: currency.symbol,
+                                  decimalPlaces: currency.decimalPlaces,
                                 ),
                               ),
                             ],
@@ -532,7 +545,8 @@ class _DashboardTab extends ConsumerWidget {
                                   bgColor: Colors.greenAccent
                                       .withValues(alpha: 0.25 / 1.0),
                                   textColor: Colors.greenAccent.shade100,
-                                  currencySymbol: currencySymbol,
+                                  currencySymbol: currency.symbol,
+                                  decimalPlaces: currency.decimalPlaces,
                                 ),
                               ),
                               const SizedBox(width: 12),
@@ -546,7 +560,8 @@ class _DashboardTab extends ConsumerWidget {
                                   bgColor: Colors.orangeAccent
                                       .withValues(alpha: 0.25 / 1.0),
                                   textColor: Colors.orangeAccent.shade100,
-                                  currencySymbol: currencySymbol,
+                                  currencySymbol: currency.symbol,
+                                  decimalPlaces: currency.decimalPlaces,
                                 ),
                               ),
                             ],
@@ -677,6 +692,7 @@ class _DashboardTab extends ConsumerWidget {
     required Color bgColor,
     required Color textColor,
     required String currencySymbol,
+    required int decimalPlaces,
   }) {
     final theme = Theme.of(context);
 
@@ -723,7 +739,7 @@ class _DashboardTab extends ConsumerWidget {
           ),
           const SizedBox(height: 10), // More spacing
           Text(
-            '$currencySymbol${amount.toStringAsFixed(0)}',
+            AmountFormatter.formatWithCurrency(amount, currencySymbol, decimalPlaces),
             style: theme.textTheme.titleLarge?.copyWith(
               color: Colors.white,
               fontWeight: FontWeight.bold,
@@ -884,7 +900,12 @@ class _DashboardTab extends ConsumerWidget {
 
   Widget _buildRecentTransactions(BuildContext context, WidgetRef ref) {
     final transactionsAsync = ref.watch(transactionsWithDetailsProvider);
-    final currencySymbol = ref.watch(currencySymbolProvider);
+    final currencyAsync = ref.watch(currentCurrencyProvider);
+    final currency = currencyAsync.value;
+    
+    if (currency == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
 
     return transactionsAsync.when(
       data: (transactions) {
@@ -988,7 +1009,7 @@ class _DashboardTab extends ConsumerWidget {
                 ),
                 subtitle: Text(dateFormat.format(transaction.date)),
                 trailing: Text(
-                  '${isExpense ? '-' : '+'} $currencySymbol${transaction.amount.toStringAsFixed(2)}',
+                  '${isExpense ? '-' : '+'} ${AmountFormatter.formatWithCurrency(transaction.amount, currency.symbol, currency.decimalPlaces)}',
                   style: TextStyle(
                     color: isExpense
                         ? AppColors.expenseColor

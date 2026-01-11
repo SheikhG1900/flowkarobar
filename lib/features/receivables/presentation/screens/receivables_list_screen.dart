@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/features/receivables/presentation/providers/receivables_provider.dart';
@@ -35,7 +36,6 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
 
   @override
   Widget build(BuildContext context) {
-    final currencySymbol = ref.watch(currencySymbolProvider);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Receivables'),
@@ -77,7 +77,11 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
     final receivablesAsync =
         ref.watch(receivablesWithLinkedDataProvider(status));
     final theme = Theme.of(context);
-    final currencySymbol = ref.watch(currencySymbolProvider);
+    final currency = ref.watch(currentCurrencyProvider).value;
+    
+    if (currency == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
 
     return receivablesAsync.when(
       data: (receivables) {
@@ -179,7 +183,7 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
                           );
                         }
                       },
-                      child: _buildReceivableCard(item, currencySymbol),
+                      child: _buildReceivableCard(item, currency),
                     ),
                   );
                 }),
@@ -195,7 +199,7 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
     );
   }
 
-  Widget _buildReceivableCard(dynamic item, String currencySymbol) {
+  Widget _buildReceivableCard(dynamic item, AppCurrency currency) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final receivable = item.receivable;
@@ -377,7 +381,7 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      AmountFormatter.formatWithCurrency(receivable.amount, currencySymbol),
+                      AmountFormatter.formatWithCurrency(receivable.amount, currency.symbol, currency.decimalPlaces),
                       style: theme.textTheme.titleLarge?.copyWith(
                         color: AppColors.receivableColor,
                         fontWeight: FontWeight.bold,

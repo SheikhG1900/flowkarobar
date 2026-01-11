@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
+import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/features/currencies/presentation/providers/currencies_provider.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
 
@@ -22,6 +23,7 @@ class _EditCurrencyScreenState extends ConsumerState<EditCurrencyScreen> {
   late TextEditingController _nameController;
   late TextEditingController _symbolController;
   late TextEditingController _codeController;
+  late int _decimalPlaces;
 
   bool _isLoading = false;
 
@@ -31,6 +33,12 @@ class _EditCurrencyScreenState extends ConsumerState<EditCurrencyScreen> {
     _nameController = TextEditingController(text: widget.currency.name);
     _symbolController = TextEditingController(text: widget.currency.symbol);
     _codeController = TextEditingController(text: widget.currency.code);
+    _decimalPlaces = widget.currency.decimalPlaces;
+    
+    // Add listeners to update preview instantly
+    _nameController.addListener(() => setState(() {}));
+    _symbolController.addListener(() => setState(() {}));
+    _codeController.addListener(() => setState(() {}));
   }
 
   @override
@@ -57,6 +65,7 @@ class _EditCurrencyScreenState extends ConsumerState<EditCurrencyScreen> {
         name: _nameController.text,
         symbol: _symbolController.text,
         code: _codeController.text.toUpperCase(),
+        decimalPlaces: _decimalPlaces,
       );
 
       await repository.updateCurrency(updatedCurrency);
@@ -91,36 +100,6 @@ class _EditCurrencyScreenState extends ConsumerState<EditCurrencyScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
-    // Don't allow editing default currencies
-    if (widget.currency.isDefault) {
-      return Scaffold(
-        appBar: AppBar(
-          title: const Text('Edit Currency'),
-        ),
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(32),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.lock,
-                  size: 64,
-                  color: theme.colorScheme.outline,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Cannot edit default currency',
-                  style: theme.textTheme.titleMedium,
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    }
 
     return Scaffold(
       appBar: AppBar(
@@ -199,6 +178,32 @@ class _EditCurrencyScreenState extends ConsumerState<EditCurrencyScreen> {
                 return null;
               },
             ),
+            const SizedBox(height: 16),
+
+            // Decimal Places Selector
+            DropdownButtonFormField<int>(
+              value: _decimalPlaces,
+              decoration: InputDecoration(
+                labelText: 'Decimal Places',
+                helperText: 'Number of digits after decimal point',
+                prefixIcon: const Icon(Icons.numbers),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              items: const [
+                DropdownMenuItem(value: 0, child: Text('0 (No decimals)')),
+                DropdownMenuItem(value: 1, child: Text('1 decimal place')),
+                DropdownMenuItem(value: 2, child: Text('2 decimal places')),
+              ],
+              onChanged: (value) {
+                if (value != null) {
+                  setState(() {
+                    _decimalPlaces = value;
+                  });
+                }
+              },
+            ),
             const SizedBox(height: 24),
 
             // Preview
@@ -263,9 +268,18 @@ class _EditCurrencyScreenState extends ConsumerState<EditCurrencyScreen> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'Example: ${_symbolController.text}1,234.56',
+                    'Positive: ${AmountFormatter.formatWithCurrency(1234.56, _symbolController.text, _decimalPlaces)}',
                     style: theme.textTheme.bodyLarge?.copyWith(
                       fontWeight: FontWeight.w600,
+                      color: AppColors.success,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Negative: -${AmountFormatter.formatWithCurrency(567.89, _symbolController.text, _decimalPlaces)}',
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.error,
                     ),
                   ),
                 ],
