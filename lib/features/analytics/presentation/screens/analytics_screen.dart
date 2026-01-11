@@ -83,103 +83,65 @@ class AnalyticsScreen extends ConsumerWidget {
               // Content
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.all(16.0),
+                  padding: const EdgeInsets.symmetric(vertical: 16.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Financial Summary (Combined)
-                      Text(
-                        'Financial Summary',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                      const _CollapsibleSection(
+                        title: 'Financial Summary',
+                        sectionIndex: 0,
+                        child: _FinancialSummaryCard(),
                       ),
-                      const SizedBox(height: 12),
-                      const _FinancialSummaryCard(),
-                      
-                      const SizedBox(height: 24),
                       
                       // Contact Summaries
-                      Text(
-                        'Contact Summaries',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                      const _CollapsibleSection(
+                        title: 'Contact Summaries',
+                        sectionIndex: 1,
+                        child: _ContactSummariesSection(),
                       ),
-                      const SizedBox(height: 12),
-                      const _ContactSummariesSection(),
-                      
-                      const SizedBox(height: 32),
                       
                       // Pie Chart Section
-                      Text(
-                        'Expenses by Category',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                      const _CollapsibleSection(
+                        title: 'Expenses by Category',
+                        sectionIndex: 2,
+                        child: _ExpensesPieChart(),
                       ),
-                      const SizedBox(height: 16),
-                      const _ExpensesPieChart(),
-                      
-                      const SizedBox(height: 32),
                       
                       // Trend Chart Section
-                      Text(
-                        'Income vs Expense Trend',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                      const _CollapsibleSection(
+                        title: 'Income vs Expense Trend',
+                        sectionIndex: 3,
+                        child: _TrendsBarChart(),
                       ),
-                      const SizedBox(height: 16),
-                      const _TrendsBarChart(),
-                      
-                      const SizedBox(height: 32),
                       
                       // Payables vs Receivables Trend
-                      Text(
-                        'Payables vs Receivables Trend',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                      const _CollapsibleSection(
+                        title: 'Payables vs Receivables Trend',
+                        sectionIndex: 4,
+                        child: _PayableReceivableTrendsChart(),
                       ),
-                      const SizedBox(height: 16),
-                      const _PayableReceivableTrendsChart(),
-                      
-                      const SizedBox(height: 32),
                       
                       // Top Contacts by Balance
-                      Text(
-                        'Top Contacts by Balance',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                      const _CollapsibleSection(
+                        title: 'Top Contacts by Balance',
+                        sectionIndex: 5,
+                        child: _TopContactsChart(),
                       ),
-                      const SizedBox(height: 16),
-                      const _TopContactsChart(),
-                      
-                      const SizedBox(height: 32),
                       
                       // Payment Status Distribution
-                      Text(
-                        'Payment Status Distribution',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                      const _CollapsibleSection(
+                        title: 'Payment Status Distribution',
+                        sectionIndex: 6,
+                        child: _PaymentStatusDistributionChart(),
                       ),
-                      const SizedBox(height: 16),
-                      const _PaymentStatusDistributionChart(),
-                      
-                      const SizedBox(height: 32),
                       
                       // Income by Category
-                      Text(
-                        'Income by Category',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                      const _CollapsibleSection(
+                        title: 'Income by Category',
+                        sectionIndex: 7,
+                        child: _IncomePieChart(),
                       ),
-                      const SizedBox(height: 16),
-                      const _IncomePieChart(),
                       
                       const SizedBox(height: 80), // Bottom padding
                     ],
@@ -1444,6 +1406,136 @@ class _IncomePieChart extends ConsumerWidget {
       },
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, s) => Center(child: Text('Error: `$e')),
+    );
+  }
+}
+
+// Collapsible Section Widget with Alternating Background Colors
+class _CollapsibleSection extends StatefulWidget {
+  final String title;
+  final Widget child;
+  final int sectionIndex;
+  final bool initiallyExpanded;
+
+  const _CollapsibleSection({
+    required this.title,
+    required this.child,
+    required this.sectionIndex,
+    this.initiallyExpanded = true,
+  });
+
+  @override
+  State<_CollapsibleSection> createState() => _CollapsibleSectionState();
+}
+
+class _CollapsibleSectionState extends State<_CollapsibleSection> with SingleTickerProviderStateMixin {
+  late bool _isExpanded;
+  late AnimationController _animationController;
+  late Animation<double> _iconTurns;
+
+  @override
+  void initState() {
+    super.initState();
+    _isExpanded = widget.initiallyExpanded;
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+    _iconTurns = Tween<double>(begin: 0.0, end: 0.5).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    );
+    if (_isExpanded) {
+      _animationController.value = 1.0;
+    }
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  void _toggleExpanded() {
+    setState(() {
+      _isExpanded = !_isExpanded;
+      if (_isExpanded) {
+        _animationController.forward();
+      } else {
+        _animationController.reverse();
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    
+    // Alternating background colors
+    final backgroundColor = widget.sectionIndex % 2 == 0
+        ? theme.colorScheme.surface
+        : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 1),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        border: Border(
+          bottom: BorderSide(
+            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3),
+            width: 1,
+          ),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Material(
+            color: Colors.transparent,
+            child: Semantics(
+              button: true,
+              label: '${widget.title} section, ${_isExpanded ? 'expanded' : 'collapsed'}',
+              onTap: _toggleExpanded,
+              child: InkWell(
+                onTap: _toggleExpanded,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          widget.title,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      RotationTransition(
+                        turns: _iconTurns,
+                        child: Icon(
+                          Icons.keyboard_arrow_down,
+                          color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          // Content
+          AnimatedSize(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+            child: _isExpanded
+                ? Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                    child: widget.child,
+                  )
+                : const SizedBox.shrink(),
+          ),
+        ],
+      ),
     );
   }
 }
