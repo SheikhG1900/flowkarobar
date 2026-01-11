@@ -6,6 +6,7 @@ import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/features/receivables/presentation/providers/receivables_provider.dart';
 import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
+import 'package:flowpaisa/features/contacts/presentation/screens/add_contact_screen.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/shared/widgets/limit_countdown_badge.dart';
@@ -175,36 +176,37 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
               children: [
                 Padding(
                   padding: const EdgeInsets.all(16),
-                  child: Text(
-                    'Select Contact',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Select Contact',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                      ),
+                      TextButton.icon(
+                        onPressed: () async {
+                          Navigator.pop(context); // Close picker
+                          final newContact = await Navigator.push<Contact>(
+                            context,
+                            MaterialPageRoute(builder: (_) => const AddContactScreen()),
+                          );
+                          if (newContact != null && mounted) {
+                            setState(() {
+                              _selectedContact = newContact;
+                            });
+                          }
+                        },
+                        icon: const Icon(Icons.add),
+                        label: const Text('Add New'),
+                      ),
+                    ],
                   ),
                 ),
                 Expanded(
                   child: contactsAsync.when(
                     data: (contacts) {
-                      if (contacts.isEmpty) {
-                        return Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(Icons.person_off_outlined,
-                                  size: 48, color: Colors.grey),
-                              const SizedBox(height: 16),
-                              const Text('No contacts found'),
-                              TextButton(
-                                onPressed: () {
-                                  // TODO: Add contact navigation
-                                  Navigator.pop(context);
-                                },
-                                child: const Text('Add Contact in Settings'),
-                              ),
-                            ],
-                          ),
-                        );
-                      }
                       return ListView.builder(
                         controller: scrollController,
                         itemCount: contacts.length,

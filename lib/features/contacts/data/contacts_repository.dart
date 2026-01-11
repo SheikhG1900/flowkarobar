@@ -47,6 +47,13 @@ class ContactsRepository {
         .getSingleOrNull();
   }
 
+  /// Watch contact by ID (reactive)
+  Stream<Contact?> watchContactById(int id) {
+    return (_database.select(_database.contacts)
+          ..where((c) => c.id.equals(id)))
+        .watchSingleOrNull();
+  }
+
   /// Get contact by phone number
   Future<Contact?> getContactByPhone(String phone) {
     return (_database.select(_database.contacts)
@@ -254,6 +261,61 @@ class ContactsRepository {
       totalReceivable: totalReceivable,
       totalPayable: totalPayable,
     );
+  }
+
+  /// Watch contact statistics (reactive version)
+  Stream<ContactStatistics> watchContactStatistics(int contactId) {
+    return watchContactById(contactId).asyncMap((contact) async {
+      if (contact == null) {
+        throw Exception('Contact not found');
+      }
+
+      // Get transactions count
+      final transactionsCount = await (_database.selectOnly(_database.transactions)
+            ..addColumns([_database.transactions.id.count()])
+            ..where(_database.transactions.contactId.equals(contactId)))
+          .getSingle()
+          .then((row) => row.read(_database.transactions.id.count()) ?? 0);
+
+      // Get receivables count
+      final receivablesCount = await (_database.selectOnly(_database.receivables)
+            ..addColumns([_database.receivables.id.count()])
+            ..where(_database.receivables.contactId.equals(contactId)))
+          .getSingle()
+          .then((row) => row.read(_database.receivables.id.count()) ?? 0);
+
+      // Get payables count
+      final payablesCount = await (_database.selectOnly(_database.payables)
+            ..addColumns([_database.payables.id.count()])
+            ..where(_database.payables.contactId.equals(contactId)))
+          .getSingle()
+          .then((row) => row.read(_database.payables.id.count()) ?? 0);
+
+      // Get total receivable amount
+      final totalReceivable = await (_database.selectOnly(_database.receivables)
+            ..addColumns([_database.receivables.amount.sum()])
+            ..where(_database.receivables.contactId.equals(contactId))
+            ..where(_database.receivables.status.equals('PENDING')))
+          .getSingle()
+          .then((row) => row.read(_database.receivables.amount.sum()) ?? 0.0);
+
+      // Get total payable amount
+      final totalPayable = await (_database.selectOnly(_database.payables)
+            ..addColumns([_database.payables.amount.sum()])
+            ..where(_database.payables.contactId.equals(contactId))
+            ..where(_database.payables.status.equals('PENDING')))
+          .getSingle()
+          .then((row) => row.read(_database.payables.amount.sum()) ?? 0.0);
+
+      return ContactStatistics(
+        contact: contact,
+        transactionsCount: transactionsCount,
+        receivablesCount: receivablesCount,
+        payablesCount: payablesCount,
+        totalReceivable: totalReceivable,
+        totalPayable: totalPayable,
+      );
+    });
   }
 }
 

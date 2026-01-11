@@ -34,21 +34,23 @@ class PayableDetailsDialog extends ConsumerWidget {
             icon: const Icon(Icons.share),
             onPressed: () => _sharePayable(context, payable, contact),
           ),
-          // Edit button
-          IconButton(
-            icon: const Icon(Icons.edit),
-            onPressed: () {
-              // TODO: Navigate to edit payable screen
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Edit feature coming soon')),
-              );
-            },
-          ),
-          // Delete button
-          IconButton(
-            icon: const Icon(Icons.delete),
-            onPressed: () => _deletePayable(context, ref, payable.id),
-          ),
+          // Edit button (hide if paid)
+          if (payable.status != 'PAID')
+            IconButton(
+              icon: const Icon(Icons.edit),
+              onPressed: () {
+                // TODO: Navigate to edit payable screen
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Edit feature coming soon')),
+                );
+              },
+            ),
+          // Delete button (hide if paid)
+          if (payable.status != 'PAID')
+            IconButton(
+              icon: const Icon(Icons.delete),
+              onPressed: () => _deletePayable(context, ref, payable.id),
+            ),
         ],
       ),
       body: SingleChildScrollView(

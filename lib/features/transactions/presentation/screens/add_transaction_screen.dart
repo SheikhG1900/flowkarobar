@@ -7,6 +7,7 @@ import 'package:flowpaisa/features/transactions/presentation/providers/transacti
 import 'package:flowpaisa/features/categories/presentation/providers/categories_provider.dart';
 import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
 import 'package:flowpaisa/features/categories/presentation/screens/add_category_screen.dart';
+import 'package:flowpaisa/features/contacts/presentation/screens/add_contact_screen.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
@@ -457,22 +458,38 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
               children: [
                 Padding(
                   padding: const EdgeInsets.all(16),
-                  child: Text(
-                    'Select Contact',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Select Contact',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                      ),
+                      TextButton.icon(
+                        onPressed: () async {
+                          Navigator.pop(context); // Close picker
+                          final newContact = await Navigator.push<Contact>(
+                            context,
+                            MaterialPageRoute(builder: (_) => const AddContactScreen()),
+                          );
+                          if (newContact != null && mounted) {
+                            setState(() {
+                              _selectedContact = newContact;
+                              _selectedContactId = newContact.id;
+                            });
+                          }
+                        },
+                        icon: const Icon(Icons.add),
+                        label: const Text('Add New'),
+                      ),
+                    ],
                   ),
                 ),
                 Expanded(
                   child: contactsAsync.when(
                     data: (contactsWithUsage) {
-                      if (contactsWithUsage.isEmpty) {
-                        return const Center(
-                          child:
-                              Text('No contacts found. Add one from Settings.'),
-                        );
-                      }
                       return ListView.builder(
                         controller: scrollController,
                         itemCount: contactsWithUsage.length,

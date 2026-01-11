@@ -35,8 +35,8 @@ final contactsSearchProvider = StreamProvider.family<List<Contact>, String>((ref
   return repository.searchContactsByName(query);
 });
 
-// Stats provider
-final contactStatisticsProvider = FutureProvider.family<ContactStatistics, int>((ref, contactId) {
+// Stats provider (reactive)
+final contactStatisticsProvider = StreamProvider.family<ContactStatistics, int>((ref, contactId) {
   final repository = ref.watch(contactsRepositoryProvider);
-  return repository.getContactStatistics(contactId);
+  return repository.watchContactStatistics(contactId);
 });

@@ -34,21 +34,23 @@ class ReceivableDetailsDialog extends ConsumerWidget {
             icon: const Icon(Icons.share),
             onPressed: () => _shareReceivable(context, receivable, contact),
           ),
-          // Edit button
-          IconButton(
-            icon: const Icon(Icons.edit),
-            onPressed: () {
-              // TODO: Navigate to edit receivable screen
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Edit feature coming soon')),
-              );
-            },
-          ),
-          // Delete button
-          IconButton(
-            icon: const Icon(Icons.delete),
-            onPressed: () => _deleteReceivable(context, ref, receivable.id),
-          ),
+          // Edit button (hide if received)
+          if (receivable.status != 'RECEIVED')
+            IconButton(
+              icon: const Icon(Icons.edit),
+              onPressed: () {
+                // TODO: Navigate to edit receivable screen
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Edit feature coming soon')),
+                );
+              },
+            ),
+          // Delete button (hide if received)
+          if (receivable.status != 'RECEIVED')
+            IconButton(
+              icon: const Icon(Icons.delete),
+              onPressed: () => _deleteReceivable(context, ref, receivable.id),
+            ),
         ],
       ),
       body: SingleChildScrollView(

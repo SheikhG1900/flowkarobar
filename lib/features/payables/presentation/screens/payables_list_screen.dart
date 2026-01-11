@@ -143,11 +143,17 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
                   ),
                 ),
                 // Items
-                ...dateItems.map((item) => SwipeableListItem(
-                      onEdit: () {
+                ...dateItems.map((item) {
+                  // Restrict editing/deleting paid payables
+                  final isRestricted = item.payable.status == 'PAID';
+                  
+                  return SwipeableListItem(
+                      enableEdit: !isRestricted,
+                      enableDelete: !isRestricted,
+                      onEdit: isRestricted ? null : () {
                         // TODO: Navigate to edit screen
                       },
-                      onDelete: () async {
+                      onDelete: isRestricted ? null : () async {
                         await repository.deletePayable(item.payable.id);
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
@@ -159,7 +165,8 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
                         }
                       },
                       child: _buildPayableCard(item),
-                    )),
+                    );
+                }),
               ],
             );
           },

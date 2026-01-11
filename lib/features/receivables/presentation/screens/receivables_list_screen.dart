@@ -146,8 +146,13 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
                 ),
                 // Items
                 ...dateItems.map((item) {
+                  // Restrict editing/deleting received receivables
+                  final isRestricted = item.receivable.status == 'RECEIVED';
+                  
                   return SwipeableListItem(
-                    onEdit: () {
+                    enableEdit: !isRestricted,
+                    enableDelete: !isRestricted,
+                    onEdit: isRestricted ? null : () {
                       // TODO: Navigate to edit receivable screen
                       // Navigator.push(
                       //   context,
@@ -156,7 +161,7 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
                       //   ),
                       // );
                     },
-                    onDelete: () async {
+                    onDelete: isRestricted ? null : () async {
                       final repository = ref.read(receivablesRepositoryProvider);
                       await repository.deleteReceivable(item.receivable.id);
                       if (context.mounted) {

@@ -79,6 +79,8 @@ class _AddContactScreenState extends ConsumerState<AddContactScreen> {
           ? null
           : _notesController.text.trim();
 
+      Contact? createdOrUpdatedContact;
+      
       if (widget.contactToEdit != null) {
         // Update existing
         final updatedContact = widget.contactToEdit!.copyWith(
@@ -88,9 +90,10 @@ class _AddContactScreenState extends ConsumerState<AddContactScreen> {
           notes: drift.Value(notes),
         );
         await repository.updateContact(updatedContact);
+        createdOrUpdatedContact = updatedContact;
       } else {
         // Create new
-        await repository.createContact(
+        final contactId = await repository.createContact(
           ContactsCompanion(
             name: drift.Value(name),
             phone: drift.Value(phone),
@@ -98,10 +101,12 @@ class _AddContactScreenState extends ConsumerState<AddContactScreen> {
             notes: drift.Value(notes),
           ),
         );
+        // Get the created contact to return it
+        createdOrUpdatedContact = await repository.getContactById(contactId);
       }
 
       if (mounted) {
-        Navigator.pop(context);
+        Navigator.pop(context, createdOrUpdatedContact);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(widget.contactToEdit != null
