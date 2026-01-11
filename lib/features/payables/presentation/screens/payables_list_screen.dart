@@ -147,9 +147,12 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
                   // Restrict editing/deleting paid payables
                   final isRestricted = item.payable.status == 'PAID';
                   
-                  return SwipeableListItem(
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                    child: SwipeableListItem(
                       enableEdit: !isRestricted,
                       enableDelete: !isRestricted,
+                      borderRadius: 20,
                       onEdit: isRestricted ? null : () {
                         // TODO: Navigate to edit screen
                       },
@@ -165,7 +168,8 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
                         }
                       },
                       child: _buildPayableCard(item),
-                    );
+                    ),
+                  );
                 }),
               ],
             );
@@ -191,7 +195,6 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
     final amountFontSize = AmountFormatter.getFontSize(payable.amount);
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       decoration: BoxDecoration(
         color: theme.cardColor,
         borderRadius: BorderRadius.circular(20),

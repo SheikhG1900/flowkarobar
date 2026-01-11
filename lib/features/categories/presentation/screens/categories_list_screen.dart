@@ -6,6 +6,7 @@ import 'package:flowpaisa/features/categories/presentation/providers/categories_
 import 'package:flowpaisa/features/categories/presentation/screens/add_category_screen.dart';
 import 'package:flowpaisa/features/categories/presentation/screens/edit_category_screen.dart';
 import 'package:flowpaisa/shared/widgets/glass_card.dart';
+import 'package:flowpaisa/shared/widgets/swipeable_list_item.dart';
 
 class CategoriesListScreen extends ConsumerStatefulWidget {
   const CategoriesListScreen({super.key});
@@ -122,7 +123,7 @@ class _CategoryCard extends ConsumerWidget {
 
   const _CategoryCard({required this.category});
 
-  Future<void> _showDeleteDialog(BuildContext context, WidgetRef ref) async {
+  Future<void> _deleteCategory(BuildContext context, WidgetRef ref) async {
     final repository = ref.read(categoriesRepositoryProvider);
     
     // Check if category has transactions
@@ -130,69 +131,29 @@ class _CategoryCard extends ConsumerWidget {
     
     if (!context.mounted) return;
 
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Category'),
-        content: Text(
-          hasTransactions
-              ? 'This category has transactions associated with it. It will be hidden from lists but kept for historical data.'
-              : 'Are you sure you want to delete "${category.name}"? This action cannot be undone.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+    try {
+      await repository.softDeleteCategory(category.id);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              hasTransactions
+                  ? 'Category hidden successfully'
+                  : 'Category deleted successfully',
+            ),
+            backgroundColor: AppColors.success,
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(
-              foregroundColor: AppColors.error,
-            ),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true && context.mounted) {
-      try {
-        await repository.softDeleteCategory(category.id);
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                hasTransactions
-                    ? 'Category hidden successfully'
-                    : 'Category deleted successfully',
-              ),
-              backgroundColor: AppColors.success,
-            ),
-          );
-        }
-      } catch (e) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Error: ${e.toString()}'),
-              backgroundColor: AppColors.error,
-            ),
-          );
-        }
+        );
       }
-    }
-  }
-
-  Future<void> _editCategory(BuildContext context) async {
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => EditCategoryScreen(category: category),
-      ),
-    );
-
-    if (result == true && context.mounted) {
-      // Category was updated, list will auto-refresh via provider
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
     }
   }
 
@@ -206,23 +167,24 @@ class _CategoryCard extends ConsumerWidget {
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
-      child: Dismissible(
-        key: Key('category_${category.id}'),
-        direction: category.isDefault ? DismissDirection.none : DismissDirection.endToStart,
-        confirmDismiss: (direction) async {
-          await _showDeleteDialog(context, ref);
-          return false; // Don't auto-dismiss, we handle it manually
+      child: SwipeableListItem(
+        enableEdit: true,
+        enableDelete: !category.isDefault,
+        editBackgroundColor: color,
+        deleteBackgroundColor: AppColors.error,
+        borderRadius: 16,
+        backgroundMargin: const EdgeInsets.only(bottom: 12),
+        onEdit: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => EditCategoryScreen(category: category),
+            ),
+          );
         },
-        background: Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          decoration: BoxDecoration(
-            color: AppColors.error,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          alignment: Alignment.centerRight,
-          padding: const EdgeInsets.only(right: 20),
-          child: const Icon(Icons.delete, color: Colors.white),
-        ),
+        onDelete: category.isDefault ? null : () async {
+          await _deleteCategory(context, ref);
+        },
         child: GlassCard(
           padding: const EdgeInsets.all(16),
           child: Row(
@@ -263,23 +225,6 @@ class _CategoryCard extends ConsumerWidget {
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
-                ),
-              const SizedBox(width: 8),
-              // Edit button
-              IconButton(
-                icon: const Icon(Icons.edit_outlined),
-                onPressed: () => _editCategory(context),
-                tooltip: 'Edit',
-                iconSize: 20,
-              ),
-              // Delete button (only for non-default categories)
-              if (!category.isDefault)
-                IconButton(
-                  icon: const Icon(Icons.delete_outline),
-                  onPressed: () => _showDeleteDialog(context, ref),
-                  tooltip: 'Delete',
-                  iconSize: 20,
-                  color: AppColors.error,
                 ),
             ],
           ),

@@ -15,6 +15,8 @@ class SwipeableListItem extends StatelessWidget {
   final IconData deleteIcon;
   final String editLabel;
   final String deleteLabel;
+  final double borderRadius;
+  final EdgeInsetsGeometry? backgroundMargin;
 
   const SwipeableListItem({
     super.key,
@@ -29,6 +31,8 @@ class SwipeableListItem extends StatelessWidget {
     this.deleteIcon = Icons.delete,
     this.editLabel = 'Edit',
     this.deleteLabel = 'Delete',
+    this.borderRadius = 16.0,
+    this.backgroundMargin,
   });
 
   @override
@@ -69,62 +73,76 @@ class SwipeableListItem extends StatelessWidget {
         return false;
       },
       background: enableEdit
-          ? Container(
-              alignment: Alignment.centerLeft,
-              padding: const EdgeInsets.only(left: 20),
-              color: editBackgroundColor.withValues(alpha: 0.15),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    editIcon,
-                    color: Theme.of(context).brightness == Brightness.dark
-                        ? Colors.white
-                        : editBackgroundColor,
-                    size: 28,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    editLabel,
-                    style: TextStyle(
+          ? Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Container(
+                alignment: Alignment.centerLeft,
+                margin: backgroundMargin,
+                padding: const EdgeInsets.only(left: 20),
+                decoration: BoxDecoration(
+                  color: editBackgroundColor.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(borderRadius),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      editIcon,
                       color: Theme.of(context).brightness == Brightness.dark
                           ? Colors.white
                           : editBackgroundColor,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 12,
+                      size: 28,
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 4),
+                    Text(
+                      editLabel,
+                      style: TextStyle(
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white
+                            : editBackgroundColor,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             )
           : null,
       secondaryBackground: enableDelete
-          ? Container(
-              alignment: Alignment.centerRight,
-              padding: const EdgeInsets.only(right: 20),
-              color: deleteBackgroundColor.withValues(alpha: 0.15),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    deleteIcon,
-                    color: Theme.of(context).brightness == Brightness.dark
-                        ? Colors.white
-                        : deleteBackgroundColor,
-                    size: 28,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    deleteLabel,
-                    style: TextStyle(
+          ? Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Container(
+                alignment: Alignment.centerRight,
+                margin: backgroundMargin,
+                padding: const EdgeInsets.only(right: 20),
+                decoration: BoxDecoration(
+                  color: deleteBackgroundColor.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(borderRadius),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      deleteIcon,
                       color: Theme.of(context).brightness == Brightness.dark
                           ? Colors.white
                           : deleteBackgroundColor,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 12,
+                      size: 28,
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 4),
+                    Text(
+                      deleteLabel,
+                      style: TextStyle(
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white
+                            : deleteBackgroundColor,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             )
           : null,

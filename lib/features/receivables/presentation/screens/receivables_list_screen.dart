@@ -149,31 +149,35 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
                   // Restrict editing/deleting received receivables
                   final isRestricted = item.receivable.status == 'RECEIVED';
                   
-                  return SwipeableListItem(
-                    enableEdit: !isRestricted,
-                    enableDelete: !isRestricted,
-                    onEdit: isRestricted ? null : () {
-                      // TODO: Navigate to edit receivable screen
-                      // Navigator.push(
-                      //   context,
-                      //   MaterialPageRoute(
-                      //     builder: (context) => EditReceivableScreen(receivableId: item.receivable.id),
-                      //   ),
-                      // );
-                    },
-                    onDelete: isRestricted ? null : () async {
-                      final repository = ref.read(receivablesRepositoryProvider);
-                      await repository.deleteReceivable(item.receivable.id);
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Receivable deleted'),
-                            backgroundColor: Colors.green,
-                          ),
-                        );
-                      }
-                    },
-                    child: _buildReceivableCard(item),
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                    child: SwipeableListItem(
+                      enableEdit: !isRestricted,
+                      enableDelete: !isRestricted,
+                      borderRadius: 20,
+                      onEdit: isRestricted ? null : () {
+                        // TODO: Navigate to edit receivable screen
+                        // Navigator.push(
+                        //   context,
+                        //   MaterialPageRoute(
+                        //     builder: (context) => EditReceivableScreen(receivableId: item.receivable.id),
+                        //   ),
+                        // );
+                      },
+                      onDelete: isRestricted ? null : () async {
+                        final repository = ref.read(receivablesRepositoryProvider);
+                        await repository.deleteReceivable(item.receivable.id);
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Receivable deleted'),
+                              backgroundColor: Colors.green,
+                            ),
+                          );
+                        }
+                      },
+                      child: _buildReceivableCard(item),
+                    ),
                   );
                 }),
               ],
@@ -200,7 +204,6 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
     final amountFontSize = AmountFormatter.getFontSize(receivable.amount);
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       decoration: BoxDecoration(
         color: theme.cardColor,
         borderRadius: BorderRadius.circular(20),
