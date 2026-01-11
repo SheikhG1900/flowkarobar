@@ -437,8 +437,8 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     );
   }
 
-  void _showContactPicker() {
-    showModalBottomSheet(
+  Future<Contact?> _showContactPicker() async {
+    return await showModalBottomSheet<Contact>(
       context: context,
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       shape: const RoundedRectangleBorder(
@@ -470,16 +470,13 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                       ),
                       TextButton.icon(
                         onPressed: () async {
-                          Navigator.pop(context); // Close picker
                           final newContact = await Navigator.push<Contact>(
                             context,
-                            MaterialPageRoute(builder: (_) => const AddContactScreen()),
+                            MaterialPageRoute(
+                                builder: (_) => const AddContactScreen()),
                           );
-                          if (newContact != null && mounted) {
-                            setState(() {
-                              _selectedContact = newContact;
-                              _selectedContactId = newContact.id;
-                            });
+                          if (newContact != null && context.mounted) {
+                            Navigator.pop(context, newContact);
                           }
                         },
                         icon: const Icon(Icons.add),
@@ -554,11 +551,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                               ],
                             ),
                             onTap: () {
-                              setState(() {
-                                _selectedContact = contact;
-                                _selectedContactId = contact.id;
-                              });
-                              Navigator.pop(context);
+                              Navigator.pop(context, contact);
                             },
                             selected: _selectedContactId == contact.id,
                           );
@@ -578,20 +571,30 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     );
   }
 
-  void _handleRelationshipChange(String? value) {
-    setState(() {
-      if (_paidRelationship == value) {
+  Future<void> _handleRelationshipChange(String? value) async {
+    if (_paidRelationship == value) {
+      setState(() {
         _paidRelationship = null;
         _createLinkedEntry = false;
-      } else {
-        if (_selectedContact == null) {
-          _showContactPicker();
-          return;
+      });
+    } else {
+      if (_selectedContact == null) {
+        final contact = await _showContactPicker();
+        if (contact != null) {
+          setState(() {
+            _paidRelationship = value;
+            _createLinkedEntry = true;
+            _selectedContact = contact;
+            _selectedContactId = contact.id;
+          });
         }
-        _paidRelationship = value;
-        _createLinkedEntry = true;
+      } else {
+        setState(() {
+          _paidRelationship = value;
+          _createLinkedEntry = true;
+        });
       }
-    });
+    }
   }
 
   @override
@@ -839,7 +842,15 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
 
               // Contact Selector (Optional)
               InkWell(
-                onTap: _showContactPicker,
+                onTap: () async {
+                  final contact = await _showContactPicker();
+                  if (contact != null) {
+                    setState(() {
+                      _selectedContact = contact;
+                      _selectedContactId = contact.id;
+                    });
+                  }
+                },
                 borderRadius: BorderRadius.circular(12),
                 child: Container(
                   padding: const EdgeInsets.all(16),
