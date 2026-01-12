@@ -1,3 +1,5 @@
+import 'dart:io';
+import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
@@ -69,6 +71,9 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
       return;
     }
 
+    // Flag to track if loading dialog is open
+    bool isLoadingDialogOpen = true;
+
     // Show loading
     showDialog(
       context: context,
@@ -80,40 +85,100 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
 
     try {
       final exportService = ref.read(exportServiceProvider);
-      final filePath = await exportService.exportTransactionsToCSV(
-        startDate: _startDate!,
-        endDate: _endDate!,
-      );
 
-      if (mounted) {
-        Navigator.pop(context); // Close loading
-
-        // Ask to share
-        final shouldShare = await showDialog<bool>(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Export Successful'),
-            content: Text('File saved to:\n$filePath\n\nWould you like to share it?'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text('Done'),
-              ),
-              FilledButton(
-                onPressed: () => Navigator.pop(context, true),
-                child: const Text('Share'),
-              ),
-            ],
-          ),
+      // Check for Desktop platforms
+      if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
+        // Generate content
+        final csvContent = await exportService.generateCSVContent(
+          startDate: _startDate!,
+          endDate: _endDate!,
         );
 
-        if (shouldShare == true) {
-          await exportService.shareCSVFile(filePath);
+        if (mounted) {
+          Navigator.pop(context); // Close loading
+          isLoadingDialogOpen = false;
+
+          // Ask for save location
+          final fileName =
+              'flowpaisa_export_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.csv';
+          final FileSaveLocation? result = await getSaveLocation(
+            suggestedName: fileName,
+            acceptedTypeGroups: [
+              const XTypeGroup(
+                label: 'CSV',
+                extensions: ['csv'],
+              ),
+            ],
+          );
+
+          if (result != null) {
+            final file = File(result.path);
+            await file.writeAsString(csvContent);
+
+            if (mounted) {
+              ToastUtils.showSuccessToast(
+                  context, 'Export saved to ${result.path}');
+            }
+          }
+        }
+      } else {
+        // Mobile behavior - Save to Cache by default
+        final filePath = await exportService.exportTransactionsToCSV(
+          startDate: _startDate!,
+          endDate: _endDate!,
+          useCache: true, // Use temporary storage
+        );
+
+        if (mounted) {
+          Navigator.pop(context); // Close loading
+          isLoadingDialogOpen = false;
+
+          // Ask to share
+          await showDialog<void>(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text('Export Successful'),
+              content:
+                  const Text('Your transaction history is ready to share.'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Done'),
+                ),
+                TextButton(
+                  onPressed: () async {
+                    try {
+                      await exportService.saveToDownloads(filePath);
+                      if (context.mounted) {
+                        ToastUtils.showSuccessToast(
+                            context, 'Saved to Downloads');
+                        Navigator.pop(context);
+                      }
+                    } catch (e) {
+                      if (context.mounted) {
+                        ToastUtils.showErrorToast(context, 'Error saving: $e');
+                      }
+                    }
+                  },
+                  child: const Text('Save Copy'),
+                ),
+                FilledButton(
+                  onPressed: () async {
+                    Navigator.pop(context);
+                    await exportService.shareCSVFile(filePath);
+                  },
+                  child: const Text('Share'),
+                ),
+              ],
+            ),
+          );
         }
       }
     } catch (e) {
       if (mounted) {
-        Navigator.pop(context); // Close loading
+        if (isLoadingDialogOpen) {
+          Navigator.pop(context);
+        }
         ToastUtils.showErrorToast(context, 'Error exporting: $e');
       }
     }
@@ -142,7 +207,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
     try {
       // Simulate PDF generation for now as we haven't implemented it fully
       await Future.delayed(const Duration(seconds: 1));
-      
+
       if (mounted) {
         Navigator.pop(context); // Close loading
         ToastUtils.showInfoToast(context, 'PDF Export coming soon!');
@@ -304,21 +369,23 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
                       if (!PremiumGate.isPremium(ref))
                         const Padding(
                           padding: EdgeInsets.only(top: 8, right: 8),
-                          child: Icon(Icons.lock, size: 16, color: Colors.white),
+                          child:
+                              Icon(Icons.lock, size: 16, color: Colors.white),
                         ),
                     ],
                   ),
                 ),
               ],
             ),
-            
+
             const SizedBox(height: 12),
 
             // Info Note
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                color: theme.colorScheme.surfaceContainerHighest
+                    .withValues(alpha: 0.5),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: theme.dividerColor.withValues(alpha: 0.2),

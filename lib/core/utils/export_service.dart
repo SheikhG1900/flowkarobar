@@ -10,8 +10,8 @@ class ExportService {
 
   ExportService(this._transactionsRepository);
 
-  // Export transactions to CSV
-  Future<String> exportTransactionsToCSV({
+  // Generate CSV content
+  Future<String> generateCSVContent({
     required DateTime startDate,
     required DateTime endDate,
   }) async {
@@ -39,10 +39,28 @@ class ExportService {
       }
 
       // Convert to CSV string
-      String csvString = const ListToCsvConverter().convert(csvData);
+      return const ListToCsvConverter().convert(csvData);
+    } catch (e) {
+      throw Exception('Error generating CSV: $e');
+    }
+  }
+
+  // Export transactions to CSV
+  Future<String> exportTransactionsToCSV({
+    required DateTime startDate,
+    required DateTime endDate,
+    bool useCache = false,
+  }) async {
+    try {
+      final csvString = await generateCSVContent(
+        startDate: startDate,
+        endDate: endDate,
+      );
 
       // Save to file
-      final directory = await getApplicationDocumentsDirectory();
+      final directory = await (useCache
+          ? getTemporaryDirectory()
+          : getApplicationDocumentsDirectory());
       final fileName =
           'flowpaisa_export_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.csv';
       final file = File('${directory.path}/$fileName');
@@ -51,6 +69,52 @@ class ExportService {
       return file.path;
     } catch (e) {
       throw Exception('Error exporting to CSV: $e');
+    }
+  }
+
+  // Save copy to Downloads
+  Future<void> saveToDownloads(String sourceFilePath) async {
+    try {
+      final sourceFile = File(sourceFilePath);
+      if (!await sourceFile.exists()) {
+        throw Exception('Source file not found');
+      }
+
+      // Handle Android scoped storage
+      Directory? downloadsDir;
+      if (Platform.isAndroid) {
+        downloadsDir = Directory('/storage/emulated/0/Download');
+        // Fallback if that path doesn't exist (unlikely on standard Android)
+        if (!await downloadsDir.exists()) {
+          downloadsDir = await getDownloadsDirectory();
+        }
+      } else {
+        downloadsDir = await getDownloadsDirectory();
+      }
+
+      if (downloadsDir == null) {
+        throw Exception('Downloads directory not available');
+      }
+
+      // Ensure directory exists
+      if (!await downloadsDir.exists()) {
+        await downloadsDir.create(recursive: true);
+      }
+
+      final fileName = sourceFilePath.split(Platform.pathSeparator).last;
+      String newPath = '${downloadsDir.path}/$fileName';
+      
+      // Handle duplicates
+      int counter = 1;
+      while (await File(newPath).exists()) {
+        final name = fileName.replaceAll('.csv', '');
+        newPath = '${downloadsDir.path}/${name}_$counter.csv';
+        counter++;
+      }
+
+      await sourceFile.copy(newPath);
+    } catch (e) {
+      throw Exception('Error saving to downloads: $e');
     }
   }
 
