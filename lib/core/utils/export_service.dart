@@ -16,9 +16,9 @@ class ExportService {
     required DateTime endDate,
   }) async {
     try {
-      // Get transactions in date range
-      final transactions = await _transactionsRepository
-          .getTransactionsByDateRange(startDate, endDate);
+      // Get transactions in date range with details
+      final transactionsWithDetails = await _transactionsRepository
+          .getTransactionsWithDetailsByDateRange(startDate, endDate);
 
       // Create CSV data
       List<List<dynamic>> csvData = [
@@ -27,14 +27,35 @@ class ExportService {
       ];
 
       // Add transaction rows
-      for (var transaction in transactions) {
+      for (var item in transactionsWithDetails) {
+        final t = item.transaction;
+        
+        // Filter out inactive transactions (unsettled linked entries)
+        bool include = true;
+        
+        // Exclude "Paid By" expenses (linked Payable) that are 'PENDING'
+        if (t.type == 'EXPENSE' && t.linkedPayableId != null) {
+          if (item.linkedPayable?.status != 'PAID') {
+            include = false;
+          }
+        }
+        
+        // Exclude "Will Receive" incomes (linked Receivable) that are 'PENDING'
+        if (t.type == 'INCOME' && t.linkedReceivableId != null) {
+          if (item.linkedReceivable?.status != 'RECEIVED') {
+            include = false;
+          }
+        }
+        
+        if (!include) continue;
+
         csvData.add([
-          DateFormat('dd/MM/yyyy').format(transaction.date),
-          transaction.type,
-          transaction.amount.toStringAsFixed(2),
-          transaction.categoryId?.toString() ?? '',
-          transaction.contactId?.toString() ?? '',
-          transaction.description ?? '',
+          DateFormat('dd/MM/yyyy').format(t.date),
+          t.type,
+          t.amount.toStringAsFixed(2),
+          item.category?.name ?? '', // Use name instead of ID
+          item.contact?.name ?? '',  // Use name instead of ID
+          t.description ?? '',
         ]);
       }
 

@@ -187,6 +187,46 @@ class TransactionsRepository {
     });
   }
 
+  // Get transactions with details by date range (Future)
+  Future<List<TransactionWithDetails>> getTransactionsWithDetailsByDateRange(
+    DateTime start,
+    DateTime end,
+  ) {
+    final query = _database.select(_database.transactions).join([
+      leftOuterJoin(
+        _database.categories,
+        _database.categories.id.equalsExp(_database.transactions.categoryId),
+      ),
+      leftOuterJoin(
+        _database.contacts,
+        _database.contacts.id.equalsExp(_database.transactions.contactId),
+      ),
+      leftOuterJoin(
+        _database.payables,
+        _database.payables.id.equalsExp(_database.transactions.linkedPayableId),
+      ),
+      leftOuterJoin(
+        _database.receivables,
+        _database.receivables.id.equalsExp(_database.transactions.linkedReceivableId),
+      ),
+    ]);
+
+    query.where(_database.transactions.date.isBetweenValues(start, end));
+    query.orderBy([OrderingTerm.desc(_database.transactions.date)]);
+
+    return query.get().then((rows) {
+      return rows.map((row) {
+        return TransactionWithDetails(
+          transaction: row.readTable(_database.transactions),
+          category: row.readTableOrNull(_database.categories),
+          contact: row.readTableOrNull(_database.contacts),
+          linkedPayable: row.readTableOrNull(_database.payables),
+          linkedReceivable: row.readTableOrNull(_database.receivables),
+        );
+      }).toList();
+    });
+  }
+
   // Update transaction (with companion for partial updates)
   Future<int> updateTransactionWithCompanion(int id, TransactionsCompanion companion) {
     return (_database.update(_database.transactions)
