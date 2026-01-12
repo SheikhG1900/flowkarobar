@@ -4,6 +4,7 @@ import 'package:drift/drift.dart' as drift;
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
+import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/currencies/presentation/providers/currencies_provider.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
 
@@ -64,21 +65,11 @@ class _AddCurrencyScreenState extends ConsumerState<AddCurrencyScreen> {
 
       if (mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Currency added successfully'),
-            backgroundColor: AppColors.success,
-          ),
-        );
+        ToastUtils.showSuccessToast(context, 'Currency added successfully');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: ${e.toString()}'),
-            backgroundColor: AppColors.error,
-          ),
-        );
+        ToastUtils.showErrorToast(context, 'Error: ${e.toString()}');
       }
     } finally {
       if (mounted) {

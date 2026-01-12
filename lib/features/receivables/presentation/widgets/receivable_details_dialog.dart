@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
+import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/receivables/domain/models.dart';
 import 'package:flowpaisa/features/receivables/presentation/providers/receivables_provider.dart';
 import 'package:flowpaisa/features/whatsapp/presentation/providers/whatsapp_provider.dart';
@@ -47,9 +48,7 @@ class ReceivableDetailsDialog extends ConsumerWidget {
               icon: const Icon(Icons.edit),
               onPressed: () {
                 // TODO: Navigate to edit receivable screen
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Edit feature coming soon')),
-                );
+                ToastUtils.showInfoToast(context, 'Edit feature coming soon');
               },
             ),
           // Delete button (hide if received)
@@ -458,21 +457,11 @@ ${receivable.dueDate != null ? 'Due Date: ${DateFormat.yMMMd().format(receivable
         
         if (context.mounted) {
           Navigator.pop(context);
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Receivable deleted successfully'),
-              backgroundColor: Colors.green,
-            ),
-          );
+          ToastUtils.showSuccessToast(context, 'Receivable deleted successfully');
         }
       } catch (e) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Error deleting receivable: ${e.toString()}'),
-              backgroundColor: Colors.red,
-            ),
-          );
+          ToastUtils.showErrorToast(context, 'Error deleting receivable: ${e.toString()}');
         }
       }
     }
@@ -485,21 +474,11 @@ ${receivable.dueDate != null ? 'Due Date: ${DateFormat.yMMMd().format(receivable
       
       if (context.mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Marked as received'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        ToastUtils.showSuccessToast(context, 'Marked as received');
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        ToastUtils.showErrorToast(context, 'Error: ${e.toString()}');
       }
     }
   }
@@ -512,12 +491,7 @@ ${receivable.dueDate != null ? 'Due Date: ${DateFormat.yMMMd().format(receivable
   ) async {
     final currency = ref.read(currentCurrencyProvider).value!;
     if (contact.phone == null || contact.phone.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No phone number available for this contact'),
-          backgroundColor: Colors.orange,
-        ),
-      );
+      ToastUtils.showWarningToast(context, 'No phone number available for this contact');
       return;
     }
 
@@ -537,21 +511,11 @@ Thank you!
       final success = await whatsAppService.sendMessage(cleanPhone, message);
       
       if (success && context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Opening WhatsApp...'),
-            backgroundColor: Color(0xFF25D366),
-          ),
-        );
+        ToastUtils.showSuccessToast(context, 'Opening WhatsApp...');
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        ToastUtils.showErrorToast(context, 'Error: ${e.toString()}');
       }
     }
   }

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
+import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/receivables/presentation/providers/receivables_provider.dart';
 import 'package:flowpaisa/features/receivables/presentation/screens/add_receivable_screen.dart';
 import 'package:flowpaisa/features/receivables/presentation/widgets/receivable_details_dialog.dart';
@@ -175,12 +176,7 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
                         final repository = ref.read(receivablesRepositoryProvider);
                         await repository.deleteReceivable(item.receivable.id);
                         if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Receivable deleted'),
-                              backgroundColor: Colors.green,
-                            ),
-                          );
+                          ToastUtils.showSuccessToast(context, 'Receivable deleted');
                         }
                       },
                       child: _buildReceivableCard(item, currency),

@@ -5,6 +5,7 @@ import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/features/transactions/domain/models.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transaction_service_provider.dart';
 import 'package:flowpaisa/features/transactions/presentation/screens/edit_transaction_screen.dart';
+import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/payables/presentation/providers/payables_provider.dart';
 import 'package:flowpaisa/features/receivables/presentation/providers/receivables_provider.dart';
 import 'package:flowpaisa/features/whatsapp/presentation/providers/whatsapp_provider.dart';
@@ -680,21 +681,11 @@ ${category != null ? 'Category: ${category.name}\n' : ''}${contact != null ? 'Co
 
         if (context.mounted) {
           Navigator.pop(context);
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Transaction deleted successfully'),
-              backgroundColor: Colors.green,
-            ),
-          );
+          ToastUtils.showSuccessToast(context, 'Transaction deleted successfully');
         }
       } catch (e) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Error deleting transaction: ${e.toString()}'),
-              backgroundColor: Colors.red,
-            ),
-          );
+          ToastUtils.showErrorToast(context, 'Error deleting transaction: ${e.toString()}');
         }
       }
     }
@@ -708,21 +699,11 @@ ${category != null ? 'Category: ${category.name}\n' : ''}${contact != null ? 'Co
 
       if (context.mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Marked as paid'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        ToastUtils.showSuccessToast(context, 'Marked as paid');
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        ToastUtils.showErrorToast(context, 'Error: ${e.toString()}');
       }
     }
   }
@@ -735,21 +716,11 @@ ${category != null ? 'Category: ${category.name}\n' : ''}${contact != null ? 'Co
 
       if (context.mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Marked as received'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        ToastUtils.showSuccessToast(context, 'Marked as received');
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        ToastUtils.showErrorToast(context, 'Error: ${e.toString()}');
       }
     }
   }
@@ -761,12 +732,7 @@ ${category != null ? 'Category: ${category.name}\n' : ''}${contact != null ? 'Co
     dynamic transaction,
   ) async {
     if (contact.phone == null || contact.phone.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No phone number available for this contact'),
-          backgroundColor: Colors.orange,
-        ),
-      );
+      ToastUtils.showWarningToast(context, 'No phone number available for this contact');
       return;
     }
 
@@ -790,21 +756,11 @@ Thank you!
       final success = await whatsAppService.sendMessage(cleanPhone, message);
 
       if (success && context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Opening WhatsApp...'),
-            backgroundColor: Color(0xFF25D366),
-          ),
-        );
+        ToastUtils.showSuccessToast(context, 'Opening WhatsApp...');
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        ToastUtils.showErrorToast(context, 'Error: ${e.toString()}');
       }
     }
   }

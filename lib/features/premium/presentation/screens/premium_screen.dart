@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
+import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/premium/domain/premium_provider.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
@@ -17,12 +18,7 @@ class PremiumScreen extends ConsumerWidget {
     // Listen for errors
     ref.listen(premiumProvider, (previous, next) {
       if (next.error != null && next.error != previous?.error) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(next.error!),
-            backgroundColor: Colors.red,
-          ),
-        );
+        ToastUtils.showErrorToast(context, next.error!);
       }
     });
 
@@ -30,12 +26,7 @@ class PremiumScreen extends ConsumerWidget {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
           ref.read(premiumProvider.notifier).togglePremium();
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Toggled Debug Mode'),
-              duration: Duration(seconds: 1),
-            ),
-          );
+          ToastUtils.showInfoToast(context, 'Toggled Debug Mode');
         },
         label: const Text('DEBUG: Toggle Mode'),
         icon: const Icon(Icons.developer_mode),

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:drift/drift.dart' as drift;
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
+import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/payables/presentation/providers/payables_provider.dart';
 import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
 import 'package:flowpaisa/features/contacts/presentation/screens/add_contact_screen.dart';
@@ -57,12 +58,7 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
     }
 
     if (_selectedContactId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select a contact'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      ToastUtils.showErrorToast(context, 'Please select a contact');
       return;
     }
 
@@ -98,21 +94,11 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
 
       if (mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Payable added successfully'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        ToastUtils.showSuccessToast(context, 'Payable added successfully');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        ToastUtils.showErrorToast(context, 'Error: ${e.toString()}');
       }
     } finally {
       if (mounted) {

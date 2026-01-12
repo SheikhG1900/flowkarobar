@@ -4,6 +4,7 @@ import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
+import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/receipt_scan/domain/receipt_parser.dart';
 import 'package:flowpaisa/features/transactions/presentation/screens/add_transaction_screen.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
@@ -67,9 +68,7 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error picking image: $e')),
-        );
+        ToastUtils.showErrorToast(context, 'Error picking image: $e');
       }
     }
   }
@@ -100,9 +99,7 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
     } catch (e) {
       setState(() => _isScanning = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error scanning receipt: $e')),
-        );
+        ToastUtils.showErrorToast(context, 'Error scanning receipt: $e');
       }
     }
   }
@@ -110,9 +107,7 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
   void _proceedToAddTransaction() {
     final amount = double.tryParse(_amountController.text);
     if (amount == null || amount <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a valid amount')),
-      );
+      ToastUtils.showErrorToast(context, 'Please enter a valid amount');
       return;
     }
 

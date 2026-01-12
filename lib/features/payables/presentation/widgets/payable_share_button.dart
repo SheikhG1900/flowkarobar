@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/database/database.dart';
+import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/whatsapp/domain/deep_link_service.dart';
 import 'package:flowpaisa/features/whatsapp/domain/models/shared_data_models.dart';
 import 'package:flowpaisa/features/whatsapp/domain/whatsapp_service.dart';
@@ -128,21 +129,11 @@ class _ShareOptionsSheetState extends State<_ShareOptionsSheet> {
 
       if (context.mounted) {
         Navigator.of(context).pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Opening WhatsApp...'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        ToastUtils.showSuccessToast(context, 'Opening WhatsApp...');
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to share: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        ToastUtils.showErrorToast(context, 'Failed to share: $e');
       }
     } finally {
       if (mounted) {
@@ -180,21 +171,11 @@ class _ShareOptionsSheetState extends State<_ShareOptionsSheet> {
 
       if (context.mounted) {
         Navigator.of(context).pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Link copied to clipboard!'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        ToastUtils.showSuccessToast(context, 'Link copied to clipboard!');
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to copy link: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        ToastUtils.showErrorToast(context, 'Failed to copy link: $e');
       }
     } finally {
       if (mounted) {

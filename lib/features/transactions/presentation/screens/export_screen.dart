@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/export_service.dart';
+import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/transactions/data/transactions_repository.dart';
 import 'package:flowpaisa/shared/providers/database_provider.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
@@ -57,24 +58,14 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
     } catch (e) {
       setState(() => _isLoading = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error loading summary: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        ToastUtils.showErrorToast(context, 'Error loading summary: $e');
       }
     }
   }
 
   Future<void> _exportToCSV() async {
     if (_startDate == null || _endDate == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select date range'),
-          backgroundColor: Colors.orange,
-        ),
-      );
+      ToastUtils.showWarningToast(context, 'Please select date range');
       return;
     }
 
@@ -123,12 +114,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
     } catch (e) {
       if (mounted) {
         Navigator.pop(context); // Close loading
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error exporting: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        ToastUtils.showErrorToast(context, 'Error exporting: $e');
       }
     }
   }
@@ -140,12 +126,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
     }
 
     if (_startDate == null || _endDate == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select date range'),
-          backgroundColor: Colors.orange,
-        ),
-      );
+      ToastUtils.showWarningToast(context, 'Please select date range');
       return;
     }
 
@@ -164,22 +145,12 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
       
       if (mounted) {
         Navigator.pop(context); // Close loading
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('PDF Export coming soon!'),
-            backgroundColor: Colors.blue,
-          ),
-        );
+        ToastUtils.showInfoToast(context, 'PDF Export coming soon!');
       }
     } catch (e) {
       if (mounted) {
         Navigator.pop(context); // Close loading
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error exporting: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        ToastUtils.showErrorToast(context, 'Error exporting: $e');
       }
     }
   }

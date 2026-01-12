@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
+import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/currencies/presentation/providers/currencies_provider.dart';
 import 'package:flowpaisa/features/currencies/presentation/screens/add_currency_screen.dart';
 import 'package:flowpaisa/features/currencies/presentation/screens/edit_currency_screen.dart';
@@ -94,21 +95,11 @@ class _CurrencyCard extends ConsumerWidget {
     try {
       await repository.deleteCurrency(currency.id);
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Currency deleted successfully'),
-            backgroundColor: AppColors.success,
-          ),
-        );
+        ToastUtils.showSuccessToast(context, 'Currency deleted successfully');
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: ${e.toString()}'),
-            backgroundColor: AppColors.error,
-          ),
-        );
+        ToastUtils.showErrorToast(context, 'Error: ${e.toString()}');
       }
     }
   }
@@ -118,13 +109,7 @@ class _CurrencyCard extends ConsumerWidget {
     await notifier.setSelectedCurrency(currency.id);
 
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Currency set to ${currency.name}'),
-          backgroundColor: AppColors.success,
-          duration: const Duration(seconds: 2),
-        ),
-      );
+      ToastUtils.showSuccessToast(context, 'Currency set to ${currency.name}');
     }
   }
 

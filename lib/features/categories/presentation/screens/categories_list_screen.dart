@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
+import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/categories/presentation/providers/categories_provider.dart';
 import 'package:flowpaisa/features/categories/presentation/screens/add_category_screen.dart';
 import 'package:flowpaisa/features/categories/presentation/screens/edit_category_screen.dart';
@@ -134,25 +135,16 @@ class _CategoryCard extends ConsumerWidget {
     try {
       await repository.softDeleteCategory(category.id);
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              hasTransactions
-                  ? 'Category hidden successfully'
-                  : 'Category deleted successfully',
-            ),
-            backgroundColor: AppColors.success,
-          ),
+        ToastUtils.showSuccessToast(
+          context,
+          hasTransactions
+              ? 'Category hidden successfully'
+              : 'Category deleted successfully',
         );
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: ${e.toString()}'),
-            backgroundColor: AppColors.error,
-          ),
-        );
+        ToastUtils.showErrorToast(context, 'Error: ${e.toString()}');
       }
     }
   }

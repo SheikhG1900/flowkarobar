@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
+import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
 
@@ -56,22 +57,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
         if (mounted) {
           Navigator.pop(context); // Close loading
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Profile updated successfully'),
-              backgroundColor: Colors.green,
-            ),
-          );
+          ToastUtils.showSuccessToast(context, 'Profile updated successfully');
         }
       } catch (e) {
         if (mounted) {
           Navigator.pop(context); // Close loading
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Error: ${e.toString()}'),
-              backgroundColor: Colors.red,
-            ),
-          );
+          ToastUtils.showErrorToast(context, 'Error: ${e.toString()}');
         }
       }
     }
@@ -102,12 +93,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             onPressed: () {
               Navigator.pop(context);
               // TODO: Implement delete all data
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Data deletion will be implemented'),
-                  backgroundColor: Colors.orange,
-                ),
-              );
+              ToastUtils.showWarningToast(context, 'Data deletion will be implemented');
             },
             style: FilledButton.styleFrom(
               backgroundColor: Colors.red,
@@ -189,12 +175,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 child: TextButton(
                   onPressed: () {
                     // TODO: Implement photo upload
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Photo upload coming soon!'),
-                        duration: Duration(seconds: 2),
-                      ),
-                    );
+                    ToastUtils.showInfoToast(context, 'Photo upload coming soon!');
                   },
                   child: const Text('Change Photo'),
                 ),
@@ -279,12 +260,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                   onTap: () {
                     // TODO: Show currency selector
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Go to Settings > Currencies to change currency'),
-                        duration: Duration(seconds: 2),
-                      ),
-                    );
+                    ToastUtils.showInfoToast(context, 'Go to Settings > Currencies to change currency');
                   },
                 ),
               ),
@@ -316,12 +292,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                   onTap: () {
                     // TODO: Show date format selector
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Date format selection coming soon!'),
-                        duration: Duration(seconds: 2),
-                      ),
-                    );
+                    ToastUtils.showInfoToast(context, 'Date format selection coming soon!');
                   },
                 ),
               ),

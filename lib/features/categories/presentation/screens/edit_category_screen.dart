@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:drift/drift.dart' as drift;
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
+import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/categories/presentation/providers/categories_provider.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
 import 'package:flowpaisa/core/utils/icon_helper.dart';
@@ -116,29 +117,14 @@ class _EditCategoryScreenState extends ConsumerState<EditCategoryScreen> {
       if (mounted) {
         if (success) {
           Navigator.pop(context, true); // Return true to indicate success
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Category updated successfully'),
-              backgroundColor: AppColors.success,
-            ),
-          );
+          ToastUtils.showSuccessToast(context, 'Category updated successfully');
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Failed to update category'),
-              backgroundColor: AppColors.error,
-            ),
-          );
+          ToastUtils.showErrorToast(context, 'Failed to update category');
         }
       }
     } catch (e, stackTrace) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: ${e.toString()}'),
-            backgroundColor: AppColors.error,
-          ),
-        );
+        ToastUtils.showErrorToast(context, 'Error: ${e.toString()}');
         // Print error for debugging
         debugPrint('Error updating category: $e');
         debugPrint('Stack trace: $stackTrace');

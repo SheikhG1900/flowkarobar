@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
+import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transaction_service_provider.dart';
 import 'package:flowpaisa/features/categories/presentation/providers/categories_provider.dart';
 import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
@@ -103,11 +104,9 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     }
 
     if (_createLinkedEntry && _selectedContact == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select a contact for linked transaction'),
-          backgroundColor: Colors.red,
-        ),
+      ToastUtils.showErrorToast(
+        context,
+        'Please select a contact for linked transaction',
       );
       return;
     }
@@ -148,25 +147,16 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
       if (mounted) {
         // Pop to root to avoid stacking if coming from scanner
         Navigator.popUntil(context, (route) => route.isFirst);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              _createLinkedEntry
-                  ? 'Transaction and linked entry added successfully'
-                  : 'Transaction added successfully',
-            ),
-            backgroundColor: Colors.green,
-          ),
+        ToastUtils.showSuccessToast(
+          context,
+          _createLinkedEntry
+              ? 'Transaction and linked entry added successfully'
+              : 'Transaction added successfully',
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        ToastUtils.showErrorToast(context, 'Error: ${e.toString()}');
       }
     } finally {
       if (mounted) {

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
+import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transaction_service_provider.dart';
 import 'package:flowpaisa/features/categories/presentation/providers/categories_provider.dart';
 import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
@@ -70,11 +71,9 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
 
     // Validate contact for linked transactions
     if (_paidRelationship != null && _selectedContact == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select a contact for this relationship'),
-          backgroundColor: Colors.red,
-        ),
+      ToastUtils.showErrorToast(
+        context,
+        'Please select a contact for this relationship',
       );
       return;
     }
@@ -104,21 +103,11 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
 
       if (mounted) {
         Navigator.pop(context, true); // Return true to indicate success
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Transaction updated successfully'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        ToastUtils.showSuccessToast(context, 'Transaction updated successfully');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        ToastUtils.showErrorToast(context, 'Error: ${e.toString()}');
       }
     } finally {
       if (mounted) {
@@ -161,9 +150,10 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
       });
       
       if (_selectedContact == null && mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Please select a contact for this relationship')),
-          );
+        ToastUtils.showErrorToast(
+          context,
+          'Please select a contact for this relationship',
+        );
       }
     }
   }

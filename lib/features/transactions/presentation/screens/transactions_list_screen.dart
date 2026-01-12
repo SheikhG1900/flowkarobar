@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
+import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transaction_service_provider.dart';
 import 'package:flowpaisa/features/transactions/presentation/screens/add_transaction_screen.dart';
@@ -134,21 +135,11 @@ class TransactionsListScreen extends ConsumerWidget {
                           try {
                             await service.deleteTransaction(item.transaction.id);
                             if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Transaction deleted'),
-                                  backgroundColor: Colors.green,
-                                ),
-                              );
+                              ToastUtils.showSuccessToast(context, 'Transaction deleted');
                             }
                           } catch (e) {
                             if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Error deleting transaction: $e'),
-                                  backgroundColor: Colors.red,
-                                ),
-                              );
+                              ToastUtils.showErrorToast(context, 'Error deleting transaction: $e');
                             }
                           }
                         },

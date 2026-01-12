@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:drift/drift.dart' as drift;
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
+import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
@@ -107,23 +108,16 @@ class _AddContactScreenState extends ConsumerState<AddContactScreen> {
 
       if (mounted) {
         Navigator.pop(context, createdOrUpdatedContact);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(widget.contactToEdit != null
-                ? 'Contact updated successfully'
-                : 'Contact added successfully'),
-            backgroundColor: AppColors.success,
-          ),
+        ToastUtils.showSuccessToast(
+          context,
+          widget.contactToEdit != null
+              ? 'Contact updated successfully'
+              : 'Contact added successfully',
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: ${e.toString()}'),
-            backgroundColor: AppColors.error,
-          ),
-        );
+        ToastUtils.showErrorToast(context, 'Error: ${e.toString()}');
       }
     } finally {
       if (mounted) {

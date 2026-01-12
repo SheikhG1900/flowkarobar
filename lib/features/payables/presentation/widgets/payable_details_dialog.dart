@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
+import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/payables/domain/models.dart';
 import 'package:flowpaisa/features/payables/presentation/providers/payables_provider.dart';
 import 'package:flowpaisa/features/whatsapp/presentation/providers/whatsapp_provider.dart';
@@ -47,9 +48,7 @@ class PayableDetailsDialog extends ConsumerWidget {
               icon: const Icon(Icons.edit),
               onPressed: () {
                 // TODO: Navigate to edit payable screen
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Edit feature coming soon')),
-                );
+                ToastUtils.showInfoToast(context, 'Edit feature coming soon');
               },
             ),
           // Delete button (hide if paid)
@@ -458,21 +457,11 @@ ${payable.dueDate != null ? 'Due Date: ${DateFormat.yMMMd().format(payable.dueDa
         
         if (context.mounted) {
           Navigator.pop(context);
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Payable deleted successfully'),
-              backgroundColor: Colors.green,
-            ),
-          );
+          ToastUtils.showSuccessToast(context, 'Payable deleted successfully');
         }
       } catch (e) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Error deleting payable: ${e.toString()}'),
-              backgroundColor: Colors.red,
-            ),
-          );
+          ToastUtils.showErrorToast(context, 'Error deleting payable: ${e.toString()}');
         }
       }
     }
@@ -485,21 +474,11 @@ ${payable.dueDate != null ? 'Due Date: ${DateFormat.yMMMd().format(payable.dueDa
       
       if (context.mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Marked as paid'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        ToastUtils.showSuccessToast(context, 'Marked as paid');
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        ToastUtils.showErrorToast(context, 'Error: ${e.toString()}');
       }
     }
   }
@@ -512,12 +491,7 @@ ${payable.dueDate != null ? 'Due Date: ${DateFormat.yMMMd().format(payable.dueDa
   ) async {
     final currency = ref.read(currentCurrencyProvider).value!;
     if (contact.phone == null || contact.phone.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No phone number available for this contact'),
-          backgroundColor: Colors.orange,
-        ),
-      );
+      ToastUtils.showWarningToast(context, 'No phone number available for this contact');
       return;
     }
 
@@ -537,21 +511,11 @@ Thank you!
       final success = await whatsAppService.sendMessage(cleanPhone, message);
       
       if (success && context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Opening WhatsApp...'),
-            backgroundColor: Color(0xFF25D366),
-          ),
-        );
+        ToastUtils.showSuccessToast(context, 'Opening WhatsApp...');
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        ToastUtils.showErrorToast(context, 'Error: ${e.toString()}');
       }
     }
   }

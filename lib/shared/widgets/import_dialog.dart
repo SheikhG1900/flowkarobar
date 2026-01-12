@@ -7,6 +7,7 @@ import 'package:flowpaisa/features/payables/data/payables_repository.dart';
 import 'package:flowpaisa/features/transactions/data/transactions_repository.dart';
 import 'package:flowpaisa/features/contacts/data/contacts_repository.dart';
 import 'package:flowpaisa/shared/providers/database_provider.dart';
+import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:drift/drift.dart' as drift;
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
 
@@ -79,12 +80,7 @@ class _ImportDialogState extends ConsumerState<ImportDialog> {
 
       if (mounted) {
         Navigator.of(context).pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Successfully imported!'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        ToastUtils.showSuccessToast(context, 'Successfully imported!');
       }
     } catch (e) {
       setState(() {
