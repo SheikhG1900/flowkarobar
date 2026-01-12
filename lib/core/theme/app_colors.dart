@@ -9,38 +9,51 @@ class AppColors {
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
-  
+
   static const secondaryGradient = LinearGradient(
     colors: [Color(0xFF00B8FF), Color(0xFF0066FF)], // Electric Blue gradient
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
-  
+
   // Transaction Type Gradients
   static const incomeGradient = LinearGradient(
     colors: [Color(0xFF10B981), Color(0xFF059669)], // Green shades
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
-  
-  static const expenseGradient = LinearGradient(
-    colors: [Color(0xFFFF9A76), Color(0xFFFF7043)], // Warm Orange (softer, less shocking)
+
+  // Transaction Type Gradients
+  static const successGradient = LinearGradient(
+    colors: [
+      Color.fromARGB(255, 0, 123, 139),
+      Color.fromARGB(255, 1, 65, 100)
+    ], // Green shades
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
-  
+
+  static const expenseGradient = LinearGradient(
+    colors: [
+      Color(0xFFFF9A76),
+      Color(0xFFFF7043)
+    ], // Warm Orange (softer, less shocking)
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
   static const receivableGradient = LinearGradient(
     colors: [Color(0xFF22D3EE), Color(0xFF0EA5E9)], // Cyan to Sky Blue
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
-  
+
   static const payableGradient = LinearGradient(
     colors: [Color(0xFFFBBF24), Color(0xFFF59E0B)], // Yellow to Amber
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
-  
+
   // Solid Brand Colors (extracted from GermGuard palette)
   static const brightCyan = Color(0xFF00D4FF);
   static const deepBlue = Color(0xFF0088CC);
@@ -49,7 +62,7 @@ class AppColors {
   static const teal = Color(0xFF00B8A3);
   static const successGreen = Color(0xFF10B981);
   static const warningOrange = Color(0xFFFF9A76);
-  
+
   // Light Mode Colors
   static const lightBackground = Color(0xFFF8FAFC);
   static const lightCard = Colors.white;
@@ -59,7 +72,7 @@ class AppColors {
   static const lightTextSecondary = Color(0xFF64748B);
   static const lightBorder = Color(0xFFE2E8F0);
   static const lightDivider = Color(0xFFF1F5F9);
-  
+
   // Dark Mode Colors (Navy-based from Wortek)
   static const darkBackground = Color(0xFF0A0E27); // Deep navy
   static const darkCard = Color(0xFF1A1F3A); // Lighter navy
@@ -69,7 +82,7 @@ class AppColors {
   static const darkTextSecondary = Color(0xFF94A3B8);
   static const darkBorder = Color(0xFF334155);
   static const darkDivider = Color(0xFF1E293B);
-  
+
   // Semantic Colors
   static const success = Color(0xFF10B981);
   static const successLight = Color(0xFF6EE7B7);
@@ -79,13 +92,14 @@ class AppColors {
   static const warningLight = Color(0xFFFDE68A);
   static const info = Color(0xFF22D3EE);
   static const infoLight = Color(0xFF7DD3FC);
-  
+
   // Transaction Type Colors (for icons and indicators)
   static const incomeColor = Color(0xFF10B981);
-  static const expenseColor = Color(0xFFFF7043); // Warm orange instead of shocking pink
+  static const expenseColor =
+      Color(0xFFFF7043); // Warm orange instead of shocking pink
   static const receivableColor = Color(0xFF22D3EE); // Cyan
   static const payableColor = Color(0xFFFBBF24); // Amber
-  
+
   // Section Colors (for FABs, tabs, and quick actions)
   static const dashboardSectionColor = Color(0xFF00D4FF); // Bright Cyan
   static const transactionsSectionColor = Color(0xFF00B8FF); // Electric Blue
@@ -93,44 +107,44 @@ class AppColors {
   static const payablesSectionColor = Color(0xFFFBBF24); // Amber
   static const analyticsSectionColor = Color(0xFF8B5CF6); // Purple
   static const settingsSectionColor = Color(0xFF64748B); // Slate Gray
-  
+
   // Section Gradients
   static const dashboardSectionGradient = LinearGradient(
     colors: [Color(0xFF00D4FF), Color(0xFF0088CC)], // Primary gradient
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
-  
+
   static const transactionsSectionGradient = LinearGradient(
     colors: [Color(0xFF00D4FF), Color(0xFF0088CC)], // Primary gradient
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
-  
+
   static const receivablesSectionGradient = LinearGradient(
     colors: [Color(0xFF22D3EE), Color(0xFF0EA5E9)], // Cyan gradient
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
-  
+
   static const payablesSectionGradient = LinearGradient(
     colors: [Color(0xFFFBBF24), Color(0xFFF59E0B)], // Amber gradient
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
-  
+
   static const analyticsSectionGradient = LinearGradient(
     colors: [Color(0xFF8B5CF6), Color(0xFF7C3AED)], // Purple gradient
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
-  
+
   static const settingsSectionGradient = LinearGradient(
     colors: [Color(0xFF64748B), Color(0xFF475569)], // Gray gradient
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
-  
+
   // Gradient overlays for glassmorphism
   static LinearGradient glassGradient(bool isDark) {
     return LinearGradient(
@@ -147,7 +161,7 @@ class AppColors {
       end: Alignment.bottomRight,
     );
   }
-  
+
   // Shimmer gradient for loading states
   static const shimmerGradient = LinearGradient(
     colors: [
@@ -159,44 +173,48 @@ class AppColors {
     begin: Alignment(-1.0, 0.0),
     end: Alignment(1.0, 0.0),
   );
-  
+
   // Shadow Configuration
   static const double shadowBlurMultiplier = 1.0; // Adjustable multiplier
-  
+
   // Text Shadow Colors (Theme-aware)
-  static Color textShadowLight(double opacity) => Colors.black.withValues(alpha: opacity / 1.0);
-  static Color textShadowDark(double opacity) => Colors.black.withValues(alpha: opacity / 1.0);
-  
+  static Color textShadowLight(double opacity) =>
+      Colors.black.withValues(alpha: opacity / 1.0);
+  static Color textShadowDark(double opacity) =>
+      Colors.black.withValues(alpha: opacity / 1.0);
+
   // Default shadow configurations
   static Shadow textShadowSubtle(bool isDark) => Shadow(
-    color: isDark ? textShadowDark(0.15) : textShadowLight(0.1),
-    offset: const Offset(0, 1),
-    blurRadius: 2 * shadowBlurMultiplier,
-  );
-  
+        color: isDark ? textShadowDark(0.15) : textShadowLight(0.1),
+        offset: const Offset(0, 1),
+        blurRadius: 2 * shadowBlurMultiplier,
+      );
+
   static Shadow textShadowMedium(bool isDark) => Shadow(
-    color: isDark ? textShadowDark(0.25) : textShadowLight(0.2),
-    offset: const Offset(0, 2),
-    blurRadius: 4 * shadowBlurMultiplier,
-  );
-  
+        color: isDark ? textShadowDark(0.25) : textShadowLight(0.2),
+        offset: const Offset(0, 2),
+        blurRadius: 4 * shadowBlurMultiplier,
+      );
+
   static Shadow textShadowStrong(bool isDark) => Shadow(
-    color: isDark ? textShadowDark(0.35) : textShadowLight(0.3),
-    offset: const Offset(0, 3),
-    blurRadius: 8 * shadowBlurMultiplier,
-  );
-  
+        color: isDark ? textShadowDark(0.35) : textShadowLight(0.3),
+        offset: const Offset(0, 3),
+        blurRadius: 8 * shadowBlurMultiplier,
+      );
+
   // Container/Box Shadow Colors
-  static BoxShadow containerShadow(Color baseColor, {double opacity = 0.2, double blur = 8, double offsetY = 4}) => BoxShadow(
-    color: baseColor.withValues(alpha: opacity / 1.0),
-    blurRadius: blur * shadowBlurMultiplier,
-    offset: Offset(0, offsetY),
-  );
+  static BoxShadow containerShadow(Color baseColor,
+          {double opacity = 0.2, double blur = 8, double offsetY = 4}) =>
+      BoxShadow(
+        color: baseColor.withValues(alpha: opacity / 1.0),
+        blurRadius: blur * shadowBlurMultiplier,
+        offset: Offset(0, offsetY),
+      );
 
   // Generate a consistent color from a seed string (e.g. contact name)
   static Color getContactColor(String seed) {
     if (seed.isEmpty) return brightCyan;
-    
+
     final int hash = seed.hashCode;
     final List<Color> colors = [
       const Color(0xFFF44336), // Red
@@ -216,7 +234,7 @@ class AppColors {
       const Color(0xFF795548), // Brown
       const Color(0xFF607D8B), // Blue Grey
     ];
-    
+
     return colors[hash.abs() % colors.length];
   }
 
@@ -233,4 +251,3 @@ class AppColors {
     );
   }
 }
-

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
+import 'package:flowpaisa/core/utils/toast_utils.dart';
 
 class LanguageSelectorScreen extends ConsumerWidget {
   const LanguageSelectorScreen({super.key});
@@ -94,13 +95,7 @@ class LanguageSelectorScreen extends ConsumerWidget {
 
                   // Show success message
                   if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Language changed to ${lang['name']}'),
-                        backgroundColor: Colors.green,
-                        duration: const Duration(seconds: 2),
-                      ),
-                    );
+                    ToastUtils.showSuccessToast(context, 'Language changed to ${lang['name']}');
                   }
                 },
                 borderRadius: BorderRadius.circular(16),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
+import 'package:flowpaisa/core/utils/toast_utils.dart';
 
 class ThemeSelectorScreen extends ConsumerWidget {
   const ThemeSelectorScreen({super.key});
@@ -85,13 +86,7 @@ class ThemeSelectorScreen extends ConsumerWidget {
                 onTap: () async {
                   await themeModeNotifier.setThemeMode(mode);
                   if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Theme set to ${option['name']}'),
-                        backgroundColor: Colors.green,
-                        duration: const Duration(seconds: 2),
-                      ),
-                    );
+                    ToastUtils.showSuccessToast(context, 'Theme set to ${option['name']}');
                   }
                 },
                 borderRadius: BorderRadius.circular(20),

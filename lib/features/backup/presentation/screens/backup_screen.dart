@@ -8,6 +8,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/shared/widgets/premium_badge.dart';
 import 'dart:ui';
+import 'package:flowpaisa/core/utils/toast_utils.dart';
 
 class BackupScreen extends ConsumerStatefulWidget {
   const BackupScreen({super.key});
@@ -354,12 +355,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                 }
               } catch (e) {
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Restore failed: $e'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
+                  ToastUtils.showErrorToast(context, 'Restore failed: $e');
                 }
               }
             },

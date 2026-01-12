@@ -7,7 +7,7 @@ class ToastUtils {
       context,
       message,
       icon: Icons.check_circle_outline_rounded,
-      gradient: AppColors.incomeGradient,
+      gradient: AppColors.successGradient,
       textColor: Colors.white,
     );
   }
@@ -18,7 +18,10 @@ class ToastUtils {
       message,
       icon: Icons.error_outline_rounded,
       gradient: const LinearGradient(
-        colors: [Color(0xFFFF6B6B), Color(0xFFEF4444)],
+        colors: [
+          Color.fromARGB(255, 113, 0, 0),
+          Color.fromARGB(255, 228, 66, 66)
+        ],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       ),
@@ -59,8 +62,17 @@ class ToastUtils {
         content: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
-            gradient: gradient,
+            gradient: LinearGradient(
+              colors:
+                  gradient.colors.map((c) => c.withValues(alpha: 0.9)).toList(),
+              begin: gradient.begin,
+              end: gradient.end,
+            ),
             borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.9),
+              width: 1,
+            ),
             boxShadow: [
               BoxShadow(
                 color: gradient.colors.first.withValues(alpha: 0.3),
@@ -72,7 +84,17 @@ class ToastUtils {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, color: textColor, size: 24),
+              TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0.0, end: 1.0),
+                duration: const Duration(milliseconds: 5000),
+                curve: Curves.elasticOut,
+                builder: (context, value, child) {
+                  return Transform.scale(
+                    scale: value,
+                    child: Icon(icon, color: textColor, size: 24),
+                  );
+                },
+              ),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
