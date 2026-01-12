@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:country_flags/country_flags.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
@@ -18,19 +19,19 @@ class LanguageSelectorScreen extends ConsumerWidget {
         'code': 'en',
         'name': 'English',
         'nativeName': 'English',
-        'flag': '🇺🇸',
+        'countryCode': 'US',
       },
       {
         'code': 'hi',
         'name': 'Hindi',
         'nativeName': 'हिन्दी',
-        'flag': '🇮🇳',
+        'countryCode': 'IN',
       },
       {
         'code': 'ur',
         'name': 'Urdu',
         'nativeName': 'اردو',
-        'flag': '🇵🇰',
+        'countryCode': 'PK',
       },
     ];
 
@@ -95,7 +96,8 @@ class LanguageSelectorScreen extends ConsumerWidget {
 
                   // Show success message
                   if (context.mounted) {
-                    ToastUtils.showSuccessToast(context, 'Language changed to ${lang['name']}');
+                    ToastUtils.showSuccessToast(
+                        context, 'Language changed to ${lang['name']}');
                   }
                 },
                 borderRadius: BorderRadius.circular(16),
@@ -115,9 +117,16 @@ class LanguageSelectorScreen extends ConsumerWidget {
                           shape: BoxShape.circle,
                         ),
                         alignment: Alignment.center,
-                        child: Text(
-                          lang['flag']!,
-                          style: const TextStyle(fontSize: 32),
+                        child: Container(
+                          width: 32,
+                          height: 32,
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                          ),
+                          clipBehavior: Clip.antiAlias,
+                          child: CountryFlag.fromCountryCode(
+                            lang['countryCode']!,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 16),
