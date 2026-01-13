@@ -11,11 +11,14 @@ import 'package:flowpaisa/shared/widgets/gradient_button.dart';
 import 'package:intl/intl.dart';
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
+import 'package:printing/printing.dart';
+import 'package:pdf/pdf.dart';
+import 'package:path_provider/path_provider.dart';
 
 final exportServiceProvider = Provider<ExportService>((ref) {
   final db = ref.watch(databaseProvider);
   final transactionsRepository = TransactionsRepository(db);
-  return ExportService(transactionsRepository);
+  return ExportService(transactionsRepository, db);
 });
 
 class ExportScreen extends ConsumerStatefulWidget {
@@ -122,11 +125,12 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
           }
         }
       } else {
-        // Mobile behavior - Save to Cache by default
+        // Mobile behavior - Use cache directory (share_plus FileProvider supports cache)
         final filePath = await exportService.exportTransactionsToCSV(
           startDate: _startDate!,
           endDate: _endDate!,
-          useCache: true, // Use temporary storage
+          useCache:
+              true, // Use cache - share_plus FileProvider exposes this directory
         );
 
         if (mounted) {
@@ -205,16 +209,83 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
     );
 
     try {
-      // Simulate PDF generation for now as we haven't implemented it fully
-      await Future.delayed(const Duration(seconds: 1));
+      final exportService = ref.read(exportServiceProvider);
+
+      // Generate PDF bytes once
+      final pdfBytes = await exportService.exportTransactionsToPDF(
+        startDate: _startDate!,
+        endDate: _endDate!,
+        currencySymbol: currencySymbol,
+      );
+
+      // Save PDF to temporary file for save/share actions
+      final directory = await getTemporaryDirectory();
+      final fileName =
+          'flowpaisa_export_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.pdf';
+      final filePath = '${directory.path}/$fileName';
+      final file = File(filePath);
+      await file.writeAsBytes(pdfBytes);
 
       if (mounted) {
         Navigator.pop(context); // Close loading
-        ToastUtils.showInfoToast(context, 'PDF Export coming soon!');
+
+        // Show action dialog with three options
+        await showDialog<void>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('PDF Ready'),
+            content: const Text('Your PDF report is ready. Choose an action:'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () async {
+                  Navigator.pop(context);
+                  try {
+                    await exportService.saveToDownloads(filePath);
+                    if (context.mounted) {
+                      ToastUtils.showSuccessToast(
+                          context, 'Saved to Downloads');
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      ToastUtils.showErrorToast(context, 'Error saving: $e');
+                    }
+                  }
+                },
+                child: const Text('Save Copy'),
+              ),
+              TextButton(
+                onPressed: () async {
+                  Navigator.pop(context);
+                  try {
+                    await exportService.sharePDFFile(filePath);
+                  } catch (e) {
+                    if (context.mounted) {
+                      ToastUtils.showErrorToast(context, 'Error sharing: $e');
+                    }
+                  }
+                },
+                child: const Text('Share'),
+              ),
+              FilledButton(
+                onPressed: () async {
+                  Navigator.pop(context);
+                  await Printing.layoutPdf(
+                    onLayout: (PdfPageFormat format) async => pdfBytes,
+                  );
+                },
+                child: const Text('Preview'),
+              ),
+            ],
+          ),
+        );
       }
     } catch (e) {
       if (mounted) {
-        Navigator.pop(context); // Close loading
+        Navigator.pop(context); // Close loading if still open
         ToastUtils.showErrorToast(context, 'Error exporting: $e');
       }
     }
@@ -234,11 +305,32 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
   }
 
   Future<void> _selectEndDate() async {
+    final now = DateTime.now();
+    // Ensure firstDate is never after lastDate
+    // Use startDate if available and not after now, otherwise use a safe default
+    final firstDate = _startDate != null && !_startDate!.isAfter(now)
+        ? _startDate!
+        : DateTime(2000);
+
+    // Ensure initialDate is within the valid range [firstDate, lastDate]
+    DateTime initialDate;
+    if (_endDate != null) {
+      if (_endDate!.isAfter(now)) {
+        initialDate = now; // Clamp to lastDate if endDate is in the future
+      } else if (_endDate!.isBefore(firstDate)) {
+        initialDate = firstDate; // Clamp to firstDate if endDate is too early
+      } else {
+        initialDate = _endDate!;
+      }
+    } else {
+      initialDate = now;
+    }
+
     final picked = await showDatePicker(
       context: context,
-      initialDate: _endDate ?? DateTime.now(),
-      firstDate: _startDate ?? DateTime(2000),
-      lastDate: DateTime.now(),
+      initialDate: initialDate,
+      firstDate: firstDate,
+      lastDate: now,
     );
     if (picked != null) {
       setState(() => _endDate = picked);

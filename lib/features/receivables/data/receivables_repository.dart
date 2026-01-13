@@ -237,6 +237,31 @@ class ReceivablesRepository {
       ),
     );
   }
+
+  /// Get receivables with contact information by date range
+  Future<List<ReceivableWithContact>> getReceivablesWithContactsByDateRange(
+    DateTime start,
+    DateTime end,
+  ) {
+    final query = _database.select(_database.receivables).join([
+      leftOuterJoin(
+        _database.contacts,
+        _database.contacts.id.equalsExp(_database.receivables.contactId),
+      ),
+    ]);
+
+    query.where(_database.receivables.date.isBetweenValues(start, end));
+    query.orderBy([OrderingTerm.desc(_database.receivables.date)]);
+
+    return query.get().then((rows) {
+      return rows.map((row) {
+        return ReceivableWithContact(
+          receivable: row.readTable(_database.receivables),
+          contact: row.readTableOrNull(_database.contacts),
+        );
+      }).toList();
+    });
+  }
 }
 
 /// Data class for receivable with contact information

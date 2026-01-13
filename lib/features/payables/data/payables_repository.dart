@@ -235,6 +235,31 @@ class PayablesRepository {
       ),
     );
   }
+
+  /// Get payables with contact information by date range
+  Future<List<PayableWithContact>> getPayablesWithContactsByDateRange(
+    DateTime start,
+    DateTime end,
+  ) {
+    final query = _database.select(_database.payables).join([
+      leftOuterJoin(
+        _database.contacts,
+        _database.contacts.id.equalsExp(_database.payables.contactId),
+      ),
+    ]);
+
+    query.where(_database.payables.date.isBetweenValues(start, end));
+    query.orderBy([OrderingTerm.desc(_database.payables.date)]);
+
+    return query.get().then((rows) {
+      return rows.map((row) {
+        return PayableWithContact(
+          payable: row.readTable(_database.payables),
+          contact: row.readTableOrNull(_database.contacts),
+        );
+      }).toList();
+    });
+  }
 }
 
 /// Data class for payable with contact information
