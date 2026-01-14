@@ -7,6 +7,7 @@ import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/categories/presentation/providers/categories_provider.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
 import 'package:flowpaisa/core/utils/icon_helper.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/shared/widgets/limit_countdown_badge.dart';
 
@@ -169,12 +170,12 @@ class _AddCategoryScreenState extends ConsumerState<AddCategoryScreen> {
                   ButtonSegment(
                     value: 'EXPENSE',
                     label: Text('Expense'),
-                    icon: Icon(Icons.money_off),
+                    icon: Icon(Symbols.money_off),
                   ),
                   ButtonSegment(
                     value: 'INCOME',
                     label: Text('Income'),
-                    icon: Icon(Icons.attach_money),
+                    icon: Icon(Symbols.attach_money),
                   ),
                 ],
                 selected: {_selectedType},
@@ -222,8 +223,7 @@ class _AddCategoryScreenState extends ConsumerState<AddCategoryScreen> {
                   ),
                   alignment: Alignment.center,
                   child: Icon(
-                    IconData(int.parse(_selectedIcon),
-                        fontFamily: 'MaterialIcons'),
+                    IconHelper.getIconData(_selectedIcon),
                     color: _selectedColor,
                     size: 40,
                   ),

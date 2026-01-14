@@ -8,15 +8,19 @@ import 'package:flowpaisa/features/categories/presentation/screens/add_category_
 import 'package:flowpaisa/features/categories/presentation/screens/edit_category_screen.dart';
 import 'package:flowpaisa/shared/widgets/glass_card.dart';
 import 'package:flowpaisa/shared/widgets/swipeable_list_item.dart';
+import 'package:flowpaisa/core/utils/category_helper.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 class CategoriesListScreen extends ConsumerStatefulWidget {
   const CategoriesListScreen({super.key});
 
   @override
-  ConsumerState<CategoriesListScreen> createState() => _CategoriesListScreenState();
+  ConsumerState<CategoriesListScreen> createState() =>
+      _CategoriesListScreenState();
 }
 
-class _CategoriesListScreenState extends ConsumerState<CategoriesListScreen> with SingleTickerProviderStateMixin {
+class _CategoriesListScreenState extends ConsumerState<CategoriesListScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
   @override
@@ -38,7 +42,9 @@ class _CategoriesListScreenState extends ConsumerState<CategoriesListScreen> wit
         title: const Text('Categories'),
         bottom: TabBar(
           controller: _tabController,
-          indicatorColor: _tabController.index == 0 ? AppColors.expenseColor : AppColors.incomeColor,
+          indicatorColor: _tabController.index == 0
+              ? AppColors.expenseColor
+              : AppColors.incomeColor,
           tabs: const [
             Tab(text: 'Expense'),
             Tab(text: 'Income'),
@@ -64,7 +70,9 @@ class _CategoriesListScreenState extends ConsumerState<CategoriesListScreen> wit
             ),
           );
         },
-        backgroundColor: _tabController.index == 0 ? AppColors.expenseColor : AppColors.incomeColor,
+        backgroundColor: _tabController.index == 0
+            ? AppColors.expenseColor
+            : AppColors.incomeColor,
         child: const Icon(Icons.add, color: Colors.white),
       ),
     );
@@ -88,16 +96,19 @@ class _CategoryList extends ConsumerWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(
-                  Icons.category_outlined,
+                  Symbols.category,
                   size: 80,
-                  color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.5),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .outline
+                      .withValues(alpha: 0.5),
                 ),
                 const SizedBox(height: 16),
                 Text(
                   'No $type categories',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                 ),
               ],
             ),
@@ -126,10 +137,11 @@ class _CategoryCard extends ConsumerWidget {
 
   Future<void> _deleteCategory(BuildContext context, WidgetRef ref) async {
     final repository = ref.read(categoriesRepositoryProvider);
-    
+
     // Check if category has transactions
-    final hasTransactions = await repository.categoryHasTransactions(category.id);
-    
+    final hasTransactions =
+        await repository.categoryHasTransactions(category.id);
+
     if (!context.mounted) return;
 
     try {
@@ -153,8 +165,8 @@ class _CategoryCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final isExpense = category.type == 'EXPENSE';
-    final color = category.color != null 
-        ? Color(int.parse(category.color!.replaceAll('#', '0xFF'))) 
+    final color = category.color != null
+        ? Color(int.parse(category.color!.replaceAll('#', '0xFF')))
         : (isExpense ? AppColors.expenseColor : AppColors.incomeColor);
 
     return Padding(
@@ -174,9 +186,11 @@ class _CategoryCard extends ConsumerWidget {
             ),
           );
         },
-        onDelete: category.isDefault ? null : () async {
-          await _deleteCategory(context, ref);
-        },
+        onDelete: category.isDefault
+            ? null
+            : () async {
+                await _deleteCategory(context, ref);
+              },
         child: GlassCard(
           padding: const EdgeInsets.all(16),
           child: Row(
@@ -185,7 +199,8 @@ class _CategoryCard extends ConsumerWidget {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: color.withValues(alpha: theme.brightness == Brightness.dark ? 0.1 : 0.15),
+                  color: color.withValues(
+                      alpha: theme.brightness == Brightness.dark ? 0.1 : 0.15),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
                     color: color.withValues(alpha: 0.3),
@@ -193,7 +208,8 @@ class _CategoryCard extends ConsumerWidget {
                   ),
                 ),
                 alignment: Alignment.center,
-                child: _buildCategoryIcon(category.icon, color, isExpense),
+                child: CategoryHelper.buildCategoryIcon(
+                    category.icon, color, isExpense),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -206,7 +222,8 @@ class _CategoryCard extends ConsumerWidget {
               ),
               if (category.isDefault)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: theme.colorScheme.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(8),
@@ -224,31 +241,4 @@ class _CategoryCard extends ConsumerWidget {
       ),
     );
   }
-
-  Widget _buildCategoryIcon(String? iconString, Color color, bool isExpense) {
-    if (iconString == null) {
-      return Icon(
-        isExpense ? Icons.money_off : Icons.attach_money,
-        color: color,
-        size: 24,
-      );
-    }
-    
-    // Try to parse as integer (code point for IconData)
-    final int? codePoint = int.tryParse(iconString);
-    if (codePoint != null) {
-      return Icon(
-        IconData(codePoint, fontFamily: 'MaterialIcons'),
-        color: color,
-        size: 24,
-      );
-    }
-    
-    // Fallback to text (emoji) for legacy data
-    return Text(
-      iconString,
-      style: const TextStyle(fontSize: 24),
-    );
-  }
 }
-

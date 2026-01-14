@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
+import 'package:flowpaisa/core/utils/icon_helper.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:flowpaisa/features/payables/domain/models.dart';
 import 'package:flowpaisa/features/payables/presentation/providers/payables_provider.dart';
 import 'package:flowpaisa/features/whatsapp/presentation/providers/whatsapp_provider.dart';
@@ -361,9 +363,7 @@ class PayableDetailsDialog extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(
-                  category.icon != null
-                      ? IconData(int.parse(category.icon!), fontFamily: 'MaterialIcons')
-                      : Icons.category,
+                  IconHelper.getIconData(category.icon) ?? Symbols.category,
                   color: categoryColor,
                   size: 20,
                 ),

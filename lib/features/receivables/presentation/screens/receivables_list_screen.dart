@@ -10,6 +10,8 @@ import 'package:flowpaisa/features/receivables/presentation/widgets/receivable_d
 import 'package:flowpaisa/shared/widgets/swipeable_list_item.dart';
 import 'package:intl/intl.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
+import 'package:flowpaisa/core/utils/icon_helper.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 class ReceivablesListScreen extends ConsumerStatefulWidget {
   const ReceivablesListScreen({super.key});
@@ -306,9 +308,8 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
                             children: [
                               Icon(
                                 linkedCategory.icon != null
-                                    ? IconData(int.parse(linkedCategory.icon!),
-                                        fontFamily: 'MaterialIcons')
-                                    : Icons.category_outlined,
+                                    ? IconHelper.getIconData(linkedCategory.icon)
+                                    : Symbols.category,
                                 color: linkedCategory.color != null
                                     ? Color(int.parse(linkedCategory.color!
                                         .replaceAll('#', '0xFF')))

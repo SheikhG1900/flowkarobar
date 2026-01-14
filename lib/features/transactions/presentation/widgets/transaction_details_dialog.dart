@@ -1,3 +1,4 @@
+import 'package:flowpaisa/core/utils/icon_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
@@ -27,7 +28,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
     final currencyAsync = ref.watch(currentCurrencyProvider);
     final currency = currencyAsync.value;
     final transaction = item.transaction;
-    
+
     if (currency == null) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -316,8 +317,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
                       ),
                       child: Icon(
                         category != null && category.icon != null
-                            ? IconData(int.parse(category.icon!),
-                                fontFamily: 'MaterialIcons')
+                            ? IconHelper.getIconData(category.icon!)
                             : (isExpense
                                 ? Icons.arrow_circle_down
                                 : Icons.arrow_circle_up),
@@ -638,8 +638,8 @@ class TransactionDetailsDialog extends ConsumerWidget {
     }
   }
 
-  void _shareTransaction(BuildContext context, WidgetRef ref, dynamic transaction,
-      dynamic category, dynamic contact) {
+  void _shareTransaction(BuildContext context, WidgetRef ref,
+      dynamic transaction, dynamic category, dynamic contact) {
     final currency = ref.read(currentCurrencyProvider).value!;
     final isExpense = transaction.type == 'EXPENSE';
     final message = '''
@@ -681,11 +681,13 @@ ${category != null ? 'Category: ${category.name}\n' : ''}${contact != null ? 'Co
 
         if (context.mounted) {
           Navigator.pop(context);
-          ToastUtils.showSuccessToast(context, 'Transaction deleted successfully');
+          ToastUtils.showSuccessToast(
+              context, 'Transaction deleted successfully');
         }
       } catch (e) {
         if (context.mounted) {
-          ToastUtils.showErrorToast(context, 'Error deleting transaction: ${e.toString()}');
+          ToastUtils.showErrorToast(
+              context, 'Error deleting transaction: ${e.toString()}');
         }
       }
     }
@@ -732,7 +734,8 @@ ${category != null ? 'Category: ${category.name}\n' : ''}${contact != null ? 'Co
     dynamic transaction,
   ) async {
     if (contact.phone == null || contact.phone.isEmpty) {
-      ToastUtils.showWarningToast(context, 'No phone number available for this contact');
+      ToastUtils.showWarningToast(
+          context, 'No phone number available for this contact');
       return;
     }
 

@@ -12,6 +12,7 @@ import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/shared/widgets/swipeable_list_item.dart';
 import 'package:intl/intl.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
+import 'package:flowpaisa/core/utils/category_helper.dart';
 
 class TransactionsListScreen extends ConsumerWidget {
   const TransactionsListScreen({super.key});
@@ -268,7 +269,8 @@ class TransactionsListScreen extends ConsumerWidget {
             ),
           ),
           alignment: Alignment.center,
-          child: _buildCategoryIcon(category?.icon, displayColor, isExpense),
+          child: CategoryHelper.buildCategoryIcon(
+              category?.icon, displayColor, isExpense),
         ),
         title: Text(
           transaction.description ?? (isExpense ? 'Expense' : 'Income'),
@@ -437,31 +439,6 @@ class TransactionsListScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildCategoryIcon(String? iconString, Color color, bool isExpense) {
-    if (iconString == null) {
-      return Icon(
-        isExpense ? Icons.money_off : Icons.attach_money,
-        color: color,
-        size: 24,
-      );
-    }
-
-    // Try to parse as integer (code point for IconData)
-    final int? codePoint = int.tryParse(iconString);
-    if (codePoint != null) {
-      return Icon(
-        IconData(codePoint, fontFamily: 'MaterialIcons'),
-        color: color,
-        size: 24,
-      );
-    }
-
-    // Fallback to text (emoji)
-    return Text(
-      iconString,
-      style: const TextStyle(fontSize: 24),
-    );
-  }
 
   Color _getStatusColor(String relationship) {
     switch (relationship) {

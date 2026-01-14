@@ -37,6 +37,8 @@ import 'package:flowpaisa/shared/widgets/premium_badge.dart';
 import 'package:flowpaisa/shared/providers/shared_preferences_provider.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
+import 'package:flowpaisa/core/utils/category_helper.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
@@ -64,6 +66,10 @@ void main() async {
 
   // Pre-cache fonts for all languages
   await _initializeFonts();
+
+  // Force tree shaking for Material Symbols icons
+  // This ensures only used icons are included in the build
+  Symbols.forceCompileTimeTreeShaking();
 
   runApp(
     ProviderScope(
@@ -820,7 +826,7 @@ class _DashboardTab extends ConsumerWidget {
                     },
                   ),
                   _QuickActionButton(
-                    icon: Icons.account_balance_wallet_outlined,
+                    icon: Symbols.account_balance_wallet,
                     label: 'Receivables',
                     fontSizeMultiplier: 0.82,
                     gradient: AppColors.receivablesSectionGradient,
@@ -1000,7 +1006,7 @@ class _DashboardTab extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   alignment: Alignment.center,
-                  child: _buildCategoryIcon(
+                  child: CategoryHelper.buildCategoryIcon(
                       category?.icon, categoryColor, isExpense),
                 ),
                 title: Text(
@@ -1044,33 +1050,6 @@ class _DashboardTab extends ConsumerWidget {
     );
   }
 
-  Widget _buildCategoryIcon(String? iconString, Color color, bool isExpense) {
-    if (iconString == null) {
-      return Icon(
-        isExpense
-            ? Icons.shopping_bag_outlined
-            : Icons.account_balance_wallet_outlined,
-        color: color,
-        size: 24,
-      );
-    }
-
-    // Try to parse as integer (code point for IconData)
-    final int? codePoint = int.tryParse(iconString);
-    if (codePoint != null) {
-      return Icon(
-        IconData(codePoint, fontFamily: 'MaterialIcons'),
-        color: color,
-        size: 24,
-      );
-    }
-
-    // Fallback to text (emoji) for legacy data
-    return Text(
-      iconString,
-      style: const TextStyle(fontSize: 24),
-    );
-  }
 }
 
 class _QuickActionButton extends StatelessWidget {
@@ -1201,7 +1180,7 @@ class _SettingsTab extends ConsumerWidget {
             },
           ),
           ListTile(
-            leading: const Icon(Icons.category_outlined),
+            leading: const Icon(Symbols.category),
             title: const Text('Categories'),
             subtitle: const Text('Manage expense & income categories'),
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),

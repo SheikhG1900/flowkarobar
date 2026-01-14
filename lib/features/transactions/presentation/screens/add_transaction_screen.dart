@@ -14,6 +14,8 @@ import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/shared/widgets/limit_countdown_badge.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
+import 'package:flowpaisa/core/utils/icon_helper.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 class AddTransactionScreen extends ConsumerStatefulWidget {
   final double? initialAmount;
@@ -373,8 +375,12 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                                     color: color.withValues(alpha: 0.3)),
                               ),
                               alignment: Alignment.center,
-                              child: _buildCategoryIcon(category.icon,
-                                  color: color),
+                              child: Icon(
+                                IconHelper.getIconData(category.icon) ??
+                                    Symbols.category,
+                                color: color,
+                                size: 24,
+                              ),
                             ),
                             title: Text(category.name),
                             trailing: Row(
@@ -778,12 +784,14 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                               : null,
                         ),
                         alignment: Alignment.center,
-                        child: _buildCategoryIcon(
-                          _selectedCategory?.icon,
+                        child: Icon(
+                          IconHelper.getIconData(_selectedCategory?.icon) ??
+                              Symbols.category,
                           color: _selectedCategory?.color != null
                               ? Color(int.parse(_selectedCategory!.color!
                                   .replaceAll('#', '0xFF')))
-                              : null,
+                              : Theme.of(context).colorScheme.onSurfaceVariant,
+                          size: 24,
                         ),
                       ),
                       const SizedBox(width: 16),
@@ -1114,30 +1122,6 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildCategoryIcon(String? iconString, {Color? color}) {
-    if (iconString == null) {
-      return Icon(
-        Icons.category_outlined,
-        color: color ?? Theme.of(context).colorScheme.onSurfaceVariant,
-        size: 24,
-      );
-    }
-
-    final int? codePoint = int.tryParse(iconString);
-    if (codePoint != null) {
-      return Icon(
-        IconData(codePoint, fontFamily: 'MaterialIcons'),
-        color: color,
-        size: 24,
-      );
-    }
-
-    return Text(
-      iconString,
-      style: const TextStyle(fontSize: 20),
     );
   }
 }

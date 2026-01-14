@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:flutter/services.dart';
 import 'package:flowpaisa/core/utils/native_share.dart';
 import 'package:flowpaisa/features/transactions/data/transactions_repository.dart';
 import 'package:flowpaisa/features/payables/data/payables_repository.dart';
@@ -12,12 +13,33 @@ import 'package:csv/csv.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
+import 'package:drift/drift.dart' as drift;
 
 class ExportService {
   final TransactionsRepository _transactionsRepository;
   final AppDatabase _database;
+  static pw.Font? _cachedFont;
 
   ExportService(this._transactionsRepository, this._database);
+
+  // Load Material Icons font for PDF generation
+  // Using PdfGoogleFonts.materialIcons() to get the exact font Google expects for Material Icons codePoints
+  Future<pw.Font?> loadMaterialIconsFont() async {
+    if (_cachedFont != null) return _cachedFont;
+    try {
+      final data =
+          await rootBundle.load('assets/fonts/MaterialSymbolsOutlined.ttf');
+      _cachedFont = pw.Font.ttf(data);
+      // _cachedFont = await PdfGoogleFonts.materialIcons();
+      return _cachedFont;
+    } catch (e) {
+      // Return null if font file is not found
+      // This allows graceful fallback to colored circles
+      print('Warning: Could not load Material Icons font: $e');
+      return null;
+    }
+  }
 
   // Generate CSV content
   Future<String> generateCSVContent({
@@ -230,6 +252,7 @@ class ExportService {
     required DateTime startDate,
     required DateTime endDate,
     String? currencySymbol,
+    pw.Font? materialIconsFont,
   }) async {
     final payablesRepository = PayablesRepository(_database);
     final receivablesRepository = ReceivablesRepository(_database);
@@ -324,6 +347,37 @@ class ExportService {
         return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
       }
       return name[0].toUpperCase();
+    }
+
+    // Helper function to build category icon using pw.Icon widget
+    pw.Widget _buildCategoryIcon(
+        String? iconCodePoint, PdfColor color, pw.Font? font) {
+      // Try to parse icon codePoint and render with Material Icons font
+      if (font != null && iconCodePoint != null && iconCodePoint.isNotEmpty) {
+        final codePoint = int.tryParse(iconCodePoint);
+        if (codePoint != null) {
+          // Material Icons use private Unicode range 0xe000-0xefff
+          // Validate codePoint is in valid range
+          if (codePoint >= 0xe000 && codePoint <= 0xefff) {
+            // Use pw.Icon widget with pw.IconData for better icon rendering
+            return pw.Icon(
+              pw.IconData(codePoint),
+              font: font,
+              size: 12,
+              color: color,
+            );
+          }
+        }
+      }
+      // Fallback to colored circle if font is not available or codePoint is invalid
+      return pw.Container(
+        width: 12,
+        height: 12,
+        decoration: pw.BoxDecoration(
+          color: color,
+          shape: pw.BoxShape.circle,
+        ),
+      );
     }
 
     // Add pages
@@ -474,13 +528,10 @@ class ExportService {
                           padding: const pw.EdgeInsets.all(4),
                           child: pw.Row(
                             children: [
-                              pw.Container(
-                                width: 12,
-                                height: 12,
-                                decoration: pw.BoxDecoration(
-                                  color: categoryColor,
-                                  shape: pw.BoxShape.circle,
-                                ),
+                              _buildCategoryIcon(
+                                item.category?.icon,
+                                categoryColor,
+                                materialIconsFont,
                               ),
                               pw.SizedBox(width: 4),
                               pw.Expanded(
@@ -790,10 +841,14 @@ class ExportService {
     String? currencySymbol,
   }) async {
     try {
+      // Load Material Icons font
+      final materialIconsFont = await loadMaterialIconsFont();
+
       final pdf = await generatePDFDocument(
         startDate: startDate,
         endDate: endDate,
         currencySymbol: currencySymbol,
+        materialIconsFont: materialIconsFont,
       );
       return pdf.save();
     } catch (e) {
@@ -826,6 +881,169 @@ class ExportService {
       return file.path;
     } catch (e) {
       throw Exception('Error saving PDF: $e');
+    }
+  }
+
+  // Test PDF: Generate a PDF with all categories showing names, icons, and codePoint values
+  Future<Uint8List> generateTestCategoriesPDF() async {
+    try {
+      // Load Material Icons font
+      final materialIconsFont = await loadMaterialIconsFont();
+
+      // Fetch all categories
+      final categories = await (_database.select(_database.categories)
+            ..where((c) => c.isDeleted.equals(false))
+            ..orderBy([(c) => drift.OrderingTerm.asc(c.name)]))
+          .get();
+
+      // Helper function to convert hex color to PdfColor
+      PdfColor hexToPdfColor(String hex) {
+        hex = hex.replaceAll('#', '');
+        if (hex.length == 6) {
+          final r = int.parse(hex.substring(0, 2), radix: 16) / 255.0;
+          final g = int.parse(hex.substring(2, 4), radix: 16) / 255.0;
+          final b = int.parse(hex.substring(4, 6), radix: 16) / 255.0;
+          return PdfColor(r, g, b);
+        }
+        return PdfColors.black;
+      }
+
+      // Helper function to build category icon
+      pw.Widget buildCategoryIcon(
+          String? iconCodePoint, PdfColor color, pw.Font? font) {
+        if (font != null && iconCodePoint != null && iconCodePoint.isNotEmpty) {
+          final codePoint = int.tryParse(iconCodePoint);
+          if (codePoint != null) {
+            if (codePoint >= 0xe000 && codePoint <= 0xefff) {
+              return pw.Icon(
+                pw.IconData(codePoint),
+                font: font,
+                size: 20,
+                color: color,
+              );
+            }
+          }
+        }
+        // Fallback to colored circle
+        return pw.Container(
+          width: 20,
+          height: 20,
+          decoration: pw.BoxDecoration(
+            color: color,
+            shape: pw.BoxShape.circle,
+          ),
+        );
+      }
+
+      final pdf = pw.Document();
+
+      pdf.addPage(
+        pw.MultiPage(
+          pageFormat: PdfPageFormat.a4,
+          margin: const pw.EdgeInsets.all(40),
+          theme: materialIconsFont != null
+              ? pw.ThemeData.withFont(icons: materialIconsFont)
+              : null,
+          build: (pw.Context context) {
+            return [
+              // Header
+              pw.Header(
+                level: 0,
+                child: pw.Text(
+                  'Categories Test - Icons with CodePoints',
+                  style: pw.TextStyle(
+                    fontSize: 24,
+                    fontWeight: pw.FontWeight.bold,
+                  ),
+                ),
+              ),
+              pw.SizedBox(height: 20),
+
+              // Categories Table
+              pw.Table(
+                border: pw.TableBorder.all(color: PdfColors.grey300),
+                children: [
+                  // Header row
+                  pw.TableRow(
+                    decoration:
+                        const pw.BoxDecoration(color: PdfColors.grey200),
+                    children: [
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.all(8),
+                        child: pw.Text(
+                          'Icon',
+                          style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                        ),
+                      ),
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.all(8),
+                        child: pw.Text(
+                          'Name',
+                          style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                        ),
+                      ),
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.all(8),
+                        child: pw.Text(
+                          'Type',
+                          style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                        ),
+                      ),
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.all(8),
+                        child: pw.Text(
+                          'CodePoint',
+                          style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                        ),
+                      ),
+                    ],
+                  ),
+                  // Category rows
+                  ...categories.map((category) {
+                    final categoryColor = category.color != null
+                        ? hexToPdfColor(category.color!)
+                        : PdfColors.grey600;
+
+                    return pw.TableRow(
+                      children: [
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(8),
+                          child: pw.Center(
+                            child: buildCategoryIcon(
+                              category.icon,
+                              categoryColor,
+                              materialIconsFont,
+                            ),
+                          ),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(8),
+                          child: pw.Text(category.name),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(8),
+                          child: pw.Text(category.type),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(8),
+                          child: pw.Text(
+                            category.icon ?? 'null',
+                            style: const pw.TextStyle(fontSize: 10),
+                          ),
+                        ),
+                      ],
+                    );
+                  }),
+                ],
+              ),
+            ];
+          },
+        ),
+      );
+
+      return pdf.save();
+    } catch (e) {
+      throw Exception('Error generating test PDF: $e');
     }
   }
 

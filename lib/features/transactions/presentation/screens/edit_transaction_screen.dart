@@ -10,6 +10,8 @@ import 'package:flowpaisa/features/contacts/presentation/providers/contacts_prov
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
+import 'package:flowpaisa/core/utils/icon_helper.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 class EditTransactionScreen extends ConsumerStatefulWidget {
   final Transaction transaction;
@@ -103,7 +105,8 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
 
       if (mounted) {
         Navigator.pop(context, true); // Return true to indicate success
-        ToastUtils.showSuccessToast(context, 'Transaction updated successfully');
+        ToastUtils.showSuccessToast(
+            context, 'Transaction updated successfully');
       }
     } catch (e) {
       if (mounted) {
@@ -142,13 +145,13 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
       // Logic from AddTransactionScreen to prompt for contact if missing
       if (_selectedContact == null) {
         // Attempt to show picker
-         _showContactPicker();
+        _showContactPicker();
       }
-      
+
       setState(() {
         _paidRelationship = value;
       });
-      
+
       if (_selectedContact == null && mounted) {
         ToastUtils.showErrorToast(
           context,
@@ -222,9 +225,8 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                               alignment: Alignment.center,
                               child: Icon(
                                 category.icon != null
-                                    ? IconData(int.parse(category.icon!),
-                                        fontFamily: 'MaterialIcons')
-                                    : Icons.category_outlined,
+                                    ? IconHelper.getIconData(category.icon)
+                                    : Symbols.category,
                                 color: color,
                                 size: 24,
                               ),
@@ -537,9 +539,8 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                         alignment: Alignment.center,
                         child: Icon(
                           _selectedCategory?.icon != null
-                              ? IconData(int.parse(_selectedCategory!.icon!),
-                                  fontFamily: 'MaterialIcons')
-                              : Icons.category_outlined,
+                              ? IconHelper.getIconData(_selectedCategory!.icon)
+                              : Symbols.category,
                           color: _selectedCategory?.color != null
                               ? Color(int.parse(_selectedCategory!.color!
                                   .replaceAll('#', '0xFF')))

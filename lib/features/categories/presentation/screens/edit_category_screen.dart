@@ -7,6 +7,7 @@ import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/categories/presentation/providers/categories_provider.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
 import 'package:flowpaisa/core/utils/icon_helper.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 class EditCategoryScreen extends ConsumerStatefulWidget {
   final Category category;
@@ -53,19 +54,20 @@ class _EditCategoryScreenState extends ConsumerState<EditCategoryScreen> {
     super.initState();
     _nameController = TextEditingController(text: widget.category.name);
     _selectedIcon = widget.category.icon ?? '58668';
-    
+
     // Parse color from category
     if (widget.category.color != null) {
       try {
-        _selectedColor = Color(int.parse(widget.category.color!.replaceAll('#', '0xFF')));
+        _selectedColor =
+            Color(int.parse(widget.category.color!.replaceAll('#', '0xFF')));
       } catch (e) {
-        _selectedColor = widget.category.type == 'EXPENSE' 
-            ? AppColors.expenseColor 
+        _selectedColor = widget.category.type == 'EXPENSE'
+            ? AppColors.expenseColor
             : AppColors.incomeColor;
       }
     } else {
-      _selectedColor = widget.category.type == 'EXPENSE' 
-          ? AppColors.expenseColor 
+      _selectedColor = widget.category.type == 'EXPENSE'
+          ? AppColors.expenseColor
           : AppColors.incomeColor;
     }
 
@@ -109,7 +111,8 @@ class _EditCategoryScreenState extends ConsumerState<EditCategoryScreen> {
       final updatedCategory = widget.category.copyWith(
         name: _nameController.text.trim(),
         icon: drift.Value(_selectedIcon),
-        color: drift.Value('#${(_selectedColor.r * 255).toInt().toRadixString(16).padLeft(2, '0')}${(_selectedColor.g * 255).toInt().toRadixString(16).padLeft(2, '0')}${(_selectedColor.b * 255).toInt().toRadixString(16).padLeft(2, '0')}'),
+        color: drift.Value(
+            '#${(_selectedColor.r * 255).toInt().toRadixString(16).padLeft(2, '0')}${(_selectedColor.g * 255).toInt().toRadixString(16).padLeft(2, '0')}${(_selectedColor.b * 255).toInt().toRadixString(16).padLeft(2, '0')}'),
       );
 
       final success = await repository.updateCategory(updatedCategory);
@@ -156,11 +159,15 @@ class _EditCategoryScreenState extends ConsumerState<EditCategoryScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: (isExpense ? AppColors.expenseColor : AppColors.incomeColor)
+                  color: (isExpense
+                          ? AppColors.expenseColor
+                          : AppColors.incomeColor)
                       .withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: (isExpense ? AppColors.expenseColor : AppColors.incomeColor)
+                    color: (isExpense
+                            ? AppColors.expenseColor
+                            : AppColors.incomeColor)
                         .withValues(alpha: 0.3),
                   ),
                 ),
@@ -168,14 +175,18 @@ class _EditCategoryScreenState extends ConsumerState<EditCategoryScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(
-                      isExpense ? Icons.money_off : Icons.attach_money,
-                      color: isExpense ? AppColors.expenseColor : AppColors.incomeColor,
+                      isExpense ? Symbols.money_off : Symbols.attach_money,
+                      color: isExpense
+                          ? AppColors.expenseColor
+                          : AppColors.incomeColor,
                     ),
                     const SizedBox(width: 8),
                     Text(
                       isExpense ? 'Expense Category' : 'Income Category',
                       style: theme.textTheme.titleMedium?.copyWith(
-                        color: isExpense ? AppColors.expenseColor : AppColors.incomeColor,
+                        color: isExpense
+                            ? AppColors.expenseColor
+                            : AppColors.incomeColor,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -199,8 +210,7 @@ class _EditCategoryScreenState extends ConsumerState<EditCategoryScreen> {
                   ),
                   alignment: Alignment.center,
                   child: Icon(
-                    IconData(int.parse(_selectedIcon),
-                        fontFamily: 'MaterialIcons'),
+                    IconHelper.getIconData(_selectedIcon),
                     color: _selectedColor,
                     size: 40,
                   ),
@@ -236,9 +246,9 @@ class _EditCategoryScreenState extends ConsumerState<EditCategoryScreen> {
                     Text(
                       'Suggested Icons',
                       style: theme.textTheme.titleSmall?.copyWith(
-                            color: theme.colorScheme.primary,
-                            fontWeight: FontWeight.bold,
-                          ),
+                        color: theme.colorScheme.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ],
                 ),
@@ -262,14 +272,10 @@ class _EditCategoryScreenState extends ConsumerState<EditCategoryScreen> {
                           decoration: BoxDecoration(
                             color: isSelected
                                 ? theme.colorScheme.primaryContainer
-                                : theme
-                                    .colorScheme
-                                    .surfaceContainerHighest,
+                                : theme.colorScheme.surfaceContainerHighest,
                             borderRadius: BorderRadius.circular(12),
                             border: isSelected
-                                ? Border.all(
-                                    color:
-                                        theme.colorScheme.primary)
+                                ? Border.all(color: theme.colorScheme.primary)
                                 : null,
                           ),
                           alignment: Alignment.center,
@@ -308,8 +314,7 @@ class _EditCategoryScreenState extends ConsumerState<EditCategoryScreen> {
                         shape: BoxShape.circle,
                         border: _selectedColor == color
                             ? Border.all(
-                                color: theme.colorScheme.onSurface,
-                                width: 3)
+                                color: theme.colorScheme.onSurface, width: 3)
                             : null,
                         boxShadow: [
                           BoxShadow(
@@ -364,8 +369,7 @@ class _EditCategoryScreenState extends ConsumerState<EditCategoryScreen> {
                               : null,
                           borderRadius: BorderRadius.circular(8),
                           border: isSelected
-                              ? Border.all(
-                                  color: theme.colorScheme.primary)
+                              ? Border.all(color: theme.colorScheme.primary)
                               : null,
                         ),
                         alignment: Alignment.center,

@@ -304,6 +304,96 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
     }
   }
 
+  Future<void> _exportTestCategoriesPDF() async {
+    // Show loading
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(
+        child: CircularProgressIndicator(),
+      ),
+    );
+
+    try {
+      final exportService = ref.read(exportServiceProvider);
+
+      // Generate test PDF bytes
+      final pdfBytes = await exportService.generateTestCategoriesPDF();
+
+      // Save PDF to temporary file for save/share actions
+      final directory = await getTemporaryDirectory();
+      final fileName =
+          'flowpaisa_test_categories_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.pdf';
+      final filePath = '${directory.path}/$fileName';
+      final file = File(filePath);
+      await file.writeAsBytes(pdfBytes);
+
+      if (mounted) {
+        Navigator.pop(context); // Close loading
+
+        // Show action dialog with three options
+        await showDialog<void>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Test PDF Ready'),
+            content: const Text(
+                'Test PDF with all categories is ready. Choose an action:'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () async {
+                  Navigator.pop(context);
+                  try {
+                    await exportService.saveToDownloads(filePath);
+                    if (context.mounted) {
+                      ToastUtils.showSuccessToast(
+                          context, 'Saved to Downloads');
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      ToastUtils.showErrorToast(context, 'Error saving: $e');
+                    }
+                  }
+                },
+                child: const Text('Save Copy'),
+              ),
+              TextButton(
+                onPressed: () async {
+                  Navigator.pop(context);
+                  try {
+                    await exportService.sharePDFFile(filePath);
+                  } catch (e) {
+                    if (context.mounted) {
+                      ToastUtils.showErrorToast(context, 'Error sharing: $e');
+                    }
+                  }
+                },
+                child: const Text('Share'),
+              ),
+              FilledButton(
+                onPressed: () async {
+                  Navigator.pop(context);
+                  await Printing.layoutPdf(
+                    onLayout: (PdfPageFormat format) async => pdfBytes,
+                  );
+                },
+                child: const Text('Preview'),
+              ),
+            ],
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context); // Close loading if still open
+        ToastUtils.showErrorToast(context, 'Error generating test PDF: $e');
+      }
+    }
+  }
+
   Future<void> _selectEndDate() async {
     final now = DateTime.now();
     // Ensure firstDate is never after lastDate
@@ -468,6 +558,18 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
                   ),
                 ),
               ],
+            ),
+
+            const SizedBox(height: 12),
+
+            // Test Categories Button (for testing icons)
+            OutlinedButton.icon(
+              onPressed: _exportTestCategoriesPDF,
+              icon: const Icon(Icons.bug_report),
+              label: const Text('Test Categories PDF (Icons)'),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+              ),
             ),
 
             const SizedBox(height: 12),

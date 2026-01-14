@@ -63,9 +63,9 @@ dependencies:
   
   # Export
   csv: ^6.0.0
-  pdf: ^3.10.0
-  printing: ^5.11.0
-  
+  pdf: ^3.10.8
+  printing: ^5.12.2
+  material_symbols_icons: ^4.2892.0
   # Contacts
   flutter_contacts: ^1.1.7+1  # Modern replacement for contacts_service
   
@@ -94,7 +94,10 @@ dependency_overrides:
 flutter:
   uses-material-design: true
   generate: true
-  
-  # Assets
-  # assets:
-  #   - assets/images/
+  fonts:
+    - family: MaterialSymbols
+      fonts:
+        - asset: assets/fonts/MaterialSymbolsOutlined.ttf
+
+  assets:
+    - assets/fonts/MaterialSymbolsOutlined.ttf

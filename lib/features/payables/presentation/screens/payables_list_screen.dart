@@ -10,6 +10,8 @@ import 'package:flowpaisa/features/payables/presentation/widgets/payable_details
 import 'package:flowpaisa/shared/widgets/swipeable_list_item.dart';
 import 'package:intl/intl.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
+import 'package:flowpaisa/core/utils/icon_helper.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 class PayablesListScreen extends ConsumerStatefulWidget {
   const PayablesListScreen({super.key});
@@ -298,9 +300,8 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
                             children: [
                               Icon(
                                 linkedCategory.icon != null
-                                    ? IconData(int.parse(linkedCategory.icon!),
-                                        fontFamily: 'MaterialIcons')
-                                    : Icons.category_outlined,
+                                    ? IconHelper.getIconData(linkedCategory.icon)
+                                    : Symbols.category,
                                 color: linkedCategory.color != null
                                     ? Color(int.parse(linkedCategory.color!
                                         .replaceAll('#', '0xFF')))
