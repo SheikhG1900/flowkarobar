@@ -247,6 +247,23 @@ class ExportService {
     );
   }
 
+  // Helper functions to get app colors as PdfColor (class methods for reuse)
+  static PdfColor getIncomePdfColor() {
+    return PdfColor(0x10 / 255.0, 0xB9 / 255.0, 0x81 / 255.0); // #10B981
+  }
+
+  static PdfColor getExpensePdfColor() {
+    return PdfColor(0xFF / 255.0, 0x70 / 255.0, 0x43 / 255.0); // #FF7043
+  }
+
+  static PdfColor getPayablePdfColor() {
+    return PdfColor(0xFB / 255.0, 0xBF / 255.0, 0x24 / 255.0); // #FBBF24
+  }
+
+  static PdfColor getReceivablePdfColor() {
+    return PdfColor(0x22 / 255.0, 0xD3 / 255.0, 0xEE / 255.0); // #22D3EE
+  }
+
   // Generate PDF document
   Future<pw.Document> generatePDFDocument({
     required DateTime startDate,
@@ -359,12 +376,23 @@ class ExportService {
           // Material Icons use private Unicode range 0xe000-0xefff
           // Validate codePoint is in valid range
           if (codePoint >= 0xe000 && codePoint <= 0xefff) {
-            // Use pw.Icon widget with pw.IconData for better icon rendering
-            return pw.Icon(
-              pw.IconData(codePoint),
-              font: font,
-              size: 12,
-              color: color,
+            // Use pw.Icon widget with pw.IconData wrapped in circular container
+            // to match avatar appearance (12x12 with colored background)
+            return pw.Container(
+              width: 12,
+              height: 12,
+              decoration: pw.BoxDecoration(
+                color: color,
+                shape: pw.BoxShape.circle,
+              ),
+              child: pw.Center(
+                child: pw.Icon(
+                  pw.IconData(codePoint),
+                  font: font,
+                  size: 8,
+                  color: PdfColors.white,
+                ),
+              ),
             );
           }
         }
@@ -431,32 +459,67 @@ class ExportService {
                   children: [
                     _buildTableCell('Total Transactions',
                         filteredTransactions.length.toString()),
-                    _buildTableCell('Total Income',
-                        '$currency ${totalIncome.toStringAsFixed(2)}'),
+                    _buildTableCell(
+                        'Total Income',
+                        '$currency ${totalIncome.toStringAsFixed(2)}',
+                        ExportService.getIncomePdfColor()),
                   ],
                 ),
                 pw.TableRow(
                   children: [
-                    _buildTableCell('Total Expense',
-                        '$currency ${totalExpense.toStringAsFixed(2)}'),
-                    _buildTableCell('Net Balance',
-                        '$currency ${(totalIncome - totalExpense).toStringAsFixed(2)}'),
+                    _buildTableCell(
+                        'Total Expense',
+                        '$currency ${totalExpense.toStringAsFixed(2)}',
+                        ExportService.getExpensePdfColor()),
+                    _buildTableCell(
+                        'Net Balance',
+                        '$currency ${(totalIncome - totalExpense).toStringAsFixed(2)}',
+                        (totalIncome - totalExpense) == 0
+                            ? PdfColors.black
+                            : (totalIncome - totalExpense) >= 0
+                                ? ExportService.getIncomePdfColor()
+                                : ExportService.getExpensePdfColor()),
                   ],
                 ),
                 pw.TableRow(
                   children: [
-                    _buildTableCell('Payables (Pending)',
-                        '$currency ${totalPayablePending.toStringAsFixed(2)}'),
-                    _buildTableCell('Payables (Paid)',
-                        '$currency ${totalPayablePaid.toStringAsFixed(2)}'),
+                    _buildTableCell(
+                        'Payables (Pending)',
+                        '$currency ${totalPayablePending.toStringAsFixed(2)}',
+                        ExportService.getPayablePdfColor()),
+                    _buildTableCell(
+                        'Payables (Paid)',
+                        '$currency ${totalPayablePaid.toStringAsFixed(2)}',
+                        ExportService.getPayablePdfColor()),
                   ],
                 ),
                 pw.TableRow(
                   children: [
-                    _buildTableCell('Receivables (Pending)',
-                        '$currency ${totalReceivablePending.toStringAsFixed(2)}'),
-                    _buildTableCell('Receivables (Received)',
-                        '$currency ${totalReceivableReceived.toStringAsFixed(2)}'),
+                    _buildTableCell(
+                        'Receivables (Pending)',
+                        '$currency ${totalReceivablePending.toStringAsFixed(2)}',
+                        ExportService.getReceivablePdfColor()),
+                    _buildTableCell(
+                        'Receivables (Received)',
+                        '$currency ${totalReceivableReceived.toStringAsFixed(2)}',
+                        ExportService.getReceivablePdfColor()),
+                  ],
+                ),
+                // Net Payable/Receivable row (only pending amounts)
+                pw.TableRow(
+                  children: [
+                    _buildTableCell(
+                        totalPayablePending >= totalReceivablePending
+                            ? 'Net Payable (Pending)'
+                            : 'Net Receivable (Pending)',
+                        '$currency ${(totalPayablePending - totalReceivablePending).abs().toStringAsFixed(2)}',
+                        (totalPayablePending - totalReceivablePending).abs() ==
+                                0
+                            ? PdfColors.black
+                            : totalPayablePending >= totalReceivablePending
+                                ? ExportService.getPayablePdfColor()
+                                : ExportService.getReceivablePdfColor()),
+                    _buildTableCell('', null),
                   ],
                 ),
               ],
@@ -506,84 +569,107 @@ class ExportService {
                     final contactColor = item.contact != null
                         ? getContactPdfColor(item.contact!.name)
                         : PdfColors.grey600;
+                    final amountColor = t.type == 'INCOME'
+                        ? ExportService.getIncomePdfColor()
+                        : ExportService.getExpensePdfColor();
                     return pw.TableRow(
                       children: [
                         pw.Padding(
                           padding: const pw.EdgeInsets.all(4),
-                          child: pw.Text(dateFormat.format(t.date),
-                              style: const pw.TextStyle(fontSize: 9)),
-                        ),
-                        pw.Padding(
-                          padding: const pw.EdgeInsets.all(4),
-                          child: pw.Text(t.type,
-                              style: const pw.TextStyle(fontSize: 9)),
-                        ),
-                        pw.Padding(
-                          padding: const pw.EdgeInsets.all(4),
-                          child: pw.Text(
-                              '$currency ${t.amount.toStringAsFixed(2)}',
-                              style: const pw.TextStyle(fontSize: 9)),
-                        ),
-                        pw.Padding(
-                          padding: const pw.EdgeInsets.all(4),
-                          child: pw.Row(
-                            children: [
-                              _buildCategoryIcon(
-                                item.category?.icon,
-                                categoryColor,
-                                materialIconsFont,
-                              ),
-                              pw.SizedBox(width: 4),
-                              pw.Expanded(
-                                child: pw.Text(
-                                  item.category?.name ?? '-',
-                                  style: const pw.TextStyle(fontSize: 9),
-                                  maxLines: 1,
-                                ),
-                              ),
-                            ],
+                          child: pw.Container(
+                            alignment: pw.Alignment.centerLeft,
+                            child: pw.Text(dateFormat.format(t.date),
+                                style: const pw.TextStyle(fontSize: 9)),
                           ),
                         ),
                         pw.Padding(
                           padding: const pw.EdgeInsets.all(4),
-                          child: item.contact != null
-                              ? pw.Row(
-                                  children: [
-                                    pw.Container(
-                                      width: 16,
-                                      height: 16,
-                                      decoration: pw.BoxDecoration(
-                                        color: contactColor,
-                                        shape: pw.BoxShape.circle,
-                                      ),
-                                      child: pw.Center(
-                                        child: pw.Text(
-                                          getInitials(item.contact!.name),
-                                          style: pw.TextStyle(
-                                              fontSize: 8,
-                                              color: PdfColors.white),
-                                        ),
-                                      ),
-                                    ),
-                                    pw.SizedBox(width: 4),
-                                    pw.Expanded(
-                                      child: pw.Text(
-                                        item.contact!.name,
-                                        style: const pw.TextStyle(fontSize: 9),
-                                        maxLines: 1,
-                                      ),
-                                    ),
-                                  ],
-                                )
-                              : pw.Text('-',
-                                  style: const pw.TextStyle(fontSize: 9)),
+                          child: pw.Container(
+                            alignment: pw.Alignment.centerLeft,
+                            child: pw.Text(t.type,
+                                style: const pw.TextStyle(fontSize: 9)),
+                          ),
                         ),
                         pw.Padding(
                           padding: const pw.EdgeInsets.all(4),
-                          child: pw.Text(
-                            t.description ?? '-',
-                            style: const pw.TextStyle(fontSize: 9),
-                            maxLines: 2,
+                          child: pw.Container(
+                            alignment: pw.Alignment.centerLeft,
+                            child: pw.Text(
+                                '$currency ${t.amount.toStringAsFixed(2)}',
+                                style: pw.TextStyle(
+                                    fontSize: 9, color: amountColor)),
+                          ),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(4),
+                          child: pw.Container(
+                            alignment: pw.Alignment.centerLeft,
+                            child: pw.Row(
+                              children: [
+                                _buildCategoryIcon(
+                                  item.category?.icon,
+                                  categoryColor,
+                                  materialIconsFont,
+                                ),
+                                pw.SizedBox(width: 4),
+                                pw.Expanded(
+                                  child: pw.Text(
+                                    item.category?.name ?? '-',
+                                    style: const pw.TextStyle(fontSize: 9),
+                                    maxLines: 1,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(4),
+                          child: pw.Container(
+                            alignment: pw.Alignment.centerLeft,
+                            child: item.contact != null
+                                ? pw.Row(
+                                    children: [
+                                      pw.Container(
+                                        width: 12,
+                                        height: 12,
+                                        decoration: pw.BoxDecoration(
+                                          color: contactColor,
+                                          shape: pw.BoxShape.circle,
+                                        ),
+                                        child: pw.Center(
+                                          child: pw.Text(
+                                            getInitials(item.contact!.name),
+                                            style: pw.TextStyle(
+                                                fontSize: 6,
+                                                color: PdfColors.white),
+                                          ),
+                                        ),
+                                      ),
+                                      pw.SizedBox(width: 4),
+                                      pw.Expanded(
+                                        child: pw.Text(
+                                          item.contact!.name,
+                                          style:
+                                              const pw.TextStyle(fontSize: 9),
+                                          maxLines: 1,
+                                        ),
+                                      ),
+                                    ],
+                                  )
+                                : pw.Text('-',
+                                    style: const pw.TextStyle(fontSize: 9)),
+                          ),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(4),
+                          child: pw.Container(
+                            alignment: pw.Alignment.centerLeft,
+                            child: pw.Text(
+                              t.description ?? '-',
+                              style: const pw.TextStyle(fontSize: 9),
+                              maxLines: 2,
+                            ),
                           ),
                         ),
                       ],
@@ -635,60 +721,78 @@ class ExportService {
                       children: [
                         pw.Padding(
                           padding: const pw.EdgeInsets.all(4),
-                          child: item.contact != null
-                              ? pw.Row(
-                                  children: [
-                                    pw.Container(
-                                      width: 16,
-                                      height: 16,
-                                      decoration: pw.BoxDecoration(
-                                        color: contactColor,
-                                        shape: pw.BoxShape.circle,
-                                      ),
-                                      child: pw.Center(
-                                        child: pw.Text(
-                                          getInitials(item.contact!.name),
-                                          style: pw.TextStyle(
-                                              fontSize: 8,
-                                              color: PdfColors.white),
+                          child: pw.Container(
+                            alignment: pw.Alignment.centerLeft,
+                            child: item.contact != null
+                                ? pw.Row(
+                                    children: [
+                                      pw.Container(
+                                        width: 12,
+                                        height: 12,
+                                        decoration: pw.BoxDecoration(
+                                          color: contactColor,
+                                          shape: pw.BoxShape.circle,
+                                        ),
+                                        child: pw.Center(
+                                          child: pw.Text(
+                                            getInitials(item.contact!.name),
+                                            style: pw.TextStyle(
+                                                fontSize: 6,
+                                                color: PdfColors.white),
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                    pw.SizedBox(width: 4),
-                                    pw.Expanded(
-                                      child: pw.Text(
-                                        item.contact!.name,
-                                        style: const pw.TextStyle(fontSize: 9),
-                                        maxLines: 1,
+                                      pw.SizedBox(width: 4),
+                                      pw.Expanded(
+                                        child: pw.Text(
+                                          item.contact!.name,
+                                          style:
+                                              const pw.TextStyle(fontSize: 9),
+                                          maxLines: 1,
+                                        ),
                                       ),
-                                    ),
-                                  ],
-                                )
-                              : pw.Text('-',
-                                  style: const pw.TextStyle(fontSize: 9)),
+                                    ],
+                                  )
+                                : pw.Text('-',
+                                    style: const pw.TextStyle(fontSize: 9)),
+                          ),
                         ),
                         pw.Padding(
                           padding: const pw.EdgeInsets.all(4),
-                          child: pw.Text(
-                              '$currency ${p.amount.toStringAsFixed(2)}',
-                              style: const pw.TextStyle(fontSize: 9)),
+                          child: pw.Container(
+                            alignment: pw.Alignment.centerLeft,
+                            child: pw.Text(
+                                '$currency ${p.amount.toStringAsFixed(2)}',
+                                style: pw.TextStyle(
+                                    fontSize: 9,
+                                    color: ExportService.getPayablePdfColor())),
+                          ),
                         ),
                         pw.Padding(
                           padding: const pw.EdgeInsets.all(4),
-                          child: pw.Text(dateFormat.format(p.date),
-                              style: const pw.TextStyle(fontSize: 9)),
+                          child: pw.Container(
+                            alignment: pw.Alignment.centerLeft,
+                            child: pw.Text(dateFormat.format(p.date),
+                                style: const pw.TextStyle(fontSize: 9)),
+                          ),
                         ),
                         pw.Padding(
                           padding: const pw.EdgeInsets.all(4),
-                          child: pw.Text(p.status,
-                              style: const pw.TextStyle(fontSize: 9)),
+                          child: pw.Container(
+                            alignment: pw.Alignment.centerLeft,
+                            child: pw.Text(p.status,
+                                style: const pw.TextStyle(fontSize: 9)),
+                          ),
                         ),
                         pw.Padding(
                           padding: const pw.EdgeInsets.all(4),
-                          child: pw.Text(
-                            p.description ?? '-',
-                            style: const pw.TextStyle(fontSize: 9),
-                            maxLines: 2,
+                          child: pw.Container(
+                            alignment: pw.Alignment.centerLeft,
+                            child: pw.Text(
+                              p.description ?? '-',
+                              style: const pw.TextStyle(fontSize: 9),
+                              maxLines: 2,
+                            ),
                           ),
                         ),
                       ],
@@ -740,60 +844,79 @@ class ExportService {
                       children: [
                         pw.Padding(
                           padding: const pw.EdgeInsets.all(4),
-                          child: item.contact != null
-                              ? pw.Row(
-                                  children: [
-                                    pw.Container(
-                                      width: 16,
-                                      height: 16,
-                                      decoration: pw.BoxDecoration(
-                                        color: contactColor,
-                                        shape: pw.BoxShape.circle,
-                                      ),
-                                      child: pw.Center(
-                                        child: pw.Text(
-                                          getInitials(item.contact!.name),
-                                          style: pw.TextStyle(
-                                              fontSize: 8,
-                                              color: PdfColors.white),
+                          child: pw.Container(
+                            alignment: pw.Alignment.centerLeft,
+                            child: item.contact != null
+                                ? pw.Row(
+                                    children: [
+                                      pw.Container(
+                                        width: 12,
+                                        height: 12,
+                                        decoration: pw.BoxDecoration(
+                                          color: contactColor,
+                                          shape: pw.BoxShape.circle,
+                                        ),
+                                        child: pw.Center(
+                                          child: pw.Text(
+                                            getInitials(item.contact!.name),
+                                            style: pw.TextStyle(
+                                                fontSize: 6,
+                                                color: PdfColors.white),
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                    pw.SizedBox(width: 4),
-                                    pw.Expanded(
-                                      child: pw.Text(
-                                        item.contact!.name,
-                                        style: const pw.TextStyle(fontSize: 9),
-                                        maxLines: 1,
+                                      pw.SizedBox(width: 4),
+                                      pw.Expanded(
+                                        child: pw.Text(
+                                          item.contact!.name,
+                                          style:
+                                              const pw.TextStyle(fontSize: 9),
+                                          maxLines: 1,
+                                        ),
                                       ),
-                                    ),
-                                  ],
-                                )
-                              : pw.Text('-',
-                                  style: const pw.TextStyle(fontSize: 9)),
+                                    ],
+                                  )
+                                : pw.Text('-',
+                                    style: const pw.TextStyle(fontSize: 9)),
+                          ),
                         ),
                         pw.Padding(
                           padding: const pw.EdgeInsets.all(4),
-                          child: pw.Text(
-                              '$currency ${r.amount.toStringAsFixed(2)}',
-                              style: const pw.TextStyle(fontSize: 9)),
+                          child: pw.Container(
+                            alignment: pw.Alignment.centerLeft,
+                            child: pw.Text(
+                                '$currency ${r.amount.toStringAsFixed(2)}',
+                                style: pw.TextStyle(
+                                    fontSize: 9,
+                                    color:
+                                        ExportService.getReceivablePdfColor())),
+                          ),
                         ),
                         pw.Padding(
                           padding: const pw.EdgeInsets.all(4),
-                          child: pw.Text(dateFormat.format(r.date),
-                              style: const pw.TextStyle(fontSize: 9)),
+                          child: pw.Container(
+                            alignment: pw.Alignment.centerLeft,
+                            child: pw.Text(dateFormat.format(r.date),
+                                style: const pw.TextStyle(fontSize: 9)),
+                          ),
                         ),
                         pw.Padding(
                           padding: const pw.EdgeInsets.all(4),
-                          child: pw.Text(r.status,
-                              style: const pw.TextStyle(fontSize: 9)),
+                          child: pw.Container(
+                            alignment: pw.Alignment.centerLeft,
+                            child: pw.Text(r.status,
+                                style: const pw.TextStyle(fontSize: 9)),
+                          ),
                         ),
                         pw.Padding(
                           padding: const pw.EdgeInsets.all(4),
-                          child: pw.Text(
-                            r.description ?? '-',
-                            style: const pw.TextStyle(fontSize: 9),
-                            maxLines: 2,
+                          child: pw.Container(
+                            alignment: pw.Alignment.centerLeft,
+                            child: pw.Text(
+                              r.description ?? '-',
+                              style: const pw.TextStyle(fontSize: 9),
+                              maxLines: 2,
+                            ),
                           ),
                         ),
                       ],
@@ -810,7 +933,7 @@ class ExportService {
   }
 
   // Helper methods for table cells
-  pw.Widget _buildTableCell(String text, [String? value]) {
+  pw.Widget _buildTableCell(String text, [String? value, PdfColor? color]) {
     return pw.Padding(
       padding: const pw.EdgeInsets.all(8),
       child: pw.Row(
@@ -819,8 +942,10 @@ class ExportService {
           pw.Text(text, style: const pw.TextStyle(fontSize: 10)),
           if (value != null)
             pw.Text(value,
-                style:
-                    pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold)),
+                style: pw.TextStyle(
+                    fontSize: 10,
+                    fontWeight: pw.FontWeight.bold,
+                    color: color)),
         ],
       ),
     );
