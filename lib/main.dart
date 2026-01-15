@@ -438,7 +438,10 @@ class _DashboardTab extends ConsumerWidget {
                         const SizedBox(height: 8),
                         dashboardStatsAsync.when(
                           data: (stats) => Text(
-                            AmountFormatter.formatWithCurrency(stats.totalBalance, currency.symbol, currency.decimalPlaces),
+                            AmountFormatter.formatWithCurrency(
+                                stats.totalBalance,
+                                currency.symbol,
+                                currency.decimalPlaces),
                             style: theme.textTheme.displayMedium?.copyWith(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
@@ -449,7 +452,8 @@ class _DashboardTab extends ConsumerWidget {
                             ),
                           ),
                           loading: () => Text(
-                            AmountFormatter.formatWithCurrency(0, currency.symbol, currency.decimalPlaces),
+                            AmountFormatter.formatWithCurrency(
+                                0, currency.symbol, currency.decimalPlaces),
                             style: theme.textTheme.displayMedium?.copyWith(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
@@ -459,7 +463,8 @@ class _DashboardTab extends ConsumerWidget {
                             ),
                           ),
                           error: (_, __) => Text(
-                            AmountFormatter.formatWithCurrency(0, currency.symbol, currency.decimalPlaces),
+                            AmountFormatter.formatWithCurrency(
+                                0, currency.symbol, currency.decimalPlaces),
                             style: theme.textTheme.displayMedium?.copyWith(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
@@ -745,7 +750,8 @@ class _DashboardTab extends ConsumerWidget {
           ),
           const SizedBox(height: 10), // More spacing
           Text(
-            AmountFormatter.formatWithCurrency(amount, currencySymbol, decimalPlaces),
+            AmountFormatter.formatWithCurrency(
+                amount, currencySymbol, decimalPlaces),
             style: theme.textTheme.titleLarge?.copyWith(
               color: Colors.white,
               fontWeight: FontWeight.bold,
@@ -761,7 +767,8 @@ class _DashboardTab extends ConsumerWidget {
     );
   }
 
-  Widget _buildQuickActions(BuildContext context, AppLocalizations l10n, bool isPremium) {
+  Widget _buildQuickActions(
+      BuildContext context, AppLocalizations l10n, bool isPremium) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
@@ -908,7 +915,7 @@ class _DashboardTab extends ConsumerWidget {
     final transactionsAsync = ref.watch(transactionsWithDetailsProvider);
     final currencyAsync = ref.watch(currentCurrencyProvider);
     final currency = currencyAsync.value;
-    
+
     if (currency == null) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -1028,7 +1035,8 @@ class _DashboardTab extends ConsumerWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => TransactionDetailsDialog(item: item),
+                      builder: (context) =>
+                          TransactionDetailsDialog(item: item),
                     ),
                   );
                 },
@@ -1049,7 +1057,6 @@ class _DashboardTab extends ConsumerWidget {
       ),
     );
   }
-
 }
 
 class _QuickActionButton extends StatelessWidget {
@@ -1242,7 +1249,8 @@ class _SettingsTab extends ConsumerWidget {
               children: [
                 Text(l10n.backup),
                 const SizedBox(width: 8),
-                if (!isPremium) const PremiumBadge(isSmall: true, showLock: true),
+                if (!isPremium)
+                  const PremiumBadge(isSmall: true, showLock: true),
               ],
             ),
             subtitle: const Text('Google Drive Backup & Restore'),
@@ -1298,7 +1306,8 @@ class _SettingsTab extends ConsumerWidget {
                   color: Colors.white.withValues(alpha: 0.9),
                 ),
               ),
-              trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.white),
+              trailing: const Icon(Icons.arrow_forward_ios,
+                  size: 16, color: Colors.white),
               onTap: () {
                 Navigator.push(
                   context,
