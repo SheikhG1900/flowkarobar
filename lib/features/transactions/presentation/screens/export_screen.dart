@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:file_selector/file_selector.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
@@ -562,17 +563,18 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
 
             const SizedBox(height: 12),
 
-            // Test Categories Button (for testing icons)
-            OutlinedButton.icon(
-              onPressed: _exportTestCategoriesPDF,
-              icon: const Icon(Icons.bug_report),
-              label: const Text('Test Categories PDF (Icons)'),
-              style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 12),
+            // Test Categories Button (for testing icons) - only in debug mode
+            if (kDebugMode) ...[
+              OutlinedButton.icon(
+                onPressed: _exportTestCategoriesPDF,
+                icon: const Icon(Icons.bug_report),
+                label: const Text('Test Categories PDF (Icons)'),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                ),
               ),
-            ),
-
-            const SizedBox(height: 12),
+              const SizedBox(height: 12),
+            ],
 
             // Info Note
             Container(

@@ -261,6 +261,82 @@ class PayablesRepository {
       }).toList();
     });
   }
+
+  /// Watch payables with ALL linked data (paginated) - Stream version
+  Stream<List<PayableWithLinkedData>> watchPayablesWithLinkedDataPaginated({
+    required String status,
+    int limit = 50,
+    int offset = 0,
+  }) {
+    final query = _database.select(_database.payables).join([
+      leftOuterJoin(
+        _database.contacts,
+        _database.contacts.id.equalsExp(_database.payables.contactId),
+      ),
+      leftOuterJoin(
+        _database.transactions,
+        _database.transactions.id.equalsExp(_database.payables.linkedExpenseId) | 
+        _database.transactions.id.equalsExp(_database.payables.linkedIncomeId),
+      ),
+      leftOuterJoin(
+        _database.categories,
+        _database.categories.id.equalsExp(_database.transactions.categoryId),
+      ),
+    ]);
+
+    query.where(_database.payables.status.equals(status));
+    query.orderBy([OrderingTerm.desc(_database.payables.date)]);
+    query.limit(limit, offset: offset);
+
+    return query.watch().map((rows) {
+      return rows.map((row) {
+        return PayableWithLinkedData(
+          payable: row.readTable(_database.payables),
+          contact: row.readTableOrNull(_database.contacts),
+          linkedTransaction: row.readTableOrNull(_database.transactions),
+          linkedCategory: row.readTableOrNull(_database.categories),
+        );
+      }).toList();
+    });
+  }
+
+  /// Get payables with ALL linked data (paginated) - Future version for loading more
+  Future<List<PayableWithLinkedData>> getPayablesWithLinkedDataPaginated({
+    required String status,
+    int limit = 50,
+    int offset = 0,
+  }) {
+    final query = _database.select(_database.payables).join([
+      leftOuterJoin(
+        _database.contacts,
+        _database.contacts.id.equalsExp(_database.payables.contactId),
+      ),
+      leftOuterJoin(
+        _database.transactions,
+        _database.transactions.id.equalsExp(_database.payables.linkedExpenseId) | 
+        _database.transactions.id.equalsExp(_database.payables.linkedIncomeId),
+      ),
+      leftOuterJoin(
+        _database.categories,
+        _database.categories.id.equalsExp(_database.transactions.categoryId),
+      ),
+    ]);
+
+    query.where(_database.payables.status.equals(status));
+    query.orderBy([OrderingTerm.desc(_database.payables.date)]);
+    query.limit(limit, offset: offset);
+
+    return query.get().then((rows) {
+      return rows.map((row) {
+        return PayableWithLinkedData(
+          payable: row.readTable(_database.payables),
+          contact: row.readTableOrNull(_database.contacts),
+          linkedTransaction: row.readTableOrNull(_database.transactions),
+          linkedCategory: row.readTableOrNull(_database.categories),
+        );
+      }).toList();
+    });
+  }
 }
 
 /// Data class for payable with contact information

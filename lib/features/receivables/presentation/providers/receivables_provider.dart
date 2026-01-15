@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/features/receivables/data/receivables_repository.dart';
 import 'package:flowpaisa/features/receivables/domain/models.dart';
 import 'package:flowpaisa/shared/providers/database_provider.dart';
+import 'package:flowpaisa/shared/models/paginated_state.dart';
 
 // Repository provider
 final receivablesRepositoryProvider = Provider<ReceivablesRepository>((ref) {
@@ -64,4 +66,121 @@ final receivablesWithLinkedDataProvider =
         (ref, status) {
   final repository = ref.watch(receivablesRepositoryProvider);
   return repository.watchReceivablesWithLinkedData(status);
+});
+
+// Paginated receivables provider
+class ReceivablesPaginatedNotifier extends Notifier<PaginatedState<ReceivableWithLinkedData>> {
+  StreamSubscription<List<ReceivableWithLinkedData>>? _subscription;
+  late ReceivablesRepository _repository;
+  String? _status;
+  bool _isInitialized = false;
+
+  @override
+  PaginatedState<ReceivableWithLinkedData> build() {
+    _repository = ref.watch(receivablesRepositoryProvider);
+    return PaginatedState<ReceivableWithLinkedData>(
+      items: [],
+      isLoading: true,
+    );
+  }
+
+  void initialize(String status) {
+    if (_isInitialized && _status == status) return;
+    _status = status;
+    _isInitialized = true;
+    // Load initial data asynchronously
+    Future.microtask(() => _loadInitial());
+  }
+
+  Future<void> _loadInitial() async {
+    if (_status == null) return;
+    state = state.copyWith(isLoading: true, error: null);
+    
+    try {
+      // Load first page
+      final initialItems = await _repository.getReceivablesWithLinkedDataPaginated(
+        status: _status!,
+        limit: state.pageSize,
+        offset: 0,
+      );
+
+      state = state.replaceItems(initialItems, hasMore: initialItems.length == state.pageSize);
+
+      // Watch for real-time updates to loaded items
+      _subscription?.cancel();
+      _subscription = _repository
+          .watchReceivablesWithLinkedDataPaginated(
+            status: _status!,
+            limit: initialItems.length,
+            offset: 0,
+          )
+          .listen((updatedItems) {
+        if (!state.isLoadingMore) {
+          state = state.copyWith(items: updatedItems);
+        }
+      });
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: e.toString(),
+      );
+    }
+  }
+
+  Future<void> loadMore() async {
+    if (state.isLoadingMore || !state.hasMore) return;
+
+    state = state.copyWith(isLoadingMore: true);
+
+    try {
+      final newItems = await _repository.getReceivablesWithLinkedDataPaginated(
+        status: _status!,
+        limit: state.pageSize,
+        offset: state.currentOffset,
+      );
+
+      if (newItems.isEmpty) {
+        state = state.copyWith(
+          isLoadingMore: false,
+          hasMore: false,
+        );
+      } else {
+        state = state.appendItems(
+          newItems,
+          hasMore: newItems.length == state.pageSize,
+        );
+
+        // Update subscription to watch all loaded items
+        _subscription?.cancel();
+        _subscription = _repository
+            .watchReceivablesWithLinkedDataPaginated(
+              status: _status!,
+              limit: state.items.length,
+              offset: 0,
+            )
+            .listen((updatedItems) {
+          if (!state.isLoadingMore) {
+            state = state.copyWith(items: updatedItems);
+          }
+        });
+      }
+    } catch (e) {
+      state = state.copyWith(
+        isLoadingMore: false,
+        error: e.toString(),
+      );
+    }
+  }
+
+  Future<void> refresh() async {
+    _subscription?.cancel();
+    await _loadInitial();
+  }
+}
+
+final receivablesPaginatedProvider =
+    NotifierProvider.family<ReceivablesPaginatedNotifier, PaginatedState<ReceivableWithLinkedData>, String>((status) {
+  final notifier = ReceivablesPaginatedNotifier();
+  notifier.initialize(status);
+  return notifier;
 });

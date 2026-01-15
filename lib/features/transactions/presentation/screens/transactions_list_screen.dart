@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
@@ -8,26 +9,90 @@ import 'package:flowpaisa/features/transactions/presentation/providers/transacti
 import 'package:flowpaisa/features/transactions/presentation/screens/add_transaction_screen.dart';
 import 'package:flowpaisa/features/transactions/presentation/screens/edit_transaction_screen.dart';
 import 'package:flowpaisa/features/transactions/presentation/widgets/transaction_details_dialog.dart';
+import 'package:flowpaisa/features/transactions/domain/models.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/shared/widgets/swipeable_list_item.dart';
+import 'package:flowpaisa/shared/models/paginated_state.dart';
 import 'package:intl/intl.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
 import 'package:flowpaisa/core/utils/category_helper.dart';
 
-class TransactionsListScreen extends ConsumerWidget {
+class TransactionsListScreen extends ConsumerStatefulWidget {
   const TransactionsListScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<TransactionsListScreen> createState() => _TransactionsListScreenState();
+}
+
+class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen> {
+  late ScrollController _scrollController;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >= 
+        _scrollController.position.maxScrollExtent - 200) {
+      // Load more when near bottom
+      ref.read(transactionsPaginatedProvider.notifier).loadMore();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    // Use the new provider with ALL details (category + contact)
-    final transactionsAsync = ref.watch(transactionsWithDetailsProvider);
+    // Use the paginated provider
+    final paginatedState = ref.watch(transactionsPaginatedProvider);
     final theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.transactions),
         actions: [
+          // Debug button to generate dummy transactions (only in debug mode)
+          if (kDebugMode)
+            PopupMenuButton<String>(
+              icon: const Icon(Icons.bug_report),
+              onSelected: (value) async {
+                if (value == 'generate_dummy') {
+                  final service = ref.read(transactionServiceProvider);
+                  try {
+                    await service.generateDummyTransactions(count: 100);
+                    if (context.mounted) {
+                      ToastUtils.showSuccessToast(context, 'Generated 100 dummy transactions');
+                      // Refresh the paginated list
+                      ref.read(transactionsPaginatedProvider.notifier).refresh();
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      ToastUtils.showErrorToast(context, 'Error: $e');
+                    }
+                  }
+                }
+              },
+              itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: 'generate_dummy',
+                  child: Row(
+                    children: [
+                      Icon(Icons.add_circle_outline),
+                      SizedBox(width: 8),
+                      Text('Generate 100 Dummy Transactions'),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           IconButton(
             icon: const Icon(Icons.filter_list),
             onPressed: () {
@@ -42,143 +107,7 @@ class TransactionsListScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: transactionsAsync.when(
-        data: (transactions) {
-          if (transactions.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.receipt_long_outlined,
-                    size: 120,
-                    color: Colors.grey[300],
-                  ),
-                  const SizedBox(height: 24),
-                  Text(
-                    'No transactions yet',
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      color: Colors.grey[600],
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'Tap + to add your first transaction',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: Colors.grey[500],
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          // Group transactions by date
-          final groupedTransactions = <String, List>{};
-          for (final item in transactions) {
-            final dateKey = DateFormat.yMMMd().format(item.transaction.date);
-            groupedTransactions.putIfAbsent(dateKey, () => []);
-            groupedTransactions[dateKey]!.add(item);
-          }
-
-          final service = ref.read(transactionServiceProvider);
-
-          return ListView.builder(
-            padding: const EdgeInsets.only(bottom: 80),
-            itemCount: groupedTransactions.length,
-            itemBuilder: (context, index) {
-              final dateKey = groupedTransactions.keys.elementAt(index);
-              final dateTransactions = groupedTransactions[dateKey]!;
-
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Date Header
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                    child: Text(
-                      dateKey,
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-
-                  // Transactions for this date
-                  ...dateTransactions.map((item) {
-                    final isExpense = item.transaction.type == 'EXPENSE';
-                    
-                    // Determine if transaction is restricted from editing/deleting
-                    final isRestricted = item.transaction.isAutoGenerated == true || 
-                                        item.isLinkedEntryMarked;
-
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                      child: SwipeableListItem(
-                        enableEdit: !isRestricted,
-                        enableDelete: !isRestricted,
-                        borderRadius: 20,
-                        onEdit: isRestricted ? null : () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => EditTransactionScreen(
-                                transaction: item.transaction,
-                                category: item.category,
-                                contact: item.contact,
-                              ),
-                            ),
-                          );
-                        },
-                        onDelete: isRestricted ? null : () async {
-                          try {
-                            await service.deleteTransaction(item.transaction.id);
-                            if (context.mounted) {
-                              ToastUtils.showSuccessToast(context, 'Transaction deleted');
-                            }
-                          } catch (e) {
-                            if (context.mounted) {
-                              ToastUtils.showErrorToast(context, 'Error deleting transaction: $e');
-                            }
-                          }
-                        },
-                        child: _buildTransactionCard(
-                          context,
-                          ref: ref,
-                          item: item,
-                          isExpense: isExpense,
-                        ),
-                      ),
-                    );
-                  }),
-                ],
-              );
-            },
-          );
-        },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) => Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.error_outline, size: 60, color: Colors.red),
-              const SizedBox(height: 16),
-              Text(
-                'Error loading transactions',
-                style: theme.textTheme.titleLarge,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                error.toString(),
-                style: theme.textTheme.bodySmall,
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        ),
-      ),
+      body: _buildBody(paginatedState, theme),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.push(
@@ -192,6 +121,180 @@ class TransactionsListScreen extends ConsumerWidget {
         foregroundColor: Colors.white,
         child: const Icon(Icons.add),
       ),
+    );
+  }
+
+  Widget _buildBody(PaginatedState<TransactionWithDetails> paginatedState, ThemeData theme) {
+    if (paginatedState.isLoading && paginatedState.items.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (paginatedState.error != null && paginatedState.items.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, size: 60, color: Colors.red),
+            const SizedBox(height: 16),
+            Text(
+              'Error loading transactions',
+              style: theme.textTheme.titleLarge,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              paginatedState.error!,
+              style: theme.textTheme.bodySmall,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () {
+                ref.read(transactionsPaginatedProvider.notifier).refresh();
+              },
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (paginatedState.items.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.receipt_long_outlined,
+              size: 120,
+              color: Colors.grey[300],
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'No transactions yet',
+              style: theme.textTheme.titleLarge?.copyWith(
+                color: Colors.grey[600],
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Tap + to add your first transaction',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: Colors.grey[500],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Group transactions by date
+    final groupedTransactions = <String, List>{};
+    for (final item in paginatedState.items) {
+      final dateKey = DateFormat.yMMMd().format(item.transaction.date);
+      groupedTransactions.putIfAbsent(dateKey, () => []);
+      groupedTransactions[dateKey]!.add(item);
+    }
+
+    final service = ref.read(transactionServiceProvider);
+
+    return ListView.builder(
+      controller: _scrollController,
+      padding: const EdgeInsets.only(bottom: 80),
+      itemCount: groupedTransactions.length + (paginatedState.hasMore || paginatedState.isLoadingMore ? 1 : 0),
+      itemBuilder: (context, index) {
+        // Show loading indicator at bottom
+        if (index == groupedTransactions.length) {
+          if (paginatedState.isLoadingMore) {
+            return const Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Center(child: CircularProgressIndicator()),
+            );
+          }
+          if (!paginatedState.hasMore && paginatedState.items.isNotEmpty) {
+            return Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Center(
+                child: Text(
+                  'No more transactions',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: Colors.grey[600],
+                  ),
+                ),
+              ),
+            );
+          }
+          return const SizedBox.shrink();
+        }
+
+        final dateKey = groupedTransactions.keys.elementAt(index);
+        final dateTransactions = groupedTransactions[dateKey]!;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Date Header
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+              child: Text(
+                dateKey,
+                style: theme.textTheme.titleSmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+
+            // Transactions for this date
+            ...dateTransactions.map((item) {
+              final isExpense = item.transaction.type == 'EXPENSE';
+              
+              // Determine if transaction is restricted from editing/deleting
+              final isRestricted = item.transaction.isAutoGenerated == true || 
+                                  item.isLinkedEntryMarked;
+
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                child: SwipeableListItem(
+                  enableEdit: !isRestricted,
+                  enableDelete: !isRestricted,
+                  borderRadius: 20,
+                  onEdit: isRestricted ? null : () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => EditTransactionScreen(
+                          transaction: item.transaction,
+                          category: item.category,
+                          contact: item.contact,
+                        ),
+                      ),
+                    );
+                  },
+                  onDelete: isRestricted ? null : () async {
+                    try {
+                      await service.deleteTransaction(item.transaction.id);
+                      if (context.mounted) {
+                        ToastUtils.showSuccessToast(context, 'Transaction deleted');
+                      }
+                    } catch (e) {
+                      if (context.mounted) {
+                        ToastUtils.showErrorToast(context, 'Error deleting transaction: $e');
+                      }
+                    }
+                  },
+                  child: _buildTransactionCard(
+                    context,
+                    ref: ref,
+                    item: item,
+                    isExpense: isExpense,
+                  ),
+                ),
+              );
+            }),
+          ],
+        );
+      },
     );
   }
 

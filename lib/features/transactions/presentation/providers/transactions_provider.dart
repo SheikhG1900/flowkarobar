@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/features/transactions/data/transactions_repository.dart';
 import 'package:flowpaisa/features/transactions/domain/models.dart';
 import 'package:flowpaisa/shared/providers/database_provider.dart';
+import 'package:flowpaisa/shared/models/paginated_state.dart';
 
 // Repository provider
 final transactionsRepositoryProvider = Provider<TransactionsRepository>((ref) {
@@ -67,5 +69,105 @@ class DateRange {
   int get hashCode => start.hashCode ^ end.hashCode;
 }
 
+// Paginated transactions provider
+class TransactionsPaginatedNotifier extends Notifier<PaginatedState<TransactionWithDetails>> {
+  StreamSubscription<List<TransactionWithDetails>>? _subscription;
+  late TransactionsRepository _repository;
 
+  @override
+  PaginatedState<TransactionWithDetails> build() {
+    _repository = ref.watch(transactionsRepositoryProvider);
+    // Load initial data asynchronously
+    Future.microtask(() => _loadInitial());
+    return PaginatedState<TransactionWithDetails>(
+      items: [],
+      isLoading: true,
+    );
+  }
+
+  Future<void> _loadInitial() async {
+    state = state.copyWith(isLoading: true, error: null);
+    
+    try {
+      // Load first page
+      final initialItems = await _repository.getTransactionsWithDetailsPaginated(
+        limit: state.pageSize,
+        offset: 0,
+      );
+
+      state = state.replaceItems(initialItems, hasMore: initialItems.length == state.pageSize);
+
+      // Watch for real-time updates to loaded items
+      _subscription?.cancel();
+      _subscription = _repository
+          .watchTransactionsWithDetailsPaginated(
+            limit: initialItems.length,
+            offset: 0,
+          )
+          .listen((updatedItems) {
+        if (!state.isLoadingMore) {
+          state = state.copyWith(items: updatedItems);
+        }
+      });
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: e.toString(),
+      );
+    }
+  }
+
+  Future<void> loadMore() async {
+    if (state.isLoadingMore || !state.hasMore) return;
+
+    state = state.copyWith(isLoadingMore: true);
+
+    try {
+      final newItems = await _repository.getTransactionsWithDetailsPaginated(
+        limit: state.pageSize,
+        offset: state.currentOffset,
+      );
+
+      if (newItems.isEmpty) {
+        state = state.copyWith(
+          isLoadingMore: false,
+          hasMore: false,
+        );
+      } else {
+        state = state.appendItems(
+          newItems,
+          hasMore: newItems.length == state.pageSize,
+        );
+
+        // Update subscription to watch all loaded items
+        _subscription?.cancel();
+        _subscription = _repository
+            .watchTransactionsWithDetailsPaginated(
+              limit: state.items.length,
+              offset: 0,
+            )
+            .listen((updatedItems) {
+          if (!state.isLoadingMore) {
+            state = state.copyWith(items: updatedItems);
+          }
+        });
+      }
+    } catch (e) {
+      state = state.copyWith(
+        isLoadingMore: false,
+        error: e.toString(),
+      );
+    }
+  }
+
+  Future<void> refresh() async {
+    _subscription?.cancel();
+    await _loadInitial();
+  }
+}
+
+final transactionsPaginatedProvider =
+    NotifierProvider<TransactionsPaginatedNotifier, PaginatedState<TransactionWithDetails>>(() {
+  return TransactionsPaginatedNotifier();
+});
 

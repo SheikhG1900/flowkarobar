@@ -233,6 +233,84 @@ class TransactionsRepository {
           ..where((t) => t.id.equals(id)))
         .write(companion);
   }
+
+  // Watch transactions with details (paginated) - Stream version
+  Stream<List<TransactionWithDetails>> watchTransactionsWithDetailsPaginated({
+    int limit = 50,
+    int offset = 0,
+  }) {
+    final query = _database.select(_database.transactions).join([
+      leftOuterJoin(
+        _database.categories,
+        _database.categories.id.equalsExp(_database.transactions.categoryId),
+      ),
+      leftOuterJoin(
+        _database.contacts,
+        _database.contacts.id.equalsExp(_database.transactions.contactId),
+      ),
+      leftOuterJoin(
+        _database.payables,
+        _database.payables.id.equalsExp(_database.transactions.linkedPayableId),
+      ),
+      leftOuterJoin(
+        _database.receivables,
+        _database.receivables.id.equalsExp(_database.transactions.linkedReceivableId),
+      ),
+    ])
+      ..orderBy([OrderingTerm.desc(_database.transactions.date)])
+      ..limit(limit, offset: offset);
+
+    return query.watch().map((rows) {
+      return rows.map((row) {
+        return TransactionWithDetails(
+          transaction: row.readTable(_database.transactions),
+          category: row.readTableOrNull(_database.categories),
+          contact: row.readTableOrNull(_database.contacts),
+          linkedPayable: row.readTableOrNull(_database.payables),
+          linkedReceivable: row.readTableOrNull(_database.receivables),
+        );
+      }).toList();
+    });
+  }
+
+  // Get transactions with details (paginated) - Future version for loading more
+  Future<List<TransactionWithDetails>> getTransactionsWithDetailsPaginated({
+    int limit = 50,
+    int offset = 0,
+  }) {
+    final query = _database.select(_database.transactions).join([
+      leftOuterJoin(
+        _database.categories,
+        _database.categories.id.equalsExp(_database.transactions.categoryId),
+      ),
+      leftOuterJoin(
+        _database.contacts,
+        _database.contacts.id.equalsExp(_database.transactions.contactId),
+      ),
+      leftOuterJoin(
+        _database.payables,
+        _database.payables.id.equalsExp(_database.transactions.linkedPayableId),
+      ),
+      leftOuterJoin(
+        _database.receivables,
+        _database.receivables.id.equalsExp(_database.transactions.linkedReceivableId),
+      ),
+    ])
+      ..orderBy([OrderingTerm.desc(_database.transactions.date)])
+      ..limit(limit, offset: offset);
+
+    return query.get().then((rows) {
+      return rows.map((row) {
+        return TransactionWithDetails(
+          transaction: row.readTable(_database.transactions),
+          category: row.readTableOrNull(_database.categories),
+          contact: row.readTableOrNull(_database.contacts),
+          linkedPayable: row.readTableOrNull(_database.payables),
+          linkedReceivable: row.readTableOrNull(_database.receivables),
+        );
+      }).toList();
+    });
+  }
 }
 
 class TransactionWithCategory {

@@ -436,4 +436,66 @@ class TransactionService {
       await transactionsRepository.deleteTransaction(transactionId);
     });
   }
+
+  /// Generate dummy transactions for testing pagination
+  /// Creates transactions with various dates, amounts, and types
+  Future<void> generateDummyTransactions({int count = 100}) async {
+    // Get categories and contacts
+    final expenseCategories = await categoriesRepository.watchCategoriesByType('EXPENSE').first;
+    final incomeCategories = await categoriesRepository.watchCategoriesByType('INCOME').first;
+    final contacts = await contactsRepository.watchAllContacts().first;
+
+    final descriptions = [
+      'Grocery Shopping',
+      'Restaurant Bill',
+      'Gas Station',
+      'Coffee Shop',
+      'Movie Tickets',
+      'Online Purchase',
+      'Utility Bill',
+      'Phone Bill',
+      'Internet Bill',
+      'Rent Payment',
+      'Salary',
+      'Freelance Work',
+      'Investment Return',
+      'Gift Received',
+      'Bonus Payment',
+    ];
+
+    for (int i = 0; i < count; i++) {
+      final daysAgo = i ~/ 2; // Spread transactions over time
+      final date = DateTime.now().subtract(Duration(days: daysAgo));
+      final isExpense = i % 3 != 0; // Mix of expenses and income
+      final type = isExpense ? 'EXPENSE' : 'INCOME';
+      
+      // Random amount between 10 and 5000
+      final amount = (10.0 + (i * 23.5) % 4990).roundToDouble();
+      
+      // Pick random category
+      final categories = isExpense ? expenseCategories : incomeCategories;
+      int? categoryId;
+      if (categories.isNotEmpty) {
+        categoryId = categories[i % categories.length].id;
+      }
+      
+      // Pick random contact (optional)
+      int? contactId;
+      if (contacts.isNotEmpty && i % 4 == 0) {
+        contactId = contacts[i % contacts.length].id;
+      }
+      
+      // Pick random description
+      final description = descriptions[i % descriptions.length] + ' #${i + 1}';
+
+      await createTransaction(
+        amount: amount,
+        type: type,
+        date: date,
+        description: description,
+        categoryId: categoryId,
+        contactId: contactId,
+      );
+    }
+  }
 }

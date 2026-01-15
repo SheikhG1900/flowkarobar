@@ -262,6 +262,82 @@ class ReceivablesRepository {
       }).toList();
     });
   }
+
+  /// Watch receivables with ALL linked data (paginated) - Stream version
+  Stream<List<ReceivableWithLinkedData>> watchReceivablesWithLinkedDataPaginated({
+    required String status,
+    int limit = 50,
+    int offset = 0,
+  }) {
+    final query = _database.select(_database.receivables).join([
+      leftOuterJoin(
+        _database.contacts,
+        _database.contacts.id.equalsExp(_database.receivables.contactId),
+      ),
+      leftOuterJoin(
+        _database.transactions,
+        _database.transactions.id.equalsExp(_database.receivables.linkedExpenseId) | 
+        _database.transactions.id.equalsExp(_database.receivables.linkedIncomeId),
+      ),
+      leftOuterJoin(
+        _database.categories,
+        _database.categories.id.equalsExp(_database.transactions.categoryId),
+      ),
+    ]);
+
+    query.where(_database.receivables.status.equals(status));
+    query.orderBy([OrderingTerm.desc(_database.receivables.date)]);
+    query.limit(limit, offset: offset);
+
+    return query.watch().map((rows) {
+      return rows.map((row) {
+        return ReceivableWithLinkedData(
+          receivable: row.readTable(_database.receivables),
+          contact: row.readTableOrNull(_database.contacts),
+          linkedTransaction: row.readTableOrNull(_database.transactions),
+          linkedCategory: row.readTableOrNull(_database.categories),
+        );
+      }).toList();
+    });
+  }
+
+  /// Get receivables with ALL linked data (paginated) - Future version for loading more
+  Future<List<ReceivableWithLinkedData>> getReceivablesWithLinkedDataPaginated({
+    required String status,
+    int limit = 50,
+    int offset = 0,
+  }) {
+    final query = _database.select(_database.receivables).join([
+      leftOuterJoin(
+        _database.contacts,
+        _database.contacts.id.equalsExp(_database.receivables.contactId),
+      ),
+      leftOuterJoin(
+        _database.transactions,
+        _database.transactions.id.equalsExp(_database.receivables.linkedExpenseId) | 
+        _database.transactions.id.equalsExp(_database.receivables.linkedIncomeId),
+      ),
+      leftOuterJoin(
+        _database.categories,
+        _database.categories.id.equalsExp(_database.transactions.categoryId),
+      ),
+    ]);
+
+    query.where(_database.receivables.status.equals(status));
+    query.orderBy([OrderingTerm.desc(_database.receivables.date)]);
+    query.limit(limit, offset: offset);
+
+    return query.get().then((rows) {
+      return rows.map((row) {
+        return ReceivableWithLinkedData(
+          receivable: row.readTable(_database.receivables),
+          contact: row.readTableOrNull(_database.contacts),
+          linkedTransaction: row.readTableOrNull(_database.transactions),
+          linkedCategory: row.readTableOrNull(_database.categories),
+        );
+      }).toList();
+    });
+  }
 }
 
 /// Data class for receivable with contact information

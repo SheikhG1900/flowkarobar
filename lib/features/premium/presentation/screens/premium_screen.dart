@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
@@ -23,15 +24,17 @@ class PremiumScreen extends ConsumerWidget {
     });
 
     return Scaffold(
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          ref.read(premiumProvider.notifier).togglePremium();
-          ToastUtils.showInfoToast(context, 'Toggled Debug Mode');
-        },
-        label: const Text('DEBUG: Toggle Mode'),
-        icon: const Icon(Icons.developer_mode),
-        backgroundColor: Colors.grey[800],
-      ),
+      floatingActionButton: kDebugMode
+          ? FloatingActionButton.extended(
+              onPressed: () {
+                ref.read(premiumProvider.notifier).togglePremium();
+                ToastUtils.showInfoToast(context, 'Toggled Debug Mode');
+              },
+              label: const Text('DEBUG: Toggle Mode'),
+              icon: const Icon(Icons.developer_mode),
+              backgroundColor: Colors.grey[800],
+            )
+          : null,
       body: CustomScrollView(
         slivers: [
           // Premium App Bar
