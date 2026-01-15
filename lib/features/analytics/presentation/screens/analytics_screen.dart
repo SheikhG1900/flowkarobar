@@ -1,4 +1,6 @@
-﻿import 'package:flutter/material.dart';
+import 'dart:io';
+import 'dart:ui';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
@@ -9,18 +11,136 @@ import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/shared/widgets/premium_badge.dart';
 import 'package:flowpaisa/features/contacts/presentation/screens/contact_details_screen.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
-import 'dart:ui';
+import 'package:flowpaisa/core/utils/export_service.dart';
+import 'package:flowpaisa/core/utils/toast_utils.dart';
+import 'package:flowpaisa/features/transactions/data/transactions_repository.dart';
+import 'package:flowpaisa/shared/providers/database_provider.dart';
+import 'package:printing/printing.dart';
+import 'package:pdf/pdf.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
-class AnalyticsScreen extends ConsumerWidget {
+final exportServiceProvider = Provider<ExportService>((ref) {
+  final db = ref.watch(databaseProvider);
+  final transactionsRepository = TransactionsRepository(db);
+  return ExportService(transactionsRepository, db);
+});
+
+class AnalyticsScreen extends ConsumerStatefulWidget {
   const AnalyticsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AnalyticsScreen> createState() => _AnalyticsScreenState();
+}
+
+class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
+  Future<void> _exportAnalyticsToPDF() async {
+    if (!PremiumGate.isPremium(ref)) {
+      PremiumGate.showPremiumDialog(context);
+      return;
+    }
+
+    final selectedDateRange = ref.read(selectedDateRangeProvider);
+    final currencySymbol = ref.read(currencySymbolProvider);
+
+    // Show loading
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(
+        child: CircularProgressIndicator(),
+      ),
+    );
+
+    try {
+      final exportService = ref.read(exportServiceProvider);
+
+      // Generate PDF bytes once
+      final pdfBytes = await exportService.exportAnalyticsToPDF(
+        startDate: selectedDateRange.startDate,
+        endDate: selectedDateRange.endDate,
+        currencySymbol: currencySymbol,
+      );
+
+      // Save PDF to temporary file for save/share actions
+      final directory = await getTemporaryDirectory();
+      final fileName =
+          'flowpaisa_analytics_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.pdf';
+      final filePath = '${directory.path}/$fileName';
+      final file = File(filePath);
+      await file.writeAsBytes(pdfBytes);
+
+      if (mounted) {
+        Navigator.pop(context); // Close loading
+
+        // Show action dialog with options
+        await showDialog<void>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('PDF Ready'),
+            content: const Text('Your analytics PDF report is ready. Choose an action:'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () async {
+                  Navigator.pop(context);
+                  try {
+                    await exportService.saveToDownloads(filePath);
+                    if (context.mounted) {
+                      ToastUtils.showSuccessToast(
+                          context, 'Saved to Downloads');
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      ToastUtils.showErrorToast(context, 'Error saving: $e');
+                    }
+                  }
+                },
+                child: const Text('Save Copy'),
+              ),
+              TextButton(
+                onPressed: () async {
+                  Navigator.pop(context);
+                  try {
+                    await exportService.sharePDFFile(filePath);
+                  } catch (e) {
+                    if (context.mounted) {
+                      ToastUtils.showErrorToast(context, 'Error sharing: $e');
+                    }
+                  }
+                },
+                child: const Text('Share'),
+              ),
+              FilledButton(
+                onPressed: () async {
+                  Navigator.pop(context);
+                  await Printing.layoutPdf(
+                    onLayout: (PdfPageFormat format) async => pdfBytes,
+                  );
+                },
+                child: const Text('Preview'),
+              ),
+            ],
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context); // Close loading if still open
+        ToastUtils.showErrorToast(context, 'Error exporting: $e');
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final selectedDateRange = ref.watch(selectedDateRangeProvider);
     final theme = Theme.of(context);
     final isPremium = PremiumGate.isPremium(ref);
-    final currencySymbol = ref.watch(currencySymbolProvider);
 
     return Scaffold(
       body: Stack(
@@ -50,7 +170,12 @@ class AnalyticsScreen extends ConsumerWidget {
                 centerTitle: true,
                 actions: [
                   IconButton(
-                    icon: const Icon(Icons.refresh),
+                    icon: const Icon(Symbols.picture_as_pdf),
+                    onPressed: _exportAnalyticsToPDF,
+                    tooltip: 'Export Analytics PDF',
+                  ),
+                  IconButton(
+                    icon: const Icon(Symbols.refresh),
                     onPressed: () {
                       // Invalidate all analytics providers to refresh data
                       ref.invalidate(financialSummaryProvider);
