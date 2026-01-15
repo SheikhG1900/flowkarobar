@@ -1,7 +1,9 @@
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/services.dart';
+import 'package:flutter/material.dart';
 import 'package:flowpaisa/core/utils/native_share.dart';
+import 'package:flowpaisa/core/utils/icon_helper.dart';
 import 'package:flowpaisa/features/transactions/data/transactions_repository.dart';
 import 'package:flowpaisa/features/payables/data/payables_repository.dart';
 import 'package:flowpaisa/features/receivables/data/receivables_repository.dart';
@@ -13,8 +15,6 @@ import 'package:csv/csv.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
-import 'package:printing/printing.dart';
-import 'package:drift/drift.dart' as drift;
 
 class ExportService {
   final TransactionsRepository _transactionsRepository;
@@ -884,44 +884,26 @@ class ExportService {
     }
   }
 
-  // Test PDF: Generate a PDF with all categories showing names, icons, and codePoint values
+  // Test PDF: Generate a PDF with all symbol icons showing icon, codepoint, and glyph code
   Future<Uint8List> generateTestCategoriesPDF() async {
     try {
       // Load Material Icons font
       final materialIconsFont = await loadMaterialIconsFont();
 
-      // Fetch all categories
-      final categories = await (_database.select(_database.categories)
-            ..where((c) => c.isDeleted.equals(false))
-            ..orderBy([(c) => drift.OrderingTerm.asc(c.name)]))
-          .get();
+      // Get all icons info from IconHelper
+      final allIconsInfo = IconHelper.getAllIconsInfo();
 
-      // Helper function to convert hex color to PdfColor
-      PdfColor hexToPdfColor(String hex) {
-        hex = hex.replaceAll('#', '');
-        if (hex.length == 6) {
-          final r = int.parse(hex.substring(0, 2), radix: 16) / 255.0;
-          final g = int.parse(hex.substring(2, 4), radix: 16) / 255.0;
-          final b = int.parse(hex.substring(4, 6), radix: 16) / 255.0;
-          return PdfColor(r, g, b);
-        }
-        return PdfColors.black;
-      }
-
-      // Helper function to build category icon
-      pw.Widget buildCategoryIcon(
-          String? iconCodePoint, PdfColor color, pw.Font? font) {
-        if (font != null && iconCodePoint != null && iconCodePoint.isNotEmpty) {
-          final codePoint = int.tryParse(iconCodePoint);
-          if (codePoint != null) {
-            if (codePoint >= 0xe000 && codePoint <= 0xefff) {
-              return pw.Icon(
-                pw.IconData(codePoint),
-                font: font,
-                size: 20,
-                color: color,
-              );
-            }
+      // Helper function to build icon widget
+      pw.Widget buildIconWidget(IconData icon, pw.Font? font) {
+        if (font != null) {
+          final codePoint = icon.codePoint;
+          if (codePoint >= 0xe000 && codePoint <= 0xefff) {
+            return pw.Icon(
+              pw.IconData(codePoint),
+              font: font,
+              size: 20,
+              color: PdfColors.black,
+            );
           }
         }
         // Fallback to colored circle
@@ -929,7 +911,7 @@ class ExportService {
           width: 20,
           height: 20,
           decoration: pw.BoxDecoration(
-            color: color,
+            color: PdfColors.grey400,
             shape: pw.BoxShape.circle,
           ),
         );
@@ -950,18 +932,31 @@ class ExportService {
               pw.Header(
                 level: 0,
                 child: pw.Text(
-                  'Categories Test - Icons with CodePoints',
+                  'All Symbol Icons - Icon, Codepoint, and Glyph Code',
                   style: pw.TextStyle(
                     fontSize: 24,
                     fontWeight: pw.FontWeight.bold,
                   ),
                 ),
               ),
+              pw.SizedBox(height: 10),
+              pw.Text(
+                'Total Icons: ${allIconsInfo.length}',
+                style: pw.TextStyle(
+                  fontSize: 12,
+                  color: PdfColors.grey700,
+                ),
+              ),
               pw.SizedBox(height: 20),
 
-              // Categories Table
+              // Icons Table
               pw.Table(
                 border: pw.TableBorder.all(color: PdfColors.grey300),
+                columnWidths: {
+                  0: const pw.FixedColumnWidth(60),
+                  1: const pw.FlexColumnWidth(3),
+                  2: const pw.FixedColumnWidth(100),
+                },
                 children: [
                   // Header row
                   pw.TableRow(
@@ -978,56 +973,44 @@ class ExportService {
                       pw.Padding(
                         padding: const pw.EdgeInsets.all(8),
                         child: pw.Text(
-                          'Name',
+                          'Glyph Code',
                           style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
                         ),
                       ),
                       pw.Padding(
                         padding: const pw.EdgeInsets.all(8),
                         child: pw.Text(
-                          'Type',
-                          style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
-                        ),
-                      ),
-                      pw.Padding(
-                        padding: const pw.EdgeInsets.all(8),
-                        child: pw.Text(
-                          'CodePoint',
+                          'Codepoint',
                           style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
                         ),
                       ),
                     ],
                   ),
-                  // Category rows
-                  ...categories.map((category) {
-                    final categoryColor = category.color != null
-                        ? hexToPdfColor(category.color!)
-                        : PdfColors.grey600;
+                  // Icon rows
+                  ...allIconsInfo.map((iconInfo) {
+                    final icon = iconInfo['icon'] as IconData;
+                    final codepoint = iconInfo['codepoint'] as int;
+                    final glyphCode = iconInfo['glyphCode'] as String;
 
                     return pw.TableRow(
                       children: [
                         pw.Padding(
                           padding: const pw.EdgeInsets.all(8),
                           child: pw.Center(
-                            child: buildCategoryIcon(
-                              category.icon,
-                              categoryColor,
-                              materialIconsFont,
-                            ),
+                            child: buildIconWidget(icon, materialIconsFont),
                           ),
                         ),
                         pw.Padding(
                           padding: const pw.EdgeInsets.all(8),
-                          child: pw.Text(category.name),
-                        ),
-                        pw.Padding(
-                          padding: const pw.EdgeInsets.all(8),
-                          child: pw.Text(category.type),
+                          child: pw.Text(
+                            glyphCode,
+                            style: const pw.TextStyle(fontSize: 10),
+                          ),
                         ),
                         pw.Padding(
                           padding: const pw.EdgeInsets.all(8),
                           child: pw.Text(
-                            category.icon ?? 'null',
+                            codepoint.toString(),
                             style: const pw.TextStyle(fontSize: 10),
                           ),
                         ),

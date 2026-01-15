@@ -231,7 +231,7 @@ class AppDatabase extends _$AppDatabase {
       ),
       (
         'Shopping',
-        Symbols.shopping_bag.codePoint.toString(),
+        Symbols.shopping_cart.codePoint.toString(),
         '#E91E63',
         'EXPENSE'
       ),

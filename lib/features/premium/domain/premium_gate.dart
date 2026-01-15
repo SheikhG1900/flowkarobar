@@ -79,10 +79,13 @@ final categoryLimitsProvider =
   final isPremium = ref.watch(premiumProvider).isPremium;
   if (isPremium) return TotalLimits.unlimited();
 
-  // Watch categories list (we need both types)
+  // Watch categories list (we need both types, but only count custom categories)
   final expenses = await ref.watch(categoriesByTypeProvider('EXPENSE').future);
   final incomes = await ref.watch(categoriesByTypeProvider('INCOME').future);
-  final used = expenses.length + incomes.length;
+  // Only count custom categories (isDefault == false)
+  final customExpenses = expenses.where((c) => !c.isDefault).toList();
+  final customIncomes = incomes.where((c) => !c.isDefault).toList();
+  final used = customExpenses.length + customIncomes.length;
 
   return TotalLimits(
     remaining: max<int>(0, PremiumGate._categoryTotalLimit - used),
@@ -104,7 +107,7 @@ class PremiumGate {
   static const int _payableMonthlyLimit = 10;
 
   static const int _contactTotalLimit = 10;
-  static const int _categoryTotalLimit = 10;
+  static const int _categoryTotalLimit = 5;
 
   // Helper to check premium status (using read for callbacks)
   static bool isPremium(WidgetRef ref) {
@@ -175,7 +178,10 @@ class PremiumGate {
 
     final expenses = await ref.read(categoriesByTypeProvider('EXPENSE').future);
     final incomes = await ref.read(categoriesByTypeProvider('INCOME').future);
-    final used = expenses.length + incomes.length;
+    // Only count custom categories (isDefault == false)
+    final customExpenses = expenses.where((c) => !c.isDefault).toList();
+    final customIncomes = incomes.where((c) => !c.isDefault).toList();
+    final used = customExpenses.length + customIncomes.length;
 
     return TotalLimits(
       remaining: max<int>(0, _categoryTotalLimit - used),
