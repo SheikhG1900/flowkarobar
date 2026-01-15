@@ -6,6 +6,7 @@ import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/receivables/presentation/providers/receivables_provider.dart';
 import 'package:flowpaisa/features/receivables/presentation/screens/add_receivable_screen.dart';
+import 'package:flowpaisa/features/receivables/presentation/screens/edit_receivable_screen.dart';
 import 'package:flowpaisa/features/receivables/presentation/widgets/receivable_details_dialog.dart';
 import 'package:flowpaisa/shared/widgets/swipeable_list_item.dart';
 import 'package:intl/intl.dart';
@@ -156,31 +157,32 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
                 ),
                 // Items
                 ...dateItems.map((item) {
-                  // Restrict editing/deleting received receivables
-                  final isRestricted = item.receivable.status == 'RECEIVED';
+                  // Restrict editing/deleting for received or linked receivables
+                  final canEdit = item.receivable.status == 'PENDING' && 
+                                  item.receivable.linkedExpenseId == null && 
+                                  item.receivable.linkedIncomeId == null;
                   
                   return Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                     child: SwipeableListItem(
-                      enableEdit: !isRestricted,
-                      enableDelete: !isRestricted,
+                      enableEdit: canEdit,
+                      enableDelete: canEdit,
                       borderRadius: 20,
-                      onEdit: isRestricted ? null : () {
-                        // TODO: Navigate to edit receivable screen
-                        // Navigator.push(
-                        //   context,
-                        //   MaterialPageRoute(
-                        //     builder: (context) => EditReceivableScreen(receivableId: item.receivable.id),
-                        //   ),
-                        // );
-                      },
-                      onDelete: isRestricted ? null : () async {
+                      onEdit: canEdit ? () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => EditReceivableScreen(receivableId: item.receivable.id),
+                          ),
+                        );
+                      } : null,
+                      onDelete: canEdit ? () async {
                         final repository = ref.read(receivablesRepositoryProvider);
                         await repository.deleteReceivable(item.receivable.id);
                         if (context.mounted) {
                           ToastUtils.showSuccessToast(context, 'Receivable deleted');
                         }
-                      },
+                      } : null,
                       child: _buildReceivableCard(item, currency),
                     ),
                   );
@@ -203,6 +205,7 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
     final receivable = item.receivable;
     final contact = item.contact;
     final linkedCategory = item.linkedCategory;
+    final linkedTransaction = item.linkedTransaction;
     final isPending = receivable.status == 'PENDING';
     
     // Dynamic font size based on amount
@@ -281,7 +284,7 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      // Linked category tag
+                      // Linked category or transaction type tag
                       if (linkedCategory != null) ...[
                         const SizedBox(height: 4),
                         Container(
@@ -329,6 +332,51 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
                                     fontWeight: FontWeight.w600,
                                   ),
                                   overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ] else if (linkedTransaction != null) ...[
+                        const SizedBox(height: 4),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: linkedTransaction.type == 'EXPENSE'
+                                ? AppColors.expenseColor.withValues(alpha: 0.1)
+                                : AppColors.incomeColor.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(4),
+                            border: Border.all(
+                              color: linkedTransaction.type == 'EXPENSE'
+                                  ? AppColors.expenseColor.withValues(alpha: 0.3)
+                                  : AppColors.incomeColor.withValues(alpha: 0.3),
+                              width: 1,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                linkedTransaction.type == 'EXPENSE'
+                                    ? Icons.payment
+                                    : Icons.monetization_on,
+                                color: linkedTransaction.type == 'EXPENSE'
+                                    ? AppColors.expenseColor
+                                    : AppColors.incomeColor,
+                                size: 10,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                linkedTransaction.type == 'EXPENSE'
+                                    ? 'Expense'
+                                    : 'Income',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: linkedTransaction.type == 'EXPENSE'
+                                      ? AppColors.expenseColor
+                                      : AppColors.incomeColor,
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
                             ],

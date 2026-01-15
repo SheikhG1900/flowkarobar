@@ -77,7 +77,8 @@ class PayablesRepository {
       ),
       leftOuterJoin(
         _database.transactions,
-        _database.transactions.id.equalsExp(_database.payables.linkedExpenseId),
+        _database.transactions.id.equalsExp(_database.payables.linkedExpenseId) | 
+        _database.transactions.id.equalsExp(_database.payables.linkedIncomeId),
       ),
       leftOuterJoin(
         _database.categories,

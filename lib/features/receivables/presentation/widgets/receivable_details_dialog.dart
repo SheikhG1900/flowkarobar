@@ -6,7 +6,9 @@ import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/core/utils/icon_helper.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:flowpaisa/features/receivables/domain/models.dart';
+import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/features/receivables/presentation/providers/receivables_provider.dart';
+import 'package:flowpaisa/features/receivables/presentation/screens/edit_receivable_screen.dart';
 import 'package:flowpaisa/features/whatsapp/presentation/providers/whatsapp_provider.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
@@ -19,6 +21,13 @@ class ReceivableDetailsDialog extends ConsumerWidget {
     super.key,
     required this.item,
   });
+
+  bool _canEditReceivable(Receivable receivable) {
+    // Can edit only if PENDING and not linked to any transaction
+    return receivable.status == 'PENDING' && 
+           receivable.linkedExpenseId == null && 
+           receivable.linkedIncomeId == null;
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -44,13 +53,17 @@ class ReceivableDetailsDialog extends ConsumerWidget {
             icon: const Icon(Icons.share),
             onPressed: () => _shareReceivable(context, ref, receivable, contact),
           ),
-          // Edit button (hide if received)
-          if (receivable.status != 'RECEIVED')
+          // Edit button (hide if received or linked)
+          if (_canEditReceivable(receivable))
             IconButton(
               icon: const Icon(Icons.edit),
               onPressed: () {
-                // TODO: Navigate to edit receivable screen
-                ToastUtils.showInfoToast(context, 'Edit feature coming soon');
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => EditReceivableScreen(receivableId: receivable.id),
+                  ),
+                );
               },
             ),
           // Delete button (hide if received)
@@ -244,7 +257,7 @@ class ReceivableDetailsDialog extends ConsumerWidget {
               ),
             
             // Linked Transaction Section
-            if (linkedTransaction != null && linkedCategory != null) ...[
+            if (linkedTransaction != null) ...[
               const SizedBox(height: 24),
               const Divider(),
               const SizedBox(height: 16),
@@ -339,7 +352,9 @@ class ReceivableDetailsDialog extends ConsumerWidget {
     final theme = Theme.of(context);
     final currency = ref.read(currentCurrencyProvider).value!;
     final isExpense = transaction.type == 'EXPENSE';
-    final categoryColor = Color(int.parse(category.color!.replaceAll('#', '0xFF')));
+    final categoryColor = category != null && category.color != null
+        ? Color(int.parse(category.color!.replaceAll('#', '0xFF')))
+        : (isExpense ? AppColors.expenseColor : AppColors.incomeColor);
     
     return Container(
       padding: const EdgeInsets.all(16),
@@ -363,7 +378,9 @@ class ReceivableDetailsDialog extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(
-                  IconHelper.getIconData(category.icon) ?? Symbols.category,
+                  category != null && category.icon != null
+                      ? (IconHelper.getIconData(category.icon) ?? Symbols.category)
+                      : (isExpense ? Icons.payment : Icons.monetization_on),
                   color: categoryColor,
                   size: 20,
                 ),
@@ -374,7 +391,7 @@ class ReceivableDetailsDialog extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      category.name,
+                      category != null ? category.name : (isExpense ? 'Expense' : 'Income'),
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,

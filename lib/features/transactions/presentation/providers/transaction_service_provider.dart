@@ -144,7 +144,7 @@ class TransactionService {
                 description: Value(description),
                 date: Value(date),
                 status: const Value('PENDING'),
-                // linkedIncomeId is not available in Payables table currently
+                linkedIncomeId: Value(transactionId),
                 autoCreateExpense:
                     const Value(true), // When you pay back, it becomes expense
                 createdAt: Value(DateTime.now()),
@@ -305,6 +305,7 @@ class TransactionService {
                 description: Value(description),
                 date: Value(date),
                 status: const Value('PENDING'),
+                linkedIncomeId: Value(transactionId),
                 autoCreateExpense: const Value(true),
                 createdAt: Value(DateTime.now()),
                 updatedAt: Value(DateTime.now()),

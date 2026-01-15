@@ -6,6 +6,7 @@ import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/payables/presentation/providers/payables_provider.dart';
 import 'package:flowpaisa/features/payables/presentation/screens/add_payable_screen.dart';
+import 'package:flowpaisa/features/payables/presentation/screens/edit_payable_screen.dart';
 import 'package:flowpaisa/features/payables/presentation/widgets/payable_details_dialog.dart';
 import 'package:flowpaisa/shared/widgets/swipeable_list_item.dart';
 import 'package:intl/intl.dart';
@@ -154,24 +155,31 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
                 ),
                 // Items
                 ...dateItems.map((item) {
-                  // Restrict editing/deleting paid payables
-                  final isRestricted = item.payable.status == 'PAID';
+                  // Restrict editing/deleting for paid or linked payables
+                  final canEdit = item.payable.status == 'PENDING' && 
+                                  item.payable.linkedExpenseId == null && 
+                                  item.payable.linkedIncomeId == null;
                   
                   return Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                     child: SwipeableListItem(
-                      enableEdit: !isRestricted,
-                      enableDelete: !isRestricted,
+                      enableEdit: canEdit,
+                      enableDelete: canEdit,
                       borderRadius: 20,
-                      onEdit: isRestricted ? null : () {
-                        // TODO: Navigate to edit screen
-                      },
-                      onDelete: isRestricted ? null : () async {
+                      onEdit: canEdit ? () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => EditPayableScreen(payableId: item.payable.id),
+                          ),
+                        );
+                      } : null,
+                      onDelete: canEdit ? () async {
                         await repository.deletePayable(item.payable.id);
                         if (context.mounted) {
                           ToastUtils.showSuccessToast(context, 'Payable deleted');
                         }
-                      },
+                      } : null,
                       child: _buildPayableCard(item, currency),
                     ),
                   );
@@ -194,6 +202,7 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
     final payable = item.payable;
     final contact = item.contact;
     final linkedCategory = item.linkedCategory;
+    final linkedTransaction = item.linkedTransaction;
     final isPending = payable.status == 'PENDING';
 
     // Dynamic font size based on amount
@@ -273,7 +282,7 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      // Linked category tag
+                      // Linked category or transaction type tag
                       if (linkedCategory != null) ...[
                         const SizedBox(height: 4),
                         Container(
@@ -321,6 +330,51 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
                                     fontWeight: FontWeight.w600,
                                   ),
                                   overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ] else if (linkedTransaction != null) ...[
+                        const SizedBox(height: 4),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: linkedTransaction.type == 'EXPENSE'
+                                ? AppColors.expenseColor.withValues(alpha: 0.1)
+                                : AppColors.incomeColor.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(4),
+                            border: Border.all(
+                              color: linkedTransaction.type == 'EXPENSE'
+                                  ? AppColors.expenseColor.withValues(alpha: 0.3)
+                                  : AppColors.incomeColor.withValues(alpha: 0.3),
+                              width: 1,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                linkedTransaction.type == 'EXPENSE'
+                                    ? Icons.payment
+                                    : Icons.monetization_on,
+                                color: linkedTransaction.type == 'EXPENSE'
+                                    ? AppColors.expenseColor
+                                    : AppColors.incomeColor,
+                                size: 10,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                linkedTransaction.type == 'EXPENSE'
+                                    ? 'Expense'
+                                    : 'Income',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: linkedTransaction.type == 'EXPENSE'
+                                      ? AppColors.expenseColor
+                                      : AppColors.incomeColor,
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
                             ],

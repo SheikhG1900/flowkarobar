@@ -96,6 +96,8 @@ class Payables extends Table {
   // Linked transaction fields
   IntColumn get linkedExpenseId =>
       integer().nullable().references(Transactions, #id)();
+  IntColumn get linkedIncomeId =>
+      integer().nullable().references(Transactions, #id)();
   BoolColumn get autoCreateExpense =>
       boolean().withDefault(const Constant(false))();
 
@@ -184,7 +186,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -215,6 +217,10 @@ class AppDatabase extends _$AppDatabase {
           // Migration from version 5 to 6: Add decimalPlaces to AppCurrencies
           if (from <= 5) {
             await m.addColumn(appCurrencies, appCurrencies.decimalPlaces);
+          }
+          // Migration from version 6 to 7: Add linkedIncomeId to Payables
+          if (from <= 6) {
+            await m.database.customStatement('ALTER TABLE payables ADD COLUMN linked_income_id INTEGER REFERENCES transactions(id)');
           }
         },
       );

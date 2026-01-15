@@ -2208,6 +2208,15 @@ class $PayablesTable extends Payables with TableInfo<$PayablesTable, Payable> {
       requiredDuringInsert: false,
       defaultConstraints:
           GeneratedColumn.constraintIsAlways('REFERENCES transactions (id)'));
+  static const VerificationMeta _linkedIncomeIdMeta =
+      const VerificationMeta('linkedIncomeId');
+  @override
+  late final GeneratedColumn<int> linkedIncomeId = GeneratedColumn<int>(
+      'linked_income_id', aliasedName, true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES transactions (id)'));
   static const VerificationMeta _autoCreateExpenseMeta =
       const VerificationMeta('autoCreateExpense');
   @override
@@ -2253,6 +2262,7 @@ class $PayablesTable extends Payables with TableInfo<$PayablesTable, Payable> {
         status,
         paidDate,
         linkedExpenseId,
+        linkedIncomeId,
         autoCreateExpense,
         externalLinkId,
         createdAt,
@@ -2313,6 +2323,12 @@ class $PayablesTable extends Payables with TableInfo<$PayablesTable, Payable> {
           linkedExpenseId.isAcceptableOrUnknown(
               data['linked_expense_id']!, _linkedExpenseIdMeta));
     }
+    if (data.containsKey('linked_income_id')) {
+      context.handle(
+          _linkedIncomeIdMeta,
+          linkedIncomeId.isAcceptableOrUnknown(
+              data['linked_income_id']!, _linkedIncomeIdMeta));
+    }
     if (data.containsKey('auto_create_expense')) {
       context.handle(
           _autoCreateExpenseMeta,
@@ -2360,6 +2376,8 @@ class $PayablesTable extends Payables with TableInfo<$PayablesTable, Payable> {
           .read(DriftSqlType.dateTime, data['${effectivePrefix}paid_date']),
       linkedExpenseId: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}linked_expense_id']),
+      linkedIncomeId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}linked_income_id']),
       autoCreateExpense: attachedDatabase.typeMapping.read(
           DriftSqlType.bool, data['${effectivePrefix}auto_create_expense'])!,
       externalLinkId: attachedDatabase.typeMapping.read(
@@ -2387,6 +2405,7 @@ class Payable extends DataClass implements Insertable<Payable> {
   final String status;
   final DateTime? paidDate;
   final int? linkedExpenseId;
+  final int? linkedIncomeId;
   final bool autoCreateExpense;
   final String? externalLinkId;
   final DateTime createdAt;
@@ -2401,6 +2420,7 @@ class Payable extends DataClass implements Insertable<Payable> {
       required this.status,
       this.paidDate,
       this.linkedExpenseId,
+      this.linkedIncomeId,
       required this.autoCreateExpense,
       this.externalLinkId,
       required this.createdAt,
@@ -2424,6 +2444,9 @@ class Payable extends DataClass implements Insertable<Payable> {
     }
     if (!nullToAbsent || linkedExpenseId != null) {
       map['linked_expense_id'] = Variable<int>(linkedExpenseId);
+    }
+    if (!nullToAbsent || linkedIncomeId != null) {
+      map['linked_income_id'] = Variable<int>(linkedIncomeId);
     }
     map['auto_create_expense'] = Variable<bool>(autoCreateExpense);
     if (!nullToAbsent || externalLinkId != null) {
@@ -2453,6 +2476,9 @@ class Payable extends DataClass implements Insertable<Payable> {
       linkedExpenseId: linkedExpenseId == null && nullToAbsent
           ? const Value.absent()
           : Value(linkedExpenseId),
+      linkedIncomeId: linkedIncomeId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(linkedIncomeId),
       autoCreateExpense: Value(autoCreateExpense),
       externalLinkId: externalLinkId == null && nullToAbsent
           ? const Value.absent()
@@ -2475,6 +2501,7 @@ class Payable extends DataClass implements Insertable<Payable> {
       status: serializer.fromJson<String>(json['status']),
       paidDate: serializer.fromJson<DateTime?>(json['paidDate']),
       linkedExpenseId: serializer.fromJson<int?>(json['linkedExpenseId']),
+      linkedIncomeId: serializer.fromJson<int?>(json['linkedIncomeId']),
       autoCreateExpense: serializer.fromJson<bool>(json['autoCreateExpense']),
       externalLinkId: serializer.fromJson<String?>(json['externalLinkId']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
@@ -2494,6 +2521,7 @@ class Payable extends DataClass implements Insertable<Payable> {
       'status': serializer.toJson<String>(status),
       'paidDate': serializer.toJson<DateTime?>(paidDate),
       'linkedExpenseId': serializer.toJson<int?>(linkedExpenseId),
+      'linkedIncomeId': serializer.toJson<int?>(linkedIncomeId),
       'autoCreateExpense': serializer.toJson<bool>(autoCreateExpense),
       'externalLinkId': serializer.toJson<String?>(externalLinkId),
       'createdAt': serializer.toJson<DateTime>(createdAt),
@@ -2511,6 +2539,7 @@ class Payable extends DataClass implements Insertable<Payable> {
           String? status,
           Value<DateTime?> paidDate = const Value.absent(),
           Value<int?> linkedExpenseId = const Value.absent(),
+          Value<int?> linkedIncomeId = const Value.absent(),
           bool? autoCreateExpense,
           Value<String?> externalLinkId = const Value.absent(),
           DateTime? createdAt,
@@ -2527,6 +2556,8 @@ class Payable extends DataClass implements Insertable<Payable> {
         linkedExpenseId: linkedExpenseId.present
             ? linkedExpenseId.value
             : this.linkedExpenseId,
+        linkedIncomeId:
+            linkedIncomeId.present ? linkedIncomeId.value : this.linkedIncomeId,
         autoCreateExpense: autoCreateExpense ?? this.autoCreateExpense,
         externalLinkId:
             externalLinkId.present ? externalLinkId.value : this.externalLinkId,
@@ -2547,6 +2578,9 @@ class Payable extends DataClass implements Insertable<Payable> {
       linkedExpenseId: data.linkedExpenseId.present
           ? data.linkedExpenseId.value
           : this.linkedExpenseId,
+      linkedIncomeId: data.linkedIncomeId.present
+          ? data.linkedIncomeId.value
+          : this.linkedIncomeId,
       autoCreateExpense: data.autoCreateExpense.present
           ? data.autoCreateExpense.value
           : this.autoCreateExpense,
@@ -2570,6 +2604,7 @@ class Payable extends DataClass implements Insertable<Payable> {
           ..write('status: $status, ')
           ..write('paidDate: $paidDate, ')
           ..write('linkedExpenseId: $linkedExpenseId, ')
+          ..write('linkedIncomeId: $linkedIncomeId, ')
           ..write('autoCreateExpense: $autoCreateExpense, ')
           ..write('externalLinkId: $externalLinkId, ')
           ..write('createdAt: $createdAt, ')
@@ -2589,6 +2624,7 @@ class Payable extends DataClass implements Insertable<Payable> {
       status,
       paidDate,
       linkedExpenseId,
+      linkedIncomeId,
       autoCreateExpense,
       externalLinkId,
       createdAt,
@@ -2606,6 +2642,7 @@ class Payable extends DataClass implements Insertable<Payable> {
           other.status == this.status &&
           other.paidDate == this.paidDate &&
           other.linkedExpenseId == this.linkedExpenseId &&
+          other.linkedIncomeId == this.linkedIncomeId &&
           other.autoCreateExpense == this.autoCreateExpense &&
           other.externalLinkId == this.externalLinkId &&
           other.createdAt == this.createdAt &&
@@ -2622,6 +2659,7 @@ class PayablesCompanion extends UpdateCompanion<Payable> {
   final Value<String> status;
   final Value<DateTime?> paidDate;
   final Value<int?> linkedExpenseId;
+  final Value<int?> linkedIncomeId;
   final Value<bool> autoCreateExpense;
   final Value<String?> externalLinkId;
   final Value<DateTime> createdAt;
@@ -2636,6 +2674,7 @@ class PayablesCompanion extends UpdateCompanion<Payable> {
     this.status = const Value.absent(),
     this.paidDate = const Value.absent(),
     this.linkedExpenseId = const Value.absent(),
+    this.linkedIncomeId = const Value.absent(),
     this.autoCreateExpense = const Value.absent(),
     this.externalLinkId = const Value.absent(),
     this.createdAt = const Value.absent(),
@@ -2651,6 +2690,7 @@ class PayablesCompanion extends UpdateCompanion<Payable> {
     this.status = const Value.absent(),
     this.paidDate = const Value.absent(),
     this.linkedExpenseId = const Value.absent(),
+    this.linkedIncomeId = const Value.absent(),
     this.autoCreateExpense = const Value.absent(),
     this.externalLinkId = const Value.absent(),
     this.createdAt = const Value.absent(),
@@ -2668,6 +2708,7 @@ class PayablesCompanion extends UpdateCompanion<Payable> {
     Expression<String>? status,
     Expression<DateTime>? paidDate,
     Expression<int>? linkedExpenseId,
+    Expression<int>? linkedIncomeId,
     Expression<bool>? autoCreateExpense,
     Expression<String>? externalLinkId,
     Expression<DateTime>? createdAt,
@@ -2683,6 +2724,7 @@ class PayablesCompanion extends UpdateCompanion<Payable> {
       if (status != null) 'status': status,
       if (paidDate != null) 'paid_date': paidDate,
       if (linkedExpenseId != null) 'linked_expense_id': linkedExpenseId,
+      if (linkedIncomeId != null) 'linked_income_id': linkedIncomeId,
       if (autoCreateExpense != null) 'auto_create_expense': autoCreateExpense,
       if (externalLinkId != null) 'external_link_id': externalLinkId,
       if (createdAt != null) 'created_at': createdAt,
@@ -2700,6 +2742,7 @@ class PayablesCompanion extends UpdateCompanion<Payable> {
       Value<String>? status,
       Value<DateTime?>? paidDate,
       Value<int?>? linkedExpenseId,
+      Value<int?>? linkedIncomeId,
       Value<bool>? autoCreateExpense,
       Value<String?>? externalLinkId,
       Value<DateTime>? createdAt,
@@ -2714,6 +2757,7 @@ class PayablesCompanion extends UpdateCompanion<Payable> {
       status: status ?? this.status,
       paidDate: paidDate ?? this.paidDate,
       linkedExpenseId: linkedExpenseId ?? this.linkedExpenseId,
+      linkedIncomeId: linkedIncomeId ?? this.linkedIncomeId,
       autoCreateExpense: autoCreateExpense ?? this.autoCreateExpense,
       externalLinkId: externalLinkId ?? this.externalLinkId,
       createdAt: createdAt ?? this.createdAt,
@@ -2751,6 +2795,9 @@ class PayablesCompanion extends UpdateCompanion<Payable> {
     if (linkedExpenseId.present) {
       map['linked_expense_id'] = Variable<int>(linkedExpenseId.value);
     }
+    if (linkedIncomeId.present) {
+      map['linked_income_id'] = Variable<int>(linkedIncomeId.value);
+    }
     if (autoCreateExpense.present) {
       map['auto_create_expense'] = Variable<bool>(autoCreateExpense.value);
     }
@@ -2778,6 +2825,7 @@ class PayablesCompanion extends UpdateCompanion<Payable> {
           ..write('status: $status, ')
           ..write('paidDate: $paidDate, ')
           ..write('linkedExpenseId: $linkedExpenseId, ')
+          ..write('linkedIncomeId: $linkedIncomeId, ')
           ..write('autoCreateExpense: $autoCreateExpense, ')
           ..write('externalLinkId: $externalLinkId, ')
           ..write('createdAt: $createdAt, ')
@@ -6089,21 +6137,6 @@ final class $$TransactionsTableReferences
     return ProcessedTableManager(
         manager.$state.copyWith(prefetchedData: [item]));
   }
-
-  static MultiTypedResultKey<$PayablesTable, List<Payable>> _payablesRefsTable(
-          _$AppDatabase db) =>
-      MultiTypedResultKey.fromTable(db.payables,
-          aliasName: $_aliasNameGenerator(
-              db.transactions.id, db.payables.linkedExpenseId));
-
-  $$PayablesTableProcessedTableManager get payablesRefs {
-    final manager = $$PayablesTableTableManager($_db, $_db.payables).filter(
-        (f) => f.linkedExpenseId.id.sqlEquals($_itemColumn<int>('id')!));
-
-    final cache = $_typedResult.readTableOrNull(_payablesRefsTable($_db));
-    return ProcessedTableManager(
-        manager.$state.copyWith(prefetchedData: cache));
-  }
 }
 
 class $$TransactionsTableFilterComposer
@@ -6190,27 +6223,6 @@ class $$TransactionsTableFilterComposer
                   $removeJoinBuilderFromRootComposer,
             ));
     return composer;
-  }
-
-  Expression<bool> payablesRefs(
-      Expression<bool> Function($$PayablesTableFilterComposer f) f) {
-    final $$PayablesTableFilterComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.id,
-        referencedTable: $db.payables,
-        getReferencedColumn: (t) => t.linkedExpenseId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$PayablesTableFilterComposer(
-              $db: $db,
-              $table: $db.payables,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return f(composer);
   }
 }
 
@@ -6382,27 +6394,6 @@ class $$TransactionsTableAnnotationComposer
             ));
     return composer;
   }
-
-  Expression<T> payablesRefs<T extends Object>(
-      Expression<T> Function($$PayablesTableAnnotationComposer a) f) {
-    final $$PayablesTableAnnotationComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.id,
-        referencedTable: $db.payables,
-        getReferencedColumn: (t) => t.linkedExpenseId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$PayablesTableAnnotationComposer(
-              $db: $db,
-              $table: $db.payables,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return f(composer);
-  }
 }
 
 class $$TransactionsTableTableManager extends RootTableManager<
@@ -6416,8 +6407,7 @@ class $$TransactionsTableTableManager extends RootTableManager<
     $$TransactionsTableUpdateCompanionBuilder,
     (Transaction, $$TransactionsTableReferences),
     Transaction,
-    PrefetchHooks Function(
-        {bool categoryId, bool contactId, bool payablesRefs})> {
+    PrefetchHooks Function({bool categoryId, bool contactId})> {
   $$TransactionsTableTableManager(_$AppDatabase db, $TransactionsTable table)
       : super(TableManagerState(
           db: db,
@@ -6494,11 +6484,10 @@ class $$TransactionsTableTableManager extends RootTableManager<
                     $$TransactionsTableReferences(db, table, e)
                   ))
               .toList(),
-          prefetchHooksCallback: (
-              {categoryId = false, contactId = false, payablesRefs = false}) {
+          prefetchHooksCallback: ({categoryId = false, contactId = false}) {
             return PrefetchHooks(
               db: db,
-              explicitlyWatchedTables: [if (payablesRefs) db.payables],
+              explicitlyWatchedTables: [],
               addJoins: <
                   T extends TableManagerState<
                       dynamic,
@@ -6536,21 +6525,7 @@ class $$TransactionsTableTableManager extends RootTableManager<
                 return state;
               },
               getPrefetchedDataCallback: (items) async {
-                return [
-                  if (payablesRefs)
-                    await $_getPrefetchedData<Transaction, $TransactionsTable,
-                            Payable>(
-                        currentTable: table,
-                        referencedTable: $$TransactionsTableReferences
-                            ._payablesRefsTable(db),
-                        managerFromTypedResult: (p0) =>
-                            $$TransactionsTableReferences(db, table, p0)
-                                .payablesRefs,
-                        referencedItemsForCurrentItem:
-                            (item, referencedItems) => referencedItems
-                                .where((e) => e.linkedExpenseId == item.id),
-                        typedResults: items)
-                ];
+                return [];
               },
             );
           },
@@ -6568,8 +6543,7 @@ typedef $$TransactionsTableProcessedTableManager = ProcessedTableManager<
     $$TransactionsTableUpdateCompanionBuilder,
     (Transaction, $$TransactionsTableReferences),
     Transaction,
-    PrefetchHooks Function(
-        {bool categoryId, bool contactId, bool payablesRefs})>;
+    PrefetchHooks Function({bool categoryId, bool contactId})>;
 typedef $$ReceivablesTableCreateCompanionBuilder = ReceivablesCompanion
     Function({
   Value<int> id,
@@ -7148,6 +7122,7 @@ typedef $$PayablesTableCreateCompanionBuilder = PayablesCompanion Function({
   Value<String> status,
   Value<DateTime?> paidDate,
   Value<int?> linkedExpenseId,
+  Value<int?> linkedIncomeId,
   Value<bool> autoCreateExpense,
   Value<String?> externalLinkId,
   Value<DateTime> createdAt,
@@ -7163,6 +7138,7 @@ typedef $$PayablesTableUpdateCompanionBuilder = PayablesCompanion Function({
   Value<String> status,
   Value<DateTime?> paidDate,
   Value<int?> linkedExpenseId,
+  Value<int?> linkedIncomeId,
   Value<bool> autoCreateExpense,
   Value<String?> externalLinkId,
   Value<DateTime> createdAt,
@@ -7197,6 +7173,21 @@ final class $$PayablesTableReferences
     final manager = $$TransactionsTableTableManager($_db, $_db.transactions)
         .filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_linkedExpenseIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static $TransactionsTable _linkedIncomeIdTable(_$AppDatabase db) =>
+      db.transactions.createAlias(
+          $_aliasNameGenerator(db.payables.linkedIncomeId, db.transactions.id));
+
+  $$TransactionsTableProcessedTableManager? get linkedIncomeId {
+    final $_column = $_itemColumn<int>('linked_income_id');
+    if ($_column == null) return null;
+    final manager = $$TransactionsTableTableManager($_db, $_db.transactions)
+        .filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_linkedIncomeIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
         manager.$state.copyWith(prefetchedData: [item]));
@@ -7271,6 +7262,26 @@ class $$PayablesTableFilterComposer
     final $$TransactionsTableFilterComposer composer = $composerBuilder(
         composer: this,
         getCurrentColumn: (t) => t.linkedExpenseId,
+        referencedTable: $db.transactions,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$TransactionsTableFilterComposer(
+              $db: $db,
+              $table: $db.transactions,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$TransactionsTableFilterComposer get linkedIncomeId {
+    final $$TransactionsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.linkedIncomeId,
         referencedTable: $db.transactions,
         getReferencedColumn: (t) => t.id,
         builder: (joinBuilder,
@@ -7371,6 +7382,26 @@ class $$PayablesTableOrderingComposer
             ));
     return composer;
   }
+
+  $$TransactionsTableOrderingComposer get linkedIncomeId {
+    final $$TransactionsTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.linkedIncomeId,
+        referencedTable: $db.transactions,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$TransactionsTableOrderingComposer(
+              $db: $db,
+              $table: $db.transactions,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
 }
 
 class $$PayablesTableAnnotationComposer
@@ -7454,6 +7485,26 @@ class $$PayablesTableAnnotationComposer
             ));
     return composer;
   }
+
+  $$TransactionsTableAnnotationComposer get linkedIncomeId {
+    final $$TransactionsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.linkedIncomeId,
+        referencedTable: $db.transactions,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$TransactionsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.transactions,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
 }
 
 class $$PayablesTableTableManager extends RootTableManager<
@@ -7467,7 +7518,8 @@ class $$PayablesTableTableManager extends RootTableManager<
     $$PayablesTableUpdateCompanionBuilder,
     (Payable, $$PayablesTableReferences),
     Payable,
-    PrefetchHooks Function({bool contactId, bool linkedExpenseId})> {
+    PrefetchHooks Function(
+        {bool contactId, bool linkedExpenseId, bool linkedIncomeId})> {
   $$PayablesTableTableManager(_$AppDatabase db, $PayablesTable table)
       : super(TableManagerState(
           db: db,
@@ -7488,6 +7540,7 @@ class $$PayablesTableTableManager extends RootTableManager<
             Value<String> status = const Value.absent(),
             Value<DateTime?> paidDate = const Value.absent(),
             Value<int?> linkedExpenseId = const Value.absent(),
+            Value<int?> linkedIncomeId = const Value.absent(),
             Value<bool> autoCreateExpense = const Value.absent(),
             Value<String?> externalLinkId = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
@@ -7503,6 +7556,7 @@ class $$PayablesTableTableManager extends RootTableManager<
             status: status,
             paidDate: paidDate,
             linkedExpenseId: linkedExpenseId,
+            linkedIncomeId: linkedIncomeId,
             autoCreateExpense: autoCreateExpense,
             externalLinkId: externalLinkId,
             createdAt: createdAt,
@@ -7518,6 +7572,7 @@ class $$PayablesTableTableManager extends RootTableManager<
             Value<String> status = const Value.absent(),
             Value<DateTime?> paidDate = const Value.absent(),
             Value<int?> linkedExpenseId = const Value.absent(),
+            Value<int?> linkedIncomeId = const Value.absent(),
             Value<bool> autoCreateExpense = const Value.absent(),
             Value<String?> externalLinkId = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
@@ -7533,6 +7588,7 @@ class $$PayablesTableTableManager extends RootTableManager<
             status: status,
             paidDate: paidDate,
             linkedExpenseId: linkedExpenseId,
+            linkedIncomeId: linkedIncomeId,
             autoCreateExpense: autoCreateExpense,
             externalLinkId: externalLinkId,
             createdAt: createdAt,
@@ -7543,7 +7599,9 @@ class $$PayablesTableTableManager extends RootTableManager<
                   (e.readTable(table), $$PayablesTableReferences(db, table, e)))
               .toList(),
           prefetchHooksCallback: (
-              {contactId = false, linkedExpenseId = false}) {
+              {contactId = false,
+              linkedExpenseId = false,
+              linkedIncomeId = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [],
@@ -7580,6 +7638,16 @@ class $$PayablesTableTableManager extends RootTableManager<
                         $$PayablesTableReferences._linkedExpenseIdTable(db).id,
                   ) as T;
                 }
+                if (linkedIncomeId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.linkedIncomeId,
+                    referencedTable:
+                        $$PayablesTableReferences._linkedIncomeIdTable(db),
+                    referencedColumn:
+                        $$PayablesTableReferences._linkedIncomeIdTable(db).id,
+                  ) as T;
+                }
 
                 return state;
               },
@@ -7602,7 +7670,8 @@ typedef $$PayablesTableProcessedTableManager = ProcessedTableManager<
     $$PayablesTableUpdateCompanionBuilder,
     (Payable, $$PayablesTableReferences),
     Payable,
-    PrefetchHooks Function({bool contactId, bool linkedExpenseId})>;
+    PrefetchHooks Function(
+        {bool contactId, bool linkedExpenseId, bool linkedIncomeId})>;
 typedef $$RemindersTableCreateCompanionBuilder = RemindersCompanion Function({
   Value<int> id,
   required String type,
