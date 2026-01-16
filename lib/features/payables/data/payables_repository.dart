@@ -222,6 +222,21 @@ class PayablesRepository {
     return result.read(_database.payables.amount.sum()) ?? 0.0;
   }
 
+  /// Get count of overdue payables (PENDING with dueDate < now)
+  Future<int> getOverduePayablesCount() async {
+    final now = DateTime.now();
+    final query = _database.selectOnly(_database.payables)
+      ..addColumns([_database.payables.id.count()])
+      ..where(
+        _database.payables.status.equals('PENDING') &
+        _database.payables.dueDate.isNotNull() &
+        _database.payables.dueDate.isSmallerThanValue(now),
+      );
+
+    final result = await query.getSingle();
+    return result.read(_database.payables.id.count()) ?? 0;
+  }
+
   /// Get payables by contact
   Stream<List<Payable>> watchPayablesByContact(int contactId) {
     return (_database.select(_database.payables)

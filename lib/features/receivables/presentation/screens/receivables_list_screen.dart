@@ -28,49 +28,126 @@ class ReceivablesListScreen extends ConsumerStatefulWidget {
 
 class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
     with SingleTickerProviderStateMixin {
-  late TabController _tabController;
+  TabController? _tabController;
   late ScrollController _scrollController;
+  int _previousOverdueCount = -1;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
     _scrollController = ScrollController();
     _scrollController.addListener(_onScroll);
+  }
 
-    // Reset pagination when tab changes
-    _tabController.addListener(_onTabChanged);
+  void _initializeTabController(int tabCount) {
+    if (_tabController != null) {
+      if (_tabController!.length == tabCount) return;
+      _tabController!.removeListener(_onTabChanged);
+      _tabController!.dispose();
+    }
+    _tabController = TabController(length: tabCount, vsync: this);
+    _tabController!.addListener(_onTabChanged);
   }
 
   @override
   void dispose() {
-    _tabController.removeListener(_onTabChanged);
-    _tabController.dispose();
+    _tabController?.removeListener(_onTabChanged);
+    _tabController?.dispose();
     _scrollController.dispose();
     super.dispose();
   }
 
+  String _getStatusForTabIndex(int index, bool hasOverdueTab) {
+    if (hasOverdueTab) {
+      // Tabs: Pending (0), Overdue (1), Received (2)
+      return index == 0 ? 'PENDING' : (index == 1 ? 'OVERDUE' : 'RECEIVED');
+    } else {
+      // Tabs: Pending (0), Received (1)
+      return index == 0 ? 'PENDING' : 'RECEIVED';
+    }
+  }
+
   void _onTabChanged() {
-    if (_tabController.indexIsChanging) {
-      // Reset scroll position when tab changes
-      _scrollController.jumpTo(0);
+    if (_tabController?.indexIsChanging ?? false) {
+      // Reset scroll position when tab changes (only if attached)
+      if (_scrollController.hasClients) {
+        _scrollController.jumpTo(0);
+      }
       // Refresh pagination for the new tab
-      final status = _tabController.index == 0 ? 'PENDING' : 'RECEIVED';
+      final overdueCountAsync = ref.read(overdueReceivablesCountProvider);
+      final hasOverdueTab = (overdueCountAsync.value ?? 0) > 0;
+      final status = _getStatusForTabIndex(_tabController!.index, hasOverdueTab);
       ref.read(receivablesPaginatedProvider(status).notifier).refresh();
     }
   }
 
   void _onScroll() {
+    if (!_scrollController.hasClients) return;
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 200) {
       // Load more when near bottom
-      final status = _tabController.index == 0 ? 'PENDING' : 'RECEIVED';
+      final overdueCountAsync = ref.read(overdueReceivablesCountProvider);
+      final hasOverdueTab = (overdueCountAsync.value ?? 0) > 0;
+      final status = _getStatusForTabIndex(_tabController?.index ?? 0, hasOverdueTab);
       ref.read(receivablesPaginatedProvider(status).notifier).loadMore();
     }
   }
 
+  Widget _buildTabWithCount(String label, int count, {bool isOverdue = false}) {
+    return Tab(
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(label),
+          if (count > 0) ...[
+            const SizedBox(width: 4),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: isOverdue 
+                    ? Colors.red.withValues(alpha: 0.2)
+                    : AppColors.receivableColor.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                count.toString(),
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  color: isOverdue ? Colors.red : AppColors.receivableColor,
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final pendingCountAsync = ref.watch(pendingReceivablesCountProvider);
+    final overdueCountAsync = ref.watch(overdueReceivablesCountProvider);
+    final pendingCount = pendingCountAsync.value ?? 0;
+    final overdueCount = overdueCountAsync.value ?? 0;
+    final hasOverdueTab = overdueCount > 0;
+    final tabCount = hasOverdueTab ? 3 : 2;
+
+    // Initialize or update TabController when tab count changes
+    if (_previousOverdueCount != overdueCount) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _initializeTabController(tabCount);
+          _previousOverdueCount = overdueCount;
+        }
+      });
+    }
+
+    if (_tabController == null) {
+      _initializeTabController(tabCount);
+      _previousOverdueCount = overdueCount;
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Receivables'),
@@ -155,24 +232,30 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
               ],
             ),
         ],
-        bottom: TabBar(
-          controller: _tabController,
-          indicatorColor: AppColors.receivableColor,
-          labelColor: AppColors.receivableColor,
-          unselectedLabelColor: Theme.of(context).colorScheme.onSurfaceVariant,
-          tabs: const [
-            Tab(text: 'Pending'),
-            Tab(text: 'Received'),
-          ],
-        ),
+        bottom: _tabController == null
+            ? null
+            : TabBar(
+                controller: _tabController,
+                indicatorColor: AppColors.receivableColor,
+                labelColor: AppColors.receivableColor,
+                unselectedLabelColor: Theme.of(context).colorScheme.onSurfaceVariant,
+                tabs: [
+                  _buildTabWithCount('Pending', pendingCount),
+                  if (hasOverdueTab) _buildTabWithCount('Overdue', overdueCount, isOverdue: true),
+                  const Tab(text: 'Received'),
+                ],
+              ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          _buildReceivablesList('PENDING'),
-          _buildReceivablesList('RECEIVED'),
-        ],
-      ),
+      body: _tabController == null
+          ? const Center(child: CircularProgressIndicator())
+          : TabBarView(
+              controller: _tabController,
+              children: [
+                _buildReceivablesList('PENDING'),
+                if (hasOverdueTab) _buildReceivablesList('OVERDUE'),
+                _buildReceivablesList('RECEIVED'),
+              ],
+            ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.push(
@@ -242,7 +325,9 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
             Icon(
               status == 'PENDING'
                   ? Icons.hourglass_empty
-                  : Icons.check_circle_outline,
+                  : status == 'OVERDUE'
+                      ? Icons.warning
+                      : Icons.check_circle_outline,
               size: 100,
               color: Colors.grey[300],
             ),
@@ -250,7 +335,9 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
             Text(
               status == 'PENDING'
                   ? 'No pending receivables'
-                  : 'No received payments',
+                  : status == 'OVERDUE'
+                      ? 'No overdue receivables'
+                      : 'No received payments',
               style: theme.textTheme.titleLarge?.copyWith(
                 color: Colors.grey[600],
                 fontWeight: FontWeight.w600,
@@ -260,7 +347,9 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
             Text(
               status == 'PENDING'
                   ? 'Add a receivable to track money owed to you'
-                  : 'Mark pending receivables as received',
+                  : status == 'OVERDUE'
+                      ? 'All receivables are up to date'
+                      : 'Mark pending receivables as received',
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: Colors.grey[500],
               ),

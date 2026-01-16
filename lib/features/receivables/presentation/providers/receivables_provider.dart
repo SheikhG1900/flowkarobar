@@ -40,6 +40,12 @@ final totalPendingReceivablesProvider = FutureProvider<double>((ref) {
   return repository.getTotalPendingReceivables();
 });
 
+// Watch overdue receivables count
+final overdueReceivablesCountProvider = StreamProvider<int>((ref) {
+  final repository = ref.watch(receivablesRepositoryProvider);
+  return repository.watchReceivablesWithLinkedDataOverdue().map((receivables) => receivables.length);
+});
+
 // Watch receivables with contacts by status
 final receivablesWithContactsByStatusProvider =
     StreamProvider.family<List<ReceivableWithContact>, String>((ref, status) {
@@ -51,6 +57,12 @@ final receivablesWithContactsByStatusProvider =
 final pendingReceivablesProvider = StreamProvider<List<Receivable>>((ref) {
   final repository = ref.watch(receivablesRepositoryProvider);
   return repository.watchReceivablesByStatus('PENDING');
+});
+
+// Watch pending receivables count
+final pendingReceivablesCountProvider = StreamProvider<int>((ref) {
+  final repository = ref.watch(receivablesRepositoryProvider);
+  return repository.watchReceivablesByStatus('PENDING').map((receivables) => receivables.length);
 });
 
 // Watch received receivables

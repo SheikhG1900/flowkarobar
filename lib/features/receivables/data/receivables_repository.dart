@@ -228,6 +228,21 @@ class ReceivablesRepository {
     return result.read(_database.receivables.amount.sum()) ?? 0.0;
   }
 
+  /// Get count of overdue receivables (PENDING with dueDate < now)
+  Future<int> getOverdueReceivablesCount() async {
+    final now = DateTime.now();
+    final query = _database.selectOnly(_database.receivables)
+      ..addColumns([_database.receivables.id.count()])
+      ..where(
+        _database.receivables.status.equals('PENDING') &
+        _database.receivables.dueDate.isNotNull() &
+        _database.receivables.dueDate.isSmallerThanValue(now),
+      );
+
+    final result = await query.getSingle();
+    return result.read(_database.receivables.id.count()) ?? 0;
+  }
+
   /// Get receivables by contact
   Stream<List<Receivable>> watchReceivablesByContact(int contactId) {
     return (_database.select(_database.receivables)
