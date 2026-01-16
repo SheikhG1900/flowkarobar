@@ -15,6 +15,9 @@ import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
 import 'package:flowpaisa/core/utils/icon_helper.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:flowpaisa/features/transactions/presentation/widgets/schedule_selection_drawer.dart';
+import 'package:flowpaisa/features/transactions/presentation/providers/schedule_service_provider.dart';
+import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 
 class EditTransactionScreen extends ConsumerStatefulWidget {
   final Transaction transaction;
@@ -93,6 +96,82 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
     _amountController.dispose();
     _descriptionController.dispose();
     super.dispose();
+  }
+
+  Future<void> _scheduleTransaction() async {
+    // Check schedule limits first
+    final isPremium = PremiumGate.isPremium(ref);
+    if (!isPremium) {
+      final limits = await PremiumGate.getScheduleLimits(ref);
+      if (!limits.canAdd) {
+        if (mounted) {
+          PremiumGate.showPremiumDialog(context);
+        }
+        return;
+      }
+    }
+
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    // Show schedule selection drawer
+    final result = await showModalBottomSheet<ScheduleSelectionResult>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => const ScheduleSelectionDrawer(),
+    );
+
+    if (result == null) {
+      return; // User cancelled
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final scheduleService = ref.read(scheduleServiceProvider);
+      final amount = double.parse(_amountController.text);
+      final description = _descriptionController.text.isEmpty
+          ? null
+          : _descriptionController.text;
+
+      await scheduleService.createSchedule(
+        amount: amount,
+        type: _selectedType,
+        description: description,
+        categoryId: _selectedCategory?.id,
+        contactId: _selectedContactId,
+        paidRelationship: _paidRelationship,
+        dueDate: _dueDate,
+        scheduleType: result.scheduleType,
+        selectedDaysOfWeek: result.selectedDaysOfWeek,
+        selectedDaysOfMonth: result.selectedDaysOfMonth,
+      );
+
+      // Invalidate schedule limits
+      ref.invalidate(scheduleLimitsProvider);
+
+      if (mounted) {
+        Navigator.pop(context);
+        ToastUtils.showSuccessToast(
+          context,
+          'Schedule created successfully',
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ToastUtils.showErrorToast(context, 'Error: ${e.toString()}');
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   Future<void> _updateTransaction() async {
@@ -404,6 +483,7 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
     final theme = Theme.of(context);
     final isExpense = _selectedType == 'EXPENSE';
     final currencySymbol = ref.watch(currencySymbolProvider);
+    final scheduleLimitsAsync = ref.watch(scheduleLimitsProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -935,6 +1015,42 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                 isLoading: _isLoading,
                 icon: _isLoading ? null : Icons.check,
                 width: double.infinity,
+              ),
+              const SizedBox(height: 12),
+              // Schedule Button with Lock Icon (only when limit reached)
+              Stack(
+                alignment: Alignment.topRight,
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: (_isLoading ||
+                            (scheduleLimitsAsync.asData?.value != null &&
+                                !scheduleLimitsAsync.asData!.value.canAdd))
+                        ? null
+                        : _scheduleTransaction,
+                    icon: const Icon(Icons.schedule),
+                    label: const Text('Schedule'),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      side: BorderSide(
+                        color: isExpense
+                            ? AppColors.expenseColor
+                            : AppColors.incomeColor,
+                      ),
+                    ),
+                  ),
+                  if (scheduleLimitsAsync.asData?.value != null &&
+                      !scheduleLimitsAsync.asData!.value.canAdd)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8, right: 8),
+                      child: Icon(
+                        Icons.lock,
+                        size: 16,
+                        color: isExpense
+                            ? AppColors.expenseColor
+                            : AppColors.incomeColor,
+                      ),
+                    ),
+                ],
               ),
             ],
           ),

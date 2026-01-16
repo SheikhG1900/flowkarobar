@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/features/transactions/data/transactions_repository.dart';
+import 'package:flowpaisa/features/transactions/data/schedules_repository.dart';
 import 'package:flowpaisa/features/transactions/domain/models.dart';
 import 'package:flowpaisa/shared/providers/database_provider.dart';
 import 'package:flowpaisa/shared/models/paginated_state.dart';
@@ -10,6 +11,18 @@ import 'package:flowpaisa/shared/models/paginated_state.dart';
 final transactionsRepositoryProvider = Provider<TransactionsRepository>((ref) {
   final database = ref.watch(databaseProvider);
   return TransactionsRepository(database);
+});
+
+// Schedules repository provider
+final schedulesRepositoryProvider = Provider<SchedulesRepository>((ref) {
+  final database = ref.watch(databaseProvider);
+  return SchedulesRepository(database);
+});
+
+// Watch all schedules
+final allSchedulesProvider = StreamProvider<List<TransactionSchedule>>((ref) {
+  final repository = ref.watch(schedulesRepositoryProvider);
+  return repository.watchAllSchedules();
 });
 
 // Watch all transactions

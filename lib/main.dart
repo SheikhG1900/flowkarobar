@@ -40,6 +40,8 @@ import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/core/utils/category_helper.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:workmanager/workmanager.dart';
+import 'package:flowpaisa/features/transactions/data/schedule_scheduler.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -71,6 +73,22 @@ void main() async {
   // This ensures only used icons are included in the build
   Symbols.forceCompileTimeTreeShaking();
 
+  // Initialize workmanager for background tasks
+  await Workmanager().initialize(
+    callbackDispatcher,
+    isInDebugMode: false,
+  );
+
+  // Register periodic task to run daily (at approximately midnight)
+  await Workmanager().registerPeriodicTask(
+    'schedule-transactions',
+    'schedule-transactions',
+    frequency: const Duration(hours: 24),
+    constraints: Constraints(
+      networkType: NetworkType.notRequired,
+    ),
+  );
+
   runApp(
     ProviderScope(
       overrides: [
@@ -79,6 +97,18 @@ void main() async {
       child: const FlowPaisaApp(),
     ),
   );
+}
+
+/// Background task callback for workmanager
+@pragma('vm:entry-point')
+void callbackDispatcher() {
+  Workmanager().executeTask((task, inputData) async {
+    if (task == 'schedule-transactions') {
+      await processSchedules();
+      return Future.value(true);
+    }
+    return Future.value(false);
+  });
 }
 
 Future<void> _initializeFonts() async {

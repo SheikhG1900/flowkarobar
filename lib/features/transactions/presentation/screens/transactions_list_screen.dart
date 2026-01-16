@@ -17,6 +17,11 @@ import 'package:flowpaisa/shared/models/paginated_state.dart';
 import 'package:intl/intl.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
 import 'package:flowpaisa/core/utils/category_helper.dart';
+import 'package:flowpaisa/features/transactions/presentation/widgets/schedule_icon_badge.dart';
+import 'package:flowpaisa/features/transactions/presentation/widgets/schedule_list_item.dart';
+import 'package:flowpaisa/features/transactions/presentation/providers/schedule_service_provider.dart';
+import 'package:flowpaisa/features/transactions/presentation/screens/edit_schedule_screen.dart';
+import 'package:flowpaisa/core/database/database.dart';
 
 class TransactionsListScreen extends ConsumerStatefulWidget {
   const TransactionsListScreen({super.key});
@@ -26,20 +31,23 @@ class TransactionsListScreen extends ConsumerStatefulWidget {
       _TransactionsListScreenState();
 }
 
-class _TransactionsListScreenState
-    extends ConsumerState<TransactionsListScreen> {
+class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
+    with SingleTickerProviderStateMixin {
   late ScrollController _scrollController;
+  late TabController _tabController;
 
   @override
   void initState() {
     super.initState();
     _scrollController = ScrollController();
     _scrollController.addListener(_onScroll);
+    _tabController = TabController(length: 2, vsync: this);
   }
 
   @override
   void dispose() {
     _scrollController.dispose();
+    _tabController.dispose();
     super.dispose();
   }
 
@@ -57,10 +65,21 @@ class _TransactionsListScreenState
     // Use the paginated provider
     final paginatedState = ref.watch(transactionsPaginatedProvider);
     final theme = Theme.of(context);
+    final schedulesAsync = ref.watch(allSchedulesProvider);
+    final hasSchedules = schedulesAsync.value?.isNotEmpty ?? false;
 
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.transactions),
+        bottom: hasSchedules
+            ? TabBar(
+                controller: _tabController,
+                tabs: const [
+                  Tab(text: 'Transactions'),
+                  Tab(text: 'Schedules'),
+                ],
+              )
+            : null,
         actions: [
           // Debug button to generate dummy transactions (only in debug mode)
           if (kDebugMode)
@@ -113,7 +132,15 @@ class _TransactionsListScreenState
           ),
         ],
       ),
-      body: _buildBody(paginatedState, theme),
+      body: hasSchedules
+          ? TabBarView(
+              controller: _tabController,
+              children: [
+                _buildBody(paginatedState, theme),
+                _buildSchedulesTab(schedulesAsync.value ?? []),
+              ],
+            )
+          : _buildBody(paginatedState, theme),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.push(
@@ -384,217 +411,288 @@ class _TransactionsListScreenState
     // Dynamic font size based on amount
     final amountFontSize = AmountFormatter.getFontSize(transaction.amount);
 
-    return Container(
-      decoration: BoxDecoration(
-        color: theme.cardColor.withValues(alpha: isInactive ? 0.6 : 1.0),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: displayColor.withValues(alpha: isDark ? 0.2 : 0.1),
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: displayColor.withValues(alpha: isDark ? 0.05 : 0.08),
-            blurRadius: isInactive ? 4 : 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.all(16),
-        leading: Container(
-          width: 50,
-          height: 50,
+    return Stack(
+      children: [
+        Container(
           decoration: BoxDecoration(
-            color: displayColor.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(14),
+            color: theme.cardColor.withValues(alpha: isInactive ? 0.6 : 1.0),
+            borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: displayColor.withValues(alpha: 0.3),
+              color: displayColor.withValues(alpha: isDark ? 0.2 : 0.1),
               width: 1,
             ),
+            boxShadow: [
+              BoxShadow(
+                color: displayColor.withValues(alpha: isDark ? 0.05 : 0.08),
+                blurRadius: isInactive ? 4 : 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
-          alignment: Alignment.center,
-          child: CategoryHelper.buildCategoryIcon(
-              category?.icon, displayColor, isExpense),
-        ),
-        title: Text(
-          transaction.description ?? (isExpense ? 'Expense' : 'Income'),
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-            color: textColor,
-            decoration: isInactive
-                ? null
-                : null, // Could add strikethrough if cancelled
+          child: ListTile(
+            contentPadding: const EdgeInsets.all(16),
+            leading: Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                color: displayColor.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: displayColor.withValues(alpha: 0.3),
+                  width: 1,
+                ),
+              ),
+              alignment: Alignment.center,
+              child: CategoryHelper.buildCategoryIcon(
+                  category?.icon, displayColor, isExpense),
+            ),
+            title: Text(
+              transaction.description ?? (isExpense ? 'Expense' : 'Income'),
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: textColor,
+                decoration: isInactive
+                    ? null
+                    : null, // Could add strikethrough if cancelled
+              ),
+            ),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  category?.name ?? 'Uncategorized',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant
+                        .withValues(alpha: isInactive ? 0.5 : 1.0),
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                // Contact tag - styled like payable/receivable tags
+                if (contact != null) ...[
+                  const SizedBox(height: 6),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: AppColors.getContactColor(contact.name)
+                          .withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(4),
+                      border: Border.all(
+                        color: AppColors.getContactColor(contact.name)
+                            .withValues(alpha: 0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 14,
+                          height: 14,
+                          decoration: BoxDecoration(
+                            gradient:
+                                AppColors.getContactGradient(contact.name),
+                            shape: BoxShape.circle,
+                          ),
+                          alignment: Alignment.center,
+                          child: Text(
+                            contact.name.isNotEmpty
+                                ? contact.name[0].toUpperCase()
+                                : '?',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 7,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Flexible(
+                          child: Text(
+                            contact.name,
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: theme.colorScheme.onSurfaceVariant,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+            ),
+            trailing: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  '${isExpense ? '-' : '+'} ${AmountFormatter.formatWithCurrency(transaction.amount, currency.symbol, currency.decimalPlaces)}',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    color: isExpense
+                        ? (isInactive
+                            ? AppColors.expenseColor.withValues(alpha: 0.5)
+                            : AppColors.expenseColor)
+                        : (isInactive
+                            ? AppColors.incomeColor.withValues(alpha: 0.5)
+                            : AppColors.incomeColor),
+                    fontWeight: FontWeight.bold,
+                    fontSize: amountFontSize,
+                  ),
+                ),
+                // Show status badge below amount for linked transactions
+                if (transaction.paidRelationship != null) ...[
+                  const SizedBox(height: 4),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: _getStatusColor(transaction.paidRelationship!)
+                          .withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(4),
+                      border: Border.all(
+                        color: _getStatusColor(transaction.paidRelationship!)
+                            .withValues(alpha: 0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (item.isLinkedEntryMarked) ...[
+                          Icon(
+                            Icons.check_circle,
+                            size: 10,
+                            color:
+                                _getStatusColor(transaction.paidRelationship!),
+                          ),
+                          const SizedBox(width: 3),
+                        ],
+                        Text(
+                          _getStatusLabel(transaction.paidRelationship!,
+                              item.isLinkedEntryMarked),
+                          style: TextStyle(
+                            fontSize: 10,
+                            color:
+                                _getStatusColor(transaction.paidRelationship!),
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+                // Show "Auto" badge for auto-generated transactions
+                if (transaction.isAutoGenerated == true) ...[
+                  const SizedBox(height: 4),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(4),
+                      border: Border.all(
+                        color: Colors.grey.withValues(alpha: 0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.auto_awesome,
+                          size: 10,
+                          color: Colors.grey[600],
+                        ),
+                        const SizedBox(width: 3),
+                        Text(
+                          'Auto',
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: Colors.grey[600],
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+            ),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => TransactionDetailsDialog(item: item),
+                ),
+              );
+            },
           ),
         ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              category?.name ?? 'Uncategorized',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant
-                    .withValues(alpha: isInactive ? 0.5 : 1.0),
-              ),
-              overflow: TextOverflow.ellipsis,
-            ),
-            // Contact tag - styled like payable/receivable tags
-            if (contact != null) ...[
-              const SizedBox(height: 6),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                decoration: BoxDecoration(
-                  color: AppColors.getContactColor(contact.name)
-                      .withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(4),
-                  border: Border.all(
-                    color: AppColors.getContactColor(contact.name)
-                        .withValues(alpha: 0.3),
-                    width: 1,
+        // Schedule icon badge (top-right corner)
+        if (transaction.isScheduled == true) const ScheduleIconBadge(),
+      ],
+    );
+  }
+
+  Widget _buildSchedulesTab(List<TransactionSchedule> schedules) {
+    if (schedules.isEmpty) {
+      return const Center(
+        child: Text('No schedules found'),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: schedules.length,
+      itemBuilder: (context, index) {
+        final schedule = schedules[index];
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 6),
+          child: SwipeableListItem(
+            enableEdit: true,
+            enableDelete: true,
+            borderRadius: 20,
+            onEdit: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => EditScheduleScreen(
+                    schedule: schedule,
                   ),
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 14,
-                      height: 14,
-                      decoration: BoxDecoration(
-                        gradient: AppColors.getContactGradient(contact.name),
-                        shape: BoxShape.circle,
-                      ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        contact.name.isNotEmpty
-                            ? contact.name[0].toUpperCase()
-                            : '?',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 7,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    Flexible(
-                      child: Text(
-                        contact.name,
-                        style: TextStyle(
-                          fontSize: 10,
-                          color: theme.colorScheme.onSurfaceVariant,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ],
-        ),
-        trailing: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Text(
-              '${isExpense ? '-' : '+'} ${AmountFormatter.formatWithCurrency(transaction.amount, currency.symbol, currency.decimalPlaces)}',
-              style: theme.textTheme.titleLarge?.copyWith(
-                color: isExpense
-                    ? (isInactive
-                        ? AppColors.expenseColor.withValues(alpha: 0.5)
-                        : AppColors.expenseColor)
-                    : (isInactive
-                        ? AppColors.incomeColor.withValues(alpha: 0.5)
-                        : AppColors.incomeColor),
-                fontWeight: FontWeight.bold,
-                fontSize: amountFontSize,
-              ),
+              ).then((updated) {
+                if (updated == true) {
+                  ref.invalidate(allSchedulesProvider);
+                }
+              });
+            },
+            onDelete: () async {
+              final service = ref.read(scheduleServiceProvider);
+              await service.deleteSchedule(schedule.id);
+              if (context.mounted) {
+                ToastUtils.showSuccessToast(
+                    context, 'Schedule deleted successfully');
+              }
+              ref.invalidate(allSchedulesProvider);
+            },
+            child: ScheduleListItem(
+              schedule: schedule,
+              onToggle: () async {
+                final service = ref.read(scheduleServiceProvider);
+                if (schedule.isPaused) {
+                  await service.resumeSchedule(schedule.id, DateTime.now());
+                } else {
+                  await service.pauseSchedule(schedule.id);
+                }
+                ref.invalidate(allSchedulesProvider);
+              },
             ),
-            // Show status badge below amount for linked transactions
-            if (transaction.paidRelationship != null) ...[
-              const SizedBox(height: 4),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: _getStatusColor(transaction.paidRelationship!)
-                      .withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(4),
-                  border: Border.all(
-                    color: _getStatusColor(transaction.paidRelationship!)
-                        .withValues(alpha: 0.3),
-                    width: 1,
-                  ),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (item.isLinkedEntryMarked) ...[
-                      Icon(
-                        Icons.check_circle,
-                        size: 10,
-                        color: _getStatusColor(transaction.paidRelationship!),
-                      ),
-                      const SizedBox(width: 3),
-                    ],
-                    Text(
-                      _getStatusLabel(transaction.paidRelationship!,
-                          item.isLinkedEntryMarked),
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: _getStatusColor(transaction.paidRelationship!),
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-            // Show "Auto" badge for auto-generated transactions
-            if (transaction.isAutoGenerated == true) ...[
-              const SizedBox(height: 4),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: Colors.grey.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(4),
-                  border: Border.all(
-                    color: Colors.grey.withValues(alpha: 0.3),
-                    width: 1,
-                  ),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.auto_awesome,
-                      size: 10,
-                      color: Colors.grey[600],
-                    ),
-                    const SizedBox(width: 3),
-                    Text(
-                      'Auto',
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: Colors.grey[600],
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ],
-        ),
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => TransactionDetailsDialog(item: item),
-            ),
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 

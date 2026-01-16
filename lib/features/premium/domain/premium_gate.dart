@@ -7,6 +7,7 @@ import 'package:flowpaisa/shared/providers/shared_preferences_provider.dart';
 import 'package:flowpaisa/features/premium/presentation/screens/premium_screen.dart';
 import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
 import 'package:flowpaisa/features/categories/presentation/providers/categories_provider.dart';
+import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
 
 // Providers for dependencies
 final usageTrackerRepositoryProvider = Provider<UsageTrackerRepository>((ref) {
@@ -95,6 +96,22 @@ final categoryLimitsProvider =
   );
 });
 
+final scheduleLimitsProvider =
+    FutureProvider.autoDispose<TotalLimits>((ref) async {
+  final isPremium = ref.watch(premiumProvider).isPremium;
+  if (isPremium) return TotalLimits.unlimited();
+
+  final repository = ref.read(schedulesRepositoryProvider);
+  final used = await repository.getScheduleCount();
+
+  return TotalLimits(
+    remaining: max<int>(0, PremiumGate._scheduleTotalLimit - used),
+    canAdd: used < PremiumGate._scheduleTotalLimit,
+    total: PremiumGate._scheduleTotalLimit,
+    used: used,
+  );
+});
+
 class PremiumGate {
   // Limits Configuration
   static const int _transactionDailyLimit = 10;
@@ -108,6 +125,7 @@ class PremiumGate {
 
   static const int _contactTotalLimit = 10;
   static const int _categoryTotalLimit = 5;
+  static const int _scheduleTotalLimit = 2;
 
   // Helper to check premium status (using read for callbacks)
   static bool isPremium(WidgetRef ref) {
@@ -187,6 +205,22 @@ class PremiumGate {
       remaining: max<int>(0, _categoryTotalLimit - used),
       canAdd: used < _categoryTotalLimit,
       total: _categoryTotalLimit,
+      used: used,
+    );
+  }
+
+  static Future<TotalLimits> getScheduleLimits(WidgetRef ref) async {
+    if (isPremium(ref)) {
+      return TotalLimits.unlimited();
+    }
+
+    final repository = ref.read(schedulesRepositoryProvider);
+    final used = await repository.getScheduleCount();
+
+    return TotalLimits(
+      remaining: max<int>(0, _scheduleTotalLimit - used),
+      canAdd: used < _scheduleTotalLimit,
+      total: _scheduleTotalLimit,
       used: used,
     );
   }
