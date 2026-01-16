@@ -243,8 +243,10 @@ class ReceivableDetailsDialog extends ConsumerWidget {
                 icon: Icons.event,
                 label: 'Due Date',
                 value: DateFormat.yMMMd().format(receivable.dueDate!),
-                valueColor: isPending && receivable.dueDate!.isBefore(DateTime.now())
-                    ? Colors.orange
+                valueColor: isPending
+                    ? (receivable.dueDate!.isBefore(DateTime.now())
+                        ? Colors.red
+                        : Colors.orange)
                     : null,
               ),
             

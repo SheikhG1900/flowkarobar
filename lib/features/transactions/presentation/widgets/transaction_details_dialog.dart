@@ -499,7 +499,14 @@ class TransactionDetailsDialog extends ConsumerWidget {
             const SizedBox(height: 8),
             Text(
               'Due: ${DateFormat.yMMMd().format(payable.dueDate)}',
-              style: theme.textTheme.bodySmall,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: isPending
+                    ? (payable.dueDate!.isBefore(DateTime.now())
+                        ? Colors.red
+                        : Colors.orange)
+                    : null,
+                fontWeight: isPending ? FontWeight.bold : null,
+              ),
             ),
           ],
           if (payable.paidDate != null) ...[
@@ -581,7 +588,14 @@ class TransactionDetailsDialog extends ConsumerWidget {
             const SizedBox(height: 8),
             Text(
               'Due: ${DateFormat.yMMMd().format(receivable.dueDate)}',
-              style: theme.textTheme.bodySmall,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: isPending
+                    ? (receivable.dueDate!.isBefore(DateTime.now())
+                        ? Colors.red
+                        : Colors.orange)
+                    : null,
+                fontWeight: isPending ? FontWeight.bold : null,
+              ),
             ),
           ],
           if (receivable.receivedDate != null) ...[

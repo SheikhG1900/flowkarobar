@@ -37,7 +37,7 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
     _tabController = TabController(length: 2, vsync: this);
     _scrollController = ScrollController();
     _scrollController.addListener(_onScroll);
-    
+
     // Reset pagination when tab changes
     _tabController.addListener(_onTabChanged);
   }
@@ -61,7 +61,7 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
   }
 
   void _onScroll() {
-    if (_scrollController.position.pixels >= 
+    if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 200) {
       // Load more when near bottom
       final status = _tabController.index == 0 ? 'PENDING' : 'RECEIVED';
@@ -78,73 +78,82 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
           // Debug button to generate dummy receivables (only in debug mode)
           if (kDebugMode)
             PopupMenuButton<String>(
-            icon: const Icon(Icons.bug_report),
-            onSelected: (value) async {
-              if (value == 'generate_dummy') {
-                final repository = ref.read(receivablesRepositoryProvider);
-                final contactsRepo = ref.read(contactsRepositoryProvider);
-                try {
-                  final contacts = await contactsRepo.watchAllContacts().first;
-                  int defaultContactId;
-                  if (contacts.isNotEmpty) {
-                    defaultContactId = contacts[0].id;
-                  } else {
-                    // Create a default contact if none exists
-                    defaultContactId = await contactsRepo.createContact(
-                      ContactsCompanion(
-                        name: const Value('Default Contact'),
-                        createdAt: Value(DateTime.now()),
-                        updatedAt: Value(DateTime.now()),
-                      ),
-                    );
-                  }
-                  
-                  for (int i = 0; i < 100; i++) {
-                    final daysAgo = i ~/ 2;
-                    final date = DateTime.now().subtract(Duration(days: daysAgo));
-                    final amount = (50.0 + (i * 15.3) % 2000).roundToDouble();
-                    final contactId = contacts.isNotEmpty 
-                        ? contacts[i % contacts.length].id 
-                        : defaultContactId;
-                    
-                    await repository.createReceivable(
-                      ReceivablesCompanion(
-                        contactId: Value(contactId),
-                        amount: Value(amount),
-                        description: Value('Dummy Receivable #${i + 1}'),
-                        date: Value(date),
-                        status: Value(i % 3 == 0 ? 'RECEIVED' : 'PENDING'),
-                        createdAt: Value(DateTime.now()),
-                        updatedAt: Value(DateTime.now()),
-                      ),
-                    );
-                  }
-                  if (context.mounted) {
-                    ToastUtils.showSuccessToast(context, 'Generated 100 dummy receivables');
-                    // Refresh pagination
-                    ref.read(receivablesPaginatedProvider('PENDING').notifier).refresh();
-                    ref.read(receivablesPaginatedProvider('RECEIVED').notifier).refresh();
-                  }
-                } catch (e) {
-                  if (context.mounted) {
-                    ToastUtils.showErrorToast(context, 'Error: $e');
+              icon: const Icon(Icons.bug_report),
+              onSelected: (value) async {
+                if (value == 'generate_dummy') {
+                  final repository = ref.read(receivablesRepositoryProvider);
+                  final contactsRepo = ref.read(contactsRepositoryProvider);
+                  try {
+                    final contacts =
+                        await contactsRepo.watchAllContacts().first;
+                    int defaultContactId;
+                    if (contacts.isNotEmpty) {
+                      defaultContactId = contacts[0].id;
+                    } else {
+                      // Create a default contact if none exists
+                      defaultContactId = await contactsRepo.createContact(
+                        ContactsCompanion(
+                          name: const Value('Default Contact'),
+                          createdAt: Value(DateTime.now()),
+                          updatedAt: Value(DateTime.now()),
+                        ),
+                      );
+                    }
+
+                    for (int i = 0; i < 100; i++) {
+                      final daysAgo = i ~/ 2;
+                      final date =
+                          DateTime.now().subtract(Duration(days: daysAgo));
+                      final amount = (50.0 + (i * 15.3) % 2000).roundToDouble();
+                      final contactId = contacts.isNotEmpty
+                          ? contacts[i % contacts.length].id
+                          : defaultContactId;
+
+                      await repository.createReceivable(
+                        ReceivablesCompanion(
+                          contactId: Value(contactId),
+                          amount: Value(amount),
+                          description: Value('Dummy Receivable #${i + 1}'),
+                          date: Value(date),
+                          status: Value(i % 3 == 0 ? 'RECEIVED' : 'PENDING'),
+                          createdAt: Value(DateTime.now()),
+                          updatedAt: Value(DateTime.now()),
+                        ),
+                      );
+                    }
+                    if (context.mounted) {
+                      ToastUtils.showSuccessToast(
+                          context, 'Generated 100 dummy receivables');
+                      // Refresh pagination
+                      ref
+                          .read(
+                              receivablesPaginatedProvider('PENDING').notifier)
+                          .refresh();
+                      ref
+                          .read(
+                              receivablesPaginatedProvider('RECEIVED').notifier)
+                          .refresh();
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      ToastUtils.showErrorToast(context, 'Error: $e');
+                    }
                   }
                 }
-              }
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'generate_dummy',
-                child: Row(
-                  children: [
-                    Icon(Icons.add_circle_outline),
-                    SizedBox(width: 8),
-                    Text('Generate 100 Dummy Receivables'),
-                  ],
+              },
+              itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: 'generate_dummy',
+                  child: Row(
+                    children: [
+                      Icon(Icons.add_circle_outline),
+                      SizedBox(width: 8),
+                      Text('Generate 100 Dummy Receivables'),
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            ),
         ],
         bottom: TabBar(
           controller: _tabController,
@@ -185,7 +194,7 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
     final paginatedState = ref.watch(receivablesPaginatedProvider(status));
     final theme = Theme.of(context);
     final currency = ref.watch(currentCurrencyProvider).value;
-    
+
     if (currency == null) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -214,7 +223,9 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () {
-                ref.read(receivablesPaginatedProvider(status).notifier).refresh();
+                ref
+                    .read(receivablesPaginatedProvider(status).notifier)
+                    .refresh();
               },
               child: const Text('Retry'),
             ),
@@ -310,34 +321,43 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
                 (context, itemIndex) {
                   final dateItems = groupedReceivables[dateKey]!;
                   if (itemIndex >= dateItems.length) return null;
-                  
+
                   final item = dateItems[itemIndex];
                   // Restrict editing/deleting for received or linked receivables
-                  final canEdit = item.receivable.status == 'PENDING' && 
-                                  item.receivable.linkedExpenseId == null && 
-                                  item.receivable.linkedIncomeId == null;
-                  
+                  final canEdit = item.receivable.status == 'PENDING' &&
+                      item.receivable.linkedExpenseId == null &&
+                      item.receivable.linkedIncomeId == null;
+
                   return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                     child: SwipeableListItem(
                       enableEdit: canEdit,
                       enableDelete: canEdit,
                       borderRadius: 20,
-                      onEdit: canEdit ? () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => EditReceivableScreen(receivableId: item.receivable.id),
-                          ),
-                        );
-                      } : null,
-                      onDelete: canEdit ? () async {
-                        final repository = ref.read(receivablesRepositoryProvider);
-                        await repository.deleteReceivable(item.receivable.id);
-                        if (context.mounted) {
-                          ToastUtils.showSuccessToast(context, 'Receivable deleted');
-                        }
-                      } : null,
+                      onEdit: canEdit
+                          ? () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => EditReceivableScreen(
+                                      receivableId: item.receivable.id),
+                                ),
+                              );
+                            }
+                          : null,
+                      onDelete: canEdit
+                          ? () async {
+                              final repository =
+                                  ref.read(receivablesRepositoryProvider);
+                              await repository
+                                  .deleteReceivable(item.receivable.id);
+                              if (context.mounted) {
+                                ToastUtils.showSuccessToast(
+                                    context, 'Receivable deleted');
+                              }
+                            }
+                          : null,
                       child: _buildReceivableCard(item, currency),
                     ),
                   );
@@ -384,7 +404,7 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
     final linkedCategory = item.linkedCategory;
     final linkedTransaction = item.linkedTransaction;
     final isPending = receivable.status == 'PENDING';
-    
+
     // Dynamic font size based on amount
     final amountFontSize = AmountFormatter.getFontSize(receivable.amount);
 
@@ -393,12 +413,14 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
         color: theme.cardColor,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: AppColors.receivableColor.withValues(alpha: isDark ? 0.2 : 0.1),
+          color:
+              AppColors.receivableColor.withValues(alpha: isDark ? 0.2 : 0.1),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: AppColors.receivableColor.withValues(alpha: isDark ? 0.05 : 0.08),
+            color: AppColors.receivableColor
+                .withValues(alpha: isDark ? 0.05 : 0.08),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -449,7 +471,7 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
                   ),
                 ),
                 const SizedBox(width: 16),
-                
+
                 // Details
                 Expanded(
                   child: Column(
@@ -479,7 +501,8 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
                                   ? Color(int.parse(linkedCategory.color!
                                           .replaceAll('#', '0xFF')))
                                       .withValues(alpha: 0.3)
-                                  : AppColors.incomeColor.withValues(alpha: 0.3),
+                                  : AppColors.incomeColor
+                                      .withValues(alpha: 0.3),
                               width: 1,
                             ),
                           ),
@@ -488,7 +511,8 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
                             children: [
                               Icon(
                                 linkedCategory.icon != null
-                                    ? IconHelper.getIconData(linkedCategory.icon)
+                                    ? IconHelper.getIconData(
+                                        linkedCategory.icon)
                                     : Symbols.category,
                                 color: linkedCategory.color != null
                                     ? Color(int.parse(linkedCategory.color!
@@ -526,8 +550,10 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
                             borderRadius: BorderRadius.circular(4),
                             border: Border.all(
                               color: linkedTransaction.type == 'EXPENSE'
-                                  ? AppColors.expenseColor.withValues(alpha: 0.3)
-                                  : AppColors.incomeColor.withValues(alpha: 0.3),
+                                  ? AppColors.expenseColor
+                                      .withValues(alpha: 0.3)
+                                  : AppColors.incomeColor
+                                      .withValues(alpha: 0.3),
                               width: 1,
                             ),
                           ),
@@ -578,7 +604,10 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
                               Icons.event,
                               size: 12,
                               color: isPending
-                                  ? Colors.orange
+                                  ? (receivable.dueDate!
+                                          .isBefore(DateTime.now())
+                                      ? Colors.red
+                                      : Colors.orange)
                                   : theme.colorScheme.onSurfaceVariant,
                             ),
                             const SizedBox(width: 4),
@@ -586,7 +615,10 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
                               'Due: ${DateFormat.yMMMd().format(receivable.dueDate!)}',
                               style: theme.textTheme.labelSmall?.copyWith(
                                 color: isPending
-                                    ? Colors.orange
+                                    ? (receivable.dueDate!
+                                            .isBefore(DateTime.now())
+                                        ? Colors.red
+                                        : Colors.orange)
                                     : theme.colorScheme.onSurfaceVariant,
                                 fontWeight: isPending ? FontWeight.bold : null,
                               ),
@@ -603,7 +635,8 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      AmountFormatter.formatWithCurrency(receivable.amount, currency.symbol, currency.decimalPlaces),
+                      AmountFormatter.formatWithCurrency(receivable.amount,
+                          currency.symbol, currency.decimalPlaces),
                       style: theme.textTheme.titleLarge?.copyWith(
                         color: AppColors.receivableColor,
                         fontWeight: FontWeight.bold,
@@ -619,7 +652,8 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
                         color: AppColors.receivableColor.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(4),
                         border: Border.all(
-                          color: AppColors.receivableColor.withValues(alpha: 0.3),
+                          color:
+                              AppColors.receivableColor.withValues(alpha: 0.3),
                           width: 1,
                         ),
                       ),
@@ -655,4 +689,3 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
     );
   }
 }
-

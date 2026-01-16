@@ -243,8 +243,10 @@ class PayableDetailsDialog extends ConsumerWidget {
                 icon: Icons.event,
                 label: 'Due Date',
                 value: DateFormat.yMMMd().format(payable.dueDate!),
-                valueColor: isPending && payable.dueDate!.isBefore(DateTime.now())
-                    ? Colors.red
+                valueColor: isPending
+                    ? (payable.dueDate!.isBefore(DateTime.now())
+                        ? Colors.red
+                        : Colors.orange)
                     : null,
               ),
             

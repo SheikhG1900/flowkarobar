@@ -69,7 +69,8 @@ final receivablesWithLinkedDataProvider =
 });
 
 // Paginated receivables provider
-class ReceivablesPaginatedNotifier extends Notifier<PaginatedState<ReceivableWithLinkedData>> {
+class ReceivablesPaginatedNotifier
+    extends Notifier<PaginatedState<ReceivableWithLinkedData>> {
   StreamSubscription<List<ReceivableWithLinkedData>>? _subscription;
   late ReceivablesRepository _repository;
   String? _status;
@@ -95,30 +96,53 @@ class ReceivablesPaginatedNotifier extends Notifier<PaginatedState<ReceivableWit
   Future<void> _loadInitial() async {
     if (_status == null) return;
     state = state.copyWith(isLoading: true, error: null);
-    
+
     try {
       // Load first page
-      final initialItems = await _repository.getReceivablesWithLinkedDataPaginated(
-        status: _status!,
-        limit: state.pageSize,
-        offset: 0,
-      );
+      final List<ReceivableWithLinkedData> initialItems;
+      if (_status == 'OVERDUE') {
+        initialItems =
+            await _repository.getReceivablesWithLinkedDataPaginatedOverdue(
+          limit: state.pageSize,
+          offset: 0,
+        );
+      } else {
+        initialItems = await _repository.getReceivablesWithLinkedDataPaginated(
+          status: _status!,
+          limit: state.pageSize,
+          offset: 0,
+        );
+      }
 
-      state = state.replaceItems(initialItems, hasMore: initialItems.length == state.pageSize);
+      state = state.replaceItems(initialItems,
+          hasMore: initialItems.length == state.pageSize);
 
       // Watch for real-time updates to loaded items
       _subscription?.cancel();
-      _subscription = _repository
-          .watchReceivablesWithLinkedDataPaginated(
-            status: _status!,
-            limit: initialItems.length,
-            offset: 0,
-          )
-          .listen((updatedItems) {
-        if (!state.isLoadingMore) {
-          state = state.copyWith(items: updatedItems);
-        }
-      });
+      if (_status == 'OVERDUE') {
+        _subscription = _repository
+            .watchReceivablesWithLinkedDataPaginatedOverdue(
+          limit: initialItems.length,
+          offset: 0,
+        )
+            .listen((updatedItems) {
+          if (!state.isLoadingMore) {
+            state = state.copyWith(items: updatedItems);
+          }
+        });
+      } else {
+        _subscription = _repository
+            .watchReceivablesWithLinkedDataPaginated(
+          status: _status!,
+          limit: initialItems.length,
+          offset: 0,
+        )
+            .listen((updatedItems) {
+          if (!state.isLoadingMore) {
+            state = state.copyWith(items: updatedItems);
+          }
+        });
+      }
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
@@ -133,11 +157,20 @@ class ReceivablesPaginatedNotifier extends Notifier<PaginatedState<ReceivableWit
     state = state.copyWith(isLoadingMore: true);
 
     try {
-      final newItems = await _repository.getReceivablesWithLinkedDataPaginated(
-        status: _status!,
-        limit: state.pageSize,
-        offset: state.currentOffset,
-      );
+      final List<ReceivableWithLinkedData> newItems;
+      if (_status == 'OVERDUE') {
+        newItems =
+            await _repository.getReceivablesWithLinkedDataPaginatedOverdue(
+          limit: state.pageSize,
+          offset: state.currentOffset,
+        );
+      } else {
+        newItems = await _repository.getReceivablesWithLinkedDataPaginated(
+          status: _status!,
+          limit: state.pageSize,
+          offset: state.currentOffset,
+        );
+      }
 
       if (newItems.isEmpty) {
         state = state.copyWith(
@@ -152,17 +185,30 @@ class ReceivablesPaginatedNotifier extends Notifier<PaginatedState<ReceivableWit
 
         // Update subscription to watch all loaded items
         _subscription?.cancel();
-        _subscription = _repository
-            .watchReceivablesWithLinkedDataPaginated(
-              status: _status!,
-              limit: state.items.length,
-              offset: 0,
-            )
-            .listen((updatedItems) {
-          if (!state.isLoadingMore) {
-            state = state.copyWith(items: updatedItems);
-          }
-        });
+        if (_status == 'OVERDUE') {
+          _subscription = _repository
+              .watchReceivablesWithLinkedDataPaginatedOverdue(
+            limit: state.items.length,
+            offset: 0,
+          )
+              .listen((updatedItems) {
+            if (!state.isLoadingMore) {
+              state = state.copyWith(items: updatedItems);
+            }
+          });
+        } else {
+          _subscription = _repository
+              .watchReceivablesWithLinkedDataPaginated(
+            status: _status!,
+            limit: state.items.length,
+            offset: 0,
+          )
+              .listen((updatedItems) {
+            if (!state.isLoadingMore) {
+              state = state.copyWith(items: updatedItems);
+            }
+          });
+        }
       }
     } catch (e) {
       state = state.copyWith(
@@ -178,8 +224,10 @@ class ReceivablesPaginatedNotifier extends Notifier<PaginatedState<ReceivableWit
   }
 }
 
-final receivablesPaginatedProvider =
-    NotifierProvider.family<ReceivablesPaginatedNotifier, PaginatedState<ReceivableWithLinkedData>, String>((status) {
+final receivablesPaginatedProvider = NotifierProvider.family<
+    ReceivablesPaginatedNotifier,
+    PaginatedState<ReceivableWithLinkedData>,
+    String>((status) {
   final notifier = ReceivablesPaginatedNotifier();
   notifier.initialize(status);
   return notifier;
