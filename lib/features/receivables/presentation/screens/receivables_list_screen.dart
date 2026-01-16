@@ -277,15 +277,31 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
           SliverStickyHeader(
             header: Container(
               height: 50,
-              color: theme.scaffoldBackgroundColor,
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
-              alignment: Alignment.centerLeft,
-              child: Text(
-                dateKey,
-                style: theme.textTheme.titleSmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 0.5,
+              color: Colors.transparent,
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              alignment: Alignment.center,
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                decoration: BoxDecoration(
+                  color:
+                      AppColors.receivablesSectionColor.withValues(alpha: 0.7),
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.receivablesSectionColor
+                          .withValues(alpha: 0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Text(
+                  dateKey,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ),
