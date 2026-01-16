@@ -7,6 +7,9 @@ import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transaction_service_provider.dart';
 import 'package:flowpaisa/features/categories/presentation/providers/categories_provider.dart';
 import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
+import 'package:flowpaisa/features/payables/data/payables_repository.dart';
+import 'package:flowpaisa/features/receivables/data/receivables_repository.dart';
+import 'package:flowpaisa/shared/providers/database_provider.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
@@ -37,6 +40,7 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
 
   String _selectedType = 'EXPENSE';
   DateTime _selectedDate = DateTime.now();
+  DateTime? _dueDate;
   bool _isLoading = false;
 
   Category? _selectedCategory;
@@ -57,6 +61,31 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
     _selectedContact = widget.contact;
     _selectedContactId = widget.transaction.contactId;
     _paidRelationship = widget.transaction.paidRelationship;
+    
+    // Fetch due date from linked payable/receivable if exists
+    _loadLinkedEntryDueDate();
+  }
+
+  Future<void> _loadLinkedEntryDueDate() async {
+    final database = ref.read(databaseProvider);
+    final payablesRepository = PayablesRepository(database);
+    final receivablesRepository = ReceivablesRepository(database);
+
+    if (widget.transaction.linkedPayableId != null) {
+      final payable = await payablesRepository.getPayableById(widget.transaction.linkedPayableId!);
+      if (mounted && payable != null) {
+        setState(() {
+          _dueDate = payable.dueDate;
+        });
+      }
+    } else if (widget.transaction.linkedReceivableId != null) {
+      final receivable = await receivablesRepository.getReceivableById(widget.transaction.linkedReceivableId!);
+      if (mounted && receivable != null) {
+        setState(() {
+          _dueDate = receivable.dueDate;
+        });
+      }
+    }
   }
 
   @override
@@ -101,6 +130,7 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
         contactId: _selectedContactId,
         categoryId: _selectedCategory?.id,
         paidRelationship: _paidRelationship,
+        dueDate: _dueDate,
       );
 
       if (mounted) {
@@ -132,6 +162,21 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
     if (picked != null) {
       setState(() {
         _selectedDate = picked;
+      });
+    }
+  }
+
+  Future<void> _selectDueDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _dueDate ?? DateTime.now().add(const Duration(days: 30)),
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+    );
+
+    if (picked != null) {
+      setState(() {
+        _dueDate = picked;
       });
     }
   }
@@ -473,6 +518,7 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                           _selectedType = 'EXPENSE';
                           // Reset relationship when type changes
                           _paidRelationship = null;
+                          _dueDate = null;
                         });
                       },
                     ),
@@ -489,6 +535,7 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                           _selectedType = 'INCOME';
                           // Reset relationship when type changes
                           _paidRelationship = null;
+                          _dueDate = null;
                         });
                       },
                     ),
@@ -754,6 +801,74 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                       ),
                     ),
                   ],
+                ),
+                const SizedBox(height: 16),
+              ],
+
+              // Due Date Selector (only shown when relationship is active)
+              if (_paidRelationship != null) ...[
+                InkWell(
+                  onTap: _selectDueDate,
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surface,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: theme.dividerColor),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            gradient: _paidRelationship == 'PAID_FOR' ||
+                                    _paidRelationship == 'WILL_RECEIVE'
+                                ? AppColors.receivableGradient
+                                : AppColors.payableGradient,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Icon(
+                            Icons.event_available,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Due Date (Optional)',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              _dueDate != null
+                                  ? '${_dueDate!.day}/${_dueDate!.month}/${_dueDate!.year}'
+                                  : 'Not set',
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const Spacer(),
+                        if (_dueDate != null)
+                          IconButton(
+                            icon: const Icon(Icons.clear, size: 20),
+                            onPressed: () {
+                              setState(() {
+                                _dueDate = null;
+                              });
+                            },
+                          ),
+                        const Icon(Icons.arrow_forward_ios, size: 16),
+                      ],
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 16),
               ],

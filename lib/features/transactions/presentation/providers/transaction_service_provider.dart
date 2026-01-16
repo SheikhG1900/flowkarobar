@@ -51,6 +51,7 @@ class TransactionService {
     String?
         paidRelationship, // 'PAID_FOR', 'PAID_BY', 'RECEIVED_FROM', 'WILL_RECEIVE'
     bool createLinkedEntry = false,
+    DateTime? dueDate,
   }) async {
     return await database.transaction(() async {
       // 1. Create the main transaction
@@ -89,6 +90,7 @@ class TransactionService {
                 amount: Value(amount),
                 description: Value(description),
                 date: Value(date),
+                dueDate: Value(dueDate),
                 status: const Value('PENDING'),
                 linkedExpenseId: Value(transactionId),
                 autoCreateIncome:
@@ -114,10 +116,11 @@ class TransactionService {
                 amount: Value(amount),
                 description: Value(description),
                 date: Value(date),
+                dueDate: Value(dueDate),
                 status: const Value('PENDING'),
                 linkedExpenseId: Value(transactionId),
-                autoCreateExpense:
-                    const Value(false), // Don't create new transaction, activate existing one when marked
+                autoCreateExpense: const Value(
+                    false), // Don't create new transaction, activate existing one when marked
                 createdAt: Value(DateTime.now()),
                 updatedAt: Value(DateTime.now()),
               ),
@@ -143,6 +146,7 @@ class TransactionService {
                 amount: Value(amount),
                 description: Value(description),
                 date: Value(date),
+                dueDate: Value(dueDate),
                 status: const Value('PENDING'),
                 linkedIncomeId: Value(transactionId),
                 autoCreateExpense:
@@ -169,6 +173,7 @@ class TransactionService {
                 amount: Value(amount),
                 description: Value(description),
                 date: Value(date),
+                dueDate: Value(dueDate),
                 status: const Value('PENDING'),
                 linkedIncomeId: Value(transactionId), // Store as linked income
                 autoCreateIncome: const Value(
@@ -203,40 +208,52 @@ class TransactionService {
     int? categoryId,
     int? contactId,
     String? paidRelationship,
+    DateTime? dueDate,
   }) async {
     await database.transaction(() async {
       // 1. Get the existing transaction to check for linked entries
-      final existingTransaction = await transactionsRepository.getTransactionById(transactionId);
-      
+      final existingTransaction =
+          await transactionsRepository.getTransactionById(transactionId);
+
       if (existingTransaction == null) {
         throw Exception('Transaction not found');
       }
 
       // 2. Check if type or relationship changed (requires linked entry recreation)
       final typeChanged = existingTransaction.type != type;
-      final relationshipChanged = existingTransaction.paidRelationship != paidRelationship;
-      
+      final relationshipChanged =
+          existingTransaction.paidRelationship != paidRelationship;
+
       // Determine if we need to DELETE old links
-      final hasOldLinks = existingTransaction.linkedPayableId != null || existingTransaction.linkedReceivableId != null;
-      final shouldDeleteOldLinks = hasOldLinks && (typeChanged || relationshipChanged);
+      final hasOldLinks = existingTransaction.linkedPayableId != null ||
+          existingTransaction.linkedReceivableId != null;
+      final shouldDeleteOldLinks =
+          hasOldLinks && (typeChanged || relationshipChanged);
 
       // Determine if we need to CREATE new links
       // We create new links if:
       // 1. We have a valid relationship and contact
       // 2. AND (We deleted old links OR we didn't have links before OR the relationship/type changed)
-      final hasValidNewRelationship = contactId != null && paidRelationship != null;
-      final shouldCreateNewLinks = hasValidNewRelationship && (shouldDeleteOldLinks || !hasOldLinks || relationshipChanged || typeChanged);
+      final hasValidNewRelationship =
+          contactId != null && paidRelationship != null;
+      final shouldCreateNewLinks = hasValidNewRelationship &&
+          (shouldDeleteOldLinks ||
+              !hasOldLinks ||
+              relationshipChanged ||
+              typeChanged);
 
       // 3. If significant change, delete old linked entries
       int? oldLinkedPayableId = existingTransaction.linkedPayableId;
       int? oldLinkedReceivableId = existingTransaction.linkedReceivableId;
-      
+
       if (shouldDeleteOldLinks) {
         if (existingTransaction.linkedPayableId != null) {
-          await payablesRepository.deletePayable(existingTransaction.linkedPayableId!);
+          await payablesRepository
+              .deletePayable(existingTransaction.linkedPayableId!);
         }
         if (existingTransaction.linkedReceivableId != null) {
-          await receivablesRepository.deleteReceivable(existingTransaction.linkedReceivableId!);
+          await receivablesRepository
+              .deleteReceivable(existingTransaction.linkedReceivableId!);
         }
         oldLinkedPayableId = null;
         oldLinkedReceivableId = null;
@@ -267,12 +284,14 @@ class TransactionService {
         if (type == 'EXPENSE') {
           if (paidRelationship == 'PAID_FOR') {
             // Create receivable
-            newLinkedReceivableId = await receivablesRepository.createReceivable(
+            newLinkedReceivableId =
+                await receivablesRepository.createReceivable(
               ReceivablesCompanion(
                 contactId: Value(contactId),
                 amount: Value(amount),
                 description: Value(description),
                 date: Value(date),
+                dueDate: Value(dueDate),
                 status: const Value('PENDING'),
                 linkedExpenseId: Value(transactionId),
                 autoCreateIncome: const Value(true),
@@ -288,6 +307,7 @@ class TransactionService {
                 amount: Value(amount),
                 description: Value(description),
                 date: Value(date),
+                dueDate: Value(dueDate),
                 status: const Value('PENDING'),
                 linkedExpenseId: Value(transactionId),
                 autoCreateExpense: const Value(false),
@@ -305,6 +325,7 @@ class TransactionService {
                 amount: Value(amount),
                 description: Value(description),
                 date: Value(date),
+                dueDate: Value(dueDate),
                 status: const Value('PENDING'),
                 linkedIncomeId: Value(transactionId),
                 autoCreateExpense: const Value(true),
@@ -314,12 +335,14 @@ class TransactionService {
             );
           } else if (paidRelationship == 'WILL_RECEIVE') {
             // Create receivable
-            newLinkedReceivableId = await receivablesRepository.createReceivable(
+            newLinkedReceivableId =
+                await receivablesRepository.createReceivable(
               ReceivablesCompanion(
                 contactId: Value(contactId),
                 amount: Value(amount),
                 description: Value(description),
                 date: Value(date),
+                dueDate: Value(dueDate),
                 status: const Value('PENDING'),
                 linkedIncomeId: Value(transactionId),
                 autoCreateIncome: const Value(false),
@@ -349,6 +372,7 @@ class TransactionService {
             amount: Value(amount),
             description: Value(description),
             date: Value(date),
+            dueDate: Value(dueDate),
             updatedAt: Value(DateTime.now()),
           );
           if (contactId != null) {
@@ -369,6 +393,7 @@ class TransactionService {
             amount: Value(amount),
             description: Value(description),
             date: Value(date),
+            dueDate: Value(dueDate),
             updatedAt: Value(DateTime.now()),
           );
           if (contactId != null) {
@@ -388,7 +413,8 @@ class TransactionService {
       // 7. Update usage counts if categories/contacts changed
       if (categoryId != existingTransaction.categoryId) {
         if (existingTransaction.categoryId != null) {
-          await categoriesRepository.decrementUsageCount(existingTransaction.categoryId!);
+          await categoriesRepository
+              .decrementUsageCount(existingTransaction.categoryId!);
         }
         if (categoryId != null) {
           await categoriesRepository.incrementUsageCount(categoryId);
@@ -397,7 +423,8 @@ class TransactionService {
 
       if (contactId != existingTransaction.contactId) {
         if (existingTransaction.contactId != null) {
-          await contactsRepository.decrementUsageCount(existingTransaction.contactId!);
+          await contactsRepository
+              .decrementUsageCount(existingTransaction.contactId!);
         }
         if (contactId != null) {
           await contactsRepository.incrementUsageCount(contactId);
@@ -410,27 +437,32 @@ class TransactionService {
   Future<void> deleteTransaction(int transactionId) async {
     await database.transaction(() async {
       // 1. Get the existing transaction to check for linked entries
-      final existingTransaction = await transactionsRepository.getTransactionById(transactionId);
-      
+      final existingTransaction =
+          await transactionsRepository.getTransactionById(transactionId);
+
       if (existingTransaction == null) {
         throw Exception('Transaction not found');
       }
 
       // 2. Delete linked entries first
       if (existingTransaction.linkedPayableId != null) {
-        await payablesRepository.deletePayable(existingTransaction.linkedPayableId!);
+        await payablesRepository
+            .deletePayable(existingTransaction.linkedPayableId!);
       }
 
       if (existingTransaction.linkedReceivableId != null) {
-        await receivablesRepository.deleteReceivable(existingTransaction.linkedReceivableId!);
+        await receivablesRepository
+            .deleteReceivable(existingTransaction.linkedReceivableId!);
       }
 
       // 3. Decrement usage counts
       if (existingTransaction.categoryId != null) {
-        await categoriesRepository.decrementUsageCount(existingTransaction.categoryId!);
+        await categoriesRepository
+            .decrementUsageCount(existingTransaction.categoryId!);
       }
       if (existingTransaction.contactId != null) {
-        await contactsRepository.decrementUsageCount(existingTransaction.contactId!);
+        await contactsRepository
+            .decrementUsageCount(existingTransaction.contactId!);
       }
 
       // 4. Delete the transaction
@@ -442,8 +474,10 @@ class TransactionService {
   /// Creates transactions with various dates, amounts, and types
   Future<void> generateDummyTransactions({int count = 100}) async {
     // Get categories and contacts
-    final expenseCategories = await categoriesRepository.watchCategoriesByType('EXPENSE').first;
-    final incomeCategories = await categoriesRepository.watchCategoriesByType('INCOME').first;
+    final expenseCategories =
+        await categoriesRepository.watchCategoriesByType('EXPENSE').first;
+    final incomeCategories =
+        await categoriesRepository.watchCategoriesByType('INCOME').first;
     final contacts = await contactsRepository.watchAllContacts().first;
 
     final descriptions = [
@@ -469,23 +503,23 @@ class TransactionService {
       final date = DateTime.now().subtract(Duration(days: daysAgo));
       final isExpense = i % 3 != 0; // Mix of expenses and income
       final type = isExpense ? 'EXPENSE' : 'INCOME';
-      
+
       // Random amount between 10 and 5000
       final amount = (10.0 + (i * 23.5) % 4990).roundToDouble();
-      
+
       // Pick random category
       final categories = isExpense ? expenseCategories : incomeCategories;
       int? categoryId;
       if (categories.isNotEmpty) {
         categoryId = categories[i % categories.length].id;
       }
-      
+
       // Pick random contact (optional)
       int? contactId;
       if (contacts.isNotEmpty && i % 4 == 0) {
         contactId = contacts[i % contacts.length].id;
       }
-      
+
       // Pick random description
       final description = descriptions[i % descriptions.length] + ' #${i + 1}';
 

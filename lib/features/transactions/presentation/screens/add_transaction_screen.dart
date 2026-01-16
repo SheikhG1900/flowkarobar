@@ -45,6 +45,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
 
   String _selectedType = 'EXPENSE';
   DateTime _selectedDate = DateTime.now();
+  DateTime? _dueDate;
   bool _isLoading = false;
 
   // Selected entities
@@ -137,6 +138,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
         categoryId: _selectedCategory?.id,
         paidRelationship: _paidRelationship,
         createLinkedEntry: _createLinkedEntry,
+        dueDate: _dueDate,
       );
 
       // Increment usage count for free users
@@ -152,7 +154,8 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
       if (mounted) {
         // Fetch full transaction with details
         final repository = ref.read(transactionsRepositoryProvider);
-        final transactionWithDetails = await repository.getTransactionWithDetailsById(transactionId);
+        final transactionWithDetails =
+            await repository.getTransactionWithDetailsById(transactionId);
 
         if (transactionWithDetails != null) {
           // Pop create page and navigate to details
@@ -160,7 +163,8 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => TransactionDetailsDialog(item: transactionWithDetails),
+              builder: (context) =>
+                  TransactionDetailsDialog(item: transactionWithDetails),
             ),
           );
           ToastUtils.showSuccessToast(
@@ -204,6 +208,21 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     if (picked != null) {
       setState(() {
         _selectedDate = picked;
+      });
+    }
+  }
+
+  Future<void> _selectDueDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _dueDate ?? DateTime.now().add(const Duration(days: 30)),
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+    );
+
+    if (picked != null) {
+      setState(() {
+        _dueDate = picked;
       });
     }
   }
@@ -596,6 +615,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
       setState(() {
         _paidRelationship = null;
         _createLinkedEntry = false;
+        _dueDate = null;
       });
     } else {
       if (_selectedContact == null) {
@@ -606,12 +626,14 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
             _createLinkedEntry = true;
             _selectedContact = contact;
             _selectedContactId = contact.id;
+            // Keep existing due date if already set
           });
         }
       } else {
         setState(() {
           _paidRelationship = value;
           _createLinkedEntry = true;
+          // Keep existing due date if already set
         });
       }
     }
@@ -743,6 +765,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                           // Reset relationship when type changes
                           _paidRelationship = null;
                           _createLinkedEntry = false;
+                          _dueDate = null;
                         });
                       },
                     ),
@@ -760,6 +783,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                           // Reset relationship when type changes
                           _paidRelationship = null;
                           _createLinkedEntry = false;
+                          _dueDate = null;
                         });
                       },
                     ),
@@ -949,6 +973,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                               _selectedContactId = null;
                               _paidRelationship = null;
                               _createLinkedEntry = false;
+                              _dueDate = null;
                             });
                           },
                         ),
@@ -1046,6 +1071,74 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                       ),
                     ),
                   ],
+                ),
+                const SizedBox(height: 16),
+              ],
+
+              // Due Date Selector (only shown when relationship is active)
+              if (_paidRelationship != null) ...[
+                InkWell(
+                  onTap: _selectDueDate,
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surface,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: theme.dividerColor),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            gradient: _paidRelationship == 'PAID_FOR' ||
+                                    _paidRelationship == 'WILL_RECEIVE'
+                                ? AppColors.receivableGradient
+                                : AppColors.payableGradient,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Icon(
+                            Icons.event_available,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Due Date (Optional)',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              _dueDate != null
+                                  ? '${_dueDate!.day}/${_dueDate!.month}/${_dueDate!.year}'
+                                  : 'Not set',
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const Spacer(),
+                        if (_dueDate != null)
+                          IconButton(
+                            icon: const Icon(Icons.clear, size: 20),
+                            onPressed: () {
+                              setState(() {
+                                _dueDate = null;
+                              });
+                            },
+                          ),
+                        const Icon(Icons.arrow_forward_ios, size: 16),
+                      ],
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 16),
               ],
