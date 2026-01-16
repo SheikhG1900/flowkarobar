@@ -48,7 +48,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                     children: [
                       // Auth Section
                       _buildAuthSection(context, state, notifier),
-                      
+
                       if (state.currentUser != null) ...[
                         const SizedBox(height: 24),
                         _buildBackupControls(context, state, notifier),
@@ -90,7 +90,10 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                               decoration: const BoxDecoration(
                                 shape: BoxShape.circle,
                                 gradient: LinearGradient(
-                                  colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
+                                  colors: [
+                                    Color(0xFFFFD700),
+                                    Color(0xFFFFA500)
+                                  ],
                                 ),
                               ),
                               child: const Icon(
@@ -114,9 +117,10 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                                 color: theme.colorScheme.onSurfaceVariant,
                               ),
                             ),
-                            const SizedBox(height: 24),
+                            const SizedBox(height: 15),
                             FilledButton(
-                              onPressed: () => PremiumGate.showPremiumDialog(context),
+                              onPressed: () =>
+                                  PremiumGate.showPremiumDialog(context),
                               child: const Text('Unlock Premium'),
                             ),
                           ],
@@ -307,17 +311,21 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
           itemCount: state.backups.length,
           itemBuilder: (context, index) {
             final file = state.backups[index];
-            final sizeMb = (int.parse(file.size ?? '0') / 1024 / 1024).toStringAsFixed(2);
-            
+            final sizeMb =
+                (int.parse(file.size ?? '0') / 1024 / 1024).toStringAsFixed(2);
+
             return Card(
               margin: const EdgeInsets.only(bottom: 8),
               child: ListTile(
                 leading: const Icon(Icons.description_outlined),
-                title: Text(DateFormat.yMMMd().add_jm().format(file.createdTime ?? DateTime.now())),
+                title: Text(DateFormat.yMMMd()
+                    .add_jm()
+                    .format(file.createdTime ?? DateTime.now())),
                 subtitle: Text('${file.name} • $sizeMb MB'),
                 trailing: IconButton(
                   icon: const Icon(Icons.restore),
-                  onPressed: () => _showRestoreDialog(context, notifier, file.id!),
+                  onPressed: () =>
+                      _showRestoreDialog(context, notifier, file.id!),
                 ),
               ),
             );

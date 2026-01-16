@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flowpaisa/core/theme/app_colors.dart';
 
 class PremiumBadge extends StatelessWidget {
   final bool isSmall;
@@ -26,7 +25,7 @@ class PremiumBadge extends StatelessWidget {
       paddingHorizontal = 6;
       paddingVertical = 2;
       fontSize = 10;
-      iconSize = 10;
+      iconSize = 12;
     } else if (isLarge) {
       paddingHorizontal = 12;
       paddingVertical = 6;
@@ -56,6 +55,8 @@ class PremiumBadge extends StatelessWidget {
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           if (showLock) ...[
             Icon(
@@ -70,9 +71,9 @@ class PremiumBadge extends StatelessWidget {
             style: TextStyle(
               color: Colors.white,
               fontSize: fontSize,
-              fontWeight: FontWeight.bold,
+              fontWeight: isSmall ? FontWeight.normal : FontWeight.bold,
               letterSpacing: 0.5,
-              height: 1,
+              height: 1.2,
             ),
           ),
         ],
