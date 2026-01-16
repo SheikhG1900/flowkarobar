@@ -6,6 +6,7 @@ import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/payables/presentation/providers/payables_provider.dart';
+import 'package:flowpaisa/features/payables/presentation/widgets/payable_details_dialog.dart';
 import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
 import 'package:flowpaisa/features/contacts/presentation/screens/add_contact_screen.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
@@ -82,7 +83,8 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
         updatedAt: drift.Value(DateTime.now()),
       );
 
-      await repository.createPayable(payable);
+      // Create payable and get the ID
+      final payableId = await repository.createPayable(payable);
 
       // Increment usage count for free users
       if (!PremiumGate.isPremium(ref)) {
@@ -93,8 +95,24 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
       ref.invalidate(payableLimitsProvider);
 
       if (mounted) {
-        Navigator.pop(context);
-        ToastUtils.showSuccessToast(context, 'Payable added successfully');
+        // Fetch full payable with linked data
+        final payableWithLinkedData = await repository.getPayableWithLinkedDataById(payableId);
+
+        if (payableWithLinkedData != null) {
+          // Pop create page and navigate to details
+          Navigator.pop(context);
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => PayableDetailsDialog(item: payableWithLinkedData),
+            ),
+          );
+          ToastUtils.showSuccessToast(context, 'Payable added successfully');
+        } else {
+          // Fallback: just pop if details fetch fails
+          Navigator.pop(context);
+          ToastUtils.showSuccessToast(context, 'Payable added successfully');
+        }
       }
     } catch (e) {
       if (mounted) {

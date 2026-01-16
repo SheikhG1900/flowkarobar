@@ -5,6 +5,8 @@ import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transaction_service_provider.dart';
+import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
+import 'package:flowpaisa/features/transactions/presentation/widgets/transaction_details_dialog.dart';
 import 'package:flowpaisa/features/categories/presentation/providers/categories_provider.dart';
 import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
 import 'package:flowpaisa/features/categories/presentation/screens/add_category_screen.dart';
@@ -125,7 +127,8 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
           ? null
           : _descriptionController.text;
 
-      await transactionService.createTransaction(
+      // Create transaction and get the ID
+      final transactionId = await transactionService.createTransaction(
         amount: amount,
         type: _selectedType,
         date: _selectedDate,
@@ -147,14 +150,35 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
       ref.invalidate(transactionLimitsProvider);
 
       if (mounted) {
-        // Pop to root to avoid stacking if coming from scanner
-        Navigator.popUntil(context, (route) => route.isFirst);
-        ToastUtils.showSuccessToast(
-          context,
-          _createLinkedEntry
-              ? 'Transaction and linked entry added successfully'
-              : 'Transaction added successfully',
-        );
+        // Fetch full transaction with details
+        final repository = ref.read(transactionsRepositoryProvider);
+        final transactionWithDetails = await repository.getTransactionWithDetailsById(transactionId);
+
+        if (transactionWithDetails != null) {
+          // Pop create page and navigate to details
+          Navigator.pop(context);
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => TransactionDetailsDialog(item: transactionWithDetails),
+            ),
+          );
+          ToastUtils.showSuccessToast(
+            context,
+            _createLinkedEntry
+                ? 'Transaction and linked entry added successfully'
+                : 'Transaction added successfully',
+          );
+        } else {
+          // Fallback: just pop if details fetch fails
+          Navigator.pop(context);
+          ToastUtils.showSuccessToast(
+            context,
+            _createLinkedEntry
+                ? 'Transaction and linked entry added successfully'
+                : 'Transaction added successfully',
+          );
+        }
       }
     } catch (e) {
       if (mounted) {

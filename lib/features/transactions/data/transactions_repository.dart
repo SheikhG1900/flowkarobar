@@ -41,6 +41,42 @@ class TransactionsRepository {
         .getSingleOrNull();
   }
 
+  // Get transaction with details by ID
+  Future<TransactionWithDetails?> getTransactionWithDetailsById(int id) async {
+    final query = _database.select(_database.transactions).join([
+      leftOuterJoin(
+        _database.categories,
+        _database.categories.id.equalsExp(_database.transactions.categoryId),
+      ),
+      leftOuterJoin(
+        _database.contacts,
+        _database.contacts.id.equalsExp(_database.transactions.contactId),
+      ),
+      leftOuterJoin(
+        _database.payables,
+        _database.payables.id.equalsExp(_database.transactions.linkedPayableId),
+      ),
+      leftOuterJoin(
+        _database.receivables,
+        _database.receivables.id.equalsExp(_database.transactions.linkedReceivableId),
+      ),
+    ]);
+
+    query.where(_database.transactions.id.equals(id));
+
+    final rows = await query.get();
+    if (rows.isEmpty) return null;
+
+    final row = rows.first;
+    return TransactionWithDetails(
+      transaction: row.readTable(_database.transactions),
+      category: row.readTableOrNull(_database.categories),
+      contact: row.readTableOrNull(_database.contacts),
+      linkedPayable: row.readTableOrNull(_database.payables),
+      linkedReceivable: row.readTableOrNull(_database.receivables),
+    );
+  }
+
   // Create transaction
   Future<int> createTransaction(TransactionsCompanion transaction) {
     return _database.into(_database.transactions).insert(transaction);

@@ -115,6 +115,38 @@ class PayablesRepository {
         .getSingleOrNull();
   }
 
+  /// Get payable with linked data by ID
+  Future<PayableWithLinkedData?> getPayableWithLinkedDataById(int id) async {
+    final query = _database.select(_database.payables).join([
+      leftOuterJoin(
+        _database.contacts,
+        _database.contacts.id.equalsExp(_database.payables.contactId),
+      ),
+      leftOuterJoin(
+        _database.transactions,
+        _database.transactions.id.equalsExp(_database.payables.linkedExpenseId) | 
+        _database.transactions.id.equalsExp(_database.payables.linkedIncomeId),
+      ),
+      leftOuterJoin(
+        _database.categories,
+        _database.categories.id.equalsExp(_database.transactions.categoryId),
+      ),
+    ]);
+
+    query.where(_database.payables.id.equals(id));
+
+    final rows = await query.get();
+    if (rows.isEmpty) return null;
+
+    final row = rows.first;
+    return PayableWithLinkedData(
+      payable: row.readTable(_database.payables),
+      contact: row.readTableOrNull(_database.contacts),
+      linkedTransaction: row.readTableOrNull(_database.transactions),
+      linkedCategory: row.readTableOrNull(_database.categories),
+    );
+  }
+
   /// Create payable
   Future<int> createPayable(PayablesCompanion payable) {
     return _database.into(_database.payables).insert(payable);

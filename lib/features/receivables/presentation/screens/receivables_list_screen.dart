@@ -2,6 +2,7 @@ import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_sticky_header/flutter_sticky_header.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
@@ -266,44 +267,19 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
       groupedReceivables[dateKey]!.add(item);
     }
 
-    return ListView.builder(
+    final keys = groupedReceivables.keys.toList();
+
+    return CustomScrollView(
       controller: _scrollController,
-      padding: const EdgeInsets.only(bottom: 80),
-      itemCount: groupedReceivables.length + (paginatedState.hasMore || paginatedState.isLoadingMore ? 1 : 0),
-      itemBuilder: (context, index) {
-        // Show loading indicator at bottom
-        if (index == groupedReceivables.length) {
-          if (paginatedState.isLoadingMore) {
-            return const Padding(
-              padding: EdgeInsets.all(16.0),
-              child: Center(child: CircularProgressIndicator()),
-            );
-          }
-          if (!paginatedState.hasMore && paginatedState.items.isNotEmpty) {
-            return Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Center(
-                child: Text(
-                  'No more receivables',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: Colors.grey[600],
-                  ),
-                ),
-              ),
-            );
-          }
-          return const SizedBox.shrink();
-        }
-
-        final dateKey = groupedReceivables.keys.elementAt(index);
-        final dateItems = groupedReceivables[dateKey]!;
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Date Header
-            Padding(
+      slivers: [
+        // Date sections with sticky headers
+        for (final dateKey in keys)
+          SliverStickyHeader(
+            header: Container(
+              height: 50,
+              color: theme.scaffoldBackgroundColor,
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
+              alignment: Alignment.centerLeft,
               child: Text(
                 dateKey,
                 style: theme.textTheme.titleSmall?.copyWith(
@@ -313,41 +289,74 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
                 ),
               ),
             ),
-            // Items
-            ...dateItems.map((item) {
-              // Restrict editing/deleting for received or linked receivables
-              final canEdit = item.receivable.status == 'PENDING' && 
-                              item.receivable.linkedExpenseId == null && 
-                              item.receivable.linkedIncomeId == null;
-              
-              return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                child: SwipeableListItem(
-                  enableEdit: canEdit,
-                  enableDelete: canEdit,
-                  borderRadius: 20,
-                  onEdit: canEdit ? () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => EditReceivableScreen(receivableId: item.receivable.id),
-                      ),
-                    );
-                  } : null,
-                  onDelete: canEdit ? () async {
-                    final repository = ref.read(receivablesRepositoryProvider);
-                    await repository.deleteReceivable(item.receivable.id);
-                    if (context.mounted) {
-                      ToastUtils.showSuccessToast(context, 'Receivable deleted');
-                    }
-                  } : null,
-                  child: _buildReceivableCard(item, currency),
+            sliver: SliverList(
+              delegate: SliverChildBuilderDelegate(
+                (context, itemIndex) {
+                  final dateItems = groupedReceivables[dateKey]!;
+                  if (itemIndex >= dateItems.length) return null;
+                  
+                  final item = dateItems[itemIndex];
+                  // Restrict editing/deleting for received or linked receivables
+                  final canEdit = item.receivable.status == 'PENDING' && 
+                                  item.receivable.linkedExpenseId == null && 
+                                  item.receivable.linkedIncomeId == null;
+                  
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                    child: SwipeableListItem(
+                      enableEdit: canEdit,
+                      enableDelete: canEdit,
+                      borderRadius: 20,
+                      onEdit: canEdit ? () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => EditReceivableScreen(receivableId: item.receivable.id),
+                          ),
+                        );
+                      } : null,
+                      onDelete: canEdit ? () async {
+                        final repository = ref.read(receivablesRepositoryProvider);
+                        await repository.deleteReceivable(item.receivable.id);
+                        if (context.mounted) {
+                          ToastUtils.showSuccessToast(context, 'Receivable deleted');
+                        }
+                      } : null,
+                      child: _buildReceivableCard(item, currency),
+                    ),
+                  );
+                },
+                childCount: groupedReceivables[dateKey]!.length,
+              ),
+            ),
+          ),
+        // Loading indicator or "No more items"
+        if (paginatedState.isLoadingMore)
+          const SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Center(child: CircularProgressIndicator()),
+            ),
+          )
+        else if (!paginatedState.hasMore && paginatedState.items.isNotEmpty)
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Center(
+                child: Text(
+                  'No more receivables',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: Colors.grey[600],
+                  ),
                 ),
-              );
-            }),
-          ],
-        );
-      },
+              ),
+            ),
+          ),
+        // Bottom padding
+        const SliverToBoxAdapter(
+          child: SizedBox(height: 80),
+        ),
+      ],
     );
   }
 
@@ -629,5 +638,5 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
       ),
     );
   }
-
 }
+

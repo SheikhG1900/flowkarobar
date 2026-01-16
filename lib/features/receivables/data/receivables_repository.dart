@@ -115,6 +115,38 @@ class ReceivablesRepository {
         .getSingleOrNull();
   }
 
+  /// Get receivable with linked data by ID
+  Future<ReceivableWithLinkedData?> getReceivableWithLinkedDataById(int id) async {
+    final query = _database.select(_database.receivables).join([
+      leftOuterJoin(
+        _database.contacts,
+        _database.contacts.id.equalsExp(_database.receivables.contactId),
+      ),
+      leftOuterJoin(
+        _database.transactions,
+        _database.transactions.id.equalsExp(_database.receivables.linkedExpenseId) | 
+        _database.transactions.id.equalsExp(_database.receivables.linkedIncomeId),
+      ),
+      leftOuterJoin(
+        _database.categories,
+        _database.categories.id.equalsExp(_database.transactions.categoryId),
+      ),
+    ]);
+
+    query.where(_database.receivables.id.equals(id));
+
+    final rows = await query.get();
+    if (rows.isEmpty) return null;
+
+    final row = rows.first;
+    return ReceivableWithLinkedData(
+      receivable: row.readTable(_database.receivables),
+      contact: row.readTableOrNull(_database.contacts),
+      linkedTransaction: row.readTableOrNull(_database.transactions),
+      linkedCategory: row.readTableOrNull(_database.categories),
+    );
+  }
+
   /// Create receivable
   Future<int> createReceivable(ReceivablesCompanion receivable) {
     return _database.into(_database.receivables).insert(receivable);

@@ -41,7 +41,7 @@ class TransactionService {
     required this.contactsRepository,
   });
 
-  Future<void> createTransaction({
+  Future<int> createTransaction({
     required double amount,
     required String type,
     required DateTime date,
@@ -52,7 +52,7 @@ class TransactionService {
         paidRelationship, // 'PAID_FOR', 'PAID_BY', 'RECEIVED_FROM', 'WILL_RECEIVE'
     bool createLinkedEntry = false,
   }) async {
-    await database.transaction(() async {
+    return await database.transaction(() async {
       // 1. Create the main transaction
       final transactionId = await transactionsRepository.createTransaction(
         TransactionsCompanion(
@@ -188,6 +188,7 @@ class TransactionService {
           }
         }
       }
+      return transactionId;
     });
   }
 

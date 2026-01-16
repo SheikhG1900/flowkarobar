@@ -2,6 +2,7 @@ import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_sticky_header/flutter_sticky_header.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
@@ -264,44 +265,19 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
       groupedPayables[dateKey]!.add(item);
     }
 
-    return ListView.builder(
+    final keys = groupedPayables.keys.toList();
+
+    return CustomScrollView(
       controller: _scrollController,
-      padding: const EdgeInsets.only(bottom: 80),
-      itemCount: groupedPayables.length + (paginatedState.hasMore || paginatedState.isLoadingMore ? 1 : 0),
-      itemBuilder: (context, index) {
-        // Show loading indicator at bottom
-        if (index == groupedPayables.length) {
-          if (paginatedState.isLoadingMore) {
-            return const Padding(
-              padding: EdgeInsets.all(16.0),
-              child: Center(child: CircularProgressIndicator()),
-            );
-          }
-          if (!paginatedState.hasMore && paginatedState.items.isNotEmpty) {
-            return Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Center(
-                child: Text(
-                  'No more payables',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: Colors.grey[600],
-                  ),
-                ),
-              ),
-            );
-          }
-          return const SizedBox.shrink();
-        }
-
-        final dateKey = groupedPayables.keys.elementAt(index);
-        final dateItems = groupedPayables[dateKey]!;
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Date Header
-            Padding(
+      slivers: [
+        // Date sections with sticky headers
+        for (final dateKey in keys)
+          SliverStickyHeader(
+            header: Container(
+              height: 50,
+              color: theme.scaffoldBackgroundColor,
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
+              alignment: Alignment.centerLeft,
               child: Text(
                 dateKey,
                 style: theme.textTheme.titleSmall?.copyWith(
@@ -311,40 +287,73 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
                 ),
               ),
             ),
-            // Items
-            ...dateItems.map((item) {
-              // Restrict editing/deleting for paid or linked payables
-              final canEdit = item.payable.status == 'PENDING' && 
-                              item.payable.linkedExpenseId == null && 
-                              item.payable.linkedIncomeId == null;
-              
-              return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                child: SwipeableListItem(
-                  enableEdit: canEdit,
-                  enableDelete: canEdit,
-                  borderRadius: 20,
-                  onEdit: canEdit ? () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => EditPayableScreen(payableId: item.payable.id),
-                      ),
-                    );
-                  } : null,
-                  onDelete: canEdit ? () async {
-                    await repository.deletePayable(item.payable.id);
-                    if (context.mounted) {
-                      ToastUtils.showSuccessToast(context, 'Payable deleted');
-                    }
-                  } : null,
-                  child: _buildPayableCard(item, currency),
+            sliver: SliverList(
+              delegate: SliverChildBuilderDelegate(
+                (context, itemIndex) {
+                  final dateItems = groupedPayables[dateKey]!;
+                  if (itemIndex >= dateItems.length) return null;
+                  
+                  final item = dateItems[itemIndex];
+                  // Restrict editing/deleting for paid or linked payables
+                  final canEdit = item.payable.status == 'PENDING' && 
+                                  item.payable.linkedExpenseId == null && 
+                                  item.payable.linkedIncomeId == null;
+                  
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                    child: SwipeableListItem(
+                      enableEdit: canEdit,
+                      enableDelete: canEdit,
+                      borderRadius: 20,
+                      onEdit: canEdit ? () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => EditPayableScreen(payableId: item.payable.id),
+                          ),
+                        );
+                      } : null,
+                      onDelete: canEdit ? () async {
+                        await repository.deletePayable(item.payable.id);
+                        if (context.mounted) {
+                          ToastUtils.showSuccessToast(context, 'Payable deleted');
+                        }
+                      } : null,
+                      child: _buildPayableCard(item, currency),
+                    ),
+                  );
+                },
+                childCount: groupedPayables[dateKey]!.length,
+              ),
+            ),
+          ),
+        // Loading indicator or "No more items"
+        if (paginatedState.isLoadingMore)
+          const SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Center(child: CircularProgressIndicator()),
+            ),
+          )
+        else if (!paginatedState.hasMore && paginatedState.items.isNotEmpty)
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Center(
+                child: Text(
+                  'No more payables',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: Colors.grey[600],
+                  ),
                 ),
-              );
-            }),
-          ],
-        );
-      },
+              ),
+            ),
+          ),
+        // Bottom padding
+        const SliverToBoxAdapter(
+          child: SizedBox(height: 80),
+        ),
+      ],
     );
   }
 
@@ -627,5 +636,5 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
       ),
     );
   }
-
 }
+

@@ -6,6 +6,7 @@ import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/receivables/presentation/providers/receivables_provider.dart';
+import 'package:flowpaisa/features/receivables/presentation/widgets/receivable_details_dialog.dart';
 import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
 import 'package:flowpaisa/features/contacts/presentation/screens/add_contact_screen.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
@@ -83,7 +84,8 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
         updatedAt: drift.Value(DateTime.now()),
       );
 
-      await repository.createReceivable(receivable);
+      // Create receivable and get the ID
+      final receivableId = await repository.createReceivable(receivable);
 
       // Increment usage count for free users
       if (!PremiumGate.isPremium(ref)) {
@@ -96,8 +98,24 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
       ref.invalidate(receivableLimitsProvider);
 
       if (mounted) {
-        Navigator.pop(context);
-        ToastUtils.showSuccessToast(context, 'Receivable added successfully');
+        // Fetch full receivable with linked data
+        final receivableWithLinkedData = await repository.getReceivableWithLinkedDataById(receivableId);
+
+        if (receivableWithLinkedData != null) {
+          // Pop create page and navigate to details
+          Navigator.pop(context);
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ReceivableDetailsDialog(item: receivableWithLinkedData),
+            ),
+          );
+          ToastUtils.showSuccessToast(context, 'Receivable added successfully');
+        } else {
+          // Fallback: just pop if details fetch fails
+          Navigator.pop(context);
+          ToastUtils.showSuccessToast(context, 'Receivable added successfully');
+        }
       }
     } catch (e) {
       if (mounted) {
