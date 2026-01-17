@@ -1,0 +1,6 @@
+---
+alwaysApply: true
+---
+# Overview
+
+Always use Flutter 3.x syntax, prefer functional widgets

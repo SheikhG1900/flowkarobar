@@ -21,11 +21,11 @@ class ScanReceiptScreen extends ConsumerStatefulWidget {
 class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
   final ImagePicker _picker = ImagePicker();
   final ReceiptParser _parser = ReceiptParser();
-  
+
   File? _image;
   bool _isScanning = false;
   ReceiptData? _receiptData;
-  
+
   // Editable fields for review
   late TextEditingController _amountController;
   late TextEditingController _merchantController;
@@ -80,10 +80,10 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
       final inputImage = InputImage.fromFile(_image!);
       final textRecognizer = TextRecognizer();
       final recognizedText = await textRecognizer.processImage(inputImage);
-      
+
       // Parse the receipt
       final receiptData = _parser.parse(recognizedText);
-      
+
       setState(() {
         _receiptData = receiptData;
         _amountController.text = receiptData.amount?.toStringAsFixed(2) ?? '';
@@ -129,7 +129,7 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final currencySymbol = ref.watch(currencySymbolProvider);
-    
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Scan Receipt'),
@@ -158,18 +158,19 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
               Container(
                 height: 300,
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
+                  color: AppColors.brightCyan.withAlpha(20),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.grey.shade300),
+                  border: Border.all(color: AppColors.brightCyan),
                 ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.receipt_long, size: 80, color: Colors.grey.shade400),
+                    Icon(Icons.receipt_long,
+                        size: 80, color: AppColors.brightCyan),
                     const SizedBox(height: 16),
                     Text(
                       'No receipt selected',
-                      style: TextStyle(color: Colors.grey.shade600),
+                      style: TextStyle(color: AppColors.brightCyan),
                     ),
                   ],
                 ),
@@ -181,7 +182,9 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
               children: [
                 Expanded(
                   child: ElevatedButton.icon(
-                    onPressed: _isScanning ? null : () => _pickImage(ImageSource.camera),
+                    onPressed: _isScanning
+                        ? null
+                        : () => _pickImage(ImageSource.camera),
                     icon: const Icon(Icons.camera_alt),
                     label: const Text('Camera'),
                     style: ElevatedButton.styleFrom(
@@ -192,7 +195,9 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: ElevatedButton.icon(
-                    onPressed: _isScanning ? null : () => _pickImage(ImageSource.gallery),
+                    onPressed: _isScanning
+                        ? null
+                        : () => _pickImage(ImageSource.gallery),
                     icon: const Icon(Icons.photo_library),
                     label: const Text('Gallery'),
                     style: ElevatedButton.styleFrom(
@@ -240,7 +245,8 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
               // Amount Field with Chips
               TextField(
                 controller: _amountController,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
                 decoration: const InputDecoration(
                   labelText: 'Total Amount',
                   prefixIcon: Icon(Icons.attach_money),
@@ -248,21 +254,30 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
                 ),
               ),
               // Suggestion Chips for Amount
-              if (_receiptData?.amountCandidates.isNotEmpty == true && _receiptData!.amountCandidates.length > 1)
+              if (_receiptData?.amountCandidates.isNotEmpty == true &&
+                  _receiptData!.amountCandidates.length > 1)
                 Padding(
                   padding: const EdgeInsets.only(top: 8),
                   child: Wrap(
                     spacing: 8,
                     children: _receiptData!.amountCandidates.map((amt) {
-                      final isSelected = _amountController.text == amt.toStringAsFixed(2);
+                      final isSelected =
+                          _amountController.text == amt.toStringAsFixed(2);
                       return ActionChip(
-                        label: Text('$currencySymbol${amt.toStringAsFixed(2)}'),
-                        backgroundColor: isSelected 
+                        label: Text(
+                          '$currencySymbol${amt.toStringAsFixed(2)}',
+                          style: TextStyle(
+                            color: isSelected
+                                ? AppColors.brightCyan
+                                : theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                        backgroundColor: isSelected
                             ? AppColors.brightCyan.withValues(alpha: 0.1)
-                            : null,
-                        side: isSelected 
+                            : theme.colorScheme.surfaceContainerHighest,
+                        side: isSelected
                             ? const BorderSide(color: AppColors.brightCyan)
-                            : null,
+                            : BorderSide(color: theme.colorScheme.outline),
                         onPressed: () {
                           setState(() {
                             _amountController.text = amt.toStringAsFixed(2);
@@ -302,26 +317,36 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
                 ),
               ),
               // Suggestion Chips for Date
-              if (_receiptData?.dateCandidates.isNotEmpty == true && _receiptData!.dateCandidates.length > 1)
+              if (_receiptData?.dateCandidates.isNotEmpty == true &&
+                  _receiptData!.dateCandidates.length > 1)
                 Padding(
                   padding: const EdgeInsets.only(top: 8),
                   child: Wrap(
                     spacing: 8,
                     children: _receiptData!.dateCandidates.map((date) {
-                      final isSelected = DateFormat.yMMMd().format(_selectedDate) == 
-                                        DateFormat.yMMMd().format(date);
+                      final isSelected =
+                          DateFormat.yMMMd().format(_selectedDate) ==
+                              DateFormat.yMMMd().format(date);
                       return ActionChip(
-                        label: Text(DateFormat.yMMMd().format(date)),
-                        backgroundColor: isSelected 
+                        label: Text(
+                          DateFormat.yMMMd().format(date),
+                          style: TextStyle(
+                            color: isSelected
+                                ? AppColors.brightCyan
+                                : theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                        backgroundColor: isSelected
                             ? AppColors.brightCyan.withValues(alpha: 0.1)
-                            : null,
-                        side: isSelected 
+                            : theme.colorScheme.surfaceVariant,
+                        side: isSelected
                             ? const BorderSide(color: AppColors.brightCyan)
-                            : null,
+                            : BorderSide(color: theme.colorScheme.outline),
                         onPressed: () {
                           setState(() {
                             _selectedDate = date;
-                            _dateController.text = DateFormat.yMMMd().format(date);
+                            _dateController.text =
+                                DateFormat.yMMMd().format(date);
                           });
                         },
                       );

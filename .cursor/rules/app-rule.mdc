@@ -1,0 +1,8 @@
+---
+alwaysApply: true
+---
+- follow the color code of payable, receiveable, income, expense, transaction.
+
+-always use centralized color code. always try to use app_color, app_constant, app_theme.
+
+-always use centralized methods for the amount display, because currency symbol and decimal places are costomizable in this application.

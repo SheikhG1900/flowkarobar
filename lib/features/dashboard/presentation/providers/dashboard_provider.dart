@@ -1,26 +1,81 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
 import 'package:flowpaisa/core/database/database.dart';
+import 'package:flowpaisa/features/receivables/presentation/providers/receivables_provider.dart';
+import 'package:flowpaisa/features/payables/presentation/providers/payables_provider.dart';
+
+/// Filter for dashboard statistics (Overall or Monthly)
+enum DashboardFilter { overall, monthly }
+
+class DashboardFilterNotifier extends Notifier<DashboardFilter> {
+  @override
+  DashboardFilter build() => DashboardFilter.monthly;
+
+  void setFilter(DashboardFilter filter) => state = filter;
+}
+
+final dashboardFilterProvider =
+    NotifierProvider<DashboardFilterNotifier, DashboardFilter>(
+        DashboardFilterNotifier.new);
 
 /// Dashboard statistics model
 class DashboardStats {
   final double totalBalance;
-  final double totalIncome;
-  final double totalExpense;
+  final double incomeOverall;
+  final double incomeMonth;
+  final double expenseOverall;
+  final double expenseMonth;
+  final double payableOverall;
+  final double payableMonth;
+  final double receivableOverall;
+  final double receivableMonth;
+  final double overduePayable;
+  final double overdueReceivable;
   final List<Transaction> recentTransactions;
 
   DashboardStats({
     required this.totalBalance,
-    required this.totalIncome,
-    required this.totalExpense,
+    required this.incomeOverall,
+    required this.incomeMonth,
+    required this.expenseOverall,
+    required this.expenseMonth,
+    required this.payableOverall,
+    required this.payableMonth,
+    required this.receivableOverall,
+    required this.receivableMonth,
+    required this.overduePayable,
+    required this.overdueReceivable,
     required this.recentTransactions,
   });
+
+  // Getters for filtered values
+  double income(DashboardFilter filter) =>
+      filter == DashboardFilter.monthly ? incomeMonth : incomeOverall;
+  double expense(DashboardFilter filter) =>
+      filter == DashboardFilter.monthly ? expenseMonth : expenseOverall;
+  double receivable(DashboardFilter filter) =>
+      filter == DashboardFilter.monthly ? receivableMonth : receivableOverall;
+  double payable(DashboardFilter filter) =>
+      filter == DashboardFilter.monthly ? payableMonth : payableOverall;
+
+  // Calculated Net Values
+  double netCash(DashboardFilter filter) => income(filter) - expense(filter);
+  double netCredit(DashboardFilter filter) =>
+      receivable(filter) - payable(filter);
 
   factory DashboardStats.empty() {
     return DashboardStats(
       totalBalance: 0.0,
-      totalIncome: 0.0,
-      totalExpense: 0.0,
+      incomeOverall: 0.0,
+      incomeMonth: 0.0,
+      expenseOverall: 0.0,
+      expenseMonth: 0.0,
+      payableOverall: 0.0,
+      payableMonth: 0.0,
+      receivableOverall: 0.0,
+      receivableMonth: 0.0,
+      overduePayable: 0.0,
+      overdueReceivable: 0.0,
       recentTransactions: [],
     );
   }
@@ -28,52 +83,111 @@ class DashboardStats {
 
 /// Provider for dashboard statistics
 final dashboardStatsProvider = StreamProvider<DashboardStats>((ref) {
-  // Get the transactions repository
-  final repository = ref.watch(transactionsRepositoryProvider);
+  final transactionsAsync = ref.watch(allTransactionsProvider);
+  final receivablesAsync = ref.watch(allReceivablesProvider);
+  final payablesAsync = ref.watch(allPayablesProvider);
 
-  // Watch all transactions and calculate stats
-  return repository.watchAllTransactions().map((transactions) {
-    // Calculate totals
-    // stats*: Used for "Income" and "Expense" display (Visual totals)
-    // cash*: Used for "Balance" calculation (Actual cash on hand)
+  if (transactionsAsync is AsyncData &&
+      receivablesAsync is AsyncData &&
+      payablesAsync is AsyncData) {
+    final transactions = transactionsAsync.value!;
+    final receivables = receivablesAsync.value!;
+    final payables = payablesAsync.value!;
 
-    double statsIncome = 0.0;
-    double statsExpense = 0.0;
+    final now = DateTime.now();
+    final startOfMonth = DateTime(now.year, now.month, 1);
+
+    // 1. Transaction Stats (Income/Expense)
+    double incomeOverall = 0.0;
+    double incomeMonth = 0.0;
+    double expenseOverall = 0.0;
+    double expenseMonth = 0.0;
 
     double cashIncome = 0.0;
     double cashExpense = 0.0;
 
-    for (final transaction in transactions) {
-      if (transaction.type == 'INCOME') {
-        statsIncome += transaction.amount;
-
-        // If WILL_RECEIVE, it's accrued income (Receivable) but NO cash entered wallet yet.
-        if (transaction.paidRelationship != 'WILL_RECEIVE') {
-          cashIncome += transaction.amount;
+    for (final tx in transactions) {
+      if (tx.type == 'INCOME') {
+        incomeOverall += tx.amount;
+        if (tx.date.isAfter(startOfMonth) ||
+            tx.date.isAtSameMomentAs(startOfMonth)) {
+          incomeMonth += tx.amount;
         }
-      } else if (transaction.type == 'EXPENSE') {
-        statsExpense += transaction.amount;
 
-        // If PAID_BY someone else, it's an expense record but NO cash left wallet yet.
-        // So exclude from cashExpense calculation.
-        if (transaction.paidRelationship != 'PAID_BY') {
-          cashExpense += transaction.amount;
+        if (tx.paidRelationship != 'WILL_RECEIVE') {
+          cashIncome += tx.amount;
+        }
+      } else if (tx.type == 'EXPENSE') {
+        expenseOverall += tx.amount;
+        if (tx.date.isAfter(startOfMonth) ||
+            tx.date.isAtSameMomentAs(startOfMonth)) {
+          expenseMonth += tx.amount;
+        }
+
+        if (tx.paidRelationship != 'PAID_BY') {
+          cashExpense += tx.amount;
+        }
+      }
+    }
+
+    // 2. Receivable Stats
+    double receivableOverall = 0.0;
+    double receivableMonth = 0.0;
+    double overdueReceivable = 0.0;
+
+    for (final r in receivables) {
+      if (r.status == 'PENDING') {
+        receivableOverall += r.amount;
+        if (r.date.isAfter(startOfMonth) ||
+            r.date.isAtSameMomentAs(startOfMonth)) {
+          receivableMonth += r.amount;
+        }
+
+        if (r.dueDate != null && r.dueDate!.isBefore(now)) {
+          overdueReceivable += r.amount;
+        }
+      }
+    }
+
+    // 3. Payable Stats
+    double payableOverall = 0.0;
+    double payableMonth = 0.0;
+    double overduePayable = 0.0;
+
+    for (final p in payables) {
+      if (p.status == 'PENDING') {
+        payableOverall += p.amount;
+        if (p.date.isAfter(startOfMonth) ||
+            p.date.isAtSameMomentAs(startOfMonth)) {
+          payableMonth += p.amount;
+        }
+
+        if (p.dueDate != null && p.dueDate!.isBefore(now)) {
+          overduePayable += p.amount;
         }
       }
     }
 
     final totalBalance = cashIncome - cashExpense;
-
-    // Get recent transactions (last 5)
     final recentTransactions = transactions.take(5).toList();
 
-    return DashboardStats(
+    return Stream.value(DashboardStats(
       totalBalance: totalBalance,
-      totalIncome: statsIncome,
-      totalExpense: statsExpense,
+      incomeOverall: incomeOverall,
+      incomeMonth: incomeMonth,
+      expenseOverall: expenseOverall,
+      expenseMonth: expenseMonth,
+      payableOverall: payableOverall,
+      payableMonth: payableMonth,
+      receivableOverall: receivableOverall,
+      receivableMonth: receivableMonth,
+      overduePayable: overduePayable,
+      overdueReceivable: overdueReceivable,
       recentTransactions: recentTransactions,
-    );
-  });
+    ));
+  } else {
+    return const Stream.empty();
+  }
 });
 
 /// Provider for recent transactions (last 10)
@@ -97,7 +211,7 @@ final totalBalanceProvider = Provider<double>((ref) {
 /// Provider for total income
 final totalIncomeProvider = Provider<double>((ref) {
   return ref.watch(dashboardStatsProvider).when(
-        data: (stats) => stats.totalIncome,
+        data: (stats) => stats.incomeOverall,
         loading: () => 0.0,
         error: (_, __) => 0.0,
       );
@@ -106,7 +220,7 @@ final totalIncomeProvider = Provider<double>((ref) {
 /// Provider for total expense
 final totalExpenseProvider = Provider<double>((ref) {
   return ref.watch(dashboardStatsProvider).when(
-        data: (stats) => stats.totalExpense,
+        data: (stats) => stats.expenseOverall,
         loading: () => 0.0,
         error: (_, __) => 0.0,
       );

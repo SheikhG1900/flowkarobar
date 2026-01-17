@@ -341,12 +341,14 @@ class _DashboardTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final isPremium = PremiumGate.isPremium(ref);
     final currencyAsync = ref.watch(currentCurrencyProvider);
     final currency = currencyAsync.value;
 
-    // Watch dashboard statistics
+    // Watch dashboard statistics and filter
     final dashboardStatsAsync = ref.watch(dashboardStatsProvider);
+    final filter = ref.watch(dashboardFilterProvider);
 
     // Show loading if currency is not yet loaded
     if (currency == null) {
@@ -360,7 +362,7 @@ class _DashboardTab extends ConsumerWidget {
         slivers: [
           // App Bar with gradient
           SliverAppBar(
-            expandedHeight: 320, // Increased height for better spacing
+            expandedHeight: 480, // Increased height for more stats
             floating: false,
             pinned: true,
             stretch: true,
@@ -373,240 +375,207 @@ class _DashboardTab extends ConsumerWidget {
                 children: [
                   // Gradient Background with Beveled Corner (bottom-right only)
                   Container(
-                    decoration: const ShapeDecoration(
-                      gradient: AppColors.primaryGradient,
-                      shape: BeveledRectangleBorder(
+                    decoration: ShapeDecoration(
+                      gradient: AppColors.primaryGradient.withOpacity(0.3),
+                      shape: const BeveledRectangleBorder(
                         borderRadius: BorderRadius.only(
-                          bottomRight: Radius.circular(
-                              40), // This will now create a diagonal "cut"
+                          bottomRight: Radius.circular(40),
                         ),
                       ),
                     ),
                   ),
-                  // Dark Overlay for Contrast
+                  // Overlay for Contrast
                   Container(
                     decoration: ShapeDecoration(
                       gradient: LinearGradient(
                         colors: [
-                          Colors.black.withValues(alpha: 0.3),
-                          Colors.black.withValues(alpha: 0.1),
+                          isDark
+                              ? Colors.black.withValues(alpha: 0.4)
+                              : Colors.white.withValues(alpha: 0.8),
+                          isDark
+                              ? Colors.black.withValues(alpha: 0.1)
+                              : Colors.white.withValues(alpha: 0.4),
                         ],
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                       ),
                       shape: const BeveledRectangleBorder(
                         borderRadius: BorderRadius.only(
-                          bottomRight: Radius.circular(
-                              40), // This creates the "cut" effect
+                          bottomRight: Radius.circular(40),
                         ),
                       ),
                     ),
                   ),
                   // Main Content
                   Positioned(
-                    left: 24,
-                    right: 24,
-                    bottom: 32,
+                    left: 20,
+                    right: 20,
+                    bottom: 24,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        // App Title (Visible in Expanded State)
+                        // App Title
                         Row(
                           children: [
                             Container(
                               padding: const EdgeInsets.all(10),
                               decoration: BoxDecoration(
-                                color:
-                                    Colors.black.withValues(alpha: 0.3 / 1.0),
+                                color: isDark
+                                    ? Colors.black.withValues(alpha: 0.3)
+                                    : AppColors.brightCyan
+                                        .withValues(alpha: 0.1),
                                 borderRadius: const BorderRadius.only(
                                   topLeft: Radius.circular(14),
                                   bottomRight: Radius.circular(14),
-                                ), // Diagonal beveled
+                                ),
                                 boxShadow: [
                                   BoxShadow(
                                     color: Colors.black
-                                        .withValues(alpha: 0.1 / 1.0),
+                                        .withValues(alpha: 0.05 / 1.0),
                                     blurRadius: 8,
                                     offset: const Offset(0, 2),
                                   ),
                                 ],
                               ),
-                              child: const Icon(Icons.water_drop,
-                                  color: Colors.white, size: 24),
+                              child: Icon(Icons.water_drop,
+                                  color: isDark
+                                      ? Colors.white
+                                      : AppColors.brightCyan,
+                                  size: 24),
                             ),
                             const SizedBox(width: 12),
                             Text(
                               'FlowPaisa',
                               style: TextStyle(
-                                color: Colors.white,
+                                color:
+                                    isDark ? Colors.white : AppColors.lightText,
                                 fontWeight: FontWeight.bold,
-                                fontSize: 28, // Large Title
+                                fontSize: 24,
                                 letterSpacing: 0.5,
-                                shadows:
-                                    AppTheme.textShadow(blurMultiplier: 2.0),
+                                shadows: isDark
+                                    ? AppTheme.textShadow(blurMultiplier: 2.0)
+                                    : null,
                               ),
                             ),
                             if (isPremium) ...[
                               const SizedBox(width: 8),
                               const PremiumBadge(isSmall: true),
                             ],
+                            const Spacer(),
+                            // Toggle for Overall vs Monthly
+                            _buildFilterToggle(context, ref, filter, isDark),
                           ],
                         ),
-                        const SizedBox(
-                            height: 24), // Spacing between title and balance
+                        const SizedBox(height: 20),
 
                         // Balance Section
                         Text(
-                          'Total Balance',
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            color: Colors.white.withValues(alpha: 0.9 / 1.0),
+                          'Available Cash',
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            color: isDark
+                                ? Colors.white.withValues(alpha: 0.9)
+                                : AppColors.lightTextSecondary,
                             fontWeight: FontWeight.w600,
-                            shadows: AppTheme.textShadow(blurMultiplier: 1.0),
+                            shadows: isDark
+                                ? AppTheme.textShadow(blurMultiplier: 1.0)
+                                : null,
                           ),
                         ),
-                        const SizedBox(height: 8),
                         dashboardStatsAsync.when(
                           data: (stats) => Text(
                             AmountFormatter.formatWithCurrency(
                                 stats.totalBalance,
                                 currency.symbol,
                                 currency.decimalPlaces),
-                            style: theme.textTheme.displayMedium?.copyWith(
-                              color: Colors.white,
+                            style: theme.textTheme.displaySmall?.copyWith(
+                              color:
+                                  isDark ? Colors.white : AppColors.lightText,
                               fontWeight: FontWeight.bold,
                               height: 1.1,
-                              fontSize: 42, // Larger amount
-                              shadows: AppTheme.textShadow(
-                                  blurMultiplier: 4.0), // blurRadius 8 / 2 = 4
+                              fontSize: 32,
+                              shadows: isDark
+                                  ? AppTheme.textShadow(blurMultiplier: 4.0)
+                                  : null,
                             ),
                           ),
-                          loading: () => Text(
-                            AmountFormatter.formatWithCurrency(
-                                0, currency.symbol, currency.decimalPlaces),
-                            style: theme.textTheme.displayMedium?.copyWith(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              height: 1.1,
-                              fontSize: 42,
-                              shadows: AppTheme.textShadow(blurMultiplier: 4.0),
-                            ),
-                          ),
-                          error: (_, __) => Text(
-                            AmountFormatter.formatWithCurrency(
-                                0, currency.symbol, currency.decimalPlaces),
-                            style: theme.textTheme.displayMedium?.copyWith(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              height: 1.1,
-                              fontSize: 42,
-                              shadows: AppTheme.textShadow(blurMultiplier: 4.0),
-                            ),
-                          ),
+                          loading: () => SizedBox(
+                              height: 32,
+                              child: CircularProgressIndicator(
+                                  color: isDark
+                                      ? Colors.white
+                                      : AppColors.brightCyan,
+                                  strokeWidth: 2)),
+                          error: (_, __) => Text('Error',
+                              style: TextStyle(
+                                  color:
+                                      isDark ? Colors.white : AppColors.error)),
                         ),
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 16),
 
-                        // Income/Expense Chips
+                        // Stats Grid
                         dashboardStatsAsync.when(
-                          data: (stats) => Row(
+                          data: (stats) => Column(
                             children: [
-                              Expanded(
-                                child: _buildStatChip(
-                                  context,
-                                  icon: Icons.arrow_downward_rounded,
-                                  label: 'Income',
-                                  amount: stats.totalIncome,
-                                  color: Colors.white,
-                                  bgColor: Colors.greenAccent
-                                      .withValues(alpha: 0.25 / 1.0),
-                                  textColor: Colors.greenAccent.shade100,
-                                  currencySymbol: currency.symbol,
-                                  decimalPlaces: currency.decimalPlaces,
-                                ),
+                              _buildSummaryRow(
+                                context,
+                                isDark: isDark,
+                                title: 'Cash Flow',
+                                items: [
+                                  _SummaryItem(
+                                    label: 'Income',
+                                    amount: stats.income(filter),
+                                    color: AppColors.incomeColor,
+                                    icon: Icons.south_west,
+                                  ),
+                                  _SummaryItem(
+                                    label: 'Expense',
+                                    amount: stats.expense(filter),
+                                    color: AppColors.expenseColor,
+                                    icon: Icons.north_east,
+                                  ),
+                                  _SummaryItem(
+                                    label: 'Net Cash',
+                                    amount: stats.netCash(filter),
+                                    color: Colors.white,
+                                    icon: Icons.account_balance_wallet,
+                                  ),
+                                ],
+                                currency: currency,
                               ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: _buildStatChip(
-                                  context,
-                                  icon: Icons.arrow_upward_rounded,
-                                  label: 'Expense',
-                                  amount: stats.totalExpense,
-                                  color: Colors.white,
-                                  bgColor: Colors.orangeAccent
-                                      .withValues(alpha: 0.25 / 1.0),
-                                  textColor: Colors.orangeAccent.shade100,
-                                  currencySymbol: currency.symbol,
-                                  decimalPlaces: currency.decimalPlaces,
-                                ),
+                              const SizedBox(height: 12),
+                              _buildSummaryRow(
+                                context,
+                                isDark: isDark,
+                                title: 'Lending & Credit',
+                                items: [
+                                  _SummaryItem(
+                                    label: 'Receive',
+                                    amount: stats.receivable(filter),
+                                    color: AppColors.receivableColor,
+                                    icon: Icons.call_received,
+                                    overdue: stats.overdueReceivable,
+                                  ),
+                                  _SummaryItem(
+                                    label: 'Payable',
+                                    amount: stats.payable(filter),
+                                    color: AppColors.payableColor,
+                                    icon: Icons.call_made,
+                                    overdue: stats.overduePayable,
+                                  ),
+                                  _SummaryItem(
+                                    label: 'Net Credit',
+                                    amount: stats.netCredit(filter),
+                                    color: Colors.white,
+                                    icon: Icons.swap_horiz,
+                                  ),
+                                ],
+                                currency: currency,
                               ),
                             ],
                           ),
-                          loading: () => Row(
-                            children: [
-                              Expanded(
-                                child: _buildStatChip(
-                                  context,
-                                  icon: Icons.arrow_downward_rounded,
-                                  label: 'Income',
-                                  amount: 0.0,
-                                  color: Colors.white,
-                                  bgColor: Colors.greenAccent
-                                      .withValues(alpha: 0.25 / 1.0),
-                                  textColor: Colors.greenAccent.shade100,
-                                  currencySymbol: currency.symbol,
-                                  decimalPlaces: currency.decimalPlaces,
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: _buildStatChip(
-                                  context,
-                                  icon: Icons.arrow_upward_rounded,
-                                  label: 'Expense',
-                                  amount: 0.0,
-                                  color: Colors.white,
-                                  bgColor: Colors.orangeAccent
-                                      .withValues(alpha: 0.25 / 1.0),
-                                  textColor: Colors.orangeAccent.shade100,
-                                  currencySymbol: currency.symbol,
-                                  decimalPlaces: currency.decimalPlaces,
-                                ),
-                              ),
-                            ],
-                          ),
-                          error: (_, __) => Row(
-                            children: [
-                              Expanded(
-                                child: _buildStatChip(
-                                  context,
-                                  icon: Icons.arrow_downward_rounded,
-                                  label: 'Income',
-                                  amount: 0.0,
-                                  color: Colors.white,
-                                  bgColor: Colors.greenAccent
-                                      .withValues(alpha: 0.25 / 1.0),
-                                  textColor: Colors.greenAccent.shade100,
-                                  currencySymbol: currency.symbol,
-                                  decimalPlaces: currency.decimalPlaces,
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: _buildStatChip(
-                                  context,
-                                  icon: Icons.arrow_upward_rounded,
-                                  label: 'Expense',
-                                  amount: 0.0,
-                                  color: Colors.white,
-                                  bgColor: Colors.orangeAccent
-                                      .withValues(alpha: 0.25 / 1.0),
-                                  textColor: Colors.orangeAccent.shade100,
-                                  currencySymbol: currency.symbol,
-                                  decimalPlaces: currency.decimalPlaces,
-                                ),
-                              ),
-                            ],
-                          ),
+                          loading: () => const SizedBox(height: 100),
+                          error: (_, __) => const SizedBox.shrink(),
                         ),
                       ],
                     ),
@@ -614,7 +583,6 @@ class _DashboardTab extends ConsumerWidget {
                 ],
               ),
               titlePadding: EdgeInsets.zero,
-              // Only show title in collapsed state via this builder
               title: LayoutBuilder(
                 builder: (context, constraints) {
                   final settings = context.dependOnInheritedWidgetOfExactType<
@@ -625,8 +593,7 @@ class _DashboardTab extends ConsumerWidget {
                               deltaExtent)
                       .clamp(0.0, 1.0);
 
-                  // Show title only when collapsed (t > 0.7)
-                  if (t < 0.7) return const SizedBox.shrink();
+                  if (t < 0.8) return const SizedBox.shrink();
 
                   return FadeTransition(
                     opacity: AlwaysStoppedAnimation(t),
@@ -641,7 +608,7 @@ class _DashboardTab extends ConsumerWidget {
                               borderRadius: const BorderRadius.only(
                                 topLeft: Radius.circular(12),
                                 bottomRight: Radius.circular(12),
-                              ), // Diagonal beveled
+                              ),
                             ),
                             child: const Icon(Icons.water_drop,
                                 color: Colors.white, size: 20),
@@ -652,7 +619,7 @@ class _DashboardTab extends ConsumerWidget {
                             style: TextStyle(
                               color: theme.colorScheme.onSurface,
                               fontWeight: FontWeight.bold,
-                              fontSize: 20,
+                              fontSize: 18,
                             ),
                           ),
                         ],
@@ -724,76 +691,159 @@ class _DashboardTab extends ConsumerWidget {
     );
   }
 
-  Widget _buildStatChip(
-    BuildContext context, {
-    required IconData icon,
-    required String label,
-    required double amount,
-    required Color color,
-    required Color bgColor,
-    required Color textColor,
-    required String currencySymbol,
-    required int decimalPlaces,
-  }) {
-    final theme = Theme.of(context);
-
+  Widget _buildFilterToggle(BuildContext context, WidgetRef ref,
+      DashboardFilter currentFilter, bool isDark) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.15 / 1.0),
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(16),
-          bottomRight: Radius.circular(16),
-        ), // Diagonal beveled
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.1 / 1.0),
-          width: 1,
-        ),
+        color: isDark
+            ? Colors.black.withValues(alpha: 0.3)
+            : Colors.white.withValues(alpha: 0.2),
+        borderRadius: BorderRadius.circular(12),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(6), // Larger padding
-                decoration: BoxDecoration(
-                  color: bgColor,
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(8),
-                    bottomRight: Radius.circular(8),
-                  ), // Diagonal beveled
-                ),
-                child: Icon(icon, color: color, size: 18), // Larger icon
-              ),
-              const SizedBox(width: 8),
-              Text(
-                label,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  // Larger text style
-                  color: textColor,
-                  fontWeight: FontWeight.w600, // Bolder
-                  fontSize: 13,
-                ),
-              ),
-            ],
+          _ToggleOption(
+            label: 'Monthly',
+            isSelected: currentFilter == DashboardFilter.monthly,
+            isDark: isDark,
+            onTap: () => ref
+                .read(dashboardFilterProvider.notifier)
+                .setFilter(DashboardFilter.monthly),
           ),
-          const SizedBox(height: 10), // More spacing
-          Text(
-            AmountFormatter.formatWithCurrency(
-                amount, currencySymbol, decimalPlaces),
-            style: theme.textTheme.titleLarge?.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              fontSize: 20, // Larger amount
-              shadows: [
-                AppColors.textShadowSubtle(
-                    Theme.of(context).brightness == Brightness.dark)
-              ],
-            ),
+          _ToggleOption(
+            label: 'Overall',
+            isSelected: currentFilter == DashboardFilter.overall,
+            isDark: isDark,
+            onTap: () => ref
+                .read(dashboardFilterProvider.notifier)
+                .setFilter(DashboardFilter.overall),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildSummaryRow(
+    BuildContext context, {
+    required String title,
+    required List<_SummaryItem> items,
+    required dynamic currency,
+    required bool isDark,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 8),
+          child: Text(
+            title,
+            style: TextStyle(
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.8)
+                  : AppColors.lightTextSecondary,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5,
+            ),
+          ),
+        ),
+        Row(
+          children: items.map((item) {
+            final isLast = items.indexOf(item) == items.length - 1;
+            return Expanded(
+              child: Container(
+                margin: EdgeInsets.only(right: isLast ? 0 : 8),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+                decoration: BoxDecoration(
+                  gradient: AppColors.glassGradient(isDark),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: isDark
+                        ? Colors.white.withValues(alpha: 0.1)
+                        : AppColors.brightCyan.withValues(alpha: 0.2),
+                  ),
+                  boxShadow: [
+                    if (!isDark)
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.03),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(item.icon, color: item.color, size: 14),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            item.label,
+                            style: TextStyle(
+                              color: isDark
+                                  ? Colors.white70
+                                  : AppColors.lightTextSecondary,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        AmountFormatter.formatWithCurrency(
+                          item.amount,
+                          currency.symbol,
+                          currency.decimalPlaces,
+                        ),
+                        style: TextStyle(
+                          color: isDark ? Colors.white : AppColors.lightText,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    if (item.overdue != null && item.overdue! > 0) ...[
+                      const SizedBox(height: 2),
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 4, vertical: 1),
+                          decoration: BoxDecoration(
+                            color: AppColors.error.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            'Overdue: ${AmountFormatter.formatWithCurrency(item.overdue!, currency.symbol, currency.decimalPlaces)}',
+                            style: TextStyle(
+                              color:
+                                  isDark ? Colors.redAccent : AppColors.error,
+                              fontSize: 9,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ],
     );
   }
 
@@ -1366,4 +1416,62 @@ class _SettingsTab extends ConsumerWidget {
       ),
     );
   }
+}
+
+class _ToggleOption extends StatelessWidget {
+  final String label;
+  final bool isSelected;
+  final bool isDark;
+  final VoidCallback onTap;
+
+  const _ToggleOption({
+    required this.label,
+    required this.isSelected,
+    required this.isDark,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? (isDark
+                  ? Colors.white.withValues(alpha: 0.2)
+                  : AppColors.brightCyan.withValues(alpha: 0.15))
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected
+                ? (isDark ? Colors.white : AppColors.brightCyan)
+                : (isDark ? Colors.white70 : AppColors.lightTextSecondary),
+            fontSize: 12,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SummaryItem {
+  final String label;
+  final double amount;
+  final Color color;
+  final IconData icon;
+  final double? overdue;
+
+  _SummaryItem({
+    required this.label,
+    required this.amount,
+    required this.color,
+    required this.icon,
+    this.overdue,
+  });
 }
