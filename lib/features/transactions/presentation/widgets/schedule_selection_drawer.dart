@@ -39,13 +39,26 @@ class _ScheduleSelectionDrawerState extends State<ScheduleSelectionDrawer> {
   void initState() {
     super.initState();
     // Initialize with current selection if provided
+    // Only include selections that match the current schedule type
     _isDailySelected = widget.initialScheduleType == 'DAILY';
-    _selectedDaysOfWeek = widget.initialSelectedDaysOfWeek != null
-        ? widget.initialSelectedDaysOfWeek!.toSet()
-        : <int>{};
-    _selectedDaysOfMonth = widget.initialSelectedDaysOfMonth != null
-        ? widget.initialSelectedDaysOfMonth!.toSet()
-        : <int>{};
+
+    if (widget.initialScheduleType == 'WEEKLY') {
+      // For WEEKLY, only include days of week
+      _selectedDaysOfWeek = widget.initialSelectedDaysOfWeek != null
+          ? widget.initialSelectedDaysOfWeek!.toSet()
+          : <int>{};
+      _selectedDaysOfMonth = <int>{}; // Clear days of month
+    } else if (widget.initialScheduleType == 'MONTHLY') {
+      // For MONTHLY, only include days of month
+      _selectedDaysOfWeek = <int>{}; // Clear days of week
+      _selectedDaysOfMonth = widget.initialSelectedDaysOfMonth != null
+          ? widget.initialSelectedDaysOfMonth!.toSet()
+          : <int>{};
+    } else {
+      // For DAILY or no initial type, clear both
+      _selectedDaysOfWeek = <int>{};
+      _selectedDaysOfMonth = <int>{};
+    }
   }
 
   @override
@@ -82,30 +95,44 @@ class _ScheduleSelectionDrawerState extends State<ScheduleSelectionDrawer> {
             ),
           ),
           const SizedBox(height: 20),
-          // Daily option
-          _buildDailyChip(theme),
-          const SizedBox(height: 16),
-          // Days of week section
-          Text(
-            'Days of Week',
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w600,
+          // Scrollable content
+          ConstrainedBox(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * 0.6,
+            ),
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Daily option
+                  _buildDailyChip(theme),
+                  const SizedBox(height: 16),
+                  // Days of week section
+                  Text(
+                    'Days of Week',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildDaysOfWeekChips(theme),
+                  const SizedBox(height: 20),
+                  // Days of month section
+                  Text(
+                    'Days of Month',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildDaysOfMonthChips(theme),
+                  const SizedBox(height: 24),
+                ],
+              ),
             ),
           ),
-          const SizedBox(height: 12),
-          _buildDaysOfWeekChips(theme),
-          const SizedBox(height: 20),
-          // Days of month section
-          Text(
-            'Days of Month',
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 12),
-          _buildDaysOfMonthChips(theme),
-          const SizedBox(height: 24),
-          // Action buttons
+          // Action buttons (sticky at bottom)
           Row(
             children: [
               Expanded(
@@ -169,8 +196,6 @@ class _ScheduleSelectionDrawerState extends State<ScheduleSelectionDrawer> {
       'Friday',
       'Saturday'
     ];
-    final isDisabled = _isDailySelected || _selectedDaysOfMonth.isNotEmpty;
-    final isDark = theme.brightness == Brightness.dark;
 
     return Wrap(
       spacing: 8,
@@ -180,36 +205,25 @@ class _ScheduleSelectionDrawerState extends State<ScheduleSelectionDrawer> {
         return FilterChip(
           label: Text(days[index]),
           selected: isSelected,
-          onSelected: isDisabled
-              ? null
-              : (selected) {
-                  setState(() {
-                    if (selected) {
-                      _selectedDaysOfWeek.add(index);
-                      _isDailySelected = false;
-                    } else {
-                      _selectedDaysOfWeek.remove(index);
-                    }
-                  });
-                },
+          onSelected: (selected) {
+            setState(() {
+              if (selected) {
+                _selectedDaysOfWeek.add(index);
+                _isDailySelected = false;
+                _selectedDaysOfMonth.clear();
+              } else {
+                _selectedDaysOfWeek.remove(index);
+              }
+            });
+          },
           selectedColor: AppColors.brightCyan.withValues(alpha: 0.2),
           checkmarkColor: AppColors.brightCyan,
-          backgroundColor: isDisabled
-              ? (isDark ? Colors.grey[800] : Colors.grey[200])
-              : null,
           labelStyle: TextStyle(
-            color: isDisabled
-                ? (isDark ? Colors.grey[600] : Colors.grey[500])
-                : (isSelected
-                    ? AppColors.brightCyan
-                    : theme.colorScheme.onSurface),
+            color:
+                isSelected ? AppColors.brightCyan : theme.colorScheme.onSurface,
           ),
           side: BorderSide(
-            color: isSelected
-                ? AppColors.brightCyan
-                : (isDisabled
-                    ? (isDark ? Colors.grey[700]! : Colors.grey[300]!)
-                    : theme.dividerColor),
+            color: isSelected ? AppColors.brightCyan : theme.dividerColor,
             width: isSelected ? 2 : 1,
           ),
         );
@@ -218,9 +232,6 @@ class _ScheduleSelectionDrawerState extends State<ScheduleSelectionDrawer> {
   }
 
   Widget _buildDaysOfMonthChips(ThemeData theme) {
-    final isDisabled = _isDailySelected || _selectedDaysOfWeek.isNotEmpty;
-    final isDark = theme.brightness == Brightness.dark;
-
     return Wrap(
       spacing: 8,
       runSpacing: 8,
@@ -230,36 +241,25 @@ class _ScheduleSelectionDrawerState extends State<ScheduleSelectionDrawer> {
         return FilterChip(
           label: Text('$day'),
           selected: isSelected,
-          onSelected: isDisabled
-              ? null
-              : (selected) {
-                  setState(() {
-                    if (selected) {
-                      _selectedDaysOfMonth.add(day);
-                      _isDailySelected = false;
-                    } else {
-                      _selectedDaysOfMonth.remove(day);
-                    }
-                  });
-                },
+          onSelected: (selected) {
+            setState(() {
+              if (selected) {
+                _selectedDaysOfMonth.add(day);
+                _isDailySelected = false;
+                _selectedDaysOfWeek.clear();
+              } else {
+                _selectedDaysOfMonth.remove(day);
+              }
+            });
+          },
           selectedColor: AppColors.brightCyan.withValues(alpha: 0.2),
           checkmarkColor: AppColors.brightCyan,
-          backgroundColor: isDisabled
-              ? (isDark ? Colors.grey[800] : Colors.grey[200])
-              : null,
           labelStyle: TextStyle(
-            color: isDisabled
-                ? (isDark ? Colors.grey[600] : Colors.grey[500])
-                : (isSelected
-                    ? AppColors.brightCyan
-                    : theme.colorScheme.onSurface),
+            color:
+                isSelected ? AppColors.brightCyan : theme.colorScheme.onSurface,
           ),
           side: BorderSide(
-            color: isSelected
-                ? AppColors.brightCyan
-                : (isDisabled
-                    ? (isDark ? Colors.grey[700]! : Colors.grey[300]!)
-                    : theme.dividerColor),
+            color: isSelected ? AppColors.brightCyan : theme.dividerColor,
             width: isSelected ? 2 : 1,
           ),
         );
