@@ -24,8 +24,7 @@ class EditScheduleScreen extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<EditScheduleScreen> createState() =>
-      _EditScheduleScreenState();
+  ConsumerState<EditScheduleScreen> createState() => _EditScheduleScreenState();
 }
 
 class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
@@ -92,11 +91,11 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
   Future<void> _loadCategoryAndContact() async {
     if (widget.schedule.categoryId != null) {
       // Load category
-      final categories = await ref
-          .read(categoriesByTypeProvider(widget.schedule.type).future);
+      final categories =
+          await ref.read(categoriesByTypeProvider(widget.schedule.type).future);
       try {
-        final category = categories
-            .firstWhere((c) => c.id == widget.schedule.categoryId);
+        final category =
+            categories.firstWhere((c) => c.id == widget.schedule.categoryId);
         if (mounted) {
           setState(() {
             _selectedCategory = category;
@@ -168,8 +167,7 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
 
       if (mounted) {
         Navigator.pop(context, true);
-        ToastUtils.showSuccessToast(
-            context, 'Schedule updated successfully');
+        ToastUtils.showSuccessToast(context, 'Schedule updated successfully');
       }
     } catch (e) {
       if (mounted) {
@@ -214,6 +212,52 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
     }
   }
 
+  Future<void> _selectDueDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _dueDate ?? DateTime.now().add(const Duration(days: 30)),
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+    );
+
+    if (picked != null) {
+      setState(() {
+        _dueDate = picked;
+      });
+    }
+  }
+
+  Future<void> _handleRelationshipChange(String? value) async {
+    if (_paidRelationship == value) {
+      setState(() {
+        _paidRelationship = null;
+        _dueDate = null;
+      });
+    } else {
+      // Check if contact is selected when setting relationship
+      if (_selectedContact == null) {
+        // Show contact picker
+        final contact = await _showContactPicker();
+        if (contact == null) {
+          if (mounted) {
+            ToastUtils.showErrorToast(
+              context,
+              'Please select a contact for this relationship',
+            );
+          }
+          return;
+        }
+        setState(() {
+          _selectedContact = contact;
+          _selectedContactId = contact.id;
+        });
+      }
+
+      setState(() {
+        _paidRelationship = value;
+      });
+    }
+  }
 
   void _showCategoryPicker() {
     showModalBottomSheet(
@@ -371,8 +415,9 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
                               ),
                             ),
                             title: Text(contact.name),
-                            subtitle:
-                                contact.phone != null ? Text(contact.phone!) : null,
+                            subtitle: contact.phone != null
+                                ? Text(contact.phone!)
+                                : null,
                             trailing: _selectedContactId == contact.id
                                 ? const Icon(Icons.check_circle,
                                     color: AppColors.brightCyan)
@@ -404,7 +449,11 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => const ScheduleSelectionDrawer(),
+      builder: (context) => ScheduleSelectionDrawer(
+        initialScheduleType: _scheduleType,
+        initialSelectedDaysOfWeek: _selectedDaysOfWeek,
+        initialSelectedDaysOfMonth: _selectedDaysOfMonth,
+      ),
     );
 
     if (result != null) {
@@ -706,6 +755,9 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
                             setState(() {
                               _selectedContact = null;
                               _selectedContactId = null;
+                              // Clear relationship when contact is removed
+                              _paidRelationship = null;
+                              _dueDate = null;
                             });
                           },
                         )
@@ -716,6 +768,150 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
                 ),
               ),
               const SizedBox(height: 24),
+
+              // Paid Relationship Section (Linked Transactions)
+              if (_selectedType == 'EXPENSE') ...[
+                Text(
+                  'Paid Relationship',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _RelationshipButton(
+                        label: 'Paid FOR',
+                        subtitle: 'I will receive back',
+                        icon: Icons.account_balance_wallet,
+                        isSelected: _paidRelationship == 'PAID_FOR',
+                        gradient: AppColors.receivableGradient,
+                        color: AppColors.receivableColor,
+                        onTap: () => _handleRelationshipChange('PAID_FOR'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _RelationshipButton(
+                        label: 'Paid BY',
+                        subtitle: 'Someone paid for me',
+                        icon: Icons.person_outline,
+                        isSelected: _paidRelationship == 'PAID_BY',
+                        gradient: AppColors.payableGradient,
+                        color: AppColors.payableColor,
+                        onTap: () => _handleRelationshipChange('PAID_BY'),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+              ] else if (_selectedType == 'INCOME') ...[
+                Text(
+                  'Received Relationship',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _RelationshipButton(
+                        label: 'I Owe',
+                        subtitle: 'Received loan',
+                        icon: Icons.download,
+                        isSelected: _paidRelationship == 'RECEIVED_FROM',
+                        gradient: AppColors.payableGradient,
+                        color: AppColors.payableColor,
+                        onTap: () => _handleRelationshipChange('RECEIVED_FROM'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _RelationshipButton(
+                        label: 'Will Receive',
+                        subtitle: 'Receive later',
+                        icon: Icons.schedule,
+                        isSelected: _paidRelationship == 'WILL_RECEIVE',
+                        gradient: AppColors.receivableGradient,
+                        color: AppColors.receivableColor,
+                        onTap: () => _handleRelationshipChange('WILL_RECEIVE'),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+              ],
+
+              // Due Date Selector (only shown when relationship is active)
+              if (_paidRelationship != null) ...[
+                InkWell(
+                  onTap: _selectDueDate,
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surface,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: theme.dividerColor),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            gradient: _paidRelationship == 'PAID_FOR' ||
+                                    _paidRelationship == 'WILL_RECEIVE'
+                                ? AppColors.receivableGradient
+                                : AppColors.payableGradient,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Icon(
+                            Icons.event_available,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Due Date (Optional)',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                _dueDate != null
+                                    ? '${_dueDate!.day}/${_dueDate!.month}/${_dueDate!.year}'
+                                    : 'Not set',
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (_dueDate != null)
+                          IconButton(
+                            icon: const Icon(Icons.clear, size: 20),
+                            onPressed: () {
+                              setState(() {
+                                _dueDate = null;
+                              });
+                            },
+                          ),
+                        const Icon(Icons.arrow_forward_ios, size: 16),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+              ],
 
               // Description
               TextFormField(
@@ -936,9 +1132,8 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
       case 'WEEKLY':
         if (_selectedDaysOfWeek != null && _selectedDaysOfWeek!.isNotEmpty) {
           final dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-          final selectedDayNames = _selectedDaysOfWeek!
-              .map((d) => dayNames[d])
-              .join(', ');
+          final selectedDayNames =
+              _selectedDaysOfWeek!.map((d) => dayNames[d]).join(', ');
           return 'Weekly: $selectedDayNames';
         }
         return 'Weekly';
@@ -953,6 +1148,88 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
       default:
         return 'Unknown';
     }
+  }
+}
+
+/// Relationship Button Widget for Paid FOR/BY selection
+class _RelationshipButton extends StatelessWidget {
+  final String label;
+  final String subtitle;
+  final IconData icon;
+  final bool isSelected;
+  final VoidCallback onTap;
+  final Gradient gradient;
+  final Color color;
+
+  const _RelationshipButton({
+    required this.label,
+    required this.subtitle,
+    required this.icon,
+    required this.isSelected,
+    required this.onTap,
+    required this.gradient,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          gradient: isSelected ? gradient : null,
+          color: isSelected ? null : theme.colorScheme.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected ? color : theme.dividerColor,
+            width: isSelected ? 2 : 1,
+          ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: color.withValues(alpha: 0.3),
+                    blurRadius: 12,
+                    offset: const Offset(0, 6),
+                  ),
+                ]
+              : null,
+        ),
+        child: Column(
+          children: [
+            Icon(
+              icon,
+              color: isSelected
+                  ? Colors.white
+                  : theme.colorScheme.onSurfaceVariant,
+              size: 28,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              style: theme.textTheme.titleSmall?.copyWith(
+                color: isSelected ? Colors.white : theme.colorScheme.onSurface,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              subtitle,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: isSelected
+                    ? Colors.white.withValues(alpha: 0.9 / 1.0)
+                    : theme.colorScheme.onSurfaceVariant,
+                fontSize: 11,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 

@@ -14,7 +14,16 @@ class ScheduleSelectionResult {
 }
 
 class ScheduleSelectionDrawer extends StatefulWidget {
-  const ScheduleSelectionDrawer({super.key});
+  final String? initialScheduleType; // 'DAILY', 'WEEKLY', 'MONTHLY'
+  final List<int>? initialSelectedDaysOfWeek;
+  final List<int>? initialSelectedDaysOfMonth;
+
+  const ScheduleSelectionDrawer({
+    super.key,
+    this.initialScheduleType,
+    this.initialSelectedDaysOfWeek,
+    this.initialSelectedDaysOfMonth,
+  });
 
   @override
   State<ScheduleSelectionDrawer> createState() =>
@@ -22,9 +31,22 @@ class ScheduleSelectionDrawer extends StatefulWidget {
 }
 
 class _ScheduleSelectionDrawerState extends State<ScheduleSelectionDrawer> {
-  bool _isDailySelected = false;
-  final Set<int> _selectedDaysOfWeek = {}; // 0=Sunday, 6=Saturday
-  final Set<int> _selectedDaysOfMonth = {}; // 1-31
+  late bool _isDailySelected;
+  late final Set<int> _selectedDaysOfWeek; // 0=Sunday, 6=Saturday
+  late final Set<int> _selectedDaysOfMonth; // 1-31
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize with current selection if provided
+    _isDailySelected = widget.initialScheduleType == 'DAILY';
+    _selectedDaysOfWeek = widget.initialSelectedDaysOfWeek != null
+        ? widget.initialSelectedDaysOfWeek!.toSet()
+        : <int>{};
+    _selectedDaysOfMonth = widget.initialSelectedDaysOfMonth != null
+        ? widget.initialSelectedDaysOfMonth!.toSet()
+        : <int>{};
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -125,17 +147,28 @@ class _ScheduleSelectionDrawerState extends State<ScheduleSelectionDrawer> {
       },
       selectedColor: AppColors.brightCyan.withValues(alpha: 0.2),
       checkmarkColor: AppColors.brightCyan,
-      side: BorderSide(
+      labelStyle: TextStyle(
         color: _isDailySelected
             ? AppColors.brightCyan
-            : theme.dividerColor,
+            : theme.colorScheme.onSurface,
+      ),
+      side: BorderSide(
+        color: _isDailySelected ? AppColors.brightCyan : theme.dividerColor,
         width: _isDailySelected ? 2 : 1,
       ),
     );
   }
 
   Widget _buildDaysOfWeekChips(ThemeData theme) {
-    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const days = [
+      'Sunday',
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday'
+    ];
     final isDisabled = _isDailySelected || _selectedDaysOfMonth.isNotEmpty;
     final isDark = theme.brightness == Brightness.dark;
 
@@ -167,7 +200,9 @@ class _ScheduleSelectionDrawerState extends State<ScheduleSelectionDrawer> {
           labelStyle: TextStyle(
             color: isDisabled
                 ? (isDark ? Colors.grey[600] : Colors.grey[500])
-                : (isSelected ? AppColors.brightCyan : theme.colorScheme.onSurface),
+                : (isSelected
+                    ? AppColors.brightCyan
+                    : theme.colorScheme.onSurface),
           ),
           side: BorderSide(
             color: isSelected
@@ -215,7 +250,9 @@ class _ScheduleSelectionDrawerState extends State<ScheduleSelectionDrawer> {
           labelStyle: TextStyle(
             color: isDisabled
                 ? (isDark ? Colors.grey[600] : Colors.grey[500])
-                : (isSelected ? AppColors.brightCyan : theme.colorScheme.onSurface),
+                : (isSelected
+                    ? AppColors.brightCyan
+                    : theme.colorScheme.onSurface),
           ),
           side: BorderSide(
             color: isSelected

@@ -93,29 +93,50 @@ class ScheduleListItem extends ConsumerWidget {
             alignment: Alignment.centerRight,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.end,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  '${isExpense ? '-' : '+'} ${AmountFormatter.formatWithCurrency(schedule.amount, currency.symbol, currency.decimalPlaces)}',
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    color: isExpense
-                        ? AppColors.expenseColor
-                        : AppColors.incomeColor,
-                    fontWeight: FontWeight.bold,
+                Padding(
+                  padding: const EdgeInsets.only(right: 10),
+                  child: Text(
+                    '${isExpense ? '-' : '+'} ${AmountFormatter.formatWithCurrency(schedule.amount, currency.symbol, currency.decimalPlaces)}',
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      color: isExpense
+                          ? AppColors.expenseColor
+                          : AppColors.incomeColor,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 2),
                 // Chip-style toggle for active/inactive
-                FilterChip(
-                  label: Text(
-                    schedule.isPaused ? 'Inactive' : 'Active',
-                    style: const TextStyle(fontSize: 14),
+                ActionChip(
+                  label: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        schedule.isPaused
+                            ? Icons.pause_circle
+                            : Icons.check_circle,
+                        size: 14,
+                        color: schedule.isPaused
+                            ? theme.colorScheme.onSurfaceVariant
+                            : AppColors.brightCyan,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        schedule.isPaused ? 'Inactive' : 'Active',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
                   ),
-                  selected: !schedule.isPaused,
-                  onSelected: (_) => onToggle(),
-                  selectedColor: AppColors.brightCyan.withValues(alpha: 0.2),
-                  checkmarkColor: AppColors.brightCyan,
+                  onPressed: () => onToggle(),
+                  backgroundColor: !schedule.isPaused
+                      ? AppColors.brightCyan.withValues(alpha: 0.2)
+                      : null,
                   visualDensity: VisualDensity.compact,
                   padding:
                       const EdgeInsets.symmetric(horizontal: 6, vertical: -4),
@@ -124,7 +145,7 @@ class ScheduleListItem extends ConsumerWidget {
                     color: schedule.isPaused
                         ? theme.colorScheme.onSurfaceVariant
                         : AppColors.brightCyan,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.normal,
                     fontSize: 10,
                   ),
                   side: BorderSide(
