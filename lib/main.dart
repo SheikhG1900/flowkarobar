@@ -362,7 +362,7 @@ class _DashboardTab extends ConsumerWidget {
         slivers: [
           // App Bar with gradient
           SliverAppBar(
-            expandedHeight: 480, // Increased height for more stats
+            expandedHeight: 400, // Reduced height for more compact header
             floating: false,
             pinned: true,
             stretch: true,
@@ -410,7 +410,7 @@ class _DashboardTab extends ConsumerWidget {
                   Positioned(
                     left: 20,
                     right: 20,
-                    bottom: 24,
+                    top: MediaQuery.of(context).padding.top + 16,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
@@ -462,9 +462,6 @@ class _DashboardTab extends ConsumerWidget {
                               const SizedBox(width: 8),
                               const PremiumBadge(isSmall: true),
                             ],
-                            const Spacer(),
-                            // Toggle for Overall vs Monthly
-                            _buildFilterToggle(context, ref, filter, isDark),
                           ],
                         ),
                         const SizedBox(height: 20),
@@ -482,34 +479,42 @@ class _DashboardTab extends ConsumerWidget {
                                 : null,
                           ),
                         ),
-                        dashboardStatsAsync.when(
-                          data: (stats) => Text(
-                            AmountFormatter.formatWithCurrency(
-                                stats.totalBalance,
-                                currency.symbol,
-                                currency.decimalPlaces),
-                            style: theme.textTheme.displaySmall?.copyWith(
-                              color:
-                                  isDark ? Colors.white : AppColors.lightText,
-                              fontWeight: FontWeight.bold,
-                              height: 1.1,
-                              fontSize: 32,
-                              shadows: isDark
-                                  ? AppTheme.textShadow(blurMultiplier: 4.0)
-                                  : null,
-                            ),
-                          ),
-                          loading: () => SizedBox(
-                              height: 32,
-                              child: CircularProgressIndicator(
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            dashboardStatsAsync.when(
+                              data: (stats) => Text(
+                                AmountFormatter.formatWithCurrency(
+                                    stats.totalBalance,
+                                    currency.symbol,
+                                    currency.decimalPlaces),
+                                style: theme.textTheme.displaySmall?.copyWith(
                                   color: isDark
                                       ? Colors.white
-                                      : AppColors.brightCyan,
-                                  strokeWidth: 2)),
-                          error: (_, __) => Text('Error',
-                              style: TextStyle(
-                                  color:
-                                      isDark ? Colors.white : AppColors.error)),
+                                      : AppColors.lightText,
+                                  fontWeight: FontWeight.bold,
+                                  height: 1.1,
+                                  fontSize: 32,
+                                  shadows: isDark
+                                      ? AppTheme.textShadow(blurMultiplier: 4.0)
+                                      : null,
+                                ),
+                              ),
+                              loading: () => SizedBox(
+                                  height: 32,
+                                  child: CircularProgressIndicator(
+                                      color: isDark
+                                          ? Colors.white
+                                          : AppColors.brightCyan,
+                                      strokeWidth: 2)),
+                              error: (_, __) => Text('Error',
+                                  style: TextStyle(
+                                      color: isDark
+                                          ? Colors.white
+                                          : AppColors.error)),
+                            ),
+                            _buildFilterChip(context, ref, filter, isDark),
+                          ],
                         ),
                         const SizedBox(height: 16),
 
@@ -572,6 +577,7 @@ class _DashboardTab extends ConsumerWidget {
                                 ],
                                 currency: currency,
                               ),
+                              const SizedBox(height: 12),
                             ],
                           ),
                           loading: () => const SizedBox(height: 100),
@@ -691,37 +697,43 @@ class _DashboardTab extends ConsumerWidget {
     );
   }
 
-  Widget _buildFilterToggle(BuildContext context, WidgetRef ref,
+  Widget _buildFilterChip(BuildContext context, WidgetRef ref,
       DashboardFilter currentFilter, bool isDark) {
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: isDark
-            ? Colors.black.withValues(alpha: 0.3)
-            : Colors.white.withValues(alpha: 0.2),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
+    final isMonthly = currentFilter == DashboardFilter.monthly;
+    final label = isMonthly ? DateFormat.MMM().format(DateTime.now()) : 'All';
+    final icon = isMonthly ? Icons.calendar_today : Icons.all_inclusive;
+
+    return ActionChip(
+      color: WidgetStateProperty.all(AppColors.brightCyan.withAlpha(50)),
+      label: Row(
         children: [
-          _ToggleOption(
-            label: 'Monthly',
-            isSelected: currentFilter == DashboardFilter.monthly,
-            isDark: isDark,
-            onTap: () => ref
-                .read(dashboardFilterProvider.notifier)
-                .setFilter(DashboardFilter.monthly),
-          ),
-          _ToggleOption(
-            label: 'Overall',
-            isSelected: currentFilter == DashboardFilter.overall,
-            isDark: isDark,
-            onTap: () => ref
-                .read(dashboardFilterProvider.notifier)
-                .setFilter(DashboardFilter.overall),
+          Icon(icon, size: 16, color: AppColors.brightCyan),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              color: AppColors.brightCyan,
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ],
       ),
+      onPressed: () {
+        final nextFilter =
+            isMonthly ? DashboardFilter.overall : DashboardFilter.monthly;
+        ref.read(dashboardFilterProvider.notifier).setFilter(nextFilter);
+      },
+      backgroundColor: isDark
+          ? Colors.white.withValues(alpha: 0.1)
+          : AppColors.brightCyan.withValues(alpha: 0.1),
+      side: BorderSide(
+        color: AppColors.brightCyan,
+        width: 1,
+      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      visualDensity: VisualDensity.compact,
     );
   }
 
@@ -1413,48 +1425,6 @@ class _SettingsTab extends ConsumerWidget {
             },
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _ToggleOption extends StatelessWidget {
-  final String label;
-  final bool isSelected;
-  final bool isDark;
-  final VoidCallback onTap;
-
-  const _ToggleOption({
-    required this.label,
-    required this.isSelected,
-    required this.isDark,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? (isDark
-                  ? Colors.white.withValues(alpha: 0.2)
-                  : AppColors.brightCyan.withValues(alpha: 0.15))
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: isSelected
-                ? (isDark ? Colors.white : AppColors.brightCyan)
-                : (isDark ? Colors.white70 : AppColors.lightTextSecondary),
-            fontSize: 12,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-          ),
-        ),
       ),
     );
   }
