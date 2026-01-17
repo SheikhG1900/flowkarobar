@@ -2,6 +2,8 @@ import 'package:drift/drift.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/features/contacts/data/contacts_repository.dart';
 import 'package:flowpaisa/features/payables/domain/models.dart';
+import 'package:flowpaisa/features/dashboard/domain/models.dart';
+import 'package:rxdart/rxdart.dart';
 
 class PayablesRepository {
   final AppDatabase _database;
@@ -13,6 +15,46 @@ class PayablesRepository {
     return (_database.select(_database.payables)
           ..orderBy([(p) => OrderingTerm.desc(p.date)]))
         .watch();
+  }
+
+  /// Watch payable statistics for dashboard
+  Stream<PayableStats> watchPayableStats() {
+    final now = DateTime.now();
+    final startOfMonth = DateTime(now.year, now.month, 1);
+
+    final overall = _watchTotalSum();
+    final month = _watchTotalSum(start: startOfMonth);
+    final overdue = _watchTotalSum(onlyOverdue: true);
+
+    return Rx.combineLatest3(
+      overall,
+      month,
+      overdue,
+      (a, b, c) => PayableStats(
+        overall: a,
+        month: b,
+        overdue: c,
+      ),
+    );
+  }
+
+  Stream<double> _watchTotalSum({DateTime? start, bool onlyOverdue = false}) {
+    final query = _database.selectOnly(_database.payables)
+      ..addColumns([_database.payables.amount.sum()])
+      ..where(_database.payables.status.equals('PENDING'));
+
+    if (start != null) {
+      query.where(_database.payables.date.isBiggerOrEqualValue(start));
+    }
+
+    if (onlyOverdue) {
+      final now = DateTime.now();
+      query.where(_database.payables.dueDate.isSmallerThanValue(now));
+    }
+
+    return query
+        .watchSingle()
+        .map((row) => row.read(_database.payables.amount.sum()) ?? 0.0);
   }
 
   /// Watch payables by status
@@ -229,8 +271,8 @@ class PayablesRepository {
       ..addColumns([_database.payables.id.count()])
       ..where(
         _database.payables.status.equals('PENDING') &
-        _database.payables.dueDate.isNotNull() &
-        _database.payables.dueDate.isSmallerThanValue(now),
+            _database.payables.dueDate.isNotNull() &
+            _database.payables.dueDate.isSmallerThanValue(now),
       );
 
     final result = await query.getSingle();

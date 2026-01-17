@@ -1,6 +1,8 @@
 import 'package:drift/drift.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/features/transactions/domain/models.dart';
+import 'package:flowpaisa/features/dashboard/domain/models.dart';
+import 'package:rxdart/rxdart.dart';
 
 class TransactionsRepository {
   final AppDatabase _database;
@@ -10,6 +12,70 @@ class TransactionsRepository {
   // Get all transactions
   Stream<List<Transaction>> watchAllTransactions() {
     return _database.select(_database.transactions).watch();
+  }
+
+  // Watch recent transactions
+  Stream<List<Transaction>> watchRecentTransactions({int limit = 5}) {
+    return (_database.select(_database.transactions)
+          ..orderBy([(t) => OrderingTerm.desc(t.date)])
+          ..limit(limit))
+        .watch();
+  }
+
+  // Watch transaction statistics for dashboard
+  Stream<TransactionStats> watchTransactionStats() {
+    final now = DateTime.now();
+    final startOfMonth = DateTime(now.year, now.month, 1);
+
+    final incomeOverall = _watchTotalSum(type: 'INCOME');
+    final incomeMonth = _watchTotalSum(type: 'INCOME', start: startOfMonth);
+    final expenseOverall = _watchTotalSum(type: 'EXPENSE');
+    final expenseMonth = _watchTotalSum(type: 'EXPENSE', start: startOfMonth);
+    final cashIncome =
+        _watchTotalSum(type: 'INCOME', excludePaidRelationship: 'WILL_RECEIVE');
+    final cashExpense =
+        _watchTotalSum(type: 'EXPENSE', excludePaidRelationship: 'PAID_BY');
+
+    return Rx.combineLatest6(
+      incomeOverall,
+      incomeMonth,
+      expenseOverall,
+      expenseMonth,
+      cashIncome,
+      cashExpense,
+      (a, b, c, d, e, f) => TransactionStats(
+        incomeOverall: a,
+        incomeMonth: b,
+        expenseOverall: c,
+        expenseMonth: d,
+        cashIncome: e,
+        cashExpense: f,
+      ),
+    );
+  }
+
+  Stream<double> _watchTotalSum({
+    required String type,
+    DateTime? start,
+    String? excludePaidRelationship,
+  }) {
+    final query = _database.selectOnly(_database.transactions)
+      ..addColumns([_database.transactions.amount.sum()])
+      ..where(_database.transactions.type.equals(type));
+
+    if (start != null) {
+      query.where(_database.transactions.date.isBiggerOrEqualValue(start));
+    }
+
+    if (excludePaidRelationship != null) {
+      query.where(_database.transactions.paidRelationship
+          .equals(excludePaidRelationship)
+          .not());
+    }
+
+    return query
+        .watchSingle()
+        .map((row) => row.read(_database.transactions.amount.sum()) ?? 0.0);
   }
 
   // Get transactions by date range (Stream)

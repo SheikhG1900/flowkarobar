@@ -2,6 +2,8 @@ import 'package:drift/drift.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/features/contacts/data/contacts_repository.dart';
 import 'package:flowpaisa/features/receivables/domain/models.dart';
+import 'package:flowpaisa/features/dashboard/domain/models.dart';
+import 'package:rxdart/rxdart.dart';
 
 class ReceivablesRepository {
   final AppDatabase _database;
@@ -13,6 +15,46 @@ class ReceivablesRepository {
     return (_database.select(_database.receivables)
           ..orderBy([(r) => OrderingTerm.desc(r.date)]))
         .watch();
+  }
+
+  /// Watch receivable statistics for dashboard
+  Stream<ReceivableStats> watchReceivableStats() {
+    final now = DateTime.now();
+    final startOfMonth = DateTime(now.year, now.month, 1);
+
+    final overall = _watchTotalSum();
+    final month = _watchTotalSum(start: startOfMonth);
+    final overdue = _watchTotalSum(onlyOverdue: true);
+
+    return Rx.combineLatest3(
+      overall,
+      month,
+      overdue,
+      (a, b, c) => ReceivableStats(
+        overall: a,
+        month: b,
+        overdue: c,
+      ),
+    );
+  }
+
+  Stream<double> _watchTotalSum({DateTime? start, bool onlyOverdue = false}) {
+    final query = _database.selectOnly(_database.receivables)
+      ..addColumns([_database.receivables.amount.sum()])
+      ..where(_database.receivables.status.equals('PENDING'));
+
+    if (start != null) {
+      query.where(_database.receivables.date.isBiggerOrEqualValue(start));
+    }
+
+    if (onlyOverdue) {
+      final now = DateTime.now();
+      query.where(_database.receivables.dueDate.isSmallerThanValue(now));
+    }
+
+    return query
+        .watchSingle()
+        .map((row) => row.read(_database.receivables.amount.sum()) ?? 0.0);
   }
 
   /// Watch receivables by status

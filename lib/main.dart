@@ -11,6 +11,7 @@ import 'package:flowpaisa/features/receipt_scan/presentation/screens/scan_receip
 import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
 import 'package:flowpaisa/features/transactions/presentation/widgets/transaction_details_dialog.dart';
 import 'package:flowpaisa/features/dashboard/presentation/providers/dashboard_provider.dart';
+import 'package:flowpaisa/features/dashboard/domain/models.dart';
 import 'package:flowpaisa/features/receivables/presentation/screens/receivables_list_screen.dart';
 import 'package:flowpaisa/features/payables/presentation/screens/payables_list_screen.dart';
 import 'package:flowpaisa/features/contacts/presentation/screens/contacts_list_screen.dart';
@@ -762,6 +763,7 @@ class _DashboardTab extends ConsumerWidget {
           ),
         ),
         Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: items.map((item) {
             final isLast = items.indexOf(item) == items.length - 1;
             return Expanded(
@@ -837,14 +839,26 @@ class _DashboardTab extends ConsumerWidget {
                             color: AppColors.error.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(4),
                           ),
-                          child: Text(
-                            'Overdue: ${AmountFormatter.formatWithCurrency(item.overdue!, currency.symbol, currency.decimalPlaces)}',
-                            style: TextStyle(
-                              color:
-                                  isDark ? Colors.redAccent : AppColors.error,
-                              fontSize: 9,
-                              fontWeight: FontWeight.bold,
-                            ),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Icon(Icons.calendar_today,
+                                  size: 12, color: AppColors.error),
+                              const SizedBox(width: 4),
+                              Text(
+                                AmountFormatter.formatWithCurrency(
+                                    item.overdue!,
+                                    currency.symbol,
+                                    currency.decimalPlaces),
+                                style: TextStyle(
+                                  color: isDark
+                                      ? Colors.redAccent
+                                      : AppColors.error,
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
