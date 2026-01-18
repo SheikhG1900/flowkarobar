@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
+import 'package:flowpaisa/core/utils/date_formatter.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
+import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'dart:convert';
@@ -77,7 +79,7 @@ class ScheduleListItem extends ConsumerWidget {
             if (schedule.startDate != null || schedule.endDate != null) ...[
               const SizedBox(height: 4),
               Text(
-                _getDateRangeText(),
+                _getDateRangeText(ref),
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                   fontSize: 11,
@@ -105,6 +107,9 @@ class ScheduleListItem extends ConsumerWidget {
                           ? AppColors.expenseColor
                           : AppColors.incomeColor,
                       fontWeight: FontWeight.bold,
+                      fontSize: AmountFormatter.getFontSize(schedule.amount,
+                          baseSize: theme.textTheme.titleSmall?.fontSize ?? 14.0,
+                          decimalPlaces: currency.decimalPlaces),
                     ),
                   ),
                 ),
@@ -282,13 +287,16 @@ class ScheduleListItem extends ConsumerWidget {
     }
   }
 
-  String _getDateRangeText() {
+  String _getDateRangeText(WidgetRef ref) {
+    final userProfile = ref.read(userProfileProvider);
     final parts = <String>[];
     if (schedule.startDate != null) {
-      parts.add('From: ${DateFormat.yMMMd().format(schedule.startDate!)}');
+      parts.add(
+          'From: ${AppDateFormatter.formatDate(schedule.startDate!, pattern: userProfile.dateFormat)}');
     }
     if (schedule.endDate != null) {
-      parts.add('To: ${DateFormat.yMMMd().format(schedule.endDate!)}');
+      parts.add(
+          'To: ${AppDateFormatter.formatDate(schedule.endDate!, pattern: userProfile.dateFormat)}');
     }
     return parts.join(' | ');
   }

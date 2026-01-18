@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
-import 'package:intl/intl.dart';
+import 'package:flowpaisa/core/utils/date_formatter.dart';
+import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 
 // Mock notifications provider - can be enhanced later with actual data
 final notificationsProvider = Provider<List<NotificationItem>>((ref) {
@@ -307,7 +308,7 @@ class _NotificationCard extends ConsumerWidget {
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            _formatDateTime(notification.dateTime),
+                            _formatDateTime(notification.dateTime, ref),
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant,
                             ),
@@ -325,7 +326,7 @@ class _NotificationCard extends ConsumerWidget {
     );
   }
 
-  String _formatDateTime(DateTime dateTime) {
+  String _formatDateTime(DateTime dateTime, WidgetRef ref) {
     final now = DateTime.now();
     final difference = now.difference(dateTime);
 
@@ -338,7 +339,9 @@ class _NotificationCard extends ConsumerWidget {
     } else if (difference.inDays < 7) {
       return '${difference.inDays}d ago';
     } else {
-      return DateFormat.MMMd().format(dateTime);
+      final userProfile = ref.watch(userProfileProvider);
+      return AppDateFormatter.formatDate(dateTime,
+          pattern: userProfile.dateFormat);
     }
   }
 }

@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
+import 'package:flowpaisa/core/utils/date_formatter.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/core/utils/icon_helper.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:flowpaisa/features/receivables/domain/models.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/features/receivables/presentation/providers/receivables_provider.dart';
+import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 import 'package:flowpaisa/features/receivables/presentation/screens/edit_receivable_screen.dart';
 import 'package:flowpaisa/features/whatsapp/presentation/providers/whatsapp_provider.dart';
 import 'package:intl/intl.dart';
@@ -243,7 +245,8 @@ class ReceivableDetailsDialog extends ConsumerWidget {
               context,
               icon: Icons.calendar_today,
               label: 'Date',
-              value: DateFormat.yMMMd().format(receivable.date),
+              value: AppDateFormatter.formatDate(receivable.date,
+                  pattern: ref.watch(userProfileProvider).dateFormat),
             ),
 
             if (receivable.dueDate != null)
@@ -251,7 +254,8 @@ class ReceivableDetailsDialog extends ConsumerWidget {
                 context,
                 icon: Icons.event,
                 label: 'Due Date',
-                value: DateFormat.yMMMd().format(receivable.dueDate!),
+                value: AppDateFormatter.formatDate(receivable.dueDate!,
+                    pattern: ref.watch(userProfileProvider).dateFormat),
                 valueColor: isPending
                     ? (receivable.dueDate!.isBefore(DateTime.now())
                         ? Colors.red
@@ -446,7 +450,8 @@ class ReceivableDetailsDialog extends ConsumerWidget {
           ],
           const SizedBox(height: 8),
           Text(
-            DateFormat.yMMMd().add_jm().format(transaction.date),
+            AppDateFormatter.formatDate(transaction.date,
+                pattern: ref.watch(userProfileProvider).dateFormat),
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -459,12 +464,13 @@ class ReceivableDetailsDialog extends ConsumerWidget {
   void _shareReceivable(BuildContext context, WidgetRef ref, dynamic receivable,
       dynamic contact) {
     final currency = ref.read(currentCurrencyProvider).value!;
+    final userProfile = ref.read(userProfileProvider);
     final message = '''
 Receivable Details
 Amount: ${AmountFormatter.formatWithCurrency(receivable.amount, currency.symbol, currency.decimalPlaces)}
 Contact: ${contact?.name ?? 'Unknown'}
-Date: ${DateFormat.yMMMd().format(receivable.date)}
-${receivable.dueDate != null ? 'Due Date: ${DateFormat.yMMMd().format(receivable.dueDate)}\n' : ''}${receivable.description != null && receivable.description.isNotEmpty ? 'Description: ${receivable.description}\n' : ''}Status: ${receivable.status == 'PENDING' ? 'Pending' : 'Received'}
+Date: ${AppDateFormatter.formatDate(receivable.date, pattern: userProfile.dateFormat)}
+${receivable.dueDate != null ? 'Due Date: ${AppDateFormatter.formatDate(receivable.dueDate, pattern: userProfile.dateFormat)}\n' : ''}${receivable.description != null && receivable.description.isNotEmpty ? 'Description: ${receivable.description}\n' : ''}Status: ${receivable.status == 'PENDING' ? 'Pending' : 'Received'}
     ''';
 
     Share.share(message);
@@ -543,12 +549,13 @@ ${receivable.dueDate != null ? 'Due Date: ${DateFormat.yMMMd().format(receivable
 
     try {
       final whatsAppService = ref.read(whatsAppServiceProvider);
+      final userProfile = ref.read(userProfileProvider);
       final message = '''
 Hi ${contact.name},
 
-This is a reminder regarding the receivable amount of ${AmountFormatter.formatWithCurrency(receivable.amount, currency.symbol, currency.decimalPlaces)} dated ${DateFormat.yMMMd().format(receivable.date)}.
+This is a reminder regarding the receivable amount of ${AmountFormatter.formatWithCurrency(receivable.amount, currency.symbol, currency.decimalPlaces)} dated ${AppDateFormatter.formatDate(receivable.date, pattern: userProfile.dateFormat)}.
 
-${receivable.dueDate != null ? 'Due Date: ${DateFormat.yMMMd().format(receivable.dueDate)}\n' : ''}${receivable.description != null && receivable.description.isNotEmpty ? 'Details: ${receivable.description}\n' : ''}
+${receivable.dueDate != null ? 'Due Date: ${AppDateFormatter.formatDate(receivable.dueDate, pattern: userProfile.dateFormat)}\n' : ''}${receivable.description != null && receivable.description.isNotEmpty ? 'Details: ${receivable.description}\n' : ''}
 Thank you!
       ''';
 

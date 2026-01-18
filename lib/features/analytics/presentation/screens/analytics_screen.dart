@@ -7,6 +7,8 @@ import 'package:intl/intl.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/features/analytics/presentation/providers/analytics_provider.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
+import 'package:flowpaisa/core/utils/date_formatter.dart';
+import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/shared/widgets/premium_badge.dart';
 import 'package:flowpaisa/features/contacts/presentation/screens/contact_details_screen.dart';
@@ -22,8 +24,10 @@ import 'package:material_symbols_icons/symbols.dart';
 
 final exportServiceProvider = Provider<ExportService>((ref) {
   final db = ref.watch(databaseProvider);
+  final userProfile = ref.watch(userProfileProvider);
   final transactionsRepository = TransactionsRepository(db);
-  return ExportService(transactionsRepository, db);
+  return ExportService(transactionsRepository, db,
+      dateFormat: userProfile.dateFormat);
 });
 
 class AnalyticsScreen extends ConsumerStatefulWidget {
@@ -65,7 +69,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
       // Save PDF to temporary file for save/share actions
       final directory = await getTemporaryDirectory();
       final fileName =
-          'flowpaisa_analytics_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.pdf';
+          'flowpaisa_analytics_${AppDateFormatter.formatForFileName(DateTime.now())}.pdf';
       final filePath = '${directory.path}/$fileName';
       final file = File(filePath);
       await file.writeAsBytes(pdfBytes);
@@ -380,12 +384,12 @@ class _DateRangeSelector extends StatelessWidget {
   String _getDisplayText() {
     switch (selectedDateRange.type) {
       case DateRangeType.month:
-        return DateFormat.yMMMM().format(selectedDateRange.startDate);
+        return AppDateFormatter.formatMonthYear(selectedDateRange.startDate);
       case DateRangeType.quarter:
         final quarter = ((selectedDateRange.startDate.month - 1) ~/ 3) + 1;
-        return 'Q$quarter ${DateFormat.y().format(selectedDateRange.startDate)}';
+        return 'Q$quarter ${AppDateFormatter.getFormatter('y').format(selectedDateRange.startDate)}';
       case DateRangeType.year:
-        return DateFormat.y().format(selectedDateRange.startDate);
+        return AppDateFormatter.getFormatter('y').format(selectedDateRange.startDate);
       case DateRangeType.custom:
         return ' - ';
     }
@@ -1113,7 +1117,7 @@ class _TrendsBarChart extends ConsumerWidget {
                       return Padding(
                         padding: const EdgeInsets.only(top: 8.0),
                         child: Text(
-                          DateFormat.MMM().format(trends[index].month),
+                          AppDateFormatter.formatMonth(trends[index].month),
                           style: const TextStyle(fontSize: 10),
                         ),
                       );
@@ -1242,7 +1246,7 @@ class _PayableReceivableTrendsChart extends ConsumerWidget {
                       return Padding(
                         padding: const EdgeInsets.only(top: 8.0),
                         child: Text(
-                            DateFormat.MMM().format(trends[index].month),
+                            AppDateFormatter.formatMonth(trends[index].month),
                             style: const TextStyle(fontSize: 10)),
                       );
                     },

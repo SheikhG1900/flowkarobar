@@ -6,8 +6,10 @@ import 'package:flutter_sticky_header/flutter_sticky_header.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
+import 'package:flowpaisa/core/utils/date_formatter.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/receivables/presentation/providers/receivables_provider.dart';
+import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 import 'package:flowpaisa/features/receivables/presentation/screens/add_receivable_screen.dart';
 import 'package:flowpaisa/features/receivables/presentation/screens/edit_receivable_screen.dart';
 import 'package:flowpaisa/features/receivables/presentation/widgets/receivable_details_dialog.dart';
@@ -366,8 +368,10 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
 
     // Group by Date
     final groupedReceivables = <String, List<dynamic>>{};
+    final userProfile = ref.watch(userProfileProvider);
     for (final item in paginatedState.items) {
-      final dateKey = DateFormat.yMMMd().format(item.receivable.date);
+      final dateKey = AppDateFormatter.formatDate(item.receivable.date,
+          pattern: userProfile.dateFormat);
       groupedReceivables.putIfAbsent(dateKey, () => []);
       groupedReceivables[dateKey]!.add(item);
     }
@@ -706,7 +710,7 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              'Due: ${DateFormat.yMMMd().format(receivable.dueDate!)}',
+                              'Due: ${AppDateFormatter.formatDate(receivable.dueDate!, pattern: ref.watch(userProfileProvider).dateFormat)}',
                               style: theme.textTheme.labelSmall?.copyWith(
                                 color: isPending
                                     ? (receivable.dueDate!

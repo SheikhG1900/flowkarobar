@@ -31,7 +31,7 @@ import 'package:flowpaisa/features/transactions/presentation/screens/export_scre
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flowpaisa/core/utils/deep_link_handler.dart';
-import 'package:intl/intl.dart';
+import 'package:flowpaisa/core/utils/date_formatter.dart';
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/shared/widgets/premium_badge.dart';
 import 'package:flowpaisa/features/cashbooks/presentation/screens/cashbooks_screen.dart';
@@ -559,7 +559,10 @@ class _DashboardTab extends ConsumerWidget {
                                       : AppColors.lightText,
                                   fontWeight: FontWeight.bold,
                                   height: 1.1,
-                                  fontSize: 32,
+                                  fontSize: AmountFormatter.getFontSize(
+                                      stats.totalBalance,
+                                      baseSize: 32,
+                                      decimalPlaces: currency.decimalPlaces),
                                   shadows: isDark
                                       ? AppTheme.textShadow(blurMultiplier: 4.0)
                                       : null,
@@ -767,7 +770,8 @@ class _DashboardTab extends ConsumerWidget {
       DashboardFilter currentFilter, bool isDark) {
     final activeCashbook = ref.watch(activeCashbookProvider);
     final isMonthly = currentFilter == DashboardFilter.monthly;
-    final label = isMonthly ? DateFormat.MMM().format(DateTime.now()) : 'All';
+    final label =
+        isMonthly ? AppDateFormatter.formatMonth(DateTime.now()) : 'All';
     final icon = isMonthly ? Icons.calendar_today : Icons.all_inclusive;
 
     return ActionChip(
@@ -1139,9 +1143,9 @@ class _DashboardTab extends ConsumerWidget {
             final transaction = item.transaction;
             final category = item.category;
             final isExpense = transaction.type == 'EXPENSE';
-            final dateFormat = DateFormat.MMMd();
             final theme = Theme.of(context);
             final isDark = theme.brightness == Brightness.dark;
+            final userProfile = ref.watch(userProfileProvider);
 
             // Resolve category color
             Color categoryColor;
@@ -1193,7 +1197,8 @@ class _DashboardTab extends ConsumerWidget {
                   transaction.description ?? (isExpense ? 'Expense' : 'Income'),
                   style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
-                subtitle: Text(dateFormat.format(transaction.date)),
+                subtitle: Text(AppDateFormatter.formatDate(transaction.date,
+                    pattern: userProfile.dateFormat)),
                 trailing: Text(
                   '${isExpense ? '-' : '+'} ${AmountFormatter.formatWithCurrency(transaction.amount, currency.symbol, currency.decimalPlaces)}',
                   style: TextStyle(

@@ -6,8 +6,10 @@ import 'package:flutter_sticky_header/flutter_sticky_header.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
+import 'package:flowpaisa/core/utils/date_formatter.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/payables/presentation/providers/payables_provider.dart';
+import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 import 'package:flowpaisa/features/payables/presentation/screens/add_payable_screen.dart';
 import 'package:flowpaisa/features/payables/presentation/screens/edit_payable_screen.dart';
 import 'package:flowpaisa/features/payables/presentation/widgets/payable_details_dialog.dart';
@@ -362,8 +364,10 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
 
     // Group by Date
     final groupedPayables = <String, List>{};
+    final userProfile = ref.watch(userProfileProvider);
     for (final item in paginatedState.items) {
-      final dateKey = DateFormat.yMMMd().format(item.payable.date);
+      final dateKey = AppDateFormatter.formatDate(item.payable.date,
+          pattern: userProfile.dateFormat);
       groupedPayables.putIfAbsent(dateKey, () => []);
       groupedPayables[dateKey]!.add(item);
     }
@@ -696,7 +700,7 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              'Due: ${DateFormat.yMMMd().format(payable.dueDate!)}',
+                              'Due: ${AppDateFormatter.formatDate(payable.dueDate!, pattern: ref.watch(userProfileProvider).dateFormat)}',
                               style: theme.textTheme.labelSmall?.copyWith(
                                 color: isPending
                                     ? (payable.dueDate!.isBefore(DateTime.now())

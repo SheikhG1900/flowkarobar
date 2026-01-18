@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
+import 'package:flowpaisa/core/utils/date_formatter.dart';
 import 'package:flowpaisa/features/transactions/domain/models.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transaction_service_provider.dart';
+import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 import 'package:flowpaisa/features/transactions/presentation/screens/edit_transaction_screen.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/payables/presentation/providers/payables_provider.dart';
@@ -399,7 +401,8 @@ class TransactionDetailsDialog extends ConsumerWidget {
               context,
               icon: Icons.calendar_today,
               label: 'Date',
-              value: DateFormat.yMMMd().add_jm().format(transaction.date),
+              value: AppDateFormatter.formatDate(transaction.date,
+                  pattern: ref.watch(userProfileProvider).dateFormat),
             ),
 
             if (transaction.description != null &&
@@ -528,7 +531,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
           if (payable.dueDate != null) ...[
             const SizedBox(height: 8),
             Text(
-              'Due: ${DateFormat.yMMMd().format(payable.dueDate)}',
+              'Due: ${AppDateFormatter.formatDate(payable.dueDate, pattern: ref.watch(userProfileProvider).dateFormat)}',
               style: theme.textTheme.bodySmall?.copyWith(
                 color: isPending
                     ? (payable.dueDate!.isBefore(DateTime.now())
@@ -550,7 +553,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
                 ),
                 const SizedBox(width: 4),
                 Text(
-                  'Paid on: ${DateFormat.yMMMd().format(payable.paidDate!)}',
+                  'Paid on: ${AppDateFormatter.formatDate(payable.paidDate!, pattern: ref.watch(userProfileProvider).dateFormat)}',
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: AppColors.payableColor,
                     fontWeight: FontWeight.w600,
@@ -617,7 +620,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
           if (receivable.dueDate != null) ...[
             const SizedBox(height: 8),
             Text(
-              'Due: ${DateFormat.yMMMd().format(receivable.dueDate)}',
+              'Due: ${AppDateFormatter.formatDate(receivable.dueDate, pattern: ref.watch(userProfileProvider).dateFormat)}',
               style: theme.textTheme.bodySmall?.copyWith(
                 color: isPending
                     ? (receivable.dueDate!.isBefore(DateTime.now())
@@ -639,7 +642,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
                 ),
                 const SizedBox(width: 4),
                 Text(
-                  'Received on: ${DateFormat.yMMMd().format(receivable.receivedDate!)}',
+                  'Received on: ${AppDateFormatter.formatDate(receivable.receivedDate!, pattern: ref.watch(userProfileProvider).dateFormat)}',
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: AppColors.receivableColor,
                     fontWeight: FontWeight.w600,
@@ -689,7 +692,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
     final message = '''
 ${isExpense ? 'Expense' : 'Income'} Details
 Amount: ${AmountFormatter.formatWithCurrency(transaction.amount, currency.symbol, currency.decimalPlaces)}
-Date: ${DateFormat.yMMMd().format(transaction.date)}
+Date: ${AppDateFormatter.formatDate(transaction.date, pattern: ref.read(userProfileProvider).dateFormat)}
 ${category != null ? 'Category: ${category.name}\n' : ''}${contact != null ? 'Contact: ${contact.name}\n' : ''}${transaction.description != null && transaction.description.isNotEmpty ? 'Description: ${transaction.description}\n' : ''}
     ''';
 
@@ -786,11 +789,12 @@ ${category != null ? 'Category: ${category.name}\n' : ''}${contact != null ? 'Co
     try {
       final whatsAppService = ref.read(whatsAppServiceProvider);
       final currency = ref.read(currentCurrencyProvider).value!;
+      final userProfile = ref.read(userProfileProvider);
       final isExpense = transaction.type == 'EXPENSE';
       final message = '''
 Hi ${contact.name},
 
-This is regarding the ${isExpense ? 'expense' : 'income'} of ${AmountFormatter.formatWithCurrency(transaction.amount, currency.symbol, currency.decimalPlaces)} on ${DateFormat.yMMMd().format(transaction.date)}.
+This is regarding the ${isExpense ? 'expense' : 'income'} of ${AmountFormatter.formatWithCurrency(transaction.amount, currency.symbol, currency.decimalPlaces)} on ${AppDateFormatter.formatDate(transaction.date, pattern: userProfile.dateFormat)}.
 
 ${transaction.description != null && transaction.description.isNotEmpty ? 'Details: ${transaction.description}' : ''}
 

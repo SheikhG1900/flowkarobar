@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
+import 'package:flowpaisa/core/utils/date_formatter.dart';
+import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 import 'package:flowpaisa/features/whatsapp/domain/models/shared_data_models.dart';
 import 'package:flowpaisa/features/receivables/data/receivables_repository.dart';
 import 'package:flowpaisa/features/payables/data/payables_repository.dart';
@@ -279,7 +280,7 @@ class _ImportDialogState extends ConsumerState<ImportDialog> {
           _buildDetailRow('Category', data.categoryName!),
         if (data.contactName != null)
           _buildDetailRow('Contact', data.contactName!),
-        _buildDetailRow('Date', DateFormat.yMMMd().format(data.date)),
+        _buildDetailRow('Date', AppDateFormatter.formatDate(data.date, pattern: ref.watch(userProfileProvider).dateFormat)),
       ],
     );
   }
@@ -306,9 +307,9 @@ class _ImportDialogState extends ConsumerState<ImportDialog> {
           _buildDetailRow('Description', data.description!),
         if (data.contactName != null)
           _buildDetailRow('Contact', data.contactName!),
-        _buildDetailRow('Date', DateFormat.yMMMd().format(data.date)),
+        _buildDetailRow('Date', AppDateFormatter.formatDate(data.date, pattern: ref.watch(userProfileProvider).dateFormat)),
         if (data.dueDate != null)
-          _buildDetailRow('Due Date', DateFormat.yMMMd().format(data.dueDate!)),
+          _buildDetailRow('Due Date', AppDateFormatter.formatDate(data.dueDate!, pattern: ref.watch(userProfileProvider).dateFormat)),
       ],
     );
   }
@@ -334,9 +335,9 @@ class _ImportDialogState extends ConsumerState<ImportDialog> {
           _buildDetailRow('Description', data.description!),
         if (data.contactName != null)
           _buildDetailRow('Contact', data.contactName!),
-        _buildDetailRow('Date', DateFormat.yMMMd().format(data.date)),
+        _buildDetailRow('Date', AppDateFormatter.formatDate(data.date, pattern: ref.watch(userProfileProvider).dateFormat)),
         if (data.dueDate != null)
-          _buildDetailRow('Due Date', DateFormat.yMMMd().format(data.dueDate!)),
+          _buildDetailRow('Due Date', AppDateFormatter.formatDate(data.dueDate!, pattern: ref.watch(userProfileProvider).dateFormat)),
       ],
     );
   }

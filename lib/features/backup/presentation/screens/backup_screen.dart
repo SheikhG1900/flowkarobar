@@ -3,7 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/features/backup/presentation/providers/backup_provider.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
-import 'package:intl/intl.dart';
+import 'package:flowpaisa/core/utils/date_formatter.dart';
+import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/shared/widgets/premium_badge.dart';
@@ -257,7 +258,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                       const Icon(Icons.history, size: 20, color: Colors.grey),
                       const SizedBox(width: 8),
                       Text(
-                        'Last Backup: ${DateFormat.yMMMd().add_jm().format(state.lastBackupTime!)}',
+                        'Last Backup: ${AppDateFormatter.formatDate(state.lastBackupTime!, pattern: ref.watch(userProfileProvider).dateFormat)}',
                         style: theme.textTheme.bodyMedium,
                       ),
                     ],
@@ -320,9 +321,9 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
               margin: const EdgeInsets.only(bottom: 8),
               child: ListTile(
                 leading: const Icon(Icons.description_outlined),
-                title: Text(DateFormat.yMMMd()
-                    .add_jm()
-                    .format(file.createdTime ?? DateTime.now())),
+                title: Text(AppDateFormatter.formatDate(
+                    file.createdTime ?? DateTime.now(),
+                    pattern: ref.watch(userProfileProvider).dateFormat)),
                 subtitle: Text('${file.name} • $sizeMb MB'),
                 trailing: IconButton(
                   icon: const Icon(Icons.restore),

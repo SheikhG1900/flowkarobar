@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
+import 'package:flowpaisa/core/utils/date_formatter.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/core/utils/icon_helper.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:flowpaisa/features/payables/domain/models.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/features/payables/presentation/providers/payables_provider.dart';
+import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 import 'package:flowpaisa/features/payables/presentation/screens/edit_payable_screen.dart';
 import 'package:flowpaisa/features/whatsapp/presentation/providers/whatsapp_provider.dart';
 import 'package:intl/intl.dart';
@@ -242,7 +244,8 @@ class PayableDetailsDialog extends ConsumerWidget {
               context,
               icon: Icons.calendar_today,
               label: 'Date',
-              value: DateFormat.yMMMd().format(payable.date),
+              value: AppDateFormatter.formatDate(payable.date,
+                  pattern: ref.watch(userProfileProvider).dateFormat),
             ),
 
             if (payable.dueDate != null)
@@ -250,7 +253,8 @@ class PayableDetailsDialog extends ConsumerWidget {
                 context,
                 icon: Icons.event,
                 label: 'Due Date',
-                value: DateFormat.yMMMd().format(payable.dueDate!),
+                value: AppDateFormatter.formatDate(payable.dueDate!,
+                    pattern: ref.watch(userProfileProvider).dateFormat),
                 valueColor: isPending
                     ? (payable.dueDate!.isBefore(DateTime.now())
                         ? Colors.red
@@ -444,7 +448,8 @@ class PayableDetailsDialog extends ConsumerWidget {
           ],
           const SizedBox(height: 8),
           Text(
-            DateFormat.yMMMd().add_jm().format(transaction.date),
+            AppDateFormatter.formatDate(transaction.date,
+                pattern: ref.watch(userProfileProvider).dateFormat),
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -457,12 +462,13 @@ class PayableDetailsDialog extends ConsumerWidget {
   void _sharePayable(
       BuildContext context, WidgetRef ref, dynamic payable, dynamic contact) {
     final currency = ref.read(currentCurrencyProvider).value!;
+    final userProfile = ref.read(userProfileProvider);
     final message = '''
 Payable Details
 Amount: ${AmountFormatter.formatWithCurrency(payable.amount, currency.symbol, currency.decimalPlaces)}
 Contact: ${contact?.name ?? 'Unknown'}
-Date: ${DateFormat.yMMMd().format(payable.date)}
-${payable.dueDate != null ? 'Due Date: ${DateFormat.yMMMd().format(payable.dueDate)}\n' : ''}${payable.description != null && payable.description.isNotEmpty ? 'Description: ${payable.description}\n' : ''}Status: ${payable.status == 'PENDING' ? 'Pending' : 'Paid'}
+Date: ${AppDateFormatter.formatDate(payable.date, pattern: userProfile.dateFormat)}
+${payable.dueDate != null ? 'Due Date: ${AppDateFormatter.formatDate(payable.dueDate, pattern: userProfile.dateFormat)}\n' : ''}${payable.description != null && payable.description.isNotEmpty ? 'Description: ${payable.description}\n' : ''}Status: ${payable.status == 'PENDING' ? 'Pending' : 'Paid'}
     ''';
 
     Share.share(message);
@@ -541,12 +547,13 @@ ${payable.dueDate != null ? 'Due Date: ${DateFormat.yMMMd().format(payable.dueDa
 
     try {
       final whatsAppService = ref.read(whatsAppServiceProvider);
+      final userProfile = ref.read(userProfileProvider);
       final message = '''
 Hi ${contact.name},
 
-This is a reminder regarding the payable amount of ${AmountFormatter.formatWithCurrency(payable.amount, currency.symbol, currency.decimalPlaces)} dated ${DateFormat.yMMMd().format(payable.date)}.
+This is a reminder regarding the payable amount of ${AmountFormatter.formatWithCurrency(payable.amount, currency.symbol, currency.decimalPlaces)} dated ${AppDateFormatter.formatDate(payable.date, pattern: userProfile.dateFormat)}.
 
-${payable.dueDate != null ? 'Due Date: ${DateFormat.yMMMd().format(payable.dueDate)}\n' : ''}${payable.description != null && payable.description.isNotEmpty ? 'Details: ${payable.description}\n' : ''}
+${payable.dueDate != null ? 'Due Date: ${AppDateFormatter.formatDate(payable.dueDate, pattern: userProfile.dateFormat)}\n' : ''}${payable.description != null && payable.description.isNotEmpty ? 'Details: ${payable.description}\n' : ''}
 Thank you!
       ''';
 

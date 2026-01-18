@@ -9,7 +9,8 @@ import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/transactions/data/transactions_repository.dart';
 import 'package:flowpaisa/shared/providers/database_provider.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
-import 'package:intl/intl.dart';
+import 'package:flowpaisa/core/utils/date_formatter.dart';
+import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
 import 'package:printing/printing.dart';
@@ -18,8 +19,10 @@ import 'package:path_provider/path_provider.dart';
 
 final exportServiceProvider = Provider<ExportService>((ref) {
   final db = ref.watch(databaseProvider);
+  final userProfile = ref.watch(userProfileProvider);
   final transactionsRepository = TransactionsRepository(db);
-  return ExportService(transactionsRepository, db);
+  return ExportService(transactionsRepository, db,
+      dateFormat: userProfile.dateFormat);
 });
 
 class ExportScreen extends ConsumerStatefulWidget {
@@ -104,7 +107,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
 
           // Ask for save location
           final fileName =
-              'flowpaisa_export_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.csv';
+              'flowpaisa_export_${AppDateFormatter.formatForFileName(DateTime.now())}.csv';
           final FileSaveLocation? result = await getSaveLocation(
             suggestedName: fileName,
             acceptedTypeGroups: [
@@ -223,7 +226,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
       // Save PDF to temporary file for save/share actions
       final directory = await getTemporaryDirectory();
       final fileName =
-          'flowpaisa_export_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.pdf';
+          'flowpaisa_export_${AppDateFormatter.formatForFileName(DateTime.now())}.pdf';
       final filePath = '${directory.path}/$fileName';
       final file = File(filePath);
       await file.writeAsBytes(pdfBytes);
@@ -327,7 +330,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
       // Save PDF to temporary file for save/share actions
       final directory = await getTemporaryDirectory();
       final fileName =
-          'flowpaisa_test_categories_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.pdf';
+          'flowpaisa_test_categories_${AppDateFormatter.formatForFileName(DateTime.now())}.pdf';
       final filePath = '${directory.path}/$fileName';
       final file = File(filePath);
       await file.writeAsBytes(pdfBytes);
@@ -665,7 +668,9 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
                       const SizedBox(height: 4),
                       Text(
                         date != null
-                            ? DateFormat.yMMMd().format(date)
+                            ? AppDateFormatter.formatDate(date,
+                                pattern:
+                                    ref.watch(userProfileProvider).dateFormat)
                             : 'Select date',
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,

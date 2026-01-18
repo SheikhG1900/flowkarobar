@@ -8,6 +8,8 @@ import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/receipt_scan/domain/receipt_parser.dart';
 import 'package:flowpaisa/features/transactions/presentation/screens/add_transaction_screen.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
+import 'package:flowpaisa/core/utils/date_formatter.dart';
+import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
 
@@ -37,8 +39,10 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
     super.initState();
     _amountController = TextEditingController();
     _merchantController = TextEditingController();
+    final userProfile = ref.read(userProfileProvider);
     _dateController = TextEditingController(
-      text: DateFormat.yMMMd().format(_selectedDate),
+      text: AppDateFormatter.formatDate(_selectedDate,
+          pattern: userProfile.dateFormat),
     );
   }
 
@@ -90,7 +94,8 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
         _merchantController.text = receiptData.merchantName ?? '';
         if (receiptData.date != null) {
           _selectedDate = receiptData.date!;
-          _dateController.text = DateFormat.yMMMd().format(_selectedDate);
+          _dateController.text = AppDateFormatter.formatDate(_selectedDate,
+              pattern: ref.read(userProfileProvider).dateFormat);
         }
         _isScanning = false;
       });
@@ -301,7 +306,8 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
                   if (picked != null) {
                     setState(() {
                       _selectedDate = picked;
-                      _dateController.text = DateFormat.yMMMd().format(picked);
+                      _dateController.text = AppDateFormatter.formatDate(picked,
+                          pattern: ref.read(userProfileProvider).dateFormat);
                     });
                   }
                 },
@@ -324,12 +330,16 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
                   child: Wrap(
                     spacing: 8,
                     children: _receiptData!.dateCandidates.map((date) {
-                      final isSelected =
-                          DateFormat.yMMMd().format(_selectedDate) ==
-                              DateFormat.yMMMd().format(date);
+                      final userProfile = ref.watch(userProfileProvider);
+                      final isSelected = AppDateFormatter.formatDate(
+                              _selectedDate,
+                              pattern: userProfile.dateFormat) ==
+                          AppDateFormatter.formatDate(date,
+                              pattern: userProfile.dateFormat);
                       return ActionChip(
                         label: Text(
-                          DateFormat.yMMMd().format(date),
+                          AppDateFormatter.formatDate(date,
+                              pattern: userProfile.dateFormat),
                           style: TextStyle(
                             color: isSelected
                                 ? theme.colorScheme.primary
@@ -345,8 +355,9 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
                         onPressed: () {
                           setState(() {
                             _selectedDate = date;
-                            _dateController.text =
-                                DateFormat.yMMMd().format(date);
+                            _dateController.text = AppDateFormatter.formatDate(
+                                date,
+                                pattern: userProfile.dateFormat);
                           });
                         },
                       );

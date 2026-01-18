@@ -4,8 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_sticky_header/flutter_sticky_header.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
+import 'package:flowpaisa/core/utils/date_formatter.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
+import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transaction_service_provider.dart';
 import 'package:flowpaisa/features/transactions/presentation/screens/add_transaction_screen.dart';
 import 'package:flowpaisa/features/transactions/presentation/screens/edit_transaction_screen.dart';
@@ -224,8 +226,10 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
 
     // Group transactions by date
     final groupedTransactions = <String, List>{};
+    final userProfile = ref.watch(userProfileProvider);
     for (final item in paginatedState.items) {
-      final dateKey = DateFormat.yMMMd().format(item.transaction.date);
+      final dateKey = AppDateFormatter.formatDate(item.transaction.date,
+          pattern: userProfile.dateFormat);
       groupedTransactions.putIfAbsent(dateKey, () => []);
       groupedTransactions[dateKey]!.add(item);
     }

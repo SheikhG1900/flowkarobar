@@ -10,7 +10,7 @@ import 'package:flowpaisa/features/receivables/data/receivables_repository.dart'
 import 'package:flowpaisa/features/analytics/data/analytics_repository.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
-import 'package:intl/intl.dart';
+import 'package:flowpaisa/core/utils/date_formatter.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:csv/csv.dart';
 import 'package:share_plus/share_plus.dart';
@@ -20,9 +20,12 @@ import 'package:pdf/widgets.dart' as pw;
 class ExportService {
   final TransactionsRepository _transactionsRepository;
   final AppDatabase _database;
+  final String _dateFormat;
   static pw.Font? _cachedFont;
 
-  ExportService(this._transactionsRepository, this._database);
+  ExportService(this._transactionsRepository, this._database,
+      {String? dateFormat})
+      : _dateFormat = dateFormat ?? AppDateFormatter.defaultPattern;
 
   // Get AnalyticsRepository instance
   AnalyticsRepository get _analyticsRepository =>
@@ -87,7 +90,7 @@ class ExportService {
           continue;
         }
         csvData.add([
-          DateFormat('dd/MM/yyyy').format(t.date),
+          AppDateFormatter.formatDate(t.date, pattern: _dateFormat),
           t.type,
           t.amount.toStringAsFixed(2),
           item.category?.name ?? '', // Use name instead of ID
@@ -120,7 +123,7 @@ class ExportService {
           ? getTemporaryDirectory()
           : getApplicationDocumentsDirectory());
       final fileName =
-          'flowpaisa_export_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.csv';
+          'flowpaisa_export_${AppDateFormatter.formatForFileName(DateTime.now())}.csv';
       final file = File('${directory.path}/$fileName');
       await file.writeAsString(csvString);
 
@@ -336,8 +339,8 @@ class ExportService {
     }
 
     final currency = currencySymbol ?? '₹';
-    final dateFormat = DateFormat('dd/MM/yyyy');
-    final dateTimeFormat = DateFormat('dd MMM yyyy, HH:mm');
+    final dateFormat = AppDateFormatter.getFormatter(_dateFormat);
+    final dateTimeFormat = AppDateFormatter.getFormatter('dd MMM yyyy, HH:mm');
 
     // Create PDF document
     final pdf = pw.Document();
@@ -1019,7 +1022,7 @@ class ExportService {
           ? getTemporaryDirectory()
           : getApplicationDocumentsDirectory());
       final fileName =
-          'flowpaisa_export_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.pdf';
+          'flowpaisa_export_${AppDateFormatter.formatForFileName(DateTime.now())}.pdf';
       final file = File('${directory.path}/$fileName');
       await file.writeAsBytes(pdfBytes);
 
@@ -1255,9 +1258,9 @@ class ExportService {
         .getPaymentStatusDistribution(startDate, endDate);
 
     final currency = currencySymbol ?? '₹';
-    final dateFormat = DateFormat('dd/MM/yyyy');
-    final dateTimeFormat = DateFormat('dd MMM yyyy, HH:mm');
-    final monthFormat = DateFormat('MMM yyyy');
+    final dateFormat = AppDateFormatter.getFormatter(_dateFormat);
+    final dateTimeFormat = AppDateFormatter.getFormatter('dd MMM yyyy, HH:mm');
+    final monthFormat = AppDateFormatter.getFormatter('MMM yyyy');
 
     // Helper function to convert hex color to PdfColor
     PdfColor hexToPdfColor(String hex) {
@@ -2111,7 +2114,7 @@ class ExportService {
     maxValue = maxValue * 1.1;
     if (maxValue == 0) maxValue = 100;
 
-    final monthFormat = DateFormat('MMM');
+    final monthFormat = AppDateFormatter.getFormatter('MMM');
 
     return pw.Container(
       padding: const pw.EdgeInsets.all(8),
@@ -2215,7 +2218,7 @@ class ExportService {
     maxValue = maxValue * 1.1;
     if (maxValue == 0) maxValue = 100;
 
-    final monthFormat = DateFormat('MMM');
+    final monthFormat = AppDateFormatter.getFormatter('MMM');
 
     return pw.Container(
       padding: const pw.EdgeInsets.all(8),

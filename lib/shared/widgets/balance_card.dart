@@ -80,6 +80,9 @@ class BalanceCard extends ConsumerWidget {
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
                     height: 1.2,
+                    fontSize: AmountFormatter.getFontSize(balance,
+                        baseSize: theme.textTheme.displayMedium?.fontSize ?? 45.0,
+                        decimalPlaces: currency.decimalPlaces),
                   ),
                 ),
                 
@@ -236,6 +239,9 @@ class CompactBalanceCard extends ConsumerWidget {
                     style: theme.textTheme.titleLarge?.copyWith(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
+                      fontSize: AmountFormatter.getFontSize(balance,
+                          baseSize: theme.textTheme.titleLarge?.fontSize ?? 20.0,
+                          decimalPlaces: currency.decimalPlaces),
                     ),
                   ),
                 ],

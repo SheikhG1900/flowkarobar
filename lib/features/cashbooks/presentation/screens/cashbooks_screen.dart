@@ -4,7 +4,8 @@ import 'package:flowpaisa/features/cashbooks/domain/models/cashbook.dart';
 import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
 import 'package:flowpaisa/features/cashbooks/presentation/widgets/add_cashbook_dialog.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
-import 'package:intl/intl.dart';
+import 'package:flowpaisa/core/utils/date_formatter.dart';
+import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 
 class CashbooksScreen extends ConsumerWidget {
   const CashbooksScreen({super.key});
@@ -76,7 +77,7 @@ class CashbooksScreen extends ConsumerWidget {
                       ),
                     ),
                     subtitle: Text(
-                      'Created ${DateFormat.yMMMd().format(cashbook.createdAt)}',
+                      'Created ${AppDateFormatter.formatDate(cashbook.createdAt, pattern: ref.watch(userProfileProvider).dateFormat)}',
                       style: theme.textTheme.bodySmall,
                     ),
                     trailing: Row(
