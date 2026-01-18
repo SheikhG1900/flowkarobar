@@ -121,7 +121,7 @@ class ScheduleListItem extends ConsumerWidget {
                         size: 14,
                         color: schedule.isPaused
                             ? theme.colorScheme.onSurfaceVariant
-                            : AppColors.brightCyan,
+                            : theme.colorScheme.primary,
                       ),
                       const SizedBox(width: 4),
                       Text(
@@ -135,7 +135,7 @@ class ScheduleListItem extends ConsumerWidget {
                   ),
                   onPressed: () => onToggle(),
                   backgroundColor: !schedule.isPaused
-                      ? AppColors.brightCyan.withValues(alpha: 0.2)
+                      ? theme.colorScheme.primary.withValues(alpha: 0.2)
                       : null,
                   visualDensity: VisualDensity.compact,
                   padding:
@@ -144,13 +144,13 @@ class ScheduleListItem extends ConsumerWidget {
                   labelStyle: TextStyle(
                     color: schedule.isPaused
                         ? theme.colorScheme.onSurfaceVariant
-                        : AppColors.brightCyan,
+                        : theme.colorScheme.primary,
                     fontWeight: FontWeight.normal,
                     fontSize: 10,
                   ),
                   side: BorderSide(
                     color: !schedule.isPaused
-                        ? AppColors.brightCyan
+                        ? theme.colorScheme.primary
                         : theme.dividerColor,
                     width: 1,
                   ),
@@ -200,7 +200,7 @@ class ScheduleListItem extends ConsumerWidget {
                     dayLabels[index],
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: isSelected
-                          ? AppColors.brightCyan
+                          ? theme.colorScheme.primary
                           : theme.colorScheme.onSurfaceVariant
                               .withValues(alpha: 0.5),
                       fontWeight:

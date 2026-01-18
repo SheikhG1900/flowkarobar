@@ -183,6 +183,30 @@ class AppColors {
     end: Alignment(1.0, 0.0),
   );
 
+  // Generate a gradient from a primary color
+  static LinearGradient getPrimaryGradient(Color primaryColor) {
+    return LinearGradient(
+      colors: [
+        primaryColor,
+        primaryColor.withValues(alpha: 0.7),
+      ],
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+    );
+  }
+
+  // Generate a secondary gradient from a primary color
+  static LinearGradient getSecondaryGradient(Color primaryColor) {
+    return LinearGradient(
+      colors: [
+        primaryColor.withValues(alpha: 0.9),
+        primaryColor.withValues(alpha: 0.5),
+      ],
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+    );
+  }
+
   // Shadow Configuration
   static const double shadowBlurMultiplier = 1.0; // Adjustable multiplier
 

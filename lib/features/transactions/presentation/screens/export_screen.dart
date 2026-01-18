@@ -453,17 +453,18 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                gradient: AppColors.secondaryGradient,
+                gradient:
+                    AppColors.getPrimaryGradient(theme.colorScheme.primary),
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.brightCyan.withValues(alpha: 0.3),
+                    color: theme.colorScheme.primary.withValues(alpha: 0.3),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
                 ],
               ),
-              child: Column(
+              child: const Column(
                 children: [
                   const Icon(
                     Icons.file_download,
@@ -597,7 +598,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
                 children: [
                   Icon(
                     Icons.info_outline,
-                    color: AppColors.brightCyan,
+                    color: theme.colorScheme.primary,
                     size: 20,
                   ),
                   const SizedBox(width: 12),
@@ -645,10 +646,10 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: AppColors.brightCyan.withValues(alpha: 0.1),
+                    color: theme.colorScheme.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Icon(icon, color: AppColors.brightCyan),
+                  child: Icon(icon, color: theme.colorScheme.primary),
                 ),
                 const SizedBox(width: 16),
                 Expanded(

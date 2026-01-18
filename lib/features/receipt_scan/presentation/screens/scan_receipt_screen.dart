@@ -133,8 +133,8 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Scan Receipt'),
-        backgroundColor: AppColors.brightCyan,
-        foregroundColor: Colors.white,
+        backgroundColor: theme.colorScheme.primary,
+        foregroundColor: theme.colorScheme.onPrimary,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -158,19 +158,19 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
               Container(
                 height: 300,
                 decoration: BoxDecoration(
-                  color: AppColors.brightCyan.withAlpha(20),
+                  color: theme.colorScheme.primary.withAlpha(20),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.brightCyan),
+                  border: Border.all(color: theme.colorScheme.primary),
                 ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(Icons.receipt_long,
-                        size: 80, color: AppColors.brightCyan),
+                        size: 80, color: theme.colorScheme.primary),
                     const SizedBox(height: 16),
                     Text(
                       'No receipt selected',
-                      style: TextStyle(color: AppColors.brightCyan),
+                      style: TextStyle(color: theme.colorScheme.primary),
                     ),
                   ],
                 ),
@@ -268,15 +268,15 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
                           '$currencySymbol${amt.toStringAsFixed(2)}',
                           style: TextStyle(
                             color: isSelected
-                                ? AppColors.brightCyan
+                                ? theme.colorScheme.primary
                                 : theme.colorScheme.onSurfaceVariant,
                           ),
                         ),
                         backgroundColor: isSelected
-                            ? AppColors.brightCyan.withValues(alpha: 0.1)
+                            ? theme.colorScheme.primary.withValues(alpha: 0.1)
                             : theme.colorScheme.surfaceContainerHighest,
                         side: isSelected
-                            ? const BorderSide(color: AppColors.brightCyan)
+                            ? BorderSide(color: theme.colorScheme.primary)
                             : BorderSide(color: theme.colorScheme.outline),
                         onPressed: () {
                           setState(() {
@@ -332,15 +332,15 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
                           DateFormat.yMMMd().format(date),
                           style: TextStyle(
                             color: isSelected
-                                ? AppColors.brightCyan
+                                ? theme.colorScheme.primary
                                 : theme.colorScheme.onSurfaceVariant,
                           ),
                         ),
                         backgroundColor: isSelected
-                            ? AppColors.brightCyan.withValues(alpha: 0.1)
+                            ? theme.colorScheme.primary.withValues(alpha: 0.1)
                             : theme.colorScheme.surfaceVariant,
                         side: isSelected
-                            ? const BorderSide(color: AppColors.brightCyan)
+                            ? BorderSide(color: theme.colorScheme.primary)
                             : BorderSide(color: theme.colorScheme.outline),
                         onPressed: () {
                           setState(() {
@@ -358,7 +358,7 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
               // Proceed Button
               GradientButton(
                 onPressed: _proceedToAddTransaction,
-                gradient: AppColors.primaryGradient,
+                gradient: AppColors.getPrimaryGradient(theme.colorScheme.primary),
                 label: 'Proceed to Add Transaction',
               ),
             ],

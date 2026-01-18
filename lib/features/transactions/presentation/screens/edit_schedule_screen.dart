@@ -359,6 +359,7 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
   }
 
   Future<Contact?> _showContactPicker() async {
+    final theme = Theme.of(context);
     return await showModalBottomSheet<Contact>(
       context: context,
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -421,8 +422,8 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
                                 ? Text(contact.phone!)
                                 : null,
                             trailing: _selectedContactId == contact.id
-                                ? const Icon(Icons.check_circle,
-                                    color: AppColors.brightCyan)
+                                ? Icon(Icons.check_circle,
+                                    color: theme.colorScheme.primary)
                                 : null,
                             onTap: () {
                               Navigator.pop(context, contact);
@@ -693,7 +694,7 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: _selectedContact != null
-                          ? AppColors.brightCyan
+                          ? theme.colorScheme.primary
                           : theme.dividerColor,
                       width: _selectedContact != null ? 1.5 : 1,
                     ),
@@ -944,7 +945,8 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          gradient: AppColors.secondaryGradient,
+                          gradient: AppColors.getSecondaryGradient(
+                              theme.colorScheme.primary),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: const Icon(
@@ -997,7 +999,8 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          gradient: AppColors.secondaryGradient,
+                          gradient: AppColors.getSecondaryGradient(
+                              theme.colorScheme.primary),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: const Icon(
@@ -1061,7 +1064,8 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          gradient: AppColors.secondaryGradient,
+                          gradient: AppColors.getSecondaryGradient(
+                              theme.colorScheme.primary),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: const Icon(

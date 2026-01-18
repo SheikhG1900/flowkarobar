@@ -125,8 +125,9 @@ class AppTheme {
   }
 
   // Light Theme with Wortek colors
-  static ThemeData lightTheme(String languageCode) {
+  static ThemeData lightTheme(String languageCode, {Color? primaryColor}) {
     final textTheme = getTextTheme(languageCode);
+    final primary = primaryColor ?? AppColors.brightCyan;
 
     return ThemeData(
       useMaterial3: true,
@@ -134,9 +135,9 @@ class AppTheme {
 
       // Color Scheme (GermGuard-inspired Cyan/Blue)
       colorScheme: ColorScheme.light(
-        primary: AppColors.brightCyan, // Bright Cyan
+        primary: primary, // Dynamic Primary
         onPrimary: Colors.white,
-        primaryContainer: const Color(0xFFE0F7FF),
+        primaryContainer: primary.withValues(alpha: 0.1),
         onPrimaryContainer: const Color(0xFF003D57),
 
         secondary: AppColors.electricBlue, // Electric Blue
@@ -206,19 +207,19 @@ class AppTheme {
       ),
 
       // FAB with gradient colors
-      floatingActionButtonTheme: const FloatingActionButtonThemeData(
-        backgroundColor: AppColors.brightCyan,
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
+        backgroundColor: primary,
         foregroundColor: Colors.white,
         elevation: 4,
         highlightElevation: 8,
-        shape: CircleBorder(),
+        shape: const CircleBorder(),
       ),
 
       // Bottom Navigation Bar
       navigationBarTheme: NavigationBarThemeData(
         elevation: 0,
         backgroundColor: AppColors.lightCard,
-        indicatorColor: AppColors.brightCyan.withValues(alpha: 0.1 / 1.0),
+        indicatorColor: primary.withValues(alpha: 0.1 / 1.0),
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
             return textTheme.labelMedium?.copyWith(
@@ -253,7 +254,7 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.brightCyan, width: 2),
+          borderSide: BorderSide(color: primary, width: 2),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -273,7 +274,7 @@ class AppTheme {
       // Chip
       chipTheme: ChipThemeData(
         backgroundColor: AppColors.lightSurface,
-        selectedColor: AppColors.brightCyan.withValues(alpha: 0.15 / 1.0),
+        selectedColor: primary.withValues(alpha: 0.15 / 1.0),
         labelStyle: textTheme.labelMedium,
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -288,8 +289,9 @@ class AppTheme {
   }
 
   // Dark Theme with Wortek colors
-  static ThemeData darkTheme(String languageCode) {
+  static ThemeData darkTheme(String languageCode, {Color? primaryColor}) {
     final textTheme = getTextTheme(languageCode);
+    final primary = primaryColor ?? AppColors.brightCyan;
 
     return ThemeData(
       useMaterial3: true,
@@ -297,7 +299,7 @@ class AppTheme {
 
       // Color Scheme (GermGuard Dark - Professional Cyan)
       colorScheme: ColorScheme.dark(
-        primary: const Color(0xFF33E0FF), // Lighter bright cyan
+        primary: primary, // Dynamic Primary
         onPrimary: const Color(0xFF003D57),
         primaryContainer: const Color(0xFF005580),
         onPrimaryContainer: const Color(0xFFB8F0FF),
@@ -330,7 +332,7 @@ class AppTheme {
 
         inverseSurface: AppColors.lightCard,
         onInverseSurface: AppColors.lightText,
-        inversePrimary: AppColors.brightCyan,
+        inversePrimary: primary,
       ),
 
       // Scaffold
@@ -369,23 +371,23 @@ class AppTheme {
       ),
 
       // FAB
-      floatingActionButtonTheme: const FloatingActionButtonThemeData(
-        backgroundColor: Color(0xFF33E0FF),
-        foregroundColor: Color(0xFF003D57),
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
+        backgroundColor: primary,
+        foregroundColor: const Color(0xFF003D57),
         elevation: 4,
         highlightElevation: 8,
-        shape: CircleBorder(),
+        shape: const CircleBorder(),
       ),
 
       // Bottom Navigation Bar
       navigationBarTheme: NavigationBarThemeData(
         elevation: 0,
         backgroundColor: AppColors.darkCard,
-        indicatorColor: const Color(0xFF33E0FF).withValues(alpha: 0.15 / 1.0),
+        indicatorColor: primary.withValues(alpha: 0.15 / 1.0),
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
             return textTheme.labelMedium?.copyWith(
-              color: const Color(0xFF33E0FF),
+              color: primary,
               fontWeight: FontWeight.w600,
             );
           }
@@ -395,7 +397,7 @@ class AppTheme {
         }),
         iconTheme: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
-            return const IconThemeData(color: Color(0xFF33E0FF), size: 24);
+            return IconThemeData(color: primary, size: 24);
           }
           return const IconThemeData(
               color: AppColors.darkTextSecondary, size: 24);
@@ -416,7 +418,7 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF33E0FF), width: 2),
+          borderSide: BorderSide(color: primary, width: 2),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -436,7 +438,7 @@ class AppTheme {
       // Chip
       chipTheme: ChipThemeData(
         backgroundColor: AppColors.darkSurface,
-        selectedColor: const Color(0xFF33E0FF).withValues(alpha: 0.2 / 1.0),
+        selectedColor: primary.withValues(alpha: 0.2 / 1.0),
         labelStyle: textTheme.labelMedium,
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

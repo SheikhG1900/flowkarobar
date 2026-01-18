@@ -76,7 +76,6 @@ class CurrenciesListScreen extends ConsumerWidget {
             ),
           );
         },
-        backgroundColor: AppColors.brightCyan,
         child: const Icon(Icons.add, color: Colors.white),
       ),
     );
@@ -121,7 +120,7 @@ class _CurrencyCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final color = isSelected ? AppColors.brightCyan : AppColors.secondaryColor;
+    final color = isSelected ? theme.colorScheme.primary : AppColors.secondaryColor;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),

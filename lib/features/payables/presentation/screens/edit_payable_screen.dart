@@ -506,7 +506,8 @@ class _EditPayableScreenState extends ConsumerState<EditPayableScreen> {
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          gradient: AppColors.secondaryGradient,
+                          gradient: AppColors.getSecondaryGradient(
+                              theme.colorScheme.primary),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: const Icon(

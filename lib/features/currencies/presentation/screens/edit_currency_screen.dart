@@ -220,10 +220,10 @@ class _EditCurrencyScreenState extends ConsumerState<EditCurrencyScreen> {
                         width: 48,
                         height: 48,
                         decoration: BoxDecoration(
-                          color: AppColors.brightCyan.withValues(alpha: 0.1),
+                          color: theme.colorScheme.primary.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: AppColors.brightCyan.withValues(alpha: 0.3),
+                            color: theme.colorScheme.primary.withValues(alpha: 0.3),
                             width: 1,
                           ),
                         ),
@@ -232,7 +232,7 @@ class _EditCurrencyScreenState extends ConsumerState<EditCurrencyScreen> {
                           _symbolController.text,
                           style: TextStyle(
                             fontSize: 24,
-                            color: AppColors.brightCyan,
+                            color: theme.colorScheme.primary,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -281,7 +281,7 @@ class _EditCurrencyScreenState extends ConsumerState<EditCurrencyScreen> {
             // Update Button
             GradientButton(
               onPressed: _isLoading ? null : _updateCurrency,
-              gradient: AppColors.primaryGradient,
+              gradient: AppColors.getPrimaryGradient(theme.colorScheme.primary),
               label: 'Update Currency',
               isLoading: _isLoading,
             ),

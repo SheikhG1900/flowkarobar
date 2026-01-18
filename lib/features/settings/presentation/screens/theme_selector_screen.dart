@@ -22,7 +22,7 @@ class ThemeSelectorScreen extends ConsumerWidget {
         'previewColors': [
           Colors.white,
           Colors.grey[100]!,
-          AppColors.brightCyan
+          theme.colorScheme.primary
         ],
       },
       {
@@ -33,7 +33,7 @@ class ThemeSelectorScreen extends ConsumerWidget {
         'previewColors': [
           const Color(0xFF0A0E27),
           const Color(0xFF1A1F3A),
-          AppColors.primaryGradient.colors.last
+          theme.colorScheme.primary
         ],
       },
       {
@@ -44,7 +44,7 @@ class ThemeSelectorScreen extends ConsumerWidget {
         'previewColors': [
           Colors.grey[800]!,
           Colors.grey[300]!,
-          AppColors.brightCyan
+          theme.colorScheme.primary
         ],
       },
     ];
@@ -69,15 +69,14 @@ class ThemeSelectorScreen extends ConsumerWidget {
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
                 color: isSelected
-                    ? AppColors.primaryGradient.colors.first
+                    ? theme.colorScheme.primary
                     : theme.dividerColor.withValues(alpha: 0.1),
                 width: isSelected ? 2 : 1,
               ),
               boxShadow: [
                 if (isSelected)
                   BoxShadow(
-                    color: AppColors.primaryGradient.colors.first
-                        .withValues(alpha: 0.2),
+                    color: theme.colorScheme.primary.withValues(alpha: 0.2),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   )
@@ -112,8 +111,10 @@ class ThemeSelectorScreen extends ConsumerWidget {
                             width: 56,
                             height: 56,
                             decoration: BoxDecoration(
-                              gradient:
-                                  isSelected ? AppColors.primaryGradient : null,
+                              gradient: isSelected
+                                  ? AppColors.getPrimaryGradient(
+                                      theme.colorScheme.primary)
+                                  : null,
                               color: isSelected
                                   ? null
                                   : theme.colorScheme.surfaceContainerHighest
@@ -122,8 +123,7 @@ class ThemeSelectorScreen extends ConsumerWidget {
                               boxShadow: isSelected
                                   ? [
                                       BoxShadow(
-                                        color: AppColors
-                                            .primaryGradient.colors.first
+                                        color: theme.colorScheme.primary
                                             .withValues(alpha: 0.3),
                                         blurRadius: 8,
                                         offset: const Offset(0, 4),
@@ -152,7 +152,7 @@ class ThemeSelectorScreen extends ConsumerWidget {
                                   style: theme.textTheme.titleLarge?.copyWith(
                                     fontWeight: FontWeight.bold,
                                     color: isSelected
-                                        ? AppColors.primaryGradient.colors.first
+                                        ? theme.colorScheme.primary
                                         : theme.colorScheme.onSurface,
                                   ),
                                 ),
@@ -172,12 +172,12 @@ class ThemeSelectorScreen extends ConsumerWidget {
                             Container(
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                gradient: AppColors.primaryGradient,
+                                gradient: AppColors.getPrimaryGradient(
+                                    theme.colorScheme.primary),
                                 shape: BoxShape.circle,
                                 boxShadow: [
                                   BoxShadow(
-                                    color: AppColors
-                                        .primaryGradient.colors.first
+                                    color: theme.colorScheme.primary
                                         .withValues(alpha: 0.3),
                                     blurRadius: 8,
                                     offset: const Offset(0, 2),

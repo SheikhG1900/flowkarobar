@@ -135,6 +135,8 @@ class _FlowPaisaAppState extends ConsumerState<FlowPaisaApp> {
     // Watch language and theme mode from providers
     final currentLocale = ref.watch(languageProvider);
     final currentThemeMode = ref.watch(themeModeProvider);
+    final activeCashbook = ref.watch(activeCashbookProvider);
+    final activeColor = activeCashbook.color;
 
     return MaterialApp(
       title: AppConstants.appName,
@@ -165,8 +167,10 @@ class _FlowPaisaAppState extends ConsumerState<FlowPaisaApp> {
       },
 
       // Theme
-      theme: AppTheme.lightTheme(currentLocale.languageCode),
-      darkTheme: AppTheme.darkTheme(currentLocale.languageCode),
+      theme: AppTheme.lightTheme(currentLocale.languageCode,
+          primaryColor: activeColor),
+      darkTheme: AppTheme.darkTheme(currentLocale.languageCode,
+          primaryColor: activeColor),
       themeMode: currentThemeMode,
 
       // Home
@@ -209,7 +213,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       case 3: // Settings
         return AppColors.settingsSectionColor;
       default:
-        return AppColors.brightCyan;
+        return activeCashbook.color;
     }
   }
 
@@ -566,7 +570,7 @@ class _DashboardTab extends ConsumerWidget {
                                   child: CircularProgressIndicator(
                                       color: isDark
                                           ? Colors.white
-                                          : AppColors.brightCyan,
+                                          : theme.colorScheme.primary,
                                       strokeWidth: 2)),
                               error: (_, __) => Text('Error',
                                   style: TextStyle(
@@ -671,7 +675,8 @@ class _DashboardTab extends ConsumerWidget {
                           Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              gradient: AppColors.primaryGradient,
+                              gradient: AppColors.getPrimaryGradient(
+                                  theme.colorScheme.primary),
                               borderRadius: const BorderRadius.only(
                                 topLeft: Radius.circular(12),
                                 bottomRight: Radius.circular(12),
@@ -804,6 +809,7 @@ class _DashboardTab extends ConsumerWidget {
     required dynamic currency,
     required bool isDark,
   }) {
+    final theme = Theme.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -836,7 +842,7 @@ class _DashboardTab extends ConsumerWidget {
                   border: Border.all(
                     color: isDark
                         ? Colors.white.withValues(alpha: 0.1)
-                        : AppColors.brightCyan.withValues(alpha: 0.2),
+                        : theme.colorScheme.primary.withValues(alpha: 0.2),
                   ),
                   boxShadow: [
                     if (!isDark)
@@ -934,6 +940,7 @@ class _DashboardTab extends ConsumerWidget {
 
   Widget _buildQuickActions(
       BuildContext context, AppLocalizations l10n, bool isPremium) {
+    final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
@@ -974,7 +981,8 @@ class _DashboardTab extends ConsumerWidget {
                   _QuickActionButton(
                     icon: Icons.add,
                     label: 'Add',
-                    gradient: AppColors.transactionsSectionGradient,
+                    gradient:
+                        AppColors.getPrimaryGradient(theme.colorScheme.primary),
                     onTap: () {
                       Navigator.push(
                         context,
@@ -987,7 +995,8 @@ class _DashboardTab extends ConsumerWidget {
                   _QuickActionButton(
                     icon: Icons.document_scanner_outlined,
                     label: 'Scan',
-                    gradient: AppColors.secondaryGradient,
+                    gradient: AppColors.getSecondaryGradient(
+                        theme.colorScheme.primary),
                     onTap: () {
                       Navigator.push(
                         context,

@@ -77,12 +77,12 @@ class NotificationsScreen extends ConsumerWidget {
               width: 120,
               height: 120,
               decoration: BoxDecoration(
-                gradient: AppColors.primaryGradient,
+                gradient:
+                    AppColors.getPrimaryGradient(theme.colorScheme.primary),
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.primaryGradient.colors.first
-                        .withValues(alpha: 0.3),
+                    color: theme.colorScheme.primary.withValues(alpha: 0.3),
                     blurRadius: 20,
                     offset: const Offset(0, 8),
                   ),
@@ -117,18 +117,18 @@ class NotificationsScreen extends ConsumerWidget {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppColors.brightCyan.withValues(alpha: 0.1),
+                color: theme.colorScheme.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: AppColors.brightCyan.withValues(alpha: 0.3),
+                  color: theme.colorScheme.primary.withValues(alpha: 0.3),
                 ),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.lightbulb_outline,
-                    color: AppColors.brightCyan,
+                    color: theme.colorScheme.primary,
                     size: 20,
                   ),
                   const SizedBox(width: 12),
@@ -186,7 +186,7 @@ class _NotificationCard extends ConsumerWidget {
     }
   }
 
-  Color _getColor() {
+  Color _getColor(ThemeData theme) {
     switch (notification.type) {
       case NotificationType.receivable:
         return AppColors.receivableColor;
@@ -195,7 +195,7 @@ class _NotificationCard extends ConsumerWidget {
       case NotificationType.milestone:
         return Colors.amber;
       case NotificationType.backup:
-        return AppColors.brightCyan;
+        return theme.colorScheme.primary;
       case NotificationType.reminder:
         return Colors.orange;
     }
@@ -204,7 +204,7 @@ class _NotificationCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final color = _getColor();
+    final color = _getColor(theme);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),

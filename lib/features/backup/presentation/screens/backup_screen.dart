@@ -141,13 +141,14 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
     BackupState state,
     BackupNotifier notifier,
   ) {
+    final theme = Theme.of(context);
     if (state.currentUser != null) {
       return Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
+          color: theme.cardColor,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Theme.of(context).dividerColor),
+          border: Border.all(color: theme.dividerColor),
         ),
         child: Row(
           children: [
@@ -161,11 +162,11 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                 children: [
                   Text(
                     state.currentUser!.displayName ?? 'User',
-                    style: Theme.of(context).textTheme.titleMedium,
+                    style: theme.textTheme.titleMedium,
                   ),
                   Text(
                     state.currentUser!.email,
-                    style: Theme.of(context).textTheme.bodySmall,
+                    style: theme.textTheme.bodySmall,
                   ),
                 ],
               ),
@@ -189,13 +190,13 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
           const SizedBox(height: 16),
           Text(
             'Sign in with Google to backup your data',
-            style: Theme.of(context).textTheme.bodyLarge,
+            style: theme.textTheme.bodyLarge,
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 24),
           GradientButton(
             label: 'Sign in with Google',
-            gradient: AppColors.primaryGradient,
+            gradient: AppColors.getPrimaryGradient(theme.colorScheme.primary),
             icon: Icons.login,
             onPressed: () => notifier.signIn(),
           ),
@@ -230,20 +231,21 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
     BackupState state,
     BackupNotifier notifier,
   ) {
+    final theme = Theme.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'Backup',
-          style: Theme.of(context).textTheme.titleLarge,
+          style: theme.textTheme.titleLarge,
         ),
         const SizedBox(height: 12),
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Theme.of(context).cardColor,
+            color: theme.cardColor,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Theme.of(context).dividerColor),
+            border: Border.all(color: theme.dividerColor),
           ),
           child: Column(
             children: [
@@ -256,14 +258,14 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                       const SizedBox(width: 8),
                       Text(
                         'Last Backup: ${DateFormat.yMMMd().add_jm().format(state.lastBackupTime!)}',
-                        style: Theme.of(context).textTheme.bodyMedium,
+                        style: theme.textTheme.bodyMedium,
                       ),
                     ],
                   ),
                 ),
               GradientButton(
                 label: 'Backup Now',
-                gradient: AppColors.secondaryGradient,
+                gradient: AppColors.getSecondaryGradient(theme.colorScheme.primary),
                 icon: Icons.backup,
                 onPressed: () => notifier.backup(),
               ),

@@ -38,11 +38,14 @@ class ToastUtils {
 
   static void showInfoToast(
       BuildContext context, WidgetRef ref, String message) {
+    final activeCashbook = ref.read(activeCashbookProvider);
+    final color = activeCashbook.color;
+
     _showToast(
       context,
       message,
       icon: Icons.info_outline_rounded,
-      gradient: AppColors.primaryGradient,
+      gradient: AppColors.getPrimaryGradient(color),
       textColor: Colors.white,
     );
   }

@@ -403,6 +403,7 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
         builder: (context, scrollController) => Consumer(
           builder: (context, ref, _) {
             final contactsAsync = ref.watch(smartContactsProvider);
+            final theme = Theme.of(context);
 
             return Column(
               children: [
@@ -455,8 +456,8 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                                 ? Text(contact.phone!)
                                 : null,
                             trailing: _selectedContactId == contact.id
-                                ? const Icon(Icons.check_circle,
-                                    color: AppColors.brightCyan)
+                                ? Icon(Icons.check_circle,
+                                    color: theme.colorScheme.primary)
                                 : null,
                             onTap: () {
                               setState(() {
@@ -723,7 +724,7 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: _selectedContact != null
-                          ? AppColors.brightCyan
+                          ? theme.colorScheme.primary
                           : theme.dividerColor,
                       width: _selectedContact != null ? 1.5 : 1,
                     ),
@@ -974,7 +975,7 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          gradient: AppColors.secondaryGradient,
+                          gradient: AppColors.getSecondaryGradient(theme.colorScheme.primary),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: const Icon(

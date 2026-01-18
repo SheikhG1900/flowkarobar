@@ -150,9 +150,10 @@ class _AddContactScreenState extends ConsumerState<AddContactScreen> {
                   valueListenable: _nameController,
                   builder: (context, TextEditingValue value, child) {
                     final name = value.text.trim();
+                    final theme = Theme.of(context);
                     final gradient = name.isNotEmpty
                         ? AppColors.getContactGradient(name)
-                        : AppColors.primaryGradient;
+                        : AppColors.getPrimaryGradient(theme.colorScheme.primary);
 
                     return Container(
                       width: 100,
@@ -260,7 +261,7 @@ class _AddContactScreenState extends ConsumerState<AddContactScreen> {
                     label: widget.contactToEdit != null
                         ? 'Update Contact'
                         : 'Save Contact',
-                    gradient: AppColors.primaryGradient,
+                    gradient: AppColors.getPrimaryGradient(Theme.of(context).colorScheme.primary),
                     isLoading: _isLoading,
                     onPressed: _isLoading ? null : _saveContact,
                     width: double.infinity,

@@ -35,14 +35,14 @@ class BalanceCard extends ConsumerWidget {
             margin: const EdgeInsets.all(16),
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              gradient: AppColors.primaryGradient,
+              gradient: AppColors.getPrimaryGradient(theme.colorScheme.primary),
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(24),
                 bottomRight: Radius.circular(24),
               ), // Diagonal beveled
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.brightCyan.withValues(alpha: 0.4 / 1.0),
+                  color: theme.colorScheme.primary.withValues(alpha: 0.4 / 1.0),
                   blurRadius: 20,
                   offset: const Offset(0, 10),
                 ),
@@ -211,7 +211,7 @@ class CompactBalanceCard extends ConsumerWidget {
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
-            gradient: gradient ?? AppColors.secondaryGradient,
+            gradient: gradient ?? AppColors.getSecondaryGradient(theme.colorScheme.primary),
             borderRadius: const BorderRadius.only(
               topLeft: Radius.circular(16),
               bottomRight: Radius.circular(16),

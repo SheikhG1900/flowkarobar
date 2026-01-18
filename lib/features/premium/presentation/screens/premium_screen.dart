@@ -186,7 +186,7 @@ class PremiumScreen extends ConsumerWidget {
                     title: 'Automatic Cloud Backup',
                     description:
                         'Your data is automatically backed up to Google Drive. Never lose your financial records.',
-                    color: AppColors.brightCyan,
+                    color: theme.colorScheme.primary,
                     isPremium: premiumState.isPremium,
                   ),
                   const SizedBox(height: 12),
@@ -241,7 +241,7 @@ class PremiumScreen extends ConsumerWidget {
                     title: 'Early Access',
                     description:
                         'Be the first to try new features before they\'re released to everyone.',
-                    color: AppColors.primaryGradient.colors.last,
+                    color: theme.colorScheme.primary,
                     isPremium: premiumState.isPremium,
                   ),
                   const SizedBox(height: 32),

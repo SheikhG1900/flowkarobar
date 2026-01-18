@@ -132,18 +132,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       width: 100,
                       height: 100,
                       decoration: BoxDecoration(
-                        gradient: AppColors.primaryGradient,
+                        gradient: AppColors.getPrimaryGradient(theme.colorScheme.primary),
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.primaryGradient.colors.first
-                                .withValues(alpha: 0.3),
+                            color: theme.colorScheme.primary.withValues(alpha: 0.3),
                             blurRadius: 20,
                             offset: const Offset(0, 8),
                           ),
                         ],
                       ),
-                      child: Icon(
+                      child: const Icon(
                         Icons.person,
                         size: 50,
                         color: Colors.white,
@@ -155,7 +154,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       child: Container(
                         padding: const EdgeInsets.all(6),
                         decoration: BoxDecoration(
-                          gradient: AppColors.secondaryGradient,
+                          gradient: AppColors.getSecondaryGradient(theme.colorScheme.primary),
                           shape: BoxShape.circle,
                           border: Border.all(
                             color: theme.scaffoldBackgroundColor,
@@ -250,12 +249,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   leading: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: AppColors.brightCyan.withValues(alpha: 0.1),
+                      color: theme.colorScheme.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.currency_rupee,
-                      color: AppColors.brightCyan,
+                      color: theme.colorScheme.primary,
                     ),
                   ),
                   title: const Text('Currency'),
@@ -283,13 +282,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   leading: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: AppColors.primaryGradient.colors.last
-                          .withValues(alpha: 0.1),
+                      color: theme.colorScheme.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Icon(
                       Icons.calendar_today,
-                      color: AppColors.primaryGradient.colors.last,
+                      color: theme.colorScheme.primary,
                     ),
                   ),
                   title: const Text('Date Format'),
@@ -308,7 +306,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               GradientButton(
                 label: 'Save Profile',
                 icon: Icons.check,
-                gradient: AppColors.primaryGradient,
+                gradient: AppColors.getPrimaryGradient(theme.colorScheme.primary),
                 onPressed: _saveProfile,
               ),
               const SizedBox(height: 48),

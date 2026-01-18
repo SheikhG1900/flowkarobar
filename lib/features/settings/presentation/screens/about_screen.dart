@@ -28,15 +28,14 @@ class AboutScreen extends StatelessWidget {
               width: 100,
               height: 100,
               decoration: BoxDecoration(
-                gradient: AppColors.primaryGradient,
+                gradient: AppColors.getPrimaryGradient(theme.colorScheme.primary),
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(24),
                   bottomRight: Radius.circular(24),
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.primaryGradient.colors.first
-                        .withValues(alpha: 0.3),
+                    color: theme.colorScheme.primary.withValues(alpha: 0.3),
                     blurRadius: 20,
                     offset: const Offset(0, 8),
                   ),
@@ -130,7 +129,7 @@ class AboutScreen extends StatelessWidget {
                     width: 80,
                     height: 80,
                     decoration: BoxDecoration(
-                      gradient: AppColors.primaryGradient,
+                      gradient: AppColors.getPrimaryGradient(theme.colorScheme.primary),
                       borderRadius: const BorderRadius.only(
                         topLeft: Radius.circular(20),
                         bottomRight: Radius.circular(20),
@@ -199,7 +198,7 @@ class AboutScreen extends StatelessWidget {
               width: 48,
               height: 48,
               decoration: BoxDecoration(
-                gradient: AppColors.primaryGradient,
+                gradient: AppColors.getPrimaryGradient(theme.colorScheme.primary),
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -258,7 +257,7 @@ class AboutScreen extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    gradient: AppColors.secondaryGradient,
+                    gradient: AppColors.getSecondaryGradient(theme.colorScheme.primary),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(icon, color: Colors.white, size: 20),

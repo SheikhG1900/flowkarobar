@@ -145,9 +145,6 @@ class _ScheduleSelectionDrawerState extends State<ScheduleSelectionDrawer> {
               Expanded(
                 child: FilledButton(
                   onPressed: _canConfirm() ? _onConfirm : null,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.brightCyan,
-                  ),
                   child: const Text('Confirm'),
                 ),
               ),
@@ -172,15 +169,15 @@ class _ScheduleSelectionDrawerState extends State<ScheduleSelectionDrawer> {
           }
         });
       },
-      selectedColor: AppColors.brightCyan.withValues(alpha: 0.2),
-      checkmarkColor: AppColors.brightCyan,
+      selectedColor: theme.colorScheme.primary.withValues(alpha: 0.2),
+      checkmarkColor: theme.colorScheme.primary,
       labelStyle: TextStyle(
         color: _isDailySelected
-            ? AppColors.brightCyan
+            ? theme.colorScheme.primary
             : theme.colorScheme.onSurface,
       ),
       side: BorderSide(
-        color: _isDailySelected ? AppColors.brightCyan : theme.dividerColor,
+        color: _isDailySelected ? theme.colorScheme.primary : theme.dividerColor,
         width: _isDailySelected ? 2 : 1,
       ),
     );
@@ -216,14 +213,14 @@ class _ScheduleSelectionDrawerState extends State<ScheduleSelectionDrawer> {
               }
             });
           },
-          selectedColor: AppColors.brightCyan.withValues(alpha: 0.2),
-          checkmarkColor: AppColors.brightCyan,
+          selectedColor: theme.colorScheme.primary.withValues(alpha: 0.2),
+          checkmarkColor: theme.colorScheme.primary,
           labelStyle: TextStyle(
             color:
-                isSelected ? AppColors.brightCyan : theme.colorScheme.onSurface,
+                isSelected ? theme.colorScheme.primary : theme.colorScheme.onSurface,
           ),
           side: BorderSide(
-            color: isSelected ? AppColors.brightCyan : theme.dividerColor,
+            color: isSelected ? theme.colorScheme.primary : theme.dividerColor,
             width: isSelected ? 2 : 1,
           ),
         );
@@ -252,14 +249,14 @@ class _ScheduleSelectionDrawerState extends State<ScheduleSelectionDrawer> {
               }
             });
           },
-          selectedColor: AppColors.brightCyan.withValues(alpha: 0.2),
-          checkmarkColor: AppColors.brightCyan,
+          selectedColor: theme.colorScheme.primary.withValues(alpha: 0.2),
+          checkmarkColor: theme.colorScheme.primary,
           labelStyle: TextStyle(
             color:
-                isSelected ? AppColors.brightCyan : theme.colorScheme.onSurface,
+                isSelected ? theme.colorScheme.primary : theme.colorScheme.onSurface,
           ),
           side: BorderSide(
-            color: isSelected ? AppColors.brightCyan : theme.dividerColor,
+            color: isSelected ? theme.colorScheme.primary : theme.dividerColor,
             width: isSelected ? 2 : 1,
           ),
         );

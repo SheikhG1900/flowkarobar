@@ -116,7 +116,7 @@ class _ContactsListScreenState extends ConsumerState<ContactsListScreen> {
                       child: GradientButton(
                         label: 'Add Contact',
                         icon: Icons.person_add,
-                        gradient: AppColors.primaryGradient,
+                        gradient: AppColors.getPrimaryGradient(theme.colorScheme.primary),
                         onPressed: () {
                           Navigator.push(
                             context,
@@ -156,7 +156,6 @@ class _ContactsListScreenState extends ConsumerState<ContactsListScreen> {
             ),
           );
         },
-        backgroundColor: AppColors.brightCyan,
         child: const Icon(Icons.person_add, color: Colors.white),
       ),
     );

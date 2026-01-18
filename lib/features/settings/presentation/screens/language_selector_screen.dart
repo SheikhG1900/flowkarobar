@@ -54,14 +54,14 @@ class LanguageSelectorScreen extends ConsumerWidget {
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
                 color: isSelected
-                    ? AppColors.brightCyan
+                    ? theme.colorScheme.primary
                     : theme.dividerColor.withValues(alpha: 0.1),
                 width: isSelected ? 2 : 1,
               ),
               boxShadow: [
                 if (isSelected)
                   BoxShadow(
-                    color: AppColors.brightCyan.withValues(alpha: 0.2),
+                    color: theme.colorScheme.primary.withValues(alpha: 0.2),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   )
@@ -111,7 +111,7 @@ class LanguageSelectorScreen extends ConsumerWidget {
                         height: 56,
                         decoration: BoxDecoration(
                           color: isSelected
-                              ? AppColors.brightCyan.withValues(alpha: 0.1)
+                              ? theme.colorScheme.primary.withValues(alpha: 0.1)
                               : theme.colorScheme.surfaceContainerHighest
                                   .withValues(alpha: 0.5),
                           shape: BoxShape.circle,
@@ -141,7 +141,7 @@ class LanguageSelectorScreen extends ConsumerWidget {
                               style: theme.textTheme.titleMedium?.copyWith(
                                 fontWeight: FontWeight.bold,
                                 color: isSelected
-                                    ? AppColors.brightCyan
+                                    ? theme.colorScheme.primary
                                     : theme.colorScheme.onSurface,
                               ),
                             ),
@@ -161,12 +161,12 @@ class LanguageSelectorScreen extends ConsumerWidget {
                         Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: AppColors.brightCyan.withValues(alpha: 0.1),
+                            color: theme.colorScheme.primary.withValues(alpha: 0.1),
                             shape: BoxShape.circle,
                           ),
-                          child: const Icon(
+                          child: Icon(
                             Icons.check_circle,
-                            color: AppColors.brightCyan,
+                            color: theme.colorScheme.primary,
                             size: 24,
                           ),
                         )
