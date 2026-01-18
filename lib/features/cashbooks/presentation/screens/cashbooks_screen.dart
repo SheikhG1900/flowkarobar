@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/features/cashbooks/domain/models/cashbook.dart';
 import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
-import 'package:flowpaisa/features/cashbooks/presentation/widgets/add_cashbook_dialog.dart';
+import 'package:flowpaisa/features/cashbooks/presentation/widgets/add_cashbook_sheet.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/core/utils/date_formatter.dart';
 import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
@@ -26,13 +26,6 @@ class CashbooksScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Cashbooks'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () => _showAddDialog(context),
-            tooltip: 'Add Cashbook',
-          ),
-        ],
       ),
       body: cashbooks.isEmpty
           ? const Center(child: CircularProgressIndicator())
@@ -181,13 +174,20 @@ class CashbooksScreen extends ConsumerWidget {
                 );
               },
             ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _showAddSheet(context),
+        tooltip: 'Add Cashbook',
+        child: const Icon(Icons.add),
+      ),
     );
   }
 
-  void _showAddDialog(BuildContext context) {
-    showDialog(
+  void _showAddSheet(BuildContext context) {
+    showModalBottomSheet(
       context: context,
-      builder: (context) => const AddCashbookDialog(),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => const AddCashbookSheet(),
     );
   }
 
@@ -199,9 +199,11 @@ class CashbooksScreen extends ConsumerWidget {
   void _handleAction(
       BuildContext context, WidgetRef ref, String action, Cashbook cashbook) {
     if (action == 'edit') {
-      showDialog(
+      showModalBottomSheet(
         context: context,
-        builder: (context) => AddCashbookDialog(cashbook: cashbook),
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (context) => AddCashbookSheet(cashbook: cashbook),
       );
     } else if (action == 'backup_local') {
       _handleBackup(context, ref, cashbook);
