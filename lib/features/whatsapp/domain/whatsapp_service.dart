@@ -1,22 +1,25 @@
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flowpaisa/core/utils/date_formatter.dart';
+import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/features/whatsapp/domain/deep_link_service.dart';
 import 'package:flowpaisa/features/whatsapp/domain/models/shared_data_models.dart';
 
 class WhatsAppService {
   final DeepLinkService _deepLinkService = DeepLinkService();
+
   /// Send a message via WhatsApp to a phone number
-  /// 
+  ///
   /// [phoneNumber] should be in international format without + (e.g., "919876543210")
   /// [message] is the text to send
   Future<bool> sendMessage(String phoneNumber, String message) async {
     try {
       // Clean phone number (remove spaces, dashes, etc.)
       final cleanNumber = phoneNumber.replaceAll(RegExp(r'[^\d+]'), '');
-      
+
       // WhatsApp URL scheme
-      final whatsappUrl = Uri.parse('https://wa.me/$cleanNumber?text=${Uri.encodeComponent(message)}');
-      
+      final whatsappUrl = Uri.parse(
+          'https://wa.me/$cleanNumber?text=${Uri.encodeComponent(message)}');
+
       if (await canLaunchUrl(whatsappUrl)) {
         await launchUrl(whatsappUrl, mode: LaunchMode.externalApplication);
         return true;
@@ -40,7 +43,8 @@ class WhatsAppService {
     buffer.writeln('Hi $contactName,');
     buffer.writeln();
     buffer.writeln('This is a friendly reminder:');
-    buffer.writeln('Amount to receive: $currencySymbol${amount.toStringAsFixed(2)}');
+    buffer.writeln(
+        'Amount to receive: ${AmountFormatter.formatWithCurrency(amount, currencySymbol, 2)}');
     if (description.isNotEmpty) {
       buffer.writeln('For: $description');
     }
@@ -64,7 +68,8 @@ class WhatsAppService {
     buffer.writeln('Hi $contactName,');
     buffer.writeln();
     buffer.writeln('Just a reminder:');
-    buffer.writeln('Amount I owe you: $currencySymbol${amount.toStringAsFixed(2)}');
+    buffer.writeln(
+        'Amount I owe you: ${AmountFormatter.formatWithCurrency(amount, currencySymbol, 2)}');
     if (description.isNotEmpty) {
       buffer.writeln('For: $description');
     }
@@ -89,7 +94,8 @@ class WhatsAppService {
     buffer.writeln('📝 Transaction Receipt');
     buffer.writeln();
     buffer.writeln('Type: $type');
-    buffer.writeln('Amount: ₹${amount.toStringAsFixed(2)}');
+    buffer.writeln(
+        'Amount: ${AmountFormatter.formatWithCurrency(amount, "₹", 2)}');
     if (description.isNotEmpty) {
       buffer.writeln('Description: $description');
     }
@@ -114,32 +120,38 @@ class WhatsAppService {
     try {
       // Generate deep link
       final deepLink = _deepLinkService.generateTransactionLink(transaction);
-      
+
       // Format message
       final buffer = StringBuffer();
-      buffer.writeln('📝 ${transaction.transactionType == "EXPENSE" ? "Expense" : "Income"} Transaction');
+      buffer.writeln(
+          '📝 ${transaction.transactionType == "EXPENSE" ? "Expense" : "Income"} Transaction');
       buffer.writeln();
-      buffer.writeln('Amount: $currencySymbol${transaction.amount.toStringAsFixed(2)}');
-      if (transaction.description != null && transaction.description!.isNotEmpty) {
+      buffer.writeln(
+          'Amount: ${AmountFormatter.formatWithCurrency(transaction.amount, currencySymbol, 2)}');
+      if (transaction.description != null &&
+          transaction.description!.isNotEmpty) {
         buffer.writeln('Description: ${transaction.description}');
       }
       if (transaction.categoryName != null) {
         buffer.writeln('Category: ${transaction.categoryName}');
       }
-      buffer.writeln('Date: ${AppDateFormatter.formatMediumDate(transaction.date)}');
+      buffer.writeln(
+          'Date: ${AppDateFormatter.formatMediumDate(transaction.date)}');
       buffer.writeln();
       buffer.writeln('View this transaction in FlowPaisa:');
       buffer.writeln(deepLink);
       buffer.writeln();
-      buffer.writeln('Don\'t have the app? Download FlowPaisa to manage your finances! 💰');
-      
+      buffer.writeln(
+          'Don\'t have the app? Download FlowPaisa to manage your finances! 💰');
+
       final message = buffer.toString();
-      
+
       if (contactPhone != null && contactPhone.isNotEmpty) {
         return await sendMessage(contactPhone, message);
       } else {
         // Share to WhatsApp without specific contact
-        final whatsappUrl = Uri.parse('https://wa.me/?text=${Uri.encodeComponent(message)}');
+        final whatsappUrl =
+            Uri.parse('https://wa.me/?text=${Uri.encodeComponent(message)}');
         if (await canLaunchUrl(whatsappUrl)) {
           await launchUrl(whatsappUrl, mode: LaunchMode.externalApplication);
           return true;
@@ -160,30 +172,34 @@ class WhatsAppService {
     try {
       // Generate deep link
       final deepLink = _deepLinkService.generateReceivableLink(receivable);
-      
+
       // Format message
       final buffer = StringBuffer();
       buffer.writeln('💰 Payment Request');
       buffer.writeln();
-      buffer.writeln('Amount to receive: $currencySymbol${receivable.amount.toStringAsFixed(2)}');
-      if (receivable.description != null && receivable.description!.isNotEmpty) {
+      buffer.writeln(
+          'Amount to receive: ${AmountFormatter.formatWithCurrency(receivable.amount, currencySymbol, 2)}');
+      if (receivable.description != null &&
+          receivable.description!.isNotEmpty) {
         buffer.writeln('For: ${receivable.description}');
       }
       if (receivable.dueDate != null) {
-        buffer.writeln('Due Date: ${AppDateFormatter.formatMediumDate(receivable.dueDate!)}');
+        buffer.writeln(
+            'Due Date: ${AppDateFormatter.formatMediumDate(receivable.dueDate!)}');
       }
       buffer.writeln();
       buffer.writeln('View details in FlowPaisa:');
       buffer.writeln(deepLink);
       buffer.writeln();
       buffer.writeln('Track your finances with FlowPaisa app! 💰');
-      
+
       final message = buffer.toString();
-      
+
       if (contactPhone != null && contactPhone.isNotEmpty) {
         return await sendMessage(contactPhone, message);
       } else {
-        final whatsappUrl = Uri.parse('https://wa.me/?text=${Uri.encodeComponent(message)}');
+        final whatsappUrl =
+            Uri.parse('https://wa.me/?text=${Uri.encodeComponent(message)}');
         if (await canLaunchUrl(whatsappUrl)) {
           await launchUrl(whatsappUrl, mode: LaunchMode.externalApplication);
           return true;
@@ -204,17 +220,19 @@ class WhatsAppService {
     try {
       // Generate deep link
       final deepLink = _deepLinkService.generatePayableLink(payable);
-      
+
       // Format message
       final buffer = StringBuffer();
       buffer.writeln('📋 Payment Acknowledgment');
       buffer.writeln();
-      buffer.writeln('Amount I owe: $currencySymbol${payable.amount.toStringAsFixed(2)}');
+      buffer.writeln(
+          'Amount I owe: ${AmountFormatter.formatWithCurrency(payable.amount, currencySymbol, 2)}');
       if (payable.description != null && payable.description!.isNotEmpty) {
         buffer.writeln('For: ${payable.description}');
       }
       if (payable.dueDate != null) {
-        buffer.writeln('Due Date: ${AppDateFormatter.formatMediumDate(payable.dueDate!)}');
+        buffer.writeln(
+            'Due Date: ${AppDateFormatter.formatMediumDate(payable.dueDate!)}');
       }
       buffer.writeln();
       buffer.writeln('View details in FlowPaisa:');
@@ -222,13 +240,14 @@ class WhatsAppService {
       buffer.writeln();
       buffer.writeln('I will settle this soon. Thanks for your patience!');
       buffer.writeln('Manage your finances with FlowPaisa! 💰');
-      
+
       final message = buffer.toString();
-      
+
       if (contactPhone != null && contactPhone.isNotEmpty) {
         return await sendMessage(contactPhone, message);
       } else {
-        final whatsappUrl = Uri.parse('https://wa.me/?text=${Uri.encodeComponent(message)}');
+        final whatsappUrl =
+            Uri.parse('https://wa.me/?text=${Uri.encodeComponent(message)}');
         if (await canLaunchUrl(whatsappUrl)) {
           await launchUrl(whatsappUrl, mode: LaunchMode.externalApplication);
           return true;
@@ -240,4 +259,3 @@ class WhatsAppService {
     }
   }
 }
-

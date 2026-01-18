@@ -213,10 +213,12 @@ class _AddCurrencyScreenState extends ConsumerState<AddCurrencyScreen> {
                         width: 48,
                         height: 48,
                         decoration: BoxDecoration(
-                          color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                          color:
+                              theme.colorScheme.primary.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                            color: theme.colorScheme.primary
+                                .withValues(alpha: 0.3),
                             width: 1,
                           ),
                         ),
@@ -266,7 +268,7 @@ class _AddCurrencyScreenState extends ConsumerState<AddCurrencyScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Negative: -${AmountFormatter.formatWithCurrency(567.89, _symbolController.text.isEmpty ? '?' : _symbolController.text, _decimalPlaces)}',
+                    'Negative: ${AmountFormatter.formatWithCurrency(-567.89, _symbolController.text.isEmpty ? '?' : _symbolController.text, _decimalPlaces)}',
                     style: theme.textTheme.bodyLarge?.copyWith(
                       fontWeight: FontWeight.w600,
                       color: AppColors.error,

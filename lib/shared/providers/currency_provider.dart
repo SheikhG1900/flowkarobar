@@ -7,29 +7,37 @@ import 'package:flowpaisa/core/utils/currency_detector.dart';
 /// Initialize currency on first launch by detecting from system locale
 final currencyInitializerProvider = FutureProvider<void>((ref) async {
   final prefsRepository = ref.watch(userPreferencesRepositoryProvider);
-  final hasInitialized = await prefsRepository.getPreference('currency_initialized');
+  final hasInitialized =
+      await prefsRepository.getPreference('currency_initialized');
 
   print('💵 Currency Initializer: hasInitialized = $hasInitialized');
 
   if (hasInitialized == null) {
-    print('💵 Currency Initializer: First launch detected, initializing currency...');
-    
+    print(
+        '💵 Currency Initializer: First launch detected, initializing currency...');
+
     // First launch - detect currency from system locale
     final currencyCode = CurrencyDetector.detectCurrencyCodeFromLocale();
     final repository = ref.read(currenciesRepositoryProvider);
-    
-    print('💵 Currency Initializer: Looking for currency with code: $currencyCode');
+
+    print(
+        '💵 Currency Initializer: Looking for currency with code: $currencyCode');
     final currency = await repository.getCurrencyByCode(currencyCode);
 
     if (currency != null) {
-      print('💵 Currency Initializer: Found currency: ${currency.name} (${currency.symbol})');
-      await prefsRepository.setPreference('selected_currency_id', currency.id.toString());
+      print(
+          '💵 Currency Initializer: Found currency: ${currency.name} (${currency.symbol})');
+      await prefsRepository.setPreference(
+          'selected_currency_id', currency.id.toString());
     } else {
-      print('💵 Currency Initializer: Currency code $currencyCode not found, using default');
+      print(
+          '💵 Currency Initializer: Currency code $currencyCode not found, using default');
       // Fallback to default currency
       final defaultCurrency = await repository.getDefaultCurrency();
-      print('💵 Currency Initializer: Using default: ${defaultCurrency.name} (${defaultCurrency.symbol})');
-      await prefsRepository.setPreference('selected_currency_id', defaultCurrency.id.toString());
+      print(
+          '💵 Currency Initializer: Using default: ${defaultCurrency.name} (${defaultCurrency.symbol})');
+      await prefsRepository.setPreference(
+          'selected_currency_id', defaultCurrency.id.toString());
     }
     await prefsRepository.setPreference('currency_initialized', 'true');
     print('💵 Currency Initializer: Initialization complete');
@@ -79,6 +87,16 @@ final currencySymbolProvider = Provider<String>((ref) {
   );
 });
 
+/// Provider for the current currency decimal places
+final currencyDecimalPlacesProvider = Provider<int>((ref) {
+  final currencyAsync = ref.watch(currentCurrencyProvider);
+  return currencyAsync.when(
+    data: (currency) => currency.decimalPlaces,
+    loading: () => 2, // Fallback while loading
+    error: (_, __) => 2, // Fallback on error
+  );
+});
+
 /// Notifier for updating the selected currency
 class CurrencyNotifier extends Notifier<void> {
   @override
@@ -86,7 +104,8 @@ class CurrencyNotifier extends Notifier<void> {
 
   Future<void> setSelectedCurrency(int currencyId) async {
     final prefsRepository = ref.read(userPreferencesRepositoryProvider);
-    await prefsRepository.setPreference('selected_currency_id', currencyId.toString());
+    await prefsRepository.setPreference(
+        'selected_currency_id', currencyId.toString());
 
     // Invalidate providers to refresh the UI
     ref.invalidate(selectedCurrencyIdProvider);

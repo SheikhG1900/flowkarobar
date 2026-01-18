@@ -35,7 +35,7 @@ class _EditCurrencyScreenState extends ConsumerState<EditCurrencyScreen> {
     _symbolController = TextEditingController(text: widget.currency.symbol);
     _codeController = TextEditingController(text: widget.currency.code);
     _decimalPlaces = widget.currency.decimalPlaces;
-    
+
     // Add listeners to update preview instantly
     _nameController.addListener(() => setState(() {}));
     _symbolController.addListener(() => setState(() {}));
@@ -73,7 +73,8 @@ class _EditCurrencyScreenState extends ConsumerState<EditCurrencyScreen> {
 
       if (mounted) {
         Navigator.pop(context);
-        ToastUtils.showSuccessToast(context, ref, 'Currency updated successfully');
+        ToastUtils.showSuccessToast(
+            context, ref, 'Currency updated successfully');
       }
     } catch (e) {
       if (mounted) {
@@ -220,10 +221,12 @@ class _EditCurrencyScreenState extends ConsumerState<EditCurrencyScreen> {
                         width: 48,
                         height: 48,
                         decoration: BoxDecoration(
-                          color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                          color:
+                              theme.colorScheme.primary.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                            color: theme.colorScheme.primary
+                                .withValues(alpha: 0.3),
                             width: 1,
                           ),
                         ),
@@ -267,7 +270,7 @@ class _EditCurrencyScreenState extends ConsumerState<EditCurrencyScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Negative: -${AmountFormatter.formatWithCurrency(567.89, _symbolController.text, _decimalPlaces)}',
+                    'Negative: ${AmountFormatter.formatWithCurrency(-567.89, _symbolController.text, _decimalPlaces)}',
                     style: theme.textTheme.bodyLarge?.copyWith(
                       fontWeight: FontWeight.w600,
                       color: AppColors.error,

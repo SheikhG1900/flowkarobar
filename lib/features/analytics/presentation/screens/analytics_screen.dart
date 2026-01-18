@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
+import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/features/analytics/presentation/providers/analytics_provider.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/core/utils/date_formatter.dart';
@@ -389,7 +390,8 @@ class _DateRangeSelector extends StatelessWidget {
         final quarter = ((selectedDateRange.startDate.month - 1) ~/ 3) + 1;
         return 'Q$quarter ${AppDateFormatter.getFormatter('y').format(selectedDateRange.startDate)}';
       case DateRangeType.year:
-        return AppDateFormatter.getFormatter('y').format(selectedDateRange.startDate);
+        return AppDateFormatter.getFormatter('y')
+            .format(selectedDateRange.startDate);
       case DateRangeType.custom:
         return ' - ';
     }
@@ -636,7 +638,10 @@ class _FinancialSummaryCard extends ConsumerWidget {
                               ),
                             ),
                             Text(
-                              '$currencySymbol${selectedSummary.netBalance.abs().toStringAsFixed(2)}',
+                              AmountFormatter.formatWithCurrency(
+                                  selectedSummary.netBalance.abs(),
+                                  currencySymbol,
+                                  2),
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 24,
@@ -650,7 +655,7 @@ class _FinancialSummaryCard extends ConsumerWidget {
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: [
                             Text(
-                              'All-time: $currencySymbol${allTimeSummary.netBalance.abs().toStringAsFixed(2)}',
+                              'All-time: ${AmountFormatter.formatWithCurrency(allTimeSummary.netBalance.abs(), currencySymbol, 2)}',
                               style: TextStyle(
                                 color: Colors.white.withValues(alpha: 0.7),
                                 fontSize: 12,
@@ -695,6 +700,7 @@ class _SummaryItem extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final currencySymbol = ref.watch(currencySymbolProvider);
+    final decimalPlaces = ref.watch(currencyDecimalPlacesProvider);
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -728,7 +734,8 @@ class _SummaryItem extends ConsumerWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            '$currencySymbol${selectedAmount.toStringAsFixed(2)}',
+            AmountFormatter.formatWithCurrency(
+                selectedAmount, currencySymbol, decimalPlaces),
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
@@ -737,7 +744,7 @@ class _SummaryItem extends ConsumerWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            'All: $currencySymbol${allTimeAmount.toStringAsFixed(0)}',
+            'All: ${AmountFormatter.formatWithCurrency(allTimeAmount, currencySymbol, 0)}',
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w500,
@@ -758,6 +765,7 @@ class _ContactSummariesSection extends ConsumerWidget {
     final summariesAsync = ref.watch(contactSummariesProvider);
     final theme = Theme.of(context);
     final currencySymbol = ref.watch(currencySymbolProvider);
+    final decimalPlaces = ref.watch(currencyDecimalPlacesProvider);
 
     return summariesAsync.when(
       data: (summaries) {
@@ -843,7 +851,7 @@ class _ContactSummariesSection extends ConsumerWidget {
                             Row(
                               children: [
                                 Text(
-                                  'P: $currencySymbol${summary.totalPayable.toStringAsFixed(0)}',
+                                  'P: ${AmountFormatter.formatWithCurrency(summary.totalPayable, currencySymbol, 0)}',
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: AppColors.payableColor,
@@ -852,7 +860,7 @@ class _ContactSummariesSection extends ConsumerWidget {
                                 ),
                                 const SizedBox(width: 16),
                                 Text(
-                                  'R: $currencySymbol${summary.totalReceivable.toStringAsFixed(0)}',
+                                  'R: ${AmountFormatter.formatWithCurrency(summary.totalReceivable, currencySymbol, 0)}',
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: AppColors.receivableColor,
@@ -888,7 +896,8 @@ class _ContactSummariesSection extends ConsumerWidget {
                         child: Text(
                           isZero
                               ? 'Settled'
-                              : '$currencySymbol${summary.balance.abs().toStringAsFixed(0)}',
+                              : AmountFormatter.formatWithCurrency(
+                                  summary.balance.abs(), currencySymbol, 0),
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
@@ -1022,7 +1031,9 @@ class _ExpensesPieChart extends ConsumerWidget {
                         ],
                       ),
                     ),
-                    Text('$currencySymbol${e.totalAmount.toStringAsFixed(2)}',
+                    Text(
+                        AmountFormatter.formatWithCurrency(
+                            e.totalAmount, currencySymbol, 2),
                         style: const TextStyle(fontWeight: FontWeight.bold)),
                   ],
                 ),
@@ -1092,7 +1103,8 @@ class _TrendsBarChart extends ConsumerWidget {
                       ),
                       children: [
                         TextSpan(
-                          text: '$currencySymbol${rod.toY.toStringAsFixed(0)}',
+                          text: AmountFormatter.formatWithCurrency(
+                              rod.toY, currencySymbol, 0),
                           style: TextStyle(
                             color: rodIndex == 0
                                 ? AppColors.incomeColor
@@ -1221,7 +1233,8 @@ class _PayableReceivableTrendsChart extends ConsumerWidget {
                           fontWeight: FontWeight.bold),
                       children: [
                         TextSpan(
-                          text: '$currencySymbol${rod.toY.toStringAsFixed(0)}',
+                          text: AmountFormatter.formatWithCurrency(
+                              rod.toY, currencySymbol, 0),
                           style: TextStyle(
                             color: rodIndex == 0
                                 ? AppColors.payableColor
@@ -1347,7 +1360,8 @@ class _TopContactsChart extends ConsumerWidget {
                         ),
                       ),
                       Text(
-                        '$currencySymbol${contact.balance.abs().toStringAsFixed(0)}',
+                        AmountFormatter.formatWithCurrency(
+                            contact.balance.abs(), currencySymbol, 0),
                         style: TextStyle(
                             fontWeight: FontWeight.bold,
                             color: color,
@@ -1568,7 +1582,7 @@ class _PaymentStatusDistributionChart extends ConsumerWidget {
           const SizedBox(width: 6),
           Text(label, style: const TextStyle(fontSize: 11)),
           const SizedBox(width: 4),
-          Text('$currencySymbol${amount.toStringAsFixed(0)}',
+          Text(AmountFormatter.formatWithCurrency(amount, currencySymbol, 0),
               style:
                   const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
         ],
@@ -1678,7 +1692,9 @@ class _IncomePieChart extends ConsumerWidget {
                         ],
                       ),
                     ),
-                    Text('$currencySymbol${e.totalAmount.toStringAsFixed(2)}',
+                    Text(
+                        AmountFormatter.formatWithCurrency(
+                            e.totalAmount, currencySymbol, 2),
                         style: const TextStyle(fontWeight: FontWeight.bold)),
                   ],
                 ),

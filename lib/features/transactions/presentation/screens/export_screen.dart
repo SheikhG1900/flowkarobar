@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
+import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/core/utils/export_service.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/transactions/data/transactions_repository.dart';
@@ -34,6 +35,7 @@ class ExportScreen extends ConsumerStatefulWidget {
 
 class _ExportScreenState extends ConsumerState<ExportScreen> {
   String get currencySymbol => ref.watch(currencySymbolProvider);
+  int get decimalPlaces => ref.watch(currencyDecimalPlacesProvider);
   DateTime? _startDate;
   DateTime? _endDate;
   ExportSummary? _summary;
@@ -727,7 +729,8 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
               _buildSummaryRow(
                 context,
                 'Income',
-                '$currencySymbol${summary.totalIncome.toStringAsFixed(2)}',
+                AmountFormatter.formatWithCurrency(
+                    summary.totalIncome, currencySymbol, decimalPlaces),
                 Icons.arrow_downward,
                 AppColors.incomeColor,
               ),
@@ -735,7 +738,8 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
               _buildSummaryRow(
                 context,
                 'Expense',
-                '$currencySymbol${summary.totalExpense.toStringAsFixed(2)}',
+                AmountFormatter.formatWithCurrency(
+                    summary.totalExpense, currencySymbol, decimalPlaces),
                 Icons.arrow_upward,
                 AppColors.expenseColor,
               ),
@@ -743,7 +747,8 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
               _buildSummaryRow(
                 context,
                 'Net Balance',
-                '$currencySymbol${summary.netBalance.toStringAsFixed(2)}',
+                AmountFormatter.formatWithCurrency(
+                    summary.netBalance, currencySymbol, decimalPlaces),
                 Icons.account_balance_wallet,
                 summary.netBalance >= 0 ? Colors.green : Colors.red,
               ),

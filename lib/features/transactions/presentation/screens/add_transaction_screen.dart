@@ -443,8 +443,8 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                                   color: theme.colorScheme.primary
                                       .withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(8),
-                                  border:
-                                      Border.all(color: theme.colorScheme.primary),
+                                  border: Border.all(
+                                      color: theme.colorScheme.primary),
                                 ),
                                 alignment: Alignment.center,
                                 child: Icon(Icons.add,
@@ -1242,7 +1242,8 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          gradient: AppColors.getSecondaryGradient(theme.colorScheme.primary),
+                          gradient: AppColors.getSecondaryGradient(
+                              theme.colorScheme.primary),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: const Icon(

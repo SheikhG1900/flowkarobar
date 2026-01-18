@@ -2,7 +2,8 @@
 class AmountFormatter {
   /// Get the appropriate font size based on the amount's digit count
   /// Scales down for larger amounts to prevent layout overflow
-  static double getFontSize(double amount, {double baseSize = 18.0, int decimalPlaces = 2}) {
+  static double getFontSize(double amount,
+      {double baseSize = 18.0, int decimalPlaces = 2}) {
     final amountString = amount.toStringAsFixed(decimalPlaces);
     // Count digits before decimal point
     final digitCount = amountString.split('.')[0].length;
@@ -18,7 +19,9 @@ class AmountFormatter {
 
   /// Format amount with proper comma separation and specified decimal places
   static String formatAmount(double amount, int decimalPlaces) {
-    final formatter = amount.toStringAsFixed(decimalPlaces);
+    final isNegative = amount < 0;
+    final absAmount = amount.abs();
+    final formatter = absAmount.toStringAsFixed(decimalPlaces);
     final parts = formatter.split('.');
     final intPart = parts[0];
     final decimalPart = parts.length > 1 ? parts[1] : '';
@@ -35,15 +38,17 @@ class AmountFormatter {
     }
 
     // Add decimal part if needed
-    if (decimalPlaces > 0) {
-      return '$result.$decimalPart';
-    } else {
-      return result;
-    }
+    final formatted = decimalPlaces > 0 ? '$result.$decimalPart' : result;
+    return isNegative ? '-$formatted' : formatted;
   }
 
   /// Get formatted text with currency symbol
-  static String formatWithCurrency(double amount, String currency, int decimalPlaces) {
-    return '$currency${formatAmount(amount, decimalPlaces)}';
+  static String formatWithCurrency(
+      double amount, String currency, int decimalPlaces) {
+    final isNegative = amount < 0;
+    final formattedAmount = formatAmount(amount.abs(), decimalPlaces);
+    return isNegative
+        ? '($currency$formattedAmount)'
+        : '$currency$formattedAmount';
   }
 }
