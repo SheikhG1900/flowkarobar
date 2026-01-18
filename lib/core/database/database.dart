@@ -376,6 +376,25 @@ class AppDatabase extends _$AppDatabase {
       );
     }
   }
+
+  Future<void> clearAllData() async {
+    await transaction(() async {
+      // Delete from all tables in correct order to respect foreign keys
+      await delete(transactionSchedules).go();
+      await delete(reminders).go();
+      await delete(whatsAppQueue).go();
+      await delete(receivables).go();
+      await delete(payables).go();
+      await delete(transactions).go();
+      await delete(categoryUsageStats).go();
+      await delete(contactUsageStats).go();
+      await delete(contacts).go();
+      await delete(syncLog).go();
+
+      // Only delete non-default categories
+      await (delete(categories)..where((tbl) => tbl.isDefault.not())).go();
+    });
+  }
 }
 
 LazyDatabase _openConnection(String fileName) {

@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
+import 'package:flowpaisa/core/utils/date_formatter.dart';
 import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
+import 'package:flowpaisa/features/currencies/presentation/screens/currencies_list_screen.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -16,18 +18,21 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
   late TextEditingController _emailController;
+  late TextEditingController _phoneController;
 
   @override
   void initState() {
     super.initState();
     _nameController = TextEditingController();
     _emailController = TextEditingController();
+    _phoneController = TextEditingController();
 
     // Load existing profile data
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final profile = ref.read(userProfileProvider);
       _nameController.text = profile.name ?? '';
       _emailController.text = profile.email ?? '';
+      _phoneController.text = profile.phone ?? '';
     });
   }
 
@@ -35,6 +40,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   void dispose() {
     _nameController.dispose();
     _emailController.dispose();
+    _phoneController.dispose();
     super.dispose();
   }
 
@@ -54,6 +60,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       try {
         await notifier.updateName(_nameController.text);
         await notifier.updateEmail(_emailController.text);
+        await notifier.updatePhone(_phoneController.text);
 
         if (mounted) {
           Navigator.pop(context); // Close loading
@@ -69,40 +76,137 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     }
   }
 
-  void _showDeleteDataDialog() {
-    showDialog(
+  void _showDateFormatSelector() {
+    final profile = ref.read(userProfileProvider);
+    final theme = Theme.of(context);
+    final now = DateTime.now();
+
+    final predefinedFormats = [
+      'dd/MM/yyyy',
+      'MM/dd/yyyy',
+      'yyyy-MM-dd',
+      'dd MMM yyyy',
+      'MMM dd, yyyy',
+      'EEEE, MMM dd, yyyy',
+    ];
+
+    showModalBottomSheet(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Row(
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.6,
+        minChildSize: 0.4,
+        maxChildSize: 0.9,
+        expand: false,
+        builder: (context, scrollController) => Column(
           children: [
-            Icon(Icons.warning_amber, color: Colors.red),
-            SizedBox(width: 12),
-            Text('Delete All Data?'),
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(
+                'Select Date Format',
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            Expanded(
+              child: ListView(
+                controller: scrollController,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                children: [
+                  ...predefinedFormats.map((format) => ListTile(
+                        title: Text(format),
+                        subtitle: Text(
+                            'Sample: ${AppDateFormatter.formatDate(now, pattern: format)}'),
+                        trailing: profile.dateFormat == format
+                            ? Icon(Icons.check_circle,
+                                color: theme.colorScheme.primary)
+                            : null,
+                        onTap: () {
+                          ref
+                              .read(userProfileProvider.notifier)
+                              .updateDateFormat(format);
+                          Navigator.pop(context);
+                        },
+                      )),
+                  const Divider(),
+                  ListTile(
+                    leading: const Icon(Icons.edit_outlined),
+                    title: const Text('Custom Format'),
+                    subtitle: const Text('Enter your own date format pattern'),
+                    onTap: () {
+                      Navigator.pop(context);
+                      _showCustomDateFormatDialog();
+                    },
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
-        content: const Text(
-          'This will permanently delete all your transactions, '
-          'contacts, categories, receivables, and payables. '
-          '\n\nThis action cannot be undone!',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+      ),
+    );
+  }
+
+  void _showCustomDateFormatDialog() {
+    final profile = ref.read(userProfileProvider);
+    final controller = TextEditingController(text: profile.dateFormat);
+    final theme = Theme.of(context);
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text('Custom Date Format'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              TextField(
+                controller: controller,
+                decoration: const InputDecoration(
+                  labelText: 'Format Pattern',
+                  hintText: 'e.g., dd-MM-yyyy',
+                  border: OutlineInputBorder(),
+                ),
+                onChanged: (value) => setState(() {}),
+              ),
+              const SizedBox(height: 12),
+              if (controller.text.isNotEmpty)
+                Text(
+                  'Sample: ${AppDateFormatter.formatDate(DateTime.now(), pattern: controller.text)}',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
+              const SizedBox(height: 8),
+              const Text(
+                'Use standard ICU patterns like:\ndd: Day, MM: Month, yyyy: Year\nMMM: Short Month, EEEE: Full Day',
+                style: TextStyle(fontSize: 10, color: Colors.grey),
+              ),
+            ],
           ),
-          FilledButton(
-            onPressed: () {
-              Navigator.pop(context);
-              // TODO: Implement delete all data
-              ToastUtils.showWarningToast(
-                  context, ref, 'Data deletion will be implemented');
-            },
-            style: FilledButton.styleFrom(
-              backgroundColor: Colors.red,
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
             ),
-            child: const Text('Delete'),
-          ),
-        ],
+            TextButton(
+              onPressed: () {
+                if (controller.text.isNotEmpty) {
+                  ref
+                      .read(userProfileProvider.notifier)
+                      .updateDateFormat(controller.text);
+                  Navigator.pop(context);
+                }
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -132,11 +236,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       width: 100,
                       height: 100,
                       decoration: BoxDecoration(
-                        gradient: AppColors.getPrimaryGradient(theme.colorScheme.primary),
+                        gradient: AppColors.getPrimaryGradient(
+                            theme.colorScheme.primary),
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                            color: theme.colorScheme.primary
+                                .withValues(alpha: 0.3),
                             blurRadius: 20,
                             offset: const Offset(0, 8),
                           ),
@@ -154,7 +260,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       child: Container(
                         padding: const EdgeInsets.all(6),
                         decoration: BoxDecoration(
-                          gradient: AppColors.getSecondaryGradient(theme.colorScheme.primary),
+                          gradient: AppColors.getSecondaryGradient(
+                              theme.colorScheme.primary),
                           shape: BoxShape.circle,
                           border: Border.all(
                             color: theme.scaffoldBackgroundColor,
@@ -225,6 +332,21 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   return null;
                 },
               ),
+              const SizedBox(height: 16),
+
+              // Phone Field
+              TextFormField(
+                controller: _phoneController,
+                decoration: InputDecoration(
+                  labelText: 'Phone Number',
+                  hintText: 'Enter your phone number',
+                  prefixIcon: const Icon(Icons.phone_outlined),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                keyboardType: TextInputType.phone,
+              ),
               const SizedBox(height: 32),
 
               // Preferences Section
@@ -261,9 +383,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   subtitle: Text(profile.currency),
                   trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                   onTap: () {
-                    // TODO: Show currency selector
-                    ToastUtils.showInfoToast(context, ref,
-                        'Go to Settings > Currencies to change currency');
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const CurrenciesListScreen(),
+                      ),
+                    );
                   },
                 ),
               ),
@@ -293,11 +418,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   title: const Text('Date Format'),
                   subtitle: Text(profile.dateFormat),
                   trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                  onTap: () {
-                    // TODO: Show date format selector
-                    ToastUtils.showInfoToast(
-                        context, ref, 'Date format selection coming soon!');
-                  },
+                  onTap: _showDateFormatSelector,
                 ),
               ),
               const SizedBox(height: 32),
@@ -306,44 +427,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               GradientButton(
                 label: 'Save Profile',
                 icon: Icons.check,
-                gradient: AppColors.getPrimaryGradient(theme.colorScheme.primary),
+                gradient:
+                    AppColors.getPrimaryGradient(theme.colorScheme.primary),
                 onPressed: _saveProfile,
-              ),
-              const SizedBox(height: 48),
-
-              // Danger Zone
-              Text(
-                'Danger Zone',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.red,
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Delete All Data Button
-              OutlinedButton.icon(
-                onPressed: _showDeleteDataDialog,
-                icon: const Icon(Icons.delete_forever, color: Colors.red),
-                label: const Text(
-                  'Delete All Data',
-                  style: TextStyle(color: Colors.red),
-                ),
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  side: const BorderSide(color: Colors.red),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'This will permanently delete all your data',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-                textAlign: TextAlign.center,
               ),
               const SizedBox(height: 32),
             ],

@@ -1,6 +1,7 @@
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:drift/drift.dart';
 
+// Repository for user preferences
 class UserPreferencesRepository {
   final AppDatabase _db;
 
@@ -13,6 +14,7 @@ class UserPreferencesRepository {
   static const String keyDateFormat = 'date_format';
   static const String keyUserName = 'user_name';
   static const String keyUserEmail = 'user_email';
+  static const String keyUserPhone = 'user_phone';
 
   // Get a preference value by key
   Future<String?> getPreference(String key) async {
@@ -26,7 +28,7 @@ class UserPreferencesRepository {
   Future<void> setPreference(String key, String value) async {
     // Check if preference exists
     final existing = await getPreference(key);
-    
+
     if (existing != null) {
       // Update existing preference
       await (_db.update(_db.userPreferences)
@@ -51,8 +53,7 @@ class UserPreferencesRepository {
 
   // Delete a preference
   Future<void> deletePreference(String key) async {
-    await (_db.delete(_db.userPreferences)
-          ..where((tbl) => tbl.key.equals(key)))
+    await (_db.delete(_db.userPreferences)..where((tbl) => tbl.key.equals(key)))
         .go();
   }
 
@@ -112,6 +113,14 @@ class UserPreferencesRepository {
 
   Future<void> setUserEmail(String email) async {
     await setPreference(keyUserEmail, email);
+  }
+
+  Future<String?> getUserPhone() async {
+    return await getPreference(keyUserPhone);
+  }
+
+  Future<void> setUserPhone(String phone) async {
+    await setPreference(keyUserPhone, phone);
   }
 
   // Get all preferences as a map

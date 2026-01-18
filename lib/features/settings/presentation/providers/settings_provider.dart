@@ -4,7 +4,8 @@ import 'package:flowpaisa/shared/providers/database_provider.dart';
 import 'package:flowpaisa/features/settings/data/user_preferences_repository.dart';
 
 // User Preferences Repository Provider
-final userPreferencesRepositoryProvider = Provider<UserPreferencesRepository>((ref) {
+final userPreferencesRepositoryProvider =
+    Provider<UserPreferencesRepository>((ref) {
   final db = ref.watch(databaseProvider);
   return UserPreferencesRepository(db);
 });
@@ -108,12 +109,14 @@ final themeModeProvider = NotifierProvider<ThemeModeNotifier, ThemeMode>(() {
 class UserProfileState {
   final String? name;
   final String? email;
+  final String? phone;
   final String currency;
   final String dateFormat;
 
   UserProfileState({
     this.name,
     this.email,
+    this.phone,
     this.currency = 'INR',
     this.dateFormat = 'dd/MM/yyyy',
   });
@@ -121,18 +124,21 @@ class UserProfileState {
   UserProfileState copyWith({
     String? name,
     String? email,
+    String? phone,
     String? currency,
     String? dateFormat,
   }) {
     return UserProfileState(
       name: name ?? this.name,
       email: email ?? this.email,
+      phone: phone ?? this.phone,
       currency: currency ?? this.currency,
       dateFormat: dateFormat ?? this.dateFormat,
     );
   }
 }
 
+// User Profile Notifier
 class UserProfileNotifier extends Notifier<UserProfileState> {
   late UserPreferencesRepository _repository;
 
@@ -146,12 +152,14 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
   Future<void> _loadProfile() async {
     final name = await _repository.getUserName();
     final email = await _repository.getUserEmail();
+    final phone = await _repository.getUserPhone();
     final currency = await _repository.getCurrency();
     final dateFormat = await _repository.getDateFormat();
 
     state = UserProfileState(
       name: name,
       email: email,
+      phone: phone,
       currency: currency,
       dateFormat: dateFormat,
     );
@@ -167,6 +175,11 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
     state = state.copyWith(email: email);
   }
 
+  Future<void> updatePhone(String phone) async {
+    await _repository.setUserPhone(phone);
+    state = state.copyWith(phone: phone);
+  }
+
   Future<void> updateCurrency(String currency) async {
     await _repository.setCurrency(currency);
     state = state.copyWith(currency: currency);
@@ -178,6 +191,7 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
   }
 }
 
-final userProfileProvider = NotifierProvider<UserProfileNotifier, UserProfileState>(() {
+final userProfileProvider =
+    NotifierProvider<UserProfileNotifier, UserProfileState>(() {
   return UserProfileNotifier();
 });

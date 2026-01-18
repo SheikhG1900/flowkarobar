@@ -7,6 +7,7 @@ import 'package:uuid/uuid.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
+import 'package:flowpaisa/core/database/database.dart';
 
 class CashbookNotifier extends Notifier<List<Cashbook>> {
   static const String _storageKey = 'cashbooks_list';
@@ -111,6 +112,16 @@ class CashbookNotifier extends Notifier<List<Cashbook>> {
     } catch (e) {
       // Log error but continue
       print('Error deleting database file: $e');
+    }
+  }
+
+  Future<void> clearCashbookData(String id) async {
+    final cashbook = state.firstWhere((c) => c.id == id);
+    final db = AppDatabase(fileName: cashbook.dbPath);
+    try {
+      await db.clearAllData();
+    } finally {
+      await db.close();
     }
   }
 }

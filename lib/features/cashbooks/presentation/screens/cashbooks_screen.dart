@@ -5,6 +5,7 @@ import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_pro
 import 'package:flowpaisa/features/cashbooks/presentation/widgets/add_cashbook_dialog.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/core/utils/date_formatter.dart';
+import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 
 class CashbooksScreen extends ConsumerWidget {
@@ -115,6 +116,18 @@ class CashbooksScreen extends ConsumerWidget {
                                 ],
                               ),
                             ),
+                            const PopupMenuItem(
+                              value: 'clear',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.cleaning_services_outlined,
+                                      size: 20, color: Colors.orange),
+                                  SizedBox(width: 8),
+                                  Text('Clear Data',
+                                      style: TextStyle(color: Colors.orange)),
+                                ],
+                              ),
+                            ),
                             if (cashbook.id != 'default')
                               const PopupMenuItem(
                                 value: 'delete',
@@ -161,9 +174,54 @@ class CashbooksScreen extends ConsumerWidget {
         context: context,
         builder: (context) => AddCashbookDialog(cashbook: cashbook),
       );
+    } else if (action == 'clear') {
+      _showClearConfirmation(context, ref, cashbook);
     } else if (action == 'delete') {
       _showDeleteConfirmation(context, ref, cashbook);
     }
+  }
+
+  void _showClearConfirmation(
+      BuildContext context, WidgetRef ref, Cashbook cashbook) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.warning_amber, color: Colors.orange),
+            SizedBox(width: 12),
+            Text('Clear Data?'),
+          ],
+        ),
+        content: Text(
+          'Are you sure you want to clear all data in "${cashbook.name}"? '
+          'This will permanently delete all transactions, contacts, and other records. '
+          'The cashbook itself will not be deleted.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              await ref
+                  .read(cashbooksProvider.notifier)
+                  .clearCashbookData(cashbook.id);
+              if (context.mounted) {
+                ToastUtils.showSuccessToast(
+                    context, ref, 'Data cleared for ${cashbook.name}');
+              }
+            },
+            style: FilledButton.styleFrom(
+              backgroundColor: Colors.orange,
+            ),
+            child: const Text('Clear All'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showDeleteConfirmation(
@@ -171,20 +229,34 @@ class CashbooksScreen extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Cashbook?'),
+        title: const Row(
+          children: [
+            Icon(Icons.delete_forever, color: Colors.red),
+            SizedBox(width: 12),
+            Text('Delete Cashbook?'),
+          ],
+        ),
         content: Text(
-            'Are you sure you want to delete "${cashbook.name}"? All data within this cashbook will be permanently lost.'),
+          'Are you sure you want to delete "${cashbook.name}"? '
+          'ALL DATA within this cashbook will be PERMANENTLY LOST. '
+          'This action cannot be undone!',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text('Cancel'),
           ),
-          TextButton(
+          FilledButton(
             onPressed: () {
               ref.read(cashbooksProvider.notifier).deleteCashbook(cashbook.id);
               Navigator.pop(context);
+              ToastUtils.showSuccessToast(
+                  context, ref, 'Cashbook "${cashbook.name}" deleted');
             },
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+            style: FilledButton.styleFrom(
+              backgroundColor: Colors.red,
+            ),
+            child: const Text('Delete Permanently'),
           ),
         ],
       ),

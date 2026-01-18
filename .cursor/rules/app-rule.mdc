@@ -10,3 +10,5 @@ alwaysApply: true
 - for any sucess and error messages, use ToastUtils.
 
 - first recommendation to use theme colors and styling. 
+
+- for Amount and Date formatting, always use AmountFormatter and AppDateFormatter. for the date default date formatting, use AppDateFormatter.formatDate with the dateformat of user profile.
