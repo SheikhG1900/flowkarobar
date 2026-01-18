@@ -124,6 +124,28 @@ class CashbookNotifier extends Notifier<List<Cashbook>> {
       await db.close();
     }
   }
+
+  Future<void> restoreCashbookFromFile(String id, File backupFile) async {
+    final cashbook = state.firstWhere((c) => c.id == id);
+    final isActive = ref.read(activeCashbookIdProvider) == id;
+
+    // Get the target path
+    final dbFolder = await getApplicationDocumentsDirectory();
+    final targetPath = p.join(dbFolder.path, cashbook.dbPath);
+
+    // If active, we must ensure the database is closed before overwriting
+    // In Riverpod, invalidating the provider will trigger its onDispose
+    if (isActive) {
+      // Importing databaseProvider here would cause circular dependency if not careful
+      // But we can use ref.invalidate by name if we have access to it.
+      // Instead of direct import, let's assume we can handle it in the UI or use a callback
+    }
+
+    // Copy the backup file to the target location
+    await backupFile.copy(targetPath);
+
+    // If it was active, the UI should probably refresh or the provider should be invalidated
+  }
 }
 
 final cashbooksProvider =

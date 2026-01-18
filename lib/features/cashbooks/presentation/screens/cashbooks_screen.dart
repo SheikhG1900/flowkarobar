@@ -5,8 +5,13 @@ import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_pro
 import 'package:flowpaisa/features/cashbooks/presentation/widgets/add_cashbook_dialog.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/core/utils/date_formatter.dart';
-import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
+import 'package:flowpaisa/features/backup/data/local_backup_service.dart';
+import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
+import 'package:flowpaisa/shared/widgets/premium_badge.dart';
+import 'package:flowpaisa/shared/providers/database_provider.dart';
+import 'package:file_selector/file_selector.dart';
+import 'dart:io';
 
 class CashbooksScreen extends ConsumerWidget {
   const CashbooksScreen({super.key});
@@ -117,6 +122,30 @@ class CashbooksScreen extends ConsumerWidget {
                               ),
                             ),
                             const PopupMenuItem(
+                              value: 'backup_local',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.file_upload_outlined, size: 20),
+                                  SizedBox(width: 8),
+                                  Text('Backup to File'),
+                                  SizedBox(width: 8),
+                                  PremiumBadge(isSmall: true),
+                                ],
+                              ),
+                            ),
+                            const PopupMenuItem(
+                              value: 'restore_local',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.file_download_outlined, size: 20),
+                                  SizedBox(width: 8),
+                                  Text('Restore from File'),
+                                  SizedBox(width: 8),
+                                  PremiumBadge(isSmall: true),
+                                ],
+                              ),
+                            ),
+                            const PopupMenuItem(
                               value: 'clear',
                               child: Row(
                                 children: [
@@ -174,10 +203,162 @@ class CashbooksScreen extends ConsumerWidget {
         context: context,
         builder: (context) => AddCashbookDialog(cashbook: cashbook),
       );
+    } else if (action == 'backup_local') {
+      _handleBackup(context, ref, cashbook);
+    } else if (action == 'restore_local') {
+      _handleRestore(context, ref, cashbook);
     } else if (action == 'clear') {
       _showClearConfirmation(context, ref, cashbook);
     } else if (action == 'delete') {
       _showDeleteConfirmation(context, ref, cashbook);
+    }
+  }
+
+  Future<void> _handleBackup(
+      BuildContext context, WidgetRef ref, Cashbook cashbook) async {
+    if (!PremiumGate.isPremium(ref)) {
+      PremiumGate.showPremiumDialog(context);
+      return;
+    }
+
+    // Show loading
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(
+        child: CircularProgressIndicator(),
+      ),
+    );
+
+    try {
+      final filePath = await LocalBackupService.prepareBackupFile(cashbook);
+
+      if (context.mounted) {
+        Navigator.pop(context); // Close loading
+
+        if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
+          final fileName = filePath.split(Platform.pathSeparator).last;
+          final FileSaveLocation? result = await getSaveLocation(
+            suggestedName: fileName,
+            acceptedTypeGroups: [
+              const XTypeGroup(
+                label: 'SQLite Database',
+                extensions: ['db'],
+              ),
+            ],
+          );
+
+          if (result != null) {
+            final file = File(result.path);
+            await File(filePath).copy(file.path);
+
+            if (context.mounted) {
+              ToastUtils.showSuccessToast(
+                  context, ref, 'Backup saved to ${result.path}');
+            }
+          }
+        } else {
+          // Mobile behavior
+          await showDialog<void>(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text('Backup Ready'),
+              content: Text('Local backup for "${cashbook.name}" is ready.'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Done'),
+                ),
+                TextButton(
+                  onPressed: () async {
+                    try {
+                      await LocalBackupService.saveToDownloads(filePath);
+                      if (context.mounted) {
+                        ToastUtils.showSuccessToast(
+                            context, ref, 'Saved to Downloads');
+                        Navigator.pop(context);
+                      }
+                    } catch (e) {
+                      if (context.mounted) {
+                        ToastUtils.showErrorToast(
+                            context, ref, 'Error saving: $e');
+                      }
+                    }
+                  },
+                  child: const Text('Save Copy'),
+                ),
+                FilledButton(
+                  onPressed: () async {
+                    Navigator.pop(context);
+                    await LocalBackupService.shareBackupFile(filePath);
+                  },
+                  child: const Text('Share'),
+                ),
+              ],
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (context.mounted) {
+        Navigator.pop(context); // Close loading if still open
+        ToastUtils.showErrorToast(context, ref, 'Backup failed: $e');
+      }
+    }
+  }
+
+  Future<void> _handleRestore(
+      BuildContext context, WidgetRef ref, Cashbook cashbook) async {
+    if (!PremiumGate.isPremium(ref)) {
+      PremiumGate.showPremiumDialog(context);
+      return;
+    }
+
+    try {
+      final file = await LocalBackupService.pickBackupFile();
+      if (file == null) return;
+
+      if (context.mounted) {
+        final confirmed = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Restore Cashbook?'),
+            content: Text(
+                'This will overwrite all data in "${cashbook.name}" with the selected backup file. This action cannot be undone.'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancel'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('Restore'),
+              ),
+            ],
+          ),
+        );
+
+        if (confirmed == true && context.mounted) {
+          await ref
+              .read(cashbooksProvider.notifier)
+              .restoreCashbookFromFile(cashbook.id, file);
+
+          // Invalidate database if it was active
+          final activeId = ref.read(activeCashbookIdProvider);
+          if (activeId == cashbook.id) {
+            ref.invalidate(databaseProvider);
+          }
+
+          if (context.mounted) {
+            ToastUtils.showSuccessToast(context, ref,
+                'Cashbook "${cashbook.name}" restored successfully');
+          }
+        }
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ToastUtils.showErrorToast(context, ref, 'Restore failed: $e');
+      }
     }
   }
 
