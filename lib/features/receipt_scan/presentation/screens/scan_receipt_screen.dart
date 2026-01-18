@@ -68,7 +68,7 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ToastUtils.showErrorToast(context, 'Error picking image: $e');
+        ToastUtils.showErrorToast(context, ref, 'Error picking image: $e');
       }
     }
   }
@@ -99,7 +99,7 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
     } catch (e) {
       setState(() => _isScanning = false);
       if (mounted) {
-        ToastUtils.showErrorToast(context, 'Error scanning receipt: $e');
+        ToastUtils.showErrorToast(context, ref, 'Error scanning receipt: $e');
       }
     }
   }
@@ -107,7 +107,7 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
   void _proceedToAddTransaction() {
     final amount = double.tryParse(_amountController.text);
     if (amount == null || amount <= 0) {
-      ToastUtils.showErrorToast(context, 'Please enter a valid amount');
+      ToastUtils.showErrorToast(context, ref, 'Please enter a valid amount');
       return;
     }
 

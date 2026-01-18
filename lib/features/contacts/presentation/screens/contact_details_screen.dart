@@ -45,7 +45,8 @@ class ContactDetailsScreen extends ConsumerWidget {
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: [
-                              AppColors.getContactColor(contact.name).withValues(alpha: 0.2),
+                              AppColors.getContactColor(contact.name)
+                                  .withValues(alpha: 0.2),
                               theme.scaffoldBackgroundColor,
                             ],
                             begin: Alignment.topCenter,
@@ -65,20 +66,26 @@ class ContactDetailsScreen extends ConsumerWidget {
                                 width: 100,
                                 height: 100,
                                 decoration: BoxDecoration(
-                                  gradient: AppColors.getContactGradient(contact.name),
+                                  gradient: AppColors.getContactGradient(
+                                      contact.name),
                                   shape: BoxShape.circle,
                                   boxShadow: [
                                     BoxShadow(
-                                      color: AppColors.getContactColor(contact.name).withValues(alpha: 0.4),
+                                      color: AppColors.getContactColor(
+                                              contact.name)
+                                          .withValues(alpha: 0.4),
                                       blurRadius: 20,
                                       offset: const Offset(0, 8),
                                     ),
                                   ],
-                                  border: Border.all(color: Colors.white, width: 4),
+                                  border:
+                                      Border.all(color: Colors.white, width: 4),
                                 ),
                                 alignment: Alignment.center,
                                 child: Text(
-                                  contact.name.isNotEmpty ? contact.name[0].toUpperCase() : '?',
+                                  contact.name.isNotEmpty
+                                      ? contact.name[0].toUpperCase()
+                                      : '?',
                                   style: const TextStyle(
                                     color: Colors.white,
                                     fontWeight: FontWeight.bold,
@@ -95,7 +102,8 @@ class ContactDetailsScreen extends ConsumerWidget {
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            if (contact.phone != null && contact.phone!.isNotEmpty) ...[
+                            if (contact.phone != null &&
+                                contact.phone!.isNotEmpty) ...[
                               const SizedBox(height: 4),
                               Text(
                                 contact.phone!,
@@ -117,7 +125,8 @@ class ContactDetailsScreen extends ConsumerWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => AddContactScreen(contactToEdit: contact),
+                          builder: (context) =>
+                              AddContactScreen(contactToEdit: contact),
                         ),
                       );
                     },
@@ -141,13 +150,15 @@ class ContactDetailsScreen extends ConsumerWidget {
                       Container(
                         padding: const EdgeInsets.all(24),
                         decoration: BoxDecoration(
-                          gradient: isPositive 
-                              ? AppColors.receivableGradient 
+                          gradient: isPositive
+                              ? AppColors.receivableGradient
                               : AppColors.payableGradient,
                           borderRadius: BorderRadius.circular(24),
                           boxShadow: [
                             BoxShadow(
-                              color: (isPositive ? AppColors.receivableColor : AppColors.payableColor)
+                              color: (isPositive
+                                      ? AppColors.receivableColor
+                                      : AppColors.payableColor)
                                   .withValues(alpha: 0.3),
                               blurRadius: 16,
                               offset: const Offset(0, 8),
@@ -180,7 +191,8 @@ class ContactDetailsScreen extends ConsumerWidget {
                               ],
                             ),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 6),
                               decoration: BoxDecoration(
                                 color: Colors.white.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(12),
@@ -246,32 +258,40 @@ class ContactDetailsScreen extends ConsumerWidget {
                           decoration: BoxDecoration(
                             color: theme.cardColor,
                             borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: theme.dividerColor.withValues(alpha: 0.5)),
+                            border: Border.all(
+                                color:
+                                    theme.dividerColor.withValues(alpha: 0.5)),
                           ),
                           child: Column(
                             children: [
-                              if (contact.email != null && contact.email!.isNotEmpty)
+                              if (contact.email != null &&
+                                  contact.email!.isNotEmpty)
                                 ListTile(
                                   leading: Container(
                                     padding: const EdgeInsets.all(8),
                                     decoration: BoxDecoration(
-                                      color: theme.colorScheme.surfaceContainerHighest,
+                                      color: theme
+                                          .colorScheme.surfaceContainerHighest,
                                       borderRadius: BorderRadius.circular(8),
                                     ),
-                                    child: const Icon(Icons.email_outlined, size: 20),
+                                    child: const Icon(Icons.email_outlined,
+                                        size: 20),
                                   ),
                                   title: Text(contact.email!),
                                   subtitle: const Text('Email'),
                                 ),
-                              if (contact.notes != null && contact.notes!.isNotEmpty)
+                              if (contact.notes != null &&
+                                  contact.notes!.isNotEmpty)
                                 ListTile(
                                   leading: Container(
                                     padding: const EdgeInsets.all(8),
                                     decoration: BoxDecoration(
-                                      color: theme.colorScheme.surfaceContainerHighest,
+                                      color: theme
+                                          .colorScheme.surfaceContainerHighest,
                                       borderRadius: BorderRadius.circular(8),
                                     ),
-                                    child: const Icon(Icons.note_alt_outlined, size: 20),
+                                    child: const Icon(Icons.note_alt_outlined,
+                                        size: 20),
                                   ),
                                   title: Text(contact.notes!),
                                   subtitle: const Text('Notes'),
@@ -304,7 +324,7 @@ class ContactDetailsScreen extends ConsumerWidget {
     required String currencySymbol,
   }) {
     final theme = Theme.of(context);
-    
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -386,12 +406,14 @@ class ContactDetailsScreen extends ConsumerWidget {
                 if (context.mounted) {
                   Navigator.pop(context); // Close dialog
                   Navigator.pop(context); // Close details screen
-                  ToastUtils.showSuccessToast(context, 'Contact deleted successfully');
+                  ToastUtils.showSuccessToast(
+                      context, ref, 'Contact deleted successfully');
                 }
               } catch (e) {
                 if (context.mounted) {
                   Navigator.pop(context);
-                  ToastUtils.showErrorToast(context, 'Error: ${e.toString()}');
+                  ToastUtils.showErrorToast(
+                      context, ref, 'Error: ${e.toString()}');
                 }
               }
             },

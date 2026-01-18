@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/features/cashbooks/domain/models/cashbook.dart';
 import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
 import 'package:flowpaisa/features/cashbooks/presentation/widgets/add_cashbook_dialog.dart';
+import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:intl/intl.dart';
 
 class CashbooksScreen extends ConsumerWidget {
@@ -149,13 +150,7 @@ class CashbooksScreen extends ConsumerWidget {
 
   void _switchCashbook(BuildContext context, WidgetRef ref, Cashbook cashbook) {
     ref.read(activeCashbookIdProvider.notifier).setActive(cashbook.id);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Switched to ${cashbook.name}'),
-        backgroundColor: cashbook.color,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+    ToastUtils.showSuccessToast(context, ref, 'Switched to ${cashbook.name}');
   }
 
   void _handleAction(

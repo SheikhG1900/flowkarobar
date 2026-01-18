@@ -363,7 +363,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                 }
               } catch (e) {
                 if (context.mounted) {
-                  ToastUtils.showErrorToast(context, 'Restore failed: $e');
+                  ToastUtils.showErrorToast(context, ref, 'Restore failed: $e');
                 }
               }
             },

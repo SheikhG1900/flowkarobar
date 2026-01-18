@@ -59,7 +59,7 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
     }
 
     if (_selectedContactId == null) {
-      ToastUtils.showErrorToast(context, 'Please select a contact');
+      ToastUtils.showErrorToast(context, ref, 'Please select a contact');
       return;
     }
 
@@ -96,7 +96,8 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
 
       if (mounted) {
         // Fetch full payable with linked data
-        final payableWithLinkedData = await repository.getPayableWithLinkedDataById(payableId);
+        final payableWithLinkedData =
+            await repository.getPayableWithLinkedDataById(payableId);
 
         if (payableWithLinkedData != null) {
           // Pop create page and navigate to details
@@ -104,19 +105,22 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => PayableDetailsDialog(item: payableWithLinkedData),
+              builder: (context) =>
+                  PayableDetailsDialog(item: payableWithLinkedData),
             ),
           );
-          ToastUtils.showSuccessToast(context, 'Payable added successfully');
+          ToastUtils.showSuccessToast(
+              context, ref, 'Payable added successfully');
         } else {
           // Fallback: just pop if details fetch fails
           Navigator.pop(context);
-          ToastUtils.showSuccessToast(context, 'Payable added successfully');
+          ToastUtils.showSuccessToast(
+              context, ref, 'Payable added successfully');
         }
       }
     } catch (e) {
       if (mounted) {
-        ToastUtils.showErrorToast(context, 'Error: ${e.toString()}');
+        ToastUtils.showErrorToast(context, ref, 'Error: ${e.toString()}');
       }
     } finally {
       if (mounted) {
@@ -192,7 +196,8 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
                           Navigator.pop(context); // Close picker
                           final newContact = await Navigator.push<Contact>(
                             context,
-                            MaterialPageRoute(builder: (_) => const AddContactScreen()),
+                            MaterialPageRoute(
+                                builder: (_) => const AddContactScreen()),
                           );
                           if (newContact != null && mounted) {
                             setState(() {

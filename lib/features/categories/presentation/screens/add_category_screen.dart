@@ -136,11 +136,11 @@ class _AddCategoryScreenState extends ConsumerState<AddCategoryScreen> {
 
       if (mounted) {
         Navigator.pop(context, newCategory); // Return the created category
-        ToastUtils.showSuccessToast(context, 'Category added successfully');
+        ToastUtils.showSuccessToast(context, ref, 'Category added successfully');
       }
     } catch (e) {
       if (mounted) {
-        ToastUtils.showErrorToast(context, 'Error: ${e.toString()}');
+        ToastUtils.showErrorToast(context, ref, 'Error: ${e.toString()}');
       }
     } finally {
       if (mounted) {

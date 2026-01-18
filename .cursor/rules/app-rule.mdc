@@ -6,3 +6,5 @@ alwaysApply: true
 -always use centralized color code. always try to use app_color, app_constant, app_theme.
 
 -always use centralized methods for the amount display, because currency symbol and decimal places are costomizable in this application. we have AmountFormatter class for this purpose.
+
+- for any sucess and error messages, use ToastUtils.

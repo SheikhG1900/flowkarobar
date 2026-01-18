@@ -5,6 +5,7 @@ import 'package:app_links/app_links.dart';
 import 'package:flowpaisa/features/whatsapp/domain/deep_link_service.dart';
 import 'package:flowpaisa/features/whatsapp/domain/models/shared_data_models.dart';
 import 'package:flowpaisa/shared/widgets/import_dialog.dart';
+import 'package:flowpaisa/core/utils/toast_utils.dart';
 
 class DeepLinkHandler {
   final DeepLinkService _deepLinkService;
@@ -79,16 +80,11 @@ class DeepLinkHandler {
 
   /// Show error message
   void _showErrorSnackBar(String message) {
-    if (_context == null || !_context!.mounted) {
+    if (_context == null || !_context!.mounted || _ref == null) {
       return;
     }
 
-    ScaffoldMessenger.of(_context!).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red,
-      ),
-    );
+    ToastUtils.showErrorToast(_context!, _ref!, message);
   }
 
   /// Dispose the handler and cancel subscriptions

@@ -167,11 +167,12 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
 
       if (mounted) {
         Navigator.pop(context, true);
-        ToastUtils.showSuccessToast(context, 'Schedule updated successfully');
+        ToastUtils.showSuccessToast(
+            context, ref, 'Schedule updated successfully');
       }
     } catch (e) {
       if (mounted) {
-        ToastUtils.showErrorToast(context, 'Error: ${e.toString()}');
+        ToastUtils.showErrorToast(context, ref, 'Error: ${e.toString()}');
       }
     } finally {
       if (mounted) {
@@ -242,6 +243,7 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
           if (mounted) {
             ToastUtils.showErrorToast(
               context,
+              ref,
               'Please select a contact for this relationship',
             );
           }

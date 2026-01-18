@@ -160,12 +160,13 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
         Navigator.pop(context);
         ToastUtils.showSuccessToast(
           context,
+          ref,
           'Schedule created successfully',
         );
       }
     } catch (e) {
       if (mounted) {
-        ToastUtils.showErrorToast(context, 'Error: ${e.toString()}');
+        ToastUtils.showErrorToast(context, ref, 'Error: ${e.toString()}');
       }
     } finally {
       if (mounted) {
@@ -185,6 +186,7 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
     if (_paidRelationship != null && _selectedContact == null) {
       ToastUtils.showErrorToast(
         context,
+        ref,
         'Please select a contact for this relationship',
       );
       return;
@@ -217,11 +219,11 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
       if (mounted) {
         Navigator.pop(context, true); // Return true to indicate success
         ToastUtils.showSuccessToast(
-            context, 'Transaction updated successfully');
+            context, ref, 'Transaction updated successfully');
       }
     } catch (e) {
       if (mounted) {
-        ToastUtils.showErrorToast(context, 'Error: ${e.toString()}');
+        ToastUtils.showErrorToast(context, ref, 'Error: ${e.toString()}');
       }
     } finally {
       if (mounted) {
@@ -281,6 +283,7 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
       if (_selectedContact == null && mounted) {
         ToastUtils.showErrorToast(
           context,
+          ref,
           'Please select a contact for this relationship',
         );
       }

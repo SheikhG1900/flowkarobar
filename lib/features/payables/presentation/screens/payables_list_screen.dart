@@ -75,7 +75,8 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
       // Refresh pagination for the new tab
       final overdueCountAsync = ref.read(overduePayablesCountProvider);
       final hasOverdueTab = (overdueCountAsync.value ?? 0) > 0;
-      final status = _getStatusForTabIndex(_tabController!.index, hasOverdueTab);
+      final status =
+          _getStatusForTabIndex(_tabController!.index, hasOverdueTab);
       ref.read(payablesPaginatedProvider(status).notifier).refresh();
     }
   }
@@ -87,7 +88,8 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
       // Load more when near bottom
       final overdueCountAsync = ref.read(overduePayablesCountProvider);
       final hasOverdueTab = (overdueCountAsync.value ?? 0) > 0;
-      final status = _getStatusForTabIndex(_tabController?.index ?? 0, hasOverdueTab);
+      final status =
+          _getStatusForTabIndex(_tabController?.index ?? 0, hasOverdueTab);
       ref.read(payablesPaginatedProvider(status).notifier).loadMore();
     }
   }
@@ -103,7 +105,7 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
-                color: isOverdue 
+                color: isOverdue
                     ? Colors.red.withValues(alpha: 0.2)
                     : AppColors.payableColor.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(10),
@@ -199,7 +201,7 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
                     }
                     if (context.mounted) {
                       ToastUtils.showSuccessToast(
-                          context, 'Generated 100 dummy payables');
+                          context, ref, 'Generated 100 dummy payables');
                       // Refresh pagination
                       ref
                           .read(payablesPaginatedProvider('PENDING').notifier)
@@ -210,7 +212,7 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
                     }
                   } catch (e) {
                     if (context.mounted) {
-                      ToastUtils.showErrorToast(context, 'Error: $e');
+                      ToastUtils.showErrorToast(context, ref, 'Error: $e');
                     }
                   }
                 }
@@ -235,10 +237,13 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
                 controller: _tabController,
                 indicatorColor: AppColors.payableColor,
                 labelColor: AppColors.payableColor,
-                unselectedLabelColor: Theme.of(context).colorScheme.onSurfaceVariant,
+                unselectedLabelColor:
+                    Theme.of(context).colorScheme.onSurfaceVariant,
                 tabs: [
                   _buildTabWithCount('Pending', pendingCount),
-                  if (hasOverdueTab) _buildTabWithCount('Overdue', overdueCount, isOverdue: true),
+                  if (hasOverdueTab)
+                    _buildTabWithCount('Overdue', overdueCount,
+                        isOverdue: true),
                   const Tab(text: 'Paid'),
                 ],
               ),
@@ -329,8 +334,8 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
             ),
             const SizedBox(height: 24),
             Text(
-              status == 'PENDING' 
-                  ? 'No pending payables' 
+              status == 'PENDING'
+                  ? 'No pending payables'
                   : status == 'OVERDUE'
                       ? 'No overdue payables'
                       : 'No paid bills',
@@ -435,7 +440,7 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
                               await repository.deletePayable(item.payable.id);
                               if (context.mounted) {
                                 ToastUtils.showSuccessToast(
-                                    context, 'Payable deleted');
+                                    context, ref, 'Payable deleted');
                               }
                             }
                           : null,

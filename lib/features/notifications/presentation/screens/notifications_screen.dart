@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
+import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:intl/intl.dart';
 
 // Mock notifications provider - can be enhanced later with actual data
@@ -52,12 +53,8 @@ class NotificationsScreen extends ConsumerWidget {
             TextButton(
               onPressed: () {
                 // TODO: Mark all as read
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('All notifications marked as read'),
-                    duration: Duration(seconds: 2),
-                  ),
-                );
+                ToastUtils.showSuccessToast(
+                    context, ref, 'All notifications marked as read');
               },
               child: const Text('Mark all read'),
             ),
@@ -169,7 +166,7 @@ class NotificationsScreen extends ConsumerWidget {
   }
 }
 
-class _NotificationCard extends StatelessWidget {
+class _NotificationCard extends ConsumerWidget {
   final NotificationItem notification;
 
   const _NotificationCard({required this.notification});
@@ -205,7 +202,7 @@ class _NotificationCard extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final color = _getColor();
 
@@ -235,12 +232,8 @@ class _NotificationCard extends StatelessWidget {
         child: InkWell(
           onTap: () {
             // TODO: Handle notification tap (navigate to relevant screen)
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Notification: ${notification.title}'),
-                duration: const Duration(seconds: 2),
-              ),
-            );
+            ToastUtils.showInfoToast(
+                context, ref, 'Notification: ${notification.title}');
           },
           borderRadius: BorderRadius.circular(16),
           child: Padding(

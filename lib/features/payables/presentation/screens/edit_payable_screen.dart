@@ -55,7 +55,7 @@ class _EditPayableScreenState extends ConsumerState<EditPayableScreen> {
 
       if (payable == null) {
         if (mounted) {
-          ToastUtils.showErrorToast(context, 'Payable not found');
+          ToastUtils.showErrorToast(context, ref, 'Payable not found');
           Navigator.pop(context);
         }
         return;
@@ -83,7 +83,8 @@ class _EditPayableScreenState extends ConsumerState<EditPayableScreen> {
         setState(() {
           _isLoadingData = false;
         });
-        ToastUtils.showErrorToast(context, 'Error loading payable: ${e.toString()}');
+        ToastUtils.showErrorToast(
+            context, ref, 'Error loading payable: ${e.toString()}');
       }
     }
   }
@@ -101,12 +102,12 @@ class _EditPayableScreenState extends ConsumerState<EditPayableScreen> {
     }
 
     if (_selectedContactId == null) {
-      ToastUtils.showErrorToast(context, 'Please select a contact');
+      ToastUtils.showErrorToast(context, ref, 'Please select a contact');
       return;
     }
 
     if (_payable == null) {
-      ToastUtils.showErrorToast(context, 'Payable data not loaded');
+      ToastUtils.showErrorToast(context, ref, 'Payable data not loaded');
       return;
     }
 
@@ -132,11 +133,12 @@ class _EditPayableScreenState extends ConsumerState<EditPayableScreen> {
 
       if (mounted) {
         Navigator.pop(context);
-        ToastUtils.showSuccessToast(context, 'Payable updated successfully');
+        ToastUtils.showSuccessToast(
+            context, ref, 'Payable updated successfully');
       }
     } catch (e) {
       if (mounted) {
-        ToastUtils.showErrorToast(context, 'Error: ${e.toString()}');
+        ToastUtils.showErrorToast(context, ref, 'Error: ${e.toString()}');
       }
     } finally {
       if (mounted) {
@@ -212,7 +214,8 @@ class _EditPayableScreenState extends ConsumerState<EditPayableScreen> {
                           Navigator.pop(context); // Close picker
                           final newContact = await Navigator.push<Contact>(
                             context,
-                            MaterialPageRoute(builder: (_) => const AddContactScreen()),
+                            MaterialPageRoute(
+                                builder: (_) => const AddContactScreen()),
                           );
                           if (newContact != null && mounted) {
                             setState(() {

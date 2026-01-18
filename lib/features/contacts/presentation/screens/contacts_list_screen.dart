@@ -79,13 +79,15 @@ class _ContactsListScreenState extends ConsumerState<ContactsListScreen> {
                     width: 120,
                     height: 120,
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                      color: theme.colorScheme.surfaceContainerHighest
+                          .withValues(alpha: 0.5),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
                       Icons.person_outline,
                       size: 60,
-                      color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                      color: theme.colorScheme.onSurfaceVariant
+                          .withValues(alpha: 0.5),
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -171,11 +173,12 @@ class _ContactCard extends ConsumerWidget {
       final repository = ref.read(contactsRepositoryProvider);
       await repository.deleteContact(contact.id);
       if (context.mounted) {
-        ToastUtils.showSuccessToast(context, 'Contact deleted successfully');
+        ToastUtils.showSuccessToast(
+            context, ref, 'Contact deleted successfully');
       }
     } catch (e) {
       if (context.mounted) {
-        ToastUtils.showErrorToast(context, 'Error: ${e.toString()}');
+        ToastUtils.showErrorToast(context, ref, 'Error: ${e.toString()}');
       }
     }
   }
@@ -226,7 +229,8 @@ class _ContactCard extends ConsumerWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => ContactDetailsScreen(contactId: contact.id),
+                    builder: (context) =>
+                        ContactDetailsScreen(contactId: contact.id),
                   ),
                 );
               },
@@ -277,7 +281,8 @@ class _ContactCard extends ConsumerWidget {
                               fontSize: 16,
                             ),
                           ),
-                          if (contact.phone != null && contact.phone!.isNotEmpty) ...[
+                          if (contact.phone != null &&
+                              contact.phone!.isNotEmpty) ...[
                             const SizedBox(height: 4),
                             Row(
                               children: [
@@ -323,7 +328,8 @@ class _ContactCard extends ConsumerWidget {
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                        color: theme.colorScheme.surfaceContainerHighest
+                            .withValues(alpha: 0.5),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(

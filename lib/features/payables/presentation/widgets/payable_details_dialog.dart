@@ -476,11 +476,11 @@ ${payable.dueDate != null ? 'Due Date: ${DateFormat.yMMMd().format(payable.dueDa
         
         if (context.mounted) {
           Navigator.pop(context);
-          ToastUtils.showSuccessToast(context, 'Payable deleted successfully');
+          ToastUtils.showSuccessToast(context, ref, 'Payable deleted successfully');
         }
       } catch (e) {
         if (context.mounted) {
-          ToastUtils.showErrorToast(context, 'Error deleting payable: ${e.toString()}');
+          ToastUtils.showErrorToast(context, ref, 'Error deleting payable: ${e.toString()}');
         }
       }
     }
@@ -493,11 +493,11 @@ ${payable.dueDate != null ? 'Due Date: ${DateFormat.yMMMd().format(payable.dueDa
       
       if (context.mounted) {
         Navigator.pop(context);
-        ToastUtils.showSuccessToast(context, 'Marked as paid');
+        ToastUtils.showSuccessToast(context, ref, 'Marked as paid');
       }
     } catch (e) {
       if (context.mounted) {
-        ToastUtils.showErrorToast(context, 'Error: ${e.toString()}');
+        ToastUtils.showErrorToast(context, ref, 'Error: ${e.toString()}');
       }
     }
   }
@@ -510,7 +510,7 @@ ${payable.dueDate != null ? 'Due Date: ${DateFormat.yMMMd().format(payable.dueDa
   ) async {
     final currency = ref.read(currentCurrencyProvider).value!;
     if (contact.phone == null || contact.phone.isEmpty) {
-      ToastUtils.showWarningToast(context, 'No phone number available for this contact');
+      ToastUtils.showWarningToast(context, ref, 'No phone number available for this contact');
       return;
     }
 
@@ -530,11 +530,11 @@ Thank you!
       final success = await whatsAppService.sendMessage(cleanPhone, message);
       
       if (success && context.mounted) {
-        ToastUtils.showSuccessToast(context, 'Opening WhatsApp...');
+        ToastUtils.showSuccessToast(context, ref, 'Opening WhatsApp...');
       }
     } catch (e) {
       if (context.mounted) {
-        ToastUtils.showErrorToast(context, 'Error: ${e.toString()}');
+        ToastUtils.showErrorToast(context, ref, 'Error: ${e.toString()}');
       }
     }
   }

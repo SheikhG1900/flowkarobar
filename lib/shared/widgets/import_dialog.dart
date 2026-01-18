@@ -52,7 +52,7 @@ class _ImportDialogState extends ConsumerState<ImportDialog> {
         );
       }
       // For transactions, we don't check (allow duplicates)
-      
+
       if (mounted) {
         setState(() {});
       }
@@ -71,16 +71,18 @@ class _ImportDialogState extends ConsumerState<ImportDialog> {
       final database = ref.read(databaseProvider);
 
       if (widget.sharedData is TransactionShareData) {
-        await _importTransaction(database, widget.sharedData as TransactionShareData);
+        await _importTransaction(
+            database, widget.sharedData as TransactionShareData);
       } else if (widget.sharedData is ReceivableShareData) {
-        await _importReceivable(database, widget.sharedData as ReceivableShareData);
+        await _importReceivable(
+            database, widget.sharedData as ReceivableShareData);
       } else if (widget.sharedData is PayableShareData) {
         await _importPayable(database, widget.sharedData as PayableShareData);
       }
 
       if (mounted) {
         Navigator.of(context).pop();
-        ToastUtils.showSuccessToast(context, 'Successfully imported!');
+        ToastUtils.showSuccessToast(context, ref, 'Successfully imported!');
       }
     } catch (e) {
       setState(() {
@@ -93,7 +95,7 @@ class _ImportDialogState extends ConsumerState<ImportDialog> {
   Future<void> _importTransaction(database, TransactionShareData data) async {
     final repo = TransactionsRepository(database);
     final contactsRepo = ContactsRepository(database);
-    
+
     // Find or create contact if phone is provided
     int? contactId;
     if (data.contactPhone != null && data.contactPhone!.isNotEmpty) {
@@ -217,8 +219,8 @@ class _ImportDialogState extends ConsumerState<ImportDialog> {
   IconData _getIcon() {
     if (widget.sharedData is TransactionShareData) {
       final tx = widget.sharedData as TransactionShareData;
-      return tx.transactionType == 'EXPENSE' 
-          ? Icons.arrow_downward 
+      return tx.transactionType == 'EXPENSE'
+          ? Icons.arrow_downward
           : Icons.arrow_upward;
     } else if (widget.sharedData is ReceivableShareData) {
       return Icons.account_balance_wallet;
@@ -239,17 +241,21 @@ class _ImportDialogState extends ConsumerState<ImportDialog> {
 
   Widget _buildDataPreview() {
     final currencySymbol = ref.watch(currencySymbolProvider);
-    
+
     if (widget.sharedData is TransactionShareData) {
-      return _buildTransactionPreview(widget.sharedData as TransactionShareData, currencySymbol);
+      return _buildTransactionPreview(
+          widget.sharedData as TransactionShareData, currencySymbol);
     } else if (widget.sharedData is ReceivableShareData) {
-      return _buildReceivablePreview(widget.sharedData as ReceivableShareData, currencySymbol);
+      return _buildReceivablePreview(
+          widget.sharedData as ReceivableShareData, currencySymbol);
     } else {
-      return _buildPayablePreview(widget.sharedData as PayableShareData, currencySymbol);
+      return _buildPayablePreview(
+          widget.sharedData as PayableShareData, currencySymbol);
     }
   }
 
-  Widget _buildTransactionPreview(TransactionShareData data, String currencySymbol) {
+  Widget _buildTransactionPreview(
+      TransactionShareData data, String currencySymbol) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -265,7 +271,8 @@ class _ImportDialogState extends ConsumerState<ImportDialog> {
           const SizedBox(height: 12),
         ],
         _buildDetailRow('Type', data.transactionType),
-        _buildDetailRow('Amount', '$currencySymbol${data.amount.toStringAsFixed(2)}'),
+        _buildDetailRow(
+            'Amount', '$currencySymbol${data.amount.toStringAsFixed(2)}'),
         if (data.description != null && data.description!.isNotEmpty)
           _buildDetailRow('Description', data.description!),
         if (data.categoryName != null)
@@ -277,7 +284,8 @@ class _ImportDialogState extends ConsumerState<ImportDialog> {
     );
   }
 
-  Widget _buildReceivablePreview(ReceivableShareData data, String currencySymbol) {
+  Widget _buildReceivablePreview(
+      ReceivableShareData data, String currencySymbol) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -292,7 +300,8 @@ class _ImportDialogState extends ConsumerState<ImportDialog> {
           ),
           const SizedBox(height: 12),
         ],
-        _buildDetailRow('Amount', '$currencySymbol${data.amount.toStringAsFixed(2)}'),
+        _buildDetailRow(
+            'Amount', '$currencySymbol${data.amount.toStringAsFixed(2)}'),
         if (data.description != null && data.description!.isNotEmpty)
           _buildDetailRow('Description', data.description!),
         if (data.contactName != null)
@@ -319,7 +328,8 @@ class _ImportDialogState extends ConsumerState<ImportDialog> {
           ),
           const SizedBox(height: 12),
         ],
-        _buildDetailRow('Amount', '$currencySymbol${data.amount.toStringAsFixed(2)}'),
+        _buildDetailRow(
+            'Amount', '$currencySymbol${data.amount.toStringAsFixed(2)}'),
         if (data.description != null && data.description!.isNotEmpty)
           _buildDetailRow('Description', data.description!),
         if (data.contactName != null)

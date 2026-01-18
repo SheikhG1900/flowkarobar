@@ -92,7 +92,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                     await service.generateDummyTransactions(count: 100);
                     if (context.mounted) {
                       ToastUtils.showSuccessToast(
-                          context, 'Generated 100 dummy transactions');
+                          context, ref, 'Generated 100 dummy transactions');
                       // Refresh the paginated list
                       ref
                           .read(transactionsPaginatedProvider.notifier)
@@ -100,7 +100,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                     }
                   } catch (e) {
                     if (context.mounted) {
-                      ToastUtils.showErrorToast(context, 'Error: $e');
+                      ToastUtils.showErrorToast(context, ref, 'Error: $e');
                     }
                   }
                 }
@@ -312,11 +312,11 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                                     .deleteTransaction(item.transaction.id);
                                 if (context.mounted) {
                                   ToastUtils.showSuccessToast(
-                                      context, 'Transaction deleted');
+                                      context, ref, 'Transaction deleted');
                                 }
                               } catch (e) {
                                 if (context.mounted) {
-                                  ToastUtils.showErrorToast(context,
+                                  ToastUtils.showErrorToast(context, ref,
                                       'Error deleting transaction: $e');
                                 }
                               }
@@ -674,7 +674,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
               await service.deleteSchedule(schedule.id);
               if (context.mounted) {
                 ToastUtils.showSuccessToast(
-                    context, 'Schedule deleted successfully');
+                    context, ref, 'Schedule deleted successfully');
               }
               ref.invalidate(allSchedulesProvider);
             },

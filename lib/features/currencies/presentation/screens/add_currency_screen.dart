@@ -65,11 +65,12 @@ class _AddCurrencyScreenState extends ConsumerState<AddCurrencyScreen> {
 
       if (mounted) {
         Navigator.pop(context);
-        ToastUtils.showSuccessToast(context, 'Currency added successfully');
+        ToastUtils.showSuccessToast(
+            context, ref, 'Currency added successfully');
       }
     } catch (e) {
       if (mounted) {
-        ToastUtils.showErrorToast(context, 'Error: ${e.toString()}');
+        ToastUtils.showErrorToast(context, ref, 'Error: ${e.toString()}');
       }
     } finally {
       if (mounted) {
@@ -221,7 +222,9 @@ class _AddCurrencyScreenState extends ConsumerState<AddCurrencyScreen> {
                         ),
                         alignment: Alignment.center,
                         child: Text(
-                          _symbolController.text.isEmpty ? '?' : _symbolController.text,
+                          _symbolController.text.isEmpty
+                              ? '?'
+                              : _symbolController.text,
                           style: TextStyle(
                             fontSize: 24,
                             color: AppColors.brightCyan,
@@ -235,11 +238,15 @@ class _AddCurrencyScreenState extends ConsumerState<AddCurrencyScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              _nameController.text.isEmpty ? 'Currency Name' : _nameController.text,
+                              _nameController.text.isEmpty
+                                  ? 'Currency Name'
+                                  : _nameController.text,
                               style: theme.textTheme.titleMedium,
                             ),
                             Text(
-                              _codeController.text.isEmpty ? 'XXX' : _codeController.text.toUpperCase(),
+                              _codeController.text.isEmpty
+                                  ? 'XXX'
+                                  : _codeController.text.toUpperCase(),
                               style: theme.textTheme.bodySmall?.copyWith(
                                 color: theme.colorScheme.onSurfaceVariant,
                               ),

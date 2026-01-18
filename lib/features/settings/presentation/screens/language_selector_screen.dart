@@ -97,7 +97,7 @@ class LanguageSelectorScreen extends ConsumerWidget {
                   // Show success message
                   if (context.mounted) {
                     ToastUtils.showSuccessToast(
-                        context, 'Language changed to ${lang['name']}');
+                        context, ref, 'Language changed to ${lang['name']}');
                   }
                 },
                 borderRadius: BorderRadius.circular(16),

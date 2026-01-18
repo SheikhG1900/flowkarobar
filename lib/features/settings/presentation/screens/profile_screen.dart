@@ -57,12 +57,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
         if (mounted) {
           Navigator.pop(context); // Close loading
-          ToastUtils.showSuccessToast(context, 'Profile updated successfully');
+          ToastUtils.showSuccessToast(
+              context, ref, 'Profile updated successfully');
         }
       } catch (e) {
         if (mounted) {
           Navigator.pop(context); // Close loading
-          ToastUtils.showErrorToast(context, 'Error: ${e.toString()}');
+          ToastUtils.showErrorToast(context, ref, 'Error: ${e.toString()}');
         }
       }
     }
@@ -93,7 +94,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             onPressed: () {
               Navigator.pop(context);
               // TODO: Implement delete all data
-              ToastUtils.showWarningToast(context, 'Data deletion will be implemented');
+              ToastUtils.showWarningToast(
+                  context, ref, 'Data deletion will be implemented');
             },
             style: FilledButton.styleFrom(
               backgroundColor: Colors.red,
@@ -175,7 +177,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 child: TextButton(
                   onPressed: () {
                     // TODO: Implement photo upload
-                    ToastUtils.showInfoToast(context, 'Photo upload coming soon!');
+                    ToastUtils.showInfoToast(
+                        context, ref, 'Photo upload coming soon!');
                   },
                   child: const Text('Change Photo'),
                 ),
@@ -260,7 +263,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                   onTap: () {
                     // TODO: Show currency selector
-                    ToastUtils.showInfoToast(context, 'Go to Settings > Currencies to change currency');
+                    ToastUtils.showInfoToast(context, ref,
+                        'Go to Settings > Currencies to change currency');
                   },
                 ),
               ),
@@ -279,7 +283,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   leading: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: AppColors.primaryGradient.colors.last.withValues(alpha: 0.1),
+                      color: AppColors.primaryGradient.colors.last
+                          .withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Icon(
@@ -292,7 +297,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                   onTap: () {
                     // TODO: Show date format selector
-                    ToastUtils.showInfoToast(context, 'Date format selection coming soon!');
+                    ToastUtils.showInfoToast(
+                        context, ref, 'Date format selection coming soon!');
                   },
                 ),
               ),

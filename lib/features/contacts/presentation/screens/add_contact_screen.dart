@@ -81,7 +81,7 @@ class _AddContactScreenState extends ConsumerState<AddContactScreen> {
           : _notesController.text.trim();
 
       Contact? createdOrUpdatedContact;
-      
+
       if (widget.contactToEdit != null) {
         // Update existing
         final updatedContact = widget.contactToEdit!.copyWith(
@@ -110,6 +110,7 @@ class _AddContactScreenState extends ConsumerState<AddContactScreen> {
         Navigator.pop(context, createdOrUpdatedContact);
         ToastUtils.showSuccessToast(
           context,
+          ref,
           widget.contactToEdit != null
               ? 'Contact updated successfully'
               : 'Contact added successfully',
@@ -117,7 +118,7 @@ class _AddContactScreenState extends ConsumerState<AddContactScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ToastUtils.showErrorToast(context, 'Error: ${e.toString()}');
+        ToastUtils.showErrorToast(context, ref, 'Error: ${e.toString()}');
       }
     } finally {
       if (mounted) {

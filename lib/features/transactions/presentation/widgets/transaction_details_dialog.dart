@@ -726,12 +726,12 @@ ${category != null ? 'Category: ${category.name}\n' : ''}${contact != null ? 'Co
         if (context.mounted) {
           Navigator.pop(context);
           ToastUtils.showSuccessToast(
-              context, 'Transaction deleted successfully');
+              context, ref, 'Transaction deleted successfully');
         }
       } catch (e) {
         if (context.mounted) {
           ToastUtils.showErrorToast(
-              context, 'Error deleting transaction: ${e.toString()}');
+              context, ref, 'Error deleting transaction: ${e.toString()}');
         }
       }
     }
@@ -745,11 +745,11 @@ ${category != null ? 'Category: ${category.name}\n' : ''}${contact != null ? 'Co
 
       if (context.mounted) {
         Navigator.pop(context);
-        ToastUtils.showSuccessToast(context, 'Marked as paid');
+        ToastUtils.showSuccessToast(context, ref, 'Marked as paid');
       }
     } catch (e) {
       if (context.mounted) {
-        ToastUtils.showErrorToast(context, 'Error: ${e.toString()}');
+        ToastUtils.showErrorToast(context, ref, 'Error: ${e.toString()}');
       }
     }
   }
@@ -762,11 +762,11 @@ ${category != null ? 'Category: ${category.name}\n' : ''}${contact != null ? 'Co
 
       if (context.mounted) {
         Navigator.pop(context);
-        ToastUtils.showSuccessToast(context, 'Marked as received');
+        ToastUtils.showSuccessToast(context, ref, 'Marked as received');
       }
     } catch (e) {
       if (context.mounted) {
-        ToastUtils.showErrorToast(context, 'Error: ${e.toString()}');
+        ToastUtils.showErrorToast(context, ref, 'Error: ${e.toString()}');
       }
     }
   }
@@ -779,7 +779,7 @@ ${category != null ? 'Category: ${category.name}\n' : ''}${contact != null ? 'Co
   ) async {
     if (contact.phone == null || contact.phone.isEmpty) {
       ToastUtils.showWarningToast(
-          context, 'No phone number available for this contact');
+          context, ref, 'No phone number available for this contact');
       return;
     }
 
@@ -803,11 +803,11 @@ Thank you!
       final success = await whatsAppService.sendMessage(cleanPhone, message);
 
       if (success && context.mounted) {
-        ToastUtils.showSuccessToast(context, 'Opening WhatsApp...');
+        ToastUtils.showSuccessToast(context, ref, 'Opening WhatsApp...');
       }
     } catch (e) {
       if (context.mounted) {
-        ToastUtils.showErrorToast(context, 'Error: ${e.toString()}');
+        ToastUtils.showErrorToast(context, ref, 'Error: ${e.toString()}');
       }
     }
   }

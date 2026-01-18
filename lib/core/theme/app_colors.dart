@@ -28,7 +28,16 @@ class AppColors {
     colors: [
       Color.fromARGB(255, 0, 123, 139),
       Color.fromARGB(255, 1, 65, 100)
-    ], // Green shades
+    ], // Teal/Blue shades
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  static const errorGradient = LinearGradient(
+    colors: [
+      Color.fromARGB(255, 113, 0, 0),
+      Color.fromARGB(255, 228, 66, 66)
+    ], // Deep Red shades
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );

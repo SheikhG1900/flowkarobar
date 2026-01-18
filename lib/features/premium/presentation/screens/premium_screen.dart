@@ -19,7 +19,7 @@ class PremiumScreen extends ConsumerWidget {
     // Listen for errors
     ref.listen(premiumProvider, (previous, next) {
       if (next.error != null && next.error != previous?.error) {
-        ToastUtils.showErrorToast(context, next.error!);
+        ToastUtils.showErrorToast(context, ref, next.error!);
       }
     });
 
@@ -28,7 +28,7 @@ class PremiumScreen extends ConsumerWidget {
           ? FloatingActionButton.extended(
               onPressed: () {
                 ref.read(premiumProvider.notifier).togglePremium();
-                ToastUtils.showInfoToast(context, 'Toggled Debug Mode');
+                ToastUtils.showInfoToast(context, ref, 'Toggled Debug Mode');
               },
               label: const Text('DEBUG: Toggle Mode'),
               icon: const Icon(Icons.developer_mode),

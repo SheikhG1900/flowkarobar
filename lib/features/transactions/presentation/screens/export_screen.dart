@@ -64,14 +64,14 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
     } catch (e) {
       setState(() => _isLoading = false);
       if (mounted) {
-        ToastUtils.showErrorToast(context, 'Error loading summary: $e');
+        ToastUtils.showErrorToast(context, ref, 'Error loading summary: $e');
       }
     }
   }
 
   Future<void> _exportToCSV() async {
     if (_startDate == null || _endDate == null) {
-      ToastUtils.showWarningToast(context, 'Please select date range');
+      ToastUtils.showWarningToast(context, ref, 'Please select date range');
       return;
     }
 
@@ -121,7 +121,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
 
             if (mounted) {
               ToastUtils.showSuccessToast(
-                  context, 'Export saved to ${result.path}');
+                  context, ref, 'Export saved to ${result.path}');
             }
           }
         }
@@ -156,12 +156,13 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
                       await exportService.saveToDownloads(filePath);
                       if (context.mounted) {
                         ToastUtils.showSuccessToast(
-                            context, 'Saved to Downloads');
+                            context, ref, 'Saved to Downloads');
                         Navigator.pop(context);
                       }
                     } catch (e) {
                       if (context.mounted) {
-                        ToastUtils.showErrorToast(context, 'Error saving: $e');
+                        ToastUtils.showErrorToast(
+                            context, ref, 'Error saving: $e');
                       }
                     }
                   },
@@ -184,7 +185,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
         if (isLoadingDialogOpen) {
           Navigator.pop(context);
         }
-        ToastUtils.showErrorToast(context, 'Error exporting: $e');
+        ToastUtils.showErrorToast(context, ref, 'Error exporting: $e');
       }
     }
   }
@@ -196,7 +197,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
     }
 
     if (_startDate == null || _endDate == null) {
-      ToastUtils.showWarningToast(context, 'Please select date range');
+      ToastUtils.showWarningToast(context, ref, 'Please select date range');
       return;
     }
 
@@ -248,11 +249,12 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
                     await exportService.saveToDownloads(filePath);
                     if (context.mounted) {
                       ToastUtils.showSuccessToast(
-                          context, 'Saved to Downloads');
+                          context, ref, 'Saved to Downloads');
                     }
                   } catch (e) {
                     if (context.mounted) {
-                      ToastUtils.showErrorToast(context, 'Error saving: $e');
+                      ToastUtils.showErrorToast(
+                          context, ref, 'Error saving: $e');
                     }
                   }
                 },
@@ -265,7 +267,8 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
                     await exportService.sharePDFFile(filePath);
                   } catch (e) {
                     if (context.mounted) {
-                      ToastUtils.showErrorToast(context, 'Error sharing: $e');
+                      ToastUtils.showErrorToast(
+                          context, ref, 'Error sharing: $e');
                     }
                   }
                 },
@@ -287,7 +290,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
     } catch (e) {
       if (mounted) {
         Navigator.pop(context); // Close loading if still open
-        ToastUtils.showErrorToast(context, 'Error exporting: $e');
+        ToastUtils.showErrorToast(context, ref, 'Error exporting: $e');
       }
     }
   }
@@ -351,11 +354,12 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
                     await exportService.saveToDownloads(filePath);
                     if (context.mounted) {
                       ToastUtils.showSuccessToast(
-                          context, 'Saved to Downloads');
+                          context, ref, 'Saved to Downloads');
                     }
                   } catch (e) {
                     if (context.mounted) {
-                      ToastUtils.showErrorToast(context, 'Error saving: $e');
+                      ToastUtils.showErrorToast(
+                          context, ref, 'Error saving: $e');
                     }
                   }
                 },
@@ -368,7 +372,8 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
                     await exportService.sharePDFFile(filePath);
                   } catch (e) {
                     if (context.mounted) {
-                      ToastUtils.showErrorToast(context, 'Error sharing: $e');
+                      ToastUtils.showErrorToast(
+                          context, ref, 'Error sharing: $e');
                     }
                   }
                 },
@@ -390,7 +395,8 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
     } catch (e) {
       if (mounted) {
         Navigator.pop(context); // Close loading if still open
-        ToastUtils.showErrorToast(context, 'Error generating test PDF: $e');
+        ToastUtils.showErrorToast(
+            context, ref, 'Error generating test PDF: $e');
       }
     }
   }

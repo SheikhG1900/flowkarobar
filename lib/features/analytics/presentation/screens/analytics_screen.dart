@@ -78,7 +78,8 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
           context: context,
           builder: (context) => AlertDialog(
             title: const Text('PDF Ready'),
-            content: const Text('Your analytics PDF report is ready. Choose an action:'),
+            content: const Text(
+                'Your analytics PDF report is ready. Choose an action:'),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
@@ -91,11 +92,12 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                     await exportService.saveToDownloads(filePath);
                     if (context.mounted) {
                       ToastUtils.showSuccessToast(
-                          context, 'Saved to Downloads');
+                          context, ref, 'Saved to Downloads');
                     }
                   } catch (e) {
                     if (context.mounted) {
-                      ToastUtils.showErrorToast(context, 'Error saving: $e');
+                      ToastUtils.showErrorToast(
+                          context, ref, 'Error saving: $e');
                     }
                   }
                 },
@@ -108,7 +110,8 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                     await exportService.sharePDFFile(filePath);
                   } catch (e) {
                     if (context.mounted) {
-                      ToastUtils.showErrorToast(context, 'Error sharing: $e');
+                      ToastUtils.showErrorToast(
+                          context, ref, 'Error sharing: $e');
                     }
                   }
                 },
@@ -130,7 +133,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
     } catch (e) {
       if (mounted) {
         Navigator.pop(context); // Close loading if still open
-        ToastUtils.showErrorToast(context, 'Error exporting: $e');
+        ToastUtils.showErrorToast(context, ref, 'Error exporting: $e');
       }
     }
   }

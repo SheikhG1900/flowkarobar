@@ -19,7 +19,11 @@ class ThemeSelectorScreen extends ConsumerWidget {
         'name': 'Light',
         'description': 'Always use light theme',
         'icon': Icons.light_mode,
-        'previewColors': [Colors.white, Colors.grey[100]!, AppColors.brightCyan],
+        'previewColors': [
+          Colors.white,
+          Colors.grey[100]!,
+          AppColors.brightCyan
+        ],
       },
       {
         'mode': ThemeMode.dark,
@@ -37,7 +41,11 @@ class ThemeSelectorScreen extends ConsumerWidget {
         'name': 'System',
         'description': 'Follow device settings',
         'icon': Icons.brightness_auto,
-        'previewColors': [Colors.grey[800]!, Colors.grey[300]!, AppColors.brightCyan],
+        'previewColors': [
+          Colors.grey[800]!,
+          Colors.grey[300]!,
+          AppColors.brightCyan
+        ],
       },
     ];
 
@@ -68,7 +76,8 @@ class ThemeSelectorScreen extends ConsumerWidget {
               boxShadow: [
                 if (isSelected)
                   BoxShadow(
-                    color: AppColors.primaryGradient.colors.first.withValues(alpha: 0.2),
+                    color: AppColors.primaryGradient.colors.first
+                        .withValues(alpha: 0.2),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   )
@@ -86,7 +95,8 @@ class ThemeSelectorScreen extends ConsumerWidget {
                 onTap: () async {
                   await themeModeNotifier.setThemeMode(mode);
                   if (context.mounted) {
-                    ToastUtils.showSuccessToast(context, 'Theme set to ${option['name']}');
+                    ToastUtils.showSuccessToast(
+                        context, ref, 'Theme set to ${option['name']}');
                   }
                 },
                 borderRadius: BorderRadius.circular(20),
@@ -102,9 +112,8 @@ class ThemeSelectorScreen extends ConsumerWidget {
                             width: 56,
                             height: 56,
                             decoration: BoxDecoration(
-                              gradient: isSelected
-                                  ? AppColors.primaryGradient
-                                  : null,
+                              gradient:
+                                  isSelected ? AppColors.primaryGradient : null,
                               color: isSelected
                                   ? null
                                   : theme.colorScheme.surfaceContainerHighest
@@ -113,8 +122,8 @@ class ThemeSelectorScreen extends ConsumerWidget {
                               boxShadow: isSelected
                                   ? [
                                       BoxShadow(
-                                        color: AppColors.primaryGradient
-                                            .colors.first
+                                        color: AppColors
+                                            .primaryGradient.colors.first
                                             .withValues(alpha: 0.3),
                                         blurRadius: 8,
                                         offset: const Offset(0, 4),
@@ -167,7 +176,8 @@ class ThemeSelectorScreen extends ConsumerWidget {
                                 shape: BoxShape.circle,
                                 boxShadow: [
                                   BoxShadow(
-                                    color: AppColors.primaryGradient.colors.first
+                                    color: AppColors
+                                        .primaryGradient.colors.first
                                         .withValues(alpha: 0.3),
                                     blurRadius: 8,
                                     offset: const Offset(0, 2),
@@ -220,12 +230,14 @@ class ThemeSelectorScreen extends ConsumerWidget {
                                             bottomLeft: Radius.circular(11),
                                           )
                                         : i ==
-                                                (option['previewColors'] as List)
+                                                (option['previewColors']
+                                                            as List)
                                                         .length -
                                                     1
                                             ? const BorderRadius.only(
                                                 topRight: Radius.circular(11),
-                                                bottomRight: Radius.circular(11),
+                                                bottomRight:
+                                                    Radius.circular(11),
                                               )
                                             : null,
                                   ),

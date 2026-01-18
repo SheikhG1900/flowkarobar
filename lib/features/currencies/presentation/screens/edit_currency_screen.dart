@@ -73,11 +73,11 @@ class _EditCurrencyScreenState extends ConsumerState<EditCurrencyScreen> {
 
       if (mounted) {
         Navigator.pop(context);
-        ToastUtils.showSuccessToast(context, 'Currency updated successfully');
+        ToastUtils.showSuccessToast(context, ref, 'Currency updated successfully');
       }
     } catch (e) {
       if (mounted) {
-        ToastUtils.showErrorToast(context, 'Error: ${e.toString()}');
+        ToastUtils.showErrorToast(context, ref, 'Error: ${e.toString()}');
       }
     } finally {
       if (mounted) {

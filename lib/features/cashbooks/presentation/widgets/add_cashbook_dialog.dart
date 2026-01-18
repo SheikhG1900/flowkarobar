@@ -282,7 +282,7 @@ class _AddCashbookDialogState extends ConsumerState<AddCashbookDialog> {
                 ),
               );
           if (mounted) {
-            ToastUtils.showSuccessToast(context, 'Cashbook updated');
+            ToastUtils.showSuccessToast(context, ref, 'Cashbook updated');
             Navigator.pop(context);
           }
         } else {
@@ -292,13 +292,13 @@ class _AddCashbookDialogState extends ConsumerState<AddCashbookDialog> {
                 iconCodePoint: _selectedIcon,
               );
           if (mounted) {
-            ToastUtils.showSuccessToast(context, 'Cashbook created');
+            ToastUtils.showSuccessToast(context, ref, 'Cashbook created');
             Navigator.pop(context);
           }
         }
       } catch (e) {
         if (mounted) {
-          ToastUtils.showErrorToast(context, 'Error: ${e.toString()}');
+          ToastUtils.showErrorToast(context, ref, 'Error: ${e.toString()}');
         }
       } finally {
         if (mounted) {

@@ -82,13 +82,15 @@ class _ShareOptionsSheetState extends State<_ShareOptionsSheet> {
             subtitle: widget.contact != null && widget.contact!.phone != null
                 ? Text('To ${widget.contact!.name}')
                 : const Text('Choose contact'),
-            onTap: _isSharing ? null : () => _shareViaWhatsApp(context),
+            onTap: _isSharing
+                ? null
+                : () => _shareViaWhatsApp(context, widget.ref),
           ),
           ListTile(
             leading: const Icon(Icons.link),
             title: const Text('Copy Link'),
             subtitle: const Text('Copy deep link to clipboard'),
-            onTap: _isSharing ? null : () => _copyLink(context),
+            onTap: _isSharing ? null : () => _copyLink(context, widget.ref),
           ),
           if (_isSharing)
             const Padding(
@@ -102,7 +104,7 @@ class _ShareOptionsSheetState extends State<_ShareOptionsSheet> {
     );
   }
 
-  Future<void> _shareViaWhatsApp(BuildContext context) async {
+  Future<void> _shareViaWhatsApp(BuildContext context, WidgetRef ref) async {
     setState(() => _isSharing = true);
 
     try {
@@ -131,11 +133,11 @@ class _ShareOptionsSheetState extends State<_ShareOptionsSheet> {
 
       if (context.mounted) {
         Navigator.of(context).pop();
-        ToastUtils.showSuccessToast(context, 'Opening WhatsApp...');
+        ToastUtils.showSuccessToast(context, ref, 'Opening WhatsApp...');
       }
     } catch (e) {
       if (context.mounted) {
-        ToastUtils.showErrorToast(context, 'Failed to share: $e');
+        ToastUtils.showErrorToast(context, ref, 'Failed to share: $e');
       }
     } finally {
       if (mounted) {
@@ -144,7 +146,7 @@ class _ShareOptionsSheetState extends State<_ShareOptionsSheet> {
     }
   }
 
-  Future<void> _copyLink(BuildContext context) async {
+  Future<void> _copyLink(BuildContext context, WidgetRef ref) async {
     setState(() => _isSharing = true);
 
     try {
@@ -170,11 +172,11 @@ class _ShareOptionsSheetState extends State<_ShareOptionsSheet> {
 
       if (context.mounted) {
         Navigator.of(context).pop();
-        ToastUtils.showSuccessToast(context, 'Link copied to clipboard!');
+        ToastUtils.showSuccessToast(context, ref, 'Link copied to clipboard!');
       }
     } catch (e) {
       if (context.mounted) {
-        ToastUtils.showErrorToast(context, 'Failed to copy link: $e');
+        ToastUtils.showErrorToast(context, ref, 'Failed to copy link: $e');
       }
     } finally {
       if (mounted) {

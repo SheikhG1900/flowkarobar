@@ -149,6 +149,7 @@ class _CategoryCard extends ConsumerWidget {
       if (context.mounted) {
         ToastUtils.showSuccessToast(
           context,
+          ref,
           hasTransactions
               ? 'Category hidden successfully'
               : 'Category deleted successfully',
@@ -156,7 +157,7 @@ class _CategoryCard extends ConsumerWidget {
       }
     } catch (e) {
       if (context.mounted) {
-        ToastUtils.showErrorToast(context, 'Error: ${e.toString()}');
+        ToastUtils.showErrorToast(context, ref, 'Error: ${e.toString()}');
       }
     }
   }

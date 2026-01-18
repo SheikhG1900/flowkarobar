@@ -20,7 +20,8 @@ class EditReceivableScreen extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<EditReceivableScreen> createState() => _EditReceivableScreenState();
+  ConsumerState<EditReceivableScreen> createState() =>
+      _EditReceivableScreenState();
 }
 
 class _EditReceivableScreenState extends ConsumerState<EditReceivableScreen> {
@@ -51,11 +52,12 @@ class _EditReceivableScreenState extends ConsumerState<EditReceivableScreen> {
   Future<void> _loadReceivableData() async {
     try {
       final repository = ref.read(receivablesRepositoryProvider);
-      final receivable = await repository.getReceivableById(widget.receivableId);
+      final receivable =
+          await repository.getReceivableById(widget.receivableId);
 
       if (receivable == null) {
         if (mounted) {
-          ToastUtils.showErrorToast(context, 'Receivable not found');
+          ToastUtils.showErrorToast(context, ref, 'Receivable not found');
           Navigator.pop(context);
         }
         return;
@@ -83,7 +85,8 @@ class _EditReceivableScreenState extends ConsumerState<EditReceivableScreen> {
         setState(() {
           _isLoadingData = false;
         });
-        ToastUtils.showErrorToast(context, 'Error loading receivable: ${e.toString()}');
+        ToastUtils.showErrorToast(
+            context, ref, 'Error loading receivable: ${e.toString()}');
       }
     }
   }
@@ -101,12 +104,12 @@ class _EditReceivableScreenState extends ConsumerState<EditReceivableScreen> {
     }
 
     if (_selectedContactId == null) {
-      ToastUtils.showErrorToast(context, 'Please select a contact');
+      ToastUtils.showErrorToast(context, ref, 'Please select a contact');
       return;
     }
 
     if (_receivable == null) {
-      ToastUtils.showErrorToast(context, 'Receivable data not loaded');
+      ToastUtils.showErrorToast(context, ref, 'Receivable data not loaded');
       return;
     }
 
@@ -132,11 +135,12 @@ class _EditReceivableScreenState extends ConsumerState<EditReceivableScreen> {
 
       if (mounted) {
         Navigator.pop(context);
-        ToastUtils.showSuccessToast(context, 'Receivable updated successfully');
+        ToastUtils.showSuccessToast(
+            context, ref, 'Receivable updated successfully');
       }
     } catch (e) {
       if (mounted) {
-        ToastUtils.showErrorToast(context, 'Error: ${e.toString()}');
+        ToastUtils.showErrorToast(context, ref, 'Error: ${e.toString()}');
       }
     } finally {
       if (mounted) {
@@ -212,7 +216,8 @@ class _EditReceivableScreenState extends ConsumerState<EditReceivableScreen> {
                           Navigator.pop(context); // Close picker
                           final newContact = await Navigator.push<Contact>(
                             context,
-                            MaterialPageRoute(builder: (_) => const AddContactScreen()),
+                            MaterialPageRoute(
+                                builder: (_) => const AddContactScreen()),
                           );
                           if (newContact != null && mounted) {
                             setState(() {

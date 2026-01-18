@@ -76,7 +76,8 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
       // Refresh pagination for the new tab
       final overdueCountAsync = ref.read(overdueReceivablesCountProvider);
       final hasOverdueTab = (overdueCountAsync.value ?? 0) > 0;
-      final status = _getStatusForTabIndex(_tabController!.index, hasOverdueTab);
+      final status =
+          _getStatusForTabIndex(_tabController!.index, hasOverdueTab);
       ref.read(receivablesPaginatedProvider(status).notifier).refresh();
     }
   }
@@ -88,7 +89,8 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
       // Load more when near bottom
       final overdueCountAsync = ref.read(overdueReceivablesCountProvider);
       final hasOverdueTab = (overdueCountAsync.value ?? 0) > 0;
-      final status = _getStatusForTabIndex(_tabController?.index ?? 0, hasOverdueTab);
+      final status =
+          _getStatusForTabIndex(_tabController?.index ?? 0, hasOverdueTab);
       ref.read(receivablesPaginatedProvider(status).notifier).loadMore();
     }
   }
@@ -104,7 +106,7 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
-                color: isOverdue 
+                color: isOverdue
                     ? Colors.red.withValues(alpha: 0.2)
                     : AppColors.receivableColor.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(10),
@@ -200,7 +202,7 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
                     }
                     if (context.mounted) {
                       ToastUtils.showSuccessToast(
-                          context, 'Generated 100 dummy receivables');
+                          context, ref, 'Generated 100 dummy receivables');
                       // Refresh pagination
                       ref
                           .read(
@@ -213,7 +215,7 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
                     }
                   } catch (e) {
                     if (context.mounted) {
-                      ToastUtils.showErrorToast(context, 'Error: $e');
+                      ToastUtils.showErrorToast(context, ref, 'Error: $e');
                     }
                   }
                 }
@@ -238,10 +240,13 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
                 controller: _tabController,
                 indicatorColor: AppColors.receivableColor,
                 labelColor: AppColors.receivableColor,
-                unselectedLabelColor: Theme.of(context).colorScheme.onSurfaceVariant,
+                unselectedLabelColor:
+                    Theme.of(context).colorScheme.onSurfaceVariant,
                 tabs: [
                   _buildTabWithCount('Pending', pendingCount),
-                  if (hasOverdueTab) _buildTabWithCount('Overdue', overdueCount, isOverdue: true),
+                  if (hasOverdueTab)
+                    _buildTabWithCount('Overdue', overdueCount,
+                        isOverdue: true),
                   const Tab(text: 'Received'),
                 ],
               ),
@@ -443,7 +448,7 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
                                   .deleteReceivable(item.receivable.id);
                               if (context.mounted) {
                                 ToastUtils.showSuccessToast(
-                                    context, 'Receivable deleted');
+                                    context, ref, 'Receivable deleted');
                               }
                             }
                           : null,

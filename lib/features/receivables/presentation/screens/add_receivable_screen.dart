@@ -60,7 +60,7 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
     }
 
     if (_selectedContactId == null) {
-      ToastUtils.showErrorToast(context, 'Please select a contact');
+      ToastUtils.showErrorToast(context, ref, 'Please select a contact');
       return;
     }
 
@@ -99,7 +99,8 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
 
       if (mounted) {
         // Fetch full receivable with linked data
-        final receivableWithLinkedData = await repository.getReceivableWithLinkedDataById(receivableId);
+        final receivableWithLinkedData =
+            await repository.getReceivableWithLinkedDataById(receivableId);
 
         if (receivableWithLinkedData != null) {
           // Pop create page and navigate to details
@@ -107,19 +108,22 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => ReceivableDetailsDialog(item: receivableWithLinkedData),
+              builder: (context) =>
+                  ReceivableDetailsDialog(item: receivableWithLinkedData),
             ),
           );
-          ToastUtils.showSuccessToast(context, 'Receivable added successfully');
+          ToastUtils.showSuccessToast(
+              context, ref, 'Receivable added successfully');
         } else {
           // Fallback: just pop if details fetch fails
           Navigator.pop(context);
-          ToastUtils.showSuccessToast(context, 'Receivable added successfully');
+          ToastUtils.showSuccessToast(
+              context, ref, 'Receivable added successfully');
         }
       }
     } catch (e) {
       if (mounted) {
-        ToastUtils.showErrorToast(context, 'Error: ${e.toString()}');
+        ToastUtils.showErrorToast(context, ref, 'Error: ${e.toString()}');
       }
     } finally {
       if (mounted) {
@@ -195,7 +199,8 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
                           Navigator.pop(context); // Close picker
                           final newContact = await Navigator.push<Contact>(
                             context,
-                            MaterialPageRoute(builder: (_) => const AddContactScreen()),
+                            MaterialPageRoute(
+                                builder: (_) => const AddContactScreen()),
                           );
                           if (newContact != null && mounted) {
                             setState(() {

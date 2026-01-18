@@ -153,12 +153,13 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
         Navigator.pop(context);
         ToastUtils.showSuccessToast(
           context,
+          ref,
           'Schedule created successfully',
         );
       }
     } catch (e) {
       if (mounted) {
-        ToastUtils.showErrorToast(context, 'Error: ${e.toString()}');
+        ToastUtils.showErrorToast(context, ref, 'Error: ${e.toString()}');
       }
     } finally {
       if (mounted) {
@@ -189,6 +190,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     if (_createLinkedEntry && _selectedContact == null) {
       ToastUtils.showErrorToast(
         context,
+        ref,
         'Please select a contact for linked transaction',
       );
       return;
@@ -247,6 +249,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
           );
           ToastUtils.showSuccessToast(
             context,
+            ref,
             _createLinkedEntry
                 ? 'Transaction and linked entry added successfully'
                 : 'Transaction added successfully',
@@ -256,6 +259,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
           Navigator.pop(context);
           ToastUtils.showSuccessToast(
             context,
+            ref,
             _createLinkedEntry
                 ? 'Transaction and linked entry added successfully'
                 : 'Transaction added successfully',
@@ -264,7 +268,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ToastUtils.showErrorToast(context, 'Error: ${e.toString()}');
+        ToastUtils.showErrorToast(context, ref, 'Error: ${e.toString()}');
       }
     } finally {
       if (mounted) {

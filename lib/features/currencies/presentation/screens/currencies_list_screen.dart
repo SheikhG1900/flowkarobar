@@ -32,14 +32,17 @@ class CurrenciesListScreen extends ConsumerWidget {
                   Icon(
                     Icons.currency_exchange,
                     size: 80,
-                    color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.5),
+                    color: Theme.of(context)
+                        .colorScheme
+                        .outline
+                        .withValues(alpha: 0.5),
                   ),
                   const SizedBox(height: 16),
                   Text(
                     'No currencies',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
                   ),
                 ],
               ),
@@ -95,11 +98,12 @@ class _CurrencyCard extends ConsumerWidget {
     try {
       await repository.deleteCurrency(currency.id);
       if (context.mounted) {
-        ToastUtils.showSuccessToast(context, 'Currency deleted successfully');
+        ToastUtils.showSuccessToast(
+            context, ref, 'Currency deleted successfully');
       }
     } catch (e) {
       if (context.mounted) {
-        ToastUtils.showErrorToast(context, 'Error: ${e.toString()}');
+        ToastUtils.showErrorToast(context, ref, 'Error: ${e.toString()}');
       }
     }
   }
@@ -109,7 +113,8 @@ class _CurrencyCard extends ConsumerWidget {
     await notifier.setSelectedCurrency(currency.id);
 
     if (context.mounted) {
-      ToastUtils.showSuccessToast(context, 'Currency set to ${currency.name}');
+      ToastUtils.showSuccessToast(
+          context, ref, 'Currency set to ${currency.name}');
     }
   }
 
@@ -135,9 +140,11 @@ class _CurrencyCard extends ConsumerWidget {
             ),
           );
         },
-        onDelete: currency.isDefault ? null : () async {
-          await _deleteCurrency(context, ref);
-        },
+        onDelete: currency.isDefault
+            ? null
+            : () async {
+                await _deleteCurrency(context, ref);
+              },
         child: GlassCard(
           padding: const EdgeInsets.all(16),
           child: InkWell(
@@ -149,7 +156,9 @@ class _CurrencyCard extends ConsumerWidget {
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: color.withValues(alpha: theme.brightness == Brightness.dark ? 0.1 : 0.15),
+                    color: color.withValues(
+                        alpha:
+                            theme.brightness == Brightness.dark ? 0.1 : 0.15),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: color.withValues(alpha: 0.3),
@@ -195,7 +204,8 @@ class _CurrencyCard extends ConsumerWidget {
                 if (currency.isDefault)
                   Container(
                     margin: const EdgeInsets.only(left: 8),
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: theme.colorScheme.surfaceContainerHighest,
                       borderRadius: BorderRadius.circular(8),

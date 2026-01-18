@@ -1,26 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../theme/app_colors.dart';
+import '../../features/cashbooks/presentation/providers/cashbook_provider.dart';
 
 class ToastUtils {
-  static void showSuccessToast(BuildContext context, String message) {
+  static void showSuccessToast(
+      BuildContext context, WidgetRef ref, String message) {
+    final activeCashbook = ref.read(activeCashbookProvider);
+    final color = activeCashbook.color;
+
     _showToast(
       context,
       message,
       icon: Icons.check_circle_outline_rounded,
-      gradient: AppColors.successGradient,
-      textColor: Colors.white,
-    );
-  }
-
-  static void showErrorToast(BuildContext context, String message) {
-    _showToast(
-      context,
-      message,
-      icon: Icons.error_outline_rounded,
-      gradient: const LinearGradient(
+      gradient: LinearGradient(
         colors: [
-          Color.fromARGB(255, 113, 0, 0),
-          Color.fromARGB(255, 228, 66, 66)
+          color,
+          color.withValues(alpha: 0.8),
         ],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
@@ -29,7 +25,19 @@ class ToastUtils {
     );
   }
 
-  static void showInfoToast(BuildContext context, String message) {
+  static void showErrorToast(
+      BuildContext context, WidgetRef ref, String message) {
+    _showToast(
+      context,
+      message,
+      icon: Icons.error_outline_rounded,
+      gradient: AppColors.errorGradient,
+      textColor: Colors.white,
+    );
+  }
+
+  static void showInfoToast(
+      BuildContext context, WidgetRef ref, String message) {
     _showToast(
       context,
       message,
@@ -39,7 +47,8 @@ class ToastUtils {
     );
   }
 
-  static void showWarningToast(BuildContext context, String message) {
+  static void showWarningToast(
+      BuildContext context, WidgetRef ref, String message) {
     _showToast(
       context,
       message,
@@ -86,7 +95,7 @@ class ToastUtils {
             children: [
               TweenAnimationBuilder<double>(
                 tween: Tween(begin: 0.0, end: 1.0),
-                duration: const Duration(milliseconds: 5000),
+                duration: const Duration(milliseconds: 500),
                 curve: Curves.elasticOut,
                 builder: (context, value, child) {
                   return Transform.scale(

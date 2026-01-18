@@ -120,14 +120,14 @@ class _EditCategoryScreenState extends ConsumerState<EditCategoryScreen> {
       if (mounted) {
         if (success) {
           Navigator.pop(context, true); // Return true to indicate success
-          ToastUtils.showSuccessToast(context, 'Category updated successfully');
+          ToastUtils.showSuccessToast(context, ref, 'Category updated successfully');
         } else {
-          ToastUtils.showErrorToast(context, 'Failed to update category');
+          ToastUtils.showErrorToast(context, ref, 'Failed to update category');
         }
       }
     } catch (e, stackTrace) {
       if (mounted) {
-        ToastUtils.showErrorToast(context, 'Error: ${e.toString()}');
+        ToastUtils.showErrorToast(context, ref, 'Error: ${e.toString()}');
         // Print error for debugging
         debugPrint('Error updating category: $e');
         debugPrint('Stack trace: $stackTrace');
