@@ -52,7 +52,7 @@ class DeepLinkHandler {
     }
 
     final sharedData = _deepLinkService.decodeLink(uriString);
-    
+
     if (sharedData == null) {
       // Invalid link - show error
       _showErrorSnackBar('Invalid link format');
