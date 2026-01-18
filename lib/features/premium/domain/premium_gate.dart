@@ -8,6 +8,7 @@ import 'package:flowpaisa/features/premium/presentation/screens/premium_screen.d
 import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
 import 'package:flowpaisa/features/categories/presentation/providers/categories_provider.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
+import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
 
 // Providers for dependencies
 final usageTrackerRepositoryProvider = Provider<UsageTrackerRepository>((ref) {
@@ -112,6 +113,21 @@ final scheduleLimitsProvider =
   );
 });
 
+final cashbookLimitsProvider = Provider.autoDispose<TotalLimits>((ref) {
+  final isPremium = ref.watch(premiumProvider).isPremium;
+  if (isPremium) return TotalLimits.unlimited();
+
+  final cashbooks = ref.watch(cashbooksProvider);
+  final used = cashbooks.length;
+
+  return TotalLimits(
+    remaining: max<int>(0, PremiumGate._cashbookTotalLimit - used),
+    canAdd: used < PremiumGate._cashbookTotalLimit,
+    total: PremiumGate._cashbookTotalLimit,
+    used: used,
+  );
+});
+
 class PremiumGate {
   // Limits Configuration
   static const int _transactionDailyLimit = 10;
@@ -126,6 +142,7 @@ class PremiumGate {
   static const int _contactTotalLimit = 10;
   static const int _categoryTotalLimit = 5;
   static const int _scheduleTotalLimit = 2;
+  static const int _cashbookTotalLimit = 2; // 1 default + 1 extra
 
   // Helper to check premium status (using read for callbacks)
   static bool isPremium(WidgetRef ref) {
@@ -221,6 +238,22 @@ class PremiumGate {
       remaining: max<int>(0, _scheduleTotalLimit - used),
       canAdd: used < _scheduleTotalLimit,
       total: _scheduleTotalLimit,
+      used: used,
+    );
+  }
+
+  static TotalLimits getCashbookLimits(WidgetRef ref) {
+    if (isPremium(ref)) {
+      return TotalLimits.unlimited();
+    }
+
+    final cashbooks = ref.read(cashbooksProvider);
+    final used = cashbooks.length;
+
+    return TotalLimits(
+      remaining: max<int>(0, _cashbookTotalLimit - used),
+      canAdd: used < _cashbookTotalLimit,
+      total: _cashbookTotalLimit,
       used: used,
     );
   }

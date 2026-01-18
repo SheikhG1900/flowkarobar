@@ -34,6 +34,8 @@ import 'package:flowpaisa/core/utils/deep_link_handler.dart';
 import 'package:intl/intl.dart';
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/shared/widgets/premium_badge.dart';
+import 'package:flowpaisa/features/cashbooks/presentation/screens/cashbooks_screen.dart';
+import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
 
 import 'package:flowpaisa/shared/providers/shared_preferences_provider.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
@@ -346,6 +348,9 @@ class _DashboardTab extends ConsumerWidget {
     final isPremium = PremiumGate.isPremium(ref);
     final currencyAsync = ref.watch(currentCurrencyProvider);
     final currency = currencyAsync.value;
+    final activeCashbook = ref.watch(activeCashbookProvider);
+    final activeColor = activeCashbook.color;
+    final activeIcon = activeCashbook.icon;
 
     // Watch dashboard statistics and filter
     final dashboardStatsAsync = ref.watch(dashboardStatsProvider);
@@ -363,7 +368,7 @@ class _DashboardTab extends ConsumerWidget {
         slivers: [
           // App Bar with gradient
           SliverAppBar(
-            expandedHeight: 400, // Reduced height for more compact header
+            expandedHeight: 420, // Reduced height for more compact header
             floating: false,
             pinned: true,
             stretch: true,
@@ -377,10 +382,17 @@ class _DashboardTab extends ConsumerWidget {
                   // Gradient Background with Beveled Corner (bottom-right only)
                   Container(
                     decoration: ShapeDecoration(
-                      gradient: AppColors.primaryGradient.withOpacity(0.3),
+                      gradient: LinearGradient(
+                        colors: [
+                          activeColor.withValues(alpha: 0.4),
+                          activeColor.withValues(alpha: 0.1),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
                       shape: BeveledRectangleBorder(
                         side: BorderSide(
-                            color: AppColors.brightCyan.withValues(alpha: 0.3),
+                            color: activeColor.withValues(alpha: 0.3),
                             width: 1),
                         borderRadius: BorderRadius.only(
                           bottomRight: Radius.circular(40),
@@ -420,53 +432,97 @@ class _DashboardTab extends ConsumerWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         // App Title
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(10),
-                              decoration: BoxDecoration(
-                                color: isDark
-                                    ? Colors.black.withValues(alpha: 0.3)
-                                    : AppColors.brightCyan
-                                        .withValues(alpha: 0.1),
-                                borderRadius: const BorderRadius.only(
-                                  topLeft: Radius.circular(14),
-                                  bottomRight: Radius.circular(14),
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black
-                                        .withValues(alpha: 0.05 / 1.0),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 2),
+                        InkWell(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const CashbooksScreen(),
+                              ),
+                            );
+                          },
+                          borderRadius: BorderRadius.circular(12),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 4, horizontal: 2),
+                            child: Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: activeColor.withValues(
+                                        alpha: isDark ? 0.3 : 0.1),
+                                    borderRadius: const BorderRadius.only(
+                                      topLeft: Radius.circular(14),
+                                      bottomRight: Radius.circular(14),
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black
+                                            .withValues(alpha: 0.05 / 1.0),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
                                   ),
+                                  child: Icon(activeIcon,
+                                      color:
+                                          isDark ? Colors.white : activeColor,
+                                      size: 24),
+                                ),
+                                const SizedBox(width: 12),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'FlowPaisa',
+                                      style: TextStyle(
+                                        color: isDark
+                                            ? Colors.white
+                                            : AppColors.lightText,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 20,
+                                        letterSpacing: 0.5,
+                                        shadows: isDark
+                                            ? AppTheme.textShadow(
+                                                blurMultiplier: 2.0)
+                                            : null,
+                                      ),
+                                    ),
+                                    Row(
+                                      children: [
+                                        Icon(
+                                          activeIcon,
+                                          size: 14,
+                                          color: activeColor,
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          activeCashbook.name,
+                                          style: TextStyle(
+                                            color: activeColor,
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(width: 8),
+                                Icon(
+                                  Icons.keyboard_arrow_down,
+                                  size: 16,
+                                  color:
+                                      isDark ? Colors.white54 : Colors.black54,
+                                ),
+                                if (isPremium) ...[
+                                  const SizedBox(width: 8),
+                                  const PremiumBadge(isSmall: true),
                                 ],
-                              ),
-                              child: Icon(Icons.water_drop,
-                                  color: isDark
-                                      ? Colors.white
-                                      : AppColors.brightCyan,
-                                  size: 24),
+                              ],
                             ),
-                            const SizedBox(width: 12),
-                            Text(
-                              'FlowPaisa',
-                              style: TextStyle(
-                                color:
-                                    isDark ? Colors.white : AppColors.lightText,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 24,
-                                letterSpacing: 0.5,
-                                shadows: isDark
-                                    ? AppTheme.textShadow(blurMultiplier: 2.0)
-                                    : null,
-                              ),
-                            ),
-                            if (isPremium) ...[
-                              const SizedBox(width: 8),
-                              const PremiumBadge(isSmall: true),
-                            ],
-                          ],
+                          ),
                         ),
                         const SizedBox(height: 20),
 
@@ -703,20 +759,21 @@ class _DashboardTab extends ConsumerWidget {
 
   Widget _buildFilterChip(BuildContext context, WidgetRef ref,
       DashboardFilter currentFilter, bool isDark) {
+    final activeCashbook = ref.watch(activeCashbookProvider);
     final isMonthly = currentFilter == DashboardFilter.monthly;
     final label = isMonthly ? DateFormat.MMM().format(DateTime.now()) : 'All';
     final icon = isMonthly ? Icons.calendar_today : Icons.all_inclusive;
 
     return ActionChip(
-      color: WidgetStateProperty.all(AppColors.brightCyan.withAlpha(50)),
+      color: WidgetStateProperty.all(activeCashbook.color.withAlpha(50)),
       label: Row(
         children: [
-          Icon(icon, size: 16, color: AppColors.brightCyan),
+          Icon(icon, size: 16, color: activeCashbook.color),
           const SizedBox(width: 4),
           Text(
             label,
             style: TextStyle(
-              color: AppColors.brightCyan,
+              color: activeCashbook.color,
               fontSize: 12,
               fontWeight: FontWeight.bold,
             ),
@@ -728,11 +785,9 @@ class _DashboardTab extends ConsumerWidget {
             isMonthly ? DashboardFilter.overall : DashboardFilter.monthly;
         ref.read(dashboardFilterProvider.notifier).setFilter(nextFilter);
       },
-      backgroundColor: isDark
-          ? Colors.white.withValues(alpha: 0.1)
-          : AppColors.brightCyan.withValues(alpha: 0.1),
+      backgroundColor: activeCashbook.color.withValues(alpha: 0.1),
       side: BorderSide(
-        color: AppColors.brightCyan,
+        color: activeCashbook.color,
         width: 1,
       ),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -1171,7 +1226,6 @@ class _QuickActionButton extends StatelessWidget {
   final IconData icon;
   final String label;
   final Gradient gradient;
-  final double fontSizeMultiplier;
   final VoidCallback onTap;
   final bool showLock;
 
@@ -1180,7 +1234,6 @@ class _QuickActionButton extends StatelessWidget {
     required this.label,
     required this.gradient,
     required this.onTap,
-    this.fontSizeMultiplier = 1.0,
     this.showLock = false,
   });
 
@@ -1228,9 +1281,9 @@ class _QuickActionButton extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               label,
-              style: TextStyle(
+              style: const TextStyle(
                 fontWeight: FontWeight.w700,
-                fontSize: 14 * fontSizeMultiplier,
+                fontSize: 14,
                 letterSpacing: 0.5,
                 shadows: [
                   Shadow(
@@ -1262,6 +1315,20 @@ class _SettingsTab extends ConsumerWidget {
       ),
       body: ListView(
         children: [
+          ListTile(
+            leading: const Icon(Icons.account_balance_wallet_outlined),
+            title: const Text('My Cashbooks'),
+            subtitle: const Text('Manage multiple cashbooks'),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const CashbooksScreen(),
+                ),
+              );
+            },
+          ),
           ListTile(
             leading: const Icon(Icons.people_outline),
             title: const Text('Contacts'),

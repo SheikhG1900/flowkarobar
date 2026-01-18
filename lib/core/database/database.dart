@@ -219,7 +219,8 @@ class TransactionSchedules extends Table {
   TransactionSchedules,
 ])
 class AppDatabase extends _$AppDatabase {
-  AppDatabase() : super(_openConnection());
+  AppDatabase({String fileName = 'flowpaisa.db'})
+      : super(_openConnection(fileName));
 
   @override
   int get schemaVersion => 8;
@@ -377,10 +378,10 @@ class AppDatabase extends _$AppDatabase {
   }
 }
 
-LazyDatabase _openConnection() {
+LazyDatabase _openConnection(String fileName) {
   return LazyDatabase(() async {
     final dbFolder = await getApplicationDocumentsDirectory();
-    final file = File(p.join(dbFolder.path, 'flowpaisa.db'));
+    final file = File(p.join(dbFolder.path, fileName));
 
     // Setup sqlite3 for Android
     if (Platform.isAndroid) {

@@ -1,17 +1,18 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/database/database.dart';
+import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
 
-// Database provider - single instance
+// Database provider - reactive to active cashbook
 final databaseProvider = Provider<AppDatabase>((ref) {
-  final database = AppDatabase();
+  // Watch active cashbook to recreate database on switch
+  final activeCashbook = ref.watch(activeCashbookProvider);
   
-  // Dispose when provider is destroyed
+  final database = AppDatabase(fileName: activeCashbook.dbPath);
+  
+  // Dispose when provider is destroyed or active cashbook changes
   ref.onDispose(() {
     database.close();
   });
   
   return database;
 });
-
-
-

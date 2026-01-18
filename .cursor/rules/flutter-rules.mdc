@@ -4,3 +4,5 @@ alwaysApply: true
 # Overview
 
 Always use Flutter 3.x syntax, prefer functional widgets
+
+We have flutter theme alway consider it before explicitly define default colors in widgets.

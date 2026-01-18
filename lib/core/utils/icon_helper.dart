@@ -666,6 +666,9 @@ class IconHelper {
       return null;
     }
 
+    // Handle legacy icon names
+    if (codePointString == 'water_drop') return Symbols.water_drop;
+
     final codePoint = int.tryParse(codePointString);
     if (codePoint != null) {
       return allIconsMap[codePoint];

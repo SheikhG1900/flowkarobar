@@ -10,6 +10,11 @@ import 'package:flowpaisa/features/contacts/data/contacts_repository.dart';
 import 'package:flowpaisa/shared/providers/database_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:material_symbols_icons/symbols.dart';
+import 'package:flowpaisa/features/cashbooks/domain/models/cashbook.dart';
+import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
+
 /// Background task callback for workmanager
 /// This function will be called by workmanager to generate transactions from schedules
 @pragma('vm:entry-point')
@@ -24,33 +29,59 @@ void scheduleTransactionTask() {
 /// This should be called from the background task
 Future<void> processSchedules() async {
   try {
-    // Initialize database
-    final database = AppDatabase();
-    final schedulesRepository = SchedulesRepository(database);
-    final scheduleService = ScheduleService(
-      database: database,
-      schedulesRepository: schedulesRepository,
-      transactionsRepository: TransactionsRepository(database),
-      transactionService: TransactionService(
-        database: database,
-        transactionsRepository: TransactionsRepository(database),
-        receivablesRepository: ReceivablesRepository(database),
-        payablesRepository: PayablesRepository(database),
-        categoriesRepository: CategoriesRepository(database),
-        contactsRepository: ContactsRepository(database),
-      ),
-    );
+    final prefs = await SharedPreferences.getInstance();
+    final jsonList = prefs.getStringList('cashbooks_list');
 
-    // Get all active schedules
-    final activeSchedules = await schedulesRepository.getActiveSchedules();
+    List<Cashbook> cashbooks = [];
+    if (jsonList == null || jsonList.isEmpty) {
+      cashbooks = [
+        Cashbook(
+          id: 'default',
+          name: 'Main Cashbook',
+          colorCode: '#2196F3',
+          iconCodePoint: Symbols.water_drop.codePoint.toString(),
+          dbPath: 'flowpaisa.db',
+          createdAt: DateTime.now(),
+        )
+      ];
+    } else {
+      cashbooks = jsonList.map((json) => Cashbook.fromJson(json)).toList();
+    }
 
-    // Process each schedule
-    for (final schedule in activeSchedules) {
+    for (final cashbook in cashbooks) {
       try {
-        await scheduleService.generateTransactionsFromSchedule(schedule.id);
+        final database = AppDatabase(fileName: cashbook.dbPath);
+        final schedulesRepository = SchedulesRepository(database);
+        final scheduleService = ScheduleService(
+          database: database,
+          schedulesRepository: schedulesRepository,
+          transactionsRepository: TransactionsRepository(database),
+          transactionService: TransactionService(
+            database: database,
+            transactionsRepository: TransactionsRepository(database),
+            receivablesRepository: ReceivablesRepository(database),
+            payablesRepository: PayablesRepository(database),
+            categoriesRepository: CategoriesRepository(database),
+            contactsRepository: ContactsRepository(database),
+          ),
+        );
+
+        // Get all active schedules
+        final activeSchedules = await schedulesRepository.getActiveSchedules();
+
+        // Process each schedule
+        for (final schedule in activeSchedules) {
+          try {
+            await scheduleService.generateTransactionsFromSchedule(schedule.id);
+          } catch (e) {
+            print(
+                'Error processing schedule ${schedule.id} in ${cashbook.name}: $e');
+          }
+        }
+
+        await database.close();
       } catch (e) {
-        // Log error but continue with other schedules
-        print('Error processing schedule ${schedule.id}: $e');
+        print('Error processing cashbook ${cashbook.name}: $e');
       }
     }
   } catch (e) {
@@ -62,21 +93,44 @@ Future<void> processSchedules() async {
 /// This is used when the app is in foreground
 Future<void> processSchedulesFromContext(WidgetRef ref) async {
   try {
-    final scheduleService = ref.read(scheduleServiceProvider);
+    final cashbooks = ref.read(cashbooksProvider);
 
-    // Get all active schedules using the service's repository
-    final schedulesRepository = SchedulesRepository(
-      ref.read(databaseProvider),
-    );
-    final activeSchedules = await schedulesRepository.getActiveSchedules();
+    for (final cashbook in cashbooks) {
+      // For each cashbook, we need a separate database instance and services
+      // except if it's the active one, we might want to use the providers
+      final isActive = cashbook.id == ref.read(activeCashbookIdProvider);
 
-    // Process each schedule
-    for (final schedule in activeSchedules) {
-      try {
-        await scheduleService.generateTransactionsFromSchedule(schedule.id);
-      } catch (e) {
-        // Log error but continue with other schedules
-        print('Error processing schedule ${schedule.id}: $e');
+      final database = isActive
+          ? ref.read(databaseProvider)
+          : AppDatabase(fileName: cashbook.dbPath);
+      final schedulesRepository = SchedulesRepository(database);
+      final scheduleService = ScheduleService(
+        database: database,
+        schedulesRepository: schedulesRepository,
+        transactionsRepository: TransactionsRepository(database),
+        transactionService: TransactionService(
+          database: database,
+          transactionsRepository: TransactionsRepository(database),
+          receivablesRepository: ReceivablesRepository(database),
+          payablesRepository: PayablesRepository(database),
+          categoriesRepository: CategoriesRepository(database),
+          contactsRepository: ContactsRepository(database),
+        ),
+      );
+
+      final activeSchedules = await schedulesRepository.getActiveSchedules();
+
+      for (final schedule in activeSchedules) {
+        try {
+          await scheduleService.generateTransactionsFromSchedule(schedule.id);
+        } catch (e) {
+          print(
+              'Error processing schedule ${schedule.id} in ${cashbook.name}: $e');
+        }
+      }
+
+      if (!isActive) {
+        await database.close();
       }
     }
   } catch (e) {
