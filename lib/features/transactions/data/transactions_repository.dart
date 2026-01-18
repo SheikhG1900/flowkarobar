@@ -59,18 +59,40 @@ class TransactionsRepository {
     DateTime? start,
     String? excludePaidRelationship,
   }) {
-    final query = _database.selectOnly(_database.transactions)
-      ..addColumns([_database.transactions.amount.sum()])
-      ..where(_database.transactions.type.equals(type));
+    final query = _database.selectOnly(_database.transactions);
+    query.addColumns([_database.transactions.amount.sum()]);
+    query.where(_database.transactions.type.equals(type));
 
     if (start != null) {
       query.where(_database.transactions.date.isBiggerOrEqualValue(start));
     }
 
     if (excludePaidRelationship != null) {
-      query.where(_database.transactions.paidRelationship
-          .equals(excludePaidRelationship)
-          .not());
+      if (excludePaidRelationship == 'WILL_RECEIVE') {
+        query.join([
+          leftOuterJoin(
+            _database.receivables,
+            _database.receivables.id
+                .equalsExp(_database.transactions.linkedReceivableId),
+          ),
+        ]);
+        query.where(_database.transactions.paidRelationship.isNull() |
+            _database.transactions.paidRelationship
+                .equals('WILL_RECEIVE')
+                .not() |
+            _database.receivables.status.equals('RECEIVED'));
+      } else if (excludePaidRelationship == 'PAID_BY') {
+        query.join([
+          leftOuterJoin(
+            _database.payables,
+            _database.payables.id
+                .equalsExp(_database.transactions.linkedPayableId),
+          ),
+        ]);
+        query.where(_database.transactions.paidRelationship.isNull() |
+            _database.transactions.paidRelationship.equals('PAID_BY').not() |
+            _database.payables.status.equals('PAID'));
+      }
     }
 
     return query
@@ -124,7 +146,8 @@ class TransactionsRepository {
       ),
       leftOuterJoin(
         _database.receivables,
-        _database.receivables.id.equalsExp(_database.transactions.linkedReceivableId),
+        _database.receivables.id
+            .equalsExp(_database.transactions.linkedReceivableId),
       ),
     ]);
 
@@ -271,7 +294,8 @@ class TransactionsRepository {
       ),
       leftOuterJoin(
         _database.receivables,
-        _database.receivables.id.equalsExp(_database.transactions.linkedReceivableId),
+        _database.receivables.id
+            .equalsExp(_database.transactions.linkedReceivableId),
       ),
     ])
       ..orderBy([OrderingTerm.desc(_database.transactions.date)]);
@@ -309,7 +333,8 @@ class TransactionsRepository {
       ),
       leftOuterJoin(
         _database.receivables,
-        _database.receivables.id.equalsExp(_database.transactions.linkedReceivableId),
+        _database.receivables.id
+            .equalsExp(_database.transactions.linkedReceivableId),
       ),
     ]);
 
@@ -330,7 +355,8 @@ class TransactionsRepository {
   }
 
   // Update transaction (with companion for partial updates)
-  Future<int> updateTransactionWithCompanion(int id, TransactionsCompanion companion) {
+  Future<int> updateTransactionWithCompanion(
+      int id, TransactionsCompanion companion) {
     return (_database.update(_database.transactions)
           ..where((t) => t.id.equals(id)))
         .write(companion);
@@ -356,7 +382,8 @@ class TransactionsRepository {
       ),
       leftOuterJoin(
         _database.receivables,
-        _database.receivables.id.equalsExp(_database.transactions.linkedReceivableId),
+        _database.receivables.id
+            .equalsExp(_database.transactions.linkedReceivableId),
       ),
     ])
       ..orderBy([OrderingTerm.desc(_database.transactions.date)])
@@ -395,7 +422,8 @@ class TransactionsRepository {
       ),
       leftOuterJoin(
         _database.receivables,
-        _database.receivables.id.equalsExp(_database.transactions.linkedReceivableId),
+        _database.receivables.id
+            .equalsExp(_database.transactions.linkedReceivableId),
       ),
     ])
       ..orderBy([OrderingTerm.desc(_database.transactions.date)])
@@ -424,6 +452,3 @@ class TransactionWithCategory {
     this.category,
   });
 }
-
-
-

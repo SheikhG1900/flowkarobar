@@ -32,20 +32,23 @@ final allTransactionsProvider = StreamProvider<List<Transaction>>((ref) {
 });
 
 // Watch transactions with category details
-final transactionsWithCategoryProvider = StreamProvider<List<TransactionWithCategory>>((ref) {
+final transactionsWithCategoryProvider =
+    StreamProvider<List<TransactionWithCategory>>((ref) {
   final repository = ref.watch(transactionsRepositoryProvider);
   return repository.watchTransactionsWithCategory();
 });
 
 // Watch transactions with ALL details (category + contact)
 // Uses efficient JOINs to avoid N+1 query problems
-final transactionsWithDetailsProvider = StreamProvider<List<TransactionWithDetails>>((ref) {
+final transactionsWithDetailsProvider =
+    StreamProvider<List<TransactionWithDetails>>((ref) {
   final repository = ref.watch(transactionsRepositoryProvider);
   return repository.watchTransactionsWithDetails();
 });
 
 // Watch transactions by date range
-final transactionsByDateRangeProvider = StreamProvider.family<List<Transaction>, DateRange>(
+final transactionsByDateRangeProvider =
+    StreamProvider.family<List<Transaction>, DateRange>(
   (ref, dateRange) {
     final repository = ref.watch(transactionsRepositoryProvider);
     return repository.watchTransactionsByDateRange(
@@ -56,7 +59,8 @@ final transactionsByDateRangeProvider = StreamProvider.family<List<Transaction>,
 );
 
 // Watch transactions by type
-final transactionsByTypeProvider = StreamProvider.family<List<Transaction>, String>(
+final transactionsByTypeProvider =
+    StreamProvider.family<List<Transaction>, String>(
   (ref, type) {
     final repository = ref.watch(transactionsRepositoryProvider);
     return repository.watchTransactionsByType(type);
@@ -83,7 +87,8 @@ class DateRange {
 }
 
 // Paginated transactions provider
-class TransactionsPaginatedNotifier extends Notifier<PaginatedState<TransactionWithDetails>> {
+class TransactionsPaginatedNotifier
+    extends Notifier<PaginatedState<TransactionWithDetails>> {
   StreamSubscription<List<TransactionWithDetails>>? _subscription;
   late TransactionsRepository _repository;
 
@@ -92,6 +97,11 @@ class TransactionsPaginatedNotifier extends Notifier<PaginatedState<TransactionW
     _repository = ref.watch(transactionsRepositoryProvider);
     // Load initial data asynchronously
     Future.microtask(() => _loadInitial());
+
+    ref.onDispose(() {
+      _subscription?.cancel();
+    });
+
     return PaginatedState<TransactionWithDetails>(
       items: [],
       isLoading: true,
@@ -100,23 +110,27 @@ class TransactionsPaginatedNotifier extends Notifier<PaginatedState<TransactionW
 
   Future<void> _loadInitial() async {
     state = state.copyWith(isLoading: true, error: null);
-    
+
     try {
       // Load first page
-      final initialItems = await _repository.getTransactionsWithDetailsPaginated(
+      final initialItems =
+          await _repository.getTransactionsWithDetailsPaginated(
         limit: state.pageSize,
         offset: 0,
       );
 
-      state = state.replaceItems(initialItems, hasMore: initialItems.length == state.pageSize);
+      state = state.replaceItems(initialItems,
+          hasMore: initialItems.length == state.pageSize);
 
       // Watch for real-time updates to loaded items
       _subscription?.cancel();
       _subscription = _repository
           .watchTransactionsWithDetailsPaginated(
-            limit: initialItems.length,
-            offset: 0,
-          )
+        limit: initialItems.length > state.pageSize
+            ? initialItems.length
+            : state.pageSize,
+        offset: 0,
+      )
           .listen((updatedItems) {
         if (!state.isLoadingMore) {
           state = state.copyWith(items: updatedItems);
@@ -156,9 +170,11 @@ class TransactionsPaginatedNotifier extends Notifier<PaginatedState<TransactionW
         _subscription?.cancel();
         _subscription = _repository
             .watchTransactionsWithDetailsPaginated(
-              limit: state.items.length,
-              offset: 0,
-            )
+          limit: state.items.length > state.pageSize
+              ? state.items.length
+              : state.pageSize,
+          offset: 0,
+        )
             .listen((updatedItems) {
           if (!state.isLoadingMore) {
             state = state.copyWith(items: updatedItems);
@@ -179,8 +195,7 @@ class TransactionsPaginatedNotifier extends Notifier<PaginatedState<TransactionW
   }
 }
 
-final transactionsPaginatedProvider =
-    NotifierProvider<TransactionsPaginatedNotifier, PaginatedState<TransactionWithDetails>>(() {
+final transactionsPaginatedProvider = NotifierProvider<
+    TransactionsPaginatedNotifier, PaginatedState<TransactionWithDetails>>(() {
   return TransactionsPaginatedNotifier();
 });
-

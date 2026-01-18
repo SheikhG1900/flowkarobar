@@ -64,7 +64,7 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
     _selectedContact = widget.contact;
     _selectedContactId = widget.transaction.contactId;
     _paidRelationship = widget.transaction.paidRelationship;
-    
+
     // Fetch due date from linked payable/receivable if exists
     _loadLinkedEntryDueDate();
   }
@@ -75,14 +75,16 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
     final receivablesRepository = ReceivablesRepository(database);
 
     if (widget.transaction.linkedPayableId != null) {
-      final payable = await payablesRepository.getPayableById(widget.transaction.linkedPayableId!);
+      final payable = await payablesRepository
+          .getPayableById(widget.transaction.linkedPayableId!);
       if (mounted && payable != null) {
         setState(() {
           _dueDate = payable.dueDate;
         });
       }
     } else if (widget.transaction.linkedReceivableId != null) {
-      final receivable = await receivablesRepository.getReceivableById(widget.transaction.linkedReceivableId!);
+      final receivable = await receivablesRepository
+          .getReceivableById(widget.transaction.linkedReceivableId!);
       if (mounted && receivable != null) {
         setState(() {
           _dueDate = receivable.dueDate;
@@ -1021,20 +1023,23 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
               Stack(
                 alignment: Alignment.topRight,
                 children: [
-                  OutlinedButton.icon(
-                    onPressed: (_isLoading ||
-                            (scheduleLimitsAsync.asData?.value != null &&
-                                !scheduleLimitsAsync.asData!.value.canAdd))
-                        ? null
-                        : _scheduleTransaction,
-                    icon: const Icon(Icons.schedule),
-                    label: const Text('Schedule'),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      side: BorderSide(
-                        color: isExpense
-                            ? AppColors.expenseColor
-                            : AppColors.incomeColor,
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: (_isLoading ||
+                              (scheduleLimitsAsync.asData?.value != null &&
+                                  !scheduleLimitsAsync.asData!.value.canAdd))
+                          ? null
+                          : _scheduleTransaction,
+                      icon: const Icon(Icons.schedule),
+                      label: const Text('Schedule'),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        side: BorderSide(
+                          color: isExpense
+                              ? AppColors.expenseColor
+                              : AppColors.incomeColor,
+                        ),
                       ),
                     ),
                   ),

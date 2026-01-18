@@ -195,14 +195,16 @@ class ScheduleService {
         case 'WEEKLY':
           if (schedule.selectedDaysOfWeek != null) {
             final daysOfWeek = _parseDaysOfWeek(schedule.selectedDaysOfWeek!);
-            final weekday = current.weekday % 7; // Convert to 0=Sunday, 6=Saturday
+            final weekday =
+                current.weekday % 7; // Convert to 0=Sunday, 6=Saturday
             shouldGenerate = daysOfWeek.contains(weekday);
           }
           break;
 
         case 'MONTHLY':
           if (schedule.selectedDaysOfMonth != null) {
-            final daysOfMonth = _parseDaysOfMonth(schedule.selectedDaysOfMonth!);
+            final daysOfMonth =
+                _parseDaysOfMonth(schedule.selectedDaysOfMonth!);
             final dayOfMonth = current.day;
             shouldGenerate = daysOfMonth.contains(dayOfMonth);
           }
@@ -293,14 +295,23 @@ class ScheduleService {
       TransactionSchedulesCompanion(
         amount: amount != null ? Value(amount) : const Value.absent(),
         type: type != null ? Value(type) : const Value.absent(),
-        description: description != null ? Value(description) : const Value.absent(),
-        categoryId: categoryId != null ? Value(categoryId) : const Value.absent(),
+        description:
+            description != null ? Value(description) : const Value.absent(),
+        categoryId:
+            categoryId != null ? Value(categoryId) : const Value.absent(),
         contactId: contactId != null ? Value(contactId) : const Value.absent(),
-        paidRelationship: paidRelationship != null ? Value(paidRelationship) : const Value.absent(),
+        paidRelationship: paidRelationship != null
+            ? Value(paidRelationship)
+            : const Value.absent(),
         dueDate: dueDate != null ? Value(dueDate) : const Value.absent(),
-        scheduleType: scheduleType != null ? Value(scheduleType) : const Value.absent(),
-        selectedDaysOfWeek: daysOfWeekJson != null ? Value(daysOfWeekJson) : const Value.absent(),
-        selectedDaysOfMonth: daysOfMonthJson != null ? Value(daysOfMonthJson) : const Value.absent(),
+        scheduleType:
+            scheduleType != null ? Value(scheduleType) : const Value.absent(),
+        selectedDaysOfWeek: daysOfWeekJson != null
+            ? Value(daysOfWeekJson)
+            : const Value.absent(),
+        selectedDaysOfMonth: daysOfMonthJson != null
+            ? Value(daysOfMonthJson)
+            : const Value.absent(),
         startDate: startDate != null ? Value(startDate) : const Value.absent(),
         endDate: endDate != null ? Value(endDate) : const Value.absent(),
         updatedAt: Value(DateTime.now()),

@@ -378,7 +378,10 @@ class _DashboardTab extends ConsumerWidget {
                   Container(
                     decoration: ShapeDecoration(
                       gradient: AppColors.primaryGradient.withOpacity(0.3),
-                      shape: const BeveledRectangleBorder(
+                      shape: BeveledRectangleBorder(
+                        side: BorderSide(
+                            color: AppColors.brightCyan.withValues(alpha: 0.3),
+                            width: 1),
                         borderRadius: BorderRadius.only(
                           bottomRight: Radius.circular(40),
                         ),
@@ -940,8 +943,7 @@ class _DashboardTab extends ConsumerWidget {
                   ),
                   _QuickActionButton(
                     icon: Symbols.account_balance_wallet,
-                    label: 'Receivables',
-                    fontSizeMultiplier: 0.82,
+                    label: 'Receive',
                     gradient: AppColors.receivablesSectionGradient,
                     onTap: () {
                       Navigator.push(
@@ -1187,29 +1189,16 @@ class _QuickActionButton extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 10),
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 0),
         decoration: BoxDecoration(
-          gradient: gradient,
+          gradient: gradient.withOpacity(0.2),
+          border: Border.all(
+              color: gradient.colors.first.withValues(alpha: 0.5), width: 1),
           borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(20),
             bottomRight: Radius.circular(20),
-          ), // Diagonal beveled
-          boxShadow: [
-            // Bottom shadow for depth
-            BoxShadow(
-              color: gradient.colors.first.withValues(alpha: 0.4 / 1.0),
-              blurRadius: 16,
-              offset: const Offset(0, 8),
-              spreadRadius: 0,
-            ),
-            // Inner highlight for 3D effect
-            BoxShadow(
-              color: Colors.white.withValues(alpha: 0.1 / 1.0),
-              blurRadius: 1,
-              offset: const Offset(0, -1),
-              spreadRadius: 0,
-            ),
-          ],
+          ),
+          // Diagonal beveled
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -1220,17 +1209,13 @@ class _QuickActionButton extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2 / 1.0),
+                    border: Border.all(
+                        color: gradient.colors.first.withValues(alpha: 0.8),
+                        width: 1),
+                    color: gradient.colors.first.withValues(alpha: 0.2 / 1.0),
                     shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.1 / 1.0),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
                   ),
-                  child: Icon(icon, color: Colors.white, size: 24),
+                  child: Icon(icon, size: 24),
                 ),
                 if (showLock)
                   const Positioned(
@@ -1244,7 +1229,6 @@ class _QuickActionButton extends StatelessWidget {
             Text(
               label,
               style: TextStyle(
-                color: Colors.white,
                 fontWeight: FontWeight.w700,
                 fontSize: 14 * fontSizeMultiplier,
                 letterSpacing: 0.5,

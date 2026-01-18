@@ -1319,20 +1319,23 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
               Stack(
                 alignment: Alignment.topRight,
                 children: [
-                  OutlinedButton.icon(
-                    onPressed: (_isLoading ||
-                            (scheduleLimitsAsync.asData?.value != null &&
-                                !scheduleLimitsAsync.asData!.value.canAdd))
-                        ? null
-                        : _scheduleTransaction,
-                    icon: const Icon(Icons.schedule),
-                    label: const Text('Schedule'),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      side: BorderSide(
-                        color: isExpense
-                            ? AppColors.expenseColor
-                            : AppColors.incomeColor,
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: (_isLoading ||
+                              (scheduleLimitsAsync.asData?.value != null &&
+                                  !scheduleLimitsAsync.asData!.value.canAdd))
+                          ? null
+                          : _scheduleTransaction,
+                      icon: const Icon(Icons.schedule),
+                      label: const Text('Schedule'),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        side: BorderSide(
+                          color: isExpense
+                              ? AppColors.expenseColor
+                              : AppColors.incomeColor,
+                        ),
                       ),
                     ),
                   ),

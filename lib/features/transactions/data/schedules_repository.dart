@@ -23,10 +23,11 @@ class SchedulesRepository {
           ..where((s) => s.isPaused.equals(false))
           ..where((s) {
             // Check if startDate is null or before/equal to now
-            final startCheck = s.startDate.isNull() |
-                s.startDate.isSmallerOrEqualValue(now);
+            final startCheck =
+                s.startDate.isNull() | s.startDate.isSmallerOrEqualValue(now);
             // Check if endDate is null or after/equal to now
-            final endCheck = s.endDate.isNull() | s.endDate.isBiggerOrEqualValue(now);
+            final endCheck =
+                s.endDate.isNull() | s.endDate.isBiggerOrEqualValue(now);
             return startCheck & endCheck;
           }))
         .get();
@@ -58,9 +59,9 @@ class SchedulesRepository {
     final result = await (_database.update(_database.transactionSchedules)
           ..where((s) => s.id.equals(id)))
         .write(TransactionSchedulesCompanion(
-          lastGeneratedDate: Value(date),
-          updatedAt: Value(DateTime.now()),
-        ));
+      lastGeneratedDate: Value(date),
+      updatedAt: Value(DateTime.now()),
+    ));
     return result > 0;
   }
 
@@ -69,9 +70,9 @@ class SchedulesRepository {
     final result = await (_database.update(_database.transactionSchedules)
           ..where((s) => s.id.equals(id)))
         .write(TransactionSchedulesCompanion(
-          isPaused: const Value(true),
-          updatedAt: Value(DateTime.now()),
-        ));
+      isPaused: const Value(true),
+      updatedAt: Value(DateTime.now()),
+    ));
     return result > 0;
   }
 
@@ -81,10 +82,10 @@ class SchedulesRepository {
     final result = await (_database.update(_database.transactionSchedules)
           ..where((s) => s.id.equals(id)))
         .write(TransactionSchedulesCompanion(
-          isPaused: const Value(false),
-          lastGeneratedDate: Value(dayBefore),
-          updatedAt: Value(DateTime.now()),
-        ));
+      isPaused: const Value(false),
+      lastGeneratedDate: Value(dayBefore),
+      updatedAt: Value(DateTime.now()),
+    ));
     return result > 0;
   }
 
