@@ -24,9 +24,9 @@ class PayableDetailsDialog extends ConsumerWidget {
 
   bool _canEditPayable(Payable payable) {
     // Can edit only if PENDING and not linked to any transaction
-    return payable.status == 'PENDING' && 
-           payable.linkedExpenseId == null && 
-           payable.linkedIncomeId == null;
+    return payable.status == 'PENDING' &&
+        payable.linkedExpenseId == null &&
+        payable.linkedIncomeId == null;
   }
 
   @override
@@ -37,13 +37,13 @@ class PayableDetailsDialog extends ConsumerWidget {
     final payable = item.payable;
     final contact = item.contact;
     final linkedTransaction = item.linkedTransaction;
-    
+
     if (currency == null) {
       return const Center(child: CircularProgressIndicator());
     }
     final linkedCategory = item.linkedCategory;
     final isPending = payable.status == 'PENDING';
-    
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Payable Details'),
@@ -61,7 +61,8 @@ class PayableDetailsDialog extends ConsumerWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => EditPayableScreen(payableId: payable.id),
+                    builder: (context) =>
+                        EditPayableScreen(payableId: payable.id),
                   ),
                 );
               },
@@ -113,17 +114,21 @@ class PayableDetailsDialog extends ConsumerWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    AmountFormatter.formatWithCurrency(payable.amount, currency.symbol, currency.decimalPlaces),
+                    AmountFormatter.formatWithCurrency(payable.amount,
+                        currency.symbol, currency.decimalPlaces),
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: AmountFormatter.getFontSize(payable.amount, decimalPlaces: currency.decimalPlaces) + 6,
+                      fontSize: AmountFormatter.getFontSize(payable.amount,
+                              decimalPlaces: currency.decimalPlaces) +
+                          6,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   if (!isPending) ...[
                     const SizedBox(height: 12),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(8),
@@ -152,9 +157,9 @@ class PayableDetailsDialog extends ConsumerWidget {
                 ],
               ),
             ),
-            
+
             const SizedBox(height: 24),
-            
+
             // Contact Header Section
             if (contact != null) ...[
               Row(
@@ -176,7 +181,9 @@ class PayableDetailsDialog extends ConsumerWidget {
                     ),
                     alignment: Alignment.center,
                     child: Text(
-                      contact.name.isNotEmpty ? contact.name[0].toUpperCase() : '?',
+                      contact.name.isNotEmpty
+                          ? contact.name[0].toUpperCase()
+                          : '?',
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 28,
@@ -220,7 +227,8 @@ class PayableDetailsDialog extends ConsumerWidget {
                   if (contact.phone != null)
                     IconButton(
                       icon: const Icon(Icons.chat, color: Color(0xFF25D366)),
-                      onPressed: () => _sendWhatsAppMessage(context, ref, contact, payable),
+                      onPressed: () =>
+                          _sendWhatsAppMessage(context, ref, contact, payable),
                     ),
                 ],
               ),
@@ -228,7 +236,7 @@ class PayableDetailsDialog extends ConsumerWidget {
               const Divider(),
               const SizedBox(height: 16),
             ],
-            
+
             // Details Section
             _buildDetailRow(
               context,
@@ -236,7 +244,7 @@ class PayableDetailsDialog extends ConsumerWidget {
               label: 'Date',
               value: DateFormat.yMMMd().format(payable.date),
             ),
-            
+
             if (payable.dueDate != null)
               _buildDetailRow(
                 context,
@@ -249,7 +257,7 @@ class PayableDetailsDialog extends ConsumerWidget {
                         : Colors.orange)
                     : null,
               ),
-            
+
             if (payable.description != null && payable.description!.isNotEmpty)
               _buildDetailRow(
                 context,
@@ -257,7 +265,7 @@ class PayableDetailsDialog extends ConsumerWidget {
                 label: 'Description',
                 value: payable.description!,
               ),
-            
+
             // Linked Transaction Section
             if (linkedTransaction != null) ...[
               const SizedBox(height: 24),
@@ -270,9 +278,10 @@ class PayableDetailsDialog extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              _buildLinkedTransactionCard(context, ref, linkedTransaction, linkedCategory),
+              _buildLinkedTransactionCard(
+                  context, ref, linkedTransaction, linkedCategory),
             ],
-            
+
             // Actions
             if (isPending) ...[
               const SizedBox(height: 24),
@@ -304,7 +313,7 @@ class PayableDetailsDialog extends ConsumerWidget {
     Widget? trailing,
   }) {
     final theme = Theme.of(context);
-    
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 12),
       child: Row(
@@ -350,21 +359,24 @@ class PayableDetailsDialog extends ConsumerWidget {
     );
   }
 
-  Widget _buildLinkedTransactionCard(BuildContext context, WidgetRef ref, dynamic transaction, dynamic category) {
+  Widget _buildLinkedTransactionCard(BuildContext context, WidgetRef ref,
+      dynamic transaction, dynamic category) {
     final theme = Theme.of(context);
     final currency = ref.read(currentCurrencyProvider).value!;
     final isExpense = transaction.type == 'EXPENSE';
     final categoryColor = category != null && category.color != null
         ? Color(int.parse(category.color!.replaceAll('#', '0xFF')))
         : (isExpense ? AppColors.expenseColor : AppColors.incomeColor);
-    
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: (isExpense ? AppColors.expenseColor : AppColors.incomeColor).withValues(alpha: 0.1),
+        color: (isExpense ? AppColors.expenseColor : AppColors.incomeColor)
+            .withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: (isExpense ? AppColors.expenseColor : AppColors.incomeColor).withValues(alpha: 0.3),
+          color: (isExpense ? AppColors.expenseColor : AppColors.incomeColor)
+              .withValues(alpha: 0.3),
           width: 1,
         ),
       ),
@@ -381,7 +393,8 @@ class PayableDetailsDialog extends ConsumerWidget {
                 ),
                 child: Icon(
                   category != null && category.icon != null
-                      ? (IconHelper.getIconData(category.icon) ?? Symbols.category)
+                      ? (IconHelper.getIconData(category.icon) ??
+                          Symbols.category)
                       : (isExpense ? Icons.payment : Icons.monetization_on),
                   color: categoryColor,
                   size: 20,
@@ -393,7 +406,9 @@ class PayableDetailsDialog extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      category != null ? category.name : (isExpense ? 'Expense' : 'Income'),
+                      category != null
+                          ? category.name
+                          : (isExpense ? 'Expense' : 'Income'),
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -412,12 +427,15 @@ class PayableDetailsDialog extends ConsumerWidget {
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color: isExpense ? AppColors.expenseColor : AppColors.incomeColor,
+                  color: isExpense
+                      ? AppColors.expenseColor
+                      : AppColors.incomeColor,
                 ),
               ),
             ],
           ),
-          if (transaction.description != null && transaction.description.isNotEmpty) ...[
+          if (transaction.description != null &&
+              transaction.description.isNotEmpty) ...[
             const SizedBox(height: 8),
             Text(
               transaction.description,
@@ -436,7 +454,8 @@ class PayableDetailsDialog extends ConsumerWidget {
     );
   }
 
-  void _sharePayable(BuildContext context, WidgetRef ref, dynamic payable, dynamic contact) {
+  void _sharePayable(
+      BuildContext context, WidgetRef ref, dynamic payable, dynamic contact) {
     final currency = ref.read(currentCurrencyProvider).value!;
     final message = '''
 Payable Details
@@ -445,16 +464,18 @@ Contact: ${contact?.name ?? 'Unknown'}
 Date: ${DateFormat.yMMMd().format(payable.date)}
 ${payable.dueDate != null ? 'Due Date: ${DateFormat.yMMMd().format(payable.dueDate)}\n' : ''}${payable.description != null && payable.description.isNotEmpty ? 'Description: ${payable.description}\n' : ''}Status: ${payable.status == 'PENDING' ? 'Pending' : 'Paid'}
     ''';
-    
+
     Share.share(message);
   }
 
-  Future<void> _deletePayable(BuildContext context, WidgetRef ref, int payableId) async {
+  Future<void> _deletePayable(
+      BuildContext context, WidgetRef ref, int payableId) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Payable'),
-        content: const Text('Are you sure you want to delete this payable? This action cannot be undone.'),
+        content: const Text(
+            'Are you sure you want to delete this payable? This action cannot be undone.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -473,24 +494,27 @@ ${payable.dueDate != null ? 'Due Date: ${DateFormat.yMMMd().format(payable.dueDa
       try {
         final repository = ref.read(payablesRepositoryProvider);
         await repository.deletePayable(payableId);
-        
+
         if (context.mounted) {
           Navigator.pop(context);
-          ToastUtils.showSuccessToast(context, ref, 'Payable deleted successfully');
+          ToastUtils.showSuccessToast(
+              context, ref, 'Payable deleted successfully');
         }
       } catch (e) {
         if (context.mounted) {
-          ToastUtils.showErrorToast(context, ref, 'Error deleting payable: ${e.toString()}');
+          ToastUtils.showErrorToast(
+              context, ref, 'Error deleting payable: ${e.toString()}');
         }
       }
     }
   }
 
-  Future<void> _markAsPaid(BuildContext context, WidgetRef ref, int payableId) async {
+  Future<void> _markAsPaid(
+      BuildContext context, WidgetRef ref, int payableId) async {
     try {
       final repository = ref.read(payablesRepositoryProvider);
       await repository.markAsPaid(payableId);
-      
+
       if (context.mounted) {
         Navigator.pop(context);
         ToastUtils.showSuccessToast(context, ref, 'Marked as paid');
@@ -510,7 +534,8 @@ ${payable.dueDate != null ? 'Due Date: ${DateFormat.yMMMd().format(payable.dueDa
   ) async {
     final currency = ref.read(currentCurrencyProvider).value!;
     if (contact.phone == null || contact.phone.isEmpty) {
-      ToastUtils.showWarningToast(context, ref, 'No phone number available for this contact');
+      ToastUtils.showWarningToast(
+          context, ref, 'No phone number available for this contact');
       return;
     }
 
@@ -526,9 +551,10 @@ Thank you!
       ''';
 
       // Clean phone number - remove spaces and non-digit characters except +
-      final cleanPhone = contact.phone.replaceAll(' ', '').replaceAll(RegExp(r'[^\d+]'), '');
+      final cleanPhone =
+          contact.phone.replaceAll(' ', '').replaceAll(RegExp(r'[^\d+]'), '');
       final success = await whatsAppService.sendMessage(cleanPhone, message);
-      
+
       if (success && context.mounted) {
         ToastUtils.showSuccessToast(context, ref, 'Opening WhatsApp...');
       }
