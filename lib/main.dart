@@ -198,9 +198,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Color _getSectionColor(int index) {
+    final activeCashbook = ref.watch(activeCashbookProvider);
     switch (index) {
       case 0: // Dashboard
-        return AppColors.dashboardSectionColor;
+        return activeCashbook.color;
       case 1: // Transactions
         return AppColors.transactionsSectionColor;
       case 2: // Analytics
