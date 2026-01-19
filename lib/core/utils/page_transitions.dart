@@ -8,23 +8,27 @@ class SlideUpRoute extends PageRouteBuilder {
 
   SlideUpRoute({
     required this.page,
-    this.duration = const Duration(milliseconds: 400),
+    this.duration = const Duration(milliseconds: 500),
   }) : super(
           pageBuilder: (context, animation, secondaryAnimation) => page,
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             const begin = Offset(0.0, 1.0);
             const end = Offset.zero;
-            const curve = Curves.easeOutCubic;
+            const curve = Curves.easeOutQuart;
 
-            var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-            var offsetAnimation = animation.drive(tween);
+            var slideTween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+            var fadeTween = Tween<double>(begin: 0.0, end: 1.0).chain(CurveTween(curve: curve));
 
-            return SlideTransition(
-              position: offsetAnimation,
-              child: child,
+            return FadeTransition(
+              opacity: animation.drive(fadeTween),
+              child: SlideTransition(
+                position: animation.drive(slideTween),
+                child: child,
+              ),
             );
           },
           transitionDuration: duration,
+          reverseTransitionDuration: duration,
         );
 }
 
@@ -36,7 +40,7 @@ class FadeRoute extends PageRouteBuilder {
 
   FadeRoute({
     required this.page,
-    this.duration = const Duration(milliseconds: 300),
+    this.duration = const Duration(milliseconds: 350),
   }) : super(
           pageBuilder: (context, animation, secondaryAnimation) => page,
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
@@ -46,6 +50,7 @@ class FadeRoute extends PageRouteBuilder {
             );
           },
           transitionDuration: duration,
+          reverseTransitionDuration: duration,
         );
 }
 
@@ -57,13 +62,13 @@ class ScaleFadeRoute extends PageRouteBuilder {
 
   ScaleFadeRoute({
     required this.page,
-    this.duration = const Duration(milliseconds: 300),
+    this.duration = const Duration(milliseconds: 400),
   }) : super(
           pageBuilder: (context, animation, secondaryAnimation) => page,
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            const curve = Curves.easeOutCubic;
-            var scaleTween = Tween(begin: 0.9, end: 1.0).chain(CurveTween(curve: curve));
-            var fadeTween = Tween(begin: 0.0, end: 1.0).chain(CurveTween(curve: curve));
+            const curve = Curves.easeOutBack;
+            var scaleTween = Tween(begin: 0.85, end: 1.0).chain(CurveTween(curve: curve));
+            var fadeTween = Tween(begin: 0.0, end: 1.0).chain(CurveTween(curve: Curves.easeOut));
 
             return FadeTransition(
               opacity: animation.drive(fadeTween),
@@ -74,6 +79,7 @@ class ScaleFadeRoute extends PageRouteBuilder {
             );
           },
           transitionDuration: duration,
+          reverseTransitionDuration: duration,
         );
 }
 
@@ -85,7 +91,7 @@ class SlideRightRoute extends PageRouteBuilder {
 
   SlideRightRoute({
     required this.page,
-    this.duration = const Duration(milliseconds: 300),
+    this.duration = const Duration(milliseconds: 400),
   }) : super(
           pageBuilder: (context, animation, secondaryAnimation) => page,
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
@@ -93,15 +99,24 @@ class SlideRightRoute extends PageRouteBuilder {
             const end = Offset.zero;
             const curve = Curves.easeOutCubic;
 
-            var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-            var offsetAnimation = animation.drive(tween);
+            var slideTween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+            
+            // Subtle parallax for the underlying page
+            var secondarySlideTween = Tween<Offset>(
+              begin: Offset.zero,
+              end: const Offset(-0.3, 0.0),
+            ).chain(CurveTween(curve: curve));
 
             return SlideTransition(
-              position: offsetAnimation,
-              child: child,
+              position: secondaryAnimation.drive(secondarySlideTween),
+              child: SlideTransition(
+                position: animation.drive(slideTween),
+                child: child,
+              ),
             );
           },
           transitionDuration: duration,
+          reverseTransitionDuration: duration,
         );
 }
 

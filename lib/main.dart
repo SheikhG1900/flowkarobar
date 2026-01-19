@@ -41,6 +41,8 @@ import 'package:flowpaisa/shared/providers/shared_preferences_provider.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/core/utils/category_helper.dart';
+import 'package:flowpaisa/shared/widgets/entrance_animation.dart';
+import 'package:flowpaisa/shared/widgets/animated_amount.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workmanager/workmanager.dart';
@@ -234,9 +236,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         builder: (context, constraints) {
           if (constraints.maxWidth < 600) {
             // Mobile Layout
-            return IndexedStack(
-              index: _selectedIndex,
-              children: screens,
+            return AnimatedSwitcher(
+              duration: const Duration(milliseconds: 400),
+              switchInCurve: Curves.easeOutCubic,
+              switchOutCurve: Curves.easeInCubic,
+              transitionBuilder: (Widget child, Animation<double> animation) {
+                return FadeTransition(
+                  opacity: animation,
+                  child: SlideTransition(
+                    position: Tween<Offset>(
+                      begin: const Offset(0.01, 0),
+                      end: Offset.zero,
+                    ).animate(animation),
+                    child: child,
+                  ),
+                );
+              },
+              child: KeyedSubtree(
+                key: ValueKey<int>(_selectedIndex),
+                child: screens[_selectedIndex],
+              ),
             );
           } else {
             // Tablet/Desktop Layout
@@ -271,9 +290,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
                 const VerticalDivider(thickness: 1, width: 1),
                 Expanded(
-                  child: IndexedStack(
-                    index: _selectedIndex,
-                    children: screens,
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 400),
+                    transitionBuilder:
+                        (Widget child, Animation<double> animation) {
+                      return FadeTransition(opacity: animation, child: child);
+                    },
+                    child: KeyedSubtree(
+                      key: ValueKey<int>(_selectedIndex),
+                      child: screens[_selectedIndex],
+                    ),
                   ),
                 ),
               ],
@@ -548,11 +574,10 @@ class _DashboardTab extends ConsumerWidget {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             dashboardStatsAsync.when(
-                              data: (stats) => Text(
-                                AmountFormatter.formatWithCurrency(
-                                    stats.totalBalance,
-                                    currency.symbol,
-                                    currency.decimalPlaces),
+                              data: (stats) => AnimatedAmount(
+                                amount: stats.totalBalance,
+                                currencySymbol: currency.symbol,
+                                decimalPlaces: currency.decimalPlaces,
                                 style: theme.textTheme.displaySmall?.copyWith(
                                   color: isDark
                                       ? Colors.white
@@ -590,60 +615,66 @@ class _DashboardTab extends ConsumerWidget {
                         dashboardStatsAsync.when(
                           data: (stats) => Column(
                             children: [
-                              _buildSummaryRow(
-                                context,
-                                isDark: isDark,
-                                title: 'Cash Flow',
-                                items: [
-                                  _SummaryItem(
-                                    label: 'Income',
-                                    amount: stats.income(filter),
-                                    color: AppColors.incomeColor,
-                                    icon: Icons.south_west,
-                                  ),
-                                  _SummaryItem(
-                                    label: 'Expense',
-                                    amount: stats.expense(filter),
-                                    color: AppColors.expenseColor,
-                                    icon: Icons.north_east,
-                                  ),
-                                  _SummaryItem(
-                                    label: 'Net Cash',
-                                    amount: stats.netCash(filter),
-                                    color: Colors.white,
-                                    icon: Icons.account_balance_wallet,
-                                  ),
-                                ],
-                                currency: currency,
+                              EntranceAnimation(
+                                index: 1,
+                                child: _buildSummaryRow(
+                                  context,
+                                  isDark: isDark,
+                                  title: 'Cash Flow',
+                                  items: [
+                                    _SummaryItem(
+                                      label: 'Income',
+                                      amount: stats.income(filter),
+                                      color: AppColors.incomeColor,
+                                      icon: Icons.south_west,
+                                    ),
+                                    _SummaryItem(
+                                      label: 'Expense',
+                                      amount: stats.expense(filter),
+                                      color: AppColors.expenseColor,
+                                      icon: Icons.north_east,
+                                    ),
+                                    _SummaryItem(
+                                      label: 'Net Cash',
+                                      amount: stats.netCash(filter),
+                                      color: Colors.white,
+                                      icon: Icons.account_balance_wallet,
+                                    ),
+                                  ],
+                                  currency: currency,
+                                ),
                               ),
                               const SizedBox(height: 12),
-                              _buildSummaryRow(
-                                context,
-                                isDark: isDark,
-                                title: 'Lending & Credit',
-                                items: [
-                                  _SummaryItem(
-                                    label: 'Receive',
-                                    amount: stats.receivable(filter),
-                                    color: AppColors.receivableColor,
-                                    icon: Icons.call_received,
-                                    overdue: stats.overdueReceivable,
-                                  ),
-                                  _SummaryItem(
-                                    label: 'Payable',
-                                    amount: stats.payable(filter),
-                                    color: AppColors.payableColor,
-                                    icon: Icons.call_made,
-                                    overdue: stats.overduePayable,
-                                  ),
-                                  _SummaryItem(
-                                    label: 'Net Credit',
-                                    amount: stats.netCredit(filter),
-                                    color: Colors.white,
-                                    icon: Icons.swap_horiz,
-                                  ),
-                                ],
-                                currency: currency,
+                              EntranceAnimation(
+                                index: 2,
+                                child: _buildSummaryRow(
+                                  context,
+                                  isDark: isDark,
+                                  title: 'Lending & Credit',
+                                  items: [
+                                    _SummaryItem(
+                                      label: 'Receive',
+                                      amount: stats.receivable(filter),
+                                      color: AppColors.receivableColor,
+                                      icon: Icons.call_received,
+                                      overdue: stats.overdueReceivable,
+                                    ),
+                                    _SummaryItem(
+                                      label: 'Payable',
+                                      amount: stats.payable(filter),
+                                      color: AppColors.payableColor,
+                                      icon: Icons.call_made,
+                                      overdue: stats.overduePayable,
+                                    ),
+                                    _SummaryItem(
+                                      label: 'Net Credit',
+                                      amount: stats.netCredit(filter),
+                                      color: Colors.white,
+                                      icon: Icons.swap_horiz,
+                                    ),
+                                  ],
+                                  currency: currency,
+                                ),
                               ),
                               const SizedBox(height: 12),
                             ],
@@ -738,23 +769,32 @@ class _DashboardTab extends ConsumerWidget {
 
           // Quick Actions Section
           SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 24, 16, 0),
-              child: _buildQuickActions(context, l10n, isPremium),
+            child: EntranceAnimation(
+              index: 3,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 24, 16, 0),
+                child: _buildQuickActions(context, l10n, isPremium),
+              ),
             ),
           ),
 
           // Recent Transactions Header
           SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 32, 16, 12),
-              child: _buildRecentTransactionsHeader(context, l10n),
+            child: EntranceAnimation(
+              index: 4,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 32, 16, 12),
+                child: _buildRecentTransactionsHeader(context, l10n),
+              ),
             ),
           ),
 
           // Recent Transactions List
           SliverToBoxAdapter(
-            child: _buildRecentTransactions(context, ref),
+            child: EntranceAnimation(
+              index: 5,
+              child: _buildRecentTransactions(context, ref),
+            ),
           ),
 
           // Bottom Padding
@@ -1162,62 +1202,64 @@ class _DashboardTab extends ConsumerWidget {
                   isExpense ? AppColors.expenseColor : AppColors.incomeColor;
             }
 
-            return Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-              decoration: BoxDecoration(
-                color: theme.cardColor,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: categoryColor.withValues(alpha: isDark ? 0.2 : 0.1),
-                  width: 1,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color:
-                        categoryColor.withValues(alpha: isDark ? 0.05 : 0.08),
-                    blurRadius: 8,
-                    offset: const Offset(0, 3),
+            return _AnimatedPressScale(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => TransactionDetailsDialog(item: item),
                   ),
-                ],
-              ),
-              child: ListTile(
-                contentPadding: const EdgeInsets.all(12),
-                leading: Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: categoryColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
+                );
+              },
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                decoration: BoxDecoration(
+                  color: theme.cardColor,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: categoryColor.withValues(alpha: isDark ? 0.2 : 0.1),
+                    width: 1,
                   ),
-                  alignment: Alignment.center,
-                  child: CategoryHelper.buildCategoryIcon(
-                      category?.icon, categoryColor, isExpense),
-                ),
-                title: Text(
-                  transaction.description ?? (isExpense ? 'Expense' : 'Income'),
-                  style: const TextStyle(fontWeight: FontWeight.w600),
-                ),
-                subtitle: Text(AppDateFormatter.formatDate(transaction.date,
-                    pattern: userProfile.dateFormat)),
-                trailing: Text(
-                  '${isExpense ? '-' : '+'} ${AmountFormatter.formatWithCurrency(transaction.amount, currency.symbol, currency.decimalPlaces)}',
-                  style: TextStyle(
-                    color: isExpense
-                        ? AppColors.expenseColor
-                        : AppColors.incomeColor,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) =>
-                          TransactionDetailsDialog(item: item),
+                  boxShadow: [
+                    BoxShadow(
+                      color:
+                          categoryColor.withValues(alpha: isDark ? 0.05 : 0.08),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
                     ),
-                  );
-                },
+                  ],
+                ),
+                child: ListTile(
+                  contentPadding: const EdgeInsets.all(12),
+                  leading: Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: categoryColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    alignment: Alignment.center,
+                    child: CategoryHelper.buildCategoryIcon(
+                        category?.icon, categoryColor, isExpense),
+                  ),
+                  title: Text(
+                    transaction.description ??
+                        (isExpense ? 'Expense' : 'Income'),
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  subtitle: Text(AppDateFormatter.formatDate(transaction.date,
+                      pattern: userProfile.dateFormat)),
+                  trailing: Text(
+                    '${isExpense ? '-' : '+'} ${AmountFormatter.formatWithCurrency(transaction.amount, currency.symbol, currency.decimalPlaces)}',
+                    style: TextStyle(
+                      color: isExpense
+                          ? AppColors.expenseColor
+                          : AppColors.incomeColor,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
               ),
             );
           },
@@ -1254,7 +1296,7 @@ class _QuickActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return _AnimatedPressScale(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 0),
@@ -1311,6 +1353,57 @@ class _QuickActionButton extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Helper widget for press & scale micro-animation
+class _AnimatedPressScale extends StatefulWidget {
+  final Widget child;
+  final VoidCallback onTap;
+
+  const _AnimatedPressScale({required this.child, required this.onTap});
+
+  @override
+  State<_AnimatedPressScale> createState() => _AnimatedPressScaleState();
+}
+
+class _AnimatedPressScaleState extends State<_AnimatedPressScale>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 100),
+      lowerBound: 0.0,
+      upperBound: 0.05,
+    );
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.95).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => _controller.forward(),
+      onTapUp: (_) => _controller.reverse(),
+      onTapCancel: () => _controller.reverse(),
+      onTap: widget.onTap,
+      child: ScaleTransition(
+        scale: _scaleAnimation,
+        child: widget.child,
       ),
     );
   }
