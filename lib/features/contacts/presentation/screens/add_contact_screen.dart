@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:drift/drift.dart' as drift;
+import 'package:flutter_contacts/flutter_contacts.dart' as fc;
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
@@ -46,6 +47,153 @@ class _AddContactScreenState extends ConsumerState<AddContactScreen> {
     _emailController.dispose();
     _notesController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickFromDevice() async {
+    try {
+      // Use readonly: true as it's often more reliable for just picking/reading
+      // and correctly handles cases where permission is already granted.
+      final granted = await fc.FlutterContacts.requestPermission(readonly: true);
+
+      if (granted) {
+        final deviceContact = await fc.FlutterContacts.openExternalPick();
+        if (deviceContact != null) {
+          // Fetch full contact details since openExternalPick might only return basic info
+          final fullContact =
+              await fc.FlutterContacts.getContact(deviceContact.id);
+          if (fullContact != null) {
+            _populateFromDeviceContact(fullContact);
+          }
+        }
+      } else {
+        // Fallback: Try to open the picker anyway, as some Android versions 
+        // don't require app-level permission for the system picker intent.
+        try {
+          final deviceContact = await fc.FlutterContacts.openExternalPick();
+          if (deviceContact != null) {
+            final fullContact = await fc.FlutterContacts.getContact(deviceContact.id);
+            if (fullContact != null) {
+              _populateFromDeviceContact(fullContact);
+              return;
+            }
+          }
+        } catch (_) {
+          // If fallback fails, show permission error
+        }
+
+        if (mounted) {
+          ToastUtils.showErrorToast(
+            context,
+            ref,
+            'Contact permission denied. Please enable it in settings.',
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ToastUtils.showErrorToast(
+          context,
+          ref,
+          'Error picking contact: ${e.toString()}',
+        );
+      }
+    }
+  }
+
+  void _populateFromDeviceContact(fc.Contact deviceContact) async {
+    setState(() {
+      _nameController.text = deviceContact.displayName;
+    });
+
+    if (deviceContact.emails.isNotEmpty) {
+      setState(() {
+        _emailController.text = deviceContact.emails.first.address;
+      });
+    }
+
+    if (deviceContact.phones.isNotEmpty) {
+      if (deviceContact.phones.length == 1) {
+        _setPhoneNumber(deviceContact.phones.first.number);
+      } else {
+        final selectedPhone = await _showPhoneNumberPicker(deviceContact);
+        if (selectedPhone != null) {
+          _setPhoneNumber(selectedPhone);
+        }
+      }
+    }
+  }
+
+  void _setPhoneNumber(String phone) {
+    // Clean phone number: keep only digits and +
+    final cleanPhone = phone.replaceAll(RegExp(r'[^\d+]'), '');
+    setState(() {
+      _phoneController.text = cleanPhone;
+    });
+  }
+
+  Future<String?> _showPhoneNumberPicker(fc.Contact deviceContact) async {
+    return await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        final theme = Theme.of(context);
+        final isDark = theme.brightness == Brightness.dark;
+
+        return Container(
+          decoration: BoxDecoration(
+            color: isDark ? AppColors.darkCard : AppColors.lightCard,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                margin: const EdgeInsets.only(top: 8, bottom: 16),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? AppColors.darkTextSecondary.withValues(alpha: 0.3)
+                      : AppColors.lightTextSecondary.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Text(
+                  'Select Phone Number',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Flexible(
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: deviceContact.phones.length,
+                  itemBuilder: (context, index) {
+                    final phone = deviceContact.phones[index];
+                    return ListTile(
+                      leading: Icon(
+                        Icons.phone_outlined,
+                        color: theme.colorScheme.primary,
+                      ),
+                      title: Text(phone.number),
+                      subtitle: phone.label != fc.PhoneLabel.mobile
+                          ? Text(phone.label.name.toUpperCase())
+                          : null,
+                      onTap: () => Navigator.pop(context, phone.number),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   Future<void> _saveContact() async {
@@ -186,7 +334,22 @@ class _AddContactScreenState extends ConsumerState<AddContactScreen> {
                   },
                 ),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 16),
+
+              // Import from Contacts Button
+              Center(
+                child: TextButton.icon(
+                  onPressed: _pickFromDevice,
+                  icon: const Icon(Icons.contact_page_outlined),
+                  label: const Text('Import from Contacts'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: Theme.of(context).colorScheme.primary,
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
 
               // Name Field
               TextFormField(

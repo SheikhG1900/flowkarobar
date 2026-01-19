@@ -52,5 +52,7 @@
 	</array>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSContactsUsageDescription</key>
+	<string>This app requires contact access to import names, phone numbers, and emails for your cashbook contacts.</string>
 </dict>
 </plist>
