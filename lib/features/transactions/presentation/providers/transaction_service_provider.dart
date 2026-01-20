@@ -13,6 +13,8 @@ import 'package:flowpaisa/features/categories/presentation/providers/categories_
 import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
 import 'package:flowpaisa/shared/providers/database_provider.dart';
 
+import 'package:flowpaisa/features/whatsapp/domain/deep_link_service.dart';
+
 final transactionServiceProvider = Provider<TransactionService>((ref) {
   return TransactionService(
     database: ref.watch(databaseProvider),
@@ -55,6 +57,10 @@ class TransactionService {
     String? externalLinkId,
   }) async {
     return await database.transaction(() async {
+      // 0. Ensure we have an externalLinkId if none provided
+      final effectiveExternalId =
+          externalLinkId ?? DeepLinkService().generateExternalLinkId();
+
       // 1. Create the main transaction
       final transactionId = await transactionsRepository.createTransaction(
         TransactionsCompanion(
@@ -65,7 +71,7 @@ class TransactionService {
           description: Value(description),
           date: Value(date),
           paidRelationship: Value(paidRelationship),
-          externalLinkId: Value(externalLinkId),
+          externalLinkId: Value(effectiveExternalId),
           createdAt: Value(DateTime.now()),
           updatedAt: Value(DateTime.now()),
         ),
@@ -97,6 +103,7 @@ class TransactionService {
                 linkedExpenseId: Value(transactionId),
                 autoCreateIncome:
                     const Value(true), // When they pay back, it becomes income
+                externalLinkId: Value(effectiveExternalId),
                 createdAt: Value(DateTime.now()),
                 updatedAt: Value(DateTime.now()),
               ),
@@ -123,6 +130,7 @@ class TransactionService {
                 linkedExpenseId: Value(transactionId),
                 autoCreateExpense: const Value(
                     false), // Don't create new transaction, activate existing one when marked
+                externalLinkId: Value(effectiveExternalId),
                 createdAt: Value(DateTime.now()),
                 updatedAt: Value(DateTime.now()),
               ),
@@ -153,6 +161,7 @@ class TransactionService {
                 linkedIncomeId: Value(transactionId),
                 autoCreateExpense:
                     const Value(true), // When you pay back, it becomes expense
+                externalLinkId: Value(effectiveExternalId),
                 createdAt: Value(DateTime.now()),
                 updatedAt: Value(DateTime.now()),
               ),
@@ -180,6 +189,7 @@ class TransactionService {
                 linkedIncomeId: Value(transactionId), // Store as linked income
                 autoCreateIncome: const Value(
                     false), // Don't create new transaction, activate existing one when marked
+                externalLinkId: Value(effectiveExternalId),
                 createdAt: Value(DateTime.now()),
                 updatedAt: Value(DateTime.now()),
               ),
@@ -196,6 +206,120 @@ class TransactionService {
         }
       }
       return transactionId;
+    });
+  }
+
+  /// Ensure a transaction and its linked entries have a consistent externalLinkId
+  Future<String> ensureExternalLinkId({
+    int? transactionId,
+    int? payableId,
+    int? receivableId,
+  }) async {
+    return await database.transaction(() async {
+      String? existingId;
+      Transaction? transaction;
+      Payable? payable;
+      Receivable? receivable;
+
+      // 1. Fetch existing objects and find if any already has an ID
+      if (transactionId != null) {
+        transaction =
+            await transactionsRepository.getTransactionById(transactionId);
+        existingId ??= transaction?.externalLinkId;
+      }
+      if (payableId != null) {
+        payable = await payablesRepository.getPayableById(payableId);
+        existingId ??= payable?.externalLinkId;
+      }
+      if (receivableId != null) {
+        receivable =
+            await receivablesRepository.getReceivableById(receivableId);
+        existingId ??= receivable?.externalLinkId;
+      }
+
+      // Also check linked objects if we only have one ID
+      if (existingId == null) {
+        if (transaction != null) {
+          if (transaction.linkedPayableId != null) {
+            payable = await payablesRepository
+                .getPayableById(transaction.linkedPayableId!);
+            existingId ??= payable?.externalLinkId;
+          }
+          if (transaction.linkedReceivableId != null) {
+            receivable = await receivablesRepository
+                .getReceivableById(transaction.linkedReceivableId!);
+            existingId ??= receivable?.externalLinkId;
+          }
+        } else if (payable != null) {
+          if (payable.linkedExpenseId != null) {
+            transaction = await transactionsRepository
+                .getTransactionById(payable.linkedExpenseId!);
+            existingId ??= transaction?.externalLinkId;
+          }
+          if (payable.linkedIncomeId != null) {
+            transaction = await transactionsRepository
+                .getTransactionById(payable.linkedIncomeId!);
+            existingId ??= transaction?.externalLinkId;
+          }
+        } else if (receivable != null) {
+          if (receivable.linkedExpenseId != null) {
+            transaction = await transactionsRepository
+                .getTransactionById(receivable.linkedExpenseId!);
+            existingId ??= transaction?.externalLinkId;
+          }
+          if (receivable.linkedIncomeId != null) {
+            transaction = await transactionsRepository
+                .getTransactionById(receivable.linkedIncomeId!);
+            existingId ??= transaction?.externalLinkId;
+          }
+        }
+      }
+
+      // 2. If still no ID, generate a new one
+      final String finalId =
+          existingId ?? DeepLinkService().generateExternalLinkId();
+
+      // 3. Update all related records with this ID
+      // Update transaction
+      if (transactionId != null) {
+        await transactionsRepository.updateTransactionWithCompanion(
+          transactionId,
+          TransactionsCompanion(externalLinkId: Value(finalId)),
+        );
+      } else if (transaction != null) {
+        await transactionsRepository.updateTransactionWithCompanion(
+          transaction.id,
+          TransactionsCompanion(externalLinkId: Value(finalId)),
+        );
+      }
+
+      // Update payable
+      if (payableId != null) {
+        await payablesRepository.updatePayableWithCompanion(
+          payableId,
+          PayablesCompanion(externalLinkId: Value(finalId)),
+        );
+      } else if (payable != null) {
+        await payablesRepository.updatePayableWithCompanion(
+          payable.id,
+          PayablesCompanion(externalLinkId: Value(finalId)),
+        );
+      }
+
+      // Update receivable
+      if (receivableId != null) {
+        await receivablesRepository.updateReceivableWithCompanion(
+          receivableId,
+          ReceivablesCompanion(externalLinkId: Value(finalId)),
+        );
+      } else if (receivable != null) {
+        await receivablesRepository.updateReceivableWithCompanion(
+          receivable.id,
+          ReceivablesCompanion(externalLinkId: Value(finalId)),
+        );
+      }
+
+      return finalId;
     });
   }
 

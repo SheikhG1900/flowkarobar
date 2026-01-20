@@ -6,6 +6,9 @@ import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/whatsapp/domain/deep_link_service.dart';
 import 'package:flowpaisa/features/whatsapp/domain/models/shared_data_models.dart';
 import 'package:flowpaisa/features/whatsapp/presentation/providers/whatsapp_provider.dart';
+import 'package:flowpaisa/core/utils/amount_formatter.dart';
+import 'package:flowpaisa/core/utils/date_formatter.dart';
+import 'package:flowpaisa/features/transactions/presentation/providers/transaction_service_provider.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
 import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 
@@ -104,12 +107,19 @@ class _ShareOptionsSheetState extends State<_ShareOptionsSheet> {
 
     try {
       final deepLinkService = DeepLinkService();
+      final transactionService = widget.ref.read(transactionServiceProvider);
       final whatsAppService = widget.ref.read(whatsAppServiceProvider);
-      final currencySymbol = widget.ref.read(currencySymbolProvider);
+      final currencyAsync = widget.ref.read(currentCurrencyProvider);
+      final currency = currencyAsync.value;
       final userProfile = widget.ref.read(userProfileProvider);
 
       final senderName = userProfile.name ?? 'Someone';
       final senderPhone = userProfile.phone ?? '';
+
+      // Ensure external ID is persisted before sharing
+      final effectiveExternalId = await transactionService.ensureExternalLinkId(
+        receivableId: widget.receivable.id,
+      );
 
       // Create share data for recipient (Payable)
       final shareData = PayableShareData(
@@ -119,19 +129,37 @@ class _ShareOptionsSheetState extends State<_ShareOptionsSheet> {
         dueDate: widget.receivable.dueDate,
         senderName: senderName,
         senderPhone: senderPhone,
-        externalLinkId: widget.receivable.externalLinkId ?? deepLinkService.generateExternalLinkId(),
+        externalLinkId: effectiveExternalId,
+        status: widget.receivable.status,
       );
 
       final link = deepLinkService.generatePayableLink(shareData);
+      final isReceived = widget.receivable.status == 'RECEIVED';
 
-      final message = '''
+      String message;
+      if (isReceived) {
+        message = '''
+Hi ${widget.contact?.name ?? 'there'},
+
+Greetings! 
+
+Your payment of ${AmountFormatter.formatWithCurrency(widget.receivable.amount, currency?.symbol ?? '', currency?.decimalPlaces ?? 2)} dated ${AppDateFormatter.formatDate(widget.receivable.date, pattern: userProfile.dateFormat)} has been received and recorded. 
+
+If you haven't updated this payment in FlowPaisa, please follow the link below to sync your records:
+$link
+
+Thank you!
+''';
+      } else {
+        message = '''
 💰 Payment Request
-Please pay: $currencySymbol${widget.receivable.amount.toStringAsFixed(2)}
+Please pay: ${currency?.symbol ?? ''}${widget.receivable.amount.toStringAsFixed(currency?.decimalPlaces ?? 2)}
 Date: ${widget.receivable.date.day}/${widget.receivable.date.month}/${widget.receivable.date.year}
 
 View and record this in FlowPaisa:
 $link
 ''';
+      }
 
       await whatsAppService.sendMessage(widget.contact?.phone ?? '', message);
 
@@ -155,10 +183,16 @@ $link
 
     try {
       final deepLinkService = DeepLinkService();
+      final transactionService = widget.ref.read(transactionServiceProvider);
       final userProfile = widget.ref.read(userProfileProvider);
 
       final senderName = userProfile.name ?? 'Someone';
       final senderPhone = userProfile.phone ?? '';
+
+      // Ensure external ID is persisted before sharing
+      final effectiveExternalId = await transactionService.ensureExternalLinkId(
+        receivableId: widget.receivable.id,
+      );
 
       // Create share data for recipient (Payable)
       final shareData = PayableShareData(
@@ -168,7 +202,8 @@ $link
         dueDate: widget.receivable.dueDate,
         senderName: senderName,
         senderPhone: senderPhone,
-        externalLinkId: widget.receivable.externalLinkId ?? deepLinkService.generateExternalLinkId(),
+        externalLinkId: effectiveExternalId,
+        status: widget.receivable.status,
       );
 
       final link = deepLinkService.generatePayableLink(shareData);

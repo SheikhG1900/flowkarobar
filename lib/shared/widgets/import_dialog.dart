@@ -5,13 +5,16 @@ import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 import 'package:flowpaisa/features/whatsapp/domain/models/shared_data_models.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
+import 'package:flowpaisa/features/receivables/domain/models.dart';
+import 'package:flowpaisa/features/payables/domain/models.dart';
 import 'package:flowpaisa/features/receivables/presentation/providers/receivables_provider.dart';
 import 'package:flowpaisa/features/payables/presentation/providers/payables_provider.dart';
-import 'package:flowpaisa/shared/providers/database_provider.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
 import 'package:flowpaisa/features/transactions/presentation/screens/add_transaction_screen.dart';
 import 'package:flowpaisa/features/payables/presentation/screens/add_payable_screen.dart';
 import 'package:flowpaisa/features/receivables/presentation/screens/add_receivable_screen.dart';
+import 'package:flowpaisa/features/payables/presentation/widgets/payable_details_dialog.dart';
+import 'package:flowpaisa/features/receivables/presentation/widgets/receivable_details_dialog.dart';
 
 class ImportDialog extends ConsumerStatefulWidget {
   final SharedData sharedData;
@@ -28,7 +31,9 @@ class ImportDialog extends ConsumerStatefulWidget {
 class _ImportDialogState extends ConsumerState<ImportDialog> {
   bool _isImporting = false;
   bool _alreadyImported = false;
+  bool _isSettledUpdate = false;
   String? _errorMessage;
+  dynamic _existingItemWithLinkedData;
 
   @override
   void initState() {
@@ -38,26 +43,55 @@ class _ImportDialogState extends ConsumerState<ImportDialog> {
 
   Future<void> _checkIfAlreadyImported() async {
     final externalId = widget.sharedData.externalLinkId;
+    final sharedStatus = widget.sharedData.status;
+    final sharedType = widget.sharedData.type;
     bool exists = false;
 
+    debugPrint(
+        'ImportDialog: Checking externalId: $externalId, type: $sharedType, status: $sharedStatus');
+
     try {
-      if (widget.sharedData is TransactionShareData) {
-        exists = await ref
-            .read(transactionsRepositoryProvider)
-            .checkIfExternalLinkExists(externalId);
-      } else if (widget.sharedData is ReceivableShareData) {
-        exists = await ref
-            .read(receivablesRepositoryProvider)
-            .checkIfExternalLinkExists(externalId);
-      } else if (widget.sharedData is PayableShareData) {
-        exists = await ref
-            .read(payablesRepositoryProvider)
-            .checkIfExternalLinkExists(externalId);
+      // Priority 1: Check Payables (Focus according to user requirement)
+      final payablesRepo = ref.read(payablesRepositoryProvider);
+      final payable = await payablesRepo.getPayableByExternalLinkId(externalId);
+      if (payable != null) {
+        exists = true;
+        _existingItemWithLinkedData =
+            await payablesRepo.getPayableWithLinkedDataById(payable.id);
+        debugPrint('ImportDialog: Found matching Payable.');
+      } else {
+        // Priority 2: Check Receivables
+        final receivablesRepo = ref.read(receivablesRepositoryProvider);
+        final receivable =
+            await receivablesRepo.getReceivableByExternalLinkId(externalId);
+        if (receivable != null) {
+          exists = true;
+          _existingItemWithLinkedData = await receivablesRepo
+              .getReceivableWithLinkedDataById(receivable.id);
+          debugPrint('ImportDialog: Found matching Receivable.');
+        } else {
+          // Priority 3: Check Transactions
+          exists = await ref
+              .read(transactionsRepositoryProvider)
+              .checkIfExternalLinkExists(externalId);
+          debugPrint(
+              'ImportDialog: Checked Transactions table. Exists: $exists');
+        }
+      }
+
+      if (!exists) {
+        debugPrint('ImportDialog: externalId NOT FOUND in any table.');
+      } else {
+        debugPrint('ImportDialog: externalId FOUND in the database.');
       }
 
       if (mounted) {
         setState(() {
           _alreadyImported = exists;
+          _isSettledUpdate =
+              exists && (sharedStatus == 'PAID' || sharedStatus == 'RECEIVED');
+          debugPrint(
+              'ImportDialog: _alreadyImported: $_alreadyImported, _isSettledUpdate: $_isSettledUpdate');
         });
       }
     } catch (e) {
@@ -65,7 +99,38 @@ class _ImportDialogState extends ConsumerState<ImportDialog> {
     }
   }
 
+  void _navigateToDetails() {
+    debugPrint(
+        'ImportDialog: Navigating to details. sharedData type: ${widget.sharedData.runtimeType}');
+    Navigator.of(context).pop(); // Close dialog
+
+    if (_existingItemWithLinkedData is ReceivableWithLinkedData) {
+      debugPrint('ImportDialog: Pushing ReceivableDetailsDialog');
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) =>
+              ReceivableDetailsDialog(item: _existingItemWithLinkedData),
+        ),
+      );
+    } else if (_existingItemWithLinkedData is PayableWithLinkedData) {
+      debugPrint('ImportDialog: Pushing PayableDetailsDialog');
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) =>
+              PayableDetailsDialog(item: _existingItemWithLinkedData),
+        ),
+      );
+    } else {
+      debugPrint(
+          'ImportDialog: Warning - no details screen found for this type/data combo');
+    }
+  }
+
   void _navigateToCreate() {
+    debugPrint(
+        'ImportDialog: Navigating to create. sharedData type: ${widget.sharedData.runtimeType}');
     Navigator.of(context).pop(); // Close dialog first
 
     if (widget.sharedData is TransactionShareData) {
@@ -145,18 +210,30 @@ class _ImportDialogState extends ConsumerState<ImportDialog> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.orange.withOpacity(0.1),
+                  color: _isSettledUpdate
+                      ? Colors.green.withOpacity(0.1)
+                      : Colors.orange.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.orange),
+                  border: Border.all(
+                      color: _isSettledUpdate ? Colors.green : Colors.orange),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.info_outline, color: Colors.orange),
+                    Icon(
+                        _isSettledUpdate
+                            ? Icons.check_circle_outline
+                            : Icons.info_outline,
+                        color: _isSettledUpdate ? Colors.green : Colors.orange),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'This item has already been imported.',
-                        style: TextStyle(color: Colors.orange.shade800),
+                        _isSettledUpdate
+                            ? '${widget.sharedData.senderName ?? 'Sender'} has marked this as ${widget.sharedData.status}. Update your local record?'
+                            : 'This item has already been imported.',
+                        style: TextStyle(
+                            color: _isSettledUpdate
+                                ? Colors.green.shade800
+                                : Colors.orange.shade800),
                       ),
                     ),
                   ],
@@ -203,11 +280,15 @@ class _ImportDialogState extends ConsumerState<ImportDialog> {
           )
         else
           ElevatedButton(
-            onPressed: _navigateToCreate,
+            onPressed: _isImporting
+                ? null
+                : (_isSettledUpdate ? _navigateToDetails : _navigateToCreate),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.grey.shade400,
+              backgroundColor:
+                  _isSettledUpdate ? Colors.green : Colors.grey.shade400,
+              foregroundColor: Colors.white,
             ),
-            child: const Text('View Details'),
+            child: Text(_isSettledUpdate ? 'View Details' : 'View Details'),
           ),
       ],
     );
@@ -269,14 +350,19 @@ class _ImportDialogState extends ConsumerState<ImportDialog> {
         ],
         _buildDetailRow('Type', data.transactionType),
         _buildDetailRow(
-            'Amount', AmountFormatter.formatWithCurrency(data.amount, currencySymbol, ref.watch(currentCurrencyProvider).value?.decimalPlaces ?? 2)),
+            'Amount',
+            AmountFormatter.formatWithCurrency(data.amount, currencySymbol,
+                ref.watch(currentCurrencyProvider).value?.decimalPlaces ?? 2)),
         if (data.description != null && data.description!.isNotEmpty)
           _buildDetailRow('Description', data.description!),
         if (data.categoryName != null)
           _buildDetailRow('Category', data.categoryName!),
         if (data.contactName != null)
           _buildDetailRow('Contact', data.contactName!),
-        _buildDetailRow('Date', AppDateFormatter.formatDate(data.date, pattern: ref.watch(userProfileProvider).dateFormat)),
+        _buildDetailRow(
+            'Date',
+            AppDateFormatter.formatDate(data.date,
+                pattern: ref.watch(userProfileProvider).dateFormat)),
       ],
     );
   }
@@ -298,14 +384,22 @@ class _ImportDialogState extends ConsumerState<ImportDialog> {
           const SizedBox(height: 12),
         ],
         _buildDetailRow(
-            'Amount', AmountFormatter.formatWithCurrency(data.amount, currencySymbol, ref.watch(currentCurrencyProvider).value?.decimalPlaces ?? 2)),
+            'Amount',
+            AmountFormatter.formatWithCurrency(data.amount, currencySymbol,
+                ref.watch(currentCurrencyProvider).value?.decimalPlaces ?? 2)),
         if (data.description != null && data.description!.isNotEmpty)
           _buildDetailRow('Description', data.description!),
         if (data.contactName != null)
           _buildDetailRow('Contact', data.contactName!),
-        _buildDetailRow('Date', AppDateFormatter.formatDate(data.date, pattern: ref.watch(userProfileProvider).dateFormat)),
+        _buildDetailRow(
+            'Date',
+            AppDateFormatter.formatDate(data.date,
+                pattern: ref.watch(userProfileProvider).dateFormat)),
         if (data.dueDate != null)
-          _buildDetailRow('Due Date', AppDateFormatter.formatDate(data.dueDate!, pattern: ref.watch(userProfileProvider).dateFormat)),
+          _buildDetailRow(
+              'Due Date',
+              AppDateFormatter.formatDate(data.dueDate!,
+                  pattern: ref.watch(userProfileProvider).dateFormat)),
       ],
     );
   }
@@ -326,14 +420,22 @@ class _ImportDialogState extends ConsumerState<ImportDialog> {
           const SizedBox(height: 12),
         ],
         _buildDetailRow(
-            'Amount', AmountFormatter.formatWithCurrency(data.amount, currencySymbol, ref.watch(currentCurrencyProvider).value?.decimalPlaces ?? 2)),
+            'Amount',
+            AmountFormatter.formatWithCurrency(data.amount, currencySymbol,
+                ref.watch(currentCurrencyProvider).value?.decimalPlaces ?? 2)),
         if (data.description != null && data.description!.isNotEmpty)
           _buildDetailRow('Description', data.description!),
         if (data.contactName != null)
           _buildDetailRow('Contact', data.contactName!),
-        _buildDetailRow('Date', AppDateFormatter.formatDate(data.date, pattern: ref.watch(userProfileProvider).dateFormat)),
+        _buildDetailRow(
+            'Date',
+            AppDateFormatter.formatDate(data.date,
+                pattern: ref.watch(userProfileProvider).dateFormat)),
         if (data.dueDate != null)
-          _buildDetailRow('Due Date', AppDateFormatter.formatDate(data.dueDate!, pattern: ref.watch(userProfileProvider).dateFormat)),
+          _buildDetailRow(
+              'Due Date',
+              AppDateFormatter.formatDate(data.dueDate!,
+                  pattern: ref.watch(userProfileProvider).dateFormat)),
       ],
     );
   }

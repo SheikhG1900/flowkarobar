@@ -8,6 +8,7 @@ import 'package:flowpaisa/core/utils/icon_helper.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:flowpaisa/features/payables/domain/models.dart';
 import 'package:flowpaisa/core/database/database.dart';
+import 'package:flowpaisa/features/transactions/presentation/providers/transaction_service_provider.dart';
 import 'package:flowpaisa/features/payables/presentation/providers/payables_provider.dart';
 import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 import 'package:flowpaisa/features/payables/presentation/screens/edit_payable_screen.dart';
@@ -460,11 +461,18 @@ class PayableDetailsDialog extends ConsumerWidget {
     );
   }
 
-  void _sharePayable(
-      BuildContext context, WidgetRef ref, dynamic payable, dynamic contact) {
+  Future<void> _sharePayable(
+      BuildContext context, WidgetRef ref, dynamic payable, dynamic contact) async {
     final currency = ref.read(currentCurrencyProvider).value!;
     final userProfile = ref.read(userProfileProvider);
     final deepLinkService = DeepLinkService();
+    final transactionService = ref.read(transactionServiceProvider);
+    final isPaid = payable.status == 'PAID';
+
+    // Ensure external ID is persisted before sharing
+    final effectiveExternalId = await transactionService.ensureExternalLinkId(
+      payableId: payable.id,
+    );
 
     final link = deepLinkService.generateReceivableLink(ReceivableShareData(
       amount: payable.amount,
@@ -473,19 +481,34 @@ class PayableDetailsDialog extends ConsumerWidget {
       dueDate: payable.dueDate,
       senderName: userProfile.name ?? 'Someone',
       senderPhone: userProfile.phone ?? '',
-      externalLinkId: deepLinkService.generateExternalLinkId(),
+      externalLinkId: effectiveExternalId,
+      status: payable.status,
     ));
 
-    final message = '''
+    String message;
+    if (isPaid) {
+      message = '''
+Greetings! 
+
+The payment of ${AmountFormatter.formatWithCurrency(payable.amount, currency.symbol, currency.decimalPlaces)} has been completed and recorded. 
+
+If you haven't updated this in your records, please use the link below to sync it in FlowPaisa:
+$link
+
+Thank you!
+''';
+    } else {
+      message = '''
 Payable Details
 Amount: ${AmountFormatter.formatWithCurrency(payable.amount, currency.symbol, currency.decimalPlaces)}
 Contact: ${contact?.name ?? 'Unknown'}
 Date: ${AppDateFormatter.formatDate(payable.date, pattern: userProfile.dateFormat)}
-${payable.dueDate != null ? 'Due Date: ${AppDateFormatter.formatDate(payable.dueDate, pattern: userProfile.dateFormat)}\n' : ''}${payable.description != null && payable.description.isNotEmpty ? 'Description: ${payable.description}\n' : ''}Status: ${payable.status == 'PENDING' ? 'Pending' : 'Paid'}
+${payable.dueDate != null ? 'Due Date: ${AppDateFormatter.formatDate(payable.dueDate, pattern: userProfile.dateFormat)}\n' : ''}${payable.description != null && payable.description.isNotEmpty ? 'Description: ${payable.description}\n' : ''}Status: Pending
 
 View and record this in FlowPaisa:
 $link
-    ''';
+''';
+    }
 
     Share.share(message);
   }
@@ -538,14 +561,36 @@ $link
       await repository.markAsPaid(payableId);
 
       if (context.mounted) {
-        Navigator.pop(context);
-        ToastUtils.showSuccessToast(context, ref, 'Marked as paid');
+        // Refresh item to get updated status and externalLinkId
+        final updatedItem = await repository.getPayableWithLinkedDataById(payableId);
+        
+        if (context.mounted) {
+          Navigator.pop(context);
+          ToastUtils.showSuccessToast(context, ref, 'Marked as paid');
+          
+          if (updatedItem != null) {
+            _showSettlementShareOption(context, ref, updatedItem.payable, updatedItem.contact);
+          }
+        }
       }
     } catch (e) {
       if (context.mounted) {
         ToastUtils.showErrorToast(context, ref, 'Error: ${e.toString()}');
       }
     }
+  }
+
+  void _showSettlementShareOption(BuildContext context, WidgetRef ref, Payable payable, dynamic contact) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text('Payable marked as paid. Inform the contact?'),
+        action: SnackBarAction(
+          label: 'SHARE',
+          onPressed: () => _sharePayable(context, ref, payable, contact),
+        ),
+        duration: const Duration(seconds: 5),
+      ),
+    );
   }
 
   Future<void> _sendWhatsAppMessage(
@@ -565,9 +610,16 @@ $link
       final whatsAppService = ref.read(whatsAppServiceProvider);
       final userProfile = ref.read(userProfileProvider);
       final deepLinkService = DeepLinkService();
+      final transactionService = ref.read(transactionServiceProvider);
+      final isPaid = payable.status == 'PAID';
 
       final senderName = userProfile.name ?? 'Someone';
       final senderPhone = userProfile.phone ?? '';
+
+      // Ensure external ID is persisted before sharing
+      final effectiveExternalId = await transactionService.ensureExternalLinkId(
+        payableId: payable.id,
+      );
 
       // Create reciprocal link (Receivable link for the recipient)
       final link = deepLinkService.generateReceivableLink(ReceivableShareData(
@@ -577,10 +629,26 @@ $link
         dueDate: payable.dueDate,
         senderName: senderName,
         senderPhone: senderPhone,
-        externalLinkId: deepLinkService.generateExternalLinkId(),
+        externalLinkId: effectiveExternalId,
+        status: payable.status,
       ));
 
-      final message = '''
+      String message;
+      if (isPaid) {
+        message = '''
+Hi ${contact.name},
+
+Greetings! 
+
+The payment of ${AmountFormatter.formatWithCurrency(payable.amount, currency.symbol, currency.decimalPlaces)} dated ${AppDateFormatter.formatDate(payable.date, pattern: userProfile.dateFormat)} has been completed and recorded. 
+
+If you haven't updated this payment in FlowPaisa, please follow the link below to sync your records:
+$link
+
+Thank you!
+''';
+      } else {
+        message = '''
 Hi ${contact.name},
 
 This is a reminder regarding the payable amount of ${AmountFormatter.formatWithCurrency(payable.amount, currency.symbol, currency.decimalPlaces)} dated ${AppDateFormatter.formatDate(payable.date, pattern: userProfile.dateFormat)}.
@@ -590,7 +658,8 @@ View and import this in FlowPaisa:
 $link
 
 Thank you!
-      ''';
+''';
+      }
 
       // Clean phone number - remove spaces and non-digit characters except +
       final cleanPhone =

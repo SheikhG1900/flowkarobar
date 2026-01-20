@@ -306,6 +306,14 @@ class ReceivablesRepository {
     return receivable != null;
   }
 
+  /// Mark receivable as received by external link ID
+  Future<void> markAsReceivedByExternalLinkId(String externalLinkId) async {
+    final receivable = await getReceivableByExternalLinkId(externalLinkId);
+    if (receivable != null && receivable.status == 'PENDING') {
+      await markAsReceived(receivable.id);
+    }
+  }
+
   /// Import receivable from shared link
   Future<int> importFromSharedLink(dynamic sharedData) async {
     // Import shared data (dynamic type for flexibility with SharedData classes)

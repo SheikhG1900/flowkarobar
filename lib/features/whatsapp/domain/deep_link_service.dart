@@ -63,12 +63,16 @@ class DeepLinkService {
     String? categoryIcon,
     DateTime? dueDate,
     required String externalLinkId,
+    String? status,
   }) {
     // Mapping logic based on user requirements:
     // "will receive" (WILL_RECEIVE) -> Create payable link
     // "I owe" (RECEIVED_FROM) -> Create receivable link
     // "paid by" (PAID_BY) -> Create paid for (PAID_FOR) transaction link
     // "paid for" (PAID_FOR) -> Create paid by (PAID_BY) transaction link
+
+    // For status: if sender marks PAID, it remains PAID for the link.
+    // Recipient will see "Sender marked this as PAID".
 
     if (relationship == 'WILL_RECEIVE') {
       return generatePayableLink(PayableShareData(
@@ -79,6 +83,7 @@ class DeepLinkService {
         senderName: senderName,
         senderPhone: senderPhone,
         externalLinkId: externalLinkId,
+        status: status,
       ));
     } else if (relationship == 'RECEIVED_FROM') {
       return generateReceivableLink(ReceivableShareData(
@@ -89,6 +94,7 @@ class DeepLinkService {
         senderName: senderName,
         senderPhone: senderPhone,
         externalLinkId: externalLinkId,
+        status: status,
       ));
     } else {
       // It's a regular transaction (Income/Expense) or PAID_BY/PAID_FOR
@@ -97,7 +103,7 @@ class DeepLinkService {
 
       if (relationship == 'PAID_BY') {
         recipientRelationship = 'PAID_FOR';
-        recipientTransactionType = 'INCOME';
+        recipientTransactionType = 'EXPENSE';
       } else if (relationship == 'PAID_FOR') {
         recipientRelationship = 'PAID_BY';
         recipientTransactionType = 'EXPENSE';
@@ -115,6 +121,7 @@ class DeepLinkService {
         senderName: senderName,
         senderPhone: senderPhone,
         externalLinkId: externalLinkId,
+        status: status,
       ));
     }
   }

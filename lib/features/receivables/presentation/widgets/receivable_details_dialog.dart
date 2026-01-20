@@ -8,6 +8,7 @@ import 'package:flowpaisa/core/utils/icon_helper.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:flowpaisa/features/receivables/domain/models.dart';
 import 'package:flowpaisa/core/database/database.dart';
+import 'package:flowpaisa/features/transactions/presentation/providers/transaction_service_provider.dart';
 import 'package:flowpaisa/features/receivables/presentation/providers/receivables_provider.dart';
 import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 import 'package:flowpaisa/features/receivables/presentation/screens/edit_receivable_screen.dart';
@@ -462,11 +463,18 @@ class ReceivableDetailsDialog extends ConsumerWidget {
     );
   }
 
-  void _shareReceivable(BuildContext context, WidgetRef ref, dynamic receivable,
-      dynamic contact) {
+  Future<void> _shareReceivable(BuildContext context, WidgetRef ref, dynamic receivable,
+      dynamic contact) async {
     final currency = ref.read(currentCurrencyProvider).value!;
     final userProfile = ref.read(userProfileProvider);
     final deepLinkService = DeepLinkService();
+    final transactionService = ref.read(transactionServiceProvider);
+    final isReceived = receivable.status == 'RECEIVED';
+
+    // Ensure external ID is persisted before sharing
+    final effectiveExternalId = await transactionService.ensureExternalLinkId(
+      receivableId: receivable.id,
+    );
 
     final link = deepLinkService.generatePayableLink(PayableShareData(
       amount: receivable.amount,
@@ -475,19 +483,34 @@ class ReceivableDetailsDialog extends ConsumerWidget {
       dueDate: receivable.dueDate,
       senderName: userProfile.name ?? 'Someone',
       senderPhone: userProfile.phone ?? '',
-      externalLinkId: deepLinkService.generateExternalLinkId(),
+      externalLinkId: effectiveExternalId,
+      status: receivable.status,
     ));
 
-    final message = '''
+    String message;
+    if (isReceived) {
+      message = '''
+Greetings! 
+
+The payment of ${AmountFormatter.formatWithCurrency(receivable.amount, currency.symbol, currency.decimalPlaces)} has been received and recorded. 
+
+If you haven't updated this in your records, please use the link below to sync it in FlowPaisa:
+$link
+
+Thank you!
+''';
+    } else {
+      message = '''
 Receivable Details
 Amount: ${AmountFormatter.formatWithCurrency(receivable.amount, currency.symbol, currency.decimalPlaces)}
 Contact: ${contact?.name ?? 'Unknown'}
 Date: ${AppDateFormatter.formatDate(receivable.date, pattern: userProfile.dateFormat)}
-${receivable.dueDate != null ? 'Due Date: ${AppDateFormatter.formatDate(receivable.dueDate, pattern: userProfile.dateFormat)}\n' : ''}${receivable.description != null && receivable.description.isNotEmpty ? 'Description: ${receivable.description}\n' : ''}Status: ${receivable.status == 'PENDING' ? 'Pending' : 'Received'}
+${receivable.dueDate != null ? 'Due Date: ${AppDateFormatter.formatDate(receivable.dueDate, pattern: userProfile.dateFormat)}\n' : ''}${receivable.description != null && receivable.description.isNotEmpty ? 'Description: ${receivable.description}\n' : ''}Status: Pending
 
 View and record this in FlowPaisa:
 $link
-    ''';
+''';
+    }
 
     Share.share(message);
   }
@@ -540,14 +563,36 @@ $link
       await repository.markAsReceived(receivableId);
 
       if (context.mounted) {
-        Navigator.pop(context);
-        ToastUtils.showSuccessToast(context, ref, 'Marked as received');
+        // Refresh item to get updated status and externalLinkId
+        final updatedItem = await repository.getReceivableWithLinkedDataById(receivableId);
+        
+        if (context.mounted) {
+          Navigator.pop(context);
+          ToastUtils.showSuccessToast(context, ref, 'Marked as received');
+          
+          if (updatedItem != null) {
+            _showSettlementShareOption(context, ref, updatedItem.receivable, updatedItem.contact);
+          }
+        }
       }
     } catch (e) {
       if (context.mounted) {
         ToastUtils.showErrorToast(context, ref, 'Error: ${e.toString()}');
       }
     }
+  }
+
+  void _showSettlementShareOption(BuildContext context, WidgetRef ref, Receivable receivable, dynamic contact) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text('Receivable marked as received. Inform the contact?'),
+        action: SnackBarAction(
+          label: 'SHARE',
+          onPressed: () => _shareReceivable(context, ref, receivable, contact),
+        ),
+        duration: const Duration(seconds: 5),
+      ),
+    );
   }
 
   Future<void> _sendWhatsAppMessage(
@@ -567,9 +612,16 @@ $link
       final whatsAppService = ref.read(whatsAppServiceProvider);
       final userProfile = ref.read(userProfileProvider);
       final deepLinkService = DeepLinkService();
+      final transactionService = ref.read(transactionServiceProvider);
+      final isReceived = receivable.status == 'RECEIVED';
 
       final senderName = userProfile.name ?? 'Someone';
       final senderPhone = userProfile.phone ?? '';
+
+      // Ensure external ID is persisted before sharing
+      final effectiveExternalId = await transactionService.ensureExternalLinkId(
+        receivableId: receivable.id,
+      );
 
       // Create reciprocal link (Payable link for the recipient)
       final link = deepLinkService.generatePayableLink(PayableShareData(
@@ -579,10 +631,26 @@ $link
         dueDate: receivable.dueDate,
         senderName: senderName,
         senderPhone: senderPhone,
-        externalLinkId: deepLinkService.generateExternalLinkId(),
+        externalLinkId: effectiveExternalId,
+        status: receivable.status,
       ));
 
-      final message = '''
+      String message;
+      if (isReceived) {
+        message = '''
+Hi ${contact.name},
+
+Greetings! 
+
+Your payment of ${AmountFormatter.formatWithCurrency(receivable.amount, currency.symbol, currency.decimalPlaces)} dated ${AppDateFormatter.formatDate(receivable.date, pattern: userProfile.dateFormat)} has been received and recorded. 
+
+If you haven't updated this payment in FlowPaisa, please follow the link below to sync your records:
+$link
+
+Thank you!
+''';
+      } else {
+        message = '''
 Hi ${contact.name},
 
 This is a reminder regarding the receivable amount of ${AmountFormatter.formatWithCurrency(receivable.amount, currency.symbol, currency.decimalPlaces)} dated ${AppDateFormatter.formatDate(receivable.date, pattern: userProfile.dateFormat)}.
@@ -592,7 +660,8 @@ View and import this in FlowPaisa:
 $link
 
 Thank you!
-      ''';
+''';
+      }
 
       // Clean phone number - remove spaces and non-digit characters except +
       final cleanPhone =

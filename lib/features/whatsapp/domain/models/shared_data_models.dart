@@ -4,16 +4,18 @@ abstract class SharedData {
   final String externalLinkId;
   final String? senderName;
   final String? senderPhone;
+  final String? status; // 'PENDING', 'PAID', 'RECEIVED', etc.
 
   SharedData({
     required this.type,
     required this.externalLinkId,
     this.senderName,
     this.senderPhone,
+    this.status,
   });
 
   Map<String, dynamic> toJson();
-  
+
   static SharedData fromJson(Map<String, dynamic> json) {
     final type = json['type'] as String;
     switch (type) {
@@ -55,12 +57,14 @@ class TransactionShareData extends SharedData {
     this.relationship,
     String? senderName,
     String? senderPhone,
+    String? status,
     required String externalLinkId,
   }) : super(
           type: 'transaction',
           externalLinkId: externalLinkId,
           senderName: senderName,
           senderPhone: senderPhone,
+          status: status,
         );
 
   @override
@@ -79,6 +83,7 @@ class TransactionShareData extends SharedData {
         'relationship': relationship,
         'senderName': senderName,
         'senderPhone': senderPhone,
+        'status': status,
       };
 
   factory TransactionShareData.fromJson(Map<String, dynamic> json) {
@@ -95,6 +100,7 @@ class TransactionShareData extends SharedData {
       relationship: json['relationship'] as String?,
       senderName: json['senderName'] as String?,
       senderPhone: json['senderPhone'] as String?,
+      status: json['status'] as String?,
       externalLinkId: json['externalLinkId'] as String,
     );
   }
@@ -118,12 +124,14 @@ class ReceivableShareData extends SharedData {
     this.contactPhone,
     String? senderName,
     String? senderPhone,
+    String? status,
     required String externalLinkId,
   }) : super(
           type: 'receivable',
           externalLinkId: externalLinkId,
           senderName: senderName,
           senderPhone: senderPhone,
+          status: status,
         );
 
   @override
@@ -138,6 +146,7 @@ class ReceivableShareData extends SharedData {
         'contactPhone': contactPhone,
         'senderName': senderName,
         'senderPhone': senderPhone,
+        'status': status,
       };
 
   factory ReceivableShareData.fromJson(Map<String, dynamic> json) {
@@ -152,6 +161,7 @@ class ReceivableShareData extends SharedData {
       contactPhone: json['contactPhone'] as String?,
       senderName: json['senderName'] as String?,
       senderPhone: json['senderPhone'] as String?,
+      status: json['status'] as String?,
       externalLinkId: json['externalLinkId'] as String,
     );
   }
@@ -175,12 +185,14 @@ class PayableShareData extends SharedData {
     this.contactPhone,
     String? senderName,
     String? senderPhone,
+    String? status,
     required String externalLinkId,
   }) : super(
           type: 'payable',
           externalLinkId: externalLinkId,
           senderName: senderName,
           senderPhone: senderPhone,
+          status: status,
         );
 
   @override
@@ -195,6 +207,7 @@ class PayableShareData extends SharedData {
         'contactPhone': contactPhone,
         'senderName': senderName,
         'senderPhone': senderPhone,
+        'status': status,
       };
 
   factory PayableShareData.fromJson(Map<String, dynamic> json) {
@@ -209,6 +222,7 @@ class PayableShareData extends SharedData {
       contactPhone: json['contactPhone'] as String?,
       senderName: json['senderName'] as String?,
       senderPhone: json['senderPhone'] as String?,
+      status: json['status'] as String?,
       externalLinkId: json['externalLinkId'] as String,
     );
   }

@@ -300,6 +300,14 @@ class PayablesRepository {
     return payable != null;
   }
 
+  /// Mark payable as paid by external link ID
+  Future<void> markAsPaidByExternalLinkId(String externalLinkId) async {
+    final payable = await getPayableByExternalLinkId(externalLinkId);
+    if (payable != null && payable.status == 'PENDING') {
+      await markAsPaid(payable.id);
+    }
+  }
+
   /// Import payable from shared link
   Future<int> importFromSharedLink(dynamic sharedData) async {
     // Import shared data (dynamic type for flexibility with SharedData classes)

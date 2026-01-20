@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flowpaisa/features/transactions/presentation/providers/transaction_service_provider.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/whatsapp/domain/deep_link_service.dart';
@@ -108,12 +109,18 @@ class _ShareOptionsSheetState extends State<_ShareOptionsSheet> {
 
     try {
       final deepLinkService = DeepLinkService();
+      final transactionService = widget.ref.read(transactionServiceProvider);
       final whatsAppService = widget.ref.read(whatsAppServiceProvider);
       final currencySymbol = widget.ref.read(currencySymbolProvider);
       final userProfile = widget.ref.read(userProfileProvider);
 
       final senderName = userProfile.name ?? 'Someone';
       final senderPhone = userProfile.phone ?? '';
+
+      // Ensure external ID is persisted before sharing
+      final effectiveExternalId = await transactionService.ensureExternalLinkId(
+        transactionId: widget.transaction.id,
+      );
 
       // Generate reciprocal link
       final link = deepLinkService.generateReciprocalLink(
@@ -126,7 +133,7 @@ class _ShareOptionsSheetState extends State<_ShareOptionsSheet> {
         categoryName: widget.category?.name,
         categoryColor: widget.category?.color,
         categoryIcon: widget.category?.icon,
-        externalLinkId: deepLinkService.generateExternalLinkId(),
+        externalLinkId: effectiveExternalId,
       );
 
       // Create dummy message for WhatsApp - ideally whatsAppService should handle this
@@ -165,10 +172,16 @@ $link
 
     try {
       final deepLinkService = DeepLinkService();
+      final transactionService = widget.ref.read(transactionServiceProvider);
       final userProfile = widget.ref.read(userProfileProvider);
 
       final senderName = userProfile.name ?? 'Someone';
       final senderPhone = userProfile.phone ?? '';
+
+      // Ensure external ID is persisted before sharing
+      final effectiveExternalId = await transactionService.ensureExternalLinkId(
+        transactionId: widget.transaction.id,
+      );
 
       // Generate reciprocal link
       final link = deepLinkService.generateReciprocalLink(
@@ -181,7 +194,7 @@ $link
         categoryName: widget.category?.name,
         categoryColor: widget.category?.color,
         categoryIcon: widget.category?.icon,
-        externalLinkId: deepLinkService.generateExternalLinkId(),
+        externalLinkId: effectiveExternalId,
       );
 
       // Copy to clipboard
