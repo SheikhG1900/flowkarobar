@@ -303,6 +303,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
                         icon: const Icon(Icons.chat, color: Color(0xFF25D366)),
                         onPressed: () => _sendWhatsAppMessage(
                             context, ref, contact, transaction),
+                        tooltip: 'Send Message',
                       ),
                   ],
                 ],
