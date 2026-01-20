@@ -8,6 +8,7 @@ import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import 'package:flowpaisa/core/database/database.dart';
+import 'package:flowpaisa/features/settings/data/user_preferences_repository.dart';
 
 class CashbookNotifier extends Notifier<List<Cashbook>> {
   static const String _storageKey = 'cashbooks_list';
@@ -78,6 +79,37 @@ class CashbookNotifier extends Notifier<List<Cashbook>> {
     final newList = [...state, newCashbook];
     await _saveCashbooks(newList);
     state = newList;
+
+    // Copy profile data from default cashbook to new cashbook
+    final defaultDb = AppDatabase(fileName: 'flowpaisa.db');
+    try {
+      final defaultRepo = UserPreferencesRepository(defaultDb);
+      final profileName = await defaultRepo.getUserName();
+      final profileEmail = await defaultRepo.getUserEmail();
+      final profilePhone = await defaultRepo.getUserPhone();
+      final profileAddress = await defaultRepo.getUserAddress();
+
+      // Only copy if default cashbook has profile data
+      if (profileName != null ||
+          profileEmail != null ||
+          profilePhone != null ||
+          profileAddress != null) {
+        final newDb = AppDatabase(fileName: newCashbook.dbPath);
+        try {
+          final newRepo = UserPreferencesRepository(newDb);
+          if (profileName != null) await newRepo.setUserName(profileName);
+          if (profileEmail != null) await newRepo.setUserEmail(profileEmail);
+          if (profilePhone != null) await newRepo.setUserPhone(profilePhone);
+          if (profileAddress != null) {
+            await newRepo.setUserAddress(profileAddress);
+          }
+        } finally {
+          await newDb.close();
+        }
+      }
+    } finally {
+      await defaultDb.close();
+    }
   }
 
   Future<void> updateCashbook(Cashbook updated) async {

@@ -5,6 +5,7 @@ import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/core/utils/date_formatter.dart';
 import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 import 'package:flowpaisa/features/currencies/presentation/screens/currencies_list_screen.dart';
+import 'package:flowpaisa/shared/providers/currency_provider.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -19,6 +20,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   late TextEditingController _nameController;
   late TextEditingController _emailController;
   late TextEditingController _phoneController;
+  late TextEditingController _addressController;
 
   @override
   void initState() {
@@ -26,6 +28,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     _nameController = TextEditingController();
     _emailController = TextEditingController();
     _phoneController = TextEditingController();
+    _addressController = TextEditingController();
 
     // Load existing profile data
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -33,6 +36,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       _nameController.text = profile.name ?? '';
       _emailController.text = profile.email ?? '';
       _phoneController.text = profile.phone ?? '';
+      _addressController.text = profile.address ?? '';
     });
   }
 
@@ -41,7 +45,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     _nameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
+    _addressController.dispose();
     super.dispose();
+  }
+
+  String _getInitials(String name) {
+    if (name.trim().isEmpty) return '?';
+    final parts = name.trim().split(' ');
+    if (parts.length == 1) {
+      return parts[0].substring(0, 1).toUpperCase();
+    } else {
+      return '${parts[0].substring(0, 1)}${parts[1].substring(0, 1)}'.toUpperCase();
+    }
   }
 
   Future<void> _saveProfile() async {
@@ -61,6 +76,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         await notifier.updateName(_nameController.text);
         await notifier.updateEmail(_emailController.text);
         await notifier.updatePhone(_phoneController.text);
+        await notifier.updateAddress(_addressController.text);
 
         if (mounted) {
           Navigator.pop(context); // Close loading
@@ -82,11 +98,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final now = DateTime.now();
 
     final predefinedFormats = [
+      'MMM dd, yyyy',
       'dd/MM/yyyy',
       'MM/dd/yyyy',
       'yyyy-MM-dd',
       'dd MMM yyyy',
-      'MMM dd, yyyy',
       'EEEE, MMM dd, yyyy',
     ];
 
@@ -248,30 +264,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           ),
                         ],
                       ),
-                      child: const Icon(
-                        Icons.person,
-                        size: 50,
-                        color: Colors.white,
-                      ),
-                    ),
-                    Positioned(
-                      bottom: 0,
-                      right: 0,
-                      child: Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: BoxDecoration(
-                          gradient: AppColors.getSecondaryGradient(
-                              theme.colorScheme.primary),
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: theme.scaffoldBackgroundColor,
-                            width: 2,
+                      child: Center(
+                        child: Text(
+                          _getInitials(profile.name ?? ''),
+                          style: const TextStyle(
+                            fontSize: 36,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
                           ),
-                        ),
-                        child: const Icon(
-                          Icons.camera_alt,
-                          size: 16,
-                          color: Colors.white,
                         ),
                       ),
                     ),
@@ -347,6 +347,22 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ),
                 keyboardType: TextInputType.phone,
               ),
+              const SizedBox(height: 16),
+
+              // Address Field
+              TextFormField(
+                controller: _addressController,
+                decoration: InputDecoration(
+                  labelText: 'Address',
+                  hintText: 'Enter your address',
+                  prefixIcon: const Icon(Icons.location_on_outlined),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                keyboardType: TextInputType.streetAddress,
+                maxLines: 3,
+              ),
               const SizedBox(height: 32),
 
               // Preferences Section
@@ -367,26 +383,41 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     color: theme.dividerColor.withValues(alpha: 0.1),
                   ),
                 ),
-                child: ListTile(
-                  leading: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(
-                      Icons.currency_rupee,
-                      color: theme.colorScheme.primary,
-                    ),
-                  ),
-                  title: const Text('Currency'),
-                  subtitle: Text(profile.currency),
-                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const CurrenciesListScreen(),
+                child: Consumer(
+                  builder: (context, ref, child) {
+                    final currentCurrencyAsync = ref.watch(currentCurrencyProvider);
+                    return currentCurrencyAsync.when(
+                      data: (currency) => ListTile(
+                        leading: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Icon(
+                            Icons.currency_rupee,
+                            color: theme.colorScheme.primary,
+                          ),
+                        ),
+                        title: const Text('Currency'),
+                        subtitle: Text('${currency.name} (${currency.symbol})'),
+                        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const CurrenciesListScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                      loading: () => const ListTile(
+                        title: Text('Currency'),
+                        subtitle: Text('Loading...'),
+                      ),
+                      error: (error, stack) => ListTile(
+                        title: const Text('Currency'),
+                        subtitle: Text('Error: $error'),
                       ),
                     );
                   },

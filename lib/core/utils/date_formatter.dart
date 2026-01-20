@@ -3,7 +3,7 @@ import 'package:intl/intl.dart';
 /// Utility class for centralized date formatting
 class AppDateFormatter {
   /// Default date format pattern used in the app if not specified
-  static const String defaultPattern = 'dd/MM/yyyy';
+  static const String defaultPattern = 'MMM dd, yyyy';
 
   /// Format a DateTime object to a string using the specified pattern
   /// If [pattern] is null, it uses [defaultPattern]

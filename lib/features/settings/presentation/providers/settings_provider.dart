@@ -110,6 +110,7 @@ class UserProfileState {
   final String? name;
   final String? email;
   final String? phone;
+  final String? address;
   final String currency;
   final String dateFormat;
 
@@ -117,14 +118,16 @@ class UserProfileState {
     this.name,
     this.email,
     this.phone,
+    this.address,
     this.currency = 'INR',
-    this.dateFormat = 'dd/MM/yyyy',
+    this.dateFormat = 'MMM dd, yyyy',
   });
 
   UserProfileState copyWith({
     String? name,
     String? email,
     String? phone,
+    String? address,
     String? currency,
     String? dateFormat,
   }) {
@@ -132,6 +135,7 @@ class UserProfileState {
       name: name ?? this.name,
       email: email ?? this.email,
       phone: phone ?? this.phone,
+      address: address ?? this.address,
       currency: currency ?? this.currency,
       dateFormat: dateFormat ?? this.dateFormat,
     );
@@ -153,6 +157,7 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
     final name = await _repository.getUserName();
     final email = await _repository.getUserEmail();
     final phone = await _repository.getUserPhone();
+    final address = await _repository.getUserAddress();
     final currency = await _repository.getCurrency();
     final dateFormat = await _repository.getDateFormat();
 
@@ -160,6 +165,7 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
       name: name,
       email: email,
       phone: phone,
+      address: address,
       currency: currency,
       dateFormat: dateFormat,
     );
@@ -178,6 +184,11 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
   Future<void> updatePhone(String phone) async {
     await _repository.setUserPhone(phone);
     state = state.copyWith(phone: phone);
+  }
+
+  Future<void> updateAddress(String address) async {
+    await _repository.setUserAddress(address);
+    state = state.copyWith(address: address);
   }
 
   Future<void> updateCurrency(String currency) async {

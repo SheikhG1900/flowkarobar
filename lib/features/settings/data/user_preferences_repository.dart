@@ -15,6 +15,7 @@ class UserPreferencesRepository {
   static const String keyUserName = 'user_name';
   static const String keyUserEmail = 'user_email';
   static const String keyUserPhone = 'user_phone';
+  static const String keyUserAddress = 'user_address';
 
   // Get a preference value by key
   Future<String?> getPreference(String key) async {
@@ -91,7 +92,7 @@ class UserPreferencesRepository {
   // Date Format Preference
   Future<String> getDateFormat() async {
     final value = await getPreference(keyDateFormat);
-    return value ?? 'dd/MM/yyyy'; // Default to Indian format
+    return value ?? 'MMM dd, yyyy'; // Default to MMM dd, yyyy format
   }
 
   Future<void> setDateFormat(String format) async {
@@ -121,6 +122,14 @@ class UserPreferencesRepository {
 
   Future<void> setUserPhone(String phone) async {
     await setPreference(keyUserPhone, phone);
+  }
+
+  Future<String?> getUserAddress() async {
+    return await getPreference(keyUserAddress);
+  }
+
+  Future<void> setUserAddress(String address) async {
+    await setPreference(keyUserAddress, address);
   }
 
   // Get all preferences as a map
