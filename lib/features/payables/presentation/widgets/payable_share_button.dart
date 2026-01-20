@@ -5,9 +5,9 @@ import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/whatsapp/domain/deep_link_service.dart';
 import 'package:flowpaisa/features/whatsapp/domain/models/shared_data_models.dart';
-import 'package:flowpaisa/features/whatsapp/domain/whatsapp_service.dart';
 import 'package:flowpaisa/features/whatsapp/presentation/providers/whatsapp_provider.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
+import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 
 class PayableShareButton extends ConsumerWidget {
   final Payable payable;
@@ -106,28 +106,34 @@ class _ShareOptionsSheetState extends State<_ShareOptionsSheet> {
       final deepLinkService = DeepLinkService();
       final whatsAppService = widget.ref.read(whatsAppServiceProvider);
       final currencySymbol = widget.ref.read(currencySymbolProvider);
+      final userProfile = widget.ref.read(userProfileProvider);
 
-      // Use existing externalLinkId or generate new one
-      final externalLinkId = widget.payable.externalLinkId ??
-          deepLinkService.generateExternalLinkId();
+      final senderName = userProfile.name ?? 'Someone';
+      final senderPhone = userProfile.phone ?? '';
 
-      // Create share data
-      final shareData = PayableShareData(
+      // Create share data for recipient (Receivable)
+      final shareData = ReceivableShareData(
         amount: widget.payable.amount,
         description: widget.payable.description,
         date: widget.payable.date,
         dueDate: widget.payable.dueDate,
-        contactName: widget.contact?.name,
-        contactPhone: widget.contact?.phone,
-        externalLinkId: externalLinkId,
+        senderName: senderName,
+        senderPhone: senderPhone,
+        externalLinkId: widget.payable.externalLinkId ?? deepLinkService.generateExternalLinkId(),
       );
 
-      // Share via WhatsApp
-      await whatsAppService.sharePayableWithLink(
-        payable: shareData,
-        contactPhone: widget.contact?.phone,
-        currencySymbol: currencySymbol,
-      );
+      final link = deepLinkService.generateReceivableLink(shareData);
+
+      final message = '''
+📋 Payment Acknowledgment
+I owe you: $currencySymbol${widget.payable.amount.toStringAsFixed(2)}
+Date: ${widget.payable.date.day}/${widget.payable.date.month}/${widget.payable.date.year}
+
+View and record this in FlowPaisa:
+$link
+''';
+
+      await whatsAppService.sendMessage(widget.contact?.phone ?? '', message);
 
       if (context.mounted) {
         Navigator.of(context).pop();
@@ -149,24 +155,23 @@ class _ShareOptionsSheetState extends State<_ShareOptionsSheet> {
 
     try {
       final deepLinkService = DeepLinkService();
+      final userProfile = widget.ref.read(userProfileProvider);
 
-      // Use existing externalLinkId or generate new one
-      final externalLinkId = widget.payable.externalLinkId ??
-          deepLinkService.generateExternalLinkId();
+      final senderName = userProfile.name ?? 'Someone';
+      final senderPhone = userProfile.phone ?? '';
 
-      // Create share data
-      final shareData = PayableShareData(
+      // Create share data for recipient (Receivable)
+      final shareData = ReceivableShareData(
         amount: widget.payable.amount,
         description: widget.payable.description,
         date: widget.payable.date,
         dueDate: widget.payable.dueDate,
-        contactName: widget.contact?.name,
-        contactPhone: widget.contact?.phone,
-        externalLinkId: externalLinkId,
+        senderName: senderName,
+        senderPhone: senderPhone,
+        externalLinkId: widget.payable.externalLinkId ?? deepLinkService.generateExternalLinkId(),
       );
 
-      // Generate link
-      final link = deepLinkService.generatePayableLink(shareData);
+      final link = deepLinkService.generateReceivableLink(shareData);
 
       // Copy to clipboard
       await Clipboard.setData(ClipboardData(text: link));

@@ -52,6 +52,9 @@ class Transactions extends Table {
   BoolColumn get isScheduled => boolean().withDefault(
       const Constant(false))(); // true if generated from a schedule
 
+  // Offline shared transaction
+  TextColumn get externalLinkId => text().nullable().unique()(); // "tx_8f7a3b"
+
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
 }
@@ -223,7 +226,7 @@ class AppDatabase extends _$AppDatabase {
       : super(_openConnection(fileName));
 
   @override
-  int get schemaVersion => 8;
+  int get schemaVersion => 9;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -264,6 +267,10 @@ class AppDatabase extends _$AppDatabase {
           if (from <= 7) {
             await m.addColumn(transactions, transactions.isScheduled);
             await m.createTable(transactionSchedules);
+          }
+          // Migration from version 8 to 9: Add externalLinkId to Transactions
+          if (from <= 8) {
+            await m.addColumn(transactions, transactions.externalLinkId);
           }
         },
       );

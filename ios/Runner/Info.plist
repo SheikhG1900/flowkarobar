@@ -52,6 +52,19 @@
 	</array>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>com.flowpaisa.app</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>flowpaisa</string>
+			</array>
+		</dict>
+	</array>
 	<key>NSContactsUsageDescription</key>
 	<string>This app requires contact access to import names, phone numbers, and emails for your cashbook contacts.</string>
 </dict>

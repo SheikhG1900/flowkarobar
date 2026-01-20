@@ -256,6 +256,19 @@ class TransactionsRepository {
         .watch();
   }
 
+  // Get transaction by external link ID
+  Future<Transaction?> getTransactionByExternalLinkId(String externalLinkId) {
+    return (_database.select(_database.transactions)
+          ..where((t) => t.externalLinkId.equals(externalLinkId)))
+        .getSingleOrNull();
+  }
+
+  // Check if external link ID already exists
+  Future<bool> checkIfExternalLinkExists(String externalLinkId) async {
+    final transaction = await getTransactionByExternalLinkId(externalLinkId);
+    return transaction != null;
+  }
+
   // Watch transactions with category details
   Stream<List<TransactionWithCategory>> watchTransactionsWithCategory() {
     final query = _database.select(_database.transactions).join([

@@ -52,6 +52,7 @@ class TransactionService {
         paidRelationship, // 'PAID_FOR', 'PAID_BY', 'RECEIVED_FROM', 'WILL_RECEIVE'
     bool createLinkedEntry = false,
     DateTime? dueDate,
+    String? externalLinkId,
   }) async {
     return await database.transaction(() async {
       // 1. Create the main transaction
@@ -64,6 +65,7 @@ class TransactionService {
           description: Value(description),
           date: Value(date),
           paidRelationship: Value(paidRelationship),
+          externalLinkId: Value(externalLinkId),
           createdAt: Value(DateTime.now()),
           updatedAt: Value(DateTime.now()),
         ),

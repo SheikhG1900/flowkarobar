@@ -11,8 +11,9 @@ import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/features/payables/presentation/providers/payables_provider.dart';
 import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 import 'package:flowpaisa/features/payables/presentation/screens/edit_payable_screen.dart';
+import 'package:flowpaisa/features/whatsapp/domain/deep_link_service.dart';
+import 'package:flowpaisa/features/whatsapp/domain/models/shared_data_models.dart';
 import 'package:flowpaisa/features/whatsapp/presentation/providers/whatsapp_provider.dart';
-import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
 
@@ -463,12 +464,27 @@ class PayableDetailsDialog extends ConsumerWidget {
       BuildContext context, WidgetRef ref, dynamic payable, dynamic contact) {
     final currency = ref.read(currentCurrencyProvider).value!;
     final userProfile = ref.read(userProfileProvider);
+    final deepLinkService = DeepLinkService();
+
+    final link = deepLinkService.generateReceivableLink(ReceivableShareData(
+      amount: payable.amount,
+      date: payable.date,
+      description: payable.description,
+      dueDate: payable.dueDate,
+      senderName: userProfile.name ?? 'Someone',
+      senderPhone: userProfile.phone ?? '',
+      externalLinkId: deepLinkService.generateExternalLinkId(),
+    ));
+
     final message = '''
 Payable Details
 Amount: ${AmountFormatter.formatWithCurrency(payable.amount, currency.symbol, currency.decimalPlaces)}
 Contact: ${contact?.name ?? 'Unknown'}
 Date: ${AppDateFormatter.formatDate(payable.date, pattern: userProfile.dateFormat)}
 ${payable.dueDate != null ? 'Due Date: ${AppDateFormatter.formatDate(payable.dueDate, pattern: userProfile.dateFormat)}\n' : ''}${payable.description != null && payable.description.isNotEmpty ? 'Description: ${payable.description}\n' : ''}Status: ${payable.status == 'PENDING' ? 'Pending' : 'Paid'}
+
+View and record this in FlowPaisa:
+$link
     ''';
 
     Share.share(message);
@@ -548,12 +564,31 @@ ${payable.dueDate != null ? 'Due Date: ${AppDateFormatter.formatDate(payable.due
     try {
       final whatsAppService = ref.read(whatsAppServiceProvider);
       final userProfile = ref.read(userProfileProvider);
+      final deepLinkService = DeepLinkService();
+
+      final senderName = userProfile.name ?? 'Someone';
+      final senderPhone = userProfile.phone ?? '';
+
+      // Create reciprocal link (Receivable link for the recipient)
+      final link = deepLinkService.generateReceivableLink(ReceivableShareData(
+        amount: payable.amount,
+        date: payable.date,
+        description: payable.description,
+        dueDate: payable.dueDate,
+        senderName: senderName,
+        senderPhone: senderPhone,
+        externalLinkId: deepLinkService.generateExternalLinkId(),
+      ));
+
       final message = '''
 Hi ${contact.name},
 
 This is a reminder regarding the payable amount of ${AmountFormatter.formatWithCurrency(payable.amount, currency.symbol, currency.decimalPlaces)} dated ${AppDateFormatter.formatDate(payable.date, pattern: userProfile.dateFormat)}.
 
 ${payable.dueDate != null ? 'Due Date: ${AppDateFormatter.formatDate(payable.dueDate, pattern: userProfile.dateFormat)}\n' : ''}${payable.description != null && payable.description.isNotEmpty ? 'Details: ${payable.description}\n' : ''}
+View and import this in FlowPaisa:
+$link
+
 Thank you!
       ''';
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:drift/drift.dart' as drift;
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
@@ -25,14 +26,28 @@ class AddTransactionScreen extends ConsumerStatefulWidget {
   final double? initialAmount;
   final DateTime? initialDate;
   final String? initialDescription;
-  final String? initialCategoryName; // Pass name to lookup ID
+  final String? initialType;
+  final String? initialRelationship;
+  final String? initialCategoryName;
+  final String? initialCategoryColor;
+  final String? initialCategoryIcon;
+  final String? initialContactName;
+  final String? initialContactPhone;
+  final String? initialExternalLinkId;
 
   const AddTransactionScreen({
     super.key,
     this.initialAmount,
     this.initialDate,
     this.initialDescription,
+    this.initialType,
+    this.initialRelationship,
     this.initialCategoryName,
+    this.initialCategoryColor,
+    this.initialCategoryIcon,
+    this.initialContactName,
+    this.initialContactPhone,
+    this.initialExternalLinkId,
   });
 
   @override
@@ -49,6 +64,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
   DateTime _selectedDate = DateTime.now();
   DateTime? _dueDate;
   bool _isLoading = false;
+  bool _isDuplicate = false;
 
   // Selected entities
   Category? _selectedCategory;
@@ -73,17 +89,94 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     if (widget.initialDescription != null) {
       _descriptionController.text = widget.initialDescription!;
     }
-
-    // Auto-select category if name provided (needs async lookup, handled in post-frame or logic below)
-    if (widget.initialCategoryName != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _findAndSelectCategory(widget.initialCategoryName!);
-      });
+    if (widget.initialType != null) {
+      _selectedType = widget.initialType!;
     }
+    if (widget.initialRelationship != null) {
+      _paidRelationship = widget.initialRelationship;
+      _createLinkedEntry = true;
+    }
+
+    // Handle initial contact and category in post-frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initializeEntities();
+    });
   }
 
-  Future<void> _findAndSelectCategory(String name) async {
-    // Logic to select category if needed
+  Future<void> _initializeEntities() async {
+    // 0. Handle duplicate check
+    if (widget.initialExternalLinkId != null) {
+      final repository = ref.read(transactionsRepositoryProvider);
+      final exists = await repository
+          .checkIfExternalLinkExists(widget.initialExternalLinkId!);
+      if (exists) {
+        if (mounted) {
+          setState(() {
+            _isDuplicate = true;
+          });
+          ToastUtils.showWarningToast(
+            context,
+            ref,
+            'This transaction has already been imported.',
+          );
+        }
+      }
+    }
+
+    // 1. Handle Contact
+    if (widget.initialContactPhone != null ||
+        widget.initialContactName != null) {
+      final contactsRepo = ref.read(contactsRepositoryProvider);
+
+      Contact? contact;
+      if (widget.initialContactPhone != null &&
+          widget.initialContactPhone!.isNotEmpty) {
+        contact =
+            await contactsRepo.getContactByPhone(widget.initialContactPhone!);
+      }
+
+      if (contact == null && widget.initialContactName != null) {
+        // Option to create contact will be handled by the UI or we can auto-create
+        // For now, we'll try to find by name if phone failed
+        final allContacts = await contactsRepo.watchAllContacts().first;
+        try {
+          contact = allContacts.firstWhere((c) =>
+              c.name.toLowerCase() == widget.initialContactName!.toLowerCase());
+        } catch (_) {}
+      }
+
+      if (contact != null) {
+        if (mounted) {
+          setState(() {
+            _selectedContact = contact;
+            _selectedContactId = contact!.id;
+          });
+        }
+      } else if (widget.initialContactName != null) {
+        // We have a name but no contact found - the UI already has a "Suggest" or "Add New" flow
+        // We'll keep the info available for the user to create
+      }
+    }
+
+    // 2. Handle Category
+    if (widget.initialCategoryName != null) {
+      final categoriesRepo = ref.read(categoriesRepositoryProvider);
+      final allCategories = await categoriesRepo.watchAllCategories().first;
+
+      Category? category;
+      try {
+        category = allCategories.firstWhere((c) =>
+            c.name.toLowerCase() == widget.initialCategoryName!.toLowerCase());
+      } catch (_) {}
+
+      if (category != null) {
+        if (mounted) {
+          setState(() {
+            _selectedCategory = category;
+          });
+        }
+      }
+    }
   }
 
   @override
@@ -219,6 +312,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
         paidRelationship: _paidRelationship,
         createLinkedEntry: _createLinkedEntry,
         dueDate: _dueDate,
+        externalLinkId: widget.initialExternalLinkId,
       );
 
       // Increment usage count for free users
@@ -1060,6 +1154,31 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                             });
                           },
                         ),
+                      ] else if (widget.initialContactName != null) ...[
+                        const Spacer(),
+                        TextButton.icon(
+                          onPressed: () async {
+                            final contactsRepo =
+                                ref.read(contactsRepositoryProvider);
+                            final id = await contactsRepo.createContact(
+                              ContactsCompanion(
+                                name: drift.Value(widget.initialContactName!),
+                                phone: drift.Value(widget.initialContactPhone),
+                                createdAt: drift.Value(DateTime.now()),
+                                updatedAt: drift.Value(DateTime.now()),
+                              ),
+                            );
+                            final newContact =
+                                (await contactsRepo.watchAllContacts().first)
+                                    .firstWhere((c) => c.id == id);
+                            setState(() {
+                              _selectedContact = newContact;
+                              _selectedContactId = id;
+                            });
+                          },
+                          icon: const Icon(Icons.add, size: 16),
+                          label: Text('Add "${widget.initialContactName}"'),
+                        ),
                       ] else ...[
                         const Spacer(),
                         const Icon(Icons.arrow_forward_ios, size: 16),
@@ -1303,7 +1422,8 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                 children: [
                   GradientButton(
                     label: _isLoading ? 'Saving...' : l10n.save,
-                    onPressed: _isLoading ? null : _saveTransaction,
+                    onPressed:
+                        (_isLoading || _isDuplicate) ? null : _saveTransaction,
                     gradient: isExpense
                         ? AppColors.expenseGradient
                         : AppColors.incomeGradient,
@@ -1311,11 +1431,16 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                     icon: _isLoading ? null : Icons.check,
                     width: double.infinity,
                   ),
-                  if (limitsAsync.asData?.value != null &&
-                      !limitsAsync.asData!.value.canAdd)
-                    const Padding(
-                      padding: EdgeInsets.only(top: 8, right: 8),
-                      child: Icon(Icons.lock, size: 16, color: Colors.white),
+                  if ((limitsAsync.asData?.value != null &&
+                          !limitsAsync.asData!.value.canAdd) ||
+                      _isDuplicate)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8, right: 8),
+                      child: Icon(
+                        _isDuplicate ? Icons.info_outline : Icons.lock,
+                        size: 16,
+                        color: Colors.white,
+                      ),
                     ),
                 ],
               ),

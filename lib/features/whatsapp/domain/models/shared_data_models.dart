@@ -1,13 +1,15 @@
-import 'dart:convert';
-
 /// Base class for all shareable data types
 abstract class SharedData {
   final String type;
   final String externalLinkId;
+  final String? senderName;
+  final String? senderPhone;
 
   SharedData({
     required this.type,
     required this.externalLinkId,
+    this.senderName,
+    this.senderPhone,
   });
 
   Map<String, dynamic> toJson();
@@ -34,9 +36,11 @@ class TransactionShareData extends SharedData {
   final String? description;
   final DateTime date;
   final String? categoryName;
+  final String? categoryColor;
+  final String? categoryIcon;
   final String? contactName;
   final String? contactPhone;
-  final String? sharedBy;
+  final String? relationship; // 'PAID_FOR', 'PAID_BY', etc.
 
   TransactionShareData({
     required this.amount,
@@ -44,11 +48,20 @@ class TransactionShareData extends SharedData {
     this.description,
     required this.date,
     this.categoryName,
+    this.categoryColor,
+    this.categoryIcon,
     this.contactName,
     this.contactPhone,
-    this.sharedBy,
+    this.relationship,
+    String? senderName,
+    String? senderPhone,
     required String externalLinkId,
-  }) : super(type: 'transaction', externalLinkId: externalLinkId);
+  }) : super(
+          type: 'transaction',
+          externalLinkId: externalLinkId,
+          senderName: senderName,
+          senderPhone: senderPhone,
+        );
 
   @override
   Map<String, dynamic> toJson() => {
@@ -59,9 +72,13 @@ class TransactionShareData extends SharedData {
         'description': description,
         'date': date.toIso8601String(),
         'categoryName': categoryName,
+        'categoryColor': categoryColor,
+        'categoryIcon': categoryIcon,
         'contactName': contactName,
         'contactPhone': contactPhone,
-        'sharedBy': sharedBy,
+        'relationship': relationship,
+        'senderName': senderName,
+        'senderPhone': senderPhone,
       };
 
   factory TransactionShareData.fromJson(Map<String, dynamic> json) {
@@ -71,9 +88,13 @@ class TransactionShareData extends SharedData {
       description: json['description'] as String?,
       date: DateTime.parse(json['date'] as String),
       categoryName: json['categoryName'] as String?,
+      categoryColor: json['categoryColor'] as String?,
+      categoryIcon: json['categoryIcon'] as String?,
       contactName: json['contactName'] as String?,
       contactPhone: json['contactPhone'] as String?,
-      sharedBy: json['sharedBy'] as String?,
+      relationship: json['relationship'] as String?,
+      senderName: json['senderName'] as String?,
+      senderPhone: json['senderPhone'] as String?,
       externalLinkId: json['externalLinkId'] as String,
     );
   }
@@ -87,7 +108,6 @@ class ReceivableShareData extends SharedData {
   final DateTime? dueDate;
   final String? contactName;
   final String? contactPhone;
-  final String? sharedBy;
 
   ReceivableShareData({
     required this.amount,
@@ -96,9 +116,15 @@ class ReceivableShareData extends SharedData {
     this.dueDate,
     this.contactName,
     this.contactPhone,
-    this.sharedBy,
+    String? senderName,
+    String? senderPhone,
     required String externalLinkId,
-  }) : super(type: 'receivable', externalLinkId: externalLinkId);
+  }) : super(
+          type: 'receivable',
+          externalLinkId: externalLinkId,
+          senderName: senderName,
+          senderPhone: senderPhone,
+        );
 
   @override
   Map<String, dynamic> toJson() => {
@@ -110,7 +136,8 @@ class ReceivableShareData extends SharedData {
         'dueDate': dueDate?.toIso8601String(),
         'contactName': contactName,
         'contactPhone': contactPhone,
-        'sharedBy': sharedBy,
+        'senderName': senderName,
+        'senderPhone': senderPhone,
       };
 
   factory ReceivableShareData.fromJson(Map<String, dynamic> json) {
@@ -123,7 +150,8 @@ class ReceivableShareData extends SharedData {
           : null,
       contactName: json['contactName'] as String?,
       contactPhone: json['contactPhone'] as String?,
-      sharedBy: json['sharedBy'] as String?,
+      senderName: json['senderName'] as String?,
+      senderPhone: json['senderPhone'] as String?,
       externalLinkId: json['externalLinkId'] as String,
     );
   }
@@ -137,7 +165,6 @@ class PayableShareData extends SharedData {
   final DateTime? dueDate;
   final String? contactName;
   final String? contactPhone;
-  final String? sharedBy;
 
   PayableShareData({
     required this.amount,
@@ -146,9 +173,15 @@ class PayableShareData extends SharedData {
     this.dueDate,
     this.contactName,
     this.contactPhone,
-    this.sharedBy,
+    String? senderName,
+    String? senderPhone,
     required String externalLinkId,
-  }) : super(type: 'payable', externalLinkId: externalLinkId);
+  }) : super(
+          type: 'payable',
+          externalLinkId: externalLinkId,
+          senderName: senderName,
+          senderPhone: senderPhone,
+        );
 
   @override
   Map<String, dynamic> toJson() => {
@@ -160,7 +193,8 @@ class PayableShareData extends SharedData {
         'dueDate': dueDate?.toIso8601String(),
         'contactName': contactName,
         'contactPhone': contactPhone,
-        'sharedBy': sharedBy,
+        'senderName': senderName,
+        'senderPhone': senderPhone,
       };
 
   factory PayableShareData.fromJson(Map<String, dynamic> json) {
@@ -173,7 +207,8 @@ class PayableShareData extends SharedData {
           : null,
       contactName: json['contactName'] as String?,
       contactPhone: json['contactPhone'] as String?,
-      sharedBy: json['sharedBy'] as String?,
+      senderName: json['senderName'] as String?,
+      senderPhone: json['senderPhone'] as String?,
       externalLinkId: json['externalLinkId'] as String,
     );
   }

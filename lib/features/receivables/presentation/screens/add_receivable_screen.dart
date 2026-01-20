@@ -15,7 +15,22 @@ import 'package:flowpaisa/shared/widgets/limit_countdown_badge.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
 
 class AddReceivableScreen extends ConsumerStatefulWidget {
-  const AddReceivableScreen({super.key});
+  final double? initialAmount;
+  final DateTime? initialDate;
+  final String? initialDescription;
+  final String? initialContactName;
+  final String? initialContactPhone;
+  final String? initialExternalLinkId;
+
+  const AddReceivableScreen({
+    super.key,
+    this.initialAmount,
+    this.initialDate,
+    this.initialDescription,
+    this.initialContactName,
+    this.initialContactPhone,
+    this.initialExternalLinkId,
+  });
 
   @override
   ConsumerState<AddReceivableScreen> createState() =>
@@ -31,9 +46,77 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
   DateTime? _dueDate;
   bool _autoCreateIncome = true;
   bool _isLoading = false;
+  bool _isDuplicate = false;
 
   Contact? _selectedContact;
   int? _selectedContactId;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialAmount != null) {
+      _amountController.text = widget.initialAmount!.toStringAsFixed(2);
+    }
+    if (widget.initialDate != null) {
+      _selectedDate = widget.initialDate!;
+    }
+    if (widget.initialDescription != null) {
+      _descriptionController.text = widget.initialDescription!;
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initializeEntities();
+    });
+  }
+
+  Future<void> _initializeEntities() async {
+    if (widget.initialExternalLinkId != null) {
+      final repository = ref.read(receivablesRepositoryProvider);
+      final exists = await repository
+          .checkIfExternalLinkExists(widget.initialExternalLinkId!);
+      if (exists) {
+        if (mounted) {
+          setState(() {
+            _isDuplicate = true;
+          });
+          ToastUtils.showWarningToast(
+            context,
+            ref,
+            'This receivable has already been imported.',
+          );
+        }
+      }
+    }
+
+    if (widget.initialContactPhone != null ||
+        widget.initialContactName != null) {
+      final contactsRepo = ref.read(contactsRepositoryProvider);
+
+      Contact? contact;
+      if (widget.initialContactPhone != null &&
+          widget.initialContactPhone!.isNotEmpty) {
+        contact =
+            await contactsRepo.getContactByPhone(widget.initialContactPhone!);
+      }
+
+      if (contact == null && widget.initialContactName != null) {
+        final allContacts = await contactsRepo.watchAllContacts().first;
+        try {
+          contact = allContacts.firstWhere((c) =>
+              c.name.toLowerCase() == widget.initialContactName!.toLowerCase());
+        } catch (_) {}
+      }
+
+      if (contact != null) {
+        if (mounted) {
+          setState(() {
+            _selectedContact = contact;
+            _selectedContactId = contact!.id;
+          });
+        }
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -80,6 +163,7 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
         dueDate: drift.Value(_dueDate),
         status: const drift.Value('PENDING'),
         autoCreateIncome: drift.Value(_autoCreateIncome),
+        externalLinkId: drift.Value(widget.initialExternalLinkId),
         createdAt: drift.Value(DateTime.now()),
         updatedAt: drift.Value(DateTime.now()),
       );
@@ -441,8 +525,46 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
                           ),
                         ],
                       ),
-                      const Spacer(),
-                      const Icon(Icons.arrow_forward_ios, size: 16),
+                      if (_selectedContact != null) ...[
+                        const Spacer(),
+                        IconButton(
+                          icon: const Icon(Icons.close, size: 20),
+                          onPressed: () {
+                            setState(() {
+                              _selectedContact = null;
+                              _selectedContactId = null;
+                            });
+                          },
+                        ),
+                      ] else if (widget.initialContactName != null) ...[
+                        const Spacer(),
+                        TextButton.icon(
+                          onPressed: () async {
+                            final contactsRepo =
+                                ref.read(contactsRepositoryProvider);
+                            final id = await contactsRepo.createContact(
+                              ContactsCompanion(
+                                name: drift.Value(widget.initialContactName!),
+                                phone: drift.Value(widget.initialContactPhone),
+                                createdAt: drift.Value(DateTime.now()),
+                                updatedAt: drift.Value(DateTime.now()),
+                              ),
+                            );
+                            final newContact =
+                                (await contactsRepo.watchAllContacts().first)
+                                    .firstWhere((c) => c.id == id);
+                            setState(() {
+                              _selectedContact = newContact;
+                              _selectedContactId = id;
+                            });
+                          },
+                          icon: const Icon(Icons.add, size: 16),
+                          label: Text('Add "${widget.initialContactName}"'),
+                        ),
+                      ] else ...[
+                        const Spacer(),
+                        const Icon(Icons.arrow_forward_ios, size: 16),
+                      ],
                     ],
                   ),
                 ),
@@ -479,7 +601,8 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          gradient: AppColors.getSecondaryGradient(theme.colorScheme.primary),
+                          gradient: AppColors.getSecondaryGradient(
+                              theme.colorScheme.primary),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: const Icon(
@@ -633,16 +756,20 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
                       children: [
                         GradientButton(
                           label: 'Add Receivable',
-                          onPressed: _saveReceivable,
+                          onPressed: _isDuplicate ? null : _saveReceivable,
                           gradient: AppColors.receivableGradient,
                           width: double.infinity,
                         ),
-                        if (limitsAsync.asData?.value != null &&
-                            !limitsAsync.asData!.value.canAdd)
-                          const Padding(
-                            padding: EdgeInsets.only(top: 8, right: 8),
-                            child:
-                                Icon(Icons.lock, size: 16, color: Colors.white),
+                        if ((limitsAsync.asData?.value != null &&
+                                !limitsAsync.asData!.value.canAdd) ||
+                            _isDuplicate)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8, right: 8),
+                            child: Icon(
+                              _isDuplicate ? Icons.info_outline : Icons.lock,
+                              size: 16,
+                              color: Colors.white,
+                            ),
                           ),
                       ],
                     ),

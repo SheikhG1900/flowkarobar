@@ -14,11 +14,15 @@ import 'package:flowpaisa/shared/widgets/limit_countdown_badge.dart';
 class AddCategoryScreen extends ConsumerStatefulWidget {
   final String? initialName;
   final String? initialType;
+  final String? initialColor;
+  final String? initialIcon;
 
   const AddCategoryScreen({
     super.key,
     this.initialName,
     this.initialType,
+    this.initialColor,
+    this.initialIcon,
   });
 
   @override
@@ -61,6 +65,16 @@ class _AddCategoryScreenState extends ConsumerState<AddCategoryScreen> {
     if (widget.initialType != null) {
       _selectedType = widget.initialType!;
       _updateColorForType();
+    }
+
+    if (widget.initialColor != null) {
+      try {
+        _selectedColor = Color(int.parse(widget.initialColor!.replaceAll('#', '0xFF')));
+      } catch (_) {}
+    }
+
+    if (widget.initialIcon != null) {
+      _selectedIcon = widget.initialIcon!;
     }
 
     // Initial suggestions check

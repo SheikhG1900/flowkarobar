@@ -73,7 +73,6 @@ class DeepLinkHandler {
       context: _context!,
       builder: (context) => ImportDialog(
         sharedData: sharedData,
-        ref: _ref!,
       ),
     );
   }

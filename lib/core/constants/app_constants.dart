@@ -5,9 +5,9 @@ class AppConstants {
   static const String deepLinkScheme = 'flowpaisa';
   
   // URLs
-  static const String appWebsite = 'https://flowpaisa.app';
-  static const String privacyPolicy = 'https://flowpaisa.app/privacy';
-  static const String termsOfService = 'https://flowpaisa.app/terms';
+  static const String appWebsite = 'https://tamatasoft.github.io/flowpaisa';
+  static const String privacyPolicy = 'https://tamatasoft.github.io/flowpaisa/privacy';
+  static const String termsOfService = 'https://tamatasoft.github.io/flowpaisa/terms';
   
   // Firebase Collections
   static const String languageRequestsCollection = 'language_requests';

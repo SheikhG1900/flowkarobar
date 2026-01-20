@@ -11,8 +11,8 @@ import 'package:flowpaisa/features/transactions/presentation/screens/edit_transa
 import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/payables/presentation/providers/payables_provider.dart';
 import 'package:flowpaisa/features/receivables/presentation/providers/receivables_provider.dart';
+import 'package:flowpaisa/features/whatsapp/domain/deep_link_service.dart';
 import 'package:flowpaisa/features/whatsapp/presentation/providers/whatsapp_provider.dart';
-import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
 
@@ -689,11 +689,29 @@ class TransactionDetailsDialog extends ConsumerWidget {
       dynamic transaction, dynamic category, dynamic contact) {
     final currency = ref.read(currentCurrencyProvider).value!;
     final isExpense = transaction.type == 'EXPENSE';
+    final userProfile = ref.read(userProfileProvider);
+    final deepLinkService = DeepLinkService();
+
+    final link = deepLinkService.generateReciprocalLink(
+      senderName: userProfile.name ?? 'Someone',
+      senderPhone: userProfile.phone ?? '',
+      relationship: transaction.paidRelationship,
+      amount: transaction.amount,
+      date: transaction.date,
+      description: transaction.description,
+      categoryName: category?.name,
+      categoryColor: category?.color,
+      categoryIcon: category?.icon,
+      externalLinkId: deepLinkService.generateExternalLinkId(),
+    );
+
     final message = '''
 ${isExpense ? 'Expense' : 'Income'} Details
 Amount: ${AmountFormatter.formatWithCurrency(transaction.amount, currency.symbol, currency.decimalPlaces)}
-Date: ${AppDateFormatter.formatDate(transaction.date, pattern: ref.read(userProfileProvider).dateFormat)}
+Date: ${AppDateFormatter.formatDate(transaction.date, pattern: userProfile.dateFormat)}
 ${category != null ? 'Category: ${category.name}\n' : ''}${contact != null ? 'Contact: ${contact.name}\n' : ''}${transaction.description != null && transaction.description.isNotEmpty ? 'Description: ${transaction.description}\n' : ''}
+View and import this in FlowPaisa:
+$link
     ''';
 
     Share.share(message);
@@ -791,12 +809,41 @@ ${category != null ? 'Category: ${category.name}\n' : ''}${contact != null ? 'Co
       final currency = ref.read(currentCurrencyProvider).value!;
       final userProfile = ref.read(userProfileProvider);
       final isExpense = transaction.type == 'EXPENSE';
+      final deepLinkService = DeepLinkService();
+
+      final senderName = userProfile.name ?? 'Someone';
+      final senderPhone = userProfile.phone ?? '';
+
+      // Find category if not provided (though in this dialog it should be available in item.category)
+      // but the method signature only has 'transaction'.
+      // Wait, the caller passes 'transaction' which is transaction table object,
+      // and 'contact' which is contact table object.
+      // I need category too for the deep link.
+      // Looking at the call site in build():
+      // onPressed: () => _sendWhatsAppMessage(context, ref, contact, transaction),
+
+      final link = deepLinkService.generateReciprocalLink(
+        senderName: senderName,
+        senderPhone: senderPhone,
+        relationship: transaction.paidRelationship,
+        amount: transaction.amount,
+        date: transaction.date,
+        description: transaction.description,
+        categoryName: item.category?.name,
+        categoryColor: item.category?.color,
+        categoryIcon: item.category?.icon,
+        externalLinkId: deepLinkService.generateExternalLinkId(),
+      );
+
       final message = '''
 Hi ${contact.name},
 
 This is regarding the ${isExpense ? 'expense' : 'income'} of ${AmountFormatter.formatWithCurrency(transaction.amount, currency.symbol, currency.decimalPlaces)} on ${AppDateFormatter.formatDate(transaction.date, pattern: userProfile.dateFormat)}.
 
 ${transaction.description != null && transaction.description.isNotEmpty ? 'Details: ${transaction.description}' : ''}
+
+View and import this in FlowPaisa:
+$link
 
 Thank you!
       ''';

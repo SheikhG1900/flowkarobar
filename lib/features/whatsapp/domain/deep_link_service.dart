@@ -1,10 +1,13 @@
 import 'dart:convert';
 import 'dart:math';
+import 'package:flowpaisa/core/constants/app_constants.dart';
 import 'package:flowpaisa/features/whatsapp/domain/models/shared_data_models.dart';
 
 class DeepLinkService {
-  static const String _scheme = 'flowpaisa';
+  static const String _scheme = AppConstants.deepLinkScheme;
   static const String _host = 'share';
+  static const String _webBaseUrl =
+      'https://tamatasoft.github.io/flowpaisa/share';
 
   /// Generate a unique external link ID
   /// Format: "tx_8f7a3b" (tx_ prefix + 6 random hex chars)
@@ -17,12 +20,18 @@ class DeepLinkService {
     return 'tx_$chars';
   }
 
+  /// Helper to create the link with both scheme and https fallback
+  String _buildLink(String type, String base64Data) {
+    // We prioritize https link because it's clickable in most apps like WhatsApp
+    return '$_webBaseUrl?type=$type&data=$base64Data';
+  }
+
   /// Generate a deep link for a transaction
   String generateTransactionLink(TransactionShareData data) {
     final jsonData = data.toJson();
     final jsonString = json.encode(jsonData);
     final base64Data = base64Url.encode(utf8.encode(jsonString));
-    return '$_scheme://$_host?type=transaction&data=$base64Data';
+    return _buildLink('transaction', base64Data);
   }
 
   /// Generate a deep link for a receivable
@@ -30,7 +39,7 @@ class DeepLinkService {
     final jsonData = data.toJson();
     final jsonString = json.encode(jsonData);
     final base64Data = base64Url.encode(utf8.encode(jsonString));
-    return '$_scheme://$_host?type=receivable&data=$base64Data';
+    return _buildLink('receivable', base64Data);
   }
 
   /// Generate a deep link for a payable
@@ -38,7 +47,76 @@ class DeepLinkService {
     final jsonData = data.toJson();
     final jsonString = json.encode(jsonData);
     final base64Data = base64Url.encode(utf8.encode(jsonString));
-    return '$_scheme://$_host?type=payable&data=$base64Data';
+    return _buildLink('payable', base64Data);
+  }
+
+  /// Generate a reciprocal link based on the sender's transaction relationship
+  String generateReciprocalLink({
+    required String senderName,
+    required String senderPhone,
+    required String? relationship,
+    required double amount,
+    required DateTime date,
+    String? description,
+    String? categoryName,
+    String? categoryColor,
+    String? categoryIcon,
+    DateTime? dueDate,
+    required String externalLinkId,
+  }) {
+    // Mapping logic based on user requirements:
+    // "will receive" (WILL_RECEIVE) -> Create payable link
+    // "I owe" (RECEIVED_FROM) -> Create receivable link
+    // "paid by" (PAID_BY) -> Create paid for (PAID_FOR) transaction link
+    // "paid for" (PAID_FOR) -> Create paid by (PAID_BY) transaction link
+
+    if (relationship == 'WILL_RECEIVE') {
+      return generatePayableLink(PayableShareData(
+        amount: amount,
+        date: date,
+        description: description,
+        dueDate: dueDate,
+        senderName: senderName,
+        senderPhone: senderPhone,
+        externalLinkId: externalLinkId,
+      ));
+    } else if (relationship == 'RECEIVED_FROM') {
+      return generateReceivableLink(ReceivableShareData(
+        amount: amount,
+        date: date,
+        description: description,
+        dueDate: dueDate,
+        senderName: senderName,
+        senderPhone: senderPhone,
+        externalLinkId: externalLinkId,
+      ));
+    } else {
+      // It's a regular transaction (Income/Expense) or PAID_BY/PAID_FOR
+      String recipientRelationship = relationship ?? '';
+      String recipientTransactionType = 'EXPENSE';
+
+      if (relationship == 'PAID_BY') {
+        recipientRelationship = 'PAID_FOR';
+        recipientTransactionType = 'INCOME';
+      } else if (relationship == 'PAID_FOR') {
+        recipientRelationship = 'PAID_BY';
+        recipientTransactionType = 'EXPENSE';
+      }
+
+      return generateTransactionLink(TransactionShareData(
+        amount: amount,
+        transactionType: recipientTransactionType,
+        description: description,
+        date: date,
+        categoryName: categoryName,
+        categoryColor: categoryColor,
+        categoryIcon: categoryIcon,
+        relationship: recipientRelationship,
+        senderName: senderName,
+        senderPhone: senderPhone,
+        externalLinkId: externalLinkId,
+      ));
+    }
   }
 
   /// Decode a deep link and return the shared data
@@ -46,9 +124,14 @@ class DeepLinkService {
   SharedData? decodeLink(String uriString) {
     try {
       final uri = Uri.parse(uriString);
-      
-      // Validate scheme and host
-      if (uri.scheme != _scheme || uri.host != _host) {
+
+      // Validate scheme and host for both flowpaisa:// and https://tamatasoft.github.io/flowpaisa/share
+      final isCustomScheme = uri.scheme == _scheme && uri.host == _host;
+      final isHttpsScheme = uri.scheme == 'https' &&
+          uri.host == 'tamatasoft.github.io' &&
+          uri.path == '/flowpaisa/share';
+
+      if (!isCustomScheme && !isHttpsScheme) {
         return null;
       }
 
@@ -81,7 +164,11 @@ class DeepLinkService {
   bool isValidDeepLink(String uriString) {
     try {
       final uri = Uri.parse(uriString);
-      return uri.scheme == _scheme && uri.host == _host;
+      final isCustomScheme = uri.scheme == _scheme && uri.host == _host;
+      final isHttpsScheme = uri.scheme == 'https' &&
+          uri.host == 'tamatasoft.github.io' &&
+          uri.path == '/flowpaisa/share';
+      return isCustomScheme || isHttpsScheme;
     } catch (e) {
       return false;
     }

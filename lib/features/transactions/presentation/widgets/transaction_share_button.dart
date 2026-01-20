@@ -4,10 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/whatsapp/domain/deep_link_service.dart';
-import 'package:flowpaisa/features/whatsapp/domain/models/shared_data_models.dart';
-import 'package:flowpaisa/features/whatsapp/domain/whatsapp_service.dart';
 import 'package:flowpaisa/features/whatsapp/presentation/providers/whatsapp_provider.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
+import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 
 class TransactionShareButton extends ConsumerWidget {
   final Transaction transaction;
@@ -111,25 +110,40 @@ class _ShareOptionsSheetState extends State<_ShareOptionsSheet> {
       final deepLinkService = DeepLinkService();
       final whatsAppService = widget.ref.read(whatsAppServiceProvider);
       final currencySymbol = widget.ref.read(currencySymbolProvider);
+      final userProfile = widget.ref.read(userProfileProvider);
 
-      // Create share data
-      final shareData = TransactionShareData(
+      final senderName = userProfile.name ?? 'Someone';
+      final senderPhone = userProfile.phone ?? '';
+
+      // Generate reciprocal link
+      final link = deepLinkService.generateReciprocalLink(
+        senderName: senderName,
+        senderPhone: senderPhone,
+        relationship: widget.transaction.paidRelationship,
         amount: widget.transaction.amount,
-        transactionType: widget.transaction.type,
-        description: widget.transaction.description,
         date: widget.transaction.date,
+        description: widget.transaction.description,
         categoryName: widget.category?.name,
-        contactName: widget.contact?.name,
-        contactPhone: widget.contact?.phone,
+        categoryColor: widget.category?.color,
+        categoryIcon: widget.category?.icon,
         externalLinkId: deepLinkService.generateExternalLinkId(),
       );
 
-      // Share via WhatsApp
-      await whatsAppService.shareTransactionWithLink(
-        transaction: shareData,
-        contactPhone: widget.contact?.phone,
-        currencySymbol: currencySymbol,
-      );
+      // Create dummy message for WhatsApp - ideally whatsAppService should handle this
+      // but for now we follow the existing pattern if possible or adjust it.
+      // whatsAppService.shareTransactionWithLink uses TransactionShareData.
+      // I'll update WhatsAppService later if needed, but for now I'll use the link.
+
+      final message = '''
+📝 Transaction Details
+Amount: $currencySymbol${widget.transaction.amount.toStringAsFixed(2)}
+Date: ${widget.transaction.date.day}/${widget.transaction.date.month}/${widget.transaction.date.year}
+
+View and import this transaction in FlowPaisa:
+$link
+''';
+
+      await whatsAppService.sendMessage(widget.contact?.phone ?? '', message);
 
       if (context.mounted) {
         Navigator.of(context).pop();
@@ -151,21 +165,24 @@ class _ShareOptionsSheetState extends State<_ShareOptionsSheet> {
 
     try {
       final deepLinkService = DeepLinkService();
+      final userProfile = widget.ref.read(userProfileProvider);
 
-      // Create share data
-      final shareData = TransactionShareData(
+      final senderName = userProfile.name ?? 'Someone';
+      final senderPhone = userProfile.phone ?? '';
+
+      // Generate reciprocal link
+      final link = deepLinkService.generateReciprocalLink(
+        senderName: senderName,
+        senderPhone: senderPhone,
+        relationship: widget.transaction.paidRelationship,
         amount: widget.transaction.amount,
-        transactionType: widget.transaction.type,
-        description: widget.transaction.description,
         date: widget.transaction.date,
+        description: widget.transaction.description,
         categoryName: widget.category?.name,
-        contactName: widget.contact?.name,
-        contactPhone: widget.contact?.phone,
+        categoryColor: widget.category?.color,
+        categoryIcon: widget.category?.icon,
         externalLinkId: deepLinkService.generateExternalLinkId(),
       );
-
-      // Generate link
-      final link = deepLinkService.generateTransactionLink(shareData);
 
       // Copy to clipboard
       await Clipboard.setData(ClipboardData(text: link));

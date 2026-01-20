@@ -1,26 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/utils/date_formatter.dart';
+import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 import 'package:flowpaisa/features/whatsapp/domain/models/shared_data_models.dart';
-import 'package:flowpaisa/features/receivables/data/receivables_repository.dart';
-import 'package:flowpaisa/features/payables/data/payables_repository.dart';
-import 'package:flowpaisa/features/transactions/data/transactions_repository.dart';
-import 'package:flowpaisa/features/contacts/data/contacts_repository.dart';
+import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
+import 'package:flowpaisa/features/receivables/presentation/providers/receivables_provider.dart';
+import 'package:flowpaisa/features/payables/presentation/providers/payables_provider.dart';
 import 'package:flowpaisa/shared/providers/database_provider.dart';
-import 'package:flowpaisa/core/utils/toast_utils.dart';
-import 'package:drift/drift.dart' as drift;
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
+import 'package:flowpaisa/features/transactions/presentation/screens/add_transaction_screen.dart';
+import 'package:flowpaisa/features/payables/presentation/screens/add_payable_screen.dart';
+import 'package:flowpaisa/features/receivables/presentation/screens/add_receivable_screen.dart';
 
 class ImportDialog extends ConsumerStatefulWidget {
   final SharedData sharedData;
-  final WidgetRef ref;
 
   const ImportDialog({
-    Key? key,
+    super.key,
     required this.sharedData,
-    required this.ref,
-  }) : super(key: key);
+  });
 
   @override
   ConsumerState<ImportDialog> createState() => _ImportDialogState();
@@ -38,97 +37,92 @@ class _ImportDialogState extends ConsumerState<ImportDialog> {
   }
 
   Future<void> _checkIfAlreadyImported() async {
-    final database = ref.read(databaseProvider);
+    final externalId = widget.sharedData.externalLinkId;
+    bool exists = false;
 
     try {
-      if (widget.sharedData is ReceivableShareData) {
-        final repo = ReceivablesRepository(database);
-        _alreadyImported = await repo.checkIfExternalLinkExists(
-          widget.sharedData.externalLinkId,
-        );
+      if (widget.sharedData is TransactionShareData) {
+        exists = await ref
+            .read(transactionsRepositoryProvider)
+            .checkIfExternalLinkExists(externalId);
+      } else if (widget.sharedData is ReceivableShareData) {
+        exists = await ref
+            .read(receivablesRepositoryProvider)
+            .checkIfExternalLinkExists(externalId);
       } else if (widget.sharedData is PayableShareData) {
-        final repo = PayablesRepository(database);
-        _alreadyImported = await repo.checkIfExternalLinkExists(
-          widget.sharedData.externalLinkId,
-        );
+        exists = await ref
+            .read(payablesRepositoryProvider)
+            .checkIfExternalLinkExists(externalId);
       }
-      // For transactions, we don't check (allow duplicates)
 
       if (mounted) {
-        setState(() {});
+        setState(() {
+          _alreadyImported = exists;
+        });
       }
     } catch (e) {
       debugPrint('Error checking if already imported: $e');
     }
   }
 
-  Future<void> _importData() async {
-    setState(() {
-      _isImporting = true;
-      _errorMessage = null;
-    });
+  void _navigateToCreate() {
+    Navigator.of(context).pop(); // Close dialog first
 
-    try {
-      final database = ref.read(databaseProvider);
-
-      if (widget.sharedData is TransactionShareData) {
-        await _importTransaction(
-            database, widget.sharedData as TransactionShareData);
-      } else if (widget.sharedData is ReceivableShareData) {
-        await _importReceivable(
-            database, widget.sharedData as ReceivableShareData);
-      } else if (widget.sharedData is PayableShareData) {
-        await _importPayable(database, widget.sharedData as PayableShareData);
-      }
-
-      if (mounted) {
-        Navigator.of(context).pop();
-        ToastUtils.showSuccessToast(context, ref, 'Successfully imported!');
-      }
-    } catch (e) {
-      setState(() {
-        _errorMessage = 'Failed to import: $e';
-        _isImporting = false;
-      });
-    }
-  }
-
-  Future<void> _importTransaction(database, TransactionShareData data) async {
-    final repo = TransactionsRepository(database);
-    final contactsRepo = ContactsRepository(database);
-
-    // Find or create contact if phone is provided
-    int? contactId;
-    if (data.contactPhone != null && data.contactPhone!.isNotEmpty) {
-      contactId = await contactsRepo.findOrCreateContactByPhone(
-        phone: data.contactPhone!,
-        name: data.contactName ?? 'Unknown',
+    if (widget.sharedData is TransactionShareData) {
+      final data = widget.sharedData as TransactionShareData;
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => AddTransactionScreen(
+            initialAmount: data.amount,
+            initialDate: data.date,
+            initialDescription: data.description,
+            initialType: data.transactionType,
+            initialRelationship: data.relationship,
+            initialCategoryName: data.categoryName,
+            initialCategoryColor: data.categoryColor,
+            initialCategoryIcon: data.categoryIcon,
+            initialContactName: data.senderName,
+            initialContactPhone: data.senderPhone,
+            initialExternalLinkId: data.externalLinkId,
+          ),
+        ),
+      );
+    } else if (widget.sharedData is ReceivableShareData) {
+      final data = widget.sharedData as ReceivableShareData;
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => AddReceivableScreen(
+            initialAmount: data.amount,
+            initialDate: data.date,
+            initialDescription: data.description,
+            initialContactName: data.senderName,
+            initialContactPhone: data.senderPhone,
+            initialExternalLinkId: data.externalLinkId,
+          ),
+        ),
+      );
+    } else if (widget.sharedData is PayableShareData) {
+      final data = widget.sharedData as PayableShareData;
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => AddPayableScreen(
+            initialAmount: data.amount,
+            initialDate: data.date,
+            initialDescription: data.description,
+            initialContactName: data.senderName,
+            initialContactPhone: data.senderPhone,
+            initialExternalLinkId: data.externalLinkId,
+          ),
+        ),
       );
     }
-
-    await repo.createTransactionSimple(
-      amount: data.amount,
-      type: data.transactionType,
-      description: data.description,
-      date: data.date,
-      categoryId: null, // User can edit later
-      contactId: contactId,
-    );
-  }
-
-  Future<void> _importReceivable(database, ReceivableShareData data) async {
-    final repo = ReceivablesRepository(database);
-    await repo.importFromSharedLink(data);
-  }
-
-  Future<void> _importPayable(database, PayableShareData data) async {
-    final repo = PayablesRepository(database);
-    await repo.importFromSharedLink(data);
   }
 
   @override
   Widget build(BuildContext context) {
-    final currencySymbol = ref.watch(currencySymbolProvider);
     return AlertDialog(
       title: Row(
         children: [
@@ -204,14 +198,16 @@ class _ImportDialogState extends ConsumerState<ImportDialog> {
         ),
         if (!_alreadyImported)
           ElevatedButton(
-            onPressed: _isImporting ? null : _importData,
-            child: _isImporting
-                ? const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Text('Import'),
+            onPressed: _isImporting ? null : _navigateToCreate,
+            child: const Text('Import Details'),
+          )
+        else
+          ElevatedButton(
+            onPressed: _navigateToCreate,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.grey.shade400,
+            ),
+            child: const Text('View Details'),
           ),
       ],
     );
@@ -260,9 +256,9 @@ class _ImportDialogState extends ConsumerState<ImportDialog> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (data.sharedBy != null) ...[
+        if (data.senderName != null) ...[
           Text(
-            'Shared by: ${data.sharedBy}',
+            'Shared by: ${data.senderName}',
             style: TextStyle(
               fontSize: 12,
               color: Colors.grey.shade600,
@@ -273,7 +269,7 @@ class _ImportDialogState extends ConsumerState<ImportDialog> {
         ],
         _buildDetailRow('Type', data.transactionType),
         _buildDetailRow(
-            'Amount', '$currencySymbol${data.amount.toStringAsFixed(2)}'),
+            'Amount', AmountFormatter.formatWithCurrency(data.amount, currencySymbol, ref.watch(currentCurrencyProvider).value?.decimalPlaces ?? 2)),
         if (data.description != null && data.description!.isNotEmpty)
           _buildDetailRow('Description', data.description!),
         if (data.categoryName != null)
@@ -290,9 +286,9 @@ class _ImportDialogState extends ConsumerState<ImportDialog> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (data.sharedBy != null) ...[
+        if (data.senderName != null) ...[
           Text(
-            'Shared by: ${data.sharedBy}',
+            'Shared by: ${data.senderName}',
             style: TextStyle(
               fontSize: 12,
               color: Colors.grey.shade600,
@@ -302,7 +298,7 @@ class _ImportDialogState extends ConsumerState<ImportDialog> {
           const SizedBox(height: 12),
         ],
         _buildDetailRow(
-            'Amount', '$currencySymbol${data.amount.toStringAsFixed(2)}'),
+            'Amount', AmountFormatter.formatWithCurrency(data.amount, currencySymbol, ref.watch(currentCurrencyProvider).value?.decimalPlaces ?? 2)),
         if (data.description != null && data.description!.isNotEmpty)
           _buildDetailRow('Description', data.description!),
         if (data.contactName != null)
@@ -318,9 +314,9 @@ class _ImportDialogState extends ConsumerState<ImportDialog> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (data.sharedBy != null) ...[
+        if (data.senderName != null) ...[
           Text(
-            'Shared by: ${data.sharedBy}',
+            'Shared by: ${data.senderName}',
             style: TextStyle(
               fontSize: 12,
               color: Colors.grey.shade600,
@@ -330,7 +326,7 @@ class _ImportDialogState extends ConsumerState<ImportDialog> {
           const SizedBox(height: 12),
         ],
         _buildDetailRow(
-            'Amount', '$currencySymbol${data.amount.toStringAsFixed(2)}'),
+            'Amount', AmountFormatter.formatWithCurrency(data.amount, currencySymbol, ref.watch(currentCurrencyProvider).value?.decimalPlaces ?? 2)),
         if (data.description != null && data.description!.isNotEmpty)
           _buildDetailRow('Description', data.description!),
         if (data.contactName != null)
