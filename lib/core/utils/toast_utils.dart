@@ -82,8 +82,9 @@ class ToastUtils {
             );
           },
           child: Container(
-            // margin gives the shadow space to draw so it doesn't get cut off
-            margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 20),
+            // margin gives the shadow space and positions the toast at the bottom
+            margin:
+                const EdgeInsets.only(bottom: 24, left: 16, right: 16, top: 8),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.zero,
               boxShadow: [
@@ -174,9 +175,9 @@ class ToastUtils {
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
-        behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.all(8),
-        padding: EdgeInsets.zero,
+        behavior: SnackBarBehavior.fixed,
+        padding:
+            EdgeInsets.zero, // Remove default padding to use container margin
         duration: const Duration(seconds: 3),
       ),
     );

@@ -461,8 +461,8 @@ class PayableDetailsDialog extends ConsumerWidget {
     );
   }
 
-  Future<void> _sharePayable(
-      BuildContext context, WidgetRef ref, dynamic payable, dynamic contact) async {
+  Future<void> _sharePayable(BuildContext context, WidgetRef ref,
+      dynamic payable, dynamic contact) async {
     final currency = ref.read(currentCurrencyProvider).value!;
     final userProfile = ref.read(userProfileProvider);
     final deepLinkService = DeepLinkService();
@@ -562,14 +562,16 @@ $link
 
       if (context.mounted) {
         // Refresh item to get updated status and externalLinkId
-        final updatedItem = await repository.getPayableWithLinkedDataById(payableId);
-        
+        final updatedItem =
+            await repository.getPayableWithLinkedDataById(payableId);
+
         if (context.mounted) {
           Navigator.pop(context);
           ToastUtils.showSuccessToast(context, ref, 'Marked as paid');
-          
+
           if (updatedItem != null) {
-            _showSettlementShareOption(context, ref, updatedItem.payable, updatedItem.contact);
+            _showSettlementShareOption(
+                context, ref, updatedItem.payable, updatedItem.contact);
           }
         }
       }
@@ -580,7 +582,8 @@ $link
     }
   }
 
-  void _showSettlementShareOption(BuildContext context, WidgetRef ref, Payable payable, dynamic contact) {
+  void _showSettlementShareOption(
+      BuildContext context, WidgetRef ref, Payable payable, dynamic contact) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: const Text('Payable marked as paid. Inform the contact?'),
