@@ -4,54 +4,61 @@ import '../../features/cashbooks/presentation/providers/cashbook_provider.dart';
 
 class ToastUtils {
   static void showSuccessToast(
-      BuildContext context, WidgetRef ref, String message) {
-    final activeCashbook = ref.read(activeCashbookProvider);
-    final activeColor = activeCashbook.color;
+      BuildContext context, WidgetRef ref, String message,
+      {String? actionLabel, VoidCallback? onActionPressed, Color? color}) {
+    final activeColor = color ?? ref.read(activeCashbookProvider).color;
 
     _showToast(
       context,
       message,
       icon: Icons.check_circle_outline_rounded,
       activeColor: activeColor,
+      actionLabel: actionLabel,
+      onActionPressed: onActionPressed,
     );
   }
 
   static void showErrorToast(
-      BuildContext context, WidgetRef ref, String message) {
-    final activeCashbook = ref.read(activeCashbookProvider);
-    final activeColor = activeCashbook.color;
+      BuildContext context, WidgetRef ref, String message,
+      {String? actionLabel, VoidCallback? onActionPressed, Color? color}) {
+    final activeColor = color ?? ref.read(activeCashbookProvider).color;
 
     _showToast(
       context,
       message,
       icon: Icons.error_outline_rounded,
       activeColor: activeColor,
+      actionLabel: actionLabel,
+      onActionPressed: onActionPressed,
     );
   }
 
-  static void showInfoToast(
-      BuildContext context, WidgetRef ref, String message) {
-    final activeCashbook = ref.read(activeCashbookProvider);
-    final activeColor = activeCashbook.color;
+  static void showInfoToast(BuildContext context, WidgetRef ref, String message,
+      {String? actionLabel, VoidCallback? onActionPressed, Color? color}) {
+    final activeColor = color ?? ref.read(activeCashbookProvider).color;
 
     _showToast(
       context,
       message,
       icon: Icons.info_outline_rounded,
       activeColor: activeColor,
+      actionLabel: actionLabel,
+      onActionPressed: onActionPressed,
     );
   }
 
   static void showWarningToast(
-      BuildContext context, WidgetRef ref, String message) {
-    final activeCashbook = ref.read(activeCashbookProvider);
-    final activeColor = activeCashbook.color;
+      BuildContext context, WidgetRef ref, String message,
+      {String? actionLabel, VoidCallback? onActionPressed, Color? color}) {
+    final activeColor = color ?? ref.read(activeCashbookProvider).color;
 
     _showToast(
       context,
       message,
       icon: Icons.warning_amber_rounded,
       activeColor: activeColor,
+      actionLabel: actionLabel,
+      onActionPressed: onActionPressed,
     );
   }
 
@@ -60,13 +67,16 @@ class ToastUtils {
     String message, {
     required IconData icon,
     required Color activeColor,
+    String? actionLabel,
+    VoidCallback? onActionPressed,
   }) {
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
     final theme = Theme.of(context);
     final textColor = theme.colorScheme.onSurface;
     final backgroundColor = theme.scaffoldBackgroundColor;
 
-    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-    ScaffoldMessenger.of(context).showSnackBar(
+    scaffoldMessenger.hideCurrentSnackBar();
+    scaffoldMessenger.showSnackBar(
       SnackBar(
         content: TweenAnimationBuilder<Offset>(
           tween: Tween(begin: const Offset(0.2, 0), end: Offset.zero),
@@ -138,7 +148,6 @@ class ToastUtils {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 16, vertical: 14),
                       child: Row(
-                        mainAxisSize: MainAxisSize.min,
                         children: [
                           TweenAnimationBuilder<double>(
                             tween: Tween(begin: 0.0, end: 1.0),
@@ -164,6 +173,39 @@ class ToastUtils {
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
+                          if (actionLabel != null && onActionPressed != null)
+                            Padding(
+                              padding: const EdgeInsets.only(left: 8),
+                              child: TextButton(
+                                onPressed: () {
+                                  onActionPressed();
+                                  scaffoldMessenger.hideCurrentSnackBar();
+                                },
+                                style: TextButton.styleFrom(
+                                  backgroundColor:
+                                      activeColor.withValues(alpha: 0.2),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16, vertical: 10),
+                                  minimumSize: Size.zero,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.zero,
+                                    side: BorderSide(
+                                      color: activeColor.withValues(alpha: 0.5),
+                                      width: 1,
+                                    ),
+                                  ),
+                                ),
+                                child: Text(
+                                  actionLabel,
+                                  style: TextStyle(
+                                    color: activeColor,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 1.2,
+                                  ),
+                                ),
+                              ),
+                            ),
                         ],
                       ),
                     ),
@@ -178,7 +220,9 @@ class ToastUtils {
         behavior: SnackBarBehavior.fixed,
         padding:
             EdgeInsets.zero, // Remove default padding to use container margin
-        duration: const Duration(seconds: 3),
+        duration: actionLabel != null
+            ? const Duration(seconds: 6)
+            : const Duration(seconds: 3),
       ),
     );
   }

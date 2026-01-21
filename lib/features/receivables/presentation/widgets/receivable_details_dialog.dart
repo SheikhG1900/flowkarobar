@@ -11,6 +11,7 @@ import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transaction_service_provider.dart';
 import 'package:flowpaisa/features/receivables/presentation/providers/receivables_provider.dart';
 import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
+import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
 import 'package:flowpaisa/features/receivables/presentation/screens/edit_receivable_screen.dart';
 import 'package:flowpaisa/features/whatsapp/domain/deep_link_service.dart';
 import 'package:flowpaisa/features/whatsapp/domain/models/shared_data_models.dart';
@@ -463,12 +464,21 @@ class ReceivableDetailsDialog extends ConsumerWidget {
     );
   }
 
-  Future<void> _shareReceivable(BuildContext context, WidgetRef ref, dynamic receivable,
-      dynamic contact) async {
-    final currency = ref.read(currentCurrencyProvider).value!;
-    final userProfile = ref.read(userProfileProvider);
+  Future<void> _shareReceivable(
+    BuildContext context,
+    WidgetRef ref,
+    dynamic receivable,
+    dynamic contact, {
+    dynamic currencyOverride,
+    dynamic userProfileOverride,
+    dynamic transactionServiceOverride,
+  }) async {
+    final currency =
+        currencyOverride ?? ref.read(currentCurrencyProvider).value!;
+    final userProfile = userProfileOverride ?? ref.read(userProfileProvider);
     final deepLinkService = DeepLinkService();
-    final transactionService = ref.read(transactionServiceProvider);
+    final transactionService =
+        transactionServiceOverride ?? ref.read(transactionServiceProvider);
     final isReceived = receivable.status == 'RECEIVED';
 
     // Ensure external ID is persisted before sharing
@@ -564,14 +574,32 @@ $link
 
       if (context.mounted) {
         // Refresh item to get updated status and externalLinkId
-        final updatedItem = await repository.getReceivableWithLinkedDataById(receivableId);
-        
+        final updatedItem =
+            await repository.getReceivableWithLinkedDataById(receivableId);
+
         if (context.mounted) {
+          final activeColor = ref.read(activeCashbookProvider).color;
+          final currency = ref.read(currentCurrencyProvider).value!;
+          final userProfile = ref.read(userProfileProvider);
+          final transactionService = ref.read(transactionServiceProvider);
+          final whatsAppService = ref.read(whatsAppServiceProvider);
+
           Navigator.pop(context);
-          ToastUtils.showSuccessToast(context, ref, 'Marked as received');
-          
+          ToastUtils.showSuccessToast(context, ref, 'Marked as received',
+              color: activeColor);
+
           if (updatedItem != null) {
-            _showSettlementShareOption(context, ref, updatedItem.receivable, updatedItem.contact);
+            _showSettlementShareOption(
+              context,
+              ref,
+              updatedItem.receivable,
+              updatedItem.contact,
+              activeColor: activeColor,
+              currency: currency,
+              userProfile: userProfile,
+              transactionService: transactionService,
+              whatsAppService: whatsAppService,
+            );
           }
         }
       }
@@ -582,16 +610,49 @@ $link
     }
   }
 
-  void _showSettlementShareOption(BuildContext context, WidgetRef ref, Receivable receivable, dynamic contact) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('Receivable marked as received. Inform the contact?'),
-        action: SnackBarAction(
-          label: 'SHARE',
-          onPressed: () => _shareReceivable(context, ref, receivable, contact),
-        ),
-        duration: const Duration(seconds: 5),
-      ),
+  void _showSettlementShareOption(
+    BuildContext context,
+    WidgetRef ref,
+    Receivable receivable,
+    dynamic contact, {
+    Color? activeColor,
+    dynamic currency,
+    dynamic userProfile,
+    dynamic transactionService,
+    dynamic whatsAppService,
+  }) {
+    ToastUtils.showSuccessToast(
+      context,
+      ref,
+      'Receivable marked as received. Inform the contact?',
+      actionLabel: 'SHARE',
+      onActionPressed: () {
+        if (contact != null &&
+            contact.phone != null &&
+            contact.phone.isNotEmpty) {
+          _sendWhatsAppMessage(
+            context,
+            ref,
+            contact,
+            receivable,
+            currencyOverride: currency,
+            userProfileOverride: userProfile,
+            whatsAppServiceOverride: whatsAppService,
+            transactionServiceOverride: transactionService,
+          );
+        } else {
+          _shareReceivable(
+            context,
+            ref,
+            receivable,
+            contact,
+            currencyOverride: currency,
+            userProfileOverride: userProfile,
+            transactionServiceOverride: transactionService,
+          );
+        }
+      },
+      color: activeColor,
     );
   }
 
@@ -599,9 +660,14 @@ $link
     BuildContext context,
     WidgetRef ref,
     dynamic contact,
-    dynamic receivable,
-  ) async {
-    final currency = ref.read(currentCurrencyProvider).value!;
+    dynamic receivable, {
+    dynamic currencyOverride,
+    dynamic userProfileOverride,
+    dynamic whatsAppServiceOverride,
+    dynamic transactionServiceOverride,
+  }) async {
+    final currency =
+        currencyOverride ?? ref.read(currentCurrencyProvider).value!;
     if (contact.phone == null || contact.phone.isEmpty) {
       ToastUtils.showWarningToast(
           context, ref, 'No phone number available for this contact');
@@ -609,10 +675,12 @@ $link
     }
 
     try {
-      final whatsAppService = ref.read(whatsAppServiceProvider);
-      final userProfile = ref.read(userProfileProvider);
+      final whatsAppService =
+          whatsAppServiceOverride ?? ref.read(whatsAppServiceProvider);
+      final userProfile = userProfileOverride ?? ref.read(userProfileProvider);
       final deepLinkService = DeepLinkService();
-      final transactionService = ref.read(transactionServiceProvider);
+      final transactionService =
+          transactionServiceOverride ?? ref.read(transactionServiceProvider);
       final isReceived = receivable.status == 'RECEIVED';
 
       final senderName = userProfile.name ?? 'Someone';
