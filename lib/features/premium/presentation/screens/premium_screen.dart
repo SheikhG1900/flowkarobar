@@ -244,6 +244,16 @@ class PremiumScreen extends ConsumerWidget {
                     color: theme.colorScheme.primary,
                     isPremium: premiumState.isPremium,
                   ),
+                  const SizedBox(height: 12),
+                  _buildFeatureCard(
+                    context,
+                    icon: Icons.message_outlined,
+                    title: 'Custom Message Templates',
+                    description:
+                        'Customize WhatsApp message templates for reminders, receipts, and sharing in multiple languages.',
+                    color: Colors.teal,
+                    isPremium: premiumState.isPremium,
+                  ),
                   const SizedBox(height: 32),
 
                   if (!premiumState.isPremium) ...[

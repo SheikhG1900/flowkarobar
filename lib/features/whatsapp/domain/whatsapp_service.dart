@@ -3,6 +3,8 @@ import 'package:flowpaisa/core/utils/date_formatter.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/features/whatsapp/domain/deep_link_service.dart';
 import 'package:flowpaisa/features/whatsapp/domain/models/shared_data_models.dart';
+import 'package:flowpaisa/features/messages/domain/message_template_service.dart';
+import 'package:flowpaisa/features/messages/data/default_templates.dart';
 
 class WhatsAppService {
   final DeepLinkService _deepLinkService = DeepLinkService();
@@ -32,7 +34,7 @@ class WhatsAppService {
   }
 
   /// Format a receivable reminder message
-  String formatReceivableReminder({
+  Future<String> formatReceivableReminder({
     required String contactName,
     required double amount,
     required String description,
@@ -40,14 +42,40 @@ class WhatsAppService {
     String currencySymbol = '₹',
     int decimalPlaces = 2,
     String? dateFormat,
-  }) {
+    MessageTemplateService? templateService,
+    String language = 'en',
+  }) async {
+    final formattedAmount = AmountFormatter.formatWithCurrency(
+        amount, currencySymbol, decimalPlaces);
+    final dueDateText = dueDate != null
+        ? AppDateFormatter.formatDate(dueDate, pattern: dateFormat)
+        : null;
+
+    // Use template service if provided
+    if (templateService != null) {
+      final status = DefaultTemplates.pending;
+      final template = await templateService.getTemplate(
+        DefaultTemplates.receivableReminder,
+        status,
+        language,
+      );
+      final variables = templateService.buildReceivableReminderVariables(
+        contactName: contactName,
+        amount: formattedAmount,
+        description: description,
+        dueDate: dueDateText,
+      );
+      return templateService.renderTemplate(template, variables);
+    }
+
+    // Fallback to old hardcoded logic
     final buffer = StringBuffer();
     buffer.writeln('Hi $contactName,');
     buffer.writeln();
     buffer.writeln('Greetings! I hope you are doing well.');
     buffer.writeln();
     buffer.write(
-        'This is a friendly reminder that I am expecting a payment of *${AmountFormatter.formatWithCurrency(amount, currencySymbol, decimalPlaces)}*');
+        'This is a friendly reminder that I am expecting a payment of *$formattedAmount*');
 
     if (description.isNotEmpty) {
       buffer.write(' for _${description}_');
@@ -55,8 +83,7 @@ class WhatsAppService {
     buffer.writeln('.');
 
     if (dueDate != null) {
-      buffer.writeln(
-          'Expected by: *${AppDateFormatter.formatDate(dueDate, pattern: dateFormat)}*.');
+      buffer.writeln('Expected by: *$dueDateText*.');
     }
 
     buffer.writeln();
@@ -65,7 +92,7 @@ class WhatsAppService {
   }
 
   /// Format a payable reminder message
-  String formatPayableReminder({
+  Future<String> formatPayableReminder({
     required String contactName,
     required double amount,
     required String description,
@@ -73,12 +100,37 @@ class WhatsAppService {
     String currencySymbol = '₹',
     int decimalPlaces = 2,
     String? dateFormat,
-  }) {
+    MessageTemplateService? templateService,
+    String language = 'en',
+  }) async {
+    final formattedAmount = AmountFormatter.formatWithCurrency(
+        amount, currencySymbol, decimalPlaces);
+    final dueDateText = dueDate != null
+        ? AppDateFormatter.formatDate(dueDate, pattern: dateFormat)
+        : null;
+
+    // Use template service if provided
+    if (templateService != null) {
+      final status = DefaultTemplates.pending;
+      final template = await templateService.getTemplate(
+        DefaultTemplates.payableReminder,
+        status,
+        language,
+      );
+      final variables = templateService.buildPayableReminderVariables(
+        contactName: contactName,
+        amount: formattedAmount,
+        description: description,
+        dueDate: dueDateText,
+      );
+      return templateService.renderTemplate(template, variables);
+    }
+
+    // Fallback to old hardcoded logic
     final buffer = StringBuffer();
     buffer.writeln('Hi $contactName,');
     buffer.writeln();
-    buffer.write(
-        'I have recorded that I owe you *${AmountFormatter.formatWithCurrency(amount, currencySymbol, decimalPlaces)}*');
+    buffer.write('I have recorded that I owe you *$formattedAmount*');
 
     if (description.isNotEmpty) {
       buffer.write(' for _${description}_');
@@ -86,8 +138,7 @@ class WhatsAppService {
     buffer.writeln('.');
 
     if (dueDate != null) {
-      buffer.writeln(
-          'I will settle this by *${AppDateFormatter.formatDate(dueDate, pattern: dateFormat)}*.');
+      buffer.writeln('I will settle this by *$dueDateText*.');
     } else {
       buffer.writeln('I will settle this soon. Thanks for your patience!');
     }
@@ -97,7 +148,7 @@ class WhatsAppService {
   }
 
   /// Format a transaction receipt message
-  String formatTransactionReceipt({
+  Future<String> formatTransactionReceipt({
     required String type,
     required double amount,
     required String description,
@@ -107,15 +158,36 @@ class WhatsAppService {
     String currencySymbol = '₹',
     int decimalPlaces = 2,
     String? dateFormat,
-  }) {
-    final buffer = StringBuffer();
-    buffer.writeln('_Transaction Receipt_');
-    buffer.writeln();
-
+    MessageTemplateService? templateService,
+    String language = 'en',
+  }) async {
     final formattedAmount = AmountFormatter.formatWithCurrency(
         amount, currencySymbol, decimalPlaces);
     final formattedDate =
         AppDateFormatter.formatDate(date, pattern: dateFormat);
+
+    // Use template service if provided
+    if (templateService != null) {
+      final template = await templateService.getTemplate(
+        DefaultTemplates.transactionReceipt,
+        '',
+        language,
+      );
+      final variables = templateService.buildTransactionReceiptVariables(
+        type: type,
+        amount: formattedAmount,
+        date: formattedDate,
+        description: description,
+        categoryName: categoryName,
+        contactName: contactName,
+      );
+      return templateService.renderTemplate(template, variables);
+    }
+
+    // Fallback to old hardcoded logic
+    final buffer = StringBuffer();
+    buffer.writeln('_Transaction Receipt_');
+    buffer.writeln();
 
     if (type.toUpperCase() == 'INCOME') {
       buffer.write('I have recorded an Income of *$formattedAmount*');
@@ -150,58 +222,94 @@ class WhatsAppService {
     required String currencySymbol,
     int decimalPlaces = 2,
     String? dateFormat,
+    MessageTemplateService? templateService,
+    String language = 'en',
   }) async {
     try {
       // Generate deep link
       final deepLink = _deepLinkService.generateTransactionLink(transaction);
 
       // Format message
-      final buffer = StringBuffer();
       final isIncome = transaction.transactionType.toUpperCase() == "INCOME";
       final formattedAmount = AmountFormatter.formatWithCurrency(
           transaction.amount, currencySymbol, decimalPlaces);
       final formattedDate =
           AppDateFormatter.formatDate(transaction.date, pattern: dateFormat);
 
-      buffer.writeln(isIncome ? '💰 Income Recorded' : '💸 Expense Recorded');
-      buffer.writeln();
+      String message;
+      if (templateService != null) {
+        // Determine template type based on relationship
+        String templateType = DefaultTemplates.transactionShare;
+        String relationshipKey = 'generic';
 
-      if (transaction.relationship == 'PAID_FOR') {
-        buffer.write(
-            'I have recorded that I paid on your behalf *$formattedAmount*');
-      } else if (transaction.relationship == 'PAID_BY') {
-        buffer.write('I have recorded that you paid for me *$formattedAmount*');
-      } else if (transaction.relationship == 'WILL_RECEIVE') {
-        buffer.write(
-            'I have recorded that I am expecting a payment of *$formattedAmount*');
-      } else if (transaction.relationship == 'RECEIVED_FROM') {
-        buffer.write(
-            'I have recorded that I received *$formattedAmount* from you');
+        if (transaction.relationship == 'PAID_FOR') {
+          relationshipKey = 'paid_for';
+        } else if (transaction.relationship == 'PAID_BY') {
+          relationshipKey = 'paid_by';
+        } else if (transaction.relationship == 'WILL_RECEIVE') {
+          relationshipKey = 'will_receive';
+        } else if (transaction.relationship == 'RECEIVED_FROM') {
+          relationshipKey = 'received_from';
+        }
+
+        final template = await templateService.getTemplate(
+          templateType,
+          relationshipKey,
+          language,
+        );
+        final variables = templateService.buildTransactionShareVariables(
+          type: isIncome ? 'Income' : 'Expense',
+          amount: formattedAmount,
+          date: formattedDate,
+          description: transaction.description,
+          categoryName: transaction.categoryName,
+          link: deepLink,
+          relationship: transaction.relationship,
+        );
+        message = templateService.renderTemplate(template, variables);
       } else {
-        buffer.write(
-            'I have recorded a ${isIncome ? 'receipt' : 'payment'} of *$formattedAmount*');
+        // Fallback to old hardcoded logic
+        final buffer = StringBuffer();
+        buffer.writeln(isIncome ? '💰 Income Recorded' : '💸 Expense Recorded');
+        buffer.writeln();
+
+        if (transaction.relationship == 'PAID_FOR') {
+          buffer.write(
+              'I have recorded that I paid on your behalf *$formattedAmount*');
+        } else if (transaction.relationship == 'PAID_BY') {
+          buffer
+              .write('I have recorded that you paid for me *$formattedAmount*');
+        } else if (transaction.relationship == 'WILL_RECEIVE') {
+          buffer.write(
+              'I have recorded that I am expecting a payment of *$formattedAmount*');
+        } else if (transaction.relationship == 'RECEIVED_FROM') {
+          buffer.write(
+              'I have recorded that I received *$formattedAmount* from you');
+        } else {
+          buffer.write(
+              'I have recorded a ${isIncome ? 'receipt' : 'payment'} of *$formattedAmount*');
+        }
+
+        buffer.write(' on *$formattedDate*');
+
+        if (transaction.description != null &&
+            transaction.description!.isNotEmpty) {
+          buffer.write(' for _${transaction.description}_');
+        }
+        buffer.writeln('.');
+
+        if (transaction.categoryName != null) {
+          buffer.writeln(
+              'This was recorded under the *${transaction.categoryName}* category.');
+        }
+
+        buffer.writeln();
+        buffer.writeln('View this transaction in FlowPaisa:');
+        buffer.writeln(deepLink);
+        buffer.writeln();
+        buffer.writeln('Manage your finances better with FlowPaisa! 💰');
+        message = buffer.toString();
       }
-
-      buffer.write(' on *$formattedDate*');
-
-      if (transaction.description != null &&
-          transaction.description!.isNotEmpty) {
-        buffer.write(' for _${transaction.description}_');
-      }
-      buffer.writeln('.');
-
-      if (transaction.categoryName != null) {
-        buffer.writeln(
-            'This was recorded under the *${transaction.categoryName}* category.');
-      }
-
-      buffer.writeln();
-      buffer.writeln('View this transaction in FlowPaisa:');
-      buffer.writeln(deepLink);
-      buffer.writeln();
-      buffer.writeln('Manage your finances better with FlowPaisa! 💰');
-
-      final message = buffer.toString();
 
       if (contactPhone != null && contactPhone.isNotEmpty) {
         return await sendMessage(contactPhone, message);
@@ -227,38 +335,63 @@ class WhatsAppService {
     required String currencySymbol,
     int decimalPlaces = 2,
     String? dateFormat,
+    MessageTemplateService? templateService,
+    String language = 'en',
   }) async {
     try {
       // Generate deep link
       final deepLink = _deepLinkService.generateReceivableLink(receivable);
 
       // Format message
-      final buffer = StringBuffer();
       final formattedAmount = AmountFormatter.formatWithCurrency(
           receivable.amount, currencySymbol, decimalPlaces);
+      final dueDateText = receivable.dueDate != null
+          ? AppDateFormatter.formatDate(receivable.dueDate!,
+              pattern: dateFormat)
+          : null;
 
-      buffer.writeln('📝 Payment Request');
-      buffer.writeln();
-      buffer.write('Hi, I have sent a request for *$formattedAmount*');
+      String message;
+      if (templateService != null) {
+        final status = receivable.status?.toLowerCase() == 'received'
+            ? DefaultTemplates.received
+            : DefaultTemplates.pending;
+        final template = await templateService.getTemplate(
+          DefaultTemplates.receivableShare,
+          status,
+          language,
+        );
+        final variables = templateService.buildReceivableShareVariables(
+          amount: formattedAmount,
+          description: receivable.description,
+          dueDate: dueDateText,
+          link: deepLink,
+        );
+        message = templateService.renderTemplate(template, variables);
+      } else {
+        // Fallback to old hardcoded logic
+        final buffer = StringBuffer();
+        buffer.writeln('📝 Payment Request');
+        buffer.writeln();
+        buffer.write('Hi, I have sent a request for *$formattedAmount*');
 
-      if (receivable.description != null &&
-          receivable.description!.isNotEmpty) {
-        buffer.write(' for _${receivable.description}_');
+        if (receivable.description != null &&
+            receivable.description!.isNotEmpty) {
+          buffer.write(' for _${receivable.description}_');
+        }
+        buffer.writeln('.');
+
+        if (receivable.dueDate != null) {
+          buffer.writeln('Due Date: *$dueDateText*');
+        }
+
+        buffer.writeln();
+        buffer
+            .writeln('You can view the details and record this in FlowPaisa:');
+        buffer.writeln(deepLink);
+        buffer.writeln();
+        buffer.writeln('Track your finances with FlowPaisa! 💰');
+        message = buffer.toString();
       }
-      buffer.writeln('.');
-
-      if (receivable.dueDate != null) {
-        buffer.writeln(
-            'Due Date: *${AppDateFormatter.formatDate(receivable.dueDate!, pattern: dateFormat)}*');
-      }
-
-      buffer.writeln();
-      buffer.writeln('You can view the details and record this in FlowPaisa:');
-      buffer.writeln(deepLink);
-      buffer.writeln();
-      buffer.writeln('Track your finances with FlowPaisa! 💰');
-
-      final message = buffer.toString();
 
       if (contactPhone != null && contactPhone.isNotEmpty) {
         return await sendMessage(contactPhone, message);
@@ -283,39 +416,62 @@ class WhatsAppService {
     required String currencySymbol,
     int decimalPlaces = 2,
     String? dateFormat,
+    MessageTemplateService? templateService,
+    String language = 'en',
   }) async {
     try {
       // Generate deep link
       final deepLink = _deepLinkService.generatePayableLink(payable);
 
       // Format message
-      final buffer = StringBuffer();
       final formattedAmount = AmountFormatter.formatWithCurrency(
           payable.amount, currencySymbol, decimalPlaces);
+      final dueDateText = payable.dueDate != null
+          ? AppDateFormatter.formatDate(payable.dueDate!, pattern: dateFormat)
+          : null;
 
-      buffer.writeln('📋 Payment Acknowledgment');
-      buffer.writeln();
-      buffer
-          .write('I wanted to let you know that I owe you *$formattedAmount*');
+      String message;
+      if (templateService != null) {
+        final status = payable.status?.toLowerCase() == 'paid'
+            ? DefaultTemplates.paid
+            : DefaultTemplates.pending;
+        final template = await templateService.getTemplate(
+          DefaultTemplates.payableShare,
+          status,
+          language,
+        );
+        final variables = templateService.buildPayableShareVariables(
+          amount: formattedAmount,
+          description: payable.description,
+          dueDate: dueDateText,
+          link: deepLink,
+        );
+        message = templateService.renderTemplate(template, variables);
+      } else {
+        // Fallback to old hardcoded logic
+        final buffer = StringBuffer();
+        buffer.writeln('📋 Payment Acknowledgment');
+        buffer.writeln();
+        buffer.write(
+            'I wanted to let you know that I owe you *$formattedAmount*');
 
-      if (payable.description != null && payable.description!.isNotEmpty) {
-        buffer.write(' for _${payable.description}_');
+        if (payable.description != null && payable.description!.isNotEmpty) {
+          buffer.write(' for _${payable.description}_');
+        }
+        buffer.writeln('.');
+
+        if (payable.dueDate != null) {
+          buffer.writeln('Planned payment date: *$dueDateText*');
+        }
+
+        buffer.writeln();
+        buffer.writeln('View details in FlowPaisa:');
+        buffer.writeln(deepLink);
+        buffer.writeln();
+        buffer.writeln('I will settle this soon. Thanks for your patience!');
+        buffer.writeln('Manage your finances with FlowPaisa! 💰');
+        message = buffer.toString();
       }
-      buffer.writeln('.');
-
-      if (payable.dueDate != null) {
-        buffer.writeln(
-            'Planned payment date: *${AppDateFormatter.formatDate(payable.dueDate!, pattern: dateFormat)}*');
-      }
-
-      buffer.writeln();
-      buffer.writeln('View details in FlowPaisa:');
-      buffer.writeln(deepLink);
-      buffer.writeln();
-      buffer.writeln('I will settle this soon. Thanks for your patience!');
-      buffer.writeln('Manage your finances with FlowPaisa! 💰');
-
-      final message = buffer.toString();
 
       if (contactPhone != null && contactPhone.isNotEmpty) {
         return await sendMessage(contactPhone, message);

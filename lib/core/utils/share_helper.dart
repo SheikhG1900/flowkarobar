@@ -9,6 +9,8 @@ import '../../features/whatsapp/presentation/providers/whatsapp_provider.dart';
 import '../../features/transactions/presentation/providers/transaction_service_provider.dart';
 import '../../shared/providers/currency_provider.dart';
 import '../../features/settings/presentation/providers/settings_provider.dart';
+import '../../features/messages/presentation/providers/message_template_provider.dart';
+import '../../features/messages/data/default_templates.dart';
 
 class ShareHelper {
   static Future<void> sharePayable(
@@ -161,33 +163,47 @@ class ShareHelper {
       status: payable.status,
     ));
 
+    // Get template service and language
+    final templateService = ref.read(messageTemplateServiceProvider);
+    final language = getCurrentLanguageCode(ref);
+
     String message;
     if (isPaid) {
-      message = '''
-Hi ${contact.name},
-
-Greetings! 
-
-The payment of *${AmountFormatter.formatWithCurrency(payable.amount, currency.symbol, currency.decimalPlaces)}* on *${AppDateFormatter.formatDate(payable.date, pattern: userProfile.dateFormat)}* has been completed and recorded. 
-
-If you haven't updated this payment in FlowPaisa, please follow the link below to sync your records:
-$link
-
-Thank you!
-''';
+      // Use template for paid status
+      final template = await templateService.getTemplate(
+        DefaultTemplates.payableReminder,
+        DefaultTemplates.paid,
+        language,
+      );
+      final variables = templateService.buildPayableReminderVariables(
+        contactName: contact.name,
+        amount: AmountFormatter.formatWithCurrency(payable.amount, currency.symbol, currency.decimalPlaces),
+        description: payable.description,
+        dueDate: payable.dueDate != null
+            ? AppDateFormatter.formatDate(payable.dueDate, pattern: userProfile.dateFormat)
+            : null,
+        date: AppDateFormatter.formatDate(payable.date, pattern: userProfile.dateFormat),
+      );
+      variables['link'] = link;
+      message = templateService.renderTemplate(template, variables);
     } else {
-      message = '''
-Hi ${contact.name},
-
-This is a friendly reminder that I have recorded that I owe you *${AmountFormatter.formatWithCurrency(payable.amount, currency.symbol, currency.decimalPlaces)}* from *${AppDateFormatter.formatDate(payable.date, pattern: userProfile.dateFormat)}*.
-
-${payable.description != null && payable.description.isNotEmpty ? 'This is for _${payable.description}_.\n' : ''}${payable.dueDate != null ? 'I will settle this by *${AppDateFormatter.formatDate(payable.dueDate, pattern: userProfile.dateFormat)}*.\n' : 'I will settle this soon. Thanks for your patience!'}
-
-You can view and import this in FlowPaisa:
-$link
-
-Thank you!
-''';
+      // Use template for pending status
+      final template = await templateService.getTemplate(
+        DefaultTemplates.payableReminder,
+        DefaultTemplates.pending,
+        language,
+      );
+      final variables = templateService.buildPayableReminderVariables(
+        contactName: contact.name,
+        amount: AmountFormatter.formatWithCurrency(payable.amount, currency.symbol, currency.decimalPlaces),
+        description: payable.description,
+        dueDate: payable.dueDate != null
+            ? AppDateFormatter.formatDate(payable.dueDate, pattern: userProfile.dateFormat)
+            : null,
+        date: AppDateFormatter.formatDate(payable.date, pattern: userProfile.dateFormat),
+      );
+      variables['link'] = link;
+      message = templateService.renderTemplate(template, variables);
     }
 
     final cleanPhone = contact.phone.replaceAll(' ', '').replaceAll(RegExp(r'[^\d+]'), '');
@@ -219,34 +235,47 @@ Thank you!
       status: receivable.status,
     ));
 
+    // Get template service and language
+    final templateService = ref.read(messageTemplateServiceProvider);
+    final language = getCurrentLanguageCode(ref);
+
     String message;
     if (isReceived) {
-      message = '''
-Hi ${contact.name},
-
-Greetings! 
-
-The payment of *${AmountFormatter.formatWithCurrency(receivable.amount, currency.symbol, currency.decimalPlaces)}* on *${AppDateFormatter.formatDate(receivable.date, pattern: userProfile.dateFormat)}* has been received and recorded. 
-
-If you haven't updated this in your FlowPaisa records, please follow the link below to sync:
-$link
-
-Thank you!
-''';
+      // Use template for received status
+      final template = await templateService.getTemplate(
+        DefaultTemplates.receivableReminder,
+        DefaultTemplates.received,
+        language,
+      );
+      final variables = templateService.buildReceivableReminderVariables(
+        contactName: contact.name,
+        amount: AmountFormatter.formatWithCurrency(receivable.amount, currency.symbol, currency.decimalPlaces),
+        description: receivable.description,
+        dueDate: receivable.dueDate != null
+            ? AppDateFormatter.formatDate(receivable.dueDate, pattern: userProfile.dateFormat)
+            : null,
+      );
+      variables['date'] = AppDateFormatter.formatDate(receivable.date, pattern: userProfile.dateFormat);
+      variables['link'] = link;
+      message = templateService.renderTemplate(template, variables);
     } else {
-      message = '''
-Hi ${contact.name},
-
-Greetings! I hope you are doing well.
-
-This is a friendly reminder that I am expecting a payment of *${AmountFormatter.formatWithCurrency(receivable.amount, currency.symbol, currency.decimalPlaces)}* from *${AppDateFormatter.formatDate(receivable.date, pattern: userProfile.dateFormat)}*.
-
-${receivable.dueDate != null ? 'Expected by: *${AppDateFormatter.formatDate(receivable.dueDate, pattern: userProfile.dateFormat)}*\n' : ''}${receivable.description != null && receivable.description.isNotEmpty ? 'Details: _${receivable.description}_\n' : ''}
-You can view and record this in FlowPaisa:
-$link
-
-Thank you!
-''';
+      // Use template for pending status
+      final template = await templateService.getTemplate(
+        DefaultTemplates.receivableReminder,
+        DefaultTemplates.pending,
+        language,
+      );
+      final variables = templateService.buildReceivableReminderVariables(
+        contactName: contact.name,
+        amount: AmountFormatter.formatWithCurrency(receivable.amount, currency.symbol, currency.decimalPlaces),
+        description: receivable.description,
+        dueDate: receivable.dueDate != null
+            ? AppDateFormatter.formatDate(receivable.dueDate, pattern: userProfile.dateFormat)
+            : null,
+      );
+      variables['date'] = AppDateFormatter.formatDate(receivable.date, pattern: userProfile.dateFormat);
+      variables['link'] = link;
+      message = templateService.renderTemplate(template, variables);
     }
 
     final cleanPhone = contact.phone.replaceAll(' ', '').replaceAll(RegExp(r'[^\d+]'), '');
@@ -291,52 +320,43 @@ Thank you!
       status: status,
     );
 
+    // Get template service and language
+    final templateService = ref.read(messageTemplateServiceProvider);
+    final language = getCurrentLanguageCode(ref);
+
     String message;
     final formattedAmount = AmountFormatter.formatWithCurrency(transaction.amount, currency.symbol, currency.decimalPlaces);
     final formattedDate = AppDateFormatter.formatDate(transaction.date, pattern: userProfile.dateFormat);
+    final isIncome = transaction.type.toUpperCase() == 'INCOME';
 
-    if (isMarked && (transaction.paidRelationship == 'PAID_FOR' || transaction.paidRelationship == 'WILL_RECEIVE')) {
-      message = '''
-Hi ${contact.name},
-
-The payment of *$formattedAmount* on *$formattedDate* has been received and recorded.
-
-Sync your records in FlowPaisa:
-$link
-''';
-    } else if (isMarked && (transaction.paidRelationship == 'PAID_BY' || transaction.paidRelationship == 'RECEIVED_FROM')) {
-      message = '''
-Hi ${contact.name},
-
-The payment of *$formattedAmount* on *$formattedDate* has been completed.
-
-Sync your records in FlowPaisa:
-$link
-''';
-    } else {
-      String relationshipText = '';
-      if (transaction.paidRelationship == 'PAID_FOR') {
-        relationshipText = 'I have recorded that I paid on your behalf';
-      } else if (transaction.paidRelationship == 'PAID_BY') {
-        relationshipText = 'I have recorded that you paid for me';
-      } else if (transaction.paidRelationship == 'WILL_RECEIVE') {
-        relationshipText = 'I have recorded that I am expecting a payment of';
-      } else if (transaction.paidRelationship == 'RECEIVED_FROM') {
-        relationshipText = 'I have recorded that I received *$formattedAmount* from you';
-      } else {
-        relationshipText = 'I have recorded a transaction of';
-      }
-
-      message = '''
-Hi ${contact.name},
-
-$relationshipText *$formattedAmount* on *$formattedDate*.
-
-${transaction.description != null && transaction.description.isNotEmpty ? 'This was for _${transaction.description}_.\n' : ''}
-You can view the details and sync this in FlowPaisa:
-$link
-''';
+    // Determine template relationship key
+    String relationshipKey = 'generic';
+    if (transaction.paidRelationship == 'PAID_FOR') {
+      relationshipKey = 'paid_for';
+    } else if (transaction.paidRelationship == 'PAID_BY') {
+      relationshipKey = 'paid_by';
+    } else if (transaction.paidRelationship == 'WILL_RECEIVE') {
+      relationshipKey = 'will_receive';
+    } else if (transaction.paidRelationship == 'RECEIVED_FROM') {
+      relationshipKey = 'received_from';
     }
+
+    // Use template
+    final template = await templateService.getTemplate(
+      DefaultTemplates.transactionShare,
+      relationshipKey,
+      language,
+    );
+    final variables = templateService.buildTransactionShareVariables(
+      type: isIncome ? 'Income' : 'Expense',
+      amount: formattedAmount,
+      date: formattedDate,
+      description: transaction.description,
+      categoryName: category?.name,
+      link: link,
+      relationship: transaction.paidRelationship,
+    );
+    message = templateService.renderTemplate(template, variables);
 
     final cleanPhone = contact.phone.replaceAll(' ', '').replaceAll(RegExp(r'[^\d+]'), '');
     await whatsAppService.sendMessage(cleanPhone, message);

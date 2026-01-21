@@ -27,6 +27,7 @@ import 'package:flowpaisa/features/settings/presentation/screens/profile_screen.
 import 'package:flowpaisa/features/notifications/presentation/screens/notifications_screen.dart';
 import 'package:flowpaisa/features/premium/presentation/screens/premium_screen.dart';
 import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
+import 'package:flowpaisa/features/messages/presentation/screens/message_templates_screen.dart';
 import 'package:flowpaisa/features/transactions/presentation/screens/export_screen.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -1527,6 +1528,31 @@ class _SettingsTab extends ConsumerWidget {
                   builder: (context) => const BackupScreen(),
                 ),
               );
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.message_outlined),
+            title: Row(
+              children: [
+                const Text('Message Templates'),
+                const SizedBox(width: 8),
+                if (!isPremium)
+                  const PremiumBadge(isSmall: true, showLock: true),
+              ],
+            ),
+            subtitle: const Text('Customize WhatsApp message templates'),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () {
+              if (!isPremium) {
+                PremiumGate.showPremiumDialog(context);
+              } else {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const MessageTemplatesScreen(),
+                  ),
+                );
+              }
             },
           ),
           ListTile(

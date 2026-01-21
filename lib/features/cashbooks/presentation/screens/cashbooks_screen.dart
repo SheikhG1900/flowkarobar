@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/features/cashbooks/domain/models/cashbook.dart';
 import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
 import 'package:flowpaisa/features/cashbooks/presentation/widgets/add_cashbook_sheet.dart';
+import 'package:flowpaisa/features/cashbooks/presentation/widgets/copy_preferences_dialog.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/core/utils/date_formatter.dart';
 import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
@@ -139,6 +140,18 @@ class CashbooksScreen extends ConsumerWidget {
                               ),
                             ),
                             const PopupMenuItem(
+                              value: 'copy_preferences',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.copy_outlined, size: 20),
+                                  SizedBox(width: 8),
+                                  Text('Copy Preferences'),
+                                  SizedBox(width: 8),
+                                  PremiumBadge(isSmall: true),
+                                ],
+                              ),
+                            ),
+                            const PopupMenuItem(
                               value: 'clear',
                               child: Row(
                                 children: [
@@ -209,6 +222,19 @@ class CashbooksScreen extends ConsumerWidget {
       _handleBackup(context, ref, cashbook);
     } else if (action == 'restore_local') {
       _handleRestore(context, ref, cashbook);
+    } else if (action == 'copy_preferences') {
+      if (!PremiumGate.isPremium(ref)) {
+        PremiumGate.showPremiumDialog(context);
+        return;
+      }
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (context) => CopyPreferencesSheet(
+          targetCashbookId: cashbook.id,
+        ),
+      );
     } else if (action == 'clear') {
       _showClearConfirmation(context, ref, cashbook);
     } else if (action == 'delete') {
