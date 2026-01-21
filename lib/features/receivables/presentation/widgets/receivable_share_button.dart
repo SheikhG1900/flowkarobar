@@ -143,9 +143,9 @@ Hi ${widget.contact?.name ?? 'there'},
 
 Greetings! 
 
-Your payment of ${AmountFormatter.formatWithCurrency(widget.receivable.amount, currency?.symbol ?? '', currency?.decimalPlaces ?? 2)} dated ${AppDateFormatter.formatDate(widget.receivable.date, pattern: userProfile.dateFormat)} has been received and recorded. 
+The payment of *${AmountFormatter.formatWithCurrency(widget.receivable.amount, currency?.symbol ?? '', currency?.decimalPlaces ?? 2)}* on *${AppDateFormatter.formatDate(widget.receivable.date, pattern: userProfile.dateFormat)}* has been received and recorded. 
 
-If you haven't updated this payment in FlowPaisa, please follow the link below to sync your records:
+If you haven't updated this in your *FlowPaisa* records, please follow the link below to sync:
 $link
 
 Thank you!
@@ -153,9 +153,10 @@ Thank you!
       } else {
         message = '''
 💰 Payment Request
-Please pay: ${currency?.symbol ?? ''}${widget.receivable.amount.toStringAsFixed(currency?.decimalPlaces ?? 2)}
-Date: ${widget.receivable.date.day}/${widget.receivable.date.month}/${widget.receivable.date.year}
 
+I am expecting a payment of *${AmountFormatter.formatWithCurrency(widget.receivable.amount, currency?.symbol ?? '', currency?.decimalPlaces ?? 2)}* for the transaction on *${AppDateFormatter.formatDate(widget.receivable.date, pattern: userProfile.dateFormat)}*.
+
+${widget.receivable.description != null && widget.receivable.description!.isNotEmpty ? 'This is for _${widget.receivable.description}_.\n' : ''}
 View and record this in FlowPaisa:
 $link
 ''';

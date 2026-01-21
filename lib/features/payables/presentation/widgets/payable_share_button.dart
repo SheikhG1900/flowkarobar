@@ -143,9 +143,9 @@ Hi ${widget.contact?.name ?? 'there'},
 
 Greetings! 
 
-The payment of ${AmountFormatter.formatWithCurrency(widget.payable.amount, currency?.symbol ?? '', currency?.decimalPlaces ?? 2)} dated ${AppDateFormatter.formatDate(widget.payable.date, pattern: userProfile.dateFormat)} has been completed and recorded. 
+The payment of *${AmountFormatter.formatWithCurrency(widget.payable.amount, currency?.symbol ?? '', currency?.decimalPlaces ?? 2)}* on *${AppDateFormatter.formatDate(widget.payable.date, pattern: userProfile.dateFormat)}* has been completed and recorded. 
 
-If you haven't updated this payment in FlowPaisa, please follow the link below to sync your records:
+If you haven't updated this payment in *FlowPaisa*, please follow the link below to sync your records:
 $link
 
 Thank you!
@@ -153,8 +153,11 @@ Thank you!
       } else {
         message = '''
 📋 Payment Acknowledgment
-I owe you: ${currency?.symbol ?? ''}${widget.payable.amount.toStringAsFixed(currency?.decimalPlaces ?? 2)}
-Date: ${widget.payable.date.day}/${widget.payable.date.month}/${widget.payable.date.year}
+
+I have recorded that I owe you *${AmountFormatter.formatWithCurrency(widget.payable.amount, currency?.symbol ?? '', currency?.decimalPlaces ?? 2)}* for the transaction on *${AppDateFormatter.formatDate(widget.payable.date, pattern: userProfile.dateFormat)}*.
+
+${widget.payable.description != null && widget.payable.description!.isNotEmpty ? 'This is for _${widget.payable.description}_.\n' : ''}
+I will settle this soon. Thanks for your patience!
 
 View and record this in FlowPaisa:
 $link

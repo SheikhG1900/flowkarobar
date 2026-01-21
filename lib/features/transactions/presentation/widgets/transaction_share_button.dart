@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flowpaisa/core/utils/amount_formatter.dart';
+import 'package:flowpaisa/core/utils/date_formatter.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transaction_service_provider.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
@@ -141,11 +143,26 @@ class _ShareOptionsSheetState extends State<_ShareOptionsSheet> {
       // whatsAppService.shareTransactionWithLink uses TransactionShareData.
       // I'll update WhatsAppService later if needed, but for now I'll use the link.
 
-      final message = '''
-📝 Transaction Details
-Amount: $currencySymbol${widget.transaction.amount.toStringAsFixed(2)}
-Date: ${widget.transaction.date.day}/${widget.transaction.date.month}/${widget.transaction.date.year}
+      String relationshipText = '';
+      if (widget.transaction.paidRelationship == 'PAID_FOR') {
+        relationshipText = 'I have recorded that I paid on your behalf';
+      } else if (widget.transaction.paidRelationship == 'PAID_BY') {
+        relationshipText = 'I have recorded that you paid for me';
+      } else if (widget.transaction.paidRelationship == 'WILL_RECEIVE') {
+        relationshipText = 'I have recorded that I am expecting a payment of';
+      } else if (widget.transaction.paidRelationship == 'RECEIVED_FROM') {
+        relationshipText =
+            'I have recorded that I received *${AmountFormatter.formatWithCurrency(widget.transaction.amount, currencySymbol, 2)}* from you';
+      } else {
+        relationshipText = 'I have recorded a payment of';
+      }
 
+      final message = '''
+💰 Transaction Recorded
+
+$relationshipText *${AmountFormatter.formatWithCurrency(widget.transaction.amount, currencySymbol, 2)}* on *${AppDateFormatter.formatDate(widget.transaction.date, pattern: userProfile.dateFormat)}*.
+
+${widget.transaction.description != null && widget.transaction.description!.isNotEmpty ? 'This was for _${widget.transaction.description}_.\n' : ''}
 View and import this transaction in FlowPaisa:
 $link
 ''';
