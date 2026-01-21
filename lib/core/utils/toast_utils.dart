@@ -1,63 +1,57 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../theme/app_colors.dart';
 import '../../features/cashbooks/presentation/providers/cashbook_provider.dart';
 
 class ToastUtils {
   static void showSuccessToast(
       BuildContext context, WidgetRef ref, String message) {
     final activeCashbook = ref.read(activeCashbookProvider);
-    final color = activeCashbook.color;
+    final activeColor = activeCashbook.color;
 
     _showToast(
       context,
       message,
       icon: Icons.check_circle_outline_rounded,
-      gradient: LinearGradient(
-        colors: [
-          color,
-          color.withValues(alpha: 0.8),
-        ],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      ),
-      textColor: Colors.white,
+      activeColor: activeColor,
     );
   }
 
   static void showErrorToast(
       BuildContext context, WidgetRef ref, String message) {
+    final activeCashbook = ref.read(activeCashbookProvider);
+    final activeColor = activeCashbook.color;
+
     _showToast(
       context,
       message,
       icon: Icons.error_outline_rounded,
-      gradient: AppColors.errorGradient,
-      textColor: Colors.white,
+      activeColor: activeColor,
     );
   }
 
   static void showInfoToast(
       BuildContext context, WidgetRef ref, String message) {
     final activeCashbook = ref.read(activeCashbookProvider);
-    final color = activeCashbook.color;
+    final activeColor = activeCashbook.color;
 
     _showToast(
       context,
       message,
       icon: Icons.info_outline_rounded,
-      gradient: AppColors.getPrimaryGradient(color),
-      textColor: Colors.white,
+      activeColor: activeColor,
     );
   }
 
   static void showWarningToast(
       BuildContext context, WidgetRef ref, String message) {
+    final activeCashbook = ref.read(activeCashbookProvider);
+    final activeColor = activeCashbook.color;
+
     _showToast(
       context,
       message,
       icon: Icons.warning_amber_rounded,
-      gradient: AppColors.payableGradient,
-      textColor: Colors.white,
+      activeColor: activeColor,
     );
   }
 
@@ -65,68 +59,109 @@ class ToastUtils {
     BuildContext context,
     String message, {
     required IconData icon,
-    required LinearGradient gradient,
-    required Color textColor,
+    required Color activeColor,
   }) {
+    final theme = Theme.of(context);
+    final textColor = theme.colorScheme.onSurface;
+    final backgroundColor = theme.scaffoldBackgroundColor;
+
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          // margin gives the shadow space to draw so it doesn't get cut off
+          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 20),
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors:
-                  gradient.colors.map((c) => c.withValues(alpha: 0.9)).toList(),
-              begin: gradient.begin,
-              end: gradient.end,
-            ),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: Colors.white.withValues(alpha: 0.9),
-              width: 1,
-            ),
+            borderRadius: BorderRadius.zero,
             boxShadow: [
+              // Tightened primary shadow to prevent edge clipping
               BoxShadow(
-                color: gradient.colors.first.withValues(alpha: 0.3),
-                blurRadius: 12,
+                color: activeColor.withValues(alpha: 0.3),
+                blurRadius: 16,
+                offset: const Offset(0, 10),
+                spreadRadius: -4, // Pulls the shadow in from the edges
+              ),
+              // Tightened colored glow
+              BoxShadow(
+                color: activeColor.withValues(alpha: 0.2),
+                blurRadius: 10,
                 offset: const Offset(0, 4),
+                spreadRadius: -2,
               ),
             ],
           ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TweenAnimationBuilder<double>(
-                tween: Tween(begin: 0.0, end: 1.0),
-                duration: const Duration(milliseconds: 500),
-                curve: Curves.elasticOut,
-                builder: (context, value, child) {
-                  return Transform.scale(
-                    scale: value,
-                    child: Icon(icon, color: textColor, size: 24),
-                  );
-                },
+          child: Container(
+            decoration: BoxDecoration(
+              color: backgroundColor,
+              borderRadius: BorderRadius.zero,
+              border: Border.all(
+                color: activeColor.withValues(alpha: 1),
+                width: 1,
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  message,
-                  style: TextStyle(
-                    color: textColor,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
+            ),
+            child: ClipRRect(
+              // Square corners
+              borderRadius: BorderRadius.zero,
+              child: Stack(
+                children: [
+                  // Gradient overlay
+                  Positioned.fill(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            activeColor.withValues(alpha: 0.4),
+                            activeColor.withValues(alpha: 0.1),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                      ),
+                    ),
                   ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
+                  // Content with padding
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 14),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        TweenAnimationBuilder<double>(
+                          tween: Tween(begin: 0.0, end: 1.0),
+                          duration: const Duration(milliseconds: 500),
+                          curve: Curves.elasticOut,
+                          builder: (context, value, child) {
+                            return Transform.scale(
+                              scale: value,
+                              child: Icon(icon, color: textColor, size: 24),
+                            );
+                          },
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            message,
+                            style: TextStyle(
+                              color: textColor,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
         behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.all(16),
+        margin: const EdgeInsets.all(8),
         padding: EdgeInsets.zero,
         duration: const Duration(seconds: 3),
       ),

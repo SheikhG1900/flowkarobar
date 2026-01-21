@@ -42,6 +42,15 @@ class AppColors {
     end: Alignment.bottomRight,
   );
 
+  static const errorGradientDark = LinearGradient(
+    colors: [
+      Color.fromARGB(255, 90, 0, 0),
+      Color.fromARGB(255, 170, 40, 40)
+    ], // Darker Red shades for better text readability
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
   static const expenseGradient = LinearGradient(
     colors: [
       Color(0xFFFF9A76),
