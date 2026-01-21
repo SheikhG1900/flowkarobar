@@ -5,6 +5,10 @@ import 'package:drift/drift.dart' as drift;
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
+import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
+import 'package:flowpaisa/features/whatsapp/presentation/providers/whatsapp_provider.dart';
+import 'package:flowpaisa/core/utils/share_helper.dart';
+import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transaction_service_provider.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
 import 'package:flowpaisa/features/transactions/presentation/widgets/transaction_details_dialog.dart';
@@ -332,25 +336,44 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
             await repository.getTransactionWithDetailsById(transactionId);
 
         if (transactionWithDetails != null) {
-          // Pop create page and navigate to details
-          Navigator.pop(context);
-          Navigator.push(
+          final activeColor = ref.read(activeCashbookProvider).color;
+          final currency = ref.read(currentCurrencyProvider).value!;
+          final userProfile = ref.read(userProfileProvider);
+          final transactionService = ref.read(transactionServiceProvider);
+          final whatsAppService = ref.read(whatsAppServiceProvider);
+
+          ToastUtils.showSuccessToast(
             context,
+            ref,
+            _createLinkedEntry
+                ? 'Transaction and linked entry added successfully'
+                : 'Transaction added successfully',
+            actionLabel: 'SHARE',
+            onActionPressed: (snackContext) => ShareHelper.shareTransaction(
+              snackContext,
+              ref,
+              transactionWithDetails.transaction,
+              transactionWithDetails.contact,
+              transactionWithDetails.category,
+              false, // isMarked
+              currencyOverride: currency,
+              userProfileOverride: userProfile,
+              transactionServiceOverride: transactionService,
+              whatsAppServiceOverride: whatsAppService,
+            ),
+            color: activeColor,
+          );
+
+          final navigator = Navigator.of(context);
+          // Pop create page and navigate to details
+          navigator.pop();
+          navigator.push(
             MaterialPageRoute(
               builder: (context) =>
                   TransactionDetailsDialog(item: transactionWithDetails),
             ),
           );
-          ToastUtils.showSuccessToast(
-            context,
-            ref,
-            _createLinkedEntry
-                ? 'Transaction and linked entry added successfully'
-                : 'Transaction added successfully',
-          );
         } else {
-          // Fallback: just pop if details fetch fails
-          Navigator.pop(context);
           ToastUtils.showSuccessToast(
             context,
             ref,
@@ -358,6 +381,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                 ? 'Transaction and linked entry added successfully'
                 : 'Transaction added successfully',
           );
+          Navigator.pop(context);
         }
       }
     } catch (e) {

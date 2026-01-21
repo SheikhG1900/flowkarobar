@@ -5,7 +5,9 @@ import '../../features/cashbooks/presentation/providers/cashbook_provider.dart';
 class ToastUtils {
   static void showSuccessToast(
       BuildContext context, WidgetRef ref, String message,
-      {String? actionLabel, VoidCallback? onActionPressed, Color? color}) {
+      {String? actionLabel,
+      void Function(BuildContext)? onActionPressed,
+      Color? color}) {
     final activeColor = color ?? ref.read(activeCashbookProvider).color;
 
     _showToast(
@@ -20,7 +22,9 @@ class ToastUtils {
 
   static void showErrorToast(
       BuildContext context, WidgetRef ref, String message,
-      {String? actionLabel, VoidCallback? onActionPressed, Color? color}) {
+      {String? actionLabel,
+      void Function(BuildContext)? onActionPressed,
+      Color? color}) {
     final activeColor = color ?? ref.read(activeCashbookProvider).color;
 
     _showToast(
@@ -34,7 +38,9 @@ class ToastUtils {
   }
 
   static void showInfoToast(BuildContext context, WidgetRef ref, String message,
-      {String? actionLabel, VoidCallback? onActionPressed, Color? color}) {
+      {String? actionLabel,
+      void Function(BuildContext)? onActionPressed,
+      Color? color}) {
     final activeColor = color ?? ref.read(activeCashbookProvider).color;
 
     _showToast(
@@ -49,7 +55,9 @@ class ToastUtils {
 
   static void showWarningToast(
       BuildContext context, WidgetRef ref, String message,
-      {String? actionLabel, VoidCallback? onActionPressed, Color? color}) {
+      {String? actionLabel,
+      void Function(BuildContext)? onActionPressed,
+      Color? color}) {
     final activeColor = color ?? ref.read(activeCashbookProvider).color;
 
     _showToast(
@@ -68,7 +76,7 @@ class ToastUtils {
     required IconData icon,
     required Color activeColor,
     String? actionLabel,
-    VoidCallback? onActionPressed,
+    void Function(BuildContext)? onActionPressed,
   }) {
     final scaffoldMessenger = ScaffoldMessenger.of(context);
     final theme = Theme.of(context);
@@ -91,129 +99,132 @@ class ToastUtils {
               ),
             );
           },
-          child: Container(
-            // margin gives the shadow space and positions the toast at the bottom
-            margin:
-                const EdgeInsets.only(bottom: 24, left: 16, right: 16, top: 8),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.zero,
-              boxShadow: [
-                // Tightened primary shadow to prevent edge clipping
-                BoxShadow(
-                  color: activeColor.withValues(alpha: 0.3),
-                  blurRadius: 16,
-                  offset: const Offset(0, 10),
-                  spreadRadius: -4, // Pulls the shadow in from the edges
-                ),
-                // Tightened colored glow
-                BoxShadow(
-                  color: activeColor.withValues(alpha: 0.2),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                  spreadRadius: -2,
-                ),
-              ],
-            ),
-            child: Container(
+          child: Builder(builder: (snackContext) {
+            return Container(
+              // margin gives the shadow space and positions the toast at the bottom
+              margin: const EdgeInsets.only(
+                  bottom: 24, left: 16, right: 16, top: 8),
               decoration: BoxDecoration(
-                color: backgroundColor,
                 borderRadius: BorderRadius.zero,
-                border: Border.all(
-                  color: activeColor.withValues(alpha: 1),
-                  width: 1,
-                ),
+                boxShadow: [
+                  // Tightened primary shadow to prevent edge clipping
+                  BoxShadow(
+                    color: activeColor.withValues(alpha: 0.3),
+                    blurRadius: 16,
+                    offset: const Offset(0, 10),
+                    spreadRadius: -4, // Pulls the shadow in from the edges
+                  ),
+                  // Tightened colored glow
+                  BoxShadow(
+                    color: activeColor.withValues(alpha: 0.2),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                    spreadRadius: -2,
+                  ),
+                ],
               ),
-              child: ClipRRect(
-                // Square corners
-                borderRadius: BorderRadius.zero,
-                child: Stack(
-                  children: [
-                    // Gradient overlay
-                    Positioned.fill(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              activeColor.withValues(alpha: 0.4),
-                              activeColor.withValues(alpha: 0.1),
-                            ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: backgroundColor,
+                  borderRadius: BorderRadius.zero,
+                  border: Border.all(
+                    color: activeColor.withValues(alpha: 1),
+                    width: 1,
+                  ),
+                ),
+                child: ClipRRect(
+                  // Square corners
+                  borderRadius: BorderRadius.zero,
+                  child: Stack(
+                    children: [
+                      // Gradient overlay
+                      Positioned.fill(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                activeColor.withValues(alpha: 0.4),
+                                activeColor.withValues(alpha: 0.1),
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    // Content with padding
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 14),
-                      child: Row(
-                        children: [
-                          TweenAnimationBuilder<double>(
-                            tween: Tween(begin: 0.0, end: 1.0),
-                            duration: const Duration(milliseconds: 500),
-                            curve: Curves.elasticOut,
-                            builder: (context, value, child) {
-                              return Transform.scale(
-                                scale: value,
-                                child: Icon(icon, color: textColor, size: 24),
-                              );
-                            },
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              message,
-                              style: TextStyle(
-                                color: textColor,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                              ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
+                      // Content with padding
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 14),
+                        child: Row(
+                          children: [
+                            TweenAnimationBuilder<double>(
+                              tween: Tween(begin: 0.0, end: 1.0),
+                              duration: const Duration(milliseconds: 500),
+                              curve: Curves.elasticOut,
+                              builder: (context, value, child) {
+                                return Transform.scale(
+                                  scale: value,
+                                  child: Icon(icon, color: textColor, size: 24),
+                                );
+                              },
                             ),
-                          ),
-                          if (actionLabel != null && onActionPressed != null)
-                            Padding(
-                              padding: const EdgeInsets.only(left: 8),
-                              child: TextButton(
-                                onPressed: () {
-                                  onActionPressed();
-                                  scaffoldMessenger.hideCurrentSnackBar();
-                                },
-                                style: TextButton.styleFrom(
-                                  backgroundColor:
-                                      activeColor.withValues(alpha: 0.2),
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 16, vertical: 10),
-                                  minimumSize: Size.zero,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.zero,
-                                    side: BorderSide(
-                                      color: activeColor.withValues(alpha: 0.5),
-                                      width: 1,
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                message,
+                                style: TextStyle(
+                                  color: textColor,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            if (actionLabel != null && onActionPressed != null)
+                              Padding(
+                                padding: const EdgeInsets.only(left: 8),
+                                child: TextButton(
+                                  onPressed: () {
+                                    onActionPressed(snackContext);
+                                    scaffoldMessenger.hideCurrentSnackBar();
+                                  },
+                                  style: TextButton.styleFrom(
+                                    backgroundColor:
+                                        activeColor.withValues(alpha: 0.2),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 16, vertical: 10),
+                                    minimumSize: Size.zero,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.zero,
+                                      side: BorderSide(
+                                        color:
+                                            activeColor.withValues(alpha: 0.5),
+                                        width: 1,
+                                      ),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    actionLabel,
+                                    style: TextStyle(
+                                      color: activeColor,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 1.2,
                                     ),
                                   ),
                                 ),
-                                child: Text(
-                                  actionLabel,
-                                  style: TextStyle(
-                                    color: activeColor,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                    letterSpacing: 1.2,
-                                  ),
-                                ),
                               ),
-                            ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ),
+            );
+          }),
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,

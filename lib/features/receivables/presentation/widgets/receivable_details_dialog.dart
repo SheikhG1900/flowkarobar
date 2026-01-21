@@ -10,13 +10,11 @@ import 'package:flowpaisa/features/receivables/domain/models.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transaction_service_provider.dart';
 import 'package:flowpaisa/features/receivables/presentation/providers/receivables_provider.dart';
+import 'package:flowpaisa/core/utils/share_helper.dart';
 import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
 import 'package:flowpaisa/features/receivables/presentation/screens/edit_receivable_screen.dart';
-import 'package:flowpaisa/features/whatsapp/domain/deep_link_service.dart';
-import 'package:flowpaisa/features/whatsapp/domain/models/shared_data_models.dart';
 import 'package:flowpaisa/features/whatsapp/presentation/providers/whatsapp_provider.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
 
 class ReceivableDetailsDialog extends ConsumerWidget {
@@ -57,7 +55,7 @@ class ReceivableDetailsDialog extends ConsumerWidget {
           IconButton(
             icon: const Icon(Icons.share),
             onPressed: () =>
-                _shareReceivable(context, ref, receivable, contact),
+                ShareHelper.shareReceivable(context, ref, receivable, contact),
           ),
           // Edit button (hide if received or linked)
           if (_canEditReceivable(receivable))
@@ -233,8 +231,8 @@ class ReceivableDetailsDialog extends ConsumerWidget {
                   if (contact.phone != null)
                     IconButton(
                       icon: const Icon(Icons.chat, color: Color(0xFF25D366)),
-                      onPressed: () => _sendWhatsAppMessage(
-                          context, ref, contact, receivable),
+                      onPressed: () => ShareHelper.shareReceivable(
+                          context, ref, receivable, contact),
                     ),
                 ],
               ),
@@ -464,67 +462,6 @@ class ReceivableDetailsDialog extends ConsumerWidget {
     );
   }
 
-  Future<void> _shareReceivable(
-    BuildContext context,
-    WidgetRef ref,
-    dynamic receivable,
-    dynamic contact, {
-    dynamic currencyOverride,
-    dynamic userProfileOverride,
-    dynamic transactionServiceOverride,
-  }) async {
-    final currency =
-        currencyOverride ?? ref.read(currentCurrencyProvider).value!;
-    final userProfile = userProfileOverride ?? ref.read(userProfileProvider);
-    final deepLinkService = DeepLinkService();
-    final transactionService =
-        transactionServiceOverride ?? ref.read(transactionServiceProvider);
-    final isReceived = receivable.status == 'RECEIVED';
-
-    // Ensure external ID is persisted before sharing
-    final effectiveExternalId = await transactionService.ensureExternalLinkId(
-      receivableId: receivable.id,
-    );
-
-    final link = deepLinkService.generatePayableLink(PayableShareData(
-      amount: receivable.amount,
-      date: receivable.date,
-      description: receivable.description,
-      dueDate: receivable.dueDate,
-      senderName: userProfile.name ?? 'Someone',
-      senderPhone: userProfile.phone ?? '',
-      externalLinkId: effectiveExternalId,
-      status: receivable.status,
-    ));
-
-    String message;
-    if (isReceived) {
-      message = '''
-Greetings! 
-
-The payment of ${AmountFormatter.formatWithCurrency(receivable.amount, currency.symbol, currency.decimalPlaces)} has been received and recorded. 
-
-If you haven't updated this in your records, please use the link below to sync it in FlowPaisa:
-$link
-
-Thank you!
-''';
-    } else {
-      message = '''
-Receivable Details
-Amount: ${AmountFormatter.formatWithCurrency(receivable.amount, currency.symbol, currency.decimalPlaces)}
-Contact: ${contact?.name ?? 'Unknown'}
-Date: ${AppDateFormatter.formatDate(receivable.date, pattern: userProfile.dateFormat)}
-${receivable.dueDate != null ? 'Due Date: ${AppDateFormatter.formatDate(receivable.dueDate, pattern: userProfile.dateFormat)}\n' : ''}${receivable.description != null && receivable.description.isNotEmpty ? 'Description: ${receivable.description}\n' : ''}Status: Pending
-
-View and record this in FlowPaisa:
-$link
-''';
-    }
-
-    Share.share(message);
-  }
-
   Future<void> _deleteReceivable(
       BuildContext context, WidgetRef ref, int receivableId) async {
     final confirmed = await showDialog<bool>(
@@ -584,7 +521,6 @@ $link
           final transactionService = ref.read(transactionServiceProvider);
           final whatsAppService = ref.read(whatsAppServiceProvider);
 
-          Navigator.pop(context);
           ToastUtils.showSuccessToast(context, ref, 'Marked as received',
               color: activeColor);
 
@@ -601,6 +537,7 @@ $link
               whatsAppService: whatsAppService,
             );
           }
+          Navigator.pop(context);
         }
       }
     } catch (e) {
@@ -626,123 +563,17 @@ $link
       ref,
       'Receivable marked as received. Inform the contact?',
       actionLabel: 'SHARE',
-      onActionPressed: () {
-        if (contact != null &&
-            contact.phone != null &&
-            contact.phone.isNotEmpty) {
-          _sendWhatsAppMessage(
-            context,
-            ref,
-            contact,
-            receivable,
-            currencyOverride: currency,
-            userProfileOverride: userProfile,
-            whatsAppServiceOverride: whatsAppService,
-            transactionServiceOverride: transactionService,
-          );
-        } else {
-          _shareReceivable(
-            context,
-            ref,
-            receivable,
-            contact,
-            currencyOverride: currency,
-            userProfileOverride: userProfile,
-            transactionServiceOverride: transactionService,
-          );
-        }
-      },
+      onActionPressed: (snackContext) => ShareHelper.shareReceivable(
+        snackContext,
+        ref,
+        receivable,
+        contact,
+        currencyOverride: currency,
+        userProfileOverride: userProfile,
+        transactionServiceOverride: transactionService,
+        whatsAppServiceOverride: whatsAppService,
+      ),
       color: activeColor,
     );
-  }
-
-  Future<void> _sendWhatsAppMessage(
-    BuildContext context,
-    WidgetRef ref,
-    dynamic contact,
-    dynamic receivable, {
-    dynamic currencyOverride,
-    dynamic userProfileOverride,
-    dynamic whatsAppServiceOverride,
-    dynamic transactionServiceOverride,
-  }) async {
-    final currency =
-        currencyOverride ?? ref.read(currentCurrencyProvider).value!;
-    if (contact.phone == null || contact.phone.isEmpty) {
-      ToastUtils.showWarningToast(
-          context, ref, 'No phone number available for this contact');
-      return;
-    }
-
-    try {
-      final whatsAppService =
-          whatsAppServiceOverride ?? ref.read(whatsAppServiceProvider);
-      final userProfile = userProfileOverride ?? ref.read(userProfileProvider);
-      final deepLinkService = DeepLinkService();
-      final transactionService =
-          transactionServiceOverride ?? ref.read(transactionServiceProvider);
-      final isReceived = receivable.status == 'RECEIVED';
-
-      final senderName = userProfile.name ?? 'Someone';
-      final senderPhone = userProfile.phone ?? '';
-
-      // Ensure external ID is persisted before sharing
-      final effectiveExternalId = await transactionService.ensureExternalLinkId(
-        receivableId: receivable.id,
-      );
-
-      // Create reciprocal link (Payable link for the recipient)
-      final link = deepLinkService.generatePayableLink(PayableShareData(
-        amount: receivable.amount,
-        date: receivable.date,
-        description: receivable.description,
-        dueDate: receivable.dueDate,
-        senderName: senderName,
-        senderPhone: senderPhone,
-        externalLinkId: effectiveExternalId,
-        status: receivable.status,
-      ));
-
-      String message;
-      if (isReceived) {
-        message = '''
-Hi ${contact.name},
-
-Greetings! 
-
-Your payment of ${AmountFormatter.formatWithCurrency(receivable.amount, currency.symbol, currency.decimalPlaces)} dated ${AppDateFormatter.formatDate(receivable.date, pattern: userProfile.dateFormat)} has been received and recorded. 
-
-If you haven't updated this payment in FlowPaisa, please follow the link below to sync your records:
-$link
-
-Thank you!
-''';
-      } else {
-        message = '''
-Hi ${contact.name},
-
-This is a reminder regarding the receivable amount of ${AmountFormatter.formatWithCurrency(receivable.amount, currency.symbol, currency.decimalPlaces)} dated ${AppDateFormatter.formatDate(receivable.date, pattern: userProfile.dateFormat)}.
-
-${receivable.dueDate != null ? 'Due Date: ${AppDateFormatter.formatDate(receivable.dueDate, pattern: userProfile.dateFormat)}\n' : ''}${receivable.description != null && receivable.description.isNotEmpty ? 'Details: ${receivable.description}\n' : ''}
-View and import this in FlowPaisa:
-$link
-
-Thank you!
-''';
-      }
-
-      // Clean phone number - remove spaces and non-digit characters except +
-      final cleanPhone =
-          contact.phone.replaceAll(' ', '').replaceAll(RegExp(r'[^\d+]'), '');
-      final success = await whatsAppService.sendMessage(cleanPhone, message);
-
-      if (success && context.mounted) {
-        ToastUtils.showSuccessToast(context, ref, 'Opening WhatsApp...');
-      }
-    } catch (e) {
-      if (context.mounted) {
-        ToastUtils.showErrorToast(context, ref, 'Error: ${e.toString()}');
-      }
-    }
   }
 }

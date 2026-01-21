@@ -10,13 +10,11 @@ import 'package:flowpaisa/features/payables/domain/models.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transaction_service_provider.dart';
 import 'package:flowpaisa/features/payables/presentation/providers/payables_provider.dart';
+import 'package:flowpaisa/core/utils/share_helper.dart';
 import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
 import 'package:flowpaisa/features/payables/presentation/screens/edit_payable_screen.dart';
-import 'package:flowpaisa/features/whatsapp/domain/deep_link_service.dart';
-import 'package:flowpaisa/features/whatsapp/domain/models/shared_data_models.dart';
 import 'package:flowpaisa/features/whatsapp/presentation/providers/whatsapp_provider.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
 
 class PayableDetailsDialog extends ConsumerWidget {
@@ -56,7 +54,8 @@ class PayableDetailsDialog extends ConsumerWidget {
           // Share button
           IconButton(
             icon: const Icon(Icons.share),
-            onPressed: () => _sharePayable(context, ref, payable, contact),
+            onPressed: () =>
+                ShareHelper.sharePayable(context, ref, payable, contact),
           ),
           // Edit button (hide if paid or linked)
           if (_canEditPayable(payable))
@@ -232,8 +231,8 @@ class PayableDetailsDialog extends ConsumerWidget {
                   if (contact.phone != null)
                     IconButton(
                       icon: const Icon(Icons.chat, color: Color(0xFF25D366)),
-                      onPressed: () =>
-                          _sendWhatsAppMessage(context, ref, contact, payable),
+                      onPressed: () => ShareHelper.sharePayable(
+                          context, ref, payable, contact),
                     ),
                 ],
               ),
@@ -462,67 +461,6 @@ class PayableDetailsDialog extends ConsumerWidget {
     );
   }
 
-  Future<void> _sharePayable(
-    BuildContext context,
-    WidgetRef ref,
-    dynamic payable,
-    dynamic contact, {
-    dynamic currencyOverride,
-    dynamic userProfileOverride,
-    dynamic transactionServiceOverride,
-  }) async {
-    final currency =
-        currencyOverride ?? ref.read(currentCurrencyProvider).value!;
-    final userProfile = userProfileOverride ?? ref.read(userProfileProvider);
-    final deepLinkService = DeepLinkService();
-    final transactionService =
-        transactionServiceOverride ?? ref.read(transactionServiceProvider);
-    final isPaid = payable.status == 'PAID';
-
-    // Ensure external ID is persisted before sharing
-    final effectiveExternalId = await transactionService.ensureExternalLinkId(
-      payableId: payable.id,
-    );
-
-    final link = deepLinkService.generateReceivableLink(ReceivableShareData(
-      amount: payable.amount,
-      date: payable.date,
-      description: payable.description,
-      dueDate: payable.dueDate,
-      senderName: userProfile.name ?? 'Someone',
-      senderPhone: userProfile.phone ?? '',
-      externalLinkId: effectiveExternalId,
-      status: payable.status,
-    ));
-
-    String message;
-    if (isPaid) {
-      message = '''
-Greetings! 
-
-The payment of ${AmountFormatter.formatWithCurrency(payable.amount, currency.symbol, currency.decimalPlaces)} has been completed and recorded. 
-
-If you haven't updated this in your records, please use the link below to sync it in FlowPaisa:
-$link
-
-Thank you!
-''';
-    } else {
-      message = '''
-Payable Details
-Amount: ${AmountFormatter.formatWithCurrency(payable.amount, currency.symbol, currency.decimalPlaces)}
-Contact: ${contact?.name ?? 'Unknown'}
-Date: ${AppDateFormatter.formatDate(payable.date, pattern: userProfile.dateFormat)}
-${payable.dueDate != null ? 'Due Date: ${AppDateFormatter.formatDate(payable.dueDate, pattern: userProfile.dateFormat)}\n' : ''}${payable.description != null && payable.description.isNotEmpty ? 'Description: ${payable.description}\n' : ''}Status: Pending
-
-View and record this in FlowPaisa:
-$link
-''';
-    }
-
-    Share.share(message);
-  }
-
   Future<void> _deletePayable(
       BuildContext context, WidgetRef ref, int payableId) async {
     final confirmed = await showDialog<bool>(
@@ -582,7 +520,6 @@ $link
           final transactionService = ref.read(transactionServiceProvider);
           final whatsAppService = ref.read(whatsAppServiceProvider);
 
-          Navigator.pop(context);
           ToastUtils.showSuccessToast(context, ref, 'Marked as paid',
               color: activeColor);
 
@@ -599,6 +536,7 @@ $link
               whatsAppService: whatsAppService,
             );
           }
+          Navigator.pop(context);
         }
       }
     } catch (e) {
@@ -624,123 +562,17 @@ $link
       ref,
       'Payable marked as paid. Inform the contact?',
       actionLabel: 'SHARE',
-      onActionPressed: () {
-        if (contact != null &&
-            contact.phone != null &&
-            contact.phone.isNotEmpty) {
-          _sendWhatsAppMessage(
-            context,
-            ref,
-            contact,
-            payable,
-            currencyOverride: currency,
-            userProfileOverride: userProfile,
-            whatsAppServiceOverride: whatsAppService,
-            transactionServiceOverride: transactionService,
-          );
-        } else {
-          _sharePayable(
-            context,
-            ref,
-            payable,
-            contact,
-            currencyOverride: currency,
-            userProfileOverride: userProfile,
-            transactionServiceOverride: transactionService,
-          );
-        }
-      },
+      onActionPressed: (snackContext) => ShareHelper.sharePayable(
+        snackContext,
+        ref,
+        payable,
+        contact,
+        currencyOverride: currency,
+        userProfileOverride: userProfile,
+        transactionServiceOverride: transactionService,
+        whatsAppServiceOverride: whatsAppService,
+      ),
       color: activeColor,
     );
-  }
-
-  Future<void> _sendWhatsAppMessage(
-    BuildContext context,
-    WidgetRef ref,
-    dynamic contact,
-    dynamic payable, {
-    dynamic currencyOverride,
-    dynamic userProfileOverride,
-    dynamic whatsAppServiceOverride,
-    dynamic transactionServiceOverride,
-  }) async {
-    final currency =
-        currencyOverride ?? ref.read(currentCurrencyProvider).value!;
-    if (contact.phone == null || contact.phone.isEmpty) {
-      ToastUtils.showWarningToast(
-          context, ref, 'No phone number available for this contact');
-      return;
-    }
-
-    try {
-      final whatsAppService =
-          whatsAppServiceOverride ?? ref.read(whatsAppServiceProvider);
-      final userProfile = userProfileOverride ?? ref.read(userProfileProvider);
-      final deepLinkService = DeepLinkService();
-      final transactionService =
-          transactionServiceOverride ?? ref.read(transactionServiceProvider);
-      final isPaid = payable.status == 'PAID';
-
-      final senderName = userProfile.name ?? 'Someone';
-      final senderPhone = userProfile.phone ?? '';
-
-      // Ensure external ID is persisted before sharing
-      final effectiveExternalId = await transactionService.ensureExternalLinkId(
-        payableId: payable.id,
-      );
-
-      // Create reciprocal link (Receivable link for the recipient)
-      final link = deepLinkService.generateReceivableLink(ReceivableShareData(
-        amount: payable.amount,
-        date: payable.date,
-        description: payable.description,
-        dueDate: payable.dueDate,
-        senderName: senderName,
-        senderPhone: senderPhone,
-        externalLinkId: effectiveExternalId,
-        status: payable.status,
-      ));
-
-      String message;
-      if (isPaid) {
-        message = '''
-Hi ${contact.name},
-
-Greetings! 
-
-The payment of ${AmountFormatter.formatWithCurrency(payable.amount, currency.symbol, currency.decimalPlaces)} dated ${AppDateFormatter.formatDate(payable.date, pattern: userProfile.dateFormat)} has been completed and recorded. 
-
-If you haven't updated this payment in FlowPaisa, please follow the link below to sync your records:
-$link
-
-Thank you!
-''';
-      } else {
-        message = '''
-Hi ${contact.name},
-
-This is a reminder regarding the payable amount of ${AmountFormatter.formatWithCurrency(payable.amount, currency.symbol, currency.decimalPlaces)} dated ${AppDateFormatter.formatDate(payable.date, pattern: userProfile.dateFormat)}.
-
-${payable.dueDate != null ? 'Due Date: ${AppDateFormatter.formatDate(payable.dueDate, pattern: userProfile.dateFormat)}\n' : ''}${payable.description != null && payable.description.isNotEmpty ? 'Details: ${payable.description}\n' : ''}
-View and import this in FlowPaisa:
-$link
-
-Thank you!
-''';
-      }
-
-      // Clean phone number - remove spaces and non-digit characters except +
-      final cleanPhone =
-          contact.phone.replaceAll(' ', '').replaceAll(RegExp(r'[^\d+]'), '');
-      final success = await whatsAppService.sendMessage(cleanPhone, message);
-
-      if (success && context.mounted) {
-        ToastUtils.showSuccessToast(context, ref, 'Opening WhatsApp...');
-      }
-    } catch (e) {
-      if (context.mounted) {
-        ToastUtils.showErrorToast(context, ref, 'Error: ${e.toString()}');
-      }
-    }
   }
 }
