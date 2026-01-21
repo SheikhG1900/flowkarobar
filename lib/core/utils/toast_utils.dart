@@ -68,92 +68,106 @@ class ToastUtils {
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Container(
-          // margin gives the shadow space to draw so it doesn't get cut off
-          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 20),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.zero,
-            boxShadow: [
-              // Tightened primary shadow to prevent edge clipping
-              BoxShadow(
-                color: activeColor.withValues(alpha: 0.3),
-                blurRadius: 16,
-                offset: const Offset(0, 10),
-                spreadRadius: -4, // Pulls the shadow in from the edges
+        content: TweenAnimationBuilder<Offset>(
+          tween: Tween(begin: const Offset(0.2, 0), end: Offset.zero),
+          duration: const Duration(milliseconds: 600),
+          curve: Curves.easeOutBack,
+          builder: (context, offset, child) {
+            return FractionalTranslation(
+              translation: offset,
+              child: Opacity(
+                opacity: (1.0 - (offset.dx * 5)).clamp(0.0, 1.0),
+                child: child,
               ),
-              // Tightened colored glow
-              BoxShadow(
-                color: activeColor.withValues(alpha: 0.2),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-                spreadRadius: -2,
-              ),
-            ],
-          ),
+            );
+          },
           child: Container(
+            // margin gives the shadow space to draw so it doesn't get cut off
+            margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 20),
             decoration: BoxDecoration(
-              color: backgroundColor,
               borderRadius: BorderRadius.zero,
-              border: Border.all(
-                color: activeColor.withValues(alpha: 1),
-                width: 1,
-              ),
+              boxShadow: [
+                // Tightened primary shadow to prevent edge clipping
+                BoxShadow(
+                  color: activeColor.withValues(alpha: 0.3),
+                  blurRadius: 16,
+                  offset: const Offset(0, 10),
+                  spreadRadius: -4, // Pulls the shadow in from the edges
+                ),
+                // Tightened colored glow
+                BoxShadow(
+                  color: activeColor.withValues(alpha: 0.2),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                  spreadRadius: -2,
+                ),
+              ],
             ),
-            child: ClipRRect(
-              // Square corners
-              borderRadius: BorderRadius.zero,
-              child: Stack(
-                children: [
-                  // Gradient overlay
-                  Positioned.fill(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            activeColor.withValues(alpha: 0.4),
-                            activeColor.withValues(alpha: 0.1),
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
+            child: Container(
+              decoration: BoxDecoration(
+                color: backgroundColor,
+                borderRadius: BorderRadius.zero,
+                border: Border.all(
+                  color: activeColor.withValues(alpha: 1),
+                  width: 1,
+                ),
+              ),
+              child: ClipRRect(
+                // Square corners
+                borderRadius: BorderRadius.zero,
+                child: Stack(
+                  children: [
+                    // Gradient overlay
+                    Positioned.fill(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              activeColor.withValues(alpha: 0.4),
+                              activeColor.withValues(alpha: 0.1),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  // Content with padding
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 14),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        TweenAnimationBuilder<double>(
-                          tween: Tween(begin: 0.0, end: 1.0),
-                          duration: const Duration(milliseconds: 500),
-                          curve: Curves.elasticOut,
-                          builder: (context, value, child) {
-                            return Transform.scale(
-                              scale: value,
-                              child: Icon(icon, color: textColor, size: 24),
-                            );
-                          },
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            message,
-                            style: TextStyle(
-                              color: textColor,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
+                    // Content with padding
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 14),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          TweenAnimationBuilder<double>(
+                            tween: Tween(begin: 0.0, end: 1.0),
+                            duration: const Duration(milliseconds: 500),
+                            curve: Curves.elasticOut,
+                            builder: (context, value, child) {
+                              return Transform.scale(
+                                scale: value,
+                                child: Icon(icon, color: textColor, size: 24),
+                              );
+                            },
                           ),
-                        ),
-                      ],
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              message,
+                              style: TextStyle(
+                                color: textColor,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
