@@ -55,7 +55,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     if (parts.length == 1) {
       return parts[0].substring(0, 1).toUpperCase();
     } else {
-      return '${parts[0].substring(0, 1)}${parts[1].substring(0, 1)}'.toUpperCase();
+      return '${parts[0].substring(0, 1)}${parts[1].substring(0, 1)}'
+          .toUpperCase();
     }
   }
 
@@ -385,13 +386,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ),
                 child: Consumer(
                   builder: (context, ref, child) {
-                    final currentCurrencyAsync = ref.watch(currentCurrencyProvider);
+                    final currentCurrencyAsync =
+                        ref.watch(currentCurrencyProvider);
                     return currentCurrencyAsync.when(
                       data: (currency) => ListTile(
                         leading: Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                            color: theme.colorScheme.primary
+                                .withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Icon(
@@ -406,7 +409,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const CurrenciesListScreen(),
+                              builder: (context) =>
+                                  const CurrenciesListScreen(),
                             ),
                           );
                         },
