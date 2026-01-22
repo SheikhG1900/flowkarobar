@@ -10,6 +10,7 @@ import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/shared/widgets/premium_badge.dart';
 import 'dart:ui';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
+import 'package:flowpaisa/l10n/app_localizations.dart';
 
 class BackupScreen extends ConsumerStatefulWidget {
   const BackupScreen({super.key});
@@ -25,13 +26,14 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
     final notifier = ref.read(backupProvider.notifier);
     final isPremium = PremiumGate.isPremium(ref);
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       appBar: AppBar(
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('Google Drive Backup'),
+            Text(l10n.googleDrive),
             const SizedBox(width: 8),
             if (!isPremium) const PremiumBadge(isSmall: true, showLock: true),
           ],
@@ -48,13 +50,13 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       // Auth Section
-                      _buildAuthSection(context, state, notifier),
+                      _buildAuthSection(context, state, notifier, l10n),
 
                       if (state.currentUser != null) ...[
                         const SizedBox(height: 24),
-                        _buildBackupControls(context, state, notifier),
+                        _buildBackupControls(context, state, notifier, l10n),
                         const SizedBox(height: 24),
-                        _buildBackupsList(context, state, notifier),
+                        _buildBackupsList(context, state, notifier, l10n),
                       ],
                     ],
                   ),
@@ -105,14 +107,14 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                             ),
                             const SizedBox(height: 16),
                             Text(
-                              'Premium Feature',
+                              l10n.premiumFeature,
                               style: theme.textTheme.titleLarge?.copyWith(
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              'Cloud backup to Google Drive is available for Premium users.',
+                              l10n.cloudBackupPremiumDesc,
                               textAlign: TextAlign.center,
                               style: theme.textTheme.bodyMedium?.copyWith(
                                 color: theme.colorScheme.onSurfaceVariant,
@@ -122,7 +124,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                             FilledButton(
                               onPressed: () =>
                                   PremiumGate.showPremiumDialog(context),
-                              child: const Text('Unlock Premium'),
+                              child: Text(l10n.unlockPremium),
                             ),
                           ],
                         ),
@@ -141,6 +143,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
     BuildContext context,
     BackupState state,
     BackupNotifier notifier,
+    AppLocalizations l10n,
   ) {
     final theme = Theme.of(context);
     if (state.currentUser != null) {
@@ -162,7 +165,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    state.currentUser!.displayName ?? 'User',
+                    state.currentUser!.displayName ?? l10n.unknown,
                     style: theme.textTheme.titleMedium,
                   ),
                   Text(
@@ -175,7 +178,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
             IconButton(
               icon: const Icon(Icons.logout),
               onPressed: () => notifier.signOut(),
-              tooltip: 'Sign Out',
+              tooltip: l10n.signOut,
             ),
           ],
         ),
@@ -190,13 +193,13 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
           ),
           const SizedBox(height: 16),
           Text(
-            'Sign in with Google to backup your data',
+            l10n.signInGoogleToBackup,
             style: theme.textTheme.bodyLarge,
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 24),
           GradientButton(
-            label: 'Sign in with Google',
+            label: l10n.signInGoogle,
             gradient: AppColors.getPrimaryGradient(theme.colorScheme.primary),
             icon: Icons.login,
             onPressed: () => notifier.signIn(),
@@ -213,10 +216,10 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
               children: [
                 const Icon(Icons.warning_amber, color: Colors.amber),
                 const SizedBox(width: 12),
-                const Expanded(
+                Expanded(
                   child: Text(
-                    'Note: Backup requires valid Google Services configuration. If sign-in fails, check your setup.',
-                    style: TextStyle(fontSize: 12),
+                    l10n.googleServicesNote,
+                    style: const TextStyle(fontSize: 12),
                   ),
                 ),
               ],
@@ -231,13 +234,14 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
     BuildContext context,
     BackupState state,
     BackupNotifier notifier,
+    AppLocalizations l10n,
   ) {
     final theme = Theme.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Backup',
+          l10n.backup, // Using backupNow as header too or we can add "Backup"
           style: theme.textTheme.titleLarge,
         ),
         const SizedBox(height: 12),
@@ -258,15 +262,20 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                       const Icon(Icons.history, size: 20, color: Colors.grey),
                       const SizedBox(width: 8),
                       Text(
-                        'Last Backup: ${AppDateFormatter.formatDate(state.lastBackupTime!, pattern: ref.watch(userProfileProvider).dateFormat)}',
+                        l10n.lastBackupAt(AppDateFormatter.formatDate(
+                                state.lastBackupTime!,
+                                pattern: ref
+                                    .watch(userProfileProvider)
+                                    .dateFormat)),
                         style: theme.textTheme.bodyMedium,
                       ),
                     ],
                   ),
                 ),
               GradientButton(
-                label: 'Backup Now',
-                gradient: AppColors.getSecondaryGradient(theme.colorScheme.primary),
+                label: l10n.backupNow,
+                gradient:
+                    AppColors.getSecondaryGradient(theme.colorScheme.primary),
                 icon: Icons.backup,
                 onPressed: () => notifier.backup(),
               ),
@@ -281,12 +290,13 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
     BuildContext context,
     BackupState state,
     BackupNotifier notifier,
+    AppLocalizations l10n,
   ) {
     if (state.backups.isEmpty) {
-      return const Center(
+      return Center(
         child: Padding(
-          padding: EdgeInsets.all(32),
-          child: Text('No backups found'),
+          padding: const EdgeInsets.all(32),
+          child: Text(l10n.noBackupsFound),
         ),
       );
     }
@@ -298,7 +308,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Available Backups',
+              l10n.availableBackups,
               style: Theme.of(context).textTheme.titleLarge,
             ),
             IconButton(
@@ -328,7 +338,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                 trailing: IconButton(
                   icon: const Icon(Icons.restore),
                   onPressed: () =>
-                      _showRestoreDialog(context, notifier, file.id!),
+                      _showRestoreDialog(context, notifier, file.id!, l10n),
                 ),
               ),
             );
@@ -342,19 +352,17 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
     BuildContext context,
     BackupNotifier notifier,
     String fileId,
+    AppLocalizations l10n,
   ) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Restore Backup?'),
-        content: const Text(
-          'This will overwrite your current data with the selected backup. \n\n'
-          '⚠️ The app will need to be restarted after restoration.',
-        ),
+        title: Text(l10n.restoreBackupTitle),
+        content: Text(l10n.restoreBackupMessage),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           FilledButton(
             onPressed: () async {
@@ -362,30 +370,29 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
               try {
                 await notifier.restore(fileId);
                 if (context.mounted) {
-                  _showRestartDialog(context);
+                  _showRestartDialog(context, l10n);
                 }
               } catch (e) {
                 if (context.mounted) {
-                  ToastUtils.showErrorToast(context, ref, 'Restore failed: $e');
+                  ToastUtils.showErrorToast(
+                      context, ref, l10n.restoreFailed(e.toString()));
                 }
               }
             },
-            child: const Text('Restore'),
+            child: Text(l10n.restore),
           ),
         ],
       ),
     );
   }
 
-  void _showRestartDialog(BuildContext context) {
+  void _showRestartDialog(BuildContext context, AppLocalizations l10n) {
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: const Text('Restore Successful'),
-        content: const Text(
-          'Data restored successfully. Please close and restart the app to apply changes.',
-        ),
+        title: Text(l10n.restoreSuccessful),
+        content: Text(l10n.restoreSuccessfulMessage),
         actions: [
           FilledButton(
             onPressed: () {
@@ -393,7 +400,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
               // For now, just pop.
               Navigator.pop(context);
             },
-            child: const Text('OK'),
+            child: Text(l10n.ok),
           ),
         ],
       ),

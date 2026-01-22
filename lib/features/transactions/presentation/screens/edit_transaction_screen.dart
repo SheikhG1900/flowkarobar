@@ -11,6 +11,8 @@ import 'package:flowpaisa/features/payables/data/payables_repository.dart';
 import 'package:flowpaisa/features/receivables/data/receivables_repository.dart';
 import 'package:flowpaisa/shared/providers/database_provider.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
+import 'package:flowpaisa/core/utils/localization_helper.dart';
+import 'package:flowpaisa/core/utils/date_formatter.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
 import 'package:flowpaisa/core/utils/icon_helper.dart';
@@ -37,6 +39,7 @@ class EditTransactionScreen extends ConsumerStatefulWidget {
 }
 
 class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
+  AppLocalizations get l10n => AppLocalizations.of(context)!;
   final _formKey = GlobalKey<FormState>();
   final _amountController = TextEditingController();
   final _descriptionController = TextEditingController();
@@ -161,12 +164,13 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
         ToastUtils.showSuccessToast(
           context,
           ref,
-          'Schedule created successfully',
+          l10n.scheduleCreated,
         );
       }
     } catch (e) {
       if (mounted) {
-        ToastUtils.showErrorToast(context, ref, 'Error: ${e.toString()}');
+        final l10n = AppLocalizations.of(context)!;
+        ToastUtils.showErrorToast(context, ref, l10n.errorOccurred(e.toString()));
       }
     } finally {
       if (mounted) {
@@ -178,6 +182,7 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
   }
 
   Future<void> _updateTransaction() async {
+    final l10n = AppLocalizations.of(context)!;
     if (!_formKey.currentState!.validate()) {
       return;
     }
@@ -187,7 +192,7 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
       ToastUtils.showErrorToast(
         context,
         ref,
-        'Please select a contact for this relationship',
+        l10n.pleaseSelectContactRelationship,
       );
       return;
     }
@@ -219,11 +224,11 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
       if (mounted) {
         Navigator.pop(context, true); // Return true to indicate success
         ToastUtils.showSuccessToast(
-            context, ref, 'Transaction updated successfully');
+            context, ref, l10n.transactionUpdated);
       }
     } catch (e) {
       if (mounted) {
-        ToastUtils.showErrorToast(context, ref, 'Error: ${e.toString()}');
+        ToastUtils.showErrorToast(context, ref, l10n.errorOccurred(e.toString()));
       }
     } finally {
       if (mounted) {
@@ -265,6 +270,7 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
   }
 
   Future<void> _handleRelationshipChange(String? value) async {
+    final l10n = AppLocalizations.of(context)!;
     if (_paidRelationship == value) {
       setState(() {
         _paidRelationship = null;
@@ -284,13 +290,14 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
         ToastUtils.showErrorToast(
           context,
           ref,
-          'Please select a contact for this relationship',
+          l10n.pleaseSelectContactRelationship,
         );
       }
     }
   }
 
   void _showCategoryPicker() {
+    final l10n = AppLocalizations.of(context)!;
     showModalBottomSheet(
       context: context,
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -313,7 +320,7 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                 Padding(
                   padding: const EdgeInsets.all(16),
                   child: Text(
-                    'Select Category',
+                    l10n.selectCategory,
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
@@ -323,8 +330,8 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                   child: categoriesAsync.when(
                     data: (categoriesWithUsage) {
                       if (categoriesWithUsage.isEmpty) {
-                        return const Center(
-                          child: Text('No categories found'),
+                        return Center(
+                          child: Text(l10n.noCategoriesFound),
                         );
                       }
 
@@ -376,7 +383,7 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                     },
                     loading: () =>
                         const Center(child: CircularProgressIndicator()),
-                    error: (e, s) => Center(child: Text('Error: $e')),
+                    error: (e, s) => Center(child: Text(l10n.errorOccurred(e.toString()))),
                   ),
                 ),
               ],
@@ -388,6 +395,7 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
   }
 
   void _showContactPicker() {
+    final l10n = AppLocalizations.of(context)!;
     showModalBottomSheet(
       context: context,
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -410,7 +418,7 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                 Padding(
                   padding: const EdgeInsets.all(16),
                   child: Text(
-                    'Select Contact',
+                    l10n.selectContact,
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
@@ -420,8 +428,8 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                   child: contactsAsync.when(
                     data: (contactsWithUsage) {
                       if (contactsWithUsage.isEmpty) {
-                        return const Center(
-                          child: Text('No contacts found'),
+                        return Center(
+                          child: Text(l10n.noContactsFound),
                         );
                       }
                       return ListView.builder(
@@ -472,7 +480,7 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                     },
                     loading: () =>
                         const Center(child: CircularProgressIndicator()),
-                    error: (e, s) => Center(child: Text('Error: $e')),
+                    error: (e, s) => Center(child: Text(l10n.errorOccurred(e.toString()))),
                   ),
                 ),
               ],
@@ -493,7 +501,7 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Edit Transaction'),
+        title: Text(l10n.editTransaction),
         leading: IconButton(
           icon: const Icon(Icons.close),
           onPressed: () => Navigator.pop(context),
@@ -540,7 +548,7 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                 child: Column(
                   children: [
                     Text(
-                      'How much?',
+                      l10n.howMuch,
                       style: theme.textTheme.titleMedium?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
@@ -574,13 +582,13 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                       ],
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Please enter an amount';
+                          return l10n.pleaseEnterValidAmount;
                         }
                         if (double.tryParse(value) == null) {
-                          return 'Please enter a valid number';
+                          return l10n.pleaseEnterValidAmount;
                         }
                         if (double.parse(value) <= 0) {
-                          return 'Amount must be greater than 0';
+                          return l10n.amountGreaterThanZero;
                         }
                         return null;
                       },
@@ -641,7 +649,7 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: _selectedCategory != null
-                          ? (_selectedType == 'EXPENSE'
+                          ? (isExpense
                               ? AppColors.expenseColor
                               : AppColors.incomeColor)
                           : theme.dividerColor,
@@ -686,14 +694,17 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Category',
+                            l10n.category,
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant,
                             ),
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            _selectedCategory?.name ?? 'Select Category',
+                            _selectedCategory != null
+                                ? LocalizationHelper.getLocalizedCategoryName(
+                                    context, _selectedCategory!.name)
+                                : l10n.selectCategory,
                             style: theme.textTheme.titleMedium?.copyWith(
                               fontWeight: _selectedCategory != null
                                   ? FontWeight.bold
@@ -763,14 +774,14 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Contact (Optional)',
+                            l10n.contactOptional,
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant,
                             ),
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            _selectedContact?.name ?? 'Select Contact',
+                            _selectedContact?.name ?? l10n.selectContact,
                             style: theme.textTheme.titleMedium?.copyWith(
                               fontWeight: _selectedContact != null
                                   ? FontWeight.bold
@@ -808,7 +819,7 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                 controller: _descriptionController,
                 decoration: InputDecoration(
                   labelText: l10n.description,
-                  hintText: 'E.g., Groceries, Salary, etc.',
+                  hintText: l10n.descriptionHint,
                   prefixIcon: const Icon(Icons.notes_outlined),
                 ),
                 maxLines: 2,
@@ -817,9 +828,9 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
               const SizedBox(height: 24),
 
               // Paid Relationship Section (Linked Transactions)
-              if (_selectedType == 'EXPENSE') ...[
+              if (isExpense) ...[
                 Text(
-                  'Paid Relationship',
+                  l10n.paidRelationship,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -829,8 +840,8 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                   children: [
                     Expanded(
                       child: _RelationshipButton(
-                        label: 'Paid FOR',
-                        subtitle: 'I will receive back',
+                        label: l10n.paidFor,
+                        subtitle: l10n.iWillReceiveBack,
                         icon: Icons.account_balance_wallet,
                         isSelected: _paidRelationship == 'PAID_FOR',
                         gradient: AppColors.receivableGradient,
@@ -841,8 +852,8 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: _RelationshipButton(
-                        label: 'Paid BY',
-                        subtitle: 'Someone paid for me',
+                        label: l10n.paidBy,
+                        subtitle: l10n.someonePaidForMe,
                         icon: Icons.person_outline,
                         isSelected: _paidRelationship == 'PAID_BY',
                         gradient: AppColors.payableGradient,
@@ -855,7 +866,7 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                 const SizedBox(height: 16),
               ] else if (_selectedType == 'INCOME') ...[
                 Text(
-                  'Received Relationship',
+                  l10n.receivedRelationship,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -865,8 +876,8 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                   children: [
                     Expanded(
                       child: _RelationshipButton(
-                        label: 'I Owe',
-                        subtitle: 'Received loan',
+                        label: l10n.iOwe,
+                        subtitle: l10n.receivedLoan,
                         icon: Icons.download,
                         isSelected: _paidRelationship == 'RECEIVED_FROM',
                         gradient: AppColors.payableGradient,
@@ -877,8 +888,8 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: _RelationshipButton(
-                        label: 'Will Receive',
-                        subtitle: 'Receive later',
+                        label: l10n.willReceive,
+                        subtitle: l10n.receiveLater,
                         icon: Icons.schedule,
                         isSelected: _paidRelationship == 'WILL_RECEIVE',
                         gradient: AppColors.receivableGradient,
@@ -925,7 +936,7 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Due Date (Optional)',
+                              l10n.dueDateOptional,
                               style: theme.textTheme.bodySmall?.copyWith(
                                 color: theme.colorScheme.onSurfaceVariant,
                               ),
@@ -933,8 +944,8 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                             const SizedBox(height: 4),
                             Text(
                               _dueDate != null
-                                  ? '${_dueDate!.day}/${_dueDate!.month}/${_dueDate!.year}'
-                                  : 'Not set',
+                                  ? AppDateFormatter.formatDate(_dueDate!)
+                                  : l10n.notSet,
                               style: theme.textTheme.titleMedium?.copyWith(
                                 fontWeight: FontWeight.w600,
                               ),
@@ -989,14 +1000,14 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Date',
+                            l10n.date,
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant,
                             ),
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
+                            AppDateFormatter.formatDate(_selectedDate),
                             style: theme.textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.w600,
                             ),
@@ -1013,7 +1024,7 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
 
               // Update Button
               GradientButton(
-                label: _isLoading ? 'Updating...' : 'Update Transaction',
+                label: _isLoading ? l10n.updating : l10n.updateTransaction,
                 onPressed: _isLoading ? null : _updateTransaction,
                 gradient: isExpense
                     ? AppColors.expenseGradient
@@ -1036,7 +1047,7 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                           ? null
                           : _scheduleTransaction,
                       icon: const Icon(Icons.schedule),
-                      label: const Text('Schedule'),
+                      label: Text(l10n.schedule),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         side: BorderSide(

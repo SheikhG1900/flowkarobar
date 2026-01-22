@@ -1,3 +1,4 @@
+import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
@@ -373,6 +374,7 @@ class ShareHelper {
     required dynamic userProfile,
     required dynamic transactionService,
   }) async {
+    final l10n = AppLocalizations.of(context)!;
     final deepLinkService = DeepLinkService();
     final isPaid = payable.status == 'PAID';
     final effectiveExternalId = await transactionService.ensureExternalLinkId(payableId: payable.id);
@@ -390,9 +392,17 @@ class ShareHelper {
 
     String message;
     if (isPaid) {
-      message = 'Greetings!\n\nThe payment of ${AmountFormatter.formatWithCurrency(payable.amount, currency.symbol, currency.decimalPlaces)} on ${AppDateFormatter.formatDate(payable.date, pattern: userProfile.dateFormat)} has been completed.\n\nSync in FlowPaisa:\n$link';
+      message = l10n.sharePayableCompleted(
+        AmountFormatter.formatWithCurrency(payable.amount, currency.symbol, currency.decimalPlaces),
+        AppDateFormatter.formatDate(payable.date),
+        link,
+      );
     } else {
-      message = 'I owe you ${AmountFormatter.formatWithCurrency(payable.amount, currency.symbol, currency.decimalPlaces)}\nDate: ${AppDateFormatter.formatDate(payable.date, pattern: userProfile.dateFormat)}\n\nView in FlowPaisa:\n$link';
+      message = l10n.sharePayablePending(
+        AmountFormatter.formatWithCurrency(payable.amount, currency.symbol, currency.decimalPlaces),
+        AppDateFormatter.formatDate(payable.date),
+        link,
+      );
     }
 
     await Share.share(message);
@@ -407,6 +417,7 @@ class ShareHelper {
     required dynamic userProfile,
     required dynamic transactionService,
   }) async {
+    final l10n = AppLocalizations.of(context)!;
     final deepLinkService = DeepLinkService();
     final isReceived = receivable.status == 'RECEIVED';
     final effectiveExternalId = await transactionService.ensureExternalLinkId(receivableId: receivable.id);
@@ -424,9 +435,17 @@ class ShareHelper {
 
     String message;
     if (isReceived) {
-      message = 'Greetings!\n\nThe payment of ${AmountFormatter.formatWithCurrency(receivable.amount, currency.symbol, currency.decimalPlaces)} on ${AppDateFormatter.formatDate(receivable.date, pattern: userProfile.dateFormat)} has been received.\n\nSync in FlowPaisa:\n$link';
+      message = l10n.shareReceivableReceived(
+        AmountFormatter.formatWithCurrency(receivable.amount, currency.symbol, currency.decimalPlaces),
+        AppDateFormatter.formatDate(receivable.date),
+        link,
+      );
     } else {
-      message = 'Amount to receive: ${AmountFormatter.formatWithCurrency(receivable.amount, currency.symbol, currency.decimalPlaces)}\nDate: ${AppDateFormatter.formatDate(receivable.date, pattern: userProfile.dateFormat)}\n\nView in FlowPaisa:\n$link';
+      message = l10n.shareReceivablePending(
+        AmountFormatter.formatWithCurrency(receivable.amount, currency.symbol, currency.decimalPlaces),
+        AppDateFormatter.formatDate(receivable.date),
+        link,
+      );
     }
 
     await Share.share(message);
@@ -443,6 +462,7 @@ class ShareHelper {
     required dynamic userProfile,
     required dynamic transactionService,
   }) async {
+    final l10n = AppLocalizations.of(context)!;
     final deepLinkService = DeepLinkService();
     final effectiveExternalId = await transactionService.ensureExternalLinkId(transactionId: transaction.id);
 
@@ -469,7 +489,11 @@ class ShareHelper {
       status: status,
     );
 
-    final message = 'Recorded a transaction of ${AmountFormatter.formatWithCurrency(transaction.amount, currency.symbol, currency.decimalPlaces)} on ${AppDateFormatter.formatDate(transaction.date, pattern: userProfile.dateFormat)}.\n\nView in FlowPaisa:\n$link';
+    final message = l10n.shareTransactionMessage(
+      AmountFormatter.formatWithCurrency(transaction.amount, currency.symbol, currency.decimalPlaces),
+      AppDateFormatter.formatDate(transaction.date),
+      link,
+    );
 
     await Share.share(message);
   }

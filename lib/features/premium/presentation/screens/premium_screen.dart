@@ -7,6 +7,7 @@ import 'package:flowpaisa/features/premium/domain/premium_provider.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:flowpaisa/shared/widgets/premium_badge.dart';
+import 'package:flowpaisa/l10n/app_localizations.dart';
 
 class PremiumScreen extends ConsumerWidget {
   const PremiumScreen({super.key});
@@ -14,6 +15,7 @@ class PremiumScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final premiumState = ref.watch(premiumProvider);
 
     // Listen for errors
@@ -28,9 +30,9 @@ class PremiumScreen extends ConsumerWidget {
           ? FloatingActionButton.extended(
               onPressed: () {
                 ref.read(premiumProvider.notifier).togglePremium();
-                ToastUtils.showInfoToast(context, ref, 'Toggled Debug Mode');
+                ToastUtils.showInfoToast(context, ref, l10n.toggledDebugMode);
               },
-              label: const Text('DEBUG: Toggle Mode'),
+              label: Text(l10n.debugToggleMode),
               icon: const Icon(Icons.developer_mode),
               backgroundColor: Colors.grey[800],
             )
@@ -87,9 +89,9 @@ class PremiumScreen extends ConsumerWidget {
                       ],
                     ),
                     const SizedBox(height: 16),
-                    const Text(
-                      'FlowPaisa Premium',
-                      style: TextStyle(
+                    Text(
+                      l10n.premiumTitle,
+                      style: const TextStyle(
                         color: Colors.white,
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
@@ -105,9 +107,9 @@ class PremiumScreen extends ConsumerWidget {
                     if (premiumState.isPremium)
                       const PremiumBadge(isLarge: true)
                     else
-                      const Text(
-                        'Unlock all features',
-                        style: TextStyle(
+                      Text(
+                        l10n.unlockAllFeatures,
+                        style: const TextStyle(
                           color: Colors.white,
                           fontSize: 16,
                           shadows: [
@@ -123,7 +125,7 @@ class PremiumScreen extends ConsumerWidget {
               ),
             ),
           ),
-
+          
           // Content
           SliverToBoxAdapter(
             child: Padding(
@@ -150,26 +152,26 @@ class PremiumScreen extends ConsumerWidget {
                           ),
                         ],
                       ),
-                      child: const Column(
+                      child: Column(
                         children: [
-                          Icon(
+                          const Icon(
                             Icons.check_circle_outline,
                             color: Colors.white,
                             size: 64,
                           ),
-                          SizedBox(height: 16),
+                          const SizedBox(height: 16),
                           Text(
-                            'You are a Premium Member',
-                            style: TextStyle(
+                            l10n.premiumMemberStatus,
+                            style: const TextStyle(
                               color: Colors.white,
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          SizedBox(height: 8),
+                          const SizedBox(height: 8),
                           Text(
-                            'All premium features are active',
-                            style: TextStyle(
+                            l10n.premiumFeaturesActive,
+                            style: const TextStyle(
                               color: Colors.white70,
                               fontSize: 16,
                             ),
@@ -183,9 +185,8 @@ class PremiumScreen extends ConsumerWidget {
                   _buildFeatureCard(
                     context,
                     icon: Icons.cloud_upload,
-                    title: 'Automatic Cloud Backup',
-                    description:
-                        'Your data is automatically backed up to Google Drive. Never lose your financial records.',
+                    title: l10n.featureCloudBackupTitle,
+                    description: l10n.featureCloudBackupDesc,
                     color: theme.colorScheme.primary,
                     isPremium: premiumState.isPremium,
                   ),
@@ -194,9 +195,8 @@ class PremiumScreen extends ConsumerWidget {
                   _buildFeatureCard(
                     context,
                     icon: Icons.analytics,
-                    title: 'Advanced Analytics',
-                    description:
-                        'Get detailed insights with advanced charts, trends, and financial forecasting.',
+                    title: l10n.featureAnalyticsTitle,
+                    description: l10n.featureAnalyticsDesc,
                     color: Colors.purple,
                     isPremium: premiumState.isPremium,
                   ),
@@ -205,9 +205,8 @@ class PremiumScreen extends ConsumerWidget {
                   _buildFeatureCard(
                     context,
                     icon: Icons.picture_as_pdf,
-                    title: 'PDF Reports',
-                    description:
-                        'Generate beautiful PDF reports with charts and summaries for any date range.',
+                    title: l10n.featurePdfReportsTitle,
+                    description: l10n.featurePdfReportsDesc,
                     color: Colors.red,
                     isPremium: premiumState.isPremium,
                   ),
@@ -216,9 +215,8 @@ class PremiumScreen extends ConsumerWidget {
                   _buildFeatureCard(
                     context,
                     icon: Icons.all_inclusive,
-                    title: 'Unlimited Transactions',
-                    description:
-                        'No limits on the number of transactions, contacts, or categories you can create.',
+                    title: l10n.featureUnlimitedTitle,
+                    description: l10n.featureUnlimitedDesc,
                     color: Colors.green,
                     isPremium: premiumState.isPremium,
                   ),
@@ -227,9 +225,8 @@ class PremiumScreen extends ConsumerWidget {
                   _buildFeatureCard(
                     context,
                     icon: Icons.support_agent,
-                    title: 'Priority Support',
-                    description:
-                        'Get faster responses and dedicated support for any issues or questions.',
+                    title: l10n.featureSupportTitle,
+                    description: l10n.featureSupportDesc,
                     color: Colors.orange,
                     isPremium: premiumState.isPremium,
                   ),
@@ -238,9 +235,8 @@ class PremiumScreen extends ConsumerWidget {
                   _buildFeatureCard(
                     context,
                     icon: Icons.new_releases,
-                    title: 'Early Access',
-                    description:
-                        'Be the first to try new features before they\'re released to everyone.',
+                    title: l10n.featureEarlyAccessTitle,
+                    description: l10n.featureEarlyAccessDesc,
                     color: theme.colorScheme.primary,
                     isPremium: premiumState.isPremium,
                   ),
@@ -248,9 +244,8 @@ class PremiumScreen extends ConsumerWidget {
                   _buildFeatureCard(
                     context,
                     icon: Icons.message_outlined,
-                    title: 'Custom Message Templates',
-                    description:
-                        'Customize WhatsApp message templates for reminders, receipts, and sharing in multiple languages.',
+                    title: l10n.featureTemplatesTitle,
+                    description: l10n.featureTemplatesDesc,
                     color: Colors.teal,
                     isPremium: premiumState.isPremium,
                   ),
@@ -276,9 +271,9 @@ class PremiumScreen extends ConsumerWidget {
                       ),
                       child: Column(
                         children: [
-                          const Text(
-                            'Premium Plan',
-                            style: TextStyle(
+                          Text(
+                            l10n.premiumPlan,
+                            style: const TextStyle(
                               color: Colors.white,
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
@@ -302,7 +297,7 @@ class PremiumScreen extends ConsumerWidget {
                               Text(
                                 _getProductPrice(premiumState.products)
                                         ?.amount ??
-                                    '99',
+                                    l10n.defaultPremiumPrice,
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 48,
@@ -314,7 +309,7 @@ class PremiumScreen extends ConsumerWidget {
                               Padding(
                                 padding: const EdgeInsets.only(top: 8),
                                 child: Text(
-                                  'Lifetime', // Fixed text
+                                  l10n.lifetime,
                                   style: TextStyle(
                                     color: Colors.white.withValues(alpha: 0.9),
                                     fontSize: 16,
@@ -325,7 +320,7 @@ class PremiumScreen extends ConsumerWidget {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'One-time payment • Lifetime access',
+                            l10n.oneTimePaymentLifetime,
                             style: TextStyle(
                               color: Colors.white.withValues(alpha: 0.9),
                               fontSize: 14,
@@ -339,8 +334,8 @@ class PremiumScreen extends ConsumerWidget {
                     // Unlock Button
                     GradientButton(
                       label: premiumState.isLoading
-                          ? 'Processing...'
-                          : 'Unlock Premium',
+                          ? l10n.processing
+                          : l10n.unlockPremium,
                       icon: premiumState.isLoading
                           ? Icons.hourglass_empty
                           : Icons.lock_open,
@@ -371,7 +366,7 @@ class PremiumScreen extends ConsumerWidget {
                                   .restorePurchases();
                             },
                       icon: const Icon(Icons.restore),
-                      label: const Text('Restore Purchases'),
+                      label: Text(l10n.restorePurchases),
                     ),
                     const SizedBox(height: 16),
 
@@ -396,7 +391,7 @@ class PremiumScreen extends ConsumerWidget {
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(
-                              'All premium features are yours forever with a one-time purchase. No subscriptions!',
+                              l10n.premiumBenefitsNote,
                               style: theme.textTheme.bodySmall,
                             ),
                           ),
@@ -449,6 +444,7 @@ class PremiumScreen extends ConsumerWidget {
     bool isPremium = false,
   }) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -502,14 +498,14 @@ class PremiumScreen extends ConsumerWidget {
                           border: Border.all(
                               color: Colors.green.withValues(alpha: 0.2)),
                         ),
-                        child: const Row(
+                        child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.check, size: 14, color: Colors.green),
-                            SizedBox(width: 4),
+                            const Icon(Icons.check, size: 14, color: Colors.green),
+                            const SizedBox(width: 4),
                             Text(
-                              'Active',
-                              style: TextStyle(
+                              l10n.active,
+                              style: const TextStyle(
                                 color: Colors.green,
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,

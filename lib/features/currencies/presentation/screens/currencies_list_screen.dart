@@ -1,3 +1,4 @@
+import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/database/database.dart';
@@ -15,12 +16,13 @@ class CurrenciesListScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final currenciesAsync = ref.watch(currenciesListProvider);
     final selectedCurrencyIdAsync = ref.watch(selectedCurrencyIdProvider);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Currencies'),
+        title: Text(l10n.currencies),
       ),
       body: currenciesAsync.when(
         data: (currencies) {
@@ -39,7 +41,7 @@ class CurrenciesListScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'No currencies',
+                    l10n.noCurrencies,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
@@ -65,7 +67,7 @@ class CurrenciesListScreen extends ConsumerWidget {
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) => Center(child: Text('Error: $error')),
+        error: (error, stack) => Center(child: Text(l10n.errorOccurred(error.toString()))),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
@@ -92,33 +94,36 @@ class _CurrencyCard extends ConsumerWidget {
   });
 
   Future<void> _deleteCurrency(BuildContext context, WidgetRef ref) async {
+    final l10n = AppLocalizations.of(context)!;
     final repository = ref.read(currenciesRepositoryProvider);
 
     try {
       await repository.deleteCurrency(currency.id);
       if (context.mounted) {
         ToastUtils.showSuccessToast(
-            context, ref, 'Currency deleted successfully');
+            context, ref, l10n.currencyDeleted);
       }
     } catch (e) {
       if (context.mounted) {
-        ToastUtils.showErrorToast(context, ref, 'Error: ${e.toString()}');
+        ToastUtils.showErrorToast(context, ref, l10n.errorOccurred(e.toString()));
       }
     }
   }
 
   Future<void> _selectCurrency(BuildContext context, WidgetRef ref) async {
+    final l10n = AppLocalizations.of(context)!;
     final notifier = ref.read(currencyNotifierProvider.notifier);
     await notifier.setSelectedCurrency(currency.id);
 
     if (context.mounted) {
       ToastUtils.showSuccessToast(
-          context, ref, 'Currency set to ${currency.name}');
+          context, ref, l10n.currencySetTo(currency.name));
     }
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final color = isSelected ? theme.colorScheme.primary : AppColors.secondaryColor;
 
@@ -210,7 +215,7 @@ class _CurrencyCard extends ConsumerWidget {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
-                      'Default',
+                      l10n.defaultLabel,
                       style: theme.textTheme.labelSmall?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),

@@ -1,3 +1,4 @@
+import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 
@@ -64,6 +65,7 @@ class _ScheduleSelectionDrawerState extends State<ScheduleSelectionDrawer> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -89,7 +91,7 @@ class _ScheduleSelectionDrawerState extends State<ScheduleSelectionDrawer> {
           ),
           // Title
           Text(
-            'Select Schedule Pattern',
+            l10n.selectSchedulePattern,
             style: theme.textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.bold,
             ),
@@ -106,21 +108,21 @@ class _ScheduleSelectionDrawerState extends State<ScheduleSelectionDrawer> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   // Daily option
-                  _buildDailyChip(theme),
+                  _buildDailyChip(theme, l10n),
                   const SizedBox(height: 16),
                   // Days of week section
                   Text(
-                    'Days of Week',
+                    l10n.daysOfWeek,
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                   const SizedBox(height: 12),
-                  _buildDaysOfWeekChips(theme),
+                  _buildDaysOfWeekChips(theme, l10n),
                   const SizedBox(height: 20),
                   // Days of month section
                   Text(
-                    'Days of Month',
+                    l10n.daysOfMonth,
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
@@ -138,14 +140,14 @@ class _ScheduleSelectionDrawerState extends State<ScheduleSelectionDrawer> {
               Expanded(
                 child: OutlinedButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text('Cancel'),
+                  child: Text(l10n.cancel),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: FilledButton(
                   onPressed: _canConfirm() ? _onConfirm : null,
-                  child: const Text('Confirm'),
+                  child: Text(l10n.confirm),
                 ),
               ),
             ],
@@ -156,9 +158,9 @@ class _ScheduleSelectionDrawerState extends State<ScheduleSelectionDrawer> {
     );
   }
 
-  Widget _buildDailyChip(ThemeData theme) {
+  Widget _buildDailyChip(ThemeData theme, AppLocalizations l10n) {
     return FilterChip(
-      label: const Text('Daily'),
+      label: Text(l10n.daily),
       selected: _isDailySelected,
       onSelected: (selected) {
         setState(() {
@@ -183,15 +185,15 @@ class _ScheduleSelectionDrawerState extends State<ScheduleSelectionDrawer> {
     );
   }
 
-  Widget _buildDaysOfWeekChips(ThemeData theme) {
-    const days = [
-      'Sunday',
-      'Monday',
-      'Tuesday',
-      'Wednesday',
-      'Thursday',
-      'Friday',
-      'Saturday'
+  Widget _buildDaysOfWeekChips(ThemeData theme, AppLocalizations l10n) {
+    final days = [
+      l10n.sunday,
+      l10n.monday,
+      l10n.tuesday,
+      l10n.wednesday,
+      l10n.thursday,
+      l10n.friday,
+      l10n.saturday
     ];
 
     return Wrap(

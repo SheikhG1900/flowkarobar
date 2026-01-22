@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/foundation.dart';
+import 'package:flowpaisa/core/utils/icon_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_sticky_header/flutter_sticky_header.dart';
@@ -15,9 +16,9 @@ import 'package:flowpaisa/features/payables/presentation/screens/edit_payable_sc
 import 'package:flowpaisa/features/payables/presentation/widgets/payable_details_dialog.dart';
 import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
 import 'package:flowpaisa/shared/widgets/swipeable_list_item.dart';
-import 'package:intl/intl.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
-import 'package:flowpaisa/core/utils/icon_helper.dart';
+import 'package:flowpaisa/l10n/app_localizations.dart';
+import 'package:flowpaisa/core/utils/localization_helper.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 class PayablesListScreen extends ConsumerStatefulWidget {
@@ -151,9 +152,10 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
       _previousOverdueCount = overdueCount;
     }
 
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Payables'),
+        title: Text(l10n.payables),
         actions: [
           // Debug button to generate dummy payables (only in debug mode)
           if (kDebugMode)
@@ -203,7 +205,7 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
                     }
                     if (context.mounted) {
                       ToastUtils.showSuccessToast(
-                          context, ref, 'Generated 100 dummy payables');
+                          context, ref, l10n.dummyPayablesGenerated);
                       // Refresh pagination
                       ref
                           .read(payablesPaginatedProvider('PENDING').notifier)
@@ -214,19 +216,19 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
                     }
                   } catch (e) {
                     if (context.mounted) {
-                      ToastUtils.showErrorToast(context, ref, 'Error: $e');
+                      ToastUtils.showErrorToast(context, ref, l10n.errorOccurred(e.toString()));
                     }
                   }
                 }
               },
               itemBuilder: (context) => [
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: 'generate_dummy',
                   child: Row(
                     children: [
-                      Icon(Icons.add_circle_outline),
-                      SizedBox(width: 8),
-                      Text('Generate 100 Dummy Payables'),
+                      const Icon(Icons.add_circle_outline),
+                      const SizedBox(width: 8),
+                      Text(l10n.generateDummyPayables),
                     ],
                   ),
                 ),
@@ -242,11 +244,11 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
                 unselectedLabelColor:
                     Theme.of(context).colorScheme.onSurfaceVariant,
                 tabs: [
-                  _buildTabWithCount('Pending', pendingCount),
+                  _buildTabWithCount(l10n.pending, pendingCount),
                   if (hasOverdueTab)
-                    _buildTabWithCount('Overdue', overdueCount,
+                    _buildTabWithCount(l10n.overdue, overdueCount,
                         isOverdue: true),
-                  const Tab(text: 'Paid'),
+                  Tab(text: l10n.paid),
                 ],
               ),
       ),
@@ -283,6 +285,7 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
     final repository = ref.read(payablesRepositoryProvider);
     final currency = ref.watch(currentCurrencyProvider).value;
 
+    final l10n = AppLocalizations.of(context)!;
     if (currency == null) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -299,7 +302,7 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
             const Icon(Icons.error_outline, size: 60, color: Colors.red),
             const SizedBox(height: 16),
             Text(
-              'Error loading payables',
+              l10n.errorLoadingPayables,
               style: theme.textTheme.titleLarge,
             ),
             const SizedBox(height: 8),
@@ -313,7 +316,7 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
               onPressed: () {
                 ref.read(payablesPaginatedProvider(status).notifier).refresh();
               },
-              child: const Text('Retry'),
+              child: Text(l10n.retry),
             ),
           ],
         ),
@@ -337,10 +340,10 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
             const SizedBox(height: 24),
             Text(
               status == 'PENDING'
-                  ? 'No pending payables'
+                  ? l10n.noPendingPayables
                   : status == 'OVERDUE'
-                      ? 'No overdue payables'
-                      : 'No paid bills',
+                      ? l10n.noOverduePayables
+                      : l10n.noPaidBills,
               style: theme.textTheme.titleLarge?.copyWith(
                 color: Colors.grey[600],
                 fontWeight: FontWeight.w600,
@@ -349,10 +352,10 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
             const SizedBox(height: 12),
             Text(
               status == 'PENDING'
-                  ? 'Add a payable to track money you owe'
+                  ? l10n.addPayableSubtitle
                   : status == 'OVERDUE'
-                      ? 'All payables are up to date'
-                      : 'Mark pending payables as paid',
+                      ? l10n.allPayablesUpToDate
+                      : l10n.markPendingAsPaidSubtitle,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: Colors.grey[500],
               ),
@@ -444,7 +447,7 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
                               await repository.deletePayable(item.payable.id);
                               if (context.mounted) {
                                 ToastUtils.showSuccessToast(
-                                    context, ref, 'Payable deleted');
+                                    context, ref, l10n.payableDeleted);
                               }
                             }
                           : null,
@@ -470,7 +473,7 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
               padding: const EdgeInsets.all(16.0),
               child: Center(
                 child: Text(
-                  'No more payables',
+                  l10n.noMorePayables,
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: Colors.grey[600],
                   ),
@@ -487,6 +490,7 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
   }
 
   Widget _buildPayableCard(dynamic item, AppCurrency currency) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final payable = item.payable;
@@ -567,7 +571,7 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        contact?.name ?? 'Unknown',
+                        contact?.name ?? l10n.unknown,
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
@@ -612,7 +616,7 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
                               const SizedBox(width: 4),
                               Flexible(
                                 child: Text(
-                                  linkedCategory.name,
+                                  LocalizationHelper.getLocalizedCategoryName(context, linkedCategory.name),
                                   style: TextStyle(
                                     fontSize: 10,
                                     color: linkedCategory.color != null
@@ -661,8 +665,8 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
                               const SizedBox(width: 4),
                               Text(
                                 linkedTransaction.type == 'EXPENSE'
-                                    ? 'Expense'
-                                    : 'Income',
+                                    ? l10n.expense
+                                    : l10n.income,
                                 style: TextStyle(
                                   fontSize: 10,
                                   color: linkedTransaction.type == 'EXPENSE'
@@ -700,7 +704,7 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              'Due: ${AppDateFormatter.formatDate(payable.dueDate!, pattern: ref.watch(userProfileProvider).dateFormat)}',
+                              l10n.dueAt(AppDateFormatter.formatDate(payable.dueDate!, pattern: ref.watch(userProfileProvider).dateFormat)),
                               style: theme.textTheme.labelSmall?.copyWith(
                                 color: isPending
                                     ? (payable.dueDate!.isBefore(DateTime.now())
@@ -755,7 +759,7 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
                             const SizedBox(width: 3),
                           ],
                           Text(
-                            isPending ? 'Payable' : 'Paid',
+                            isPending ? l10n.payableTag : l10n.paidTag,
                             style: TextStyle(
                               color: AppColors.payableColor,
                               fontSize: 10,

@@ -1,3 +1,4 @@
+import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -15,8 +16,8 @@ import 'package:flowpaisa/features/receivables/presentation/screens/edit_receiva
 import 'package:flowpaisa/features/receivables/presentation/widgets/receivable_details_dialog.dart';
 import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
 import 'package:flowpaisa/shared/widgets/swipeable_list_item.dart';
-import 'package:intl/intl.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
+import 'package:flowpaisa/core/utils/localization_helper.dart';
 import 'package:flowpaisa/core/utils/icon_helper.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
@@ -130,6 +131,7 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final pendingCountAsync = ref.watch(pendingReceivablesCountProvider);
     final overdueCountAsync = ref.watch(overdueReceivablesCountProvider);
     final pendingCount = pendingCountAsync.value ?? 0;
@@ -152,107 +154,107 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
       _previousOverdueCount = overdueCount;
     }
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Receivables'),
-        actions: [
-          // Debug button to generate dummy receivables (only in debug mode)
-          if (kDebugMode)
-            PopupMenuButton<String>(
-              icon: const Icon(Icons.bug_report),
-              onSelected: (value) async {
-                if (value == 'generate_dummy') {
-                  final repository = ref.read(receivablesRepositoryProvider);
-                  final contactsRepo = ref.read(contactsRepositoryProvider);
-                  try {
-                    final contacts =
-                        await contactsRepo.watchAllContacts().first;
-                    int defaultContactId;
-                    if (contacts.isNotEmpty) {
-                      defaultContactId = contacts[0].id;
-                    } else {
-                      // Create a default contact if none exists
-                      defaultContactId = await contactsRepo.createContact(
-                        ContactsCompanion(
-                          name: const Value('Default Contact'),
-                          createdAt: Value(DateTime.now()),
-                          updatedAt: Value(DateTime.now()),
-                        ),
-                      );
-                    }
+        return Scaffold(
+          appBar: AppBar(
+            title: Text(l10n.receivables),
+            actions: [
+              // Debug button to generate dummy receivables (only in debug mode)
+              if (kDebugMode)
+                PopupMenuButton<String>(
+                  icon: const Icon(Icons.bug_report),
+                  onSelected: (value) async {
+                    if (value == 'generate_dummy') {
+                      final repository = ref.read(receivablesRepositoryProvider);
+                      final contactsRepo = ref.read(contactsRepositoryProvider);
+                      try {
+                        final contacts =
+                            await contactsRepo.watchAllContacts().first;
+                        int defaultContactId;
+                        if (contacts.isNotEmpty) {
+                          defaultContactId = contacts[0].id;
+                        } else {
+                          // Create a default contact if none exists
+                          defaultContactId = await contactsRepo.createContact(
+                            ContactsCompanion(
+                              name: const Value('Default Contact'),
+                              createdAt: Value(DateTime.now()),
+                              updatedAt: Value(DateTime.now()),
+                            ),
+                          );
+                        }
 
-                    for (int i = 0; i < 100; i++) {
-                      final daysAgo = i ~/ 2;
-                      final date =
-                          DateTime.now().subtract(Duration(days: daysAgo));
-                      final amount = (50.0 + (i * 15.3) % 2000).roundToDouble();
-                      final contactId = contacts.isNotEmpty
-                          ? contacts[i % contacts.length].id
-                          : defaultContactId;
+                        for (int i = 0; i < 100; i++) {
+                          final daysAgo = i ~/ 2;
+                          final date =
+                              DateTime.now().subtract(Duration(days: daysAgo));
+                          final amount = (50.0 + (i * 15.3) % 2000).roundToDouble();
+                          final contactId = contacts.isNotEmpty
+                              ? contacts[i % contacts.length].id
+                              : defaultContactId;
 
-                      await repository.createReceivable(
-                        ReceivablesCompanion(
-                          contactId: Value(contactId),
-                          amount: Value(amount),
-                          description: Value('Dummy Receivable #${i + 1}'),
-                          date: Value(date),
-                          status: Value(i % 3 == 0 ? 'RECEIVED' : 'PENDING'),
-                          createdAt: Value(DateTime.now()),
-                          updatedAt: Value(DateTime.now()),
-                        ),
-                      );
+                          await repository.createReceivable(
+                            ReceivablesCompanion(
+                              contactId: Value(contactId),
+                              amount: Value(amount),
+                              description: Value('Dummy Receivable #${i + 1}'),
+                              date: Value(date),
+                              status: Value(i % 3 == 0 ? 'RECEIVED' : 'PENDING'),
+                              createdAt: Value(DateTime.now()),
+                              updatedAt: Value(DateTime.now()),
+                            ),
+                          );
+                        }
+                        if (context.mounted) {
+                          ToastUtils.showSuccessToast(
+                              context, ref, l10n.dummyGenerated(100));
+                          // Refresh pagination
+                          ref
+                              .read(
+                                  receivablesPaginatedProvider('PENDING').notifier)
+                              .refresh();
+                          ref
+                              .read(
+                                  receivablesPaginatedProvider('RECEIVED').notifier)
+                              .refresh();
+                        }
+                      } catch (e) {
+                        if (context.mounted) {
+                          ToastUtils.showErrorToast(context, ref, l10n.errorOccurred(e.toString()));
+                        }
+                      }
                     }
-                    if (context.mounted) {
-                      ToastUtils.showSuccessToast(
-                          context, ref, 'Generated 100 dummy receivables');
-                      // Refresh pagination
-                      ref
-                          .read(
-                              receivablesPaginatedProvider('PENDING').notifier)
-                          .refresh();
-                      ref
-                          .read(
-                              receivablesPaginatedProvider('RECEIVED').notifier)
-                          .refresh();
-                    }
-                  } catch (e) {
-                    if (context.mounted) {
-                      ToastUtils.showErrorToast(context, ref, 'Error: $e');
-                    }
-                  }
-                }
-              },
-              itemBuilder: (context) => [
-                const PopupMenuItem(
-                  value: 'generate_dummy',
-                  child: Row(
-                    children: [
-                      Icon(Icons.add_circle_outline),
-                      SizedBox(width: 8),
-                      Text('Generate 100 Dummy Receivables'),
+                  },
+                  itemBuilder: (context) => [
+                    PopupMenuItem(
+                      value: 'generate_dummy',
+                      child: Row(
+                        children: [
+                          const Icon(Icons.add_circle_outline),
+                          const SizedBox(width: 8),
+                          Text(l10n.dummyGenerated(100)),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+            ],
+            bottom: _tabController == null
+                ? null
+                : TabBar(
+                    controller: _tabController,
+                    indicatorColor: AppColors.receivableColor,
+                    labelColor: AppColors.receivableColor,
+                    unselectedLabelColor:
+                        Theme.of(context).colorScheme.onSurfaceVariant,
+                    tabs: [
+                      _buildTabWithCount(l10n.pending, pendingCount),
+                      if (hasOverdueTab)
+                        _buildTabWithCount(l10n.overdue, overdueCount,
+                            isOverdue: true),
+                      Tab(text: l10n.receivedLabel),
                     ],
                   ),
-                ),
-              ],
-            ),
-        ],
-        bottom: _tabController == null
-            ? null
-            : TabBar(
-                controller: _tabController,
-                indicatorColor: AppColors.receivableColor,
-                labelColor: AppColors.receivableColor,
-                unselectedLabelColor:
-                    Theme.of(context).colorScheme.onSurfaceVariant,
-                tabs: [
-                  _buildTabWithCount('Pending', pendingCount),
-                  if (hasOverdueTab)
-                    _buildTabWithCount('Overdue', overdueCount,
-                        isOverdue: true),
-                  const Tab(text: 'Received'),
-                ],
-              ),
-      ),
+          ),
       body: _tabController == null
           ? const Center(child: CircularProgressIndicator())
           : TabBarView(
@@ -279,92 +281,93 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
     );
   }
 
-  Widget _buildReceivablesList(String status) {
-    // Use paginated provider
-    final paginatedState = ref.watch(receivablesPaginatedProvider(status));
-    final theme = Theme.of(context);
-    final currency = ref.watch(currentCurrencyProvider).value;
+      Widget _buildReceivablesList(String status) {
+        final l10n = AppLocalizations.of(context)!;
+        // Use paginated provider
+        final paginatedState = ref.watch(receivablesPaginatedProvider(status));
+        final theme = Theme.of(context);
+        final currency = ref.watch(currentCurrencyProvider).value;
 
-    if (currency == null) {
-      return const Center(child: CircularProgressIndicator());
-    }
+        if (currency == null) {
+          return const Center(child: CircularProgressIndicator());
+        }
 
-    if (paginatedState.isLoading && paginatedState.items.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
-    }
+        if (paginatedState.isLoading && paginatedState.items.isEmpty) {
+          return const Center(child: CircularProgressIndicator());
+        }
 
-    if (paginatedState.error != null && paginatedState.items.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.error_outline, size: 60, color: Colors.red),
-            const SizedBox(height: 16),
-            Text(
-              'Error loading receivables',
-              style: theme.textTheme.titleLarge,
+        if (paginatedState.error != null && paginatedState.items.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.error_outline, size: 60, color: Colors.red),
+                const SizedBox(height: 16),
+                Text(
+                  l10n.errorLoadingReceivables,
+                  style: theme.textTheme.titleLarge,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  paginatedState.error!,
+                  style: theme.textTheme.bodySmall,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () {
+                    ref
+                        .read(receivablesPaginatedProvider(status).notifier)
+                        .refresh();
+                  },
+                  child: Text(l10n.retry),
+                ),
+              ],
             ),
-            const SizedBox(height: 8),
-            Text(
-              paginatedState.error!,
-              style: theme.textTheme.bodySmall,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () {
-                ref
-                    .read(receivablesPaginatedProvider(status).notifier)
-                    .refresh();
-              },
-              child: const Text('Retry'),
-            ),
-          ],
-        ),
-      );
-    }
+          );
+        }
 
-    if (paginatedState.items.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              status == 'PENDING'
-                  ? Icons.hourglass_empty
-                  : status == 'OVERDUE'
-                      ? Icons.warning
-                      : Icons.check_circle_outline,
-              size: 100,
-              color: Colors.grey[300],
+        if (paginatedState.items.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  status == 'PENDING'
+                      ? Icons.hourglass_empty
+                      : status == 'OVERDUE'
+                          ? Icons.warning
+                          : Icons.check_circle_outline,
+                  size: 100,
+                  color: Colors.grey[300],
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  status == 'PENDING'
+                      ? l10n.noPendingReceivables
+                      : status == 'OVERDUE'
+                          ? l10n.noOverdueReceivables
+                          : l10n.noReceivedPayments,
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    color: Colors.grey[600],
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  status == 'PENDING'
+                      ? l10n.addReceivableSubtitle
+                      : status == 'OVERDUE'
+                          ? l10n.receivablesUpToDate
+                          : l10n.markReceivedSubtitle,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: Colors.grey[500],
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 24),
-            Text(
-              status == 'PENDING'
-                  ? 'No pending receivables'
-                  : status == 'OVERDUE'
-                      ? 'No overdue receivables'
-                      : 'No received payments',
-              style: theme.textTheme.titleLarge?.copyWith(
-                color: Colors.grey[600],
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              status == 'PENDING'
-                  ? 'Add a receivable to track money owed to you'
-                  : status == 'OVERDUE'
-                      ? 'All receivables are up to date'
-                      : 'Mark pending receivables as received',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: Colors.grey[500],
-              ),
-            ),
-          ],
-        ),
-      );
-    }
+          );
+        }
 
     // Group by Date
     final groupedReceivables = <String, List<dynamic>>{};
@@ -444,48 +447,49 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
                               );
                             }
                           : null,
-                      onDelete: canEdit
-                          ? () async {
-                              final repository =
-                                  ref.read(receivablesRepositoryProvider);
-                              await repository
-                                  .deleteReceivable(item.receivable.id);
-                              if (context.mounted) {
-                                ToastUtils.showSuccessToast(
-                                    context, ref, 'Receivable deleted');
-                              }
-                            }
-                          : null,
-                      child: _buildReceivableCard(item, currency),
-                    ),
-                  );
-                },
-                childCount: groupedReceivables[dateKey]!.length,
-              ),
-            ),
-          ),
-        // Loading indicator or "No more items"
-        if (paginatedState.isLoadingMore)
-          const SliverToBoxAdapter(
-            child: Padding(
-              padding: EdgeInsets.all(16.0),
-              child: Center(child: CircularProgressIndicator()),
-            ),
-          )
-        else if (!paginatedState.hasMore && paginatedState.items.isNotEmpty)
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Center(
-                child: Text(
-                  'No more receivables',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: Colors.grey[600],
+                          onDelete: canEdit
+                              ? () async {
+                                  final l10n = AppLocalizations.of(context)!;
+                                  final repository =
+                                      ref.read(receivablesRepositoryProvider);
+                                  await repository
+                                      .deleteReceivable(item.receivable.id);
+                                  if (context.mounted) {
+                                    ToastUtils.showSuccessToast(
+                                        context, ref, l10n.receivableDeleted);
+                                  }
+                                }
+                              : null,
+                          child: _buildReceivableCard(item, currency),
+                        ),
+                      );
+                    },
+                    childCount: groupedReceivables[dateKey]!.length,
                   ),
                 ),
               ),
-            ),
-          ),
+            // Loading indicator or "No more items"
+            if (paginatedState.isLoadingMore)
+              const SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Center(child: CircularProgressIndicator()),
+                ),
+              )
+            else if (!paginatedState.hasMore && paginatedState.items.isNotEmpty)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Center(
+                    child: Text(
+                      l10n.noMoreItems,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
         // Bottom padding
         const SliverToBoxAdapter(
           child: SizedBox(height: 80),
@@ -494,296 +498,297 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
     );
   }
 
-  Widget _buildReceivableCard(dynamic item, AppCurrency currency) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    final receivable = item.receivable;
-    final contact = item.contact;
-    final linkedCategory = item.linkedCategory;
-    final linkedTransaction = item.linkedTransaction;
-    final isPending = receivable.status == 'PENDING';
+      Widget _buildReceivableCard(dynamic item, AppCurrency currency) {
+        final l10n = AppLocalizations.of(context)!;
+        final theme = Theme.of(context);
+        final isDark = theme.brightness == Brightness.dark;
+        final receivable = item.receivable;
+        final contact = item.contact;
+        final linkedCategory = item.linkedCategory;
+        final linkedTransaction = item.linkedTransaction;
+        final isPending = receivable.status == 'PENDING';
 
-    // Dynamic font size based on amount
-    final amountFontSize = AmountFormatter.getFontSize(receivable.amount);
+        // Dynamic font size based on amount
+        final amountFontSize = AmountFormatter.getFontSize(receivable.amount);
 
-    return Container(
-      decoration: BoxDecoration(
-        color: theme.cardColor,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color:
-              AppColors.receivableColor.withValues(alpha: isDark ? 0.2 : 0.1),
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.receivableColor
-                .withValues(alpha: isDark ? 0.05 : 0.08),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => ReceivableDetailsDialog(item: item),
+        return Container(
+          decoration: BoxDecoration(
+            color: theme.cardColor,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color:
+                  AppColors.receivableColor.withValues(alpha: isDark ? 0.2 : 0.1),
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.receivableColor
+                    .withValues(alpha: isDark ? 0.05 : 0.08),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
               ),
-            );
-          },
-          borderRadius: BorderRadius.circular(20),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                // Contact Avatar
-                Container(
-                  width: 50,
-                  height: 50,
-                  decoration: BoxDecoration(
-                    gradient: AppColors.getContactGradient(contact?.name ?? ''),
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.getContactColor(contact?.name ?? '')
-                            .withValues(alpha: 0.3),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
+            ],
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ReceivableDetailsDialog(item: item),
+                  ),
+                );
+              },
+              borderRadius: BorderRadius.circular(20),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    // Contact Avatar
+                    Container(
+                      width: 50,
+                      height: 50,
+                      decoration: BoxDecoration(
+                        gradient: AppColors.getContactGradient(contact?.name ?? ''),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.getContactColor(contact?.name ?? '')
+                                .withValues(alpha: 0.3),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    contact?.name.isNotEmpty == true
-                        ? contact!.name[0].toUpperCase()
-                        : '?',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 16),
-
-                // Details
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        contact?.name ?? 'Unknown',
-                        style: theme.textTheme.titleMedium?.copyWith(
+                      alignment: Alignment.center,
+                      child: Text(
+                        contact?.name.isNotEmpty == true
+                            ? contact!.name[0].toUpperCase()
+                            : '?',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 22,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      // Linked category or transaction type tag
-                      if (linkedCategory != null) ...[
-                        const SizedBox(height: 4),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: linkedCategory.color != null
-                                ? Color(int.parse(linkedCategory.color!
-                                        .replaceAll('#', '0xFF')))
-                                    .withValues(alpha: 0.1)
-                                : AppColors.incomeColor.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(4),
-                            border: Border.all(
-                              color: linkedCategory.color != null
-                                  ? Color(int.parse(linkedCategory.color!
-                                          .replaceAll('#', '0xFF')))
-                                      .withValues(alpha: 0.3)
-                                  : AppColors.incomeColor
-                                      .withValues(alpha: 0.3),
-                              width: 1,
+                    ),
+                    const SizedBox(width: 16),
+
+                    // Details
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            contact?.name ?? l10n.unknown,
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                linkedCategory.icon != null
-                                    ? IconHelper.getIconData(
-                                        linkedCategory.icon)
-                                    : Symbols.category,
+                          // Linked category or transaction type tag
+                          if (linkedCategory != null) ...[
+                            const SizedBox(height: 4),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
                                 color: linkedCategory.color != null
                                     ? Color(int.parse(linkedCategory.color!
-                                        .replaceAll('#', '0xFF')))
-                                    : AppColors.incomeColor,
-                                size: 10,
+                                            .replaceAll('#', '0xFF')))
+                                        .withValues(alpha: 0.1)
+                                    : AppColors.incomeColor.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(4),
+                                border: Border.all(
+                                  color: linkedCategory.color != null
+                                      ? Color(int.parse(linkedCategory.color!
+                                              .replaceAll('#', '0xFF')))
+                                          .withValues(alpha: 0.3)
+                                      : AppColors.incomeColor
+                                          .withValues(alpha: 0.3),
+                                  width: 1,
+                                ),
                               ),
-                              const SizedBox(width: 4),
-                              Flexible(
-                                child: Text(
-                                  linkedCategory.name,
-                                  style: TextStyle(
-                                    fontSize: 10,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    linkedCategory.icon != null
+                                        ? IconHelper.getIconData(
+                                            linkedCategory.icon)
+                                        : Symbols.category,
                                     color: linkedCategory.color != null
                                         ? Color(int.parse(linkedCategory.color!
                                             .replaceAll('#', '0xFF')))
                                         : AppColors.incomeColor,
-                                    fontWeight: FontWeight.w600,
+                                    size: 10,
                                   ),
-                                  overflow: TextOverflow.ellipsis,
+                                  const SizedBox(width: 4),
+                                  Flexible(
+                                    child: Text(
+                                      LocalizationHelper.getLocalizedCategoryName(context, linkedCategory.name),
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        color: linkedCategory.color != null
+                                            ? Color(int.parse(linkedCategory.color!
+                                                .replaceAll('#', '0xFF')))
+                                            : AppColors.incomeColor,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ] else if (linkedTransaction != null) ...[
+                            const SizedBox(height: 4),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: linkedTransaction.type == 'EXPENSE'
+                                    ? AppColors.expenseColor.withValues(alpha: 0.1)
+                                    : AppColors.incomeColor.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(4),
+                                border: Border.all(
+                                  color: linkedTransaction.type == 'EXPENSE'
+                                      ? AppColors.expenseColor
+                                          .withValues(alpha: 0.3)
+                                      : AppColors.incomeColor
+                                          .withValues(alpha: 0.3),
+                                  width: 1,
                                 ),
                               ),
-                            ],
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    linkedTransaction.type == 'EXPENSE'
+                                        ? Icons.payment
+                                        : Icons.monetization_on,
+                                    color: linkedTransaction.type == 'EXPENSE'
+                                        ? AppColors.expenseColor
+                                        : AppColors.incomeColor,
+                                    size: 10,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    linkedTransaction.type == 'EXPENSE'
+                                        ? l10n.expense
+                                        : l10n.income,
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: linkedTransaction.type == 'EXPENSE'
+                                          ? AppColors.expenseColor
+                                          : AppColors.incomeColor,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                          if (receivable.description != null &&
+                              receivable.description!.isNotEmpty)
+                            Text(
+                              receivable.description!,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          if (receivable.dueDate != null) ...[
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.event,
+                                  size: 12,
+                                  color: isPending
+                                      ? (receivable.dueDate!
+                                              .isBefore(DateTime.now())
+                                          ? Colors.red
+                                          : Colors.orange)
+                                      : theme.colorScheme.onSurfaceVariant,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  l10n.dueAt(AppDateFormatter.formatDate(receivable.dueDate!, pattern: ref.watch(userProfileProvider).dateFormat)),
+                                  style: theme.textTheme.labelSmall?.copyWith(
+                                    color: isPending
+                                        ? (receivable.dueDate!
+                                                .isBefore(DateTime.now())
+                                            ? Colors.red
+                                            : Colors.orange)
+                                        : theme.colorScheme.onSurfaceVariant,
+                                    fontWeight: isPending ? FontWeight.bold : null,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+
+                    // Amount and Tags
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          AmountFormatter.formatWithCurrency(receivable.amount,
+                              currency.symbol, currency.decimalPlaces),
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            color: AppColors.receivableColor,
+                            fontWeight: FontWeight.bold,
+                            fontSize: amountFontSize,
                           ),
                         ),
-                      ] else if (linkedTransaction != null) ...[
                         const SizedBox(height: 4),
+                        // Status badge (Receivable or Received)
                         Container(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
-                            color: linkedTransaction.type == 'EXPENSE'
-                                ? AppColors.expenseColor.withValues(alpha: 0.1)
-                                : AppColors.incomeColor.withValues(alpha: 0.1),
+                            color: AppColors.receivableColor.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(4),
                             border: Border.all(
-                              color: linkedTransaction.type == 'EXPENSE'
-                                  ? AppColors.expenseColor
-                                      .withValues(alpha: 0.3)
-                                  : AppColors.incomeColor
-                                      .withValues(alpha: 0.3),
+                              color:
+                                  AppColors.receivableColor.withValues(alpha: 0.3),
                               width: 1,
                             ),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(
-                                linkedTransaction.type == 'EXPENSE'
-                                    ? Icons.payment
-                                    : Icons.monetization_on,
-                                color: linkedTransaction.type == 'EXPENSE'
-                                    ? AppColors.expenseColor
-                                    : AppColors.incomeColor,
-                                size: 10,
-                              ),
-                              const SizedBox(width: 4),
+                              if (!isPending) ...[
+                                Icon(
+                                  Icons.check_circle,
+                                  size: 10,
+                                  color: AppColors.receivableColor,
+                                ),
+                                const SizedBox(width: 3),
+                              ],
                               Text(
-                                linkedTransaction.type == 'EXPENSE'
-                                    ? 'Expense'
-                                    : 'Income',
+                                isPending ? l10n.receivableTag : l10n.receivedTag,
                                 style: TextStyle(
+                                  color: AppColors.receivableColor,
                                   fontSize: 10,
-                                  color: linkedTransaction.type == 'EXPENSE'
-                                      ? AppColors.expenseColor
-                                      : AppColors.incomeColor,
-                                  fontWeight: FontWeight.w600,
+                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
                             ],
                           ),
                         ),
                       ],
-                      if (receivable.description != null &&
-                          receivable.description!.isNotEmpty)
-                        Text(
-                          receivable.description!,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      if (receivable.dueDate != null) ...[
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.event,
-                              size: 12,
-                              color: isPending
-                                  ? (receivable.dueDate!
-                                          .isBefore(DateTime.now())
-                                      ? Colors.red
-                                      : Colors.orange)
-                                  : theme.colorScheme.onSurfaceVariant,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              'Due: ${AppDateFormatter.formatDate(receivable.dueDate!, pattern: ref.watch(userProfileProvider).dateFormat)}',
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                color: isPending
-                                    ? (receivable.dueDate!
-                                            .isBefore(DateTime.now())
-                                        ? Colors.red
-                                        : Colors.orange)
-                                    : theme.colorScheme.onSurfaceVariant,
-                                fontWeight: isPending ? FontWeight.bold : null,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-
-                // Amount and Tags
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      AmountFormatter.formatWithCurrency(receivable.amount,
-                          currency.symbol, currency.decimalPlaces),
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        color: AppColors.receivableColor,
-                        fontWeight: FontWeight.bold,
-                        fontSize: amountFontSize,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    // Status badge (Receivable or Received)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: AppColors.receivableColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(4),
-                        border: Border.all(
-                          color:
-                              AppColors.receivableColor.withValues(alpha: 0.3),
-                          width: 1,
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (!isPending) ...[
-                            Icon(
-                              Icons.check_circle,
-                              size: 10,
-                              color: AppColors.receivableColor,
-                            ),
-                            const SizedBox(width: 3),
-                          ],
-                          Text(
-                            isPending ? 'Receivable' : 'Received',
-                            style: TextStyle(
-                              color: AppColors.receivableColor,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
                     ),
                   ],
                 ),
-              ],
+              ),
             ),
           ),
-        ),
-      ),
-    );
-  }
+        );
+      }
 }

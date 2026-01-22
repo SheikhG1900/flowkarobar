@@ -1,3 +1,4 @@
+import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:drift/drift.dart' as drift;
@@ -16,6 +17,7 @@ class AddCurrencyScreen extends ConsumerStatefulWidget {
 }
 
 class _AddCurrencyScreenState extends ConsumerState<AddCurrencyScreen> {
+  AppLocalizations get l10n => AppLocalizations.of(context)!;
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _symbolController = TextEditingController();
@@ -66,11 +68,11 @@ class _AddCurrencyScreenState extends ConsumerState<AddCurrencyScreen> {
       if (mounted) {
         Navigator.pop(context);
         ToastUtils.showSuccessToast(
-            context, ref, 'Currency added successfully');
+            context, ref, l10n.currencyAdded);
       }
     } catch (e) {
       if (mounted) {
-        ToastUtils.showErrorToast(context, ref, 'Error: ${e.toString()}');
+        ToastUtils.showErrorToast(context, ref, l10n.errorOccurred(e.toString()));
       }
     } finally {
       if (mounted) {
@@ -87,7 +89,7 @@ class _AddCurrencyScreenState extends ConsumerState<AddCurrencyScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Add Currency'),
+        title: Text(l10n.addCurrency),
       ),
       body: Form(
         key: _formKey,
@@ -98,8 +100,8 @@ class _AddCurrencyScreenState extends ConsumerState<AddCurrencyScreen> {
             TextFormField(
               controller: _nameController,
               decoration: InputDecoration(
-                labelText: 'Currency Name',
-                hintText: 'e.g., Euro, British Pound',
+                labelText: l10n.currencyNameLabel,
+                hintText: l10n.currencyNameHint,
                 prefixIcon: const Icon(Icons.label),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -107,7 +109,7 @@ class _AddCurrencyScreenState extends ConsumerState<AddCurrencyScreen> {
               ),
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'Please enter currency name';
+                  return l10n.pleaseEnterCurrencyName;
                 }
                 return null;
               },
@@ -118,9 +120,9 @@ class _AddCurrencyScreenState extends ConsumerState<AddCurrencyScreen> {
             TextFormField(
               controller: _symbolController,
               decoration: InputDecoration(
-                labelText: 'Currency Symbol',
-                hintText: 'e.g., €, £, ¥',
-                helperText: 'You can use emoji, letters, or symbols',
+                labelText: l10n.currencySymbolLabel,
+                hintText: l10n.currencySymbolHint,
+                helperText: l10n.currencySymbolHelper,
                 prefixIcon: const Icon(Icons.currency_exchange),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -128,10 +130,10 @@ class _AddCurrencyScreenState extends ConsumerState<AddCurrencyScreen> {
               ),
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'Please enter currency symbol';
+                  return l10n.pleaseEnterCurrencySymbol;
                 }
                 if (value.length > 10) {
-                  return 'Symbol must be 10 characters or less';
+                  return l10n.symbolLengthError;
                 }
                 return null;
               },
@@ -142,9 +144,9 @@ class _AddCurrencyScreenState extends ConsumerState<AddCurrencyScreen> {
             TextFormField(
               controller: _codeController,
               decoration: InputDecoration(
-                labelText: 'Currency Code',
-                hintText: 'e.g., EUR, GBP, JPY',
-                helperText: 'ISO 4217 code (3 letters)',
+                labelText: l10n.currencyCodeLabel,
+                hintText: l10n.currencyCodeHint,
+                helperText: l10n.currencyCodeHelper,
                 prefixIcon: const Icon(Icons.code),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -154,10 +156,10 @@ class _AddCurrencyScreenState extends ConsumerState<AddCurrencyScreen> {
               maxLength: 3,
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'Please enter currency code';
+                  return l10n.pleaseEnterCurrencyCode;
                 }
                 if (value.length != 3) {
-                  return 'Code must be exactly 3 characters';
+                  return l10n.codeLengthError;
                 }
                 return null;
               },
@@ -168,17 +170,17 @@ class _AddCurrencyScreenState extends ConsumerState<AddCurrencyScreen> {
             DropdownButtonFormField<int>(
               value: _decimalPlaces,
               decoration: InputDecoration(
-                labelText: 'Decimal Places',
-                helperText: 'Number of digits after decimal point',
+                labelText: l10n.decimalPlacesLabel,
+                helperText: l10n.decimalPlacesHelper,
                 prefixIcon: const Icon(Icons.numbers),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              items: const [
-                DropdownMenuItem(value: 0, child: Text('0 (No decimals)')),
-                DropdownMenuItem(value: 1, child: Text('1 decimal place')),
-                DropdownMenuItem(value: 2, child: Text('2 decimal places')),
+              items: [
+                DropdownMenuItem(value: 0, child: Text(l10n.noDecimals)),
+                DropdownMenuItem(value: 1, child: Text(l10n.oneDecimal)),
+                DropdownMenuItem(value: 2, child: Text(l10n.twoDecimals)),
               ],
               onChanged: (value) {
                 if (value != null) {
@@ -201,7 +203,7 @@ class _AddCurrencyScreenState extends ConsumerState<AddCurrencyScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Preview',
+                    l10n.preview,
                     style: theme.textTheme.titleSmall?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
@@ -241,7 +243,7 @@ class _AddCurrencyScreenState extends ConsumerState<AddCurrencyScreen> {
                           children: [
                             Text(
                               _nameController.text.isEmpty
-                                  ? 'Currency Name'
+                                  ? l10n.currencyNameLabel
                                   : _nameController.text,
                               style: theme.textTheme.titleMedium,
                             ),
@@ -260,7 +262,7 @@ class _AddCurrencyScreenState extends ConsumerState<AddCurrencyScreen> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'Positive: ${AmountFormatter.formatWithCurrency(1234.56, _symbolController.text.isEmpty ? '?' : _symbolController.text, _decimalPlaces)}',
+                    l10n.positiveAmount(AmountFormatter.formatWithCurrency(1234.56, _symbolController.text.isEmpty ? '?' : _symbolController.text, _decimalPlaces)),
                     style: theme.textTheme.bodyLarge?.copyWith(
                       fontWeight: FontWeight.w600,
                       color: AppColors.success,
@@ -268,7 +270,7 @@ class _AddCurrencyScreenState extends ConsumerState<AddCurrencyScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Negative: ${AmountFormatter.formatWithCurrency(-567.89, _symbolController.text.isEmpty ? '?' : _symbolController.text, _decimalPlaces)}',
+                    l10n.negativeAmount(AmountFormatter.formatWithCurrency(-567.89, _symbolController.text.isEmpty ? '?' : _symbolController.text, _decimalPlaces)),
                     style: theme.textTheme.bodyLarge?.copyWith(
                       fontWeight: FontWeight.w600,
                       color: AppColors.error,
@@ -283,7 +285,7 @@ class _AddCurrencyScreenState extends ConsumerState<AddCurrencyScreen> {
             GradientButton(
               onPressed: _isLoading ? null : _saveCurrency,
               gradient: AppColors.getPrimaryGradient(theme.colorScheme.primary),
-              label: 'Save Currency',
+              label: l10n.saveCurrency,
               isLoading: _isLoading,
             ),
           ],

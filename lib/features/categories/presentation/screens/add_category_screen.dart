@@ -10,6 +10,7 @@ import 'package:flowpaisa/core/utils/icon_helper.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/shared/widgets/limit_countdown_badge.dart';
+import 'package:flowpaisa/l10n/app_localizations.dart';
 
 class AddCategoryScreen extends ConsumerStatefulWidget {
   final String? initialName;
@@ -69,7 +70,8 @@ class _AddCategoryScreenState extends ConsumerState<AddCategoryScreen> {
 
     if (widget.initialColor != null) {
       try {
-        _selectedColor = Color(int.parse(widget.initialColor!.replaceAll('#', '0xFF')));
+        _selectedColor =
+            Color(int.parse(widget.initialColor!.replaceAll('#', '0xFF')));
       } catch (_) {}
     }
 
@@ -115,6 +117,7 @@ class _AddCategoryScreenState extends ConsumerState<AddCategoryScreen> {
   }
 
   Future<void> _saveCategory() async {
+    final l10n = AppLocalizations.of(context)!;
     // Check limits - call the method directly to get accurate current limits
     final isPremium = PremiumGate.isPremium(ref);
     if (!isPremium) {
@@ -150,11 +153,13 @@ class _AddCategoryScreenState extends ConsumerState<AddCategoryScreen> {
 
       if (mounted) {
         Navigator.pop(context, newCategory); // Return the created category
-        ToastUtils.showSuccessToast(context, ref, 'Category added successfully');
+        ToastUtils.showSuccessToast(
+            context, ref, l10n.categoryAddedSuccessfully);
       }
     } catch (e) {
       if (mounted) {
-        ToastUtils.showErrorToast(context, ref, 'Error: ${e.toString()}');
+        ToastUtils.showErrorToast(
+            context, ref, l10n.errorOccurred(e.toString()));
       }
     } finally {
       if (mounted) {
@@ -166,10 +171,11 @@ class _AddCategoryScreenState extends ConsumerState<AddCategoryScreen> {
   @override
   Widget build(BuildContext context) {
     final limitsAsync = ref.watch(categoryLimitsProvider);
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Add Category'),
+        title: Text(l10n.addCategory),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -180,16 +186,16 @@ class _AddCategoryScreenState extends ConsumerState<AddCategoryScreen> {
             children: [
               // Type Toggle
               SegmentedButton<String>(
-                segments: const [
+                segments: [
                   ButtonSegment(
                     value: 'EXPENSE',
-                    label: Text('Expense'),
-                    icon: Icon(Symbols.money_off),
+                    label: Text(l10n.expense),
+                    icon: const Icon(Symbols.money_off),
                   ),
                   ButtonSegment(
                     value: 'INCOME',
-                    label: Text('Income'),
-                    icon: Icon(Symbols.attach_money),
+                    label: Text(l10n.income),
+                    icon: const Icon(Symbols.attach_money),
                   ),
                 ],
                 selected: {_selectedType},
@@ -248,15 +254,15 @@ class _AddCategoryScreenState extends ConsumerState<AddCategoryScreen> {
               // Name Field
               TextFormField(
                 controller: _nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Category Name',
-                  prefixIcon: Icon(Icons.label_outline),
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: l10n.categoryName,
+                  prefixIcon: const Icon(Icons.label_outline),
+                  border: const OutlineInputBorder(),
                 ),
                 textCapitalization: TextCapitalization.sentences,
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
-                    return 'Please enter a name';
+                    return l10n.pleaseEnterName;
                   }
                   return null;
                 },
@@ -271,7 +277,7 @@ class _AddCategoryScreenState extends ConsumerState<AddCategoryScreen> {
                         size: 16, color: Theme.of(context).colorScheme.primary),
                     const SizedBox(width: 8),
                     Text(
-                      'Suggested Icons',
+                      l10n.suggestedIcons,
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
                             color: Theme.of(context).colorScheme.primary,
                             fontWeight: FontWeight.bold,
@@ -327,7 +333,7 @@ class _AddCategoryScreenState extends ConsumerState<AddCategoryScreen> {
 
               // Color Picker
               Text(
-                'Color',
+                l10n.color,
                 style: Theme.of(context).textTheme.titleMedium,
               ),
               const SizedBox(height: 12),
@@ -368,7 +374,7 @@ class _AddCategoryScreenState extends ConsumerState<AddCategoryScreen> {
 
               // Icon Picker
               Text(
-                'All Icons',
+                l10n.allIcons,
                 style: Theme.of(context).textTheme.titleMedium,
               ),
               const SizedBox(height: 12),
@@ -439,7 +445,7 @@ class _AddCategoryScreenState extends ConsumerState<AddCategoryScreen> {
                 alignment: Alignment.topRight,
                 children: [
                   GradientButton(
-                    label: 'Save Category',
+                    label: l10n.saveCategory,
                     gradient: _selectedType == 'EXPENSE'
                         ? AppColors.expenseGradient
                         : AppColors.incomeGradient,

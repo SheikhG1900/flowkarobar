@@ -1,3 +1,5 @@
+import 'package:flowpaisa/core/utils/localization_helper.dart';
+import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
@@ -18,6 +20,7 @@ class TemplateEditorScreen extends ConsumerStatefulWidget {
 }
 
 class _TemplateEditorScreenState extends ConsumerState<TemplateEditorScreen> {
+  AppLocalizations get l10n => AppLocalizations.of(context)!;
   String _selectedLanguage = 'en';
   late TextEditingController _templateController;
   bool _isLoading = false;
@@ -67,7 +70,7 @@ class _TemplateEditorScreenState extends ConsumerState<TemplateEditorScreen> {
         _isLoading = false;
       });
       if (mounted) {
-        ToastUtils.showErrorToast(context, ref, 'Error loading template: $e');
+        ToastUtils.showErrorToast(context, ref, '${l10n.errorOccurred(e.toString())}');
       }
     }
   }
@@ -92,14 +95,14 @@ class _TemplateEditorScreenState extends ConsumerState<TemplateEditorScreen> {
       });
 
       if (mounted) {
-        ToastUtils.showSuccessToast(context, ref, 'Template saved successfully');
+        ToastUtils.showSuccessToast(context, ref, l10n.templateSaved);
       }
     } catch (e) {
       setState(() {
         _isLoading = false;
       });
       if (mounted) {
-        ToastUtils.showErrorToast(context, ref, 'Error saving template: $e');
+        ToastUtils.showErrorToast(context, ref, l10n.errorOccurred(e.toString()));
       }
     }
   }
@@ -108,18 +111,16 @@ class _TemplateEditorScreenState extends ConsumerState<TemplateEditorScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Reset Template'),
-        content: const Text(
-          'Are you sure you want to reset this template to the default? This cannot be undone.',
-        ),
+        title: Text(l10n.resetTemplateTitle),
+        content: Text(l10n.resetTemplateMessage),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
-          FilledButton(
+          TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Reset'),
+            child: Text(l10n.reset),
           ),
         ],
       ),
@@ -142,14 +143,14 @@ class _TemplateEditorScreenState extends ConsumerState<TemplateEditorScreen> {
         await _loadTemplate();
 
         if (mounted) {
-          ToastUtils.showSuccessToast(context, ref, 'Template reset to default');
+          ToastUtils.showSuccessToast(context, ref, l10n.templateReset);
         }
       } catch (e) {
         setState(() {
           _isLoading = false;
         });
         if (mounted) {
-          ToastUtils.showErrorToast(context, ref, 'Error resetting template: $e');
+          ToastUtils.showErrorToast(context, ref, l10n.errorOccurred(e.toString()));
         }
       }
     }
@@ -175,7 +176,7 @@ class _TemplateEditorScreenState extends ConsumerState<TemplateEditorScreen> {
           if (_hasCustomTemplate)
             IconButton(
               icon: const Icon(Icons.restore),
-              tooltip: 'Reset to default',
+              tooltip: l10n.resetToDefault,
               onPressed: _isLoading ? null : _resetTemplate,
             ),
         ],
@@ -189,14 +190,14 @@ class _TemplateEditorScreenState extends ConsumerState<TemplateEditorScreen> {
                   padding: const EdgeInsets.all(16),
                   child: DropdownButtonFormField<String>(
                     value: _selectedLanguage,
-                    decoration: const InputDecoration(
-                      labelText: 'Language',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: l10n.language,
+                      border: const OutlineInputBorder(),
                     ),
-                    items: const [
-                      DropdownMenuItem(value: 'en', child: Text('English')),
-                      DropdownMenuItem(value: 'hi', child: Text('Hindi')),
-                      DropdownMenuItem(value: 'ur', child: Text('Urdu')),
+                    items: [
+                      DropdownMenuItem(value: 'en', child: Text(l10n.english)),
+                      DropdownMenuItem(value: 'hi', child: Text(l10n.hindi)),
+                      DropdownMenuItem(value: 'ur', child: Text(l10n.urdu)),
                     ],
                     onChanged: _onLanguageChanged,
                   ),
@@ -211,7 +212,7 @@ class _TemplateEditorScreenState extends ConsumerState<TemplateEditorScreen> {
                         Row(
                           children: [
                             Text(
-                              'Template',
+                              l10n.template,
                               style: theme.textTheme.titleMedium,
                             ),
                             const Spacer(),
@@ -220,7 +221,7 @@ class _TemplateEditorScreenState extends ConsumerState<TemplateEditorScreen> {
                                 _showVariableHelp(context);
                               },
                               icon: const Icon(Icons.help_outline, size: 18),
-                              label: const Text('Variables'),
+                              label: Text(l10n.variables),
                             ),
                           ],
                         ),
@@ -231,9 +232,9 @@ class _TemplateEditorScreenState extends ConsumerState<TemplateEditorScreen> {
                             maxLines: null,
                             expands: true,
                             decoration: InputDecoration(
-                              hintText: 'Enter template text...',
+                              hintText: l10n.enterTemplateText,
                               border: const OutlineInputBorder(),
-                              helperText: 'Use {variableName} for dynamic content',
+                              helperText: l10n.useVariableHint('variableName'),
                             ),
                             style: const TextStyle(fontFamily: 'monospace'),
                           ),
@@ -249,7 +250,7 @@ class _TemplateEditorScreenState extends ConsumerState<TemplateEditorScreen> {
                     width: double.infinity,
                     child: FilledButton(
                       onPressed: _isLoading ? null : _saveTemplate,
-                      child: const Text('Save Template'),
+                      child: Text(l10n.saveTemplate),
                     ),
                   ),
                 ),
@@ -259,41 +260,42 @@ class _TemplateEditorScreenState extends ConsumerState<TemplateEditorScreen> {
   }
 
   String _getTemplateName() {
+    final type = LocalizationHelper.localizeCategoryName(context, widget.templateType);
     final statusText = widget.templateStatus.isEmpty
         ? ''
-        : ' - ${widget.templateStatus.replaceAll('_', ' ').split(' ').map((s) => s[0].toUpperCase() + s.substring(1)).join(' ')}';
-    return '${widget.templateType.replaceAll('_', ' ').split(' ').map((s) => s[0].toUpperCase() + s.substring(1)).join(' ')}$statusText';
+        : ' - ${LocalizationHelper.localizeStatus(context, widget.templateStatus)}';
+    return '$type$statusText';
   }
 
   void _showVariableHelp(BuildContext context) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Available Variables'),
+        title: Text(l10n.availableVariables),
         content: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
-            children: const [
-              Text('You can use these variables in your templates:'),
-              SizedBox(height: 12),
-              Text('• {contactName} - Contact\'s name'),
-              Text('• {amount} - Formatted amount with currency'),
-              Text('• {description} - Transaction/receivable/payable description'),
-              Text('• {date} - Formatted date'),
-              Text('• {dueDate} - Formatted due date'),
-              Text('• {categoryName} - Category name'),
-              Text('• {link} - Deep link URL'),
-              Text('• {type} - Transaction type (Income/Expense)'),
-              Text('• {status} - Status text'),
-              Text('• {relationship} - Relationship text'),
+            children: [
+              Text(l10n.variablesInstructions),
+              const SizedBox(height: 12),
+              Text(l10n.variableContactName('contactName')),
+              Text(l10n.variableAmount('amount')),
+              Text(l10n.variableDescription('description')),
+              Text(l10n.variableDate('date')),
+              Text(l10n.variableDueDate('dueDate')),
+              Text(l10n.variableCategoryName('categoryName')),
+              Text(l10n.variableLink('link')),
+              Text(l10n.variableType('type')),
+              Text(l10n.variableStatus('status')),
+              Text(l10n.variableRelationship('relationship')),
             ],
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
+            child: Text(l10n.close),
           ),
         ],
       ),

@@ -4,6 +4,7 @@ import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/core/utils/date_formatter.dart';
 import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
+import 'package:flowpaisa/l10n/app_localizations.dart';
 
 // Mock notifications provider - can be enhanced later with actual data
 final notificationsProvider = Provider<List<NotificationItem>>((ref) {
@@ -44,10 +45,11 @@ class NotificationsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final notifications = ref.watch(notificationsProvider);
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Notifications'),
+        title: Text(l10n.notifications),
         centerTitle: true,
         actions: [
           if (notifications.isNotEmpty)
@@ -55,19 +57,20 @@ class NotificationsScreen extends ConsumerWidget {
               onPressed: () {
                 // TODO: Mark all as read
                 ToastUtils.showSuccessToast(
-                    context, ref, 'All notifications marked as read');
+                    context, ref, l10n.allNotificationsMarkedRead);
               },
-              child: const Text('Mark all read'),
+              child: Text(l10n.markAllRead),
             ),
         ],
       ),
       body: notifications.isEmpty
-          ? _buildEmptyState(context, theme)
+          ? _buildEmptyState(context, theme, l10n)
           : _buildNotificationsList(context, theme, notifications),
     );
   }
 
-  Widget _buildEmptyState(BuildContext context, ThemeData theme) {
+  Widget _buildEmptyState(
+      BuildContext context, ThemeData theme, AppLocalizations l10n) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -97,18 +100,14 @@ class NotificationsScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 32),
             Text(
-              'No Notifications',
+              l10n.noNotifications,
               style: theme.textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 12),
             Text(
-              'You\'re all caught up! We\'ll notify you about:\n\n'
-              '• Due receivables and payables\n'
-              '• Transaction milestones\n'
-              '• Backup reminders\n'
-              '• Important updates',
+              l10n.noNotificationsDescription,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -135,7 +134,7 @@ class NotificationsScreen extends ConsumerWidget {
                   const SizedBox(width: 12),
                   Flexible(
                     child: Text(
-                      'Tip: Set due dates for receivables and payables to get timely reminders',
+                      l10n.notificationsTip,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurface,
                       ),
@@ -205,6 +204,7 @@ class _NotificationCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final color = _getColor(theme);
 
     return Container(
@@ -234,7 +234,7 @@ class _NotificationCard extends ConsumerWidget {
           onTap: () {
             // TODO: Handle notification tap (navigate to relevant screen)
             ToastUtils.showInfoToast(
-                context, ref, 'Notification: ${notification.title}');
+                context, ref, l10n.notificationTitlePrefix(notification.title));
           },
           borderRadius: BorderRadius.circular(16),
           child: Padding(
@@ -308,7 +308,7 @@ class _NotificationCard extends ConsumerWidget {
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            _formatDateTime(notification.dateTime, ref),
+                            _formatDateTime(notification.dateTime, ref, l10n, context),
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant,
                             ),
@@ -326,22 +326,20 @@ class _NotificationCard extends ConsumerWidget {
     );
   }
 
-  String _formatDateTime(DateTime dateTime, WidgetRef ref) {
+  String _formatDateTime(DateTime dateTime, WidgetRef ref, AppLocalizations l10n, BuildContext context) {
     final now = DateTime.now();
     final difference = now.difference(dateTime);
 
     if (difference.inMinutes < 1) {
-      return 'Just now';
+      return l10n.justNow;
     } else if (difference.inHours < 1) {
-      return '${difference.inMinutes}m ago';
+      return l10n.minutesAgo(difference.inMinutes);
     } else if (difference.inHours < 24) {
-      return '${difference.inHours}h ago';
+      return l10n.hoursAgo(difference.inHours);
     } else if (difference.inDays < 7) {
-      return '${difference.inDays}d ago';
+      return l10n.daysAgo(difference.inDays);
     } else {
-      final userProfile = ref.watch(userProfileProvider);
-      return AppDateFormatter.formatDate(dateTime,
-          pattern: userProfile.dateFormat);
+      return AppDateFormatter.formatDate(dateTime);
     }
   }
 }

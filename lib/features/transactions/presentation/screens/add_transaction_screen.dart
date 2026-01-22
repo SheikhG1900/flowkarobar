@@ -60,6 +60,7 @@ class AddTransactionScreen extends ConsumerStatefulWidget {
 }
 
 class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
+  AppLocalizations get l10n => AppLocalizations.of(context)!;
   final _formKey = GlobalKey<FormState>();
   final _amountController = TextEditingController();
   final _descriptionController = TextEditingController();
@@ -121,7 +122,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
           ToastUtils.showWarningToast(
             context,
             ref,
-            'This transaction has already been imported.',
+            l10n.transactionAlreadyImported,
           );
         }
       }
@@ -251,12 +252,13 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
         ToastUtils.showSuccessToast(
           context,
           ref,
-          'Schedule created successfully',
+          l10n.scheduleCreated,
         );
       }
     } catch (e) {
       if (mounted) {
-        ToastUtils.showErrorToast(context, ref, 'Error: ${e.toString()}');
+        ToastUtils.showErrorToast(
+            context, ref, l10n.errorOccurred(e.toString()));
       }
     } finally {
       if (mounted) {
@@ -288,7 +290,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
       ToastUtils.showErrorToast(
         context,
         ref,
-        'Please select a contact for linked transaction',
+        l10n.pleaseSelectContactLinked,
       );
       return;
     }
@@ -346,9 +348,9 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
             context,
             ref,
             _createLinkedEntry
-                ? 'Transaction and linked entry added successfully'
-                : 'Transaction added successfully',
-            actionLabel: 'SHARE',
+                ? l10n.transactionLinkedAdded
+                : l10n.transactionAdded,
+            actionLabel: l10n.share,
             onActionPressed: (snackContext) => ShareHelper.shareTransaction(
               snackContext,
               ref,
@@ -378,15 +380,16 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
             context,
             ref,
             _createLinkedEntry
-                ? 'Transaction and linked entry added successfully'
-                : 'Transaction added successfully',
+                ? l10n.transactionLinkedAdded
+                : l10n.transactionAdded,
           );
           Navigator.pop(context);
         }
       }
     } catch (e) {
       if (mounted) {
-        ToastUtils.showErrorToast(context, ref, 'Error: ${e.toString()}');
+        ToastUtils.showErrorToast(
+            context, ref, l10n.errorOccurred(e.toString()));
       }
     } finally {
       if (mounted) {
@@ -455,7 +458,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Select Category',
+                        l10n.selectCategory,
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
@@ -482,7 +485,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                           }
                         },
                         icon: const Icon(Icons.add),
-                        label: const Text('Add New'),
+                        label: Text(l10n.addNew),
                       ),
                     ],
                   ),
@@ -508,8 +511,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Text(
-                                  'No ${_selectedType.toLowerCase()} categories found'),
+                              Text(l10n.noCategoriesFound),
                               const SizedBox(height: 16),
                               if (widget.initialCategoryName != null)
                                 FilledButton.icon(
@@ -533,8 +535,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                                     }
                                   },
                                   icon: const Icon(Icons.add),
-                                  label: Text(
-                                      'Create "${widget.initialCategoryName}"'),
+                                  label: Text(l10n.createCategoryNamed(widget.initialCategoryName!)),
                                 ),
                             ],
                           ),
@@ -568,9 +569,8 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                                 child: Icon(Icons.add,
                                     color: theme.colorScheme.primary),
                               ),
-                              title: Text(
-                                  'Create "${widget.initialCategoryName}"'),
-                              subtitle: const Text('Tap to add this category'),
+                              title: Text(l10n.createCategoryNamed(widget.initialCategoryName!)),
+                              subtitle: Text(l10n.tapToAddCategory),
                               onTap: () async {
                                 final newCategory = await Navigator.push(
                                   context,
@@ -641,7 +641,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                                       borderRadius: BorderRadius.circular(4),
                                     ),
                                     child: Text(
-                                      'Frequent',
+                                      l10n.frequent,
                                       style: TextStyle(
                                         fontSize: 10,
                                         color: color,
@@ -666,7 +666,8 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                     },
                     loading: () =>
                         const Center(child: CircularProgressIndicator()),
-                    error: (e, s) => Center(child: Text('Error: $e')),
+                    error: (e, s) => Center(
+                        child: Text(l10n.errorOccurred(e.toString()))),
                   ),
                 ),
               ],
@@ -704,7 +705,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Select Contact',
+                        l10n.selectContact,
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
@@ -721,7 +722,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                           }
                         },
                         icon: const Icon(Icons.add),
-                        label: const Text('Add New'),
+                        label: Text(l10n.addNew),
                       ),
                     ],
                   ),
@@ -776,7 +777,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                                       borderRadius: BorderRadius.circular(4),
                                     ),
                                     child: Text(
-                                      'Frequent',
+                                      l10n.frequent,
                                       style: TextStyle(
                                         fontSize: 10,
                                         color: theme.colorScheme.primary,
@@ -799,7 +800,8 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                     },
                     loading: () =>
                         const Center(child: CircularProgressIndicator()),
-                    error: (e, s) => Center(child: Text('Error: $e')),
+                    error: (e, s) => Center(
+                        child: Text(l10n.errorOccurred(e.toString()))),
                   ),
                 ),
               ],
@@ -899,7 +901,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                 child: Column(
                   children: [
                     Text(
-                      'How much?',
+                      l10n.howMuch,
                       style: theme.textTheme.titleMedium?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
@@ -922,7 +924,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
                         border: InputBorder.none,
-                        hintText: '0.00',
+                        hintText: l10n.amountHint,
                         hintStyle: theme.textTheme.displayLarge?.copyWith(
                           color: Colors.grey.withValues(alpha: 0.3),
                         ),
@@ -935,13 +937,13 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                       ],
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Please enter an amount';
+                          return l10n.pleaseEnterAmount;
                         }
                         if (double.tryParse(value) == null) {
-                          return 'Please enter a valid number';
+                          return l10n.pleaseEnterValidNumber;
                         }
                         if (double.parse(value) <= 0) {
-                          return 'Amount must be greater than 0';
+                          return l10n.amountGreaterThanZero;
                         }
                         return null;
                       },
@@ -1048,14 +1050,14 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Category',
+                            l10n.category,
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant,
                             ),
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            _selectedCategory?.name ?? 'Select Category',
+                            _selectedCategory?.name ?? l10n.selectCategory,
                             style: theme.textTheme.titleMedium?.copyWith(
                               fontWeight: _selectedCategory != null
                                   ? FontWeight.bold
@@ -1078,7 +1080,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                 Padding(
                   padding: const EdgeInsets.only(left: 16, top: 4),
                   child: Text(
-                    'Suggested: ${widget.initialCategoryName}',
+                    l10n.suggestedLabel(widget.initialCategoryName!),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.primary,
                       fontStyle: FontStyle.italic,
@@ -1145,14 +1147,14 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Contact (Optional)',
+                            l10n.contactOptional,
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant,
                             ),
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            _selectedContact?.name ?? 'Select Contact',
+                            _selectedContact?.name ?? l10n.selectContact,
                             style: theme.textTheme.titleMedium?.copyWith(
                               fontWeight: _selectedContact != null
                                   ? FontWeight.bold
@@ -1201,7 +1203,8 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                             });
                           },
                           icon: const Icon(Icons.add, size: 16),
-                          label: Text('Add "${widget.initialContactName}"'),
+                          label: Text(l10n
+                              .addContactWithName(widget.initialContactName!)),
                         ),
                       ] else ...[
                         const Spacer(),
@@ -1218,7 +1221,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                 controller: _descriptionController,
                 decoration: InputDecoration(
                   labelText: l10n.description,
-                  hintText: 'E.g., Groceries, Salary, etc.',
+                  hintText: l10n.descriptionHint,
                   prefixIcon: const Icon(Icons.notes_outlined),
                 ),
                 maxLines: 2,
@@ -1229,7 +1232,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
               // Paid Relationship Section (Linked Transactions)
               if (_selectedType == 'EXPENSE') ...[
                 Text(
-                  'Paid Relationship',
+                  l10n.paidRelationship,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -1239,8 +1242,8 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                   children: [
                     Expanded(
                       child: _RelationshipButton(
-                        label: 'Paid FOR',
-                        subtitle: 'I will receive back',
+                        label: l10n.paidFor,
+                        subtitle: l10n.iWillReceiveBack,
                         icon: Icons.account_balance_wallet,
                         isSelected: _paidRelationship == 'PAID_FOR',
                         gradient: AppColors.receivableGradient,
@@ -1251,8 +1254,8 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: _RelationshipButton(
-                        label: 'Paid BY',
-                        subtitle: 'Someone paid for me',
+                        label: l10n.paidBy,
+                        subtitle: l10n.someonePaidForMe,
                         icon: Icons.person_outline,
                         isSelected: _paidRelationship == 'PAID_BY',
                         gradient: AppColors.payableGradient,
@@ -1265,7 +1268,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                 const SizedBox(height: 16),
               ] else if (_selectedType == 'INCOME') ...[
                 Text(
-                  'Received Relationship',
+                  l10n.receivedRelationship,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -1275,8 +1278,8 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                   children: [
                     Expanded(
                       child: _RelationshipButton(
-                        label: 'I Owe',
-                        subtitle: 'Received loan',
+                        label: l10n.iOwe,
+                        subtitle: l10n.receivedLoan,
                         icon: Icons.download,
                         isSelected: _paidRelationship == 'RECEIVED_FROM',
                         gradient: AppColors.payableGradient,
@@ -1287,8 +1290,8 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: _RelationshipButton(
-                        label: 'Will Receive',
-                        subtitle: 'Receive later',
+                        label: l10n.willReceive,
+                        subtitle: l10n.receiveLater,
                         icon: Icons.schedule,
                         isSelected: _paidRelationship == 'WILL_RECEIVE',
                         gradient: AppColors.receivableGradient,
@@ -1335,7 +1338,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Due Date (Optional)',
+                              l10n.dueDateOptional,
                               style: theme.textTheme.bodySmall?.copyWith(
                                 color: theme.colorScheme.onSurfaceVariant,
                               ),
@@ -1344,7 +1347,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                             Text(
                               _dueDate != null
                                   ? '${_dueDate!.day}/${_dueDate!.month}/${_dueDate!.year}'
-                                  : 'Not set',
+                                  : l10n.notSet,
                               style: theme.textTheme.titleMedium?.copyWith(
                                 fontWeight: FontWeight.w600,
                               ),
@@ -1400,7 +1403,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Date',
+                            l10n.date,
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant,
                             ),
@@ -1445,7 +1448,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                 alignment: Alignment.topRight,
                 children: [
                   GradientButton(
-                    label: _isLoading ? 'Saving...' : l10n.save,
+                    label: _isLoading ? l10n.saving : l10n.save,
                     onPressed:
                         (_isLoading || _isDuplicate) ? null : _saveTransaction,
                     gradient: isExpense
@@ -1482,7 +1485,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                           ? null
                           : _scheduleTransaction,
                       icon: const Icon(Icons.schedule),
-                      label: const Text('Schedule'),
+                      label: Text(l10n.schedule),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         side: BorderSide(

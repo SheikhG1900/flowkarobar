@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:drift/drift.dart' as drift;
 import 'package:flutter_contacts/flutter_contacts.dart' as fc;
+import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
@@ -20,6 +21,7 @@ class AddContactScreen extends ConsumerStatefulWidget {
 }
 
 class _AddContactScreenState extends ConsumerState<AddContactScreen> {
+  AppLocalizations get l10n => AppLocalizations.of(context)!;
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
   late TextEditingController _phoneController;
@@ -85,7 +87,7 @@ class _AddContactScreenState extends ConsumerState<AddContactScreen> {
           ToastUtils.showErrorToast(
             context,
             ref,
-            'Contact permission denied. Please enable it in settings.',
+            l10n.contactPermissionDenied,
           );
         }
       }
@@ -94,7 +96,7 @@ class _AddContactScreenState extends ConsumerState<AddContactScreen> {
         ToastUtils.showErrorToast(
           context,
           ref,
-          'Error picking contact: ${e.toString()}',
+          l10n.errorPickingContact(e.toString()),
         );
       }
     }
@@ -161,7 +163,7 @@ class _AddContactScreenState extends ConsumerState<AddContactScreen> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Text(
-                  'Select Phone Number',
+                  l10n.selectPhoneNumber,
                   style: theme.textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -260,13 +262,13 @@ class _AddContactScreenState extends ConsumerState<AddContactScreen> {
           context,
           ref,
           widget.contactToEdit != null
-              ? 'Contact updated successfully'
-              : 'Contact added successfully',
+              ? l10n.contactUpdatedSuccessfully
+              : l10n.contactAddedSuccessfully,
         );
       }
     } catch (e) {
       if (mounted) {
-        ToastUtils.showErrorToast(context, ref, 'Error: ${e.toString()}');
+        ToastUtils.showErrorToast(context, ref, l10n.errorOccurred(e.toString()));
       }
     } finally {
       if (mounted) {
@@ -283,7 +285,7 @@ class _AddContactScreenState extends ConsumerState<AddContactScreen> {
     return Scaffold(
       appBar: AppBar(
         title:
-            Text(widget.contactToEdit != null ? 'Edit Contact' : 'Add Contact'),
+            Text(widget.contactToEdit != null ? l10n.editContact : l10n.addContact),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -341,7 +343,7 @@ class _AddContactScreenState extends ConsumerState<AddContactScreen> {
                 child: TextButton.icon(
                   onPressed: _pickFromDevice,
                   icon: const Icon(Icons.contact_page_outlined),
-                  label: const Text('Import from Contacts'),
+                  label: Text(l10n.importFromContacts),
                   style: TextButton.styleFrom(
                     foregroundColor: Theme.of(context).colorScheme.primary,
                     padding:
@@ -354,14 +356,14 @@ class _AddContactScreenState extends ConsumerState<AddContactScreen> {
               // Name Field
               TextFormField(
                 controller: _nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Name',
-                  prefixIcon: Icon(Icons.person_outline),
+                decoration: InputDecoration(
+                  labelText: l10n.name,
+                  prefixIcon: const Icon(Icons.person_outline),
                 ),
                 textCapitalization: TextCapitalization.words,
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
-                    return 'Please enter a name';
+                    return l10n.pleaseEnterName;
                   }
                   return null;
                 },
@@ -371,9 +373,9 @@ class _AddContactScreenState extends ConsumerState<AddContactScreen> {
               // Phone Field
               TextFormField(
                 controller: _phoneController,
-                decoration: const InputDecoration(
-                  labelText: 'Phone Number (Optional)',
-                  prefixIcon: Icon(Icons.phone_outlined),
+                decoration: InputDecoration(
+                  labelText: l10n.phoneNumberOptional,
+                  prefixIcon: const Icon(Icons.phone_outlined),
                 ),
                 keyboardType: TextInputType.phone,
               ),
@@ -382,9 +384,9 @@ class _AddContactScreenState extends ConsumerState<AddContactScreen> {
               // Email Field
               TextFormField(
                 controller: _emailController,
-                decoration: const InputDecoration(
-                  labelText: 'Email (Optional)',
-                  prefixIcon: Icon(Icons.email_outlined),
+                decoration: InputDecoration(
+                  labelText: l10n.emailOptional,
+                  prefixIcon: const Icon(Icons.email_outlined),
                 ),
                 keyboardType: TextInputType.emailAddress,
               ),
@@ -393,9 +395,9 @@ class _AddContactScreenState extends ConsumerState<AddContactScreen> {
               // Address/Notes Field
               TextFormField(
                 controller: _notesController,
-                decoration: const InputDecoration(
-                  labelText: 'Address / Notes (Optional)',
-                  prefixIcon: Icon(Icons.note_alt_outlined),
+                decoration: InputDecoration(
+                  labelText: l10n.addressNotesOptional,
+                  prefixIcon: const Icon(Icons.note_alt_outlined),
                 ),
                 maxLines: 2,
               ),
@@ -422,8 +424,8 @@ class _AddContactScreenState extends ConsumerState<AddContactScreen> {
                 children: [
                   GradientButton(
                     label: widget.contactToEdit != null
-                        ? 'Update Contact'
-                        : 'Save Contact',
+                        ? l10n.updateContact
+                        : l10n.saveContact,
                     gradient: AppColors.getPrimaryGradient(Theme.of(context).colorScheme.primary),
                     isLoading: _isLoading,
                     onPressed: _isLoading ? null : _saveContact,

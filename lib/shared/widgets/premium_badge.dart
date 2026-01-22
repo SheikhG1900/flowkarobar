@@ -1,3 +1,4 @@
+import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 class PremiumBadge extends StatelessWidget {
@@ -16,6 +17,7 @@ class PremiumBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     double paddingHorizontal = 8;
     double paddingVertical = 4;
     double fontSize = 12;
@@ -67,7 +69,7 @@ class PremiumBadge extends StatelessWidget {
             const SizedBox(width: 4),
           ],
           Text(
-            text ?? 'PRO',
+            text ?? l10n.proLabel,
             style: TextStyle(
               color: Colors.white,
               fontSize: fontSize,

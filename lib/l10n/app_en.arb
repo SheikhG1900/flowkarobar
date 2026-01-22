@@ -1,39 +1,1173 @@
 {
   "@@locale": "en",
-  "appName": "FlowPaisa",
-  "@appName": {
-    "description": "The name of the application"
-  },
-  "addTransaction": "Add Transaction",
-  "expense": "Expense",
+  "appTitle": "Cashbook",
+  "cashbooks": "Cashbooks",
+  "transactions": "Transactions",
+  "settings": "Settings",
+  "totalBalance": "Total Balance",
   "income": "Income",
-  "receivable": "Receivable",
-  "payable": "Payable",
+  "expense": "Expense",
+  "addTransaction": "Add Transaction",
+  "editTransaction": "Edit Transaction",
+  "scheduleCreated": "Schedule created successfully",
+  "transactionUpdated": "Transaction updated successfully",
+  "updateTransaction": "Update Transaction",
   "amount": "Amount",
-  "description": "Description",
   "category": "Category",
-  "contact": "Contact",
   "date": "Date",
+  "description": "Description",
   "save": "Save",
   "cancel": "Cancel",
   "delete": "Delete",
+  "payable": "Payable",
+  "createdLabel": "Created: {date}",
+  "@createdLabel": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "defaultPremiumPrice": "$9.99",
+  "errorOccurred": "Error: {error}",
+  "@errorOccurred": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "noDataForTrends": "No data for trends",
+  "cancelled": "Cancelled",
+  "minutesAgo": "{minutes}m ago",
+  "@minutesAgo": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "hoursAgo": "{hours}h ago",
+  "@hoursAgo": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "daysAgo": "{days}d ago",
+  "@daysAgo": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "sample": "Sample: {sample}",
+  "@sample": {
+    "placeholders": {
+      "sample": {
+        "type": "String"
+      }
+    }
+  },
+  "positiveAmount": "Positive: {amount}",
+  "@positiveAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "negativeAmount": "Negative: {amount}",
+  "@negativeAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "themeSet": "Theme set to {name}",
+  "@themeSet": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "languageChanged": "Language changed to {name}",
+  "@languageChanged": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "lastBackupAt": "Last Backup: {time}",
+  "@lastBackupAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "restoreFailed": "Restore failed: {error}",
+  "@restoreFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorSaving": "Error saving: {error}",
+  "@errorSaving": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorSharing": "Error sharing: {error}",
+  "@errorSharing": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorExporting": "Error exporting: {error}",
+  "@errorExporting": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "exportSavedTo": "Export saved to {path}",
+  "@exportSavedTo": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationTitlePrefix": "Notification: {title}",
+  "@notificationTitlePrefix": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "errorDeletingTransaction": "Error deleting transaction: {error}",
+  "@errorDeletingTransaction": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "noTypeCategories": "No {type} categories",
+  "@noTypeCategories": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteCashbookMessage": "Are you sure you want to delete \"{name}\"? This will permanently delete all data associated with this cashbook.",
+  "@deleteCashbookMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "currencySetTo": "Currency set to {name}",
+  "@currencySetTo": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "confirmDelete": "Are you sure you want to delete this {item}?",
+  "@confirmDelete": {
+    "placeholders": {
+      "item": {
+        "type": "String"
+      }
+    }
+  },
+  "search": "Search",
+  "noTransactions": "No transactions found",
+  "selectCategory": "Select Category",
+  "all": "All",
+  "today": "Today",
+  "yesterday": "Yesterday",
+  "thisMonth": "This Month",
+  "lastMonth": "Last Month",
+  "customRange": "Custom Range",
+  "currency": "Currency",
+  "language": "Language",
+  "theme": "Theme",
+  "light": "Light",
+  "dark": "Dark",
+  "system": "System",
+  "hindi": "Hindi",
+  "english": "English",
+  "urdu": "Urdu",
+  "cashbookName": "Cashbook Name",
+  "createCashbook": "Create Cashbook",
+  "editCashbook": "Edit Cashbook",
+  "deleteCashbook": "Delete Cashbook",
+  "cashbookDeleted": "Cashbook deleted successfully",
+  "cashbookAdded": "Cashbook added successfully",
+  "cashbookUpdated": "Cashbook updated successfully",
+  "pleaseEnterName": "Please enter a name",
+  "copyPreferences": "Copy Preferences",
+  "copyPreferencesFrom": "Copy Preferences From",
+  "copyPreferencesSubtitle": "Categories and settings will be copied from the selected cashbook.",
+  "none": "None",
+  "howMuch": "How much?",
+  "amountHint": "0.00",
+  "pleaseEnterAmount": "Please enter an amount",
+  "pleaseEnterValidNumber": "Please enter a valid number",
+  "amountGreaterThanZero": "Amount must be greater than 0",
+  "contact": "Contact",
+  "selectContact": "Select Contact",
+  "addNew": "Add New",
+  "descriptionHint": "e.g., Lunch money",
+  "premiumFeature": "Premium Feature",
+  "premiumRequired": "This feature requires a premium subscription.",
+  "getPremium": "Get Premium",
+  "switchedToCashbook": "Switched to {name}",
+  "@switchedToCashbook": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "categoryFood": "Food",
+  "categoryTransport": "Transport",
+  "categoryShopping": "Shopping",
+  "categoryBills": "Bills",
+  "categoryEntertainment": "Entertainment",
+  "categoryHealth": "Health",
+  "categorySalary": "Salary",
+  "categoryBusiness": "Business",
+  "categoryInvestment": "Investment",
+  "categoryRent": "Rent",
+  "categoryOther": "Other",
+  "statusPending": "Pending",
+  "statusCompleted": "Completed",
+  "statusCancelled": "Cancelled",
+  "receivables": "Receivables",
+  "pending": "Pending",
+  "overdue": "Overdue",
+  "receivedLabel": "Received",
+  "generateDummyReceivables": "Generate 100 Dummy Receivables",
+  "dummyGenerated": "Generated {count} dummy items",
+  "@dummyGenerated": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "errorLoadingReceivables": "Error loading receivables",
+  "retry": "Retry",
+  "noPendingReceivables": "No pending receivables",
+  "noOverdueReceivables": "No overdue receivables",
+  "noReceivedPayments": "No received payments",
+  "addReceivableSubtitle": "Add a receivable to track money owed to you",
+  "receivablesUpToDate": "All receivables are up to date",
+  "markReceivedSubtitle": "Mark pending receivables as received",
+  "noMoreItems": "No more items",
+  "receivableDeleted": "Receivable deleted",
+  "unknown": "Unknown",
+  "dueAt": "Due: {date}",
+  "@dueAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "receivable": "Receivable",
+  "addReceivable": "Add Receivable",
+  "receivableAlreadyImported": "This receivable has already been imported.",
+  "pleaseSelectContact": "Please select a contact",
+  "receivableAdded": "Receivable added successfully",
+  "share": "SHARE",
+  "errorOccurred": "Error: {error}",
+  "@errorOccurred": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dueDateOptional": "Due Date (Optional)",
+  "notSet": "Not set",
+  "autoCreateIncome": "Auto-create income",
+  "autoCreateIncomeSubtitle": "Record as income when marked as received",
+  "receivableNotFound": "Receivable not found",
+  "receivableUpdated": "Receivable updated successfully",
+  "editReceivable": "Edit Receivable",
+  "receivableDetails": "Receivable Details",
   "edit": "Edit",
-  "dashboard": "Dashboard",
-  "transactions": "Transactions",
+  "receivablePending": "Receivable (Pending)",
+  "dueDate": "Due Date",
+  "linkedTransaction": "Linked Transaction",
+  "markAsReceived": "Mark as Received",
+  "deleteReceivableTitle": "Delete Receivable",
+  "deleteReceivableMessage": "Are you sure you want to delete this receivable? This action cannot be undone.",
+  "markedAsReceived": "Marked as received",
+  "informContactSettlement": "Receivable marked as received. Inform the contact?",
+  "addContactWithName": "Add \"{name}\"",
+  "@addContactWithName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "payables": "Payables",
+  "generateDummyPayables": "Generate 100 Dummy Payables",
+  "dummyPayablesGenerated": "Generated 100 dummy payables",
+  "errorLoadingPayables": "Error loading payables",
+  "noPendingPayables": "No pending payables",
+  "noOverduePayables": "No overdue payables",
+  "noPaidBills": "No paid bills",
+  "addPayableSubtitle": "Add a payable to track money you owe",
+  "allPayablesUpToDate": "All payables are up to date",
+  "markPendingAsPaidSubtitle": "Mark pending payables as paid",
+  "noMorePayables": "No more payables",
+  "payableDeleted": "Payable deleted",
+  "payableAlreadyImported": "This payable has already been imported.",
+  "payableAdded": "Payable added successfully",
+  "addPayable": "Add Payable",
+  "editPayable": "Edit Payable",
+  "payableNotFound": "Payable not found",
+  "payableDataNotLoaded": "Payable data not loaded",
+  "payableUpdated": "Payable updated successfully",
+  "updatePayable": "Update Payable",
+  "payableDetails": "Payable Details",
+  "payablePending": "Payable (Pending)",
+  "paid": "Paid",
+  "markAsPaid": "Mark as Paid",
+  "deletePayableTitle": "Delete Payable",
+  "deletePayableMessage": "Are you sure you want to delete this payable? This action cannot be undone.",
+  "markedAsPaid": "Marked as paid",
+  "informContactSettlementPayable": "Payable marked as paid. Inform the contact?",
+  "autoCreateExpense": "Auto-create expense",
+  "autoCreateExpenseSubtitle": "Record as expense when marked as paid",
+  "languageChanged": "Language changed to {name}",
+  "@languageChanged": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "appRefreshLanguage": "The app will refresh to apply the new language",
+  "profile": "Profile",
+  "changePhoto": "Change Photo",
+  "photoUploadComingSoon": "Photo upload coming soon!",
+  "name": "Name",
+  "enterName": "Enter your name",
+  "email": "Email",
+  "enterEmail": "Enter your email",
+  "enterValidEmail": "Please enter a valid email",
+  "phoneNumber": "Phone Number",
+  "enterPhoneNumber": "Enter your phone number",
+  "address": "Address",
+  "enterAddress": "Enter your address",
+  "preferences": "Preferences",
+  "dateFormat": "Date Format",
+  "saveProfile": "Save Profile",
+  "profileUpdated": "Profile updated successfully",
+  "selectDateFormat": "Select Date Format",
+  "sample": "Sample: {sample}",
+  "@sample": {
+    "placeholders": {
+      "sample": {
+        "type": "String"
+      }
+    }
+  },
+  "customFormat": "Custom Format",
+  "enterCustomDateFormat": "Enter your own date format pattern",
+  "customDateFormat": "Custom Date Format",
+  "formatPattern": "Format Pattern",
+  "dateFormatInstructions": "Use standard ICU patterns like:\ndd: Day, MM: Month, yyyy: Year\nMMM: Short Month, EEEE: Full Day",
+  "themeSet": "Theme set to {name}",
+  "@themeSet": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "lightThemeDescription": "Always use light theme",
+  "darkThemeDescription": "Always use dark theme",
+  "systemThemeDescription": "Follow device settings",
+  "themeChangesApplyImmediately": "Theme changes apply immediately",
   "analytics": "Analytics",
-  "settings": "Settings",
+  "exportAnalyticsPDF": "Export Analytics PDF",
+  "refreshAnalytics": "Refresh Analytics",
+  "financialSummary": "Financial Summary",
+  "contactSummaries": "Contact Summaries",
+  "expensesByCategory": "Expenses by Category",
+  "incomeVsExpenseTrend": "Income vs Expense Trend",
+  "payablesVsReceivablesTrend": "Payables vs Receivables Trend",
+  "topContactsByBalance": "Top Contacts by Balance",
+  "paymentStatusDistribution": "Payment Status Distribution",
+  "incomeByCategory": "Income by Category",
+  "unlockAdvancedAnalytics": "Unlock advanced analytics, trends, and charts with Premium.",
+  "unlockPremium": "Unlock Premium",
+  "noContactActivity": "No contact activity for this period",
+  "settled": "Settled",
+  "noExpensesPeriod": "No expenses for this period",
+  "noDataTrends": "No data for trends",
+  "noPayableReceivableData": "No payable/receivable data",
+  "noContactData": "No contact data",
+  "noPaymentStatusData": "No payment status data",
+  "noIncome": "No income for this period",
+  "pdfReady": "PDF Ready",
+  "analyticsPDFReadyMessage": "Your analytics PDF report is ready. Choose an action:",
+  "saveCopy": "Save Copy",
+  "preview": "Preview",
+  "savedToDownloads": "Saved to Downloads",
+  "errorSaving": "Error saving: {error}",
+  "@errorSaving": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorSharing": "Error sharing: {error}",
+  "@errorSharing": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorExporting": "Error exporting: {error}",
+  "@errorExporting": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "month": "Month",
+  "quarter": "Quarter",
+  "year": "Year",
+  "custom": "Custom",
+  "payableShort": "P:",
+  "receivableShort": "R:",
+  "netBalance": "Net Balance",
+  "allTime": "All-time:",
+  "expenses": "Expenses",
+  "noExpenses": "No expenses for this period",
+  "expanded": "expanded",
+  "collapsed": "collapsed",
+  "notifications": "Notifications",
+  "allNotificationsMarkedRead": "All notifications marked as read",
+  "markAllRead": "Mark all read",
+  "noNotifications": "No Notifications",
+  "noNotificationsDescription": "You're all caught up! We'll notify you about:\n\n• Due receivables and payables\n• Transaction milestones\n• Backup reminders\n• Important updates",
+  "notificationsTip": "Tip: Set due dates for receivables and payables to get timely reminders",
+  "notificationTitlePrefix": "Notification: {title}",
+  "@notificationTitlePrefix": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "justNow": "Just now",
+  "minutesAgo": "{minutes}m ago",
+  "@minutesAgo": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "hoursAgo": "{hours}h ago",
+  "@hoursAgo": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "daysAgo": "{days}d ago",
+  "@daysAgo": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "toggledDebugMode": "Toggled Debug Mode",
+  "debugToggleMode": "DEBUG: Toggle Mode",
+  "premiumTitle": "FlowPaisa Premium",
+  "unlockAllFeatures": "Unlock all features",
+  "premiumMemberStatus": "You are a Premium Member",
+  "premiumFeaturesActive": "All premium features are active",
+  "featureCloudBackupTitle": "Automatic Cloud Backup",
+  "featureCloudBackupDesc": "Your data is automatically backed up to Google Drive. Never lose your financial records.",
+  "featureAnalyticsTitle": "Advanced Analytics",
+  "featureAnalyticsDesc": "Get detailed insights with advanced charts, trends, and financial forecasting.",
+  "featurePdfReportsTitle": "PDF Reports",
+  "featurePdfReportsDesc": "Generate beautiful PDF reports with charts and summaries for any date range.",
+  "featureUnlimitedTitle": "Unlimited Transactions",
+  "featureUnlimitedDesc": "No limits on the number of transactions, contacts, or categories you can create.",
+  "featureSupportTitle": "Priority Support",
+  "featureSupportDesc": "Get faster responses and dedicated support for any issues or questions.",
+  "featureEarlyAccessTitle": "Early Access",
+  "featureEarlyAccessDesc": "Be the first to try new features before they're released to everyone.",
+  "featureTemplatesTitle": "Custom Message Templates",
+  "featureTemplatesDesc": "Customize WhatsApp message templates for reminders, receipts, and sharing in multiple languages.",
+  "premiumPlan": "Premium Plan",
+  "lifetime": "Lifetime",
+  "oneTimePaymentLifetime": "One-time payment • Lifetime access",
+  "processing": "Processing...",
+  "restorePurchases": "Restore Purchases",
+  "premiumBenefitsNote": "All premium features are yours forever with a one-time purchase. No subscriptions!",
+  "active": "Active",
+  "googleDriveBackup": "Google Drive Backup",
+  "cloudBackupPremiumDesc": "Cloud backup to Google Drive is available for Premium users.",
+  "signOut": "Sign Out",
+  "signInGoogleToBackup": "Sign in with Google to backup your data",
+  "signInGoogle": "Sign in with Google",
+  "googleServicesNote": "Note: Backup requires valid Google Services configuration. If sign-in fails, check your setup.",
+  "lastBackupAt": "Last Backup: {time}",
+  "@lastBackupAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "backupNow": "Backup Now",
+  "noBackupsFound": "No backups found",
+  "availableBackups": "Available Backups",
+  "restoreBackupTitle": "Restore Backup?",
+  "restoreBackupMessage": "This will overwrite your current data with the selected backup. \n\n⚠️ The app will need to be restarted after restoration.",
+  "restore": "Restore",
+  "restoreFailed": "Restore failed: {error}",
+  "@restoreFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "restoreSuccessful": "Restore Successful",
+  "restoreSuccessfulMessage": "Data restored successfully. Please close and restart the app to apply changes.",
+  "ok": "OK",
+  "categories": "Categories",
+  "noTypeCategories": "No {type} categories",
+  "@noTypeCategories": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
+  "categoryHiddenSuccessfully": "Category hidden successfully",
+  "categoryDeletedSuccessfully": "Category deleted successfully",
+  "defaultLabel": "Default",
+  "addCategory": "Add Category",
+  "categoryName": "Category Name",
+  "suggestedIcons": "Suggested Icons",
+  "color": "Color",
+  "allIcons": "All Icons",
+  "saveCategory": "Save Category",
+  "categoryAddedSuccessfully": "Category added successfully",
+  "editCategory": "Edit Category",
+  "categoryUpdatedSuccessfully": "Category updated successfully",
+  "failedToUpdateCategory": "Failed to update category",
+  "expenseCategory": "Expense Category",
+  "incomeCategory": "Income Category",
+  "updateCategory": "Update Category",
+  "searchContacts": "Search contacts...",
+  "contacts": "Contacts",
+  "noContactsYet": "No contacts yet",
+  "noContactsFound": "No contacts found",
+  "addPeopleToTrack": "Add people to track expenses with",
+  "trySearchingDifferentName": "Try searching for a different name",
+  "addContact": "Add Contact",
+  "contactDeletedSuccessfully": "Contact deleted successfully",
+  "contactPermissionDenied": "Contact permission denied. Please enable it in settings.",
+  "errorPickingContact": "Error picking contact: {error}",
+  "@errorPickingContact": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "selectPhoneNumber": "Select Phone Number",
+  "contactUpdatedSuccessfully": "Contact updated successfully",
+  "contactAddedSuccessfully": "Contact added successfully",
+  "editContact": "Edit Contact",
+  "importFromContacts": "Import from Contacts",
+  "phoneNumberOptional": "Phone Number (Optional)",
+  "emailOptional": "Email (Optional)",
+  "addressNotesOptional": "Address / Notes (Optional)",
+  "updateContact": "Update Contact",
+  "saveContact": "Save Contact",
+  "myCashbooks": "My Cashbooks",
+  "manageCashbooks": "Manage multiple cashbooks",
+  "manageContacts": "Manage your contacts",
+  "manageCategories": "Manage expense & income categories",
+  "manageCurrencies": "Manage currencies",
+  "googleDriveBackupRestore": "Google Drive Backup & Restore",
+  "messageTemplates": "Message Templates",
+  "customizeMessageTemplates": "Customize WhatsApp message templates",
+  "exportData": "Export Data",
+  "downloadDataCsvPdf": "Download your data as CSV or PDF",
+  "premiumActive": "Premium Active",
+  "about": "About",
+  "tagline": "Track every paisa",
+  "versionInfo": "Version {version} (Build {buildNumber})",
+  "@versionInfo": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      },
+      "buildNumber": {
+        "type": "String"
+      }
+    }
+  },
+  "appDescription": "FlowPaisa is a comprehensive personal finance and cash flow manager. Track your expenses, incomes, receivables, and payables all in one place. Features include receipt scanning, WhatsApp integration, cloud backup, and beautiful analytics.",
+  "openSourceLicenses": "Open Source Licenses",
+  "developedBy": "Developed by",
+  "developerName": "TamataSoft",
+  "copyright": "© 2026 TamataSoft. All rights reserved.",
+  "receiptScan": "Receipt Scan",
+  "cloudBackup": "Cloud Backup",
+  "multilingual": "Multilingual",
+  "availableCash": "Available Cash",
+  "quickActions": "Quick Actions",
+  "add": "Add",
+  "scan": "Scan",
+  "recentTransactions": "Recent Transactions",
+  "viewAll": "View All",
+  "noTransactionsYet": "No transactions yet",
+  "tapToAddFirst": "Tap + to add your first transaction",
+  "cashFlow": "Cash Flow",
+  "netCash": "Net Cash",
+  "lendingCredit": "Lending & Credit",
+  "netCredit": "Net Credit",
+  "receive": "Receive",
+  "messageTemplatesDesc": "Customize message templates is available for Premium users.",
+  "upgradeToPremium": "Upgrade to Premium",
+  "receivableReminders": "Receivable Reminders",
+  "pendingReceivable": "Pending Receivable",
+  "receivedPayment": "Received Payment",
+  "payableReminders": "Payable Reminders",
+  "pendingPayable": "Pending Payable",
+  "paidPayable": "Paid Payable",
+  "transactionMessages": "Transaction Messages",
+  "transactionReceipt": "Transaction Receipt",
+  "transactionSharePaidFor": "Transaction Share - Paid For",
+  "transactionSharePaidBy": "Transaction Share - Paid By",
+  "transactionShareWillReceive": "Transaction Share - Will Receive",
+  "transactionShareReceivedFrom": "Transaction Share - Received From",
+  "transactionShareGeneric": "Transaction Share - Generic",
+  "shareMessages": "Share Messages",
+  "receivableSharePending": "Receivable Share - Pending",
+  "receivableShareReceived": "Receivable Share - Received",
+  "payableSharePending": "Payable Share - Pending",
+  "payableSharePaid": "Payable Share - Paid",
+  "resetToDefault": "Reset to default",
+  "resetTemplateTitle": "Reset Template",
+  "resetTemplateMessage": "Are you sure you want to reset this template to the default? This cannot be undone.",
+  "templateSaved": "Template saved successfully",
+  "templateReset": "Template reset to default",
+  "enterTemplateText": "Enter template text...",
+  "useVariableHint": "Use {variableName} for dynamic content",
+  "saveTemplate": "Save Template",
+  "availableVariables": "Available Variables",
+  "variablesInstructions": "You can use these variables in your templates:",
+  "variableContactName": "• {contactName} - Contact's name",
+  "variableAmount": "• {amount} - Formatted amount with currency",
+  "variableDescription": "• {description} - Transaction/receivable/payable description",
+  "variableDate": "• {date} - Formatted date",
+  "variableDueDate": "• {dueDate} - Formatted due date",
+  "variableCategoryName": "• {categoryName} - Category name",
+  "variableLink": "• {link} - Deep link URL",
+  "variableType": "• {type} - Transaction type (Income/Expense)",
+  "variableStatus": "• {status} - Status text",
+  "variableRelationship": "• {relationship} - Relationship text",
+  "noCurrencies": "No currencies",
+  "currencyDeleted": "Currency deleted successfully",
+  "currencySetTo": "Currency set to {name}",
+  "@currencySetTo": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "addCurrency": "Add Currency",
+  "currencyNameLabel": "Currency Name",
+  "currencyNameHint": "e.g., Euro, British Pound",
+  "pleaseEnterCurrencyName": "Please enter currency name",
+  "currencySymbolLabel": "Currency Symbol",
+  "currencySymbolHint": "e.g., €, £, ¥",
+  "currencySymbolHelper": "You can use emoji, letters, or symbols",
+  "pleaseEnterCurrencySymbol": "Please enter currency symbol",
+  "symbolLengthError": "Symbol must be 10 characters or less",
+  "currencyCodeLabel": "Currency Code",
+  "currencyCodeHint": "e.g., EUR, GBP, JPY",
+  "currencyCodeHelper": "ISO 4217 code (3 letters)",
+  "pleaseEnterCurrencyCode": "Please enter currency code",
+  "codeLengthError": "Code must be exactly 3 characters",
+  "decimalPlacesLabel": "Decimal Places",
+  "decimalPlacesHelper": "Number of digits after decimal point",
+  "noDecimals": "0 (No decimals)",
+  "oneDecimal": "1 decimal place",
+  "twoDecimals": "2 decimal places",
+  "positiveAmount": "Positive: {amount}",
+  "@positiveAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "negativeAmount": "Negative: {amount}",
+  "@negativeAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "saveCurrency": "Save Currency",
+  "currencyAdded": "Currency added successfully",
+  "editCurrency": "Edit Currency",
+  "updateCurrency": "Update Currency",
+  "currencyUpdated": "Currency updated successfully",
+  "selectDateRange": "Select date range",
+  "exportSavedTo": "Export saved to {path}",
+  "@exportSavedTo": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "exportSuccessful": "Export Successful",
+  "transactionHistoryReady": "Your transaction history is ready to share.",
+  "done": "Done",
+  "pdfReportReady": "Your PDF report is ready. Choose an action:",
+  "testPdfReady": "Test PDF Ready",
+  "testPdfCategoriesReady": "Test PDF with all categories is ready. Choose an action:",
+  "exportYourData": "Export Your Data",
+  "downloadHistoryCsvPdf": "Download your transaction history as CSV or PDF",
+  "startDate": "Start Date",
+  "endDate": "End Date",
+  "selectDate": "Select date",
+  "exportSummary": "Export Summary",
+  "totalTransactions": "Total Transactions",
+  "csvInfoNote": "CSV files can be opened in Excel or Google Sheets. PDF reports are great for sharing.",
+  "testCategoriesPdf": "Test Categories PDF (Icons)",
+  "transactionDetails": "Transaction Details",
+  "autoGenerated": "Auto-Generated",
+  "scheduled": "Scheduled",
+  "sendMessage": "Send Message",
+  "linkedEntry": "Linked Entry",
+  "paidOn": "Paid on: {date}",
+  "@paidOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "receivedOn": "Received on: {date}",
+  "@receivedOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteTransactionTitle": "Delete Transaction",
+  "deleteTransactionMessage": "Are you sure you want to delete this transaction? This action cannot be undone.",
+  "transactionDeleted": "Transaction deleted successfully",
+  "errorLoadingCurrency": "Error loading currency",
+  "balanceLabel": "Balance",
+  "errorLabel": "Error",
+  "importTransaction": "Import Transaction",
+  "importReceivable": "Import Receivable",
+  "importPayable": "Import Payable",
+  "sharedBy": "Shared by: {name}",
+  "@sharedBy": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "sender": "Sender",
+  "someone": "Someone",
+  "markedAsStatus": "{name} has marked this as {status}. Update your local record?",
+  "@markedAsStatus": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "itemAlreadyImported": "This item has already been imported.",
+  "importDetails": "Import Details",
+  "viewDetails": "View Details",
+  "type": "Type",
+  "remaining": "remaining",
+  "daily": "daily",
+  "monthly": "monthly",
+  "limitReached": "Limit Reached",
+  "proLabel": "PRO",
+  "deleteItem": "Delete Item",
+  "confirmDeleteItem": "Are you sure you want to delete this item?",
+  "sharePayableCompleted": "Greetings!\n\nThe payment of {amount} on {date} has been completed.\n\nSync in FlowPaisa:\n{link}",
+  "@sharePayableCompleted": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      },
+      "link": {
+        "type": "String"
+      }
+    }
+  },
+  "sharePayablePending": "I owe you {amount}\nDate: {date}\n\nView in FlowPaisa:\n{link}",
+  "@sharePayablePending": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      },
+      "link": {
+        "type": "String"
+      }
+    }
+  },
+  "shareReceivableReceived": "Greetings!\n\nThe payment of {amount} on {date} has been received.\n\nSync in FlowPaisa:\n{link}",
+  "@shareReceivableReceived": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      },
+      "link": {
+        "type": "String"
+      }
+    }
+  },
+  "shareReceivablePending": "Amount to receive: {amount}\nDate: {date}\n\nView in FlowPaisa:\n{link}",
+  "@shareReceivablePending": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      },
+      "link": {
+        "type": "String"
+      }
+    }
+  },
+  "shareTransactionMessage": "Recorded a transaction of {amount} on {date}.\n\nView in FlowPaisa:\n{link}",
+  "@shareTransactionMessage": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      },
+      "link": {
+        "type": "String"
+      }
+    }
+  },
+  "shareViaWhatsApp": "Share via WhatsApp",
+  "toContact": "To {name}",
+  "@toContact": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chooseContact": "Choose contact",
+  "copyLink": "Copy Link",
+  "copyDeepLinkSubtitle": "Copy deep link to clipboard",
+  "scanReceipt": "Scan Receipt",
+  "camera": "Camera",
+  "gallery": "Gallery",
+  "scanningReceipt": "Scanning receipt...",
+  "noReceiptSelected": "No receipt selected",
+  "reviewAndEdit": "Review & Edit",
+  "merchantName": "Merchant Name",
+  "totalAmount": "Total Amount",
+  "proceedToAddTransaction": "Proceed to Add Transaction",
+  "errorPickingImage": "Error picking image: {error}",
+  "@errorPickingImage": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorScanningReceipt": "Error scanning receipt: {error}",
+  "@errorScanningReceipt": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "noCategoriesFound": "No categories found",
+  "noContactsFound": "No contacts found",
+  "paidRelationship": "Paid Relationship",
   "paidFor": "Paid FOR",
   "paidBy": "Paid BY",
-  "pending": "Pending",
-  "settled": "Settled",
-  "sendReminder": "Send Reminder",
-  "scanReceipt": "Scan Receipt",
-  "export": "Export",
+  "iWillReceiveBack": "I will receive back",
+  "someonePaidForMe": "Someone paid for me",
+  "receivedRelationship": "Received Relationship",
+  "iOwe": "I Owe",
+  "receivedLoan": "Received loan",
+  "receiveLater": "Receive later",
+  "schedulePattern": "Schedule Pattern",
+  "startDateOptional": "Start Date (Optional)",
+  "endDateOptional": "End Date (Optional)",
+  "scheduleUpdated": "Schedule updated successfully",
+  "updateSchedule": "Update Schedule",
+  "updating": "Updating...",
+  "contactOptional": "Contact (Optional)",
+  "pleaseSelectContactRelationship": "Please select a contact for this relationship",
+  "weekly": "Weekly",
+  "monthly": "Monthly",
+  "weeklyWithDays": "Weekly: {days}",
+  "@weeklyWithDays": {
+    "placeholders": {
+      "days": {
+        "type": "String"
+      }
+    }
+  },
+  "monthlyWithDay": "Monthly: {day}",
+  "@monthlyWithDay": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      }
+    }
+  },
+  "schedules": "Schedules",
+  "generate100DummyTransactions": "Generate 100 Dummy Transactions",
+  "generated100DummyTransactions": "Generated 100 dummy transactions",
+  "errorLoadingTransactions": "Error loading transactions",
+  "noSchedulesFound": "No schedules found",
+  "noMoreTransactions": "No more transactions",
+  "transactionDeleted": "Transaction deleted",
+  "errorDeletingTransaction": "Error deleting transaction: {error}",
+  "@errorDeletingTransaction": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "scheduleDeleted": "Schedule deleted successfully",
+  "autoBadge": "Auto",
+  "uncategorized": "Uncategorized",
+  "editSchedule": "Edit Schedule",
+  "schedule": "Schedule",
+  "daily": "Daily",
+  "confirm": "Confirm",
+  "emailLabel": "Email",
+  "notesLabel": "Notes",
+  "deleteContactTitle": "Delete Contact",
+  "loading": "Loading...",
+  "limitReachedTitle": "Limit Reached",
+  "upgrade": "Upgrade",
+  "summary": "Summary",
+  "noTransactionsInRange": "No transactions in this date range.",
+  "noPayablesInRange": "No payables in this date range.",
+  "noReceivablesInRange": "No receivables in this date range.",
+  "topCategoriesVisual": "Top Categories (Visual)",
+  "incomeVsExpenseTrendVisual": "Income vs Expense Trend (Visual)",
+  "payableVsReceivableTrendVisual": "Payable vs Receivable Trend (Visual)",
+  "incomeShort": "I:",
+  "shareTransaction": "Share Transaction",
+  "sharePaymentRequest": "Share Payment Request",
+  "sharePaymentAcknowledgment": "Share Payment Acknowledgment",
+  "openingWhatsApp": "Opening WhatsApp...",
+  "linkCopied": "Link copied to clipboard!",
+  "failedToShare": "Failed to share: {error}",
+  "@failedToShare": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "failedToCopyLink": "Failed to copy link: {error}",
+  "@failedToCopyLink": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "expenseShort": "E:",
+  "suggestedLabel": "Suggested: {name}",
+  "@suggestedLabel": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteCashbookTitle": "Delete Cashbook",
+  "deleteCashbookMessage": "Are you sure you want to delete \"{name}\"? This will permanently delete all data associated with this cashbook.",
+  "@deleteCashbookMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "deletePermanently": "Delete Permanently",
+  "pleaseEnterValidAmount": "Please enter a valid amount",
+  "categoryEducation": "Education",
+  "categoryGift": "Gift",
+  "statusPaid": "Paid",
+  "statusReceived": "Received",
+  "statusSettled": "Settled",
+  "statusOverdue": "Overdue",
+  "statusSent": "Sent",
+  "statusFailed": "Failed",
+  "payableTag": "Payable",
+  "receivableTag": "Receivable",
+  "receivedTag": "Received",
+  "paidTag": "Paid",
+  "currencyUSD": "US Dollar ($)",
+  "currencyINR": "Indian Rupee (₹)",
+  "currencyPKR": "Pakistani Rupee (Rs)",
+  "inactive": "Inactive",
+  "sundayShort": "Sun",
+  "mondayShort": "Mon",
+  "tuesdayShort": "Tue",
+  "wednesdayShort": "Wed",
+  "thursdayShort": "Thu",
+  "fridayShort": "Fri",
+  "saturdayShort": "Sat",
+  "from": "From",
+  "to": "To",
+  "willReceive": "Will Receive",
+  "selectSchedulePattern": "Select Schedule Pattern",
+  "daysOfWeek": "Days of Week",
+  "daysOfMonth": "Days of Month",
+  "sunday": "Sunday",
+  "monday": "Monday",
+  "tuesday": "Tuesday",
+  "wednesday": "Wednesday",
+  "thursday": "Thursday",
+  "friday": "Friday",
+  "saturday": "Saturday",
+  "updateReceivable": "Update Receivable",
+  "newCashbook": "New Cashbook",
+  "freeLimitReached": "Free Limit Reached",
+  "cashbookNameHint": "e.g., Personal, Business",
+  "selectIcon": "Select Icon",
+  "selectColor": "Select Color",
+  "updateCashbook": "Update Cashbook",
+  "noOtherCashbooks": "No other cashbooks available to copy from.",
+  "selectSourceCashbook": "Select Source Cashbook",
+  "toTarget": "To: {name}",
+  "@toTarget": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "whatToCopy": "What to Copy?",
+  "userProfile": "User Profile",
+  "userProfileDescription": "Name, Email, and basic info",
+  "preferencesDescription": "Currency and Date Format settings",
+  "messageTemplatesDescription": "WhatsApp message templates",
+  "copy": "Copy",
+  "pleaseSelectSource": "Please select a source cashbook",
+  "pleaseSelectAtLeastOne": "Please select at least one item to copy",
+  "preferencesCopied": "Preferences copied successfully",
+  "errorCopyingPreferences": "Error copying preferences: {error}",
+  "@errorCopyingPreferences": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "reset": "Reset",
+  "template": "Template",
+  "variables": "Variables",
+  "close": "Close",
+  "dashboard": "Dashboard",
+  "error": "Error",
+  "currencies": "Currencies",
   "backup": "Backup",
-  "restore": "Restore",
   "premium": "Premium",
-  "free": "Free"
+  "free": "Free",
+  "transactionAlreadyImported": "Transaction already imported",
+  "pleaseSelectContactLinked": "Please select a contact for linked transaction",
+  "transactionLinkedAdded": "Transaction linked and added successfully",
+  "transactionAdded": "Transaction added successfully",
+  "createCategoryNamed": "Create category \"{name}\"",
+  "@createCategoryNamed": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "tapToAddCategory": "Tap to add this category",
+  "frequent": "Frequent",
+  "saving": "Saving...",
+  "transactionDeletedSuccessfully": "Transaction deleted successfully",
+  "googleDrive": "Google Drive",
+  "backupToFile": "Backup to File",
+  "restoreFromFile": "Restore from File",
+  "clearData": "Clear Data",
+  "addCashbook": "Add Cashbook",
+  "cashbookCreated": "Cashbook created successfully"
 }
-
-
-

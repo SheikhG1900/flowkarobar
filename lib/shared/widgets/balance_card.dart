@@ -1,3 +1,4 @@
+import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
@@ -24,6 +25,7 @@ class BalanceCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final currencyAsync = ref.watch(currentCurrencyProvider);
 
@@ -57,7 +59,7 @@ class BalanceCard extends ConsumerWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Total Balance',
+                      l10n.totalBalance,
                       style: theme.textTheme.titleMedium?.copyWith(
                         color: Colors.white.withValues(alpha: 0.9),
                         fontWeight: FontWeight.w500,
@@ -96,7 +98,7 @@ class BalanceCard extends ConsumerWidget {
                         child: _buildStatItem(
                           context,
                           icon: Icons.arrow_downward_rounded,
-                          label: 'Income',
+                          label: l10n.income,
                           amount: income,
                           color: Colors.greenAccent,
                           currency: currency.symbol,
@@ -108,7 +110,7 @@ class BalanceCard extends ConsumerWidget {
                         child: _buildStatItem(
                           context,
                           icon: Icons.arrow_upward_rounded,
-                          label: 'Expense',
+                          label: l10n.expense,
                           amount: expense,
                           color: Colors.redAccent,
                           currency: currency.symbol,
@@ -124,7 +126,7 @@ class BalanceCard extends ConsumerWidget {
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (_, __) => const Center(child: Text('Error loading currency')),
+      error: (_, __) => Center(child: Text(l10n.errorLoadingCurrency)),
     );
   }
 
@@ -194,18 +196,19 @@ class BalanceCard extends ConsumerWidget {
 /// Smaller version for inline displays
 class CompactBalanceCard extends ConsumerWidget {
   final double balance;
-  final String label;
+  final String? label;
   final Gradient? gradient;
 
   const CompactBalanceCard({
     super.key,
     required this.balance,
-    this.label = 'Balance',
+    this.label,
     this.gradient,
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final currencyAsync = ref.watch(currentCurrencyProvider);
 
@@ -228,7 +231,7 @@ class CompactBalanceCard extends ConsumerWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    label,
+                    label ?? l10n.balanceLabel,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: Colors.white.withValues(alpha: 0.9),
                     ),
@@ -251,7 +254,7 @@ class CompactBalanceCard extends ConsumerWidget {
         );
       },
       loading: () => const SizedBox(width: 100, height: 50, child: Center(child: CircularProgressIndicator())),
-      error: (_, __) => const SizedBox(width: 100, height: 50, child: Center(child: Text('Error'))),
+      error: (_, __) => SizedBox(width: 100, height: 50, child: Center(child: Text(l10n.errorLabel))),
     );
   }
 }

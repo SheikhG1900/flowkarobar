@@ -1,3 +1,5 @@
+import 'package:flowpaisa/l10n/app_localizations.dart';
+import 'package:flowpaisa/core/utils/date_formatter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,6 +11,7 @@ import 'package:flowpaisa/features/receivables/presentation/providers/receivable
 import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
 import 'package:flowpaisa/features/contacts/presentation/screens/add_contact_screen.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
+import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
 
 class EditReceivableScreen extends ConsumerStatefulWidget {
@@ -50,6 +53,7 @@ class _EditReceivableScreenState extends ConsumerState<EditReceivableScreen> {
   }
 
   Future<void> _loadReceivableData() async {
+    final l10n = AppLocalizations.of(context)!;
     try {
       final repository = ref.read(receivablesRepositoryProvider);
       final receivable =
@@ -57,7 +61,7 @@ class _EditReceivableScreenState extends ConsumerState<EditReceivableScreen> {
 
       if (receivable == null) {
         if (mounted) {
-          ToastUtils.showErrorToast(context, ref, 'Receivable not found');
+          ToastUtils.showErrorToast(context, ref, l10n.receivableNotFound);
           Navigator.pop(context);
         }
         return;
@@ -86,7 +90,7 @@ class _EditReceivableScreenState extends ConsumerState<EditReceivableScreen> {
           _isLoadingData = false;
         });
         ToastUtils.showErrorToast(
-            context, ref, 'Error loading receivable: ${e.toString()}');
+            context, ref, l10n.errorOccurred(e.toString()));
       }
     }
   }
@@ -99,17 +103,18 @@ class _EditReceivableScreenState extends ConsumerState<EditReceivableScreen> {
   }
 
   Future<void> _updateReceivable() async {
+    final l10n = AppLocalizations.of(context)!;
     if (!_formKey.currentState!.validate()) {
       return;
     }
 
     if (_selectedContactId == null) {
-      ToastUtils.showErrorToast(context, ref, 'Please select a contact');
+      ToastUtils.showErrorToast(context, ref, l10n.pleaseSelectContact);
       return;
     }
 
     if (_receivable == null) {
-      ToastUtils.showErrorToast(context, ref, 'Receivable data not loaded');
+      ToastUtils.showErrorToast(context, ref, l10n.receivableNotFound);
       return;
     }
 
@@ -136,11 +141,11 @@ class _EditReceivableScreenState extends ConsumerState<EditReceivableScreen> {
       if (mounted) {
         Navigator.pop(context);
         ToastUtils.showSuccessToast(
-            context, ref, 'Receivable updated successfully');
+            context, ref, l10n.receivableUpdated);
       }
     } catch (e) {
       if (mounted) {
-        ToastUtils.showErrorToast(context, ref, 'Error: ${e.toString()}');
+        ToastUtils.showErrorToast(context, ref, l10n.errorOccurred(e.toString()));
       }
     } finally {
       if (mounted) {
@@ -182,6 +187,7 @@ class _EditReceivableScreenState extends ConsumerState<EditReceivableScreen> {
   }
 
   void _showContactPicker() {
+    final l10n = AppLocalizations.of(context)!;
     showModalBottomSheet(
       context: context,
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -206,7 +212,7 @@ class _EditReceivableScreenState extends ConsumerState<EditReceivableScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Select Contact',
+                        l10n.selectContact,
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
@@ -227,7 +233,7 @@ class _EditReceivableScreenState extends ConsumerState<EditReceivableScreen> {
                           }
                         },
                         icon: const Icon(Icons.add),
-                        label: const Text('Add New'),
+                        label: Text(l10n.addNew),
                       ),
                     ],
                   ),
@@ -282,7 +288,7 @@ class _EditReceivableScreenState extends ConsumerState<EditReceivableScreen> {
                     },
                     loading: () =>
                         const Center(child: CircularProgressIndicator()),
-                    error: (e, s) => Center(child: Text('Error: $e')),
+                    error: (e, s) => Center(child: Text(l10n.errorOccurred(e.toString()))),
                   ),
                 ),
               ],
@@ -295,13 +301,14 @@ class _EditReceivableScreenState extends ConsumerState<EditReceivableScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final currencySymbol = ref.watch(currencySymbolProvider);
 
     if (_isLoadingData) {
       return Scaffold(
         appBar: AppBar(
-          title: const Text('Edit Receivable'),
+          title: Text(l10n.editReceivable),
           leading: IconButton(
             icon: const Icon(Icons.close),
             onPressed: () => Navigator.pop(context),
@@ -313,7 +320,7 @@ class _EditReceivableScreenState extends ConsumerState<EditReceivableScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Edit Receivable'),
+        title: Text(l10n.editReceivable),
         leading: IconButton(
           icon: const Icon(Icons.close),
           onPressed: () => Navigator.pop(context),
@@ -352,7 +359,7 @@ class _EditReceivableScreenState extends ConsumerState<EditReceivableScreen> {
                 child: Column(
                   children: [
                     Text(
-                      'How much?',
+                      l10n.howMuch,
                       style: theme.textTheme.titleMedium?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
@@ -371,7 +378,7 @@ class _EditReceivableScreenState extends ConsumerState<EditReceivableScreen> {
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
                         border: InputBorder.none,
-                        hintText: '0.00',
+                        hintText: l10n.amountHint,
                         hintStyle: theme.textTheme.displayLarge?.copyWith(
                           color: Colors.grey.withValues(alpha: 0.3),
                         ),
@@ -384,13 +391,13 @@ class _EditReceivableScreenState extends ConsumerState<EditReceivableScreen> {
                       ],
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Please enter an amount';
+                          return l10n.pleaseEnterAmount;
                         }
                         if (double.tryParse(value) == null) {
-                          return 'Please enter a valid number';
+                          return l10n.pleaseEnterValidAmount;
                         }
                         if (double.parse(value) <= 0) {
-                          return 'Amount must be greater than 0';
+                          return l10n.amountGreaterThanZero;
                         }
                         return null;
                       },
@@ -451,14 +458,14 @@ class _EditReceivableScreenState extends ConsumerState<EditReceivableScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Contact',
+                            l10n.contact,
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant,
                             ),
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            _selectedContact?.name ?? 'Select Contact',
+                            _selectedContact?.name ?? l10n.selectContact,
                             style: theme.textTheme.titleMedium?.copyWith(
                               fontWeight: _selectedContact != null
                                   ? FontWeight.bold
@@ -482,10 +489,10 @@ class _EditReceivableScreenState extends ConsumerState<EditReceivableScreen> {
               // Description
               TextFormField(
                 controller: _descriptionController,
-                decoration: const InputDecoration(
-                  labelText: 'Description',
-                  hintText: 'e.g., Lunch money',
-                  prefixIcon: Icon(Icons.description_outlined),
+                decoration: InputDecoration(
+                  labelText: l10n.description,
+                  hintText: l10n.descriptionHint,
+                  prefixIcon: const Icon(Icons.description_outlined),
                 ),
                 textCapitalization: TextCapitalization.sentences,
               ),
@@ -523,7 +530,7 @@ class _EditReceivableScreenState extends ConsumerState<EditReceivableScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Date',
+                            l10n.date,
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant,
                             ),
@@ -531,8 +538,8 @@ class _EditReceivableScreenState extends ConsumerState<EditReceivableScreen> {
                           const SizedBox(height: 4),
                           Text(
                             _selectedDate != null
-                                ? '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}'
-                                : 'Not set',
+                                ? AppDateFormatter.formatDate(_selectedDate!)
+                                : l10n.notSet,
                             style: theme.textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.w600,
                             ),
@@ -578,7 +585,7 @@ class _EditReceivableScreenState extends ConsumerState<EditReceivableScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Due Date (Optional)',
+                            l10n.dueDateOptional,
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant,
                             ),
@@ -586,8 +593,8 @@ class _EditReceivableScreenState extends ConsumerState<EditReceivableScreen> {
                           const SizedBox(height: 4),
                           Text(
                             _dueDate != null
-                                ? '${_dueDate!.day}/${_dueDate!.month}/${_dueDate!.year}'
-                                : 'Not set',
+                                ? AppDateFormatter.formatDate(_dueDate!)
+                                : l10n.notSet,
                             style: theme.textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.w600,
                             ),
@@ -621,10 +628,10 @@ class _EditReceivableScreenState extends ConsumerState<EditReceivableScreen> {
                     _autoCreateIncome = value;
                   });
                 },
-                title: const Text('Auto-create income'),
-                subtitle: const Text(
-                  'Record as income when marked as received',
-                  style: TextStyle(fontSize: 12),
+                title: Text(l10n.autoCreateIncome),
+                subtitle: Text(
+                  l10n.autoCreateIncomeSubtitle,
+                  style: const TextStyle(fontSize: 12),
                 ),
                 secondary: Container(
                   padding: const EdgeInsets.all(8),
@@ -643,7 +650,7 @@ class _EditReceivableScreenState extends ConsumerState<EditReceivableScreen> {
               _isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : GradientButton(
-                      label: 'Update Receivable',
+                      label: l10n.updateReceivable,
                       onPressed: _updateReceivable,
                       gradient: AppColors.receivableGradient,
                       width: double.infinity,

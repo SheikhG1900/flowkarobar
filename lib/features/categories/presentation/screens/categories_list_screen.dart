@@ -10,6 +10,8 @@ import 'package:flowpaisa/shared/widgets/glass_card.dart';
 import 'package:flowpaisa/shared/widgets/swipeable_list_item.dart';
 import 'package:flowpaisa/core/utils/category_helper.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:flowpaisa/l10n/app_localizations.dart';
+import 'package:flowpaisa/core/utils/localization_helper.dart';
 
 class CategoriesListScreen extends ConsumerStatefulWidget {
   const CategoriesListScreen({super.key});
@@ -37,17 +39,18 @@ class _CategoriesListScreenState extends ConsumerState<CategoriesListScreen>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Categories'),
+        title: Text(l10n.categories),
         bottom: TabBar(
           controller: _tabController,
           indicatorColor: _tabController.index == 0
               ? AppColors.expenseColor
               : AppColors.incomeColor,
-          tabs: const [
-            Tab(text: 'Expense'),
-            Tab(text: 'Income'),
+          tabs: [
+            Tab(text: l10n.expense),
+            Tab(text: l10n.income),
           ],
           onTap: (index) {
             setState(() {}); // Rebuild to update indicator color
@@ -87,10 +90,12 @@ class _CategoryList extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final categoriesAsync = ref.watch(categoriesByTypeProvider(type));
+    final l10n = AppLocalizations.of(context)!;
 
     return categoriesAsync.when(
       data: (categories) {
         if (categories.isEmpty) {
+          final typeLabel = type == 'EXPENSE' ? l10n.expense : l10n.income;
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -105,7 +110,7 @@ class _CategoryList extends ConsumerWidget {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'No $type categories',
+                  l10n.noTypeCategories(typeLabel),
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
@@ -125,7 +130,7 @@ class _CategoryList extends ConsumerWidget {
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, stack) => Center(child: Text('Error: $error')),
+      error: (error, stack) => Center(child: Text(l10n.errorOccurred(error.toString()))),
     );
   }
 }
@@ -137,6 +142,7 @@ class _CategoryCard extends ConsumerWidget {
 
   Future<void> _deleteCategory(BuildContext context, WidgetRef ref) async {
     final repository = ref.read(categoriesRepositoryProvider);
+    final l10n = AppLocalizations.of(context)!;
 
     // Check if category has transactions
     final hasTransactions =
@@ -151,13 +157,13 @@ class _CategoryCard extends ConsumerWidget {
           context,
           ref,
           hasTransactions
-              ? 'Category hidden successfully'
-              : 'Category deleted successfully',
+              ? l10n.categoryHiddenSuccessfully
+              : l10n.categoryDeletedSuccessfully,
         );
       }
     } catch (e) {
       if (context.mounted) {
-        ToastUtils.showErrorToast(context, ref, 'Error: ${e.toString()}');
+        ToastUtils.showErrorToast(context, ref, l10n.errorOccurred(e.toString()));
       }
     }
   }
@@ -165,6 +171,7 @@ class _CategoryCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final isExpense = category.type == 'EXPENSE';
     final color = category.color != null
         ? Color(int.parse(category.color!.replaceAll('#', '0xFF')))
@@ -215,7 +222,7 @@ class _CategoryCard extends ConsumerWidget {
               const SizedBox(width: 16),
               Expanded(
                 child: Text(
-                  category.name,
+                  LocalizationHelper.getLocalizedCategoryName(context, category.name),
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
@@ -230,7 +237,7 @@ class _CategoryCard extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
-                    'Default',
+                    l10n.defaultLabel,
                     style: theme.textTheme.labelSmall?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),

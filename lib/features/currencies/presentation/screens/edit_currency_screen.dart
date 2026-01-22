@@ -1,3 +1,4 @@
+import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/database/database.dart';
@@ -20,6 +21,7 @@ class EditCurrencyScreen extends ConsumerStatefulWidget {
 }
 
 class _EditCurrencyScreenState extends ConsumerState<EditCurrencyScreen> {
+  AppLocalizations get l10n => AppLocalizations.of(context)!;
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
   late TextEditingController _symbolController;
@@ -74,11 +76,11 @@ class _EditCurrencyScreenState extends ConsumerState<EditCurrencyScreen> {
       if (mounted) {
         Navigator.pop(context);
         ToastUtils.showSuccessToast(
-            context, ref, 'Currency updated successfully');
+            context, ref, l10n.currencyUpdated);
       }
     } catch (e) {
       if (mounted) {
-        ToastUtils.showErrorToast(context, ref, 'Error: ${e.toString()}');
+        ToastUtils.showErrorToast(context, ref, l10n.errorOccurred(e.toString()));
       }
     } finally {
       if (mounted) {
@@ -95,7 +97,7 @@ class _EditCurrencyScreenState extends ConsumerState<EditCurrencyScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Edit Currency'),
+        title: Text(l10n.editCurrency),
       ),
       body: Form(
         key: _formKey,
@@ -106,8 +108,8 @@ class _EditCurrencyScreenState extends ConsumerState<EditCurrencyScreen> {
             TextFormField(
               controller: _nameController,
               decoration: InputDecoration(
-                labelText: 'Currency Name',
-                hintText: 'e.g., Euro, British Pound',
+                labelText: l10n.currencyNameLabel,
+                hintText: l10n.currencyNameHint,
                 prefixIcon: const Icon(Icons.label),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -115,7 +117,7 @@ class _EditCurrencyScreenState extends ConsumerState<EditCurrencyScreen> {
               ),
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'Please enter currency name';
+                  return l10n.pleaseEnterCurrencyName;
                 }
                 return null;
               },
@@ -126,9 +128,9 @@ class _EditCurrencyScreenState extends ConsumerState<EditCurrencyScreen> {
             TextFormField(
               controller: _symbolController,
               decoration: InputDecoration(
-                labelText: 'Currency Symbol',
-                hintText: 'e.g., €, £, ¥',
-                helperText: 'You can use emoji, letters, or symbols',
+                labelText: l10n.currencySymbolLabel,
+                hintText: l10n.currencySymbolHint,
+                helperText: l10n.currencySymbolHelper,
                 prefixIcon: const Icon(Icons.currency_exchange),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -136,10 +138,10 @@ class _EditCurrencyScreenState extends ConsumerState<EditCurrencyScreen> {
               ),
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'Please enter currency symbol';
+                  return l10n.pleaseEnterCurrencySymbol;
                 }
                 if (value.length > 10) {
-                  return 'Symbol must be 10 characters or less';
+                  return l10n.symbolLengthError;
                 }
                 return null;
               },
@@ -150,9 +152,9 @@ class _EditCurrencyScreenState extends ConsumerState<EditCurrencyScreen> {
             TextFormField(
               controller: _codeController,
               decoration: InputDecoration(
-                labelText: 'Currency Code',
-                hintText: 'e.g., EUR, GBP, JPY',
-                helperText: 'ISO 4217 code (3 letters)',
+                labelText: l10n.currencyCodeLabel,
+                hintText: l10n.currencyCodeHint,
+                helperText: l10n.currencyCodeHelper,
                 prefixIcon: const Icon(Icons.code),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -162,10 +164,10 @@ class _EditCurrencyScreenState extends ConsumerState<EditCurrencyScreen> {
               maxLength: 3,
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'Please enter currency code';
+                  return l10n.pleaseEnterCurrencyCode;
                 }
                 if (value.length != 3) {
-                  return 'Code must be exactly 3 characters';
+                  return l10n.codeLengthError;
                 }
                 return null;
               },
@@ -176,17 +178,17 @@ class _EditCurrencyScreenState extends ConsumerState<EditCurrencyScreen> {
             DropdownButtonFormField<int>(
               value: _decimalPlaces,
               decoration: InputDecoration(
-                labelText: 'Decimal Places',
-                helperText: 'Number of digits after decimal point',
+                labelText: l10n.decimalPlacesLabel,
+                helperText: l10n.decimalPlacesHelper,
                 prefixIcon: const Icon(Icons.numbers),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              items: const [
-                DropdownMenuItem(value: 0, child: Text('0 (No decimals)')),
-                DropdownMenuItem(value: 1, child: Text('1 decimal place')),
-                DropdownMenuItem(value: 2, child: Text('2 decimal places')),
+              items: [
+                DropdownMenuItem(value: 0, child: Text(l10n.noDecimals)),
+                DropdownMenuItem(value: 1, child: Text(l10n.oneDecimal)),
+                DropdownMenuItem(value: 2, child: Text(l10n.twoDecimals)),
               ],
               onChanged: (value) {
                 if (value != null) {
@@ -209,7 +211,7 @@ class _EditCurrencyScreenState extends ConsumerState<EditCurrencyScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Preview',
+                    l10n.preview,
                     style: theme.textTheme.titleSmall?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
@@ -262,7 +264,7 @@ class _EditCurrencyScreenState extends ConsumerState<EditCurrencyScreen> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'Positive: ${AmountFormatter.formatWithCurrency(1234.56, _symbolController.text, _decimalPlaces)}',
+                    l10n.positiveAmount(AmountFormatter.formatWithCurrency(1234.56, _symbolController.text, _decimalPlaces)),
                     style: theme.textTheme.bodyLarge?.copyWith(
                       fontWeight: FontWeight.w600,
                       color: AppColors.success,
@@ -270,7 +272,7 @@ class _EditCurrencyScreenState extends ConsumerState<EditCurrencyScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Negative: ${AmountFormatter.formatWithCurrency(-567.89, _symbolController.text, _decimalPlaces)}',
+                    l10n.negativeAmount(AmountFormatter.formatWithCurrency(-567.89, _symbolController.text, _decimalPlaces)),
                     style: theme.textTheme.bodyLarge?.copyWith(
                       fontWeight: FontWeight.w600,
                       color: AppColors.error,
@@ -285,7 +287,7 @@ class _EditCurrencyScreenState extends ConsumerState<EditCurrencyScreen> {
             GradientButton(
               onPressed: _isLoading ? null : _updateCurrency,
               gradient: AppColors.getPrimaryGradient(theme.colorScheme.primary),
-              label: 'Update Currency',
+              label: l10n.updateCurrency,
               isLoading: _isLoading,
             ),
           ],

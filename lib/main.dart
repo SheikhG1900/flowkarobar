@@ -507,7 +507,7 @@ class _DashboardTab extends ConsumerWidget {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      'FlowPaisa',
+                                      AppConstants.appName,
                                       style: TextStyle(
                                         color: isDark
                                             ? Colors.white
@@ -560,7 +560,7 @@ class _DashboardTab extends ConsumerWidget {
 
                         // Balance Section
                         Text(
-                          'Available Cash',
+                          l10n.availableCash,
                           style: theme.textTheme.titleSmall?.copyWith(
                             color: isDark
                                 ? Colors.white.withValues(alpha: 0.9)
@@ -601,7 +601,7 @@ class _DashboardTab extends ConsumerWidget {
                                           ? Colors.white
                                           : theme.colorScheme.primary,
                                       strokeWidth: 2)),
-                              error: (_, __) => Text('Error',
+                              error: (_, __) => Text(l10n.error,
                                   style: TextStyle(
                                       color: isDark
                                           ? Colors.white
@@ -621,22 +621,22 @@ class _DashboardTab extends ConsumerWidget {
                                 child: _buildSummaryRow(
                                   context,
                                   isDark: isDark,
-                                  title: 'Cash Flow',
+                                  title: l10n.cashFlow,
                                   items: [
                                     _SummaryItem(
-                                      label: 'Income',
+                                      label: l10n.income,
                                       amount: stats.income(filter),
                                       color: AppColors.incomeColor,
                                       icon: Icons.south_west,
                                     ),
                                     _SummaryItem(
-                                      label: 'Expense',
+                                      label: l10n.expense,
                                       amount: stats.expense(filter),
                                       color: AppColors.expenseColor,
                                       icon: Icons.north_east,
                                     ),
                                     _SummaryItem(
-                                      label: 'Net Cash',
+                                      label: l10n.netCash,
                                       amount: stats.netCash(filter),
                                       color: Colors.white,
                                       icon: Icons.account_balance_wallet,
@@ -651,24 +651,24 @@ class _DashboardTab extends ConsumerWidget {
                                 child: _buildSummaryRow(
                                   context,
                                   isDark: isDark,
-                                  title: 'Lending & Credit',
+                                  title: l10n.lendingCredit,
                                   items: [
                                     _SummaryItem(
-                                      label: 'Receive',
+                                      label: l10n.receivableTag,
                                       amount: stats.receivable(filter),
                                       color: AppColors.receivableColor,
                                       icon: Icons.call_received,
                                       overdue: stats.overdueReceivable,
                                     ),
                                     _SummaryItem(
-                                      label: 'Payable',
+                                      label: l10n.payableTag,
                                       amount: stats.payable(filter),
                                       color: AppColors.payableColor,
                                       icon: Icons.call_made,
                                       overdue: stats.overduePayable,
                                     ),
                                     _SummaryItem(
-                                      label: 'Net Credit',
+                                      label: l10n.netCredit,
                                       amount: stats.netCredit(filter),
                                       color: Colors.white,
                                       icon: Icons.swap_horiz,
@@ -809,10 +809,11 @@ class _DashboardTab extends ConsumerWidget {
 
   Widget _buildFilterChip(BuildContext context, WidgetRef ref,
       DashboardFilter currentFilter, bool isDark) {
+    final l10n = AppLocalizations.of(context)!;
     final activeCashbook = ref.watch(activeCashbookProvider);
     final isMonthly = currentFilter == DashboardFilter.monthly;
     final label =
-        isMonthly ? AppDateFormatter.formatMonth(DateTime.now()) : 'All';
+        isMonthly ? AppDateFormatter.formatMonth(DateTime.now(), context: context) : l10n.all;
     final icon = isMonthly ? Icons.calendar_today : Icons.all_inclusive;
 
     return ActionChip(
@@ -992,7 +993,7 @@ class _DashboardTab extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Quick Actions',
+            l10n.quickActions,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
@@ -1025,7 +1026,7 @@ class _DashboardTab extends ConsumerWidget {
                 children: [
                   _QuickActionButton(
                     icon: Icons.add,
-                    label: 'Add',
+                    label: l10n.add,
                     gradient:
                         AppColors.getPrimaryGradient(theme.colorScheme.primary),
                     onTap: () {
@@ -1039,7 +1040,7 @@ class _DashboardTab extends ConsumerWidget {
                   ),
                   _QuickActionButton(
                     icon: Icons.document_scanner_outlined,
-                    label: 'Scan',
+                    label: l10n.scan,
                     gradient: AppColors.getSecondaryGradient(
                         theme.colorScheme.primary),
                     onTap: () {
@@ -1053,7 +1054,7 @@ class _DashboardTab extends ConsumerWidget {
                   ),
                   _QuickActionButton(
                     icon: Symbols.account_balance_wallet,
-                    label: 'Receive',
+                    label: l10n.receivableTag,
                     gradient: AppColors.receivablesSectionGradient,
                     onTap: () {
                       Navigator.push(
@@ -1066,7 +1067,7 @@ class _DashboardTab extends ConsumerWidget {
                   ),
                   _QuickActionButton(
                     icon: Icons.payment_outlined,
-                    label: 'Payables',
+                    label: l10n.payables,
                     gradient: AppColors.payablesSectionGradient,
                     onTap: () {
                       Navigator.push(
@@ -1079,7 +1080,7 @@ class _DashboardTab extends ConsumerWidget {
                   ),
                   _QuickActionButton(
                     icon: Icons.bar_chart_rounded,
-                    label: 'Analytics',
+                    label: l10n.analytics,
                     gradient: AppColors.analyticsSectionGradient,
                     showLock: !isPremium,
                     onTap: () {
@@ -1108,7 +1109,7 @@ class _DashboardTab extends ConsumerWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            'Recent Transactions',
+            l10n.recentTransactions,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
@@ -1122,7 +1123,7 @@ class _DashboardTab extends ConsumerWidget {
                 ),
               );
             },
-            child: const Text('View All'),
+            child: Text(l10n.viewAll),
           ),
         ],
       ),
@@ -1130,6 +1131,7 @@ class _DashboardTab extends ConsumerWidget {
   }
 
   Widget _buildRecentTransactions(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final transactionsAsync = ref.watch(transactionsWithDetailsProvider);
     final currencyAsync = ref.watch(currentCurrencyProvider);
     final currency = currencyAsync.value;
@@ -1153,14 +1155,14 @@ class _DashboardTab extends ConsumerWidget {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'No transactions yet',
+                    l10n.noTransactionsYet,
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                           color: Colors.grey,
                         ),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Tap + to add your first transaction',
+                    l10n.tapToAddFirst,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: Colors.grey,
                         ),
@@ -1245,7 +1247,7 @@ class _DashboardTab extends ConsumerWidget {
                   ),
                   title: Text(
                     transaction.description ??
-                        (isExpense ? 'Expense' : 'Income'),
+                        (isExpense ? l10n.expense : l10n.income),
                     style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
                   subtitle: Text(AppDateFormatter.formatDate(transaction.date,
@@ -1274,7 +1276,7 @@ class _DashboardTab extends ConsumerWidget {
       ),
       error: (error, stack) => Padding(
         padding: const EdgeInsets.all(32),
-        child: Text('Error: ${error.toString()}'),
+        child: Text(l10n.errorOccurred(error.toString())),
       ),
     );
   }
@@ -1426,8 +1428,8 @@ class _SettingsTab extends ConsumerWidget {
         children: [
           ListTile(
             leading: const Icon(Icons.account_balance_wallet_outlined),
-            title: const Text('My Cashbooks'),
-            subtitle: const Text('Manage multiple cashbooks'),
+            title: Text(l10n.myCashbooks),
+            subtitle: Text(l10n.manageCashbooks),
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
             onTap: () {
               Navigator.push(
@@ -1440,8 +1442,8 @@ class _SettingsTab extends ConsumerWidget {
           ),
           ListTile(
             leading: const Icon(Icons.people_outline),
-            title: const Text('Contacts'),
-            subtitle: const Text('Manage your contacts'),
+            title: Text(l10n.contacts),
+            subtitle: Text(l10n.manageContacts),
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
             onTap: () {
               Navigator.push(
@@ -1454,8 +1456,8 @@ class _SettingsTab extends ConsumerWidget {
           ),
           ListTile(
             leading: const Icon(Symbols.category),
-            title: const Text('Categories'),
-            subtitle: const Text('Manage expense & income categories'),
+            title: Text(l10n.categories),
+            subtitle: Text(l10n.manageCategories),
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
             onTap: () {
               Navigator.push(
@@ -1468,8 +1470,8 @@ class _SettingsTab extends ConsumerWidget {
           ),
           ListTile(
             leading: const Icon(Icons.currency_exchange),
-            title: const Text('Currencies'),
-            subtitle: const Text('Manage currencies'),
+            title: Text(l10n.currencies),
+            subtitle: Text(l10n.manageCurrencies),
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
             onTap: () {
               Navigator.push(
@@ -1483,8 +1485,8 @@ class _SettingsTab extends ConsumerWidget {
           const Divider(),
           ListTile(
             leading: const Icon(Icons.language),
-            title: const Text('Language'),
-            subtitle: const Text('English'),
+            title: Text(l10n.language),
+            subtitle: Text(l10n.english),
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
             onTap: () {
               Navigator.push(
@@ -1497,8 +1499,8 @@ class _SettingsTab extends ConsumerWidget {
           ),
           ListTile(
             leading: const Icon(Icons.dark_mode),
-            title: const Text('Theme'),
-            subtitle: const Text('System'),
+            title: Text(l10n.theme),
+            subtitle: Text(l10n.system),
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
             onTap: () {
               Navigator.push(
@@ -1519,7 +1521,7 @@ class _SettingsTab extends ConsumerWidget {
                   const PremiumBadge(isSmall: true, showLock: true),
               ],
             ),
-            subtitle: const Text('Google Drive Backup & Restore'),
+            subtitle: Text(l10n.googleDriveBackupRestore),
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
             onTap: () {
               Navigator.push(
@@ -1534,13 +1536,13 @@ class _SettingsTab extends ConsumerWidget {
             leading: const Icon(Icons.message_outlined),
             title: Row(
               children: [
-                const Text('Message Templates'),
+                Text(l10n.messageTemplates),
                 const SizedBox(width: 8),
                 if (!isPremium)
                   const PremiumBadge(isSmall: true, showLock: true),
               ],
             ),
-            subtitle: const Text('Customize WhatsApp message templates'),
+            subtitle: Text(l10n.customizeMessageTemplates),
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
             onTap: () {
               if (!isPremium) {
@@ -1557,8 +1559,8 @@ class _SettingsTab extends ConsumerWidget {
           ),
           ListTile(
             leading: const Icon(Icons.file_download),
-            title: const Text('Export Data'),
-            subtitle: const Text('Download your data as CSV or PDF'),
+            title: Text(l10n.exportData),
+            subtitle: Text(l10n.downloadDataCsvPdf),
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
             onTap: () {
               Navigator.push(
@@ -1592,7 +1594,7 @@ class _SettingsTab extends ConsumerWidget {
                 ),
               ),
               subtitle: Text(
-                isPremium ? 'Premium Active' : l10n.free,
+                isPremium ? l10n.premiumActive : l10n.free,
                 style: TextStyle(
                   color: Colors.white.withValues(alpha: 0.9),
                 ),
@@ -1612,7 +1614,7 @@ class _SettingsTab extends ConsumerWidget {
           const Divider(),
           ListTile(
             leading: const Icon(Icons.info_outline),
-            title: const Text('About'),
+            title: Text(l10n.about),
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
             onTap: () {
               Navigator.push(

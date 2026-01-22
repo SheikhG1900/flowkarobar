@@ -3,7 +3,6 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'package:intl/intl.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/features/analytics/presentation/providers/analytics_provider.dart';
@@ -14,6 +13,7 @@ import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/shared/widgets/premium_badge.dart';
 import 'package:flowpaisa/features/contacts/presentation/screens/contact_details_screen.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
+import 'package:flowpaisa/core/utils/localization_helper.dart';
 import 'package:flowpaisa/core/utils/export_service.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/transactions/data/transactions_repository.dart';
@@ -40,6 +40,7 @@ class AnalyticsScreen extends ConsumerStatefulWidget {
 
 class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
   Future<void> _exportAnalyticsToPDF() async {
+    final l10n = AppLocalizations.of(context)!;
     if (!PremiumGate.isPremium(ref)) {
       PremiumGate.showPremiumDialog(context);
       return;
@@ -82,13 +83,12 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
         await showDialog<void>(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Text('PDF Ready'),
-            content: const Text(
-                'Your analytics PDF report is ready. Choose an action:'),
+            title: Text(l10n.pdfReady),
+            content: Text(l10n.analyticsPDFReadyMessage),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('Cancel'),
+                child: Text(l10n.cancel),
               ),
               TextButton(
                 onPressed: () async {
@@ -97,16 +97,16 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                     await exportService.saveToDownloads(filePath);
                     if (context.mounted) {
                       ToastUtils.showSuccessToast(
-                          context, ref, 'Saved to Downloads');
+                          context, ref, l10n.savedToDownloads);
                     }
                   } catch (e) {
                     if (context.mounted) {
                       ToastUtils.showErrorToast(
-                          context, ref, 'Error saving: $e');
+                          context, ref, l10n.errorSaving(e.toString()));
                     }
                   }
                 },
-                child: const Text('Save Copy'),
+                child: Text(l10n.saveCopy),
               ),
               TextButton(
                 onPressed: () async {
@@ -116,11 +116,11 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                   } catch (e) {
                     if (context.mounted) {
                       ToastUtils.showErrorToast(
-                          context, ref, 'Error sharing: $e');
+                          context, ref, l10n.errorSharing(e.toString()));
                     }
                   }
                 },
-                child: const Text('Share'),
+                child: Text(l10n.share),
               ),
               FilledButton(
                 onPressed: () async {
@@ -129,7 +129,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                     onLayout: (PdfPageFormat format) async => pdfBytes,
                   );
                 },
-                child: const Text('Preview'),
+                child: Text(l10n.preview),
               ),
             ],
           ),
@@ -138,7 +138,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
     } catch (e) {
       if (mounted) {
         Navigator.pop(context); // Close loading if still open
-        ToastUtils.showErrorToast(context, ref, 'Error exporting: $e');
+        ToastUtils.showErrorToast(context, ref, l10n.errorExporting(e.toString()));
       }
     }
   }
@@ -180,7 +180,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                   IconButton(
                     icon: const Icon(Symbols.picture_as_pdf),
                     onPressed: _exportAnalyticsToPDF,
-                    tooltip: 'Export Analytics PDF',
+                    tooltip: l10n.exportAnalyticsPDF,
                   ),
                   IconButton(
                     icon: const Icon(Symbols.refresh),
@@ -196,7 +196,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                       ref.invalidate(paymentStatusDistributionProvider);
                       ref.invalidate(incomeByCategoryProvider);
                     },
-                    tooltip: 'Refresh Analytics',
+                    tooltip: l10n.refreshAnalytics,
                   ),
                 ],
                 bottom: PreferredSize(
@@ -228,59 +228,59 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Financial Summary (Combined)
-                      const _CollapsibleSection(
-                        title: 'Financial Summary',
+                      _CollapsibleSection(
+                        title: l10n.financialSummary,
                         sectionIndex: 0,
-                        child: _FinancialSummaryCard(),
+                        child: const _FinancialSummaryCard(),
                       ),
 
                       // Contact Summaries
-                      const _CollapsibleSection(
-                        title: 'Contact Summaries',
+                      _CollapsibleSection(
+                        title: l10n.contactSummaries,
                         sectionIndex: 1,
-                        child: _ContactSummariesSection(),
+                        child: const _ContactSummariesSection(),
                       ),
 
                       // Pie Chart Section
-                      const _CollapsibleSection(
-                        title: 'Expenses by Category',
+                      _CollapsibleSection(
+                        title: l10n.expensesByCategory,
                         sectionIndex: 2,
-                        child: _ExpensesPieChart(),
+                        child: const _ExpensesPieChart(),
                       ),
 
                       // Trend Chart Section
-                      const _CollapsibleSection(
-                        title: 'Income vs Expense Trend',
+                      _CollapsibleSection(
+                        title: l10n.incomeVsExpenseTrend,
                         sectionIndex: 3,
-                        child: _TrendsBarChart(),
+                        child: const _TrendsBarChart(),
                       ),
 
                       // Payables vs Receivables Trend
-                      const _CollapsibleSection(
-                        title: 'Payables vs Receivables Trend',
+                      _CollapsibleSection(
+                        title: l10n.payablesVsReceivablesTrend,
                         sectionIndex: 4,
-                        child: _PayableReceivableTrendsChart(),
+                        child: const _PayableReceivableTrendsChart(),
                       ),
 
                       // Top Contacts by Balance
-                      const _CollapsibleSection(
-                        title: 'Top Contacts by Balance',
+                      _CollapsibleSection(
+                        title: l10n.topContactsByBalance,
                         sectionIndex: 5,
-                        child: _TopContactsChart(),
+                        child: const _TopContactsChart(),
                       ),
 
                       // Payment Status Distribution
-                      const _CollapsibleSection(
-                        title: 'Payment Status Distribution',
+                      _CollapsibleSection(
+                        title: l10n.paymentStatusDistribution,
                         sectionIndex: 6,
-                        child: _PaymentStatusDistributionChart(),
+                        child: const _PaymentStatusDistributionChart(),
                       ),
 
                       // Income by Category
-                      const _CollapsibleSection(
-                        title: 'Income by Category',
+                      _CollapsibleSection(
+                        title: l10n.incomeByCategory,
                         sectionIndex: 7,
-                        child: _IncomePieChart(),
+                        child: const _IncomePieChart(),
                       ),
 
                       const SizedBox(height: 80), // Bottom padding
@@ -336,14 +336,14 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                             ),
                             const SizedBox(height: 16),
                             Text(
-                              'Premium Feature',
+                              l10n.premiumFeature,
                               style: theme.textTheme.titleLarge?.copyWith(
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              'Unlock advanced analytics, trends, and charts with Premium.',
+                              l10n.unlockAdvancedAnalytics,
                               textAlign: TextAlign.center,
                               style: theme.textTheme.bodyMedium?.copyWith(
                                 color: theme.colorScheme.onSurfaceVariant,
@@ -353,7 +353,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                             FilledButton(
                               onPressed: () =>
                                   PremiumGate.showPremiumDialog(context),
-                              child: const Text('Unlock Premium'),
+                              child: Text(l10n.unlockPremium),
                             ),
                           ],
                         ),
@@ -382,10 +382,10 @@ class _DateRangeSelector extends StatelessWidget {
     required this.onPreviousPeriod,
   });
 
-  String _getDisplayText() {
+  String _getDisplayText(BuildContext context) {
     switch (selectedDateRange.type) {
       case DateRangeType.month:
-        return AppDateFormatter.formatMonthYear(selectedDateRange.startDate);
+        return AppDateFormatter.formatMonthYear(selectedDateRange.startDate, context: context);
       case DateRangeType.quarter:
         final quarter = ((selectedDateRange.startDate.month - 1) ~/ 3) + 1;
         return 'Q$quarter ${AppDateFormatter.getFormatter('y').format(selectedDateRange.startDate)}';
@@ -400,6 +400,7 @@ class _DateRangeSelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -410,7 +411,7 @@ class _DateRangeSelector extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               _RangeTypeChip(
-                label: 'Month',
+                label: l10n.month,
                 isSelected: selectedDateRange.type == DateRangeType.month,
                 onTap: () {
                   onDateRangeChanged(DateRangeState.currentMonth());
@@ -418,7 +419,7 @@ class _DateRangeSelector extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               _RangeTypeChip(
-                label: 'Quarter',
+                label: l10n.quarter,
                 isSelected: selectedDateRange.type == DateRangeType.quarter,
                 onTap: () {
                   final now = DateTime.now();
@@ -429,7 +430,7 @@ class _DateRangeSelector extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               _RangeTypeChip(
-                label: 'Year',
+                label: l10n.year,
                 isSelected: selectedDateRange.type == DateRangeType.year,
                 onTap: () {
                   onDateRangeChanged(DateRangeState.year(DateTime.now().year));
@@ -437,7 +438,7 @@ class _DateRangeSelector extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               _RangeTypeChip(
-                label: 'Custom',
+                label: l10n.custom,
                 isSelected: selectedDateRange.type == DateRangeType.custom,
                 onTap: () async {
                   final picked = await showDateRangePicker(
@@ -476,7 +477,7 @@ class _DateRangeSelector extends StatelessWidget {
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  _getDisplayText(),
+                  _getDisplayText(context),
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
@@ -549,6 +550,7 @@ class _FinancialSummaryCard extends ConsumerWidget {
     final selectedAsync = ref.watch(financialSummaryProvider);
     final allTimeAsync = ref.watch(allTimeFinancialSummaryProvider);
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final currencySymbol = ref.watch(currencySymbolProvider);
 
     return selectedAsync.when(
@@ -570,7 +572,7 @@ class _FinancialSummaryCard extends ConsumerWidget {
                     children: [
                       Expanded(
                         child: _SummaryItem(
-                          title: 'Payable',
+                          title: l10n.payableTag,
                           selectedAmount: selectedSummary.totalPayable,
                           allTimeAmount: allTimeSummary.totalPayable,
                           color: AppColors.payableColor,
@@ -580,7 +582,7 @@ class _FinancialSummaryCard extends ConsumerWidget {
                       const SizedBox(width: 16),
                       Expanded(
                         child: _SummaryItem(
-                          title: 'Receivable',
+                          title: l10n.receivableTag,
                           selectedAmount: selectedSummary.totalReceivable,
                           allTimeAmount: allTimeSummary.totalReceivable,
                           color: AppColors.receivableColor,
@@ -595,7 +597,7 @@ class _FinancialSummaryCard extends ConsumerWidget {
                     children: [
                       Expanded(
                         child: _SummaryItem(
-                          title: 'Expenses',
+                          title: l10n.expenses,
                           selectedAmount: selectedSummary.totalExpense,
                           allTimeAmount: allTimeSummary.totalExpense,
                           color: AppColors.expenseColor,
@@ -605,7 +607,7 @@ class _FinancialSummaryCard extends ConsumerWidget {
                       const SizedBox(width: 16),
                       Expanded(
                         child: _SummaryItem(
-                          title: 'Income',
+                          title: l10n.income,
                           selectedAmount: selectedSummary.totalIncome,
                           allTimeAmount: allTimeSummary.totalIncome,
                           color: AppColors.incomeColor,
@@ -629,9 +631,9 @@ class _FinancialSummaryCard extends ConsumerWidget {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text(
-                              'Net Balance',
-                              style: TextStyle(
+                            Text(
+                              l10n.netBalance,
+                              style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
@@ -655,7 +657,7 @@ class _FinancialSummaryCard extends ConsumerWidget {
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: [
                             Text(
-                              'All-time: ${AmountFormatter.formatWithCurrency(allTimeSummary.netBalance.abs(), currencySymbol, 2)}',
+                              '${l10n.allTime} ${AmountFormatter.formatWithCurrency(allTimeSummary.netBalance.abs(), currencySymbol, 2)}',
                               style: TextStyle(
                                 color: Colors.white.withValues(alpha: 0.7),
                                 fontSize: 12,
@@ -672,11 +674,11 @@ class _FinancialSummaryCard extends ConsumerWidget {
             );
           },
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, s) => Center(child: Text('Error: $e')),
+          error: (e, s) => Center(child: Text(l10n.errorOccurred(e.toString()))),
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, s) => Center(child: Text('Error: $e')),
+      error: (e, s) => Center(child: Text(l10n.errorOccurred(e.toString()))),
     );
   }
 }
@@ -699,6 +701,7 @@ class _SummaryItem extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final currencySymbol = ref.watch(currencySymbolProvider);
     final decimalPlaces = ref.watch(currencyDecimalPlacesProvider);
 
@@ -744,7 +747,7 @@ class _SummaryItem extends ConsumerWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            'All: ${AmountFormatter.formatWithCurrency(allTimeAmount, currencySymbol, 0)}',
+            '${l10n.allTime} ${AmountFormatter.formatWithCurrency(allTimeAmount, currencySymbol, 0)}',
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w500,
@@ -764,6 +767,7 @@ class _ContactSummariesSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final summariesAsync = ref.watch(contactSummariesProvider);
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final currencySymbol = ref.watch(currencySymbolProvider);
     final decimalPlaces = ref.watch(currencyDecimalPlacesProvider);
 
@@ -778,7 +782,7 @@ class _ContactSummariesSection extends ConsumerWidget {
                   Icon(Icons.people_outline,
                       size: 48, color: theme.disabledColor),
                   const SizedBox(height: 8),
-                  Text('No contact activity for this period',
+                  Text(l10n.noContactActivity,
                       style: TextStyle(color: theme.disabledColor)),
                 ],
               ),
@@ -851,7 +855,7 @@ class _ContactSummariesSection extends ConsumerWidget {
                             Row(
                               children: [
                                 Text(
-                                  'P: ${AmountFormatter.formatWithCurrency(summary.totalPayable, currencySymbol, 0)}',
+                                  '${l10n.payableShort} ${AmountFormatter.formatWithCurrency(summary.totalPayable, currencySymbol, 0)}',
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: AppColors.payableColor,
@@ -860,7 +864,7 @@ class _ContactSummariesSection extends ConsumerWidget {
                                 ),
                                 const SizedBox(width: 16),
                                 Text(
-                                  'R: ${AmountFormatter.formatWithCurrency(summary.totalReceivable, currencySymbol, 0)}',
+                                  '${l10n.receivableShort} ${AmountFormatter.formatWithCurrency(summary.totalReceivable, currencySymbol, 0)}',
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: AppColors.receivableColor,
@@ -895,7 +899,7 @@ class _ContactSummariesSection extends ConsumerWidget {
                         ),
                         child: Text(
                           isZero
-                              ? 'Settled'
+                              ? l10n.settled
                               : AmountFormatter.formatWithCurrency(
                                   summary.balance.abs(), currencySymbol, 0),
                           style: TextStyle(
@@ -918,7 +922,7 @@ class _ContactSummariesSection extends ConsumerWidget {
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, s) => Center(child: Text('Error: e')),
+      error: (e, s) => Center(child: Text(l10n.errorOccurred(e.toString()))),
     );
   }
 }
@@ -931,6 +935,7 @@ class _ExpensesPieChart extends ConsumerWidget {
     final expensesAsync = ref.watch(expensesByCategoryProvider);
     final currencySymbol = ref.watch(currencySymbolProvider);
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return expensesAsync.when(
       data: (expenses) {
@@ -943,7 +948,7 @@ class _ExpensesPieChart extends ConsumerWidget {
                   Icon(Icons.pie_chart_outline,
                       size: 48, color: theme.disabledColor),
                   const SizedBox(height: 8),
-                  Text('No expenses for this period',
+                  Text(l10n.noExpenses,
                       style: TextStyle(color: theme.disabledColor)),
                 ],
               ),
@@ -1006,7 +1011,9 @@ class _ExpensesPieChart extends ConsumerWidget {
                     Expanded(
                       child: Row(
                         children: [
-                          Text(e.category.name),
+                          Text(
+                            LocalizationHelper.getLocalizedCategoryName(context, e.category.name),
+                          ),
                           const SizedBox(width: 8),
                           Container(
                             padding: const EdgeInsets.symmetric(
@@ -1056,6 +1063,7 @@ class _TrendsBarChart extends ConsumerWidget {
     final trendsAsync = ref.watch(monthlyTrendsProvider);
     final currencySymbol = ref.watch(currencySymbolProvider);
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return trendsAsync.when(
       data: (trends) {
@@ -1067,7 +1075,7 @@ class _TrendsBarChart extends ConsumerWidget {
                 children: [
                   Icon(Icons.bar_chart, size: 48, color: theme.disabledColor),
                   const SizedBox(height: 8),
-                  Text('No data for trends',
+                  Text(l10n.noDataForTrends,
                       style: TextStyle(color: theme.disabledColor)),
                 ],
               ),
@@ -1094,7 +1102,7 @@ class _TrendsBarChart extends ConsumerWidget {
                 touchTooltipData: BarTouchTooltipData(
                   getTooltipColor: (_) => theme.cardColor,
                   getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                    final type = rodIndex == 0 ? 'Income' : 'Expense';
+                    final type = rodIndex == 0 ? l10n.income : l10n.expense;
                     return BarTooltipItem(
                       '$type\n',
                       TextStyle(
@@ -1129,7 +1137,7 @@ class _TrendsBarChart extends ConsumerWidget {
                       return Padding(
                         padding: const EdgeInsets.only(top: 8.0),
                         child: Text(
-                          AppDateFormatter.formatMonth(trends[index].month),
+                          AppDateFormatter.formatMonth(trends[index].month, context: context),
                           style: const TextStyle(fontSize: 10),
                         ),
                       );
@@ -1187,6 +1195,7 @@ class _PayableReceivableTrendsChart extends ConsumerWidget {
     final trendsAsync = ref.watch(payableReceivableTrendsProvider);
     final currencySymbol = ref.watch(currencySymbolProvider);
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return trendsAsync.when(
       data: (trends) {
@@ -1199,7 +1208,7 @@ class _PayableReceivableTrendsChart extends ConsumerWidget {
                 children: [
                   Icon(Icons.bar_chart, size: 48, color: theme.disabledColor),
                   const SizedBox(height: 8),
-                  Text('No payable/receivable data',
+                  Text(l10n.noPayableReceivableData,
                       style: TextStyle(color: theme.disabledColor)),
                 ],
               ),
@@ -1225,9 +1234,9 @@ class _PayableReceivableTrendsChart extends ConsumerWidget {
                 touchTooltipData: BarTouchTooltipData(
                   getTooltipColor: (_) => theme.cardColor,
                   getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                    final type = rodIndex == 0 ? 'Payable' : 'Receivable';
+                    final type = rodIndex == 0 ? l10n.payableTag : l10n.receivableTag;
                     return BarTooltipItem(
-                      '`$type\n',
+                      '$type\n',
                       TextStyle(
                           color: theme.colorScheme.onSurface,
                           fontWeight: FontWeight.bold),
@@ -1259,7 +1268,7 @@ class _PayableReceivableTrendsChart extends ConsumerWidget {
                       return Padding(
                         padding: const EdgeInsets.only(top: 8.0),
                         child: Text(
-                            AppDateFormatter.formatMonth(trends[index].month),
+                            AppDateFormatter.formatMonth(trends[index].month, context: context),
                             style: const TextStyle(fontSize: 10)),
                       );
                     },
@@ -1314,6 +1323,7 @@ class _TopContactsChart extends ConsumerWidget {
     final contactsAsync = ref.watch(topContactsByBalanceProvider);
     final currencySymbol = ref.watch(currencySymbolProvider);
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return contactsAsync.when(
       data: (contacts) {
@@ -1326,7 +1336,7 @@ class _TopContactsChart extends ConsumerWidget {
                   Icon(Icons.people_outline,
                       size: 48, color: theme.disabledColor),
                   const SizedBox(height: 8),
-                  Text('No contact data',
+                  Text(l10n.noContactData,
                       style: TextStyle(color: theme.disabledColor)),
                 ],
               ),
@@ -1398,6 +1408,7 @@ class _PaymentStatusDistributionChart extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final statusAsync = ref.watch(paymentStatusDistributionProvider);
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final currencySymbol = ref.watch(currencySymbolProvider);
 
     return statusAsync.when(
@@ -1417,7 +1428,7 @@ class _PaymentStatusDistributionChart extends ConsumerWidget {
                 children: [
                   Icon(Icons.donut_large, size: 48, color: theme.disabledColor),
                   const SizedBox(height: 8),
-                  Text('No payment status data',
+                  Text(l10n.noPaymentStatusData,
                       style: TextStyle(color: theme.disabledColor)),
                 ],
               ),
@@ -1431,7 +1442,7 @@ class _PaymentStatusDistributionChart extends ConsumerWidget {
               Expanded(
                 child: Column(
                   children: [
-                    Text('Payables',
+                    Text(l10n.payables,
                         style: theme.textTheme.titleSmall
                             ?.copyWith(fontWeight: FontWeight.bold)),
                     const SizedBox(height: 8),
@@ -1483,11 +1494,11 @@ class _PaymentStatusDistributionChart extends ConsumerWidget {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    _buildStatusLegend('Pending', status.pendingPayables,
+                    _buildStatusLegend(l10n.pending, status.pendingPayables,
                         Colors.orange, currencySymbol),
-                    _buildStatusLegend('Paid', status.paidPayables,
+                    _buildStatusLegend(l10n.paid, status.paidPayables,
                         Colors.green, currencySymbol),
-                    _buildStatusLegend('Cancelled', status.cancelledPayables,
+                    _buildStatusLegend(l10n.statusCancelled, status.cancelledPayables,
                         Colors.grey, currencySymbol),
                   ],
                 ),
@@ -1498,7 +1509,7 @@ class _PaymentStatusDistributionChart extends ConsumerWidget {
               Expanded(
                 child: Column(
                   children: [
-                    Text('Receivables',
+                    Text(l10n.receivables,
                         style: theme.textTheme.titleSmall
                             ?.copyWith(fontWeight: FontWeight.bold)),
                     const SizedBox(height: 8),
@@ -1550,11 +1561,11 @@ class _PaymentStatusDistributionChart extends ConsumerWidget {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    _buildStatusLegend('Pending', status.pendingReceivables,
+                    _buildStatusLegend(l10n.pending, status.pendingReceivables,
                         Colors.orange, currencySymbol),
-                    _buildStatusLegend('Received', status.receivedReceivables,
+                    _buildStatusLegend(l10n.receivedLabel, status.receivedReceivables,
                         Colors.green, currencySymbol),
-                    _buildStatusLegend('Cancelled', status.cancelledReceivables,
+                    _buildStatusLegend(l10n.statusCancelled, status.cancelledReceivables,
                         Colors.grey, currencySymbol),
                   ],
                 ),
@@ -1563,7 +1574,7 @@ class _PaymentStatusDistributionChart extends ConsumerWidget {
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, s) => Center(child: Text('Error: `$e')),
+      error: (e, s) => Center(child: Text(l10n.errorOccurred(e.toString()))),
     );
   }
 
@@ -1599,6 +1610,7 @@ class _IncomePieChart extends ConsumerWidget {
     final incomesAsync = ref.watch(incomeByCategoryProvider);
     final currencySymbol = ref.watch(currencySymbolProvider);
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return incomesAsync.when(
       data: (incomes) {
@@ -1611,7 +1623,7 @@ class _IncomePieChart extends ConsumerWidget {
                   Icon(Icons.pie_chart_outline,
                       size: 48, color: theme.disabledColor),
                   const SizedBox(height: 8),
-                  Text('No income for this period',
+                  Text(l10n.noIncome,
                       style: TextStyle(color: theme.disabledColor)),
                 ],
               ),
@@ -1669,7 +1681,9 @@ class _IncomePieChart extends ConsumerWidget {
                     Expanded(
                       child: Row(
                         children: [
-                          Text(e.category.name),
+                          Text(
+                            LocalizationHelper.getLocalizedCategoryName(context, e.category.name),
+                          ),
                           const SizedBox(width: 8),
                           Container(
                             padding: const EdgeInsets.symmetric(
@@ -1704,7 +1718,7 @@ class _IncomePieChart extends ConsumerWidget {
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, s) => Center(child: Text('Error: `$e')),
+      error: (e, s) => Center(child: Text(l10n.errorOccurred(e.toString()))),
     );
   }
 }
@@ -1769,6 +1783,7 @@ class _CollapsibleSectionState extends State<_CollapsibleSection>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     // Alternating background colors
     final backgroundColor = widget.sectionIndex % 2 == 0
@@ -1795,7 +1810,7 @@ class _CollapsibleSectionState extends State<_CollapsibleSection>
             child: Semantics(
               button: true,
               label:
-                  '${widget.title} section, ${_isExpanded ? 'expanded' : 'collapsed'}',
+                  '${widget.title} section, ${_isExpanded ? l10n.expanded : l10n.collapsed}',
               onTap: _toggleExpanded,
               child: InkWell(
                 onTap: _toggleExpanded,

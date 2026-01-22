@@ -1,3 +1,4 @@
+import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 class LimitCountdownBadge extends StatelessWidget {
@@ -36,6 +37,7 @@ class LimitCountdownBadge extends StatelessWidget {
   }
 
   Widget _buildSingleChip(BuildContext context, int used, int total) {
+    final l10n = AppLocalizations.of(context)!;
     if (used >= total) {
       return _buildLimitReachedChip(context);
     }
@@ -55,7 +57,7 @@ class LimitCountdownBadge extends StatelessWidget {
           Icon(Icons.inventory_2_outlined, size: 14, color: color),
           const SizedBox(width: 6),
           Text(
-            '$used/$total remaining',
+            '$used/$total ${l10n.remaining}',
             style: TextStyle(
               color: color,
               fontSize: 12,
@@ -69,6 +71,7 @@ class LimitCountdownBadge extends StatelessWidget {
 
   Widget _buildDualChips(BuildContext context, int dailyUsed, int dailyTotal,
       int monthlyUsed, int monthlyTotal) {
+    final l10n = AppLocalizations.of(context)!;
     if (dailyUsed >= dailyTotal || monthlyUsed >= monthlyTotal) {
       return _buildLimitReachedChip(context);
     }
@@ -82,14 +85,14 @@ class LimitCountdownBadge extends StatelessWidget {
         _buildMiniChip(
           context,
           Icons.calendar_today,
-          '$dailyUsed/$dailyTotal daily',
+          '$dailyUsed/$dailyTotal ${l10n.daily}',
           dailyColor,
         ),
         const SizedBox(width: 8),
         _buildMiniChip(
           context,
           Icons.date_range,
-          '$monthlyUsed/$monthlyTotal monthly',
+          '$monthlyUsed/$monthlyTotal ${l10n.monthly}',
           monthlyColor,
         ),
       ],
@@ -124,6 +127,7 @@ class LimitCountdownBadge extends StatelessWidget {
   }
 
   Widget _buildLimitReachedChip(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
       decoration: BoxDecoration(
@@ -132,14 +136,14 @@ class LimitCountdownBadge extends StatelessWidget {
         border:
             Border.all(color: Colors.red.withValues(alpha: 0.5), width: 1.5),
       ),
-      child: const Row(
+      child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.warning_amber_rounded, size: 16, color: Colors.red),
-          SizedBox(width: 6),
+          const Icon(Icons.warning_amber_rounded, size: 16, color: Colors.red),
+          const SizedBox(width: 6),
           Text(
-            'Limit Reached',
-            style: TextStyle(
+            l10n.limitReached,
+            style: const TextStyle(
               color: Colors.red,
               fontSize: 12,
               fontWeight: FontWeight.bold,

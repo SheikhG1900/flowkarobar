@@ -7,6 +7,7 @@ import 'package:flowpaisa/features/contacts/presentation/screens/add_contact_scr
 import 'package:flowpaisa/features/contacts/presentation/screens/contact_details_screen.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
 import 'package:flowpaisa/shared/widgets/swipeable_list_item.dart';
+import 'package:flowpaisa/l10n/app_localizations.dart';
 
 class ContactsListScreen extends ConsumerStatefulWidget {
   const ContactsListScreen({super.key});
@@ -29,6 +30,7 @@ class _ContactsListScreenState extends ConsumerState<ContactsListScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final contactsAsync = ref.watch(contactsSearchProvider(_searchQuery));
 
     return Scaffold(
@@ -37,10 +39,10 @@ class _ContactsListScreenState extends ConsumerState<ContactsListScreen> {
             ? TextField(
                 controller: _searchController,
                 autofocus: true,
-                decoration: const InputDecoration(
-                  hintText: 'Search contacts...',
+                decoration: InputDecoration(
+                  hintText: l10n.searchContacts,
                   border: InputBorder.none,
-                  hintStyle: TextStyle(color: Colors.white70),
+                  hintStyle: const TextStyle(color: Colors.white70),
                 ),
                 style: const TextStyle(color: Colors.white, fontSize: 18),
                 cursorColor: Colors.white,
@@ -50,7 +52,7 @@ class _ContactsListScreenState extends ConsumerState<ContactsListScreen> {
                   });
                 },
               )
-            : const Text('Contacts'),
+            : Text(l10n.contacts),
         actions: [
           IconButton(
             icon: Icon(_isSearching ? Icons.close : Icons.search),
@@ -93,8 +95,8 @@ class _ContactsListScreenState extends ConsumerState<ContactsListScreen> {
                   const SizedBox(height: 24),
                   Text(
                     _searchQuery.isEmpty
-                        ? 'No contacts yet'
-                        : 'No contacts found',
+                        ? l10n.noContactsYet
+                        : l10n.noContactsFound,
                     style: theme.textTheme.titleLarge?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                       fontWeight: FontWeight.bold,
@@ -103,8 +105,8 @@ class _ContactsListScreenState extends ConsumerState<ContactsListScreen> {
                   const SizedBox(height: 12),
                   Text(
                     _searchQuery.isEmpty
-                        ? 'Add people to track expenses with'
-                        : 'Try searching for a different name',
+                        ? l10n.addPeopleToTrack
+                        : l10n.trySearchingDifferentName,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
@@ -114,7 +116,7 @@ class _ContactsListScreenState extends ConsumerState<ContactsListScreen> {
                     SizedBox(
                       width: 200,
                       child: GradientButton(
-                        label: 'Add Contact',
+                        label: l10n.addContact,
                         icon: Icons.person_add,
                         gradient: AppColors.getPrimaryGradient(theme.colorScheme.primary),
                         onPressed: () {
@@ -144,7 +146,7 @@ class _ContactsListScreenState extends ConsumerState<ContactsListScreen> {
         },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stack) => Center(
-          child: Text('Error: $error'),
+          child: Text(l10n.errorOccurred(error.toString())),
         ),
       ),
       floatingActionButton: FloatingActionButton(
@@ -168,16 +170,17 @@ class _ContactCard extends ConsumerWidget {
   const _ContactCard({required this.contact});
 
   Future<void> _deleteContact(BuildContext context, WidgetRef ref) async {
+    final l10n = AppLocalizations.of(context)!;
     try {
       final repository = ref.read(contactsRepositoryProvider);
       await repository.deleteContact(contact.id);
       if (context.mounted) {
         ToastUtils.showSuccessToast(
-            context, ref, 'Contact deleted successfully');
+            context, ref, l10n.contactDeletedSuccessfully);
       }
     } catch (e) {
       if (context.mounted) {
-        ToastUtils.showErrorToast(context, ref, 'Error: ${e.toString()}');
+        ToastUtils.showErrorToast(context, ref, l10n.errorOccurred(e.toString()));
       }
     }
   }
@@ -185,6 +188,7 @@ class _ContactCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),

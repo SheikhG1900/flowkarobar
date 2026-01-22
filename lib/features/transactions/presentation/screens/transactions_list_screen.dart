@@ -16,9 +16,9 @@ import 'package:flowpaisa/features/transactions/domain/models.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/shared/widgets/swipeable_list_item.dart';
 import 'package:flowpaisa/shared/models/paginated_state.dart';
-import 'package:intl/intl.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
 import 'package:flowpaisa/core/utils/category_helper.dart';
+import 'package:flowpaisa/core/utils/localization_helper.dart';
 import 'package:flowpaisa/features/transactions/presentation/widgets/schedule_icon_badge.dart';
 import 'package:flowpaisa/features/transactions/presentation/widgets/schedule_list_item.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/schedule_service_provider.dart';
@@ -76,9 +76,9 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
         bottom: hasSchedules
             ? TabBar(
                 controller: _tabController,
-                tabs: const [
-                  Tab(text: 'Transactions'),
-                  Tab(text: 'Schedules'),
+                tabs: [
+                  Tab(text: l10n.transactions),
+                  Tab(text: l10n.schedules),
                 ],
               )
             : null,
@@ -94,7 +94,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                     await service.generateDummyTransactions(count: 100);
                     if (context.mounted) {
                       ToastUtils.showSuccessToast(
-                          context, ref, 'Generated 100 dummy transactions');
+                          context, ref, l10n.generated100DummyTransactions);
                       // Refresh the paginated list
                       ref
                           .read(transactionsPaginatedProvider.notifier)
@@ -102,36 +102,24 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                     }
                   } catch (e) {
                     if (context.mounted) {
-                      ToastUtils.showErrorToast(context, ref, 'Error: $e');
+                      ToastUtils.showErrorToast(context, ref, l10n.errorOccurred(e.toString()));
                     }
                   }
                 }
               },
               itemBuilder: (context) => [
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: 'generate_dummy',
                   child: Row(
                     children: [
-                      Icon(Icons.add_circle_outline),
-                      SizedBox(width: 8),
-                      Text('Generate 100 Dummy Transactions'),
+                      const Icon(Icons.add_circle_outline),
+                      const SizedBox(width: 8),
+                      Text(l10n.generate100DummyTransactions),
                     ],
                   ),
                 ),
               ],
             ),
-          IconButton(
-            icon: const Icon(Icons.filter_list),
-            onPressed: () {
-              // TODO: Implement filter
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: () {
-              // TODO: Implement search
-            },
-          ),
         ],
       ),
       body: hasSchedules
@@ -161,6 +149,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
 
   Widget _buildBody(
       PaginatedState<TransactionWithDetails> paginatedState, ThemeData theme) {
+    final l10n = AppLocalizations.of(context)!;
     if (paginatedState.isLoading && paginatedState.items.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -173,7 +162,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
             const Icon(Icons.error_outline, size: 60, color: Colors.red),
             const SizedBox(height: 16),
             Text(
-              'Error loading transactions',
+              l10n.errorLoadingTransactions,
               style: theme.textTheme.titleLarge,
             ),
             const SizedBox(height: 8),
@@ -187,7 +176,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
               onPressed: () {
                 ref.read(transactionsPaginatedProvider.notifier).refresh();
               },
-              child: const Text('Retry'),
+              child: Text(l10n.retry),
             ),
           ],
         ),
@@ -206,7 +195,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
             ),
             const SizedBox(height: 24),
             Text(
-              'No transactions yet',
+              l10n.noTransactionsYet,
               style: theme.textTheme.titleLarge?.copyWith(
                 color: Colors.grey[600],
                 fontWeight: FontWeight.w600,
@@ -214,7 +203,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
             ),
             const SizedBox(height: 12),
             Text(
-              'Tap + to add your first transaction',
+              l10n.tapToAddFirst,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: Colors.grey[500],
               ),
@@ -311,17 +300,18 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                       onDelete: isRestricted
                           ? null
                           : () async {
+                              final l10n = AppLocalizations.of(context)!;
                               try {
                                 await service
                                     .deleteTransaction(item.transaction.id);
                                 if (context.mounted) {
                                   ToastUtils.showSuccessToast(
-                                      context, ref, 'Transaction deleted');
+                                      context, ref, l10n.transactionDeleted);
                                 }
                               } catch (e) {
                                 if (context.mounted) {
                                   ToastUtils.showErrorToast(context, ref,
-                                      'Error deleting transaction: $e');
+                                      l10n.errorDeletingTransaction(e.toString()));
                                 }
                               }
                             },
@@ -352,7 +342,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
               padding: const EdgeInsets.all(16.0),
               child: Center(
                 child: Text(
-                  'No more transactions',
+                  l10n.noMoreTransactions,
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: Colors.grey[600],
                   ),
@@ -384,6 +374,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
     final transaction = item.transaction;
     final category = item.category;
     final contact = item.contact;
+    final l10n = AppLocalizations.of(context)!;
 
     // Check if it's an "inactive" transaction (Paid BY or Will Receive that hasn't been marked yet)
     final isInactive = (transaction.paidRelationship == 'PAID_BY' ||
@@ -451,7 +442,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                   category?.icon, displayColor, isExpense),
             ),
             title: Text(
-              transaction.description ?? (isExpense ? 'Expense' : 'Income'),
+              transaction.description ?? (isExpense ? l10n.expense : l10n.income),
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w600,
                 color: textColor,
@@ -464,7 +455,10 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  category?.name ?? 'Uncategorized',
+                  category != null
+                      ? LocalizationHelper.getLocalizedCategoryName(
+                          context, category.name)
+                      : l10n.uncategorized,
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant
                         .withValues(alpha: isInactive ? 0.5 : 1.0),
@@ -575,7 +569,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                           const SizedBox(width: 3),
                         ],
                         Text(
-                          _getStatusLabel(transaction.paidRelationship!,
+                          _getStatusLabel(l10n, transaction.paidRelationship!,
                               item.isLinkedEntryMarked),
                           style: TextStyle(
                             fontSize: 10,
@@ -612,7 +606,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                         ),
                         const SizedBox(width: 3),
                         Text(
-                          'Auto',
+                          l10n.autoBadge,
                           style: TextStyle(
                             fontSize: 10,
                             color: Colors.grey[600],
@@ -642,9 +636,10 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
   }
 
   Widget _buildSchedulesTab(List<TransactionSchedule> schedules) {
+    final l10n = AppLocalizations.of(context)!;
     if (schedules.isEmpty) {
-      return const Center(
-        child: Text('No schedules found'),
+      return Center(
+        child: Text(l10n.noSchedulesFound),
       );
     }
 
@@ -678,7 +673,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
               await service.deleteSchedule(schedule.id);
               if (context.mounted) {
                 ToastUtils.showSuccessToast(
-                    context, ref, 'Schedule deleted successfully');
+                    context, ref, l10n.scheduleDeleted);
               }
               ref.invalidate(allSchedulesProvider);
             },
@@ -715,16 +710,16 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
     }
   }
 
-  String _getStatusLabel(String relationship, bool isMarked) {
+  String _getStatusLabel(AppLocalizations l10n, String relationship, bool isMarked) {
     switch (relationship) {
       case 'PAID_FOR':
-        return isMarked ? 'Received' : 'Receivable';
+        return isMarked ? l10n.receivedTag : l10n.receivableTag;
       case 'PAID_BY':
-        return isMarked ? 'Paid' : 'Payable';
+        return isMarked ? l10n.paidTag : l10n.payableTag;
       case 'RECEIVED_FROM':
-        return isMarked ? 'Paid' : 'Payable';
+        return isMarked ? l10n.paidTag : l10n.payableTag;
       case 'WILL_RECEIVE':
-        return isMarked ? 'Received' : 'Receivable';
+        return isMarked ? l10n.receivedTag : l10n.receivableTag;
       default:
         return '';
     }

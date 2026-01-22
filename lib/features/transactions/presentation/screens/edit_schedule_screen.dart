@@ -140,6 +140,7 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
     });
 
     try {
+      final l10n = AppLocalizations.of(context)!;
       final scheduleService = ref.read(scheduleServiceProvider);
       final amount = double.parse(_amountController.text);
       final description = _descriptionController.text.isEmpty
@@ -168,11 +169,12 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
       if (mounted) {
         Navigator.pop(context, true);
         ToastUtils.showSuccessToast(
-            context, ref, 'Schedule updated successfully');
+            context, ref, l10n.scheduleUpdated);
       }
     } catch (e) {
       if (mounted) {
-        ToastUtils.showErrorToast(context, ref, 'Error: ${e.toString()}');
+        final l10n = AppLocalizations.of(context)!;
+        ToastUtils.showErrorToast(context, ref, l10n.errorOccurred(e.toString()));
       }
     } finally {
       if (mounted) {
@@ -229,6 +231,7 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
   }
 
   Future<void> _handleRelationshipChange(String? value) async {
+    final l10n = AppLocalizations.of(context)!;
     if (_paidRelationship == value) {
       setState(() {
         _paidRelationship = null;
@@ -244,7 +247,7 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
             ToastUtils.showErrorToast(
               context,
               ref,
-              'Please select a contact for this relationship',
+              l10n.pleaseSelectContactRelationship,
             );
           }
           return;
@@ -262,6 +265,7 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
   }
 
   void _showCategoryPicker() {
+    final l10n = AppLocalizations.of(context)!;
     showModalBottomSheet(
       context: context,
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -284,7 +288,7 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
                 Padding(
                   padding: const EdgeInsets.all(16),
                   child: Text(
-                    'Select Category',
+                    l10n.selectCategory,
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
@@ -294,8 +298,8 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
                   child: categoriesAsync.when(
                     data: (categoriesWithUsage) {
                       if (categoriesWithUsage.isEmpty) {
-                        return const Center(
-                          child: Text('No categories found'),
+                        return Center(
+                          child: Text(l10n.noCategoriesFound),
                         );
                       }
 
@@ -347,7 +351,7 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
                     },
                     loading: () =>
                         const Center(child: CircularProgressIndicator()),
-                    error: (e, s) => Center(child: Text('Error: $e')),
+                    error: (e, s) => Center(child: Text(l10n.errorOccurred(e.toString()))),
                   ),
                 ),
               ],
@@ -360,6 +364,7 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
 
   Future<Contact?> _showContactPicker() async {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     return await showModalBottomSheet<Contact>(
       context: context,
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -381,7 +386,7 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
                 Padding(
                   padding: const EdgeInsets.all(16),
                   child: Text(
-                    'Select Contact',
+                    l10n.selectContact,
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
@@ -435,7 +440,7 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
                     },
                     loading: () =>
                         const Center(child: CircularProgressIndicator()),
-                    error: (e, s) => Center(child: Text('Error: $e')),
+                    error: (e, s) => Center(child: Text(l10n.errorOccurred(e.toString()))),
                   ),
                 ),
               ],
@@ -477,7 +482,7 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Edit Schedule'),
+        title: Text(l10n.editSchedule),
         leading: IconButton(
           icon: const Icon(Icons.close),
           onPressed: () => Navigator.pop(context),
@@ -524,7 +529,7 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
                 child: Column(
                   children: [
                     Text(
-                      'Amount',
+                      l10n.amount,
                       style: theme.textTheme.titleMedium?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
@@ -545,19 +550,19 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
                         border: InputBorder.none,
-                        hintText: '0.00',
+                        hintText: l10n.amountHint,
                       ),
                       keyboardType:
                           const TextInputType.numberWithOptions(decimal: true),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Please enter an amount';
+                          return l10n.pleaseEnterAmount;
                         }
                         if (double.tryParse(value) == null) {
-                          return 'Please enter a valid number';
+                          return l10n.pleaseEnterValidNumber;
                         }
                         if (double.parse(value) <= 0) {
-                          return 'Amount must be greater than 0';
+                          return l10n.amountGreaterThanZero;
                         }
                         return null;
                       },
@@ -651,14 +656,14 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Category',
+                              l10n.category,
                               style: theme.textTheme.bodySmall?.copyWith(
                                 color: theme.colorScheme.onSurfaceVariant,
                               ),
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              _selectedCategory?.name ?? 'Select Category',
+                              _selectedCategory?.name ?? l10n.selectCategory,
                               style: theme.textTheme.titleMedium?.copyWith(
                                 fontWeight: _selectedCategory != null
                                     ? FontWeight.bold
@@ -734,14 +739,14 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Contact (Optional)',
+                              l10n.contactOptional,
                               style: theme.textTheme.bodySmall?.copyWith(
                                 color: theme.colorScheme.onSurfaceVariant,
                               ),
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              _selectedContact?.name ?? 'Select Contact',
+                              _selectedContact?.name ?? l10n.selectContact,
                               style: theme.textTheme.titleMedium?.copyWith(
                                 fontWeight: _selectedContact != null
                                     ? FontWeight.bold
@@ -775,7 +780,7 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
               // Paid Relationship Section (Linked Transactions)
               if (_selectedType == 'EXPENSE') ...[
                 Text(
-                  'Paid Relationship',
+                  l10n.paidRelationship,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -785,8 +790,8 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
                   children: [
                     Expanded(
                       child: _RelationshipButton(
-                        label: 'Paid FOR',
-                        subtitle: 'I will receive back',
+                        label: l10n.paidFor,
+                        subtitle: l10n.iWillReceiveBack,
                         icon: Icons.account_balance_wallet,
                         isSelected: _paidRelationship == 'PAID_FOR',
                         gradient: AppColors.receivableGradient,
@@ -797,8 +802,8 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: _RelationshipButton(
-                        label: 'Paid BY',
-                        subtitle: 'Someone paid for me',
+                        label: l10n.paidBy,
+                        subtitle: l10n.someonePaidForMe,
                         icon: Icons.person_outline,
                         isSelected: _paidRelationship == 'PAID_BY',
                         gradient: AppColors.payableGradient,
@@ -811,7 +816,7 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
                 const SizedBox(height: 16),
               ] else if (_selectedType == 'INCOME') ...[
                 Text(
-                  'Received Relationship',
+                  l10n.receivedRelationship,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -821,8 +826,8 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
                   children: [
                     Expanded(
                       child: _RelationshipButton(
-                        label: 'I Owe',
-                        subtitle: 'Received loan',
+                        label: l10n.iOwe,
+                        subtitle: l10n.receivedLoan,
                         icon: Icons.download,
                         isSelected: _paidRelationship == 'RECEIVED_FROM',
                         gradient: AppColors.payableGradient,
@@ -833,8 +838,8 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: _RelationshipButton(
-                        label: 'Will Receive',
-                        subtitle: 'Receive later',
+                        label: l10n.willReceive,
+                        subtitle: l10n.receiveLater,
                         icon: Icons.schedule,
                         isSelected: _paidRelationship == 'WILL_RECEIVE',
                         gradient: AppColors.receivableGradient,
@@ -882,7 +887,7 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Due Date (Optional)',
+                                l10n.dueDateOptional,
                                 style: theme.textTheme.bodySmall?.copyWith(
                                   color: theme.colorScheme.onSurfaceVariant,
                                 ),
@@ -891,7 +896,7 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
                               Text(
                                 _dueDate != null
                                     ? '${_dueDate!.day}/${_dueDate!.month}/${_dueDate!.year}'
-                                    : 'Not set',
+                                    : l10n.notSet,
                                 style: theme.textTheme.titleMedium?.copyWith(
                                   fontWeight: FontWeight.w600,
                                 ),
@@ -921,7 +926,7 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
                 controller: _descriptionController,
                 decoration: InputDecoration(
                   labelText: l10n.description,
-                  hintText: 'E.g., Groceries, Salary, etc.',
+                  hintText: l10n.descriptionHint,
                   prefixIcon: const Icon(Icons.notes_outlined),
                 ),
                 maxLines: 2,
@@ -961,14 +966,14 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Schedule Pattern',
+                              l10n.schedulePattern,
                               style: theme.textTheme.bodySmall?.copyWith(
                                 color: theme.colorScheme.onSurfaceVariant,
                               ),
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              _getSchedulePatternText(),
+                              _getSchedulePatternText(l10n),
                               style: theme.textTheme.titleMedium?.copyWith(
                                 fontWeight: FontWeight.w600,
                               ),
@@ -1015,7 +1020,7 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Start Date (Optional)',
+                              l10n.startDateOptional,
                               style: theme.textTheme.bodySmall?.copyWith(
                                 color: theme.colorScheme.onSurfaceVariant,
                               ),
@@ -1024,7 +1029,7 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
                             Text(
                               _startDate != null
                                   ? '${_startDate!.day}/${_startDate!.month}/${_startDate!.year}'
-                                  : 'Not set',
+                                  : l10n.notSet,
                               style: theme.textTheme.titleMedium?.copyWith(
                                 fontWeight: FontWeight.w600,
                               ),
@@ -1080,7 +1085,7 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'End Date (Optional)',
+                              l10n.endDateOptional,
                               style: theme.textTheme.bodySmall?.copyWith(
                                 color: theme.colorScheme.onSurfaceVariant,
                               ),
@@ -1089,7 +1094,7 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
                             Text(
                               _endDate != null
                                   ? '${_endDate!.day}/${_endDate!.month}/${_endDate!.year}'
-                                  : 'Not set',
+                                  : l10n.notSet,
                               style: theme.textTheme.titleMedium?.copyWith(
                                 fontWeight: FontWeight.w600,
                               ),
@@ -1115,7 +1120,7 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
 
               // Update Button
               GradientButton(
-                label: _isLoading ? 'Updating...' : 'Update Schedule',
+                label: _isLoading ? l10n.updating : l10n.updateSchedule,
                 onPressed: _isLoading ? null : _updateSchedule,
                 gradient: isExpense
                     ? AppColors.expenseGradient
@@ -1131,28 +1136,28 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
     );
   }
 
-  String _getSchedulePatternText() {
+  String _getSchedulePatternText(AppLocalizations l10n) {
     switch (_scheduleType) {
       case 'DAILY':
-        return 'Daily';
+        return l10n.daily;
       case 'WEEKLY':
         if (_selectedDaysOfWeek != null && _selectedDaysOfWeek!.isNotEmpty) {
           final dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
           final selectedDayNames =
               _selectedDaysOfWeek!.map((d) => dayNames[d]).join(', ');
-          return 'Weekly: $selectedDayNames';
+          return l10n.weeklyWithDays(selectedDayNames);
         }
-        return 'Weekly';
+        return l10n.weekly;
       case 'MONTHLY':
         if (_selectedDaysOfMonth != null && _selectedDaysOfMonth!.isNotEmpty) {
           if (_selectedDaysOfMonth!.length == 1) {
-            return 'Monthly: ${_selectedDaysOfMonth!.first}';
+            return l10n.monthlyWithDay(_selectedDaysOfMonth!.first.toString());
           }
-          return 'Monthly: ${_selectedDaysOfMonth!.join(', ')}';
+          return l10n.monthlyWithDay(_selectedDaysOfMonth!.join(', '));
         }
-        return 'Monthly';
+        return l10n.monthly;
       default:
-        return 'Unknown';
+        return l10n.unknown;
     }
   }
 }

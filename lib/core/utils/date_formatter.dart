@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 /// Utility class for centralized date formatting
@@ -6,12 +7,9 @@ class AppDateFormatter {
   static const String defaultPattern = 'MMM dd, yyyy';
 
   /// Format a DateTime object to a string using the specified pattern
-  /// If [pattern] is null, it uses [defaultPattern]
+  /// If [pattern] is null, it uses the user's preferred date format from profile
   static String formatDate(DateTime date, {String? pattern}) {
-    if (pattern == null) {
-      return formatMediumDate(date);
-    }
-    return DateFormat(pattern).format(date);
+    return DateFormat(pattern ?? defaultPattern).format(date);
   }
 
   /// Format a DateTime object to a medium date string (e.g., Jan 18, 2026)
@@ -30,12 +28,20 @@ class AppDateFormatter {
   }
 
   /// Format a DateTime object to just the month name (e.g., Jan)
-  static String formatMonth(DateTime date) {
+  static String formatMonth(DateTime date, {BuildContext? context}) {
+    if (context != null) {
+      final locale = Localizations.localeOf(context).toString();
+      return DateFormat.MMM(locale).format(date);
+    }
     return DateFormat.MMM().format(date);
   }
 
   /// Format a DateTime object to month and year (e.g., Jan 2026)
-  static String formatMonthYear(DateTime date) {
+  static String formatMonthYear(DateTime date, {BuildContext? context}) {
+    if (context != null) {
+      final locale = Localizations.localeOf(context).toString();
+      return DateFormat.yMMMM(locale).format(date);
+    }
     return DateFormat.yMMMM().format(date);
   }
 

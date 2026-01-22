@@ -11,6 +11,7 @@ import 'package:flowpaisa/core/utils/date_formatter.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transaction_service_provider.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
 import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
+import 'package:flowpaisa/l10n/app_localizations.dart';
 
 class PayableShareButton extends ConsumerWidget {
   final Payable payable;
@@ -24,10 +25,11 @@ class PayableShareButton extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     return IconButton(
       icon: const Icon(Icons.share),
       onPressed: () => _showShareOptions(context, ref),
-      tooltip: 'Share Payment Acknowledgment',
+      tooltip: l10n.sharePaymentAcknowledgment,
     );
   }
 
@@ -63,6 +65,7 @@ class _ShareOptionsSheetState extends State<_ShareOptionsSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -70,24 +73,24 @@ class _ShareOptionsSheetState extends State<_ShareOptionsSheet> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Share Payment Acknowledgment',
+            l10n.sharePaymentAcknowledgment,
             style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: 16),
           ListTile(
             leading: const Icon(Icons.chat, color: Colors.green),
-            title: const Text('Share via WhatsApp'),
+            title: Text(l10n.shareViaWhatsApp),
             subtitle: widget.contact != null && widget.contact!.phone != null
-                ? Text('To ${widget.contact!.name}')
-                : const Text('Choose contact'),
+                ? Text(l10n.toContact(widget.contact!.name))
+                : Text(l10n.chooseContact),
             onTap: _isSharing
                 ? null
                 : () => _shareViaWhatsApp(context, widget.ref),
           ),
           ListTile(
             leading: const Icon(Icons.link),
-            title: const Text('Copy Link'),
-            subtitle: const Text('Copy deep link to clipboard'),
+            title: Text(l10n.copyLink),
+            subtitle: Text(l10n.copyDeepLinkSubtitle),
             onTap: _isSharing ? null : () => _copyLink(context, widget.ref),
           ),
           if (_isSharing)
@@ -103,6 +106,7 @@ class _ShareOptionsSheetState extends State<_ShareOptionsSheet> {
   }
 
   Future<void> _shareViaWhatsApp(BuildContext context, WidgetRef ref) async {
+    final l10n = AppLocalizations.of(context)!;
     setState(() => _isSharing = true);
 
     try {
@@ -113,7 +117,7 @@ class _ShareOptionsSheetState extends State<_ShareOptionsSheet> {
       final currency = currencyAsync.value;
       final userProfile = widget.ref.read(userProfileProvider);
 
-      final senderName = userProfile.name ?? 'Someone';
+      final senderName = userProfile.name ?? l10n.someone;
       final senderPhone = userProfile.phone ?? '';
 
       // Ensure external ID is persisted before sharing
@@ -138,41 +142,33 @@ class _ShareOptionsSheetState extends State<_ShareOptionsSheet> {
 
       String message;
       if (isPaid) {
-        message = '''
-Hi ${widget.contact?.name ?? 'there'},
-
-Greetings! 
-
-The payment of *${AmountFormatter.formatWithCurrency(widget.payable.amount, currency?.symbol ?? '', currency?.decimalPlaces ?? 2)}* on *${AppDateFormatter.formatDate(widget.payable.date, pattern: userProfile.dateFormat)}* has been completed and recorded. 
-
-If you haven't updated this payment in *FlowPaisa*, please follow the link below to sync your records:
-$link
-
-Thank you!
-''';
+        message = l10n.sharePayableCompleted(
+          amount: AmountFormatter.formatWithCurrency(widget.payable.amount,
+              currency?.symbol ?? '', currency?.decimalPlaces ?? 2),
+          date: AppDateFormatter.formatDate(widget.payable.date,
+              pattern: userProfile.dateFormat),
+          link: link,
+        );
       } else {
-        message = '''
-📋 Payment Acknowledgment
-
-I have recorded that I owe you *${AmountFormatter.formatWithCurrency(widget.payable.amount, currency?.symbol ?? '', currency?.decimalPlaces ?? 2)}* for the transaction on *${AppDateFormatter.formatDate(widget.payable.date, pattern: userProfile.dateFormat)}*.
-
-${widget.payable.description != null && widget.payable.description!.isNotEmpty ? 'This is for _${widget.payable.description}_.\n' : ''}
-I will settle this soon. Thanks for your patience!
-
-View and record this in FlowPaisa:
-$link
-''';
+        message = l10n.sharePayablePending(
+          amount: AmountFormatter.formatWithCurrency(widget.payable.amount,
+              currency?.symbol ?? '', currency?.decimalPlaces ?? 2),
+          date: AppDateFormatter.formatDate(widget.payable.date,
+              pattern: userProfile.dateFormat),
+          link: link,
+        );
       }
 
       await whatsAppService.sendMessage(widget.contact?.phone ?? '', message);
 
       if (context.mounted) {
         Navigator.of(context).pop();
-        ToastUtils.showSuccessToast(context, ref, 'Opening WhatsApp...');
+        ToastUtils.showSuccessToast(context, ref, l10n.openingWhatsApp);
       }
     } catch (e) {
       if (context.mounted) {
-        ToastUtils.showErrorToast(context, ref, 'Failed to share: $e');
+        ToastUtils.showErrorToast(
+            context, ref, l10n.failedToShare(e.toString()));
       }
     } finally {
       if (mounted) {
@@ -182,6 +178,7 @@ $link
   }
 
   Future<void> _copyLink(BuildContext context, WidgetRef ref) async {
+    final l10n = AppLocalizations.of(context)!;
     setState(() => _isSharing = true);
 
     try {
@@ -189,7 +186,7 @@ $link
       final transactionService = widget.ref.read(transactionServiceProvider);
       final userProfile = widget.ref.read(userProfileProvider);
 
-      final senderName = userProfile.name ?? 'Someone';
+      final senderName = userProfile.name ?? l10n.someone;
       final senderPhone = userProfile.phone ?? '';
 
       // Ensure external ID is persisted before sharing
@@ -216,11 +213,12 @@ $link
 
       if (context.mounted) {
         Navigator.of(context).pop();
-        ToastUtils.showSuccessToast(context, ref, 'Link copied to clipboard!');
+        ToastUtils.showSuccessToast(context, ref, l10n.linkCopied);
       }
     } catch (e) {
       if (context.mounted) {
-        ToastUtils.showErrorToast(context, ref, 'Failed to copy link: $e');
+        ToastUtils.showErrorToast(
+            context, ref, l10n.failedToCopyLink(e.toString()));
       }
     } finally {
       if (mounted) {

@@ -12,6 +12,7 @@ import 'package:flowpaisa/core/utils/date_formatter.dart';
 import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
+import 'package:flowpaisa/l10n/app_localizations.dart';
 
 class ScanReceiptScreen extends ConsumerStatefulWidget {
   const ScanReceiptScreen({super.key});
@@ -40,10 +41,12 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
     _amountController = TextEditingController();
     _merchantController = TextEditingController();
     final userProfile = ref.read(userProfileProvider);
-    _dateController = TextEditingController(
-      text: AppDateFormatter.formatDate(_selectedDate,
-          pattern: userProfile.dateFormat),
-    );
+    _dateController = TextEditingController();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _dateController.text = AppDateFormatter.formatDate(_selectedDate);
+      }
+    });
   }
 
   @override
@@ -55,6 +58,7 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
   }
 
   Future<void> _pickImage(ImageSource source) async {
+    final l10n = AppLocalizations.of(context)!;
     try {
       final XFile? pickedFile = await _picker.pickImage(
         source: source,
@@ -72,12 +76,13 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ToastUtils.showErrorToast(context, ref, 'Error picking image: $e');
+        ToastUtils.showErrorToast(context, ref, l10n.errorPickingImage(e.toString()));
       }
     }
   }
 
   Future<void> _scanReceipt() async {
+    final l10n = AppLocalizations.of(context)!;
     if (_image == null) return;
 
     try {
@@ -94,8 +99,7 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
         _merchantController.text = receiptData.merchantName ?? '';
         if (receiptData.date != null) {
           _selectedDate = receiptData.date!;
-          _dateController.text = AppDateFormatter.formatDate(_selectedDate,
-              pattern: ref.read(userProfileProvider).dateFormat);
+          _dateController.text = AppDateFormatter.formatDate(_selectedDate);
         }
         _isScanning = false;
       });
@@ -104,15 +108,16 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
     } catch (e) {
       setState(() => _isScanning = false);
       if (mounted) {
-        ToastUtils.showErrorToast(context, ref, 'Error scanning receipt: $e');
+        ToastUtils.showErrorToast(context, ref, l10n.errorScanningReceipt(e.toString()));
       }
     }
   }
 
   void _proceedToAddTransaction() {
+    final l10n = AppLocalizations.of(context)!;
     final amount = double.tryParse(_amountController.text);
     if (amount == null || amount <= 0) {
-      ToastUtils.showErrorToast(context, ref, 'Please enter a valid amount');
+      ToastUtils.showErrorToast(context, ref, l10n.pleaseEnterValidNumber);
       return;
     }
 
@@ -134,10 +139,11 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final currencySymbol = ref.watch(currencySymbolProvider);
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Scan Receipt'),
+        title: Text(l10n.scanReceipt),
         backgroundColor: theme.colorScheme.primary,
         foregroundColor: theme.colorScheme.onPrimary,
       ),
@@ -174,7 +180,7 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
                         size: 80, color: theme.colorScheme.primary),
                     const SizedBox(height: 16),
                     Text(
-                      'No receipt selected',
+                      l10n.noReceiptSelected,
                       style: TextStyle(color: theme.colorScheme.primary),
                     ),
                   ],
@@ -191,7 +197,7 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
                         ? null
                         : () => _pickImage(ImageSource.camera),
                     icon: const Icon(Icons.camera_alt),
-                    label: const Text('Camera'),
+                    label: Text(l10n.camera),
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
                     ),
@@ -204,7 +210,7 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
                         ? null
                         : () => _pickImage(ImageSource.gallery),
                     icon: const Icon(Icons.photo_library),
-                    label: const Text('Gallery'),
+                    label: Text(l10n.gallery),
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
                     ),
@@ -216,12 +222,12 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
 
             // Scanning Indicator
             if (_isScanning)
-              const Center(
+              Center(
                 child: Column(
                   children: [
-                    CircularProgressIndicator(),
-                    SizedBox(height: 16),
-                    Text('Scanning receipt...'),
+                    const CircularProgressIndicator(),
+                    const SizedBox(height: 16),
+                    Text(l10n.scanningReceipt),
                   ],
                 ),
               ),
@@ -229,7 +235,7 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
             // Editable Fields
             if (_receiptData != null && !_isScanning) ...[
               Text(
-                'Review & Edit',
+                l10n.reviewAndEdit,
                 style: theme.textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
@@ -239,10 +245,10 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
               // Merchant Field
               TextField(
                 controller: _merchantController,
-                decoration: const InputDecoration(
-                  labelText: 'Merchant Name',
-                  prefixIcon: Icon(Icons.store),
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: l10n.merchantName,
+                  prefixIcon: const Icon(Icons.store),
+                  border: const OutlineInputBorder(),
                 ),
               ),
               const SizedBox(height: 16),
@@ -252,10 +258,10 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
                 controller: _amountController,
                 keyboardType:
                     const TextInputType.numberWithOptions(decimal: true),
-                decoration: const InputDecoration(
-                  labelText: 'Total Amount',
-                  prefixIcon: Icon(Icons.attach_money),
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: l10n.totalAmount,
+                  prefixIcon: const Icon(Icons.attach_money),
+                  border: const OutlineInputBorder(),
                 ),
               ),
               // Suggestion Chips for Amount
@@ -306,18 +312,17 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
                   if (picked != null) {
                     setState(() {
                       _selectedDate = picked;
-                      _dateController.text = AppDateFormatter.formatDate(picked,
-                          pattern: ref.read(userProfileProvider).dateFormat);
+                      _dateController.text = AppDateFormatter.formatDate(picked);
                     });
                   }
                 },
                 child: IgnorePointer(
                   child: TextField(
                     controller: _dateController,
-                    decoration: const InputDecoration(
-                      labelText: 'Date',
-                      prefixIcon: Icon(Icons.calendar_today),
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: l10n.date,
+                      prefixIcon: const Icon(Icons.calendar_today),
+                      border: const OutlineInputBorder(),
                     ),
                   ),
                 ),
@@ -330,16 +335,12 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
                   child: Wrap(
                     spacing: 8,
                     children: _receiptData!.dateCandidates.map((date) {
-                      final userProfile = ref.watch(userProfileProvider);
                       final isSelected = AppDateFormatter.formatDate(
-                              _selectedDate,
-                              pattern: userProfile.dateFormat) ==
-                          AppDateFormatter.formatDate(date,
-                              pattern: userProfile.dateFormat);
+                          _selectedDate) ==
+                          AppDateFormatter.formatDate(date);
                       return ActionChip(
                         label: Text(
-                          AppDateFormatter.formatDate(date,
-                              pattern: userProfile.dateFormat),
+                          AppDateFormatter.formatDate(date),
                           style: TextStyle(
                             color: isSelected
                                 ? theme.colorScheme.primary
@@ -356,8 +357,7 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
                           setState(() {
                             _selectedDate = date;
                             _dateController.text = AppDateFormatter.formatDate(
-                                date,
-                                pattern: userProfile.dateFormat);
+                                date);
                           });
                         },
                       );
@@ -370,7 +370,7 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
               GradientButton(
                 onPressed: _proceedToAddTransaction,
                 gradient: AppColors.getPrimaryGradient(theme.colorScheme.primary),
-                label: 'Proceed to Add Transaction',
+                label: l10n.proceedToAddTransaction,
               ),
             ],
           ],

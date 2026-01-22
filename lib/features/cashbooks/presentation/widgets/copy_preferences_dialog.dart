@@ -7,6 +7,8 @@ import 'package:flowpaisa/features/cashbooks/domain/preferences_copy_service.dar
 import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
 import 'package:flowpaisa/features/cashbooks/domain/models/cashbook.dart';
 
+import 'package:flowpaisa/l10n/app_localizations.dart';
+
 class CopyPreferencesSheet extends ConsumerStatefulWidget {
   final String targetCashbookId;
 
@@ -29,6 +31,7 @@ class _CopyPreferencesSheetState extends ConsumerState<CopyPreferencesSheet> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final cashbooks = ref.watch(cashbooksProvider);
     final targetCashbook = cashbooks.firstWhere((c) => c.id == widget.targetCashbookId);
     final availableSources = cashbooks.where((c) => c.id != widget.targetCashbookId).toList();
@@ -47,7 +50,7 @@ class _CopyPreferencesSheetState extends ConsumerState<CopyPreferencesSheet> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Copy Preferences',
+                  l10n.copyPreferences,
                   style: theme.textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -59,11 +62,11 @@ class _CopyPreferencesSheetState extends ConsumerState<CopyPreferencesSheet> {
               ],
             ),
             const SizedBox(height: 24),
-            const Text('You need at least one other cashbook to copy preferences from.'),
+            Text(l10n.noOtherCashbooks),
             const SizedBox(height: 24),
             FilledButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('OK'),
+              child: Text(l10n.ok),
             ),
           ],
         ),
@@ -89,7 +92,7 @@ class _CopyPreferencesSheetState extends ConsumerState<CopyPreferencesSheet> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Copy Preferences',
+                l10n.copyPreferences,
                 style: theme.textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
@@ -107,7 +110,7 @@ class _CopyPreferencesSheetState extends ConsumerState<CopyPreferencesSheet> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Copy preferences from:',
+                    l10n.selectSourceCashbook,
                     style: theme.textTheme.titleMedium,
                   ),
                   const SizedBox(height: 12),
@@ -117,7 +120,7 @@ class _CopyPreferencesSheetState extends ConsumerState<CopyPreferencesSheet> {
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      hintText: 'Select source cashbook',
+                      hintText: l10n.cashbookNameHint,
                       prefixIcon: _selectedSourceCashbookId != null
                           ? Icon(
                               availableSources
@@ -153,12 +156,12 @@ class _CopyPreferencesSheetState extends ConsumerState<CopyPreferencesSheet> {
                   ),
                   const SizedBox(height: 24),
                   Text(
-                    'To: ${targetCashbook.name}',
+                    l10n.whatToCopy,
                     style: theme.textTheme.titleMedium,
                   ),
                   const SizedBox(height: 24),
                   Text(
-                    'What to copy:',
+                    l10n.copy,
                     style: theme.textTheme.titleMedium,
                   ),
                   const SizedBox(height: 12),
@@ -169,8 +172,8 @@ class _CopyPreferencesSheetState extends ConsumerState<CopyPreferencesSheet> {
                     child: Column(
                       children: [
                         CheckboxListTile(
-                          title: const Text('User Profile'),
-                          subtitle: const Text('Name, email, phone, address'),
+                          title: Text(l10n.userProfile),
+                          subtitle: Text(l10n.userProfileDescription),
                           value: _copyProfile,
                           onChanged: (value) {
                             setState(() {
@@ -180,8 +183,8 @@ class _CopyPreferencesSheetState extends ConsumerState<CopyPreferencesSheet> {
                         ),
                         const Divider(height: 1),
                         CheckboxListTile(
-                          title: const Text('Preferences'),
-                          subtitle: const Text('Date format, currency'),
+                          title: Text(l10n.preferencesDescription),
+                          subtitle: Text(l10n.preferencesDescription),
                           value: _copyPreferences,
                           onChanged: (value) {
                             setState(() {
@@ -191,8 +194,8 @@ class _CopyPreferencesSheetState extends ConsumerState<CopyPreferencesSheet> {
                         ),
                         const Divider(height: 1),
                         CheckboxListTile(
-                          title: const Text('Message Templates'),
-                          subtitle: const Text('All custom message templates'),
+                          title: Text(l10n.messageTemplatesDescription),
+                          subtitle: Text(l10n.messageTemplatesDescription),
                           value: _copyTemplates,
                           onChanged: (value) {
                             setState(() {
@@ -213,7 +216,7 @@ class _CopyPreferencesSheetState extends ConsumerState<CopyPreferencesSheet> {
               Expanded(
                 child: OutlinedButton(
                   onPressed: _isLoading ? null : () => Navigator.pop(context),
-                  child: const Text('Cancel'),
+                  child: Text(l10n.cancel),
                 ),
               ),
               const SizedBox(width: 12),
@@ -227,7 +230,7 @@ class _CopyPreferencesSheetState extends ConsumerState<CopyPreferencesSheet> {
                           height: 16,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Text('Copy'),
+                      : Text(l10n.copy),
                 ),
               ),
             ],
@@ -238,13 +241,14 @@ class _CopyPreferencesSheetState extends ConsumerState<CopyPreferencesSheet> {
   }
 
   Future<void> _performCopyPreferences() async {
+    final l10n = AppLocalizations.of(context)!;
     if (_selectedSourceCashbookId == null) {
-      ToastUtils.showErrorToast(context, ref, 'Please select a source cashbook');
+      ToastUtils.showErrorToast(context, ref, l10n.pleaseSelectSource);
       return;
     }
 
     if (!_copyProfile && !_copyPreferences && !_copyTemplates) {
-      ToastUtils.showErrorToast(context, ref, 'Please select at least one item to copy');
+      ToastUtils.showErrorToast(context, ref, l10n.pleaseSelectAtLeastOne);
       return;
     }
 
@@ -299,15 +303,16 @@ class _CopyPreferencesSheetState extends ConsumerState<CopyPreferencesSheet> {
 
       if (mounted) {
         Navigator.pop(context);
-        ToastUtils.showSuccessToast(context, ref, 'Preferences copied successfully');
+        ToastUtils.showSuccessToast(context, ref, l10n.preferencesCopied);
       }
     } catch (e) {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-        ToastUtils.showErrorToast(context, ref, 'Error copying preferences: $e');
-      }
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+          ToastUtils.showErrorToast(
+              context, ref, l10n.errorOccurred(e.toString()));
+        }
     }
   }
 }

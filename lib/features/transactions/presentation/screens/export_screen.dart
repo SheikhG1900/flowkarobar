@@ -1,3 +1,4 @@
+import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'dart:io';
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/foundation.dart';
@@ -34,6 +35,7 @@ class ExportScreen extends ConsumerStatefulWidget {
 }
 
 class _ExportScreenState extends ConsumerState<ExportScreen> {
+  AppLocalizations get l10n => AppLocalizations.of(context)!;
   String get currencySymbol => ref.watch(currencySymbolProvider);
   int get decimalPlaces => ref.watch(currencyDecimalPlacesProvider);
   DateTime? _startDate;
@@ -69,14 +71,14 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
     } catch (e) {
       setState(() => _isLoading = false);
       if (mounted) {
-        ToastUtils.showErrorToast(context, ref, 'Error loading summary: $e');
+        ToastUtils.showErrorToast(context, ref, l10n.errorOccurred(e.toString()));
       }
     }
   }
 
   Future<void> _exportToCSV() async {
     if (_startDate == null || _endDate == null) {
-      ToastUtils.showWarningToast(context, ref, 'Please select date range');
+      ToastUtils.showWarningToast(context, ref, l10n.selectDateRange);
       return;
     }
 
@@ -126,7 +128,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
 
             if (mounted) {
               ToastUtils.showSuccessToast(
-                  context, ref, 'Export saved to ${result.path}');
+                  context, ref, l10n.exportSavedTo(result.path));
             }
           }
         }
@@ -147,13 +149,13 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
           await showDialog<void>(
             context: context,
             builder: (context) => AlertDialog(
-              title: const Text('Export Successful'),
+              title: Text(l10n.exportSuccessful),
               content:
-                  const Text('Your transaction history is ready to share.'),
+                  Text(l10n.transactionHistoryReady),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text('Done'),
+                  child: Text(l10n.done),
                 ),
                 TextButton(
                   onPressed: () async {
@@ -161,24 +163,24 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
                       await exportService.saveToDownloads(filePath);
                       if (context.mounted) {
                         ToastUtils.showSuccessToast(
-                            context, ref, 'Saved to Downloads');
+                            context, ref, l10n.savedToDownloads);
                         Navigator.pop(context);
                       }
                     } catch (e) {
                       if (context.mounted) {
                         ToastUtils.showErrorToast(
-                            context, ref, 'Error saving: $e');
+                            context, ref, l10n.errorSaving(e.toString()));
                       }
                     }
                   },
-                  child: const Text('Save Copy'),
+                  child: Text(l10n.saveCopy),
                 ),
                 FilledButton(
                   onPressed: () async {
                     Navigator.pop(context);
                     await exportService.shareCSVFile(filePath);
                   },
-                  child: const Text('Share'),
+                  child: Text(l10n.share),
                 ),
               ],
             ),
@@ -190,7 +192,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
         if (isLoadingDialogOpen) {
           Navigator.pop(context);
         }
-        ToastUtils.showErrorToast(context, ref, 'Error exporting: $e');
+        ToastUtils.showErrorToast(context, ref, l10n.errorExporting(e.toString()));
       }
     }
   }
@@ -202,7 +204,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
     }
 
     if (_startDate == null || _endDate == null) {
-      ToastUtils.showWarningToast(context, ref, 'Please select date range');
+      ToastUtils.showWarningToast(context, ref, l10n.selectDateRange);
       return;
     }
 
@@ -240,12 +242,12 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
         await showDialog<void>(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Text('PDF Ready'),
-            content: const Text('Your PDF report is ready. Choose an action:'),
+            title: Text(l10n.pdfReady),
+            content: Text(l10n.pdfReportReady),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('Cancel'),
+                child: Text(l10n.cancel),
               ),
               TextButton(
                 onPressed: () async {
@@ -254,16 +256,16 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
                     await exportService.saveToDownloads(filePath);
                     if (context.mounted) {
                       ToastUtils.showSuccessToast(
-                          context, ref, 'Saved to Downloads');
+                          context, ref, l10n.savedToDownloads);
                     }
                   } catch (e) {
                     if (context.mounted) {
                       ToastUtils.showErrorToast(
-                          context, ref, 'Error saving: $e');
+                          context, ref, l10n.errorSaving(e.toString()));
                     }
                   }
                 },
-                child: const Text('Save Copy'),
+                child: Text(l10n.saveCopy),
               ),
               TextButton(
                 onPressed: () async {
@@ -273,11 +275,11 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
                   } catch (e) {
                     if (context.mounted) {
                       ToastUtils.showErrorToast(
-                          context, ref, 'Error sharing: $e');
+                          context, ref, l10n.errorSharing(e.toString()));
                     }
                   }
                 },
-                child: const Text('Share'),
+                child: Text(l10n.share),
               ),
               FilledButton(
                 onPressed: () async {
@@ -286,7 +288,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
                     onLayout: (PdfPageFormat format) async => pdfBytes,
                   );
                 },
-                child: const Text('Preview'),
+                child: Text(l10n.preview),
               ),
             ],
           ),
@@ -295,7 +297,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
     } catch (e) {
       if (mounted) {
         Navigator.pop(context); // Close loading if still open
-        ToastUtils.showErrorToast(context, ref, 'Error exporting: $e');
+        ToastUtils.showErrorToast(context, ref, l10n.errorExporting(e.toString()));
       }
     }
   }
@@ -344,13 +346,12 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
         await showDialog<void>(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Text('Test PDF Ready'),
-            content: const Text(
-                'Test PDF with all categories is ready. Choose an action:'),
+            title: Text(l10n.testPdfReady),
+            content: Text(l10n.testPdfCategoriesReady),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('Cancel'),
+                child: Text(l10n.cancel),
               ),
               TextButton(
                 onPressed: () async {
@@ -359,16 +360,16 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
                     await exportService.saveToDownloads(filePath);
                     if (context.mounted) {
                       ToastUtils.showSuccessToast(
-                          context, ref, 'Saved to Downloads');
+                          context, ref, l10n.savedToDownloads);
                     }
                   } catch (e) {
                     if (context.mounted) {
                       ToastUtils.showErrorToast(
-                          context, ref, 'Error saving: $e');
+                          context, ref, l10n.errorSaving(e.toString()));
                     }
                   }
                 },
-                child: const Text('Save Copy'),
+                child: Text(l10n.saveCopy),
               ),
               TextButton(
                 onPressed: () async {
@@ -378,11 +379,11 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
                   } catch (e) {
                     if (context.mounted) {
                       ToastUtils.showErrorToast(
-                          context, ref, 'Error sharing: $e');
+                          context, ref, l10n.errorSharing(e.toString()));
                     }
                   }
                 },
-                child: const Text('Share'),
+                child: Text(l10n.share),
               ),
               FilledButton(
                 onPressed: () async {
@@ -391,7 +392,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
                     onLayout: (PdfPageFormat format) async => pdfBytes,
                   );
                 },
-                child: const Text('Preview'),
+                child: Text(l10n.preview),
               ),
             ],
           ),
@@ -401,7 +402,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
       if (mounted) {
         Navigator.pop(context); // Close loading if still open
         ToastUtils.showErrorToast(
-            context, ref, 'Error generating test PDF: $e');
+            context, ref, l10n.errorOccurred(e.toString()));
       }
     }
   }
@@ -446,7 +447,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Export Data'),
+        title: Text(l10n.exportData),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
@@ -469,7 +470,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
                   ),
                 ],
               ),
-              child: const Column(
+              child: Column(
                 children: [
                   const Icon(
                     Icons.file_download,
@@ -477,18 +478,18 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
                     size: 48,
                   ),
                   const SizedBox(height: 12),
-                  const Text(
-                    'Export Your Data',
-                    style: TextStyle(
+                  Text(
+                    l10n.exportYourData,
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   const SizedBox(height: 8),
-                  const Text(
-                    'Download your transaction history as CSV or PDF',
-                    style: TextStyle(
+                  Text(
+                    l10n.downloadHistoryCsvPdf,
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 14,
                     ),
@@ -501,7 +502,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
 
             // Date Range Section
             Text(
-              'Select Date Range',
+              l10n.selectDateRange,
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
@@ -511,7 +512,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
             // Start Date
             _buildDateCard(
               context,
-              label: 'Start Date',
+              label: l10n.startDate,
               date: _startDate,
               onTap: _selectStartDate,
               icon: Icons.calendar_today,
@@ -521,7 +522,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
             // End Date
             _buildDateCard(
               context,
-              label: 'End Date',
+              label: l10n.endDate,
               date: _endDate,
               onTap: _selectEndDate,
               icon: Icons.event,
@@ -580,7 +581,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
               OutlinedButton.icon(
                 onPressed: _exportTestCategoriesPDF,
                 icon: const Icon(Icons.bug_report),
-                label: const Text('Test Categories PDF (Icons)'),
+                label: Text(l10n.testCategoriesPdf),
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
@@ -609,7 +610,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      'CSV files can be opened in Excel or Google Sheets. PDF reports are great for sharing.',
+                      l10n.csvInfoNote,
                       style: theme.textTheme.bodySmall,
                     ),
                   ),
@@ -701,7 +702,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Export Summary',
+          l10n.exportSummary,
           style: theme.textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.bold,
           ),
@@ -720,7 +721,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
             children: [
               _buildSummaryRow(
                 context,
-                'Total Transactions',
+                l10n.totalTransactions,
                 summary.totalTransactions.toString(),
                 Icons.receipt_long,
                 theme.colorScheme.primary,
@@ -728,7 +729,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
               const Divider(height: 24),
               _buildSummaryRow(
                 context,
-                'Income',
+                l10n.income,
                 AmountFormatter.formatWithCurrency(
                     summary.totalIncome, currencySymbol, decimalPlaces),
                 Icons.arrow_downward,
@@ -737,7 +738,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
               const SizedBox(height: 12),
               _buildSummaryRow(
                 context,
-                'Expense',
+                l10n.expense,
                 AmountFormatter.formatWithCurrency(
                     summary.totalExpense, currencySymbol, decimalPlaces),
                 Icons.arrow_upward,
@@ -746,7 +747,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
               const Divider(height: 24),
               _buildSummaryRow(
                 context,
-                'Net Balance',
+                l10n.netBalance,
                 AmountFormatter.formatWithCurrency(
                     summary.netBalance, currencySymbol, decimalPlaces),
                 Icons.account_balance_wallet,

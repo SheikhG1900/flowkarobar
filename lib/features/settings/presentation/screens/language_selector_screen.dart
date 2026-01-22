@@ -2,14 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:country_flags/country_flags.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
-import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
+import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
+import 'package:flowpaisa/l10n/app_localizations.dart';
 
 class LanguageSelectorScreen extends ConsumerWidget {
   const LanguageSelectorScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final currentLocale = ref.watch(languageProvider);
     final languageNotifier = ref.read(languageProvider.notifier);
     final theme = Theme.of(context);
@@ -17,19 +19,19 @@ class LanguageSelectorScreen extends ConsumerWidget {
     final languages = [
       {
         'code': 'en',
-        'name': 'English',
+        'name': l10n.english,
         'nativeName': 'English',
         'countryCode': 'US',
       },
       {
         'code': 'hi',
-        'name': 'Hindi',
+        'name': l10n.hindi,
         'nativeName': 'हिन्दी',
         'countryCode': 'IN',
       },
       {
         'code': 'ur',
-        'name': 'Urdu',
+        'name': l10n.urdu,
         'nativeName': 'اردو',
         'countryCode': 'PK',
       },
@@ -37,7 +39,7 @@ class LanguageSelectorScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Language'),
+        title: Text(l10n.language),
         centerTitle: true,
       ),
       body: ListView.builder(
@@ -97,7 +99,7 @@ class LanguageSelectorScreen extends ConsumerWidget {
                   // Show success message
                   if (context.mounted) {
                     ToastUtils.showSuccessToast(
-                        context, ref, 'Language changed to ${lang['name']}');
+                        context, ref, l10n.languageChanged(lang['name']!));
                   }
                 },
                 borderRadius: BorderRadius.circular(16),
@@ -213,7 +215,7 @@ class LanguageSelectorScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                'The app will refresh to apply the new language',
+                l10n.appRefreshLanguage,
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),

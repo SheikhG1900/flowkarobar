@@ -1,3 +1,4 @@
+import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
@@ -9,13 +10,14 @@ class MessageTemplatesScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final isPremium = PremiumGate.isPremium(ref);
 
     if (!isPremium) {
       return Scaffold(
         appBar: AppBar(
-          title: const Text('Message Templates'),
+          title: Text(l10n.messageTemplates),
         ),
         body: Center(
           child: Padding(
@@ -30,12 +32,12 @@ class MessageTemplatesScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Premium Feature',
+                  l10n.premiumFeature,
                   style: theme.textTheme.headlineSmall,
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Customize message templates is available for Premium users.',
+                  l10n.messageTemplatesDesc,
                   textAlign: TextAlign.center,
                   style: theme.textTheme.bodyMedium,
                 ),
@@ -44,7 +46,7 @@ class MessageTemplatesScreen extends ConsumerWidget {
                   onPressed: () {
                     PremiumGate.showPremiumDialog(context);
                   },
-                  child: const Text('Upgrade to Premium'),
+                  child: Text(l10n.upgradeToPremium),
                 ),
               ],
             ),
@@ -55,7 +57,7 @@ class MessageTemplatesScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Message Templates'),
+        title: Text(l10n.messageTemplates),
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
@@ -63,15 +65,15 @@ class MessageTemplatesScreen extends ConsumerWidget {
           _buildTemplateSection(
             context,
             theme,
-            'Receivable Reminders',
+            l10n.receivableReminders,
             [
               _TemplateItem(
-                name: 'Pending Receivable',
+                name: l10n.pendingReceivable,
                 type: DefaultTemplates.receivableReminder,
                 status: DefaultTemplates.pending,
               ),
               _TemplateItem(
-                name: 'Received Payment',
+                name: l10n.receivedPayment,
                 type: DefaultTemplates.receivableReminder,
                 status: DefaultTemplates.received,
               ),
@@ -81,15 +83,15 @@ class MessageTemplatesScreen extends ConsumerWidget {
           _buildTemplateSection(
             context,
             theme,
-            'Payable Reminders',
+            l10n.payableReminders,
             [
               _TemplateItem(
-                name: 'Pending Payable',
+                name: l10n.pendingPayable,
                 type: DefaultTemplates.payableReminder,
                 status: DefaultTemplates.pending,
               ),
               _TemplateItem(
-                name: 'Paid Payable',
+                name: l10n.paidPayable,
                 type: DefaultTemplates.payableReminder,
                 status: DefaultTemplates.paid,
               ),
@@ -99,35 +101,35 @@ class MessageTemplatesScreen extends ConsumerWidget {
           _buildTemplateSection(
             context,
             theme,
-            'Transaction Messages',
+            l10n.transactionMessages,
             [
               _TemplateItem(
-                name: 'Transaction Receipt',
+                name: l10n.transactionReceipt,
                 type: DefaultTemplates.transactionReceipt,
                 status: '',
               ),
               _TemplateItem(
-                name: 'Transaction Share - Paid For',
+                name: l10n.transactionSharePaidFor,
                 type: DefaultTemplates.transactionShare,
                 status: 'paid_for',
               ),
               _TemplateItem(
-                name: 'Transaction Share - Paid By',
+                name: l10n.transactionSharePaidBy,
                 type: DefaultTemplates.transactionShare,
                 status: 'paid_by',
               ),
               _TemplateItem(
-                name: 'Transaction Share - Will Receive',
+                name: l10n.transactionShareWillReceive,
                 type: DefaultTemplates.transactionShare,
                 status: 'will_receive',
               ),
               _TemplateItem(
-                name: 'Transaction Share - Received From',
+                name: l10n.transactionShareReceivedFrom,
                 type: DefaultTemplates.transactionShare,
                 status: 'received_from',
               ),
               _TemplateItem(
-                name: 'Transaction Share - Generic',
+                name: l10n.transactionShareGeneric,
                 type: DefaultTemplates.transactionShare,
                 status: 'generic',
               ),
@@ -137,25 +139,25 @@ class MessageTemplatesScreen extends ConsumerWidget {
           _buildTemplateSection(
             context,
             theme,
-            'Share Messages',
+            l10n.shareMessages,
             [
               _TemplateItem(
-                name: 'Receivable Share - Pending',
+                name: l10n.receivableSharePending,
                 type: DefaultTemplates.receivableShare,
                 status: DefaultTemplates.pending,
               ),
               _TemplateItem(
-                name: 'Receivable Share - Received',
+                name: l10n.receivableShareReceived,
                 type: DefaultTemplates.receivableShare,
                 status: DefaultTemplates.received,
               ),
               _TemplateItem(
-                name: 'Payable Share - Pending',
+                name: l10n.payableSharePending,
                 type: DefaultTemplates.payableShare,
                 status: DefaultTemplates.pending,
               ),
               _TemplateItem(
-                name: 'Payable Share - Paid',
+                name: l10n.payableSharePaid,
                 type: DefaultTemplates.payableShare,
                 status: DefaultTemplates.paid,
               ),

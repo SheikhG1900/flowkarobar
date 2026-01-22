@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/constants/app_constants.dart';
+import 'package:flowpaisa/l10n/app_localizations.dart';
 
 class AboutScreen extends StatelessWidget {
   const AboutScreen({super.key});
@@ -8,12 +9,13 @@ class AboutScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     const version = '1.0.0';
     const buildNumber = '1';
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('About'),
+        title: Text(l10n.about),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
@@ -60,7 +62,7 @@ class AboutScreen extends StatelessWidget {
 
             // Tagline
             Text(
-              'Track every paisa',
+              l10n.tagline,
               style: theme.textTheme.titleMedium?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -75,7 +77,7 @@ class AboutScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
-                'Version $version (Build $buildNumber)',
+                l10n.versionInfo(version, buildNumber),
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
@@ -101,10 +103,7 @@ class AboutScreen extends StatelessWidget {
                 ],
               ),
               child: Text(
-                'FlowPaisa is a comprehensive personal finance and cash flow manager. '
-                'Track your expenses, incomes, receivables, and payables all in one place. '
-                'Features include receipt scanning, WhatsApp integration, cloud backup, '
-                'and beautiful analytics.',
+                l10n.appDescription,
                 style: theme.textTheme.bodyMedium,
                 textAlign: TextAlign.center,
               ),
@@ -119,7 +118,7 @@ class AboutScreen extends StatelessWidget {
             _buildActionButton(
               context,
               icon: Icons.article_outlined,
-              label: 'Open Source Licenses',
+              label: l10n.openSourceLicenses,
               onTap: () {
                 showLicensePage(
                   context: context,
@@ -146,14 +145,14 @@ class AboutScreen extends StatelessWidget {
             _buildInfoCard(
               context,
               icon: Icons.code,
-              title: 'Developed by',
-              subtitle: 'TamataSoft',
+              title: l10n.developedBy,
+              subtitle: l10n.developerName,
             ),
             const SizedBox(height: 12),
 
             // Copyright
             Text(
-              '© 2026 TamataSoft. All rights reserved.',
+              l10n.copyright,
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -168,15 +167,16 @@ class AboutScreen extends StatelessWidget {
 
   Widget _buildFeatureGrid(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final features = [
-      {'icon': Icons.receipt_long, 'label': 'Transactions'},
-      {'icon': Icons.account_balance_wallet, 'label': 'Receivables'},
-      {'icon': Icons.payment, 'label': 'Payables'},
-      {'icon': Icons.people, 'label': 'Contacts'},
-      {'icon': Icons.analytics, 'label': 'Analytics'},
-      {'icon': Icons.camera_alt, 'label': 'Receipt Scan'},
-      {'icon': Icons.cloud_upload, 'label': 'Cloud Backup'},
-      {'icon': Icons.language, 'label': 'Multilingual'},
+      {'icon': Icons.receipt_long, 'label': l10n.transactions},
+      {'icon': Icons.account_balance_wallet, 'label': l10n.receivables},
+      {'icon': Icons.payment, 'label': l10n.payables},
+      {'icon': Icons.people, 'label': l10n.contacts},
+      {'icon': Icons.analytics, 'label': l10n.analytics},
+      {'icon': Icons.camera_alt, 'label': l10n.receiptScan},
+      {'icon': Icons.cloud_upload, 'label': l10n.cloudBackup},
+      {'icon': Icons.language, 'label': l10n.multilingual},
     ];
 
     return GridView.builder(

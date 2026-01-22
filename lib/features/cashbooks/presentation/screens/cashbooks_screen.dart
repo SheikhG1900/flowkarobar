@@ -14,6 +14,8 @@ import 'package:flowpaisa/shared/providers/database_provider.dart';
 import 'package:file_selector/file_selector.dart';
 import 'dart:io';
 
+import 'package:flowpaisa/l10n/app_localizations.dart';
+
 class CashbooksScreen extends ConsumerWidget {
   const CashbooksScreen({super.key});
 
@@ -23,10 +25,11 @@ class CashbooksScreen extends ConsumerWidget {
     final activeId = ref.watch(activeCashbookIdProvider);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('My Cashbooks'),
+        title: Text(l10n.myCashbooks),
       ),
       body: cashbooks.isEmpty
           ? const Center(child: CircularProgressIndicator())
@@ -77,7 +80,7 @@ class CashbooksScreen extends ConsumerWidget {
                       ),
                     ),
                     subtitle: Text(
-                      'Created ${AppDateFormatter.formatDate(cashbook.createdAt, pattern: ref.watch(userProfileProvider).dateFormat)}',
+                      l10n.createdLabel(AppDateFormatter.formatDate(cashbook.createdAt)),
                       style: theme.textTheme.bodySmall,
                     ),
                     trailing: Row(
@@ -91,9 +94,9 @@ class CashbooksScreen extends ConsumerWidget {
                               color: color,
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            child: const Text(
-                              'Active',
-                              style: TextStyle(
+                            child: Text(
+                              l10n.active,
+                              style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 10,
                                 fontWeight: FontWeight.bold,
@@ -105,74 +108,74 @@ class CashbooksScreen extends ConsumerWidget {
                           onSelected: (value) =>
                               _handleAction(context, ref, value, cashbook),
                           itemBuilder: (context) => [
-                            const PopupMenuItem(
+                            PopupMenuItem(
                               value: 'edit',
                               child: Row(
                                 children: [
-                                  Icon(Icons.edit_outlined, size: 20),
-                                  SizedBox(width: 8),
-                                  Text('Edit'),
+                                  const Icon(Icons.edit_outlined, size: 20),
+                                  const SizedBox(width: 8),
+                                  Text(l10n.edit),
                                 ],
                               ),
                             ),
-                            const PopupMenuItem(
+                            PopupMenuItem(
                               value: 'backup_local',
                               child: Row(
                                 children: [
-                                  Icon(Icons.file_upload_outlined, size: 20),
-                                  SizedBox(width: 8),
-                                  Text('Backup to File'),
-                                  SizedBox(width: 8),
-                                  PremiumBadge(isSmall: true),
+                                  const Icon(Icons.file_upload_outlined, size: 20),
+                                  const SizedBox(width: 8),
+                                  Text(l10n.backupToFile),
+                                  const SizedBox(width: 8),
+                                  const PremiumBadge(isSmall: true),
                                 ],
                               ),
                             ),
-                            const PopupMenuItem(
+                            PopupMenuItem(
                               value: 'restore_local',
                               child: Row(
                                 children: [
-                                  Icon(Icons.file_download_outlined, size: 20),
-                                  SizedBox(width: 8),
-                                  Text('Restore from File'),
-                                  SizedBox(width: 8),
-                                  PremiumBadge(isSmall: true),
+                                  const Icon(Icons.file_download_outlined, size: 20),
+                                  const SizedBox(width: 8),
+                                  Text(l10n.restoreFromFile),
+                                  const SizedBox(width: 8),
+                                  const PremiumBadge(isSmall: true),
                                 ],
                               ),
                             ),
-                            const PopupMenuItem(
+                            PopupMenuItem(
                               value: 'copy_preferences',
                               child: Row(
                                 children: [
-                                  Icon(Icons.copy_outlined, size: 20),
-                                  SizedBox(width: 8),
-                                  Text('Copy Preferences'),
-                                  SizedBox(width: 8),
-                                  PremiumBadge(isSmall: true),
+                                  const Icon(Icons.copy_outlined, size: 20),
+                                  const SizedBox(width: 8),
+                                  Text(l10n.copyPreferences),
+                                  const SizedBox(width: 8),
+                                  const PremiumBadge(isSmall: true),
                                 ],
                               ),
                             ),
-                            const PopupMenuItem(
+                            PopupMenuItem(
                               value: 'clear',
                               child: Row(
                                 children: [
-                                  Icon(Icons.cleaning_services_outlined,
+                                  const Icon(Icons.cleaning_services_outlined,
                                       size: 20, color: Colors.orange),
-                                  SizedBox(width: 8),
-                                  Text('Clear Data',
-                                      style: TextStyle(color: Colors.orange)),
+                                  const SizedBox(width: 8),
+                                  Text(l10n.clearData,
+                                      style: const TextStyle(color: Colors.orange)),
                                 ],
                               ),
                             ),
                             if (cashbook.id != 'default')
-                              const PopupMenuItem(
+                              PopupMenuItem(
                                 value: 'delete',
                                 child: Row(
                                   children: [
-                                    Icon(Icons.delete_outline,
+                                    const Icon(Icons.delete_outline,
                                         size: 20, color: Colors.red),
-                                    SizedBox(width: 8),
-                                    Text('Delete',
-                                        style: TextStyle(color: Colors.red)),
+                                    const SizedBox(width: 8),
+                                    Text(l10n.delete,
+                                        style: const TextStyle(color: Colors.red)),
                                   ],
                                 ),
                               ),
@@ -189,7 +192,7 @@ class CashbooksScreen extends ConsumerWidget {
             ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddSheet(context),
-        tooltip: 'Add Cashbook',
+        tooltip: l10n.addCashbook,
         child: const Icon(Icons.add),
       ),
     );
@@ -205,8 +208,10 @@ class CashbooksScreen extends ConsumerWidget {
   }
 
   void _switchCashbook(BuildContext context, WidgetRef ref, Cashbook cashbook) {
+    final l10n = AppLocalizations.of(context)!;
     ref.read(activeCashbookIdProvider.notifier).setActive(cashbook.id);
-    ToastUtils.showSuccessToast(context, ref, 'Switched to ${cashbook.name}');
+    ToastUtils.showSuccessToast(
+        context, ref, l10n.switchedToCashbook(cashbook.name));
   }
 
   void _handleAction(
@@ -262,6 +267,7 @@ class CashbooksScreen extends ConsumerWidget {
       final filePath = await LocalBackupService.prepareBackupFile(cashbook);
 
       if (context.mounted) {
+        final l10n = AppLocalizations.of(context)!;
         Navigator.pop(context); // Close loading
 
         if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
@@ -282,7 +288,7 @@ class CashbooksScreen extends ConsumerWidget {
 
             if (context.mounted) {
               ToastUtils.showSuccessToast(
-                  context, ref, 'Backup saved to ${result.path}');
+                  context, ref, l10n.exportSavedTo(result.path));
             }
           }
         } else {
@@ -290,12 +296,12 @@ class CashbooksScreen extends ConsumerWidget {
           await showDialog<void>(
             context: context,
             builder: (context) => AlertDialog(
-              title: const Text('Backup Ready'),
-              content: Text('Local backup for "${cashbook.name}" is ready.'),
+              title: Text(l10n.pdfReady),
+              content: Text(l10n.analyticsPDFReadyMessage),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text('Done'),
+                  child: Text(l10n.done),
                 ),
                 TextButton(
                   onPressed: () async {
@@ -303,24 +309,24 @@ class CashbooksScreen extends ConsumerWidget {
                       await LocalBackupService.saveToDownloads(filePath);
                       if (context.mounted) {
                         ToastUtils.showSuccessToast(
-                            context, ref, 'Saved to Downloads');
+                            context, ref, l10n.savedToDownloads);
                         Navigator.pop(context);
                       }
                     } catch (e) {
                       if (context.mounted) {
                         ToastUtils.showErrorToast(
-                            context, ref, 'Error saving: $e');
+                            context, ref, l10n.errorOccurred(e.toString()));
                       }
                     }
                   },
-                  child: const Text('Save Copy'),
+                  child: Text(l10n.saveCopy),
                 ),
                 FilledButton(
                   onPressed: () async {
                     Navigator.pop(context);
                     await LocalBackupService.shareBackupFile(filePath);
                   },
-                  child: const Text('Share'),
+                  child: Text(l10n.share),
                 ),
               ],
             ),
@@ -329,8 +335,9 @@ class CashbooksScreen extends ConsumerWidget {
       }
     } catch (e) {
       if (context.mounted) {
+        final l10n = AppLocalizations.of(context)!;
         Navigator.pop(context); // Close loading if still open
-        ToastUtils.showErrorToast(context, ref, 'Backup failed: $e');
+        ToastUtils.showErrorToast(context, ref, l10n.errorOccurred(e.toString()));
       }
     }
   }
@@ -347,70 +354,69 @@ class CashbooksScreen extends ConsumerWidget {
       if (file == null) return;
 
       if (context.mounted) {
+        final l10n = AppLocalizations.of(context)!;
         final confirmed = await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Text('Restore Cashbook?'),
-            content: Text(
-                'This will overwrite all data in "${cashbook.name}" with the selected backup file. This action cannot be undone.'),
+            title: Text(l10n.restore),
+            content: Text(l10n.restoreBackupMessage),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context, false),
-                child: const Text('Cancel'),
+                child: Text(l10n.cancel),
               ),
               FilledButton(
                 onPressed: () => Navigator.pop(context, true),
-                child: const Text('Restore'),
+                child: Text(l10n.restore),
               ),
             ],
           ),
         );
 
-        if (confirmed == true && context.mounted) {
-          await ref
-              .read(cashbooksProvider.notifier)
-              .restoreCashbookFromFile(cashbook.id, file);
+          if (confirmed == true && context.mounted) {
+            await ref
+                .read(cashbooksProvider.notifier)
+                .restoreCashbookFromFile(cashbook.id, file);
 
-          // Invalidate database if it was active
-          final activeId = ref.read(activeCashbookIdProvider);
-          if (activeId == cashbook.id) {
-            ref.invalidate(databaseProvider);
-          }
+            // Invalidate database if it was active
+            final activeId = ref.read(activeCashbookIdProvider);
+            if (activeId == cashbook.id) {
+              ref.invalidate(databaseProvider);
+            }
 
-          if (context.mounted) {
-            ToastUtils.showSuccessToast(context, ref,
-                'Cashbook "${cashbook.name}" restored successfully');
+            if (context.mounted) {
+              ToastUtils.showSuccessToast(
+                  context, ref, l10n.restoreSuccessful);
+            }
           }
-        }
       }
     } catch (e) {
       if (context.mounted) {
-        ToastUtils.showErrorToast(context, ref, 'Restore failed: $e');
+        final l10n = AppLocalizations.of(context)!;
+        ToastUtils.showErrorToast(
+            context, ref, l10n.errorOccurred(e.toString()));
       }
     }
   }
 
   void _showClearConfirmation(
       BuildContext context, WidgetRef ref, Cashbook cashbook) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.warning_amber, color: Colors.orange),
-            SizedBox(width: 12),
-            Text('Clear Data?'),
+            const Icon(Icons.warning_amber, color: Colors.orange),
+            const SizedBox(width: 12),
+            Text(l10n.deleteCashbookTitle),
           ],
         ),
-        content: Text(
-          'Are you sure you want to clear all data in "${cashbook.name}"? '
-          'This will permanently delete all transactions, contacts, and other records. '
-          'The cashbook itself will not be deleted.',
-        ),
+        content: Text(l10n.deleteCashbookMessage(cashbook.name)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           FilledButton(
             onPressed: () async {
@@ -420,13 +426,13 @@ class CashbooksScreen extends ConsumerWidget {
                   .clearCashbookData(cashbook.id);
               if (context.mounted) {
                 ToastUtils.showSuccessToast(
-                    context, ref, 'Data cleared for ${cashbook.name}');
+                    context, ref, l10n.cashbookDeleted);
               }
             },
             style: FilledButton.styleFrom(
               backgroundColor: Colors.orange,
             ),
-            child: const Text('Clear All'),
+            child: Text(l10n.deletePermanently),
           ),
         ],
       ),
@@ -435,37 +441,34 @@ class CashbooksScreen extends ConsumerWidget {
 
   void _showDeleteConfirmation(
       BuildContext context, WidgetRef ref, Cashbook cashbook) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.delete_forever, color: Colors.red),
-            SizedBox(width: 12),
-            Text('Delete Cashbook?'),
+            const Icon(Icons.delete_forever, color: Colors.red),
+            const SizedBox(width: 12),
+            Text(l10n.deleteCashbookTitle),
           ],
         ),
-        content: Text(
-          'Are you sure you want to delete "${cashbook.name}"? '
-          'ALL DATA within this cashbook will be PERMANENTLY LOST. '
-          'This action cannot be undone!',
-        ),
+        content: Text(l10n.deleteCashbookMessage(cashbook.name)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           FilledButton(
             onPressed: () {
               ref.read(cashbooksProvider.notifier).deleteCashbook(cashbook.id);
               Navigator.pop(context);
               ToastUtils.showSuccessToast(
-                  context, ref, 'Cashbook "${cashbook.name}" deleted');
+                  context, ref, l10n.cashbookDeleted);
             },
             style: FilledButton.styleFrom(
               backgroundColor: Colors.red,
             ),
-            child: const Text('Delete Permanently'),
+            child: Text(l10n.deletePermanently),
           ),
         ],
       ),

@@ -1,3 +1,4 @@
+import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -13,8 +14,8 @@ class SwipeableListItem extends StatelessWidget {
   final Color deleteBackgroundColor;
   final IconData editIcon;
   final IconData deleteIcon;
-  final String editLabel;
-  final String deleteLabel;
+  final String? editLabel;
+  final String? deleteLabel;
   final double borderRadius;
   final EdgeInsetsGeometry? backgroundMargin;
 
@@ -29,14 +30,15 @@ class SwipeableListItem extends StatelessWidget {
     this.deleteBackgroundColor = Colors.red,
     this.editIcon = Icons.edit,
     this.deleteIcon = Icons.delete,
-    this.editLabel = 'Edit',
-    this.deleteLabel = 'Delete',
+    this.editLabel,
+    this.deleteLabel,
     this.borderRadius = 16.0,
     this.backgroundMargin,
   });
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     // If both actions are disabled, return child without swipe functionality
     if (!enableEdit && !enableDelete) {
       return child;
@@ -52,9 +54,9 @@ class SwipeableListItem extends StatelessWidget {
           // Swipe left to delete
           final confirmed = await _showConfirmDialog(
             context,
-            title: 'Delete Item',
-            message: 'Are you sure you want to delete this item?',
-            confirmText: 'Delete',
+            title: l10n.deleteItem,
+            message: l10n.confirmDeleteItem,
+            confirmText: l10n.delete,
             confirmColor: deleteBackgroundColor,
           );
 
@@ -95,7 +97,7 @@ class SwipeableListItem extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      editLabel,
+                      editLabel ?? l10n.edit,
                       style: TextStyle(
                         color: Theme.of(context).brightness == Brightness.dark
                             ? Colors.white
@@ -132,7 +134,7 @@ class SwipeableListItem extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      deleteLabel,
+                      deleteLabel ?? l10n.delete,
                       style: TextStyle(
                         color: Theme.of(context).brightness == Brightness.dark
                             ? Colors.white
@@ -157,6 +159,7 @@ class SwipeableListItem extends StatelessWidget {
     required String confirmText,
     required Color confirmColor,
   }) {
+    final l10n = AppLocalizations.of(context)!;
     return showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -165,7 +168,7 @@ class SwipeableListItem extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),

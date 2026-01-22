@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
-import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
+import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
+import 'package:flowpaisa/l10n/app_localizations.dart';
 
 class ThemeSelectorScreen extends ConsumerWidget {
   const ThemeSelectorScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final currentThemeMode = ref.watch(themeModeProvider);
     final themeModeNotifier = ref.read(themeModeProvider.notifier);
     final theme = Theme.of(context);
@@ -16,8 +18,8 @@ class ThemeSelectorScreen extends ConsumerWidget {
     final themeOptions = [
       {
         'mode': ThemeMode.light,
-        'name': 'Light',
-        'description': 'Always use light theme',
+        'name': l10n.light,
+        'description': l10n.lightThemeDescription,
         'icon': Icons.light_mode,
         'previewColors': [
           Colors.white,
@@ -27,8 +29,8 @@ class ThemeSelectorScreen extends ConsumerWidget {
       },
       {
         'mode': ThemeMode.dark,
-        'name': 'Dark',
-        'description': 'Always use dark theme',
+        'name': l10n.dark,
+        'description': l10n.darkThemeDescription,
         'icon': Icons.dark_mode,
         'previewColors': [
           const Color(0xFF0A0E27),
@@ -38,8 +40,8 @@ class ThemeSelectorScreen extends ConsumerWidget {
       },
       {
         'mode': ThemeMode.system,
-        'name': 'System',
-        'description': 'Follow device settings',
+        'name': l10n.system,
+        'description': l10n.systemThemeDescription,
         'icon': Icons.brightness_auto,
         'previewColors': [
           Colors.grey[800]!,
@@ -51,7 +53,7 @@ class ThemeSelectorScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Theme'),
+        title: Text(l10n.theme),
         centerTitle: true,
       ),
       body: ListView.builder(
@@ -95,7 +97,7 @@ class ThemeSelectorScreen extends ConsumerWidget {
                   await themeModeNotifier.setThemeMode(mode);
                   if (context.mounted) {
                     ToastUtils.showSuccessToast(
-                        context, ref, 'Theme set to ${option['name']}');
+                        context, ref, l10n.themeSet(option['name'] as String));
                   }
                 },
                 borderRadius: BorderRadius.circular(20),
@@ -277,7 +279,7 @@ class ThemeSelectorScreen extends ConsumerWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  'Theme changes apply immediately',
+                  l10n.themeChangesApplyImmediately,
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),

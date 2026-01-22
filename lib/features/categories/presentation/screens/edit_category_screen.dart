@@ -8,6 +8,8 @@ import 'package:flowpaisa/features/categories/presentation/providers/categories_
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
 import 'package:flowpaisa/core/utils/icon_helper.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:flowpaisa/l10n/app_localizations.dart';
+import 'package:flowpaisa/core/utils/localization_helper.dart';
 
 class EditCategoryScreen extends ConsumerStatefulWidget {
   final Category category;
@@ -50,9 +52,11 @@ class _EditCategoryScreenState extends ConsumerState<EditCategoryScreen> {
   ];
 
   @override
-  void initState() {
-    super.initState();
-    _nameController = TextEditingController(text: widget.category.name);
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Use didChangeDependencies to access context for localization
+    _nameController = TextEditingController(
+        text: widget.category.name.localizeCategory(context));
     _selectedIcon = widget.category.icon ?? '58668';
 
     // Parse color from category
@@ -100,6 +104,7 @@ class _EditCategoryScreenState extends ConsumerState<EditCategoryScreen> {
   }
 
   Future<void> _updateCategory() async {
+    final l10n = AppLocalizations.of(context)!;
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
@@ -120,14 +125,14 @@ class _EditCategoryScreenState extends ConsumerState<EditCategoryScreen> {
       if (mounted) {
         if (success) {
           Navigator.pop(context, true); // Return true to indicate success
-          ToastUtils.showSuccessToast(context, ref, 'Category updated successfully');
+          ToastUtils.showSuccessToast(context, ref, l10n.categoryUpdatedSuccessfully);
         } else {
-          ToastUtils.showErrorToast(context, ref, 'Failed to update category');
+          ToastUtils.showErrorToast(context, ref, l10n.failedToUpdateCategory);
         }
       }
     } catch (e, stackTrace) {
       if (mounted) {
-        ToastUtils.showErrorToast(context, ref, 'Error: ${e.toString()}');
+        ToastUtils.showErrorToast(context, ref, l10n.errorOccurred(e.toString()));
         // Print error for debugging
         debugPrint('Error updating category: $e');
         debugPrint('Stack trace: $stackTrace');
@@ -142,11 +147,12 @@ class _EditCategoryScreenState extends ConsumerState<EditCategoryScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final isExpense = widget.category.type == 'EXPENSE';
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Edit Category'),
+        title: Text(l10n.editCategory),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -182,7 +188,7 @@ class _EditCategoryScreenState extends ConsumerState<EditCategoryScreen> {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      isExpense ? 'Expense Category' : 'Income Category',
+                      isExpense ? l10n.expenseCategory : l10n.incomeCategory,
                       style: theme.textTheme.titleMedium?.copyWith(
                         color: isExpense
                             ? AppColors.expenseColor
@@ -221,15 +227,15 @@ class _EditCategoryScreenState extends ConsumerState<EditCategoryScreen> {
               // Name Field
               TextFormField(
                 controller: _nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Category Name',
-                  prefixIcon: Icon(Icons.label_outline),
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: l10n.categoryName,
+                  prefixIcon: const Icon(Icons.label_outline),
+                  border: const OutlineInputBorder(),
                 ),
                 textCapitalization: TextCapitalization.sentences,
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
-                    return 'Please enter a name';
+                    return l10n.pleaseEnterName;
                   }
                   return null;
                 },
@@ -244,11 +250,11 @@ class _EditCategoryScreenState extends ConsumerState<EditCategoryScreen> {
                         size: 16, color: theme.colorScheme.primary),
                     const SizedBox(width: 8),
                     Text(
-                      'Suggested Icons',
+                      l10n.suggestedIcons,
                       style: theme.textTheme.titleSmall?.copyWith(
-                        color: theme.colorScheme.primary,
-                        fontWeight: FontWeight.bold,
-                      ),
+                            color: theme.colorScheme.primary,
+                            fontWeight: FontWeight.bold,
+                          ),
                     ),
                   ],
                 ),
@@ -296,7 +302,7 @@ class _EditCategoryScreenState extends ConsumerState<EditCategoryScreen> {
 
               // Color Picker
               Text(
-                'Color',
+                l10n.color,
                 style: theme.textTheme.titleMedium,
               ),
               const SizedBox(height: 12),
@@ -336,7 +342,7 @@ class _EditCategoryScreenState extends ConsumerState<EditCategoryScreen> {
 
               // Icon Picker
               Text(
-                'All Icons',
+                l10n.allIcons,
                 style: theme.textTheme.titleMedium,
               ),
               const SizedBox(height: 12),
@@ -389,7 +395,7 @@ class _EditCategoryScreenState extends ConsumerState<EditCategoryScreen> {
 
               // Update Button
               GradientButton(
-                label: 'Update Category',
+                label: l10n.updateCategory,
                 gradient: isExpense
                     ? AppColors.expenseGradient
                     : AppColors.incomeGradient,

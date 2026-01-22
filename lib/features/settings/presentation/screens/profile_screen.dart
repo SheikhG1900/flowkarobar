@@ -1,3 +1,4 @@
+import 'package:flowpaisa/shared/widgets/gradient_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
@@ -6,7 +7,7 @@ import 'package:flowpaisa/core/utils/date_formatter.dart';
 import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 import 'package:flowpaisa/features/currencies/presentation/screens/currencies_list_screen.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
-import 'package:flowpaisa/shared/widgets/gradient_button.dart';
+import 'package:flowpaisa/l10n/app_localizations.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -61,6 +62,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   Future<void> _saveProfile() async {
+    final l10n = AppLocalizations.of(context)!;
     if (_formKey.currentState!.validate()) {
       final notifier = ref.read(userProfileProvider.notifier);
 
@@ -81,19 +83,20 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
         if (mounted) {
           Navigator.pop(context); // Close loading
-          ToastUtils.showSuccessToast(
-              context, ref, 'Profile updated successfully');
+          ToastUtils.showSuccessToast(context, ref, l10n.profileUpdated);
         }
       } catch (e) {
         if (mounted) {
           Navigator.pop(context); // Close loading
-          ToastUtils.showErrorToast(context, ref, 'Error: ${e.toString()}');
+          ToastUtils.showErrorToast(
+              context, ref, l10n.errorOccurred(e.toString()));
         }
       }
     }
   }
 
   void _showDateFormatSelector() {
+    final l10n = AppLocalizations.of(context)!;
     final profile = ref.read(userProfileProvider);
     final theme = Theme.of(context);
     final now = DateTime.now();
@@ -123,7 +126,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             Padding(
               padding: const EdgeInsets.all(16),
               child: Text(
-                'Select Date Format',
+                l10n.selectDateFormat,
                 style: theme.textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
@@ -136,8 +139,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 children: [
                   ...predefinedFormats.map((format) => ListTile(
                         title: Text(format),
-                        subtitle: Text(
-                            'Sample: ${AppDateFormatter.formatDate(now, pattern: format)}'),
+                        subtitle: Text(l10n.sample(
+                            AppDateFormatter.formatDate(now,
+                                pattern: format))),
                         trailing: profile.dateFormat == format
                             ? Icon(Icons.check_circle,
                                 color: theme.colorScheme.primary)
@@ -152,8 +156,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   const Divider(),
                   ListTile(
                     leading: const Icon(Icons.edit_outlined),
-                    title: const Text('Custom Format'),
-                    subtitle: const Text('Enter your own date format pattern'),
+                    title: Text(l10n.customFormat),
+                    subtitle: Text(l10n.enterCustomDateFormat),
                     onTap: () {
                       Navigator.pop(context);
                       _showCustomDateFormatDialog();
@@ -169,6 +173,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   void _showCustomDateFormatDialog() {
+    final l10n = AppLocalizations.of(context)!;
     final profile = ref.read(userProfileProvider);
     final controller = TextEditingController(text: profile.dateFormat);
     final theme = Theme.of(context);
@@ -177,39 +182,41 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
-          title: const Text('Custom Date Format'),
+          title: Text(l10n.customDateFormat),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               TextField(
                 controller: controller,
-                decoration: const InputDecoration(
-                  labelText: 'Format Pattern',
+                decoration: InputDecoration(
+                  labelText: l10n.formatPattern,
                   hintText: 'e.g., dd-MM-yyyy',
-                  border: OutlineInputBorder(),
+                  border: const OutlineInputBorder(),
                 ),
                 onChanged: (value) => setState(() {}),
               ),
               const SizedBox(height: 12),
               if (controller.text.isNotEmpty)
                 Text(
-                  'Sample: ${AppDateFormatter.formatDate(DateTime.now(), pattern: controller.text)}',
+                  l10n.sample(
+                      AppDateFormatter.formatDate(DateTime.now(),
+                          pattern: controller.text)),
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.primary,
                   ),
                 ),
               const SizedBox(height: 8),
-              const Text(
-                'Use standard ICU patterns like:\ndd: Day, MM: Month, yyyy: Year\nMMM: Short Month, EEEE: Full Day',
-                style: TextStyle(fontSize: 10, color: Colors.grey),
+              Text(
+                l10n.dateFormatInstructions,
+                style: const TextStyle(fontSize: 10, color: Colors.grey),
               ),
             ],
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
+              child: Text(l10n.cancel),
             ),
             TextButton(
               onPressed: () {
@@ -220,7 +227,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   Navigator.pop(context);
                 }
               },
-              child: const Text('Save'),
+              child: Text(l10n.save),
             ),
           ],
         ),
@@ -230,12 +237,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final profile = ref.watch(userProfileProvider);
     final theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Profile'),
+        title: Text(l10n.profile),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
@@ -285,9 +293,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   onPressed: () {
                     // TODO: Implement photo upload
                     ToastUtils.showInfoToast(
-                        context, ref, 'Photo upload coming soon!');
+                        context, ref, l10n.photoUploadComingSoon);
                   },
-                  child: const Text('Change Photo'),
+                  child: Text(l10n.changePhoto),
                 ),
               ),
               const SizedBox(height: 32),
@@ -296,8 +304,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               TextFormField(
                 controller: _nameController,
                 decoration: InputDecoration(
-                  labelText: 'Name',
-                  hintText: 'Enter your name',
+                  labelText: l10n.name,
+                  hintText: l10n.enterName,
                   prefixIcon: const Icon(Icons.person_outline),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -305,7 +313,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
-                    return 'Please enter your name';
+                    return l10n.pleaseEnterName;
                   }
                   return null;
                 },
@@ -316,8 +324,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               TextFormField(
                 controller: _emailController,
                 decoration: InputDecoration(
-                  labelText: 'Email',
-                  hintText: 'Enter your email',
+                  labelText: l10n.email,
+                  hintText: l10n.enterEmail,
                   prefixIcon: const Icon(Icons.email_outlined),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -327,7 +335,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 validator: (value) {
                   if (value != null && value.isNotEmpty) {
                     if (!value.contains('@')) {
-                      return 'Please enter a valid email';
+                      return l10n.enterValidEmail;
                     }
                   }
                   return null;
@@ -339,8 +347,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               TextFormField(
                 controller: _phoneController,
                 decoration: InputDecoration(
-                  labelText: 'Phone Number',
-                  hintText: 'Enter your phone number',
+                  labelText: l10n.phoneNumber,
+                  hintText: l10n.enterPhoneNumber,
                   prefixIcon: const Icon(Icons.phone_outlined),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -354,8 +362,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               TextFormField(
                 controller: _addressController,
                 decoration: InputDecoration(
-                  labelText: 'Address',
-                  hintText: 'Enter your address',
+                  labelText: l10n.address,
+                  hintText: l10n.enterAddress,
                   prefixIcon: const Icon(Icons.location_on_outlined),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -368,7 +376,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
               // Preferences Section
               Text(
-                'Preferences',
+                l10n.preferences,
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
@@ -402,7 +410,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             color: theme.colorScheme.primary,
                           ),
                         ),
-                        title: const Text('Currency'),
+                        title: Text(l10n.currency),
                         subtitle: Text('${currency.name} (${currency.symbol})'),
                         trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                         onTap: () {
@@ -415,13 +423,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           );
                         },
                       ),
-                      loading: () => const ListTile(
-                        title: Text('Currency'),
-                        subtitle: Text('Loading...'),
+                      loading: () => ListTile(
+                        title: Text(l10n.currency),
+                        subtitle: Text(l10n.loading),
                       ),
                       error: (error, stack) => ListTile(
-                        title: const Text('Currency'),
-                        subtitle: Text('Error: $error'),
+                        title: Text(l10n.currency),
+                        subtitle:
+                            Text(l10n.errorOccurred(error.toString())),
                       ),
                     );
                   },
@@ -450,7 +459,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       color: theme.colorScheme.primary,
                     ),
                   ),
-                  title: const Text('Date Format'),
+                  title: Text(l10n.dateFormat),
                   subtitle: Text(profile.dateFormat),
                   trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                   onTap: _showDateFormatSelector,
@@ -460,7 +469,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
               // Save Button
               GradientButton(
-                label: 'Save Profile',
+                label: l10n.saveProfile,
                 icon: Icons.check,
                 gradient:
                     AppColors.getPrimaryGradient(theme.colorScheme.primary),

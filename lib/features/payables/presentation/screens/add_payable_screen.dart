@@ -4,7 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:drift/drift.dart' as drift;
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
+import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
+import 'package:flowpaisa/core/utils/date_formatter.dart';
 import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transaction_service_provider.dart';
 import 'package:flowpaisa/features/whatsapp/presentation/providers/whatsapp_provider.dart';
@@ -74,6 +76,7 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
   }
 
   Future<void> _initializeEntities() async {
+    final l10n = AppLocalizations.of(context)!;
     if (widget.initialExternalLinkId != null) {
       final repository = ref.read(payablesRepositoryProvider);
       final exists = await repository
@@ -86,7 +89,7 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
           ToastUtils.showWarningToast(
             context,
             ref,
-            'This payable has already been imported.',
+            l10n.payableAlreadyImported,
           );
         }
       }
@@ -146,8 +149,9 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
       return;
     }
 
+    final l10n = AppLocalizations.of(context)!;
     if (_selectedContactId == null) {
-      ToastUtils.showErrorToast(context, ref, 'Please select a contact');
+      ToastUtils.showErrorToast(context, ref, l10n.pleaseSelectContact);
       return;
     }
 
@@ -198,8 +202,8 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
           ToastUtils.showSuccessToast(
             context,
             ref,
-            'Payable added successfully',
-            actionLabel: 'SHARE',
+            l10n.payableAdded,
+            actionLabel: l10n.share,
             onActionPressed: (snackContext) => ShareHelper.sharePayable(
               snackContext,
               ref,
@@ -223,14 +227,14 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
             ),
           );
         } else {
-          ToastUtils.showSuccessToast(
-              context, ref, 'Payable added successfully');
+          ToastUtils.showSuccessToast(context, ref, l10n.payableAdded);
           Navigator.pop(context);
         }
       }
     } catch (e) {
       if (mounted) {
-        ToastUtils.showErrorToast(context, ref, 'Error: ${e.toString()}');
+        ToastUtils.showErrorToast(
+            context, ref, l10n.errorOccurred(e.toString()));
       }
     } finally {
       if (mounted) {
@@ -288,6 +292,7 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
           builder: (context, ref, _) {
             final contactsAsync = ref.watch(contactsListProvider);
 
+            final l10n = AppLocalizations.of(context)!;
             return Column(
               children: [
                 Padding(
@@ -296,7 +301,7 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Select Contact',
+                        l10n.selectContact,
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
@@ -316,7 +321,7 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
                           }
                         },
                         icon: const Icon(Icons.add),
-                        label: const Text('Add New'),
+                        label: Text(l10n.addNew),
                       ),
                     ],
                   ),
@@ -371,7 +376,8 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
                     },
                     loading: () =>
                         const Center(child: CircularProgressIndicator()),
-                    error: (e, s) => Center(child: Text('Error: $e')),
+                    error: (e, s) => Center(
+                        child: Text(l10n.errorOccurred(e.toString()))),
                   ),
                 ),
               ],
@@ -384,13 +390,14 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final limitsAsync = ref.watch(payableLimitsProvider);
     final currencySymbol = ref.watch(currencySymbolProvider);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Add Payable'),
+        title: Text(l10n.addPayable),
         leading: IconButton(
           icon: const Icon(Icons.close),
           onPressed: () => Navigator.pop(context),
@@ -429,7 +436,7 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
                 child: Column(
                   children: [
                     Text(
-                      'How much?',
+                      l10n.howMuch,
                       style: theme.textTheme.titleMedium?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
@@ -449,7 +456,7 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
                         border: InputBorder.none,
-                        hintText: '0.00',
+                        hintText: l10n.amountHint,
                         hintStyle: theme.textTheme.displayLarge?.copyWith(
                           color: Colors.grey.withValues(alpha: 0.3),
                         ),
@@ -462,13 +469,13 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
                       ],
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Please enter an amount';
+                          return l10n.pleaseEnterAmount;
                         }
                         if (double.tryParse(value) == null) {
-                          return 'Please enter a valid number';
+                          return l10n.pleaseEnterValidAmount;
                         }
                         if (double.parse(value) <= 0) {
-                          return 'Amount must be greater than 0';
+                          return l10n.amountGreaterThanZero;
                         }
                         return null;
                       },
@@ -529,14 +536,14 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Contact',
+                            l10n.contact,
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant,
                             ),
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            _selectedContact?.name ?? 'Select Contact',
+                            _selectedContact?.name ?? l10n.selectContact,
                             style: theme.textTheme.titleMedium?.copyWith(
                               fontWeight: _selectedContact != null
                                   ? FontWeight.bold
@@ -582,7 +589,7 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
                             });
                           },
                           icon: const Icon(Icons.add, size: 16),
-                          label: Text('Add "${widget.initialContactName}"'),
+                          label: Text(l10n.addContactWithName(widget.initialContactName!)),
                         ),
                       ] else ...[
                         const Spacer(),
@@ -598,10 +605,10 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
               // Description
               TextFormField(
                 controller: _descriptionController,
-                decoration: const InputDecoration(
-                  labelText: 'Description',
-                  hintText: 'e.g., Internet bill',
-                  prefixIcon: Icon(Icons.description_outlined),
+                decoration: InputDecoration(
+                  labelText: l10n.description,
+                  hintText: l10n.descriptionHint,
+                  prefixIcon: const Icon(Icons.description_outlined),
                 ),
                 textCapitalization: TextCapitalization.sentences,
               ),
@@ -639,14 +646,14 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Date',
+                            l10n.date,
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant,
                             ),
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
+                            AppDateFormatter.formatDate(_selectedDate),
                             style: theme.textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.w600,
                             ),
@@ -692,7 +699,7 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Due Date (Optional)',
+                            l10n.dueDateOptional,
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant,
                             ),
@@ -700,8 +707,8 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
                           const SizedBox(height: 4),
                           Text(
                             _dueDate != null
-                                ? '${_dueDate!.day}/${_dueDate!.month}/${_dueDate!.year}'
-                                : 'Not set',
+                                ? AppDateFormatter.formatDate(_dueDate!)
+                                : l10n.notSet,
                             style: theme.textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.w600,
                             ),
@@ -735,10 +742,10 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
                     _autoCreateExpense = value;
                   });
                 },
-                title: const Text('Auto-create expense'),
-                subtitle: const Text(
-                  'Record as expense when marked as paid',
-                  style: TextStyle(fontSize: 12),
+                title: Text(l10n.autoCreateExpense),
+                subtitle: Text(
+                  l10n.autoCreateExpenseSubtitle,
+                  style: const TextStyle(fontSize: 12),
                 ),
                 secondary: Container(
                   padding: const EdgeInsets.all(8),
@@ -778,7 +785,7 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
                       alignment: Alignment.topRight,
                       children: [
                         GradientButton(
-                          label: 'Add Payable',
+                          label: l10n.addPayable,
                           onPressed: _isDuplicate ? null : _savePayable,
                           gradient: AppColors.payableGradient,
                           width: double.infinity,

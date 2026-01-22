@@ -5,7 +5,8 @@ import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/core/utils/date_formatter.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/core/utils/icon_helper.dart';
-import 'package:material_symbols_icons/symbols.dart';
+import 'package:flowpaisa/l10n/app_localizations.dart';
+import 'package:flowpaisa/core/utils/localization_helper.dart';
 import 'package:flowpaisa/features/payables/domain/models.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transaction_service_provider.dart';
@@ -34,6 +35,7 @@ class PayableDetailsDialog extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final currencyAsync = ref.watch(currentCurrencyProvider);
     final currency = currencyAsync.value;
@@ -49,7 +51,7 @@ class PayableDetailsDialog extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Payable Details'),
+        title: Text(l10n.payableDetails),
         actions: [
           // Share button
           IconButton(
@@ -109,7 +111,7 @@ class PayableDetailsDialog extends ConsumerWidget {
               child: Column(
                 children: [
                   Text(
-                    isPending ? 'Payable (Pending)' : 'Paid',
+                    isPending ? l10n.payablePending : l10n.paidTag,
                     style: const TextStyle(
                       color: Colors.white70,
                       fontSize: 14,
@@ -137,18 +139,18 @@ class PayableDetailsDialog extends ConsumerWidget {
                         color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Row(
+                      child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(
+                          const Icon(
                             Icons.check_circle,
                             size: 16,
                             color: Colors.white,
                           ),
-                          SizedBox(width: 6),
+                          const SizedBox(width: 6),
                           Text(
-                            'Paid',
-                            style: TextStyle(
+                            l10n.paidTag,
+                            style: const TextStyle(
                               color: Colors.white,
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
@@ -245,18 +247,16 @@ class PayableDetailsDialog extends ConsumerWidget {
             _buildDetailRow(
               context,
               icon: Icons.calendar_today,
-              label: 'Date',
-              value: AppDateFormatter.formatDate(payable.date,
-                  pattern: ref.watch(userProfileProvider).dateFormat),
+              label: l10n.date,
+              value: AppDateFormatter.formatDate(payable.date),
             ),
 
             if (payable.dueDate != null)
               _buildDetailRow(
                 context,
                 icon: Icons.event,
-                label: 'Due Date',
-                value: AppDateFormatter.formatDate(payable.dueDate!,
-                    pattern: ref.watch(userProfileProvider).dateFormat),
+                label: l10n.dueDate,
+                value: AppDateFormatter.formatDate(payable.dueDate!),
                 valueColor: isPending
                     ? (payable.dueDate!.isBefore(DateTime.now())
                         ? Colors.red
@@ -268,7 +268,7 @@ class PayableDetailsDialog extends ConsumerWidget {
               _buildDetailRow(
                 context,
                 icon: Icons.description,
-                label: 'Description',
+                label: l10n.description,
                 value: payable.description!,
               ),
 
@@ -278,7 +278,7 @@ class PayableDetailsDialog extends ConsumerWidget {
               const Divider(),
               const SizedBox(height: 16),
               Text(
-                'Linked Transaction',
+                l10n.linkedTransaction,
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
@@ -296,7 +296,7 @@ class PayableDetailsDialog extends ConsumerWidget {
                 child: FilledButton.icon(
                   onPressed: () => _markAsPaid(context, ref, payable.id),
                   icon: const Icon(Icons.check_circle),
-                  label: const Text('Mark as Paid'),
+                  label: Text(l10n.markAsPaid),
                   style: FilledButton.styleFrom(
                     backgroundColor: AppColors.payableColor,
                     padding: const EdgeInsets.symmetric(vertical: 16),
@@ -367,6 +367,7 @@ class PayableDetailsDialog extends ConsumerWidget {
 
   Widget _buildLinkedTransactionCard(BuildContext context, WidgetRef ref,
       dynamic transaction, dynamic category) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final currency = ref.read(currentCurrencyProvider).value!;
     final isExpense = transaction.type == 'EXPENSE';
@@ -400,7 +401,7 @@ class PayableDetailsDialog extends ConsumerWidget {
                 child: Icon(
                   category != null && category.icon != null
                       ? (IconHelper.getIconData(category.icon) ??
-                          Symbols.category)
+                          Icons.category)
                       : (isExpense ? Icons.payment : Icons.monetization_on),
                   color: categoryColor,
                   size: 20,
@@ -413,8 +414,9 @@ class PayableDetailsDialog extends ConsumerWidget {
                   children: [
                     Text(
                       category != null
-                          ? category.name
-                          : (isExpense ? 'Expense' : 'Income'),
+                          ? LocalizationHelper.localizeCategory(
+                              context, category.name)
+                          : (isExpense ? l10n.expense : l10n.income),
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -422,7 +424,7 @@ class PayableDetailsDialog extends ConsumerWidget {
                       ),
                     ),
                     Text(
-                      isExpense ? 'Expense' : 'Income',
+                      isExpense ? l10n.expense : l10n.income,
                       style: theme.textTheme.bodySmall,
                     ),
                   ],
@@ -450,8 +452,7 @@ class PayableDetailsDialog extends ConsumerWidget {
           ],
           const SizedBox(height: 8),
           Text(
-            AppDateFormatter.formatDate(transaction.date,
-                pattern: ref.watch(userProfileProvider).dateFormat),
+            AppDateFormatter.formatDate(transaction.date),
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -463,21 +464,21 @@ class PayableDetailsDialog extends ConsumerWidget {
 
   Future<void> _deletePayable(
       BuildContext context, WidgetRef ref, int payableId) async {
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Payable'),
-        content: const Text(
-            'Are you sure you want to delete this payable? This action cannot be undone.'),
+        title: Text(l10n.deletePayableTitle),
+        content: Text(l10n.deletePayableMessage),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
             style: FilledButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Delete'),
+            child: Text(l10n.delete),
           ),
         ],
       ),
@@ -490,13 +491,12 @@ class PayableDetailsDialog extends ConsumerWidget {
 
         if (context.mounted) {
           Navigator.pop(context);
-          ToastUtils.showSuccessToast(
-              context, ref, 'Payable deleted successfully');
+          ToastUtils.showSuccessToast(context, ref, l10n.payableDeleted);
         }
       } catch (e) {
         if (context.mounted) {
           ToastUtils.showErrorToast(
-              context, ref, 'Error deleting payable: ${e.toString()}');
+              context, ref, l10n.errorOccurred(e.toString()));
         }
       }
     }
@@ -504,6 +504,7 @@ class PayableDetailsDialog extends ConsumerWidget {
 
   Future<void> _markAsPaid(
       BuildContext context, WidgetRef ref, int payableId) async {
+    final l10n = AppLocalizations.of(context)!;
     try {
       final repository = ref.read(payablesRepositoryProvider);
       await repository.markAsPaid(payableId);
@@ -520,7 +521,7 @@ class PayableDetailsDialog extends ConsumerWidget {
           final transactionService = ref.read(transactionServiceProvider);
           final whatsAppService = ref.read(whatsAppServiceProvider);
 
-          ToastUtils.showSuccessToast(context, ref, 'Marked as paid',
+          ToastUtils.showSuccessToast(context, ref, l10n.markedAsPaid,
               color: activeColor);
 
           if (updatedItem != null) {
@@ -541,7 +542,8 @@ class PayableDetailsDialog extends ConsumerWidget {
       }
     } catch (e) {
       if (context.mounted) {
-        ToastUtils.showErrorToast(context, ref, 'Error: ${e.toString()}');
+        ToastUtils.showErrorToast(
+            context, ref, l10n.errorOccurred(e.toString()));
       }
     }
   }
@@ -557,11 +559,12 @@ class PayableDetailsDialog extends ConsumerWidget {
     dynamic transactionService,
     dynamic whatsAppService,
   }) {
+    final l10n = AppLocalizations.of(context)!;
     ToastUtils.showSuccessToast(
       context,
       ref,
-      'Payable marked as paid. Inform the contact?',
-      actionLabel: 'SHARE',
+      l10n.informContactSettlementPayable,
+      actionLabel: l10n.share,
       onActionPressed: (snackContext) => ShareHelper.sharePayable(
         snackContext,
         ref,

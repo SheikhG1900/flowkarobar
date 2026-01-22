@@ -4,7 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:drift/drift.dart' as drift show Value;
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
+import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
+import 'package:flowpaisa/core/utils/date_formatter.dart';
+import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 import 'package:flowpaisa/features/payables/presentation/providers/payables_provider.dart';
 import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
 import 'package:flowpaisa/features/contacts/presentation/screens/add_contact_screen.dart';
@@ -49,13 +52,14 @@ class _EditPayableScreenState extends ConsumerState<EditPayableScreen> {
   }
 
   Future<void> _loadPayableData() async {
+    final l10n = AppLocalizations.of(context)!;
     try {
       final repository = ref.read(payablesRepositoryProvider);
       final payable = await repository.getPayableById(widget.payableId);
 
       if (payable == null) {
         if (mounted) {
-          ToastUtils.showErrorToast(context, ref, 'Payable not found');
+          ToastUtils.showErrorToast(context, ref, l10n.payableNotFound);
           Navigator.pop(context);
         }
         return;
@@ -84,7 +88,7 @@ class _EditPayableScreenState extends ConsumerState<EditPayableScreen> {
           _isLoadingData = false;
         });
         ToastUtils.showErrorToast(
-            context, ref, 'Error loading payable: ${e.toString()}');
+            context, ref, l10n.errorOccurred(e.toString()));
       }
     }
   }
@@ -97,17 +101,18 @@ class _EditPayableScreenState extends ConsumerState<EditPayableScreen> {
   }
 
   Future<void> _updatePayable() async {
+    final l10n = AppLocalizations.of(context)!;
     if (!_formKey.currentState!.validate()) {
       return;
     }
 
     if (_selectedContactId == null) {
-      ToastUtils.showErrorToast(context, ref, 'Please select a contact');
+      ToastUtils.showErrorToast(context, ref, l10n.pleaseSelectContact);
       return;
     }
 
     if (_payable == null) {
-      ToastUtils.showErrorToast(context, ref, 'Payable data not loaded');
+      ToastUtils.showErrorToast(context, ref, l10n.payableDataNotLoaded);
       return;
     }
 
@@ -134,11 +139,11 @@ class _EditPayableScreenState extends ConsumerState<EditPayableScreen> {
       if (mounted) {
         Navigator.pop(context);
         ToastUtils.showSuccessToast(
-            context, ref, 'Payable updated successfully');
+            context, ref, l10n.payableUpdated);
       }
     } catch (e) {
       if (mounted) {
-        ToastUtils.showErrorToast(context, ref, 'Error: ${e.toString()}');
+        ToastUtils.showErrorToast(context, ref, l10n.errorOccurred(e.toString()));
       }
     } finally {
       if (mounted) {
@@ -196,6 +201,7 @@ class _EditPayableScreenState extends ConsumerState<EditPayableScreen> {
           builder: (context, ref, _) {
             final contactsAsync = ref.watch(contactsListProvider);
 
+            final l10n = AppLocalizations.of(context)!;
             return Column(
               children: [
                 Padding(
@@ -204,7 +210,7 @@ class _EditPayableScreenState extends ConsumerState<EditPayableScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Select Contact',
+                        l10n.selectContact,
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
@@ -225,7 +231,7 @@ class _EditPayableScreenState extends ConsumerState<EditPayableScreen> {
                           }
                         },
                         icon: const Icon(Icons.add),
-                        label: const Text('Add New'),
+                        label: Text(l10n.addNew),
                       ),
                     ],
                   ),
@@ -280,7 +286,7 @@ class _EditPayableScreenState extends ConsumerState<EditPayableScreen> {
                     },
                     loading: () =>
                         const Center(child: CircularProgressIndicator()),
-                    error: (e, s) => Center(child: Text('Error: $e')),
+                    error: (e, s) => Center(child: Text(l10n.errorOccurred(e.toString()))),
                   ),
                 ),
               ],
@@ -293,13 +299,14 @@ class _EditPayableScreenState extends ConsumerState<EditPayableScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final currencySymbol = ref.watch(currencySymbolProvider);
 
     if (_isLoadingData) {
       return Scaffold(
         appBar: AppBar(
-          title: const Text('Edit Payable'),
+          title: Text(l10n.editPayable),
           leading: IconButton(
             icon: const Icon(Icons.close),
             onPressed: () => Navigator.pop(context),
@@ -311,7 +318,7 @@ class _EditPayableScreenState extends ConsumerState<EditPayableScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Edit Payable'),
+        title: Text(l10n.editPayable),
         leading: IconButton(
           icon: const Icon(Icons.close),
           onPressed: () => Navigator.pop(context),
@@ -350,7 +357,7 @@ class _EditPayableScreenState extends ConsumerState<EditPayableScreen> {
                 child: Column(
                   children: [
                     Text(
-                      'How much?',
+                      l10n.howMuch,
                       style: theme.textTheme.titleMedium?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
@@ -369,7 +376,7 @@ class _EditPayableScreenState extends ConsumerState<EditPayableScreen> {
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
                         border: InputBorder.none,
-                        hintText: '0.00',
+                        hintText: l10n.amountHint,
                         hintStyle: theme.textTheme.displayLarge?.copyWith(
                           color: Colors.grey.withValues(alpha: 0.3),
                         ),
@@ -382,13 +389,13 @@ class _EditPayableScreenState extends ConsumerState<EditPayableScreen> {
                       ],
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Please enter an amount';
+                          return l10n.pleaseEnterAmount;
                         }
                         if (double.tryParse(value) == null) {
-                          return 'Please enter a valid number';
+                          return l10n.pleaseEnterValidAmount;
                         }
                         if (double.parse(value) <= 0) {
-                          return 'Amount must be greater than 0';
+                          return l10n.amountGreaterThanZero;
                         }
                         return null;
                       },
@@ -449,14 +456,14 @@ class _EditPayableScreenState extends ConsumerState<EditPayableScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Contact',
+                            l10n.contact,
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant,
                             ),
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            _selectedContact?.name ?? 'Select Contact',
+                            _selectedContact?.name ?? l10n.selectContact,
                             style: theme.textTheme.titleMedium?.copyWith(
                               fontWeight: _selectedContact != null
                                   ? FontWeight.bold
@@ -480,10 +487,10 @@ class _EditPayableScreenState extends ConsumerState<EditPayableScreen> {
               // Description
               TextFormField(
                 controller: _descriptionController,
-                decoration: const InputDecoration(
-                  labelText: 'Description',
-                  hintText: 'e.g., Internet bill',
-                  prefixIcon: Icon(Icons.description_outlined),
+                decoration: InputDecoration(
+                  labelText: l10n.description,
+                  hintText: l10n.descriptionHint,
+                  prefixIcon: const Icon(Icons.description_outlined),
                 ),
                 textCapitalization: TextCapitalization.sentences,
               ),
@@ -521,7 +528,7 @@ class _EditPayableScreenState extends ConsumerState<EditPayableScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Date',
+                            l10n.date,
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant,
                             ),
@@ -529,8 +536,8 @@ class _EditPayableScreenState extends ConsumerState<EditPayableScreen> {
                           const SizedBox(height: 4),
                           Text(
                             _selectedDate != null
-                                ? '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}'
-                                : 'Not set',
+                                ? AppDateFormatter.formatDate(_selectedDate!)
+                                : l10n.notSet,
                             style: theme.textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.w600,
                             ),
@@ -576,7 +583,7 @@ class _EditPayableScreenState extends ConsumerState<EditPayableScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Due Date (Optional)',
+                            l10n.dueDateOptional,
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant,
                             ),
@@ -584,8 +591,8 @@ class _EditPayableScreenState extends ConsumerState<EditPayableScreen> {
                           const SizedBox(height: 4),
                           Text(
                             _dueDate != null
-                                ? '${_dueDate!.day}/${_dueDate!.month}/${_dueDate!.year}'
-                                : 'Not set',
+                                ? AppDateFormatter.formatDate(_dueDate!)
+                                : l10n.notSet,
                             style: theme.textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.w600,
                             ),
@@ -619,10 +626,10 @@ class _EditPayableScreenState extends ConsumerState<EditPayableScreen> {
                     _autoCreateExpense = value;
                   });
                 },
-                title: const Text('Auto-create expense'),
-                subtitle: const Text(
-                  'Record as expense when marked as paid',
-                  style: TextStyle(fontSize: 12),
+                title: Text(l10n.autoCreateExpense),
+                subtitle: Text(
+                  l10n.autoCreateExpenseSubtitle,
+                  style: const TextStyle(fontSize: 12),
                 ),
                 secondary: Container(
                   padding: const EdgeInsets.all(8),
@@ -641,7 +648,7 @@ class _EditPayableScreenState extends ConsumerState<EditPayableScreen> {
               _isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : GradientButton(
-                      label: 'Update Payable',
+                      label: l10n.updatePayable,
                       onPressed: _updatePayable,
                       gradient: AppColors.payableGradient,
                       width: double.infinity,

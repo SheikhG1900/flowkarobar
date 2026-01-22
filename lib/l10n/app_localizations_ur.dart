@@ -9,37 +9,52 @@ class AppLocalizationsUr extends AppLocalizations {
   AppLocalizationsUr([String locale = 'ur']) : super(locale);
 
   @override
-  String get appName => 'FlowPaisa';
+  String get appTitle => 'کیش بک';
 
   @override
-  String get addTransaction => 'لین دین شامل کریں';
+  String get cashbooks => 'کیش بکس';
 
   @override
-  String get expense => 'خرچ';
+  String get transactions => 'لین دین';
+
+  @override
+  String get settings => 'سیٹنگز';
+
+  @override
+  String get totalBalance => 'کل بیلنس';
 
   @override
   String get income => 'آمدنی';
 
   @override
-  String get receivable => 'وصولی';
+  String get expense => 'خرچہ';
 
   @override
-  String get payable => 'ادائیگی';
+  String get addTransaction => 'لین دین شامل کریں';
+
+  @override
+  String get editTransaction => 'لین دین میں ترمیم کریں';
+
+  @override
+  String get scheduleCreated => 'شیڈول کامیابی سے تیار ہو گیا';
+
+  @override
+  String get transactionUpdated => 'لین دین کامیابی سے اپ ڈیٹ ہو گیا';
+
+  @override
+  String get updateTransaction => 'لین دین اپ ڈیٹ کریں';
 
   @override
   String get amount => 'رقم';
 
   @override
-  String get description => 'تفصیل';
-
-  @override
   String get category => 'زمرہ';
 
   @override
-  String get contact => 'رابطہ';
+  String get date => 'تاریخ';
 
   @override
-  String get date => 'تاریخ';
+  String get description => 'تفصیل';
 
   @override
   String get save => 'محفوظ کریں';
@@ -51,50 +66,2025 @@ class AppLocalizationsUr extends AppLocalizations {
   String get delete => 'حذف کریں';
 
   @override
-  String get edit => 'ترمیم کریں';
+  String get payable => 'قابل ادائیگی';
 
   @override
-  String get dashboard => 'ڈیش بورڈ';
+  String createdLabel(String date) {
+    return 'تخلیق شدہ: $date';
+  }
 
   @override
-  String get transactions => 'لین دین';
+  String get defaultPremiumPrice => '\$9.99';
 
   @override
-  String get analytics => 'تجزیہ';
+  String errorOccurred(String error) {
+    return 'غلطی: $error';
+  }
 
   @override
-  String get settings => 'ترتیبات';
+  String get noDataForTrends => 'No data for trends';
 
   @override
-  String get paidFor => 'کے لیے ادا کیا';
+  String get cancelled => 'Cancelled';
 
   @override
-  String get paidBy => 'کی طرف سے ادا کیا';
+  String minutesAgo(int minutes) {
+    return '$minutes منٹ پہلے';
+  }
+
+  @override
+  String hoursAgo(int hours) {
+    return '$hours گھنٹے پہلے';
+  }
+
+  @override
+  String daysAgo(int days) {
+    return '$days دن پہلے';
+  }
+
+  @override
+  String sample(String sample) {
+    return 'نمونہ: $sample';
+  }
+
+  @override
+  String positiveAmount(String amount) {
+    return 'مثبت: $amount';
+  }
+
+  @override
+  String negativeAmount(String amount) {
+    return 'منفی: $amount';
+  }
+
+  @override
+  String themeSet(String name) {
+    return 'تھیم $name پر سیٹ کر دی گئی';
+  }
+
+  @override
+  String languageChanged(String name) {
+    return 'زبان تبدیل کر کے $name کر دی گئی';
+  }
+
+  @override
+  String lastBackupAt(String time) {
+    return 'آخری بیک اپ: $time';
+  }
+
+  @override
+  String restoreFailed(String error) {
+    return 'بحالی ناکام ہو گئی: $error';
+  }
+
+  @override
+  String errorSaving(String error) {
+    return 'محفوظ کرنے میں غلطی: $error';
+  }
+
+  @override
+  String errorSharing(String error) {
+    return 'شیئر کرنے میں غلطی: $error';
+  }
+
+  @override
+  String errorExporting(String error) {
+    return 'ایکسپورٹ کرنے میں غلطی: $error';
+  }
+
+  @override
+  String exportSavedTo(String path) {
+    return 'ایکسپورٹ $path میں محفوظ ہو گیا';
+  }
+
+  @override
+  String notificationTitlePrefix(String title) {
+    return 'اطلاع: $title';
+  }
+
+  @override
+  String errorDeletingTransaction(String error) {
+    return 'لین دین حذف کرنے میں غلطی: $error';
+  }
+
+  @override
+  String noTypeCategories(String type) {
+    return 'کوئی $type زمرہ جات نہیں ہیں';
+  }
+
+  @override
+  String deleteCashbookMessage(String name) {
+    return 'Are you sure you want to delete \"$name\"? This will permanently delete all data associated with this cashbook.';
+  }
+
+  @override
+  String currencySetTo(String name) {
+    return 'کرنسی $name پر سیٹ کر دی گئی';
+  }
+
+  @override
+  String confirmDelete(String item) {
+    return 'کیا آپ واقعی اس $item کو حذف کرنا چاہتے ہیں؟';
+  }
+
+  @override
+  String get search => 'تلاش کریں';
+
+  @override
+  String get noTransactions => 'کوئی لین دین نہیں ملا';
+
+  @override
+  String get selectCategory => 'زمرہ منتخب کریں';
+
+  @override
+  String get all => 'تمام';
+
+  @override
+  String get today => 'آج';
+
+  @override
+  String get yesterday => 'کل';
+
+  @override
+  String get thisMonth => 'اس ماہ';
+
+  @override
+  String get lastMonth => 'گزشتہ ماہ';
+
+  @override
+  String get customRange => 'حسب ضرورت حد';
+
+  @override
+  String get currency => 'کرنسی';
+
+  @override
+  String get language => 'زبان';
+
+  @override
+  String get theme => 'تھیم';
+
+  @override
+  String get light => 'لائٹ';
+
+  @override
+  String get dark => 'ڈارک';
+
+  @override
+  String get system => 'سسٹم';
+
+  @override
+  String get hindi => 'ہندی';
+
+  @override
+  String get english => 'انگریزی';
+
+  @override
+  String get urdu => 'اردو';
+
+  @override
+  String get cashbookName => 'کیش بک کا نام';
+
+  @override
+  String get createCashbook => 'کیش بک بنائیں';
+
+  @override
+  String get editCashbook => 'کیش بک میں ترمیم کریں';
+
+  @override
+  String get deleteCashbook => 'کیش بک حذف کریں';
+
+  @override
+  String get cashbookDeleted => 'کیش بک کامیابی سے حذف کر دی گئی';
+
+  @override
+  String get cashbookAdded => 'کیش بک کامیابی سے شامل کر دی گئی';
+
+  @override
+  String get cashbookUpdated => 'کیش بک کامیابی سے اپ ڈیٹ کر دی گئی';
+
+  @override
+  String get pleaseEnterName => 'براہ کرم نام درج کریں';
+
+  @override
+  String get copyPreferences => 'ترجیحات کاپی کریں';
+
+  @override
+  String get copyPreferencesFrom => 'ترجیحات یہاں سے کاپی کریں';
+
+  @override
+  String get copyPreferencesSubtitle =>
+      'زمرہ جات اور ترجیحات منتخب کردہ کیش بک سے کاپی کی جائیں گی۔';
+
+  @override
+  String get none => 'کوئی نہیں';
+
+  @override
+  String get howMuch => 'کتنی رقم؟';
+
+  @override
+  String get amountHint => '0.00';
+
+  @override
+  String get pleaseEnterAmount => 'براہ کرم رقم درج کریں';
+
+  @override
+  String get pleaseEnterValidNumber => 'براہ کرم درست نمبر درج کریں';
+
+  @override
+  String get amountGreaterThanZero => 'رقم 0 سے زیادہ ہونی چاہیے';
+
+  @override
+  String get contact => 'رابطہ';
+
+  @override
+  String get selectContact => 'رابطہ منتخب کریں';
+
+  @override
+  String get addNew => 'نیا شامل کریں';
+
+  @override
+  String get descriptionHint => 'مثلاً دوپہر کے کھانے کے پیسے';
+
+  @override
+  String get premiumFeature => 'پریمیم فیچر';
+
+  @override
+  String get premiumRequired => 'اس فیچر کے لیے پریمیم سبسکرپشن درکار ہے۔';
+
+  @override
+  String get getPremium => 'پریمیم حاصل کریں';
+
+  @override
+  String switchedToCashbook(String name) {
+    return '$name پر منتقل ہو گئے';
+  }
+
+  @override
+  String get categoryFood => 'خوراک';
+
+  @override
+  String get categoryTransport => 'نقل و حمل';
+
+  @override
+  String get categoryShopping => 'شاپنگ';
+
+  @override
+  String get categoryBills => 'بل';
+
+  @override
+  String get categoryEntertainment => 'تفریح';
+
+  @override
+  String get categoryHealth => 'صحت';
+
+  @override
+  String get categorySalary => 'تنخواہ';
+
+  @override
+  String get categoryBusiness => 'کاروبار';
+
+  @override
+  String get categoryInvestment => 'سرمایہ کاری';
+
+  @override
+  String get categoryRent => 'کرایہ';
+
+  @override
+  String get categoryOther => 'دیگر';
+
+  @override
+  String get statusPending => 'زیر التواء';
+
+  @override
+  String get statusCompleted => 'مکمل ہو گیا';
+
+  @override
+  String get statusCancelled => 'منسوخ کر دیا گیا';
+
+  @override
+  String get receivables => 'وصولی';
 
   @override
   String get pending => 'زیر التواء';
 
   @override
-  String get settled => 'طے شدہ';
+  String get overdue => 'واجب الادا تاریخ گزر گئی';
 
   @override
-  String get sendReminder => 'یاد دہانی بھیجیں';
+  String get receivedLabel => 'وصول شدہ';
 
   @override
-  String get scanReceipt => 'رسید سکین کریں';
+  String get generateDummyReceivables => '100 فرضی وصولیاں بنائیں';
 
   @override
-  String get export => 'برآمد';
+  String dummyGenerated(int count) {
+    return '$count فرضی اشیاء بنائی گئیں';
+  }
 
   @override
-  String get backup => 'بیک اپ';
+  String get errorLoadingReceivables => 'وصولیاں لوڈ کرنے میں غلطی';
+
+  @override
+  String get retry => 'دوبارہ کوشش کریں';
+
+  @override
+  String get noPendingReceivables => 'کوئی زیر التواء وصولی نہیں ہے';
+
+  @override
+  String get noOverdueReceivables => 'کوئی واجب الادا وصولی نہیں ہے';
+
+  @override
+  String get noReceivedPayments => 'کوئی وصول شدہ ادائیگی نہیں ہے';
+
+  @override
+  String get addReceivableSubtitle =>
+      'اپنی واجب الادا رقم کو ٹریک کرنے کے لیے وصولی شامل کریں';
+
+  @override
+  String get receivablesUpToDate => 'تمام وصولیاں اپ ٹو ڈیٹ ہیں';
+
+  @override
+  String get markReceivedSubtitle =>
+      'زیر التواء وصولیوں کو وصول شدہ کے طور پر نشان زد کریں';
+
+  @override
+  String get noMoreItems => 'مزید اشیاء نہیں ہیں';
+
+  @override
+  String get receivableDeleted => 'وصولی حذف کر دی گئی';
+
+  @override
+  String get unknown => 'نامعلوم';
+
+  @override
+  String dueAt(String date) {
+    return 'واجب الادا: $date';
+  }
+
+  @override
+  String get receivable => 'وصولی';
+
+  @override
+  String get addReceivable => 'وصولی شامل کریں';
+
+  @override
+  String get receivableAlreadyImported =>
+      'یہ وصولی پہلے ہی درآمد کی جا چکی ہے۔';
+
+  @override
+  String get pleaseSelectContact => 'براہ کرم ایک رابطہ منتخب کریں';
+
+  @override
+  String get receivableAdded => 'وصولی کامیابی سے شامل ہو گئی';
+
+  @override
+  String get share => 'شیئر کریں';
+
+  @override
+  String get dueDateOptional => 'واجب الادا تاریخ (اختیاری)';
+
+  @override
+  String get notSet => 'سیٹ نہیں ہے';
+
+  @override
+  String get autoCreateIncome => 'خودکار طور پر آمدنی بنائیں';
+
+  @override
+  String get autoCreateIncomeSubtitle =>
+      'وصول شدہ کے طور پر نشان زد ہونے پر آمدنی کے طور پر ریکارڈ کریں';
+
+  @override
+  String get receivableNotFound => 'وصولی نہیں ملی';
+
+  @override
+  String get receivableUpdated => 'وصولی کامیابی سے اپ ڈیٹ ہو گئی';
+
+  @override
+  String get editReceivable => 'وصولی میں ترمیم کریں';
+
+  @override
+  String get receivableDetails => 'وصولی کی تفصیلات';
+
+  @override
+  String get edit => 'ترمیم کریں';
+
+  @override
+  String get receivablePending => 'وصولی (زیر التواء)';
+
+  @override
+  String get dueDate => 'واجب الادا تاریخ';
+
+  @override
+  String get linkedTransaction => 'منسلک لین دین';
+
+  @override
+  String get markAsReceived => 'وصول شدہ کے طور پر نشان زد کریں';
+
+  @override
+  String get deleteReceivableTitle => 'وصولی حذف کریں';
+
+  @override
+  String get deleteReceivableMessage =>
+      'کیا آپ واقعی اس وصولی کو حذف کرنا چاہتے ہیں؟ اس عمل کو واپس نہیں لیا جا سکتا۔';
+
+  @override
+  String get markedAsReceived => 'وصول شدہ کے طور پر نشان زد کر دیا گیا';
+
+  @override
+  String get informContactSettlement =>
+      'وصولی وصول شدہ کے طور پر نشان زد کر دی گئی۔ رابطہ کو مطلع کریں؟';
+
+  @override
+  String addContactWithName(String name) {
+    return '\"$name\" شامل کریں';
+  }
+
+  @override
+  String get payables => 'واجب الادا';
+
+  @override
+  String get generateDummyPayables => '100 فرضی واجبات بنائیں';
+
+  @override
+  String get dummyPayablesGenerated => '100 فرضی واجبات بنائی گئیں';
+
+  @override
+  String get errorLoadingPayables => 'واجبات لوڈ کرنے میں غلطی';
+
+  @override
+  String get noPendingPayables => 'کوئی زیر التواء واجبات نہیں ہے';
+
+  @override
+  String get noOverduePayables => 'کوئی واجب الادا ادائیگی نہیں ہے';
+
+  @override
+  String get noPaidBills => 'کوئی ادا شدہ بل نہیں ہے';
+
+  @override
+  String get addPayableSubtitle =>
+      'اپنی واجب الادا رقم کو ٹریک کرنے کے لیے ادائیگی شامل کریں';
+
+  @override
+  String get allPayablesUpToDate => 'تمام واجبات اپ ٹو ڈیٹ ہیں';
+
+  @override
+  String get markPendingAsPaidSubtitle =>
+      'زیر التواء واجبات کو ادا شدہ کے طور پر نشان زد کریں';
+
+  @override
+  String get noMorePayables => 'مزید واجبات نہیں ہیں';
+
+  @override
+  String get payableDeleted => 'واجب الادا حذف کر دیا گیا';
+
+  @override
+  String get payableAlreadyImported =>
+      'یہ واجب الادا پہلے ہی درآمد کیا جا چکا ہے۔';
+
+  @override
+  String get payableAdded => 'واجب الادا کامیابی سے شامل ہو گیا';
+
+  @override
+  String get addPayable => 'واجب الادا شامل کریں';
+
+  @override
+  String get editPayable => 'واجب الادا میں ترمیم کریں';
+
+  @override
+  String get payableNotFound => 'واجب الادا نہیں ملا';
+
+  @override
+  String get payableDataNotLoaded => 'واجب الادا ڈیٹا لوڈ نہیں ہوا';
+
+  @override
+  String get payableUpdated => 'واجب الادا کامیابی سے اپ ڈیٹ ہو گیا';
+
+  @override
+  String get updatePayable => 'واجب الادا اپ ڈیٹ کریں';
+
+  @override
+  String get payableDetails => 'واجب الادا تفصیلات';
+
+  @override
+  String get payablePending => 'واجب الادا (زیر التواء)';
+
+  @override
+  String get paid => 'ادا شدہ';
+
+  @override
+  String get markAsPaid => 'ادا شدہ کے طور پر نشان زد کریں';
+
+  @override
+  String get deletePayableTitle => 'واجب الادا حذف کریں';
+
+  @override
+  String get deletePayableMessage =>
+      'کیا آپ واقعی اس واجب الادا کو حذف کرنا چاہتے ہیں؟ اس عمل کو واپس نہیں لیا جا سکتا۔';
+
+  @override
+  String get markedAsPaid => 'ادا شدہ کے طور پر نشان زد کر دیا گیا';
+
+  @override
+  String get informContactSettlementPayable =>
+      'واجب الادا رقم کی ادائیگی نشان زد کر دی گئی۔ رابطہ کو مطلع کریں؟';
+
+  @override
+  String get autoCreateExpense => 'خودکار طور پر خرچہ بنائیں';
+
+  @override
+  String get autoCreateExpenseSubtitle =>
+      'ادا شدہ کے طور پر نشان زد ہونے پر خرچے کے طور پر ریکارڈ کریں';
+
+  @override
+  String get appRefreshLanguage =>
+      'نئی زبان لاگو کرنے کے لیے ایپ ری فریش ہو جائے گی';
+
+  @override
+  String get profile => 'پروفائل';
+
+  @override
+  String get changePhoto => 'فوٹو تبدیل کریں';
+
+  @override
+  String get photoUploadComingSoon => 'فوٹو اپ لوڈ کی سہولت جلد آ رہی ہے!';
+
+  @override
+  String get name => 'نام';
+
+  @override
+  String get enterName => 'اپنا نام درج کریں';
+
+  @override
+  String get email => 'ای میل';
+
+  @override
+  String get enterEmail => 'اپنا ای میل درج کریں';
+
+  @override
+  String get enterValidEmail => 'براہ کرم درست ای میل درج کریں';
+
+  @override
+  String get phoneNumber => 'فون نمبر';
+
+  @override
+  String get enterPhoneNumber => 'اپنا فون نمبر درج کریں';
+
+  @override
+  String get address => 'پتہ';
+
+  @override
+  String get enterAddress => 'اپنا پتہ درج کریں';
+
+  @override
+  String get preferences => 'ترجیحات';
+
+  @override
+  String get dateFormat => 'تاریخ کا فارمیٹ';
+
+  @override
+  String get saveProfile => 'پروفائل محفوظ کریں';
+
+  @override
+  String get profileUpdated => 'پروفائل کامیابی سے اپ ڈیٹ ہو گیا';
+
+  @override
+  String get selectDateFormat => 'تاریخ کا فارمیٹ منتخب کریں';
+
+  @override
+  String get customFormat => 'حسب ضرورت فارمیٹ';
+
+  @override
+  String get enterCustomDateFormat => 'اپنا تاریخ کا فارمیٹ پیٹرن درج کریں';
+
+  @override
+  String get customDateFormat => 'حسب ضرورت تاریخ کا فارمیٹ';
+
+  @override
+  String get formatPattern => 'فارمیٹ پیٹرن';
+
+  @override
+  String get dateFormatInstructions =>
+      'معیاری ICU پیٹرن استعمال کریں جیسے:\ndd: دن، MM: مہینہ، yyyy: سال\nMMM: مختصر مہینہ، EEEE: مکمل دن';
+
+  @override
+  String get lightThemeDescription => 'ہمیشہ لائٹ تھیم استعمال کریں';
+
+  @override
+  String get darkThemeDescription => 'ہمیشہ ڈارک تھیم استعمال کریں';
+
+  @override
+  String get systemThemeDescription => 'ڈیوائس کی سیٹنگز کے مطابق';
+
+  @override
+  String get themeChangesApplyImmediately =>
+      'تھیم کی تبدیلیاں فوری لاگو ہوتی ہیں';
+
+  @override
+  String get analytics => 'تجزیات';
+
+  @override
+  String get exportAnalyticsPDF => 'تجزیات پی ڈی ایف ایکسپورٹ کریں';
+
+  @override
+  String get refreshAnalytics => 'تجزیات ری فریش کریں';
+
+  @override
+  String get financialSummary => 'مالی خلاصہ';
+
+  @override
+  String get contactSummaries => 'رابطہ خلاصہ';
+
+  @override
+  String get expensesByCategory => 'زمرہ کے لحاظ سے اخراجات';
+
+  @override
+  String get incomeVsExpenseTrend => 'آمدنی بنام خرچہ رجحان';
+
+  @override
+  String get payablesVsReceivablesTrend => 'واجبات بنام وصولی رجحان';
+
+  @override
+  String get topContactsByBalance => 'بیلنس کے لحاظ سے ٹاپ رابطے';
+
+  @override
+  String get paymentStatusDistribution => 'ادائیگی کی حیثیت کی تقسیم';
+
+  @override
+  String get incomeByCategory => 'زمرہ کے لحاظ سے آمدنی';
+
+  @override
+  String get unlockAdvancedAnalytics =>
+      'پریمیم کے ساتھ ایڈوانس تجزیات، رجحانات اور چارٹس ان لاک کریں۔';
+
+  @override
+  String get unlockPremium => 'پریمیم حاصل کریں';
+
+  @override
+  String get noContactActivity => 'اس مدت کے لیے کوئی رابطہ سرگرمی نہیں ہے';
+
+  @override
+  String get settled => 'تصفیہ ہو گیا';
+
+  @override
+  String get noExpensesPeriod => 'اس مدت کے لیے کوئی اخراجات نہیں ہیں';
+
+  @override
+  String get noDataTrends => 'رجحانات کے لیے کوئی ڈیٹا نہیں ہے';
+
+  @override
+  String get noPayableReceivableData => 'کوئی واجبات/وصولی کا ڈیٹا نہیں ہے';
+
+  @override
+  String get noContactData => 'رابطے کا کوئی ڈیٹا نہیں ہے';
+
+  @override
+  String get noPaymentStatusData => 'ادائیگی کی حیثیت کا کوئی ڈیٹا نہیں ہے';
+
+  @override
+  String get noIncome => 'اس مدت کے لیے کوئی آمدنی نہیں ہے';
+
+  @override
+  String get pdfReady => 'پی ڈی ایف تیار ہے';
+
+  @override
+  String get analyticsPDFReadyMessage =>
+      'آپ کی تجزیاتی پی ڈی ایف رپورٹ تیار ہے۔ کوئی عمل منتخب کریں:';
+
+  @override
+  String get saveCopy => 'کاپی محفوظ کریں';
+
+  @override
+  String get preview => 'پیش نظارہ';
+
+  @override
+  String get savedToDownloads => 'ڈاؤن لوڈز میں محفوظ ہو گیا';
+
+  @override
+  String get month => 'مہینہ';
+
+  @override
+  String get quarter => 'سہ ماہی';
+
+  @override
+  String get year => 'سال';
+
+  @override
+  String get custom => 'حسب ضرورت';
+
+  @override
+  String get payableShort => 'قابل ادائیگی:';
+
+  @override
+  String get receivableShort => 'وصولی:';
+
+  @override
+  String get netBalance => 'خالص بیلنس';
+
+  @override
+  String get allTime => 'کل وقت:';
+
+  @override
+  String get expenses => 'اخراجات';
+
+  @override
+  String get noExpenses => 'اس مدت کے لیے کوئی اخراجات نہیں ہیں';
+
+  @override
+  String get expanded => 'پھیلا ہوا';
+
+  @override
+  String get collapsed => 'سُکڑا ہوا';
+
+  @override
+  String get notifications => 'اطلاعات';
+
+  @override
+  String get allNotificationsMarkedRead =>
+      'تمام اطلاعات کو پڑھا ہوا نشان زد کر دیا گیا';
+
+  @override
+  String get markAllRead => 'سب کو پڑھا ہوا نشان زد کریں';
+
+  @override
+  String get noNotifications => 'کوئی اطلاع نہیں';
+
+  @override
+  String get noNotificationsDescription =>
+      'آپ سب اپ ٹو ڈیٹ ہیں! ہم آپ کو مطلع کریں گے:\n\n• واجب الادا وصولیاں اور ادائیگیاں\n• لین دین کے اہم سنگ میل\n• بیک اپ ریمائنڈرز\n• اہم اپ ڈیٹس';
+
+  @override
+  String get notificationsTip =>
+      'ٹپ: بروقت ریمائنڈرز حاصل کرنے کے لیے وصولیوں اور ادائیگیوں کے لیے واجب الادا تاریخیں مقرر کریں';
+
+  @override
+  String get justNow => 'ابھی';
+
+  @override
+  String get toggledDebugMode => 'ڈیبگ موڈ ٹوگل کر دیا گیا';
+
+  @override
+  String get debugToggleMode => 'ڈیبگ: موڈ ٹوگل کریں';
+
+  @override
+  String get premiumTitle => 'فلوپیسہ پریمیم';
+
+  @override
+  String get unlockAllFeatures => 'تمام فیچرز ان لاک کریں';
+
+  @override
+  String get premiumMemberStatus => 'آپ پریمیم ممبر ہیں';
+
+  @override
+  String get premiumFeaturesActive => 'تمام پریمیم فیچرز فعال ہیں';
+
+  @override
+  String get featureCloudBackupTitle => 'خودکار کلاؤڈ بیک اپ';
+
+  @override
+  String get featureCloudBackupDesc =>
+      'آپ کا ڈیٹا خودکار طور پر گوگل ڈرائیو پر بیک اپ ہو جاتا ہے۔ اپنے مالی ریکارڈز کبھی ضائع نہ کریں۔';
+
+  @override
+  String get featureAnalyticsTitle => 'ایڈوانس تجزیات';
+
+  @override
+  String get featureAnalyticsDesc =>
+      'ایڈوانس چارٹس، رجحانات اور مالیاتی پیشن گوئی کے ساتھ تفصیلی بصیرت حاصل کریں۔';
+
+  @override
+  String get featurePdfReportsTitle => 'پی ڈی ایف رپورٹس';
+
+  @override
+  String get featurePdfReportsDesc =>
+      'کسی بھی تاریخ کی حد کے لیے چارٹس اور خلاصوں کے ساتھ خوبصورت پی ڈی ایف رپورٹس بنائیں۔';
+
+  @override
+  String get featureUnlimitedTitle => 'لامحدود لین دین';
+
+  @override
+  String get featureUnlimitedDesc =>
+      'لین دین، رابطوں یا زمرہ جات کی تعداد پر کوئی پابندی نہیں ہے۔';
+
+  @override
+  String get featureSupportTitle => 'ترجیحی سپورٹ';
+
+  @override
+  String get featureSupportDesc =>
+      'کسی بھی مسئلے یا سوال کے لیے تیز تر جوابات اور سرشار سپورٹ حاصل کریں۔';
+
+  @override
+  String get featureEarlyAccessTitle => 'قبل از وقت رسائی';
+
+  @override
+  String get featureEarlyAccessDesc =>
+      'سب کے لیے جاری ہونے سے پہلے نئے فیچرز آزمانے والے پہلے فرد بنیں۔';
+
+  @override
+  String get featureTemplatesTitle => 'حسب ضرورت میسج ٹیمپلیٹس';
+
+  @override
+  String get featureTemplatesDesc =>
+      'کئی زبانوں میں یاد دہانیوں، رسیدوں اور شیئرنگ کے لیے واٹس ایپ میسج ٹیمپلیٹس کو حسب ضرورت بنائیں۔';
+
+  @override
+  String get premiumPlan => 'پریمیم پلان';
+
+  @override
+  String get lifetime => 'تاحیات';
+
+  @override
+  String get oneTimePaymentLifetime => 'ایک بار ادائیگی • تاحیات رسائی';
+
+  @override
+  String get processing => 'پروسیسنگ ہو رہی ہے...';
+
+  @override
+  String get restorePurchases => 'خریداری بحال کریں';
+
+  @override
+  String get premiumBenefitsNote =>
+      'ایک بار کی خریداری کے ساتھ تمام پریمیم فیچرز ہمیشہ کے لیے آپ کے ہیں۔ کوئی سبسکرپشن نہیں!';
+
+  @override
+  String get active => 'فعال';
+
+  @override
+  String get googleDriveBackup => 'گوگل ڈرائیو بیک اپ';
+
+  @override
+  String get cloudBackupPremiumDesc =>
+      'گوگل ڈرائیو پر کلاؤڈ بیک اپ پریمیم صارفین کے لیے دستیاب ہے۔';
+
+  @override
+  String get signOut => 'سائن آؤٹ';
+
+  @override
+  String get signInGoogleToBackup =>
+      'اپنے ڈیٹا کا بیک اپ لینے کے لیے گوگل کے ساتھ سائن ان کریں';
+
+  @override
+  String get signInGoogle => 'گوگل کے ساتھ سائن ان کریں';
+
+  @override
+  String get googleServicesNote =>
+      'نوٹ: بیک اپ کے لیے درست گوگل سروسز کنفیگریشن درکار ہے۔ اگر سائن ان ناکام ہو جائے تو اپنا سیٹ اپ چیک کریں۔';
+
+  @override
+  String get backupNow => 'ابھی بیک اپ لیں';
+
+  @override
+  String get noBackupsFound => 'کوئی بیک اپ نہیں ملا';
+
+  @override
+  String get availableBackups => 'دستیاب بیک اپ';
+
+  @override
+  String get restoreBackupTitle => 'بیک اپ بحال کریں؟';
+
+  @override
+  String get restoreBackupMessage =>
+      'یہ آپ کے موجودہ ڈیٹا کو منتخب کردہ بیک اپ سے بدل دے گا۔ \n\n⚠️ بحالی کے بعد ایپ کو ری اسٹارٹ کرنے کی ضرورت ہوگی۔';
 
   @override
   String get restore => 'بحال کریں';
 
   @override
-  String get premium => 'پریمیم';
+  String get restoreSuccessful => 'بحالی کامیاب';
 
   @override
-  String get free => 'مفت';
+  String get restoreSuccessfulMessage =>
+      'ڈیٹا کامیابی سے بحال ہو گیا۔ تبدیلیاں لاگو کرنے کے لیے براہ کرم ایپ کو بند کر کے دوبارہ چلائیں۔';
+
+  @override
+  String get ok => 'ٹھیک ہے';
+
+  @override
+  String get categories => 'زمرہ جات';
+
+  @override
+  String get categoryHiddenSuccessfully => 'زمرہ کامیابی سے چھپا دیا گیا';
+
+  @override
+  String get categoryDeletedSuccessfully => 'زمرہ کامیابی سے حذف کر دیا گیا';
+
+  @override
+  String get defaultLabel => 'ڈیفالٹ';
+
+  @override
+  String get addCategory => 'زمرہ شامل کریں';
+
+  @override
+  String get categoryName => 'زمرہ کا نام';
+
+  @override
+  String get suggestedIcons => 'تجویز کردہ آئیکنز';
+
+  @override
+  String get color => 'رنگ';
+
+  @override
+  String get allIcons => 'تمام آئیکنز';
+
+  @override
+  String get saveCategory => 'زمرہ محفوظ کریں';
+
+  @override
+  String get categoryAddedSuccessfully => 'زمرہ کامیابی سے شامل ہو گیا';
+
+  @override
+  String get editCategory => 'زمرہ میں ترمیم کریں';
+
+  @override
+  String get categoryUpdatedSuccessfully => 'زمرہ کامیابی سے اپ ڈیٹ ہو گیا';
+
+  @override
+  String get failedToUpdateCategory => 'زمرہ اپ ڈیٹ کرنے میں ناکامی';
+
+  @override
+  String get expenseCategory => 'اخراجات کا زمرہ';
+
+  @override
+  String get incomeCategory => 'آمدنی کا زمرہ';
+
+  @override
+  String get updateCategory => 'زمرہ اپ ڈیٹ کریں';
+
+  @override
+  String get searchContacts => 'رابطے تلاش کریں...';
+
+  @override
+  String get contacts => 'رابطے';
+
+  @override
+  String get noContactsYet => 'ابھی تک کوئی رابطہ نہیں ہے';
+
+  @override
+  String get noContactsFound => 'کوئی رابطہ نہیں ملا';
+
+  @override
+  String get addPeopleToTrack =>
+      'اخراجات کو ٹریک کرنے کے لیے لوگوں کو شامل کریں';
+
+  @override
+  String get trySearchingDifferentName =>
+      'کسی مختلف نام سے تلاش کرنے کی کوشش کریں';
+
+  @override
+  String get addContact => 'رابطہ شامل کریں';
+
+  @override
+  String get contactDeletedSuccessfully => 'رابطہ کامیابی سے حذف کر دیا گیا';
+
+  @override
+  String get contactPermissionDenied =>
+      'رابطہ کی اجازت مسترد کر دی گئی۔ براہ کرم اسے ترتیبات میں فعال کریں۔';
+
+  @override
+  String errorPickingContact(String error) {
+    return 'رابطہ منتخب کرنے میں خرابی: $error';
+  }
+
+  @override
+  String get selectPhoneNumber => 'فون نمبر منتخب کریں';
+
+  @override
+  String get contactUpdatedSuccessfully => 'رابطہ کامیابی سے اپ ڈیٹ ہو گیا';
+
+  @override
+  String get contactAddedSuccessfully => 'رابطہ کامیابی سے شامل ہو گیا';
+
+  @override
+  String get editContact => 'رابطہ میں ترمیم کریں';
+
+  @override
+  String get importFromContacts => 'رابطوں سے درآمد کریں';
+
+  @override
+  String get phoneNumberOptional => 'فون نمبر (اختیاری)';
+
+  @override
+  String get emailOptional => 'ای میل (اختیاری)';
+
+  @override
+  String get addressNotesOptional => 'پتہ / نوٹس (اختیاری)';
+
+  @override
+  String get updateContact => 'رابطہ اپ ڈیٹ کریں';
+
+  @override
+  String get saveContact => 'رابطہ محفوظ کریں';
+
+  @override
+  String get myCashbooks => 'میری کیش بکس';
+
+  @override
+  String get manageCashbooks => 'متعدد کیش بکس کا انتظام کریں';
+
+  @override
+  String get manageContacts => 'اپنے رابطوں کا انتظام کریں';
+
+  @override
+  String get manageCategories => 'اخراجات اور آمدنی کے زمروں کا انتظام کریں';
+
+  @override
+  String get manageCurrencies => 'کرنسیوں کا انتظام کریں';
+
+  @override
+  String get googleDriveBackupRestore => 'گوگل ڈرائیو بیک اپ اور بحالی';
+
+  @override
+  String get messageTemplates => 'میسج ٹیمپلیٹس';
+
+  @override
+  String get customizeMessageTemplates =>
+      'واٹس ایپ میسج ٹیمپلیٹس کو حسب ضرورت بنائیں';
+
+  @override
+  String get exportData => 'ڈیٹا ایکسپورٹ کریں';
+
+  @override
+  String get downloadDataCsvPdf =>
+      'اپنا ڈیٹا CSV یا PDF کے طور پر ڈاؤن لوڈ کریں';
+
+  @override
+  String get premiumActive => 'پریمیم فعال ہے';
+
+  @override
+  String get about => 'ایپ کے بارے میں';
+
+  @override
+  String get tagline => 'ہر پیسے کا حساب رکھیں';
+
+  @override
+  String versionInfo(String version, String buildNumber) {
+    return 'ورژن $version (بلڈ $buildNumber)';
+  }
+
+  @override
+  String get appDescription =>
+      'FlowPaisa ایک جامع ذاتی مالیات اور کیش فلو مینیجر ہے۔ اپنے اخراجات، آمدنی، وصولی اور واجب الادا رقوم کو ایک ہی جگہ پر ٹریک کریں۔ خصوصیات میں رسید اسکیننگ، واٹس ایپ انٹیگریشن، کلاؤڈ بیک اپ، اور خوبصورت تجزیات شامل ہیں۔';
+
+  @override
+  String get openSourceLicenses => 'اوپن سورس لائسنس';
+
+  @override
+  String get developedBy => 'تیار کردہ از';
+
+  @override
+  String get developerName => 'TamataSoft';
+
+  @override
+  String get copyright => '© 2026 TamataSoft. جملہ حقوق محفوظ ہیں۔';
+
+  @override
+  String get receiptScan => 'رسید اسکین';
+
+  @override
+  String get cloudBackup => 'کلاؤڈ بیک اپ';
+
+  @override
+  String get multilingual => 'کثیر لسانی';
+
+  @override
+  String get availableCash => 'دستیاب رقم';
+
+  @override
+  String get quickActions => 'فوری کارروائیاں';
+
+  @override
+  String get add => 'شامل کریں';
+
+  @override
+  String get scan => 'اسکین کریں';
+
+  @override
+  String get recentTransactions => 'حالیہ لین دین';
+
+  @override
+  String get viewAll => 'تمام دیکھیں';
+
+  @override
+  String get noTransactionsYet => 'ابھی تک کوئی لین دین نہیں ہے';
+
+  @override
+  String get tapToAddFirst =>
+      'اپنا پہلا لین دین شامل کرنے کے لیے + پر ٹیپ کریں';
+
+  @override
+  String get cashFlow => 'کیش فلو';
+
+  @override
+  String get netCash => 'خالص رقم';
+
+  @override
+  String get lendingCredit => 'ادھار اور کریڈٹ';
+
+  @override
+  String get netCredit => 'خالص کریڈٹ';
+
+  @override
+  String get receive => 'وصول کریں';
+
+  @override
+  String get messageTemplatesDesc =>
+      'میسج ٹیمپلیٹس کو حسب ضرورت بنانا پریمیم صارفین کے لیے دستیاب ہے۔';
+
+  @override
+  String get upgradeToPremium => 'پریمیم میں اپ گریڈ کریں';
+
+  @override
+  String get receivableReminders => 'وصولی کی یاد دہانیاں';
+
+  @override
+  String get pendingReceivable => 'زیر التواء وصولی';
+
+  @override
+  String get receivedPayment => 'وصول شدہ ادائیگی';
+
+  @override
+  String get payableReminders => 'واجب الادا یاد دہانیاں';
+
+  @override
+  String get pendingPayable => 'زیر التواء واجبات';
+
+  @override
+  String get paidPayable => 'ادا شدہ واجبات';
+
+  @override
+  String get transactionMessages => 'لین دین کے پیغامات';
+
+  @override
+  String get transactionReceipt => 'لین دین کی رسید';
+
+  @override
+  String get transactionSharePaidFor => 'لین دین شیئر - ادا کیا گیا';
+
+  @override
+  String get transactionSharePaidBy => 'لین دین شیئر - ادا کیا گیا بذریعہ';
+
+  @override
+  String get transactionShareWillReceive => 'لین دین شیئر - موصول ہوگا';
+
+  @override
+  String get transactionShareReceivedFrom => 'لین دین شیئر - موصول ہوا از';
+
+  @override
+  String get transactionShareGeneric => 'لین دین شیئر - عمومی';
+
+  @override
+  String get shareMessages => 'شیئر پیغامات';
+
+  @override
+  String get receivableSharePending => 'وصولی شیئر - زیر التواء';
+
+  @override
+  String get receivableShareReceived => 'وصولی شیئر - وصول شدہ';
+
+  @override
+  String get payableSharePending => 'واجبات شیئر - زیر التواء';
+
+  @override
+  String get payableSharePaid => 'واجبات شیئر - ادا شدہ';
+
+  @override
+  String get resetToDefault => 'ڈیفالٹ پر ری سیٹ کریں';
+
+  @override
+  String get resetTemplateTitle => 'ٹیمپلیٹ ری سیٹ کریں';
+
+  @override
+  String get resetTemplateMessage =>
+      'کیا آپ واقعی اس ٹیمپلیٹ کو ڈیفالٹ پر ری سیٹ کرنا چاہتے ہیں؟ اس عمل کو واپس نہیں لیا جا سکتا۔';
+
+  @override
+  String get templateSaved => 'ٹیمپلیٹ کامیابی سے محفوظ ہو گیا';
+
+  @override
+  String get templateReset => 'ٹیمپلیٹ ڈیفالٹ پر ری سیٹ ہو گیا';
+
+  @override
+  String get enterTemplateText => 'ٹیمپلیٹ ٹیکسٹ درج کریں...';
+
+  @override
+  String useVariableHint(Object variableName) {
+    return 'حرکی مواد کے لیے $variableName استعمال کریں';
+  }
+
+  @override
+  String get saveTemplate => 'ٹیمپلیٹ محفوظ کریں';
+
+  @override
+  String get availableVariables => 'دستیاب متغیرات';
+
+  @override
+  String get variablesInstructions =>
+      'آپ اپنے ٹیمپلیٹس میں یہ متغیرات استعمال کر سکتے ہیں:';
+
+  @override
+  String variableContactName(Object contactName) {
+    return '• $contactName - رابطے کا نام';
+  }
+
+  @override
+  String variableAmount(Object amount) {
+    return '• $amount - کرنسی کے ساتھ فارمیٹ شدہ رقم';
+  }
+
+  @override
+  String variableDescription(Object description) {
+    return '• $description - لین دین/وصولی/واجبات کی تفصیل';
+  }
+
+  @override
+  String variableDate(Object date) {
+    return '• $date - فارمیٹ شدہ تاریخ';
+  }
+
+  @override
+  String variableDueDate(Object dueDate) {
+    return '• $dueDate - فارمیٹ شدہ واجب الادا تاریخ';
+  }
+
+  @override
+  String variableCategoryName(Object categoryName) {
+    return '• $categoryName - زمرہ کا نام';
+  }
+
+  @override
+  String variableLink(Object link) {
+    return '• $link - ڈیپ لنک یو آر ایل';
+  }
+
+  @override
+  String variableType(Object type) {
+    return '• $type - لین دین کی قسم (آمدنی/خرچہ)';
+  }
+
+  @override
+  String variableStatus(Object status) {
+    return '• $status - اسٹیٹس ٹیکسٹ';
+  }
+
+  @override
+  String variableRelationship(Object relationship) {
+    return '• $relationship - تعلق کا ٹیکسٹ';
+  }
+
+  @override
+  String get noCurrencies => 'کوئی کرنسی نہیں ہے';
+
+  @override
+  String get currencyDeleted => 'کرنسی کامیابی سے حذف کر دی گئی';
+
+  @override
+  String get addCurrency => 'کرنسی شامل کریں';
+
+  @override
+  String get currencyNameLabel => 'کرنسی کا نام';
+
+  @override
+  String get currencyNameHint => 'مثلاً یورو، برطانوی پاؤنڈ';
+
+  @override
+  String get pleaseEnterCurrencyName => 'براہ کرم کرنسی کا نام درج کریں';
+
+  @override
+  String get currencySymbolLabel => 'کرنسی کی علامت';
+
+  @override
+  String get currencySymbolHint => 'مثلاً €، £، ¥';
+
+  @override
+  String get currencySymbolHelper =>
+      'آپ ایموجی، حروف یا علامات استعمال کر سکتے ہیں';
+
+  @override
+  String get pleaseEnterCurrencySymbol => 'براہ کرم کرنسی کی علامت درج کریں';
+
+  @override
+  String get symbolLengthError => 'علامت 10 حروف یا اس سے کم ہونی چاہیے';
+
+  @override
+  String get currencyCodeLabel => 'کرنسی کوڈ';
+
+  @override
+  String get currencyCodeHint => 'مثلاً EUR, GBP, JPY';
+
+  @override
+  String get currencyCodeHelper => 'ISO 4217 کوڈ (3 حروف)';
+
+  @override
+  String get pleaseEnterCurrencyCode => 'براہ کرم کرنسی کوڈ درج کریں';
+
+  @override
+  String get codeLengthError => 'کوڈ بالکل 3 حروف کا ہونا چاہیے';
+
+  @override
+  String get decimalPlacesLabel => 'دشमलव کے مقامات';
+
+  @override
+  String get decimalPlacesHelper => 'اعشاریہ کے بعد ہندسوں کی تعداد';
+
+  @override
+  String get noDecimals => '0 (کوئی اعشاریہ نہیں)';
+
+  @override
+  String get oneDecimal => '1 اعشاریہ کا مقام';
+
+  @override
+  String get twoDecimals => '2 اعشاریہ کے مقامات';
+
+  @override
+  String get saveCurrency => 'کرنسی محفوظ کریں';
+
+  @override
+  String get currencyAdded => 'کرنسی کامیابی سے شامل کر دی گئی';
+
+  @override
+  String get editCurrency => 'کرنسی میں ترمیم کریں';
+
+  @override
+  String get updateCurrency => 'کرنسی اپ ڈیٹ کریں';
+
+  @override
+  String get currencyUpdated => 'کرنسی کامیابی سے اپ ڈیٹ کر دی گئی';
+
+  @override
+  String get selectDateRange => 'تاریخ کی حد منتخب کریں';
+
+  @override
+  String get exportSuccessful => 'ایکسپورٹ کامیاب';
+
+  @override
+  String get transactionHistoryReady =>
+      'آپ کی لین دین کی ہسٹری شیئر کرنے کے لیے تیار ہے۔';
+
+  @override
+  String get done => 'ہو گیا';
+
+  @override
+  String get pdfReportReady =>
+      'آپ کی پی ڈی ایف رپورٹ تیار ہے۔ کوئی عمل منتخب کریں:';
+
+  @override
+  String get testPdfReady => 'ٹیسٹ پی ڈی ایف تیار ہے';
+
+  @override
+  String get testPdfCategoriesReady =>
+      'تمام زمروں کے ساتھ ٹیسٹ پی ڈی ایف تیار ہے۔ کوئی عمل منتخب کریں:';
+
+  @override
+  String get exportYourData => 'اپنا ڈیٹا ایکسپورٹ کریں';
+
+  @override
+  String get downloadHistoryCsvPdf =>
+      'اپنی لین دین کی ہسٹری CSV یا PDF کے طور پر ڈاؤن لوڈ کریں';
+
+  @override
+  String get startDate => 'شروع کی تاریخ';
+
+  @override
+  String get endDate => 'ختم ہونے کی تاریخ';
+
+  @override
+  String get selectDate => 'تاریخ منتخب کریں';
+
+  @override
+  String get exportSummary => 'ایکسپورٹ خلاصہ';
+
+  @override
+  String get totalTransactions => 'کل لین دین';
+
+  @override
+  String get csvInfoNote =>
+      'سی ایس وی فائلیں ایکسل یا گوگل شیٹس میں کھولی جا سکتی ہیں۔ پی ڈی ایف رپورٹ شیئرنگ کے لیے بہترین ہیں۔';
+
+  @override
+  String get testCategoriesPdf => 'ٹیسٹ زمرہ جات پی ڈی ایف (آئیکنز)';
+
+  @override
+  String get transactionDetails => 'لین دین کی تفصیلات';
+
+  @override
+  String get autoGenerated => 'خودکار طریقے سے تیار کردہ';
+
+  @override
+  String get scheduled => 'شیڈول شدہ';
+
+  @override
+  String get sendMessage => 'پیغام بھیجیں';
+
+  @override
+  String get linkedEntry => 'منسلک اندراج';
+
+  @override
+  String paidOn(String date) {
+    return 'ادائیگی کی تاریخ: $date';
+  }
+
+  @override
+  String receivedOn(String date) {
+    return 'وصولی کی تاریخ: $date';
+  }
+
+  @override
+  String get deleteTransactionTitle => 'لین دین حذف کریں';
+
+  @override
+  String get deleteTransactionMessage =>
+      'کیا آپ واقعی اس لین دین کو حذف کرنا چاہتے ہیں؟ یہ عمل واپس نہیں لیا جا سکتا۔';
+
+  @override
+  String get transactionDeleted => 'لین دین حذف کر دیا گیا';
+
+  @override
+  String get errorLoadingCurrency => 'کرنسی لوڈ کرنے میں غلطی';
+
+  @override
+  String get balanceLabel => 'بیلنس';
+
+  @override
+  String get errorLabel => 'غلطی';
+
+  @override
+  String get importTransaction => 'لین دین درآمد کریں';
+
+  @override
+  String get importReceivable => 'وصولی درآمد کریں';
+
+  @override
+  String get importPayable => 'واجبات درآمد کریں';
+
+  @override
+  String sharedBy(String name) {
+    return '$name کی طرف سے شیئر کیا گیا';
+  }
+
+  @override
+  String get sender => 'بھیجنے والا';
+
+  @override
+  String get someone => 'کوئی';
+
+  @override
+  String markedAsStatus(String name, String status) {
+    return '$name نے اسے $status کے طور پر نشان زد کیا ہے۔ اپنا مقامی ریکارڈ اپ ڈیٹ کریں؟';
+  }
+
+  @override
+  String get itemAlreadyImported => 'یہ چیز پہلے ہی درآمد کی جا چکی ہے۔';
+
+  @override
+  String get importDetails => 'تفصیلات درآمد کریں';
+
+  @override
+  String get viewDetails => 'تفصیلات دیکھیں';
+
+  @override
+  String get type => 'قسم';
+
+  @override
+  String get remaining => 'باقی';
+
+  @override
+  String get daily => 'روزانہ';
+
+  @override
+  String get monthly => 'ماہانہ';
+
+  @override
+  String get limitReached => 'حد ختم ہو گئی';
+
+  @override
+  String get proLabel => 'PRO';
+
+  @override
+  String get deleteItem => 'آئٹم حذف کریں';
+
+  @override
+  String get confirmDeleteItem => 'کیا آپ واقعی اس آئٹم کو حذف کرنا چاہتے ہیں؟';
+
+  @override
+  String sharePayableCompleted(String amount, String date, String link) {
+    return 'اسلام علیکم!\n\n$date کو $amount کی ادائیگی مکمل ہو گئی ہے۔\n\nFlowPaisa میں سنک کریں:\n$link';
+  }
+
+  @override
+  String sharePayablePending(String amount, String date, String link) {
+    return 'میں نے آپ کے $amount دینے ہیں\nتاریخ: $date\n\nFlowPaisa میں دیکھیں:\n$link';
+  }
+
+  @override
+  String shareReceivableReceived(String amount, String date, String link) {
+    return 'اسلام علیکم!\n\n$date کو $amount کی ادائیگی موصول ہو گئی ہے۔\n\nFlowPaisa میں سنک کریں:\n$link';
+  }
+
+  @override
+  String shareReceivablePending(String amount, String date, String link) {
+    return 'وصول کرنے والی رقم: $amount\nتاریخ: $date\n\nFlowPaisa میں دیکھیں:\n$link';
+  }
+
+  @override
+  String shareTransactionMessage(String amount, String date, String link) {
+    return '$date کو $amount کا لین دین ریکارڈ کیا گیا۔\n\nFlowPaisa میں دیکھیں:\n$link';
+  }
+
+  @override
+  String get shareViaWhatsApp => 'واٹس ایپ کے ذریعے شیئر کریں';
+
+  @override
+  String toContact(String name) {
+    return 'کو $name';
+  }
+
+  @override
+  String get chooseContact => 'رابطہ منتخب کریں';
+
+  @override
+  String get copyLink => 'لنک کاپی کریں';
+
+  @override
+  String get copyDeepLinkSubtitle => 'ڈیپ لنک کلپ بورڈ پر کاپی کریں';
+
+  @override
+  String get scanReceipt => 'رسید اسکین کریں';
+
+  @override
+  String get camera => 'کیمرہ';
+
+  @override
+  String get gallery => 'گیلری';
+
+  @override
+  String get scanningReceipt => 'رسید اسکین ہو رہی ہے...';
+
+  @override
+  String get noReceiptSelected => 'کوئی رسید منتخب نہیں کی گئی';
+
+  @override
+  String get reviewAndEdit => 'جائزہ لیں اور ترمیم کریں';
+
+  @override
+  String get merchantName => 'تاجر کا نام';
+
+  @override
+  String get totalAmount => 'کل رقم';
+
+  @override
+  String get proceedToAddTransaction => 'لین دین شامل کرنے کے لیے آگے بڑھیں';
+
+  @override
+  String errorPickingImage(String error) {
+    return 'تصویر لینے میں غلطی: $error';
+  }
+
+  @override
+  String errorScanningReceipt(String error) {
+    return 'رسید اسکین کرنے میں غلطی: $error';
+  }
+
+  @override
+  String get noCategoriesFound => 'کوئی زمرہ نہیں ملا';
+
+  @override
+  String get paidRelationship => 'ادائیگی کا تعلق';
+
+  @override
+  String get paidFor => 'کے لیے ادا کیا';
+
+  @override
+  String get paidBy => 'کی طرف سے ادا کیا گیا';
+
+  @override
+  String get iWillReceiveBack => 'مجھے واپس ملے گا';
+
+  @override
+  String get someonePaidForMe => 'کسی نے میرے لیے ادائیگی کی';
+
+  @override
+  String get receivedRelationship => 'موصولی کا تعلق';
+
+  @override
+  String get iOwe => 'میرا قرض';
+
+  @override
+  String get receivedLoan => 'قرض موصول ہوا';
+
+  @override
+  String get receiveLater => 'بعد میں وصول کریں';
+
+  @override
+  String get schedulePattern => 'شیڈول پیٹرن';
+
+  @override
+  String get startDateOptional => 'شروع کی تاریخ (اختیاری)';
+
+  @override
+  String get endDateOptional => 'ختم ہونے کی تاریخ (اختیاری)';
+
+  @override
+  String get scheduleUpdated => 'شیڈول کامیابی سے اپ ڈیٹ ہو گیا';
+
+  @override
+  String get updateSchedule => 'شیڈول اپ ڈیٹ کریں';
+
+  @override
+  String get updating => 'اپ ڈیٹ ہو رہا ہے...';
+
+  @override
+  String get contactOptional => 'رابطہ (اختیاری)';
+
+  @override
+  String get pleaseSelectContactRelationship =>
+      'براہ کرم اس تعلق کے لیے ایک رابطہ منتخب کریں';
+
+  @override
+  String get weekly => 'ہفتہ وار';
+
+  @override
+  String weeklyWithDays(String days) {
+    return 'ہفتہ وار: $days';
+  }
+
+  @override
+  String monthlyWithDay(String day) {
+    return 'ماہانہ: $day';
+  }
+
+  @override
+  String get schedules => 'شیڈولز';
+
+  @override
+  String get generate100DummyTransactions => '100 فرضی لین دین تیار کریں';
+
+  @override
+  String get generated100DummyTransactions => '100 فرضی لین دین تیار ہو گئے';
+
+  @override
+  String get errorLoadingTransactions => 'لین دین لوڈ کرنے میں غلطی';
+
+  @override
+  String get noSchedulesFound => 'کوئی شیڈول نہیں ملا';
+
+  @override
+  String get noMoreTransactions => 'مزید لین دین نہیں ہیں';
+
+  @override
+  String get scheduleDeleted => 'شیڈول کامیابی سے حذف ہو گیا';
+
+  @override
+  String get autoBadge => 'خودکار';
+
+  @override
+  String get uncategorized => 'بغیر زمرہ';
+
+  @override
+  String get editSchedule => 'شیڈول میں ترمیم کریں';
+
+  @override
+  String get schedule => 'شیڈول';
+
+  @override
+  String get confirm => 'تصدیق کریں';
+
+  @override
+  String get emailLabel => 'ای میل';
+
+  @override
+  String get notesLabel => 'نوٹس';
+
+  @override
+  String get deleteContactTitle => 'رابطہ حذف کریں';
+
+  @override
+  String get loading => 'لوڈنگ...';
+
+  @override
+  String get limitReachedTitle => 'حد تک پہنچ گئے';
+
+  @override
+  String get upgrade => 'اپ گریڈ کریں';
+
+  @override
+  String get summary => 'خلاصہ';
+
+  @override
+  String get noTransactionsInRange =>
+      'اس تاریخ کی حد میں کوئی لین دین نہیں ہے۔';
+
+  @override
+  String get noPayablesInRange =>
+      'اس تاریخ کی حد میں کوئی واجب الادا رقم نہیں ہے۔';
+
+  @override
+  String get noReceivablesInRange => 'اس تاریخ کی حد میں کوئی وصولی نہیں ہے۔';
+
+  @override
+  String get topCategoriesVisual => 'ٹاپ زمرہ جات (بصری)';
+
+  @override
+  String get incomeVsExpenseTrendVisual =>
+      'آمدنی بمقابلہ اخراجات کا رجحان (بصری)';
+
+  @override
+  String get payableVsReceivableTrendVisual =>
+      'واجب الادا بمقابلہ وصولی کا رجحان (بصری)';
+
+  @override
+  String get incomeShort => 'آمدنی:';
+
+  @override
+  String get shareTransaction => 'لین دین شیئر کریں';
+
+  @override
+  String get sharePaymentRequest => 'ادائیگی کی درخواست شیئر کریں';
+
+  @override
+  String get sharePaymentAcknowledgment => 'ادائیگی کا اعتراف شیئر کریں';
+
+  @override
+  String get openingWhatsApp => 'واٹس ایپ کھولا جا رہا ہے...';
+
+  @override
+  String get linkCopied => 'لنک کلپ بورڈ پر کاپی ہو گیا!';
+
+  @override
+  String failedToShare(String error) {
+    return 'شیئر کرنے میں ناکامی: $error';
+  }
+
+  @override
+  String failedToCopyLink(String error) {
+    return 'لنک کاپی کرنے میں ناکامی: $error';
+  }
+
+  @override
+  String get expenseShort => 'اخراجات:';
+
+  @override
+  String suggestedLabel(String name) {
+    return 'تجویز کردہ: $name';
+  }
+
+  @override
+  String get deleteCashbookTitle => 'Delete Cashbook';
+
+  @override
+  String get deletePermanently => 'Delete Permanently';
+
+  @override
+  String get pleaseEnterValidAmount => 'Please enter a valid amount';
+
+  @override
+  String get categoryEducation => 'تعلیم';
+
+  @override
+  String get categoryGift => 'تحفہ';
+
+  @override
+  String get statusPaid => 'ادا شدہ';
+
+  @override
+  String get statusReceived => 'وصول شدہ';
+
+  @override
+  String get statusSettled => 'تصفیہ شدہ';
+
+  @override
+  String get statusOverdue => 'واجب الادا';
+
+  @override
+  String get statusSent => 'بھیجا گیا';
+
+  @override
+  String get statusFailed => 'ناکام';
+
+  @override
+  String get payableTag => 'قابل ادائیگی';
+
+  @override
+  String get receivableTag => 'وصولی';
+
+  @override
+  String get receivedTag => 'وصول شدہ';
+
+  @override
+  String get paidTag => 'ادا شدہ';
+
+  @override
+  String get currencyUSD => 'US Dollar (\$)';
+
+  @override
+  String get currencyINR => 'Indian Rupee (₹)';
+
+  @override
+  String get currencyPKR => 'Pakistani Rupee (Rs)';
+
+  @override
+  String get inactive => 'Inactive';
+
+  @override
+  String get sundayShort => 'Sun';
+
+  @override
+  String get mondayShort => 'Mon';
+
+  @override
+  String get tuesdayShort => 'Tue';
+
+  @override
+  String get wednesdayShort => 'Wed';
+
+  @override
+  String get thursdayShort => 'Thu';
+
+  @override
+  String get fridayShort => 'Fri';
+
+  @override
+  String get saturdayShort => 'Sat';
+
+  @override
+  String get from => 'From';
+
+  @override
+  String get to => 'To';
+
+  @override
+  String get willReceive => 'Will Receive';
+
+  @override
+  String get selectSchedulePattern => 'Select Schedule Pattern';
+
+  @override
+  String get daysOfWeek => 'Days of Week';
+
+  @override
+  String get daysOfMonth => 'Days of Month';
+
+  @override
+  String get sunday => 'Sunday';
+
+  @override
+  String get monday => 'Monday';
+
+  @override
+  String get tuesday => 'Tuesday';
+
+  @override
+  String get wednesday => 'Wednesday';
+
+  @override
+  String get thursday => 'Thursday';
+
+  @override
+  String get friday => 'Friday';
+
+  @override
+  String get saturday => 'Saturday';
+
+  @override
+  String get updateReceivable => 'Update Receivable';
+
+  @override
+  String get newCashbook => 'New Cashbook';
+
+  @override
+  String get freeLimitReached => 'Free Limit Reached';
+
+  @override
+  String get cashbookNameHint => 'e.g., Personal, Business';
+
+  @override
+  String get selectIcon => 'Select Icon';
+
+  @override
+  String get selectColor => 'Select Color';
+
+  @override
+  String get updateCashbook => 'Update Cashbook';
+
+  @override
+  String get noOtherCashbooks => 'No other cashbooks available to copy from.';
+
+  @override
+  String get selectSourceCashbook => 'Select Source Cashbook';
+
+  @override
+  String toTarget(String name) {
+    return 'To: $name';
+  }
+
+  @override
+  String get whatToCopy => 'What to Copy?';
+
+  @override
+  String get userProfile => 'User Profile';
+
+  @override
+  String get userProfileDescription => 'Name, Email, and basic info';
+
+  @override
+  String get preferencesDescription => 'Currency and Date Format settings';
+
+  @override
+  String get messageTemplatesDescription => 'WhatsApp message templates';
+
+  @override
+  String get copy => 'Copy';
+
+  @override
+  String get pleaseSelectSource => 'Please select a source cashbook';
+
+  @override
+  String get pleaseSelectAtLeastOne =>
+      'Please select at least one item to copy';
+
+  @override
+  String get preferencesCopied => 'Preferences copied successfully';
+
+  @override
+  String errorCopyingPreferences(String error) {
+    return 'Error copying preferences: $error';
+  }
+
+  @override
+  String get reset => 'Reset';
+
+  @override
+  String get template => 'Template';
+
+  @override
+  String get variables => 'Variables';
+
+  @override
+  String get close => 'Close';
+
+  @override
+  String get dashboard => 'Dashboard';
+
+  @override
+  String get error => 'Error';
+
+  @override
+  String get currencies => 'Currencies';
+
+  @override
+  String get backup => 'Backup';
+
+  @override
+  String get premium => 'Premium';
+
+  @override
+  String get free => 'Free';
+
+  @override
+  String get transactionAlreadyImported => 'Transaction already imported';
+
+  @override
+  String get pleaseSelectContactLinked =>
+      'Please select a contact for linked transaction';
+
+  @override
+  String get transactionLinkedAdded =>
+      'Transaction linked and added successfully';
+
+  @override
+  String get transactionAdded => 'Transaction added successfully';
+
+  @override
+  String createCategoryNamed(String name) {
+    return 'Create category \"$name\"';
+  }
+
+  @override
+  String get tapToAddCategory => 'Tap to add this category';
+
+  @override
+  String get frequent => 'Frequent';
+
+  @override
+  String get saving => 'Saving...';
+
+  @override
+  String get transactionDeletedSuccessfully =>
+      'Transaction deleted successfully';
+
+  @override
+  String get googleDrive => 'Google Drive';
+
+  @override
+  String get backupToFile => 'Backup to File';
+
+  @override
+  String get restoreFromFile => 'Restore from File';
+
+  @override
+  String get clearData => 'Clear Data';
+
+  @override
+  String get addCashbook => 'Add Cashbook';
+
+  @override
+  String get cashbookCreated => 'Cashbook created successfully';
 }

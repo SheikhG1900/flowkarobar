@@ -1,3 +1,4 @@
+import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 /// Reusable widget for showing pagination loading states
@@ -15,6 +16,7 @@ class PaginationLoader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     if (isLoading) {
       return const Padding(
         padding: EdgeInsets.all(16.0),
@@ -27,7 +29,7 @@ class PaginationLoader extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         child: Center(
           child: Text(
-            noMoreText ?? 'No more items',
+            noMoreText ?? l10n.noMoreItems,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: Colors.grey[600],
             ),

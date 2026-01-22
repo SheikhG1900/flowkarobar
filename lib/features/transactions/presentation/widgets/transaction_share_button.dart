@@ -10,6 +10,7 @@ import 'package:flowpaisa/features/whatsapp/domain/deep_link_service.dart';
 import 'package:flowpaisa/features/whatsapp/presentation/providers/whatsapp_provider.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
 import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
+import 'package:flowpaisa/l10n/app_localizations.dart';
 
 class TransactionShareButton extends ConsumerWidget {
   final Transaction transaction;
@@ -25,10 +26,11 @@ class TransactionShareButton extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     return IconButton(
       icon: const Icon(Icons.share),
       onPressed: () => _showShareOptions(context, ref),
-      tooltip: 'Share Transaction',
+      tooltip: l10n.shareTransaction,
     );
   }
 
@@ -67,6 +69,7 @@ class _ShareOptionsSheetState extends State<_ShareOptionsSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -74,24 +77,24 @@ class _ShareOptionsSheetState extends State<_ShareOptionsSheet> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Share Transaction',
+            l10n.shareTransaction,
             style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: 16),
           ListTile(
             leading: const Icon(Icons.chat, color: Colors.green),
-            title: const Text('Share via WhatsApp'),
+            title: Text(l10n.shareViaWhatsApp),
             subtitle: widget.contact != null && widget.contact!.phone != null
-                ? Text('To ${widget.contact!.name}')
-                : const Text('Choose contact'),
+                ? Text(l10n.toContact(widget.contact!.name))
+                : Text(l10n.chooseContact),
             onTap: _isSharing
                 ? null
                 : () => _shareViaWhatsApp(context, widget.ref),
           ),
           ListTile(
             leading: const Icon(Icons.link),
-            title: const Text('Copy Link'),
-            subtitle: const Text('Copy deep link to clipboard'),
+            title: Text(l10n.copyLink),
+            subtitle: Text(l10n.copyDeepLinkSubtitle),
             onTap: _isSharing ? null : () => _copyLink(context, widget.ref),
           ),
           if (_isSharing)
@@ -107,6 +110,7 @@ class _ShareOptionsSheetState extends State<_ShareOptionsSheet> {
   }
 
   Future<void> _shareViaWhatsApp(BuildContext context, WidgetRef ref) async {
+    final l10n = AppLocalizations.of(context)!;
     setState(() => _isSharing = true);
 
     try {
@@ -116,7 +120,7 @@ class _ShareOptionsSheetState extends State<_ShareOptionsSheet> {
       final currencySymbol = widget.ref.read(currencySymbolProvider);
       final userProfile = widget.ref.read(userProfileProvider);
 
-      final senderName = userProfile.name ?? 'Someone';
+      final senderName = userProfile.name ?? l10n.someone;
       final senderPhone = userProfile.phone ?? '';
 
       // Ensure external ID is persisted before sharing
@@ -145,37 +149,35 @@ class _ShareOptionsSheetState extends State<_ShareOptionsSheet> {
 
       String relationshipText = '';
       if (widget.transaction.paidRelationship == 'PAID_FOR') {
-        relationshipText = 'I have recorded that I paid on your behalf';
+        relationshipText = l10n.transactionSharePaidFor;
       } else if (widget.transaction.paidRelationship == 'PAID_BY') {
-        relationshipText = 'I have recorded that you paid for me';
+        relationshipText = l10n.transactionSharePaidBy;
       } else if (widget.transaction.paidRelationship == 'WILL_RECEIVE') {
-        relationshipText = 'I have recorded that I am expecting a payment of';
+        relationshipText = l10n.transactionShareWillReceive;
       } else if (widget.transaction.paidRelationship == 'RECEIVED_FROM') {
-        relationshipText =
-            'I have recorded that I received *${AmountFormatter.formatWithCurrency(widget.transaction.amount, currencySymbol, 2)}* from you';
+        relationshipText = l10n.transactionShareReceivedFrom;
       } else {
-        relationshipText = 'I have recorded a payment of';
+        relationshipText = l10n.transactionShareGeneric;
       }
 
-      final message = '''
-💰 Transaction Recorded
-
-$relationshipText *${AmountFormatter.formatWithCurrency(widget.transaction.amount, currencySymbol, 2)}* on *${AppDateFormatter.formatDate(widget.transaction.date, pattern: userProfile.dateFormat)}*.
-
-${widget.transaction.description != null && widget.transaction.description!.isNotEmpty ? 'This was for _${widget.transaction.description}_.\n' : ''}
-View and import this transaction in FlowPaisa:
-$link
-''';
+      final message = l10n.shareTransactionMessage(
+        amount: AmountFormatter.formatWithCurrency(
+            widget.transaction.amount, currencySymbol, 2),
+        date: AppDateFormatter.formatDate(widget.transaction.date,
+            pattern: userProfile.dateFormat),
+        link: link,
+      );
 
       await whatsAppService.sendMessage(widget.contact?.phone ?? '', message);
 
       if (context.mounted) {
         Navigator.of(context).pop();
-        ToastUtils.showSuccessToast(context, ref, 'Opening WhatsApp...');
+        ToastUtils.showSuccessToast(context, ref, l10n.openingWhatsApp);
       }
     } catch (e) {
       if (context.mounted) {
-        ToastUtils.showErrorToast(context, ref, 'Failed to share: $e');
+        ToastUtils.showErrorToast(
+            context, ref, l10n.failedToShare(e.toString()));
       }
     } finally {
       if (mounted) {
@@ -185,6 +187,7 @@ $link
   }
 
   Future<void> _copyLink(BuildContext context, WidgetRef ref) async {
+    final l10n = AppLocalizations.of(context)!;
     setState(() => _isSharing = true);
 
     try {
@@ -192,7 +195,7 @@ $link
       final transactionService = widget.ref.read(transactionServiceProvider);
       final userProfile = widget.ref.read(userProfileProvider);
 
-      final senderName = userProfile.name ?? 'Someone';
+      final senderName = userProfile.name ?? l10n.someone;
       final senderPhone = userProfile.phone ?? '';
 
       // Ensure external ID is persisted before sharing
@@ -219,11 +222,12 @@ $link
 
       if (context.mounted) {
         Navigator.of(context).pop();
-        ToastUtils.showSuccessToast(context, ref, 'Link copied to clipboard!');
+        ToastUtils.showSuccessToast(context, ref, l10n.linkCopied);
       }
     } catch (e) {
       if (context.mounted) {
-        ToastUtils.showErrorToast(context, ref, 'Failed to copy link: $e');
+        ToastUtils.showErrorToast(
+            context, ref, l10n.failedToCopyLink(e.toString()));
       }
     } finally {
       if (mounted) {

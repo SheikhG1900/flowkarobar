@@ -8,6 +8,8 @@ import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 
 import 'package:material_symbols_icons/symbols.dart';
 
+import 'package:flowpaisa/l10n/app_localizations.dart';
+
 class AddCashbookSheet extends ConsumerStatefulWidget {
   final Cashbook? cashbook;
 
@@ -91,6 +93,7 @@ class _AddCashbookSheetState extends ConsumerState<AddCashbookSheet> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final isDark = theme.brightness == Brightness.dark;
     final isEdit = widget.cashbook != null;
     final limits = ref.watch(cashbookLimitsProvider);
@@ -116,7 +119,7 @@ class _AddCashbookSheetState extends ConsumerState<AddCashbookSheet> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  isEdit ? 'Edit Cashbook' : 'New Cashbook',
+                  isEdit ? l10n.editCashbook : l10n.newCashbook,
                   style: theme.textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -143,7 +146,7 @@ class _AddCashbookSheetState extends ConsumerState<AddCashbookSheet> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        'Free limit reached (Max 2). Upgrade to Premium for unlimited cashbooks.',
+                        l10n.freeLimitReached,
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: AppColors.warning,
                           fontWeight: FontWeight.w500,
@@ -156,8 +159,8 @@ class _AddCashbookSheetState extends ConsumerState<AddCashbookSheet> {
             TextFormField(
               controller: _nameController,
               decoration: InputDecoration(
-                labelText: 'Cashbook Name',
-                hintText: 'e.g. Travel, Home Construction',
+                labelText: l10n.cashbookName,
+                hintText: l10n.cashbookNameHint,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -165,7 +168,7 @@ class _AddCashbookSheetState extends ConsumerState<AddCashbookSheet> {
               ),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
-                  return 'Please enter a name';
+                  return l10n.pleaseEnterName;
                 }
                 return null;
               },
@@ -174,7 +177,7 @@ class _AddCashbookSheetState extends ConsumerState<AddCashbookSheet> {
               enabled: isEdit || limits.canAdd,
             ),
             const SizedBox(height: 24),
-            Text('Select Icon', style: theme.textTheme.titleMedium),
+            Text(l10n.selectIcon, style: theme.textTheme.titleMedium),
             const SizedBox(height: 12),
             SizedBox(
               height: 100,
@@ -219,7 +222,7 @@ class _AddCashbookSheetState extends ConsumerState<AddCashbookSheet> {
               ),
             ),
             const SizedBox(height: 24),
-            Text('Select Color', style: theme.textTheme.titleMedium),
+            Text(l10n.selectColor, style: theme.textTheme.titleMedium),
             const SizedBox(height: 12),
             SizedBox(
               height: 50,
@@ -276,7 +279,7 @@ class _AddCashbookSheetState extends ConsumerState<AddCashbookSheet> {
                   PremiumGate.showPremiumDialog(context);
                 },
                 icon: const Icon(Icons.star),
-                label: const Text('Upgrade to Premium'),
+                label: Text(l10n.upgradeToPremium),
                 style: FilledButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
@@ -300,7 +303,7 @@ class _AddCashbookSheetState extends ConsumerState<AddCashbookSheet> {
                         child: CircularProgressIndicator(
                             strokeWidth: 2, color: Colors.white))
                     : Text(
-                        isEdit ? 'Update Cashbook' : 'Create Cashbook',
+                        isEdit ? l10n.updateCashbook : l10n.createCashbook,
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -314,6 +317,7 @@ class _AddCashbookSheetState extends ConsumerState<AddCashbookSheet> {
   }
 
   Future<void> _save() async {
+    final l10n = AppLocalizations.of(context)!;
     if (_formKey.currentState!.validate()) {
       setState(() => _isLoading = true);
       try {
@@ -326,7 +330,7 @@ class _AddCashbookSheetState extends ConsumerState<AddCashbookSheet> {
                 ),
               );
           if (mounted) {
-            ToastUtils.showSuccessToast(context, ref, 'Cashbook updated');
+            ToastUtils.showSuccessToast(context, ref, l10n.cashbookUpdated);
             Navigator.pop(context);
           }
         } else {
@@ -336,13 +340,14 @@ class _AddCashbookSheetState extends ConsumerState<AddCashbookSheet> {
                 iconCodePoint: _selectedIcon,
               );
           if (mounted) {
-            ToastUtils.showSuccessToast(context, ref, 'Cashbook created');
+            ToastUtils.showSuccessToast(context, ref, l10n.cashbookCreated);
             Navigator.pop(context);
           }
         }
       } catch (e) {
         if (mounted) {
-          ToastUtils.showErrorToast(context, ref, 'Error: ${e.toString()}');
+          ToastUtils.showErrorToast(
+              context, ref, l10n.errorOccurred(e.toString()));
         }
       } finally {
         if (mounted) {

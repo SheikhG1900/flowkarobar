@@ -1,3 +1,5 @@
+import 'package:flowpaisa/core/utils/date_formatter.dart';
+import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -75,6 +77,7 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
   }
 
   Future<void> _initializeEntities() async {
+    final l10n = AppLocalizations.of(context)!;
     if (widget.initialExternalLinkId != null) {
       final repository = ref.read(receivablesRepositoryProvider);
       final exists = await repository
@@ -87,7 +90,7 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
           ToastUtils.showWarningToast(
             context,
             ref,
-            'This receivable has already been imported.',
+            l10n.receivableAlreadyImported,
           );
         }
       }
@@ -131,6 +134,7 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
   }
 
   Future<void> _saveReceivable() async {
+    final l10n = AppLocalizations.of(context)!;
     // Check limits first - prevent saving if limit reached, regardless of form validity
     final isPremium = PremiumGate.isPremium(ref);
     if (!isPremium) {
@@ -148,7 +152,7 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
     }
 
     if (_selectedContactId == null) {
-      ToastUtils.showErrorToast(context, ref, 'Please select a contact');
+      ToastUtils.showErrorToast(context, ref, l10n.pleaseSelectContact);
       return;
     }
 
@@ -201,8 +205,8 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
           ToastUtils.showSuccessToast(
             context,
             ref,
-            'Receivable added successfully',
-            actionLabel: 'SHARE',
+            l10n.receivableAdded,
+            actionLabel: l10n.share,
             onActionPressed: (snackContext) => ShareHelper.shareReceivable(
               snackContext,
               ref,
@@ -226,14 +230,14 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
             ),
           );
         } else {
-          ToastUtils.showSuccessToast(
-              context, ref, 'Receivable added successfully');
+          ToastUtils.showSuccessToast(context, ref, l10n.receivableAdded);
           Navigator.pop(context);
         }
       }
     } catch (e) {
       if (mounted) {
-        ToastUtils.showErrorToast(context, ref, 'Error: ${e.toString()}');
+        ToastUtils.showErrorToast(
+            context, ref, l10n.errorOccurred(e.toString()));
       }
     } finally {
       if (mounted) {
@@ -275,6 +279,7 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
   }
 
   void _showContactPicker() {
+    final l10n = AppLocalizations.of(context)!;
     showModalBottomSheet(
       context: context,
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -299,7 +304,7 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Select Contact',
+                        l10n.selectContact,
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
@@ -319,7 +324,7 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
                           }
                         },
                         icon: const Icon(Icons.add),
-                        label: const Text('Add New'),
+                        label: Text(l10n.addNew),
                       ),
                     ],
                   ),
@@ -374,7 +379,8 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
                     },
                     loading: () =>
                         const Center(child: CircularProgressIndicator()),
-                    error: (e, s) => Center(child: Text('Error: $e')),
+                    error: (e, s) =>
+                        Center(child: Text(l10n.errorOccurred(e.toString()))),
                   ),
                 ),
               ],
@@ -387,13 +393,14 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final limitsAsync = ref.watch(receivableLimitsProvider);
     final currencySymbol = ref.watch(currencySymbolProvider);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Add Receivable'),
+        title: Text(l10n.addReceivable),
         leading: IconButton(
           icon: const Icon(Icons.close),
           onPressed: () => Navigator.pop(context),
@@ -432,7 +439,7 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
                 child: Column(
                   children: [
                     Text(
-                      'How much?',
+                      l10n.howMuch,
                       style: theme.textTheme.titleMedium?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
@@ -452,7 +459,7 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
                         border: InputBorder.none,
-                        hintText: '0.00',
+                        hintText: l10n.amountHint,
                         hintStyle: theme.textTheme.displayLarge?.copyWith(
                           color: Colors.grey.withValues(alpha: 0.3),
                         ),
@@ -465,13 +472,13 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
                       ],
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Please enter an amount';
+                          return l10n.pleaseEnterAmount;
                         }
                         if (double.tryParse(value) == null) {
-                          return 'Please enter a valid number';
+                          return l10n.pleaseEnterValidNumber;
                         }
                         if (double.parse(value) <= 0) {
-                          return 'Amount must be greater than 0';
+                          return l10n.amountGreaterThanZero;
                         }
                         return null;
                       },
@@ -532,14 +539,14 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Contact',
+                            l10n.contact,
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant,
                             ),
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            _selectedContact?.name ?? 'Select Contact',
+                            _selectedContact?.name ?? l10n.selectContact,
                             style: theme.textTheme.titleMedium?.copyWith(
                               fontWeight: _selectedContact != null
                                   ? FontWeight.bold
@@ -585,7 +592,8 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
                             });
                           },
                           icon: const Icon(Icons.add, size: 16),
-                          label: Text('Add "${widget.initialContactName}"'),
+                          label: Text(l10n
+                              .addContactWithName(widget.initialContactName!)),
                         ),
                       ] else ...[
                         const Spacer(),
@@ -601,10 +609,10 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
               // Description
               TextFormField(
                 controller: _descriptionController,
-                decoration: const InputDecoration(
-                  labelText: 'Description',
-                  hintText: 'e.g., Lunch money',
-                  prefixIcon: Icon(Icons.description_outlined),
+                decoration: InputDecoration(
+                  labelText: l10n.description,
+                  hintText: l10n.descriptionHint,
+                  prefixIcon: const Icon(Icons.description_outlined),
                 ),
                 textCapitalization: TextCapitalization.sentences,
               ),
@@ -642,14 +650,16 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Date',
+                            l10n.date,
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant,
                             ),
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
+                            AppDateFormatter.formatDate(_selectedDate,
+                                pattern:
+                                    ref.watch(userProfileProvider).dateFormat),
                             style: theme.textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.w600,
                             ),
@@ -695,7 +705,7 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Due Date (Optional)',
+                            l10n.dueDateOptional,
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant,
                             ),
@@ -703,8 +713,11 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
                           const SizedBox(height: 4),
                           Text(
                             _dueDate != null
-                                ? '${_dueDate!.day}/${_dueDate!.month}/${_dueDate!.year}'
-                                : 'Not set',
+                                ? AppDateFormatter.formatDate(_dueDate!,
+                                    pattern: ref
+                                        .watch(userProfileProvider)
+                                        .dateFormat)
+                                : l10n.notSet,
                             style: theme.textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.w600,
                             ),
@@ -738,10 +751,10 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
                     _autoCreateIncome = value;
                   });
                 },
-                title: const Text('Auto-create income'),
-                subtitle: const Text(
-                  'Record as income when marked as received',
-                  style: TextStyle(fontSize: 12),
+                title: Text(l10n.autoCreateIncome),
+                subtitle: Text(
+                  l10n.autoCreateIncomeSubtitle,
+                  style: const TextStyle(fontSize: 12),
                 ),
                 secondary: Container(
                   padding: const EdgeInsets.all(8),
@@ -781,7 +794,7 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
                       alignment: Alignment.topRight,
                       children: [
                         GradientButton(
-                          label: 'Add Receivable',
+                          label: l10n.addReceivable,
                           onPressed: _isDuplicate ? null : _saveReceivable,
                           gradient: AppColors.receivableGradient,
                           width: double.infinity,
