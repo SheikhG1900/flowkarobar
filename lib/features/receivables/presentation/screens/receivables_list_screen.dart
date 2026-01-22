@@ -738,8 +738,8 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         Text(
-                          AmountFormatter.formatWithCurrency(receivable.amount,
-                              currency.symbol, currency.decimalPlaces),
+                          '\u200E${AmountFormatter.formatWithCurrency(receivable.amount,
+                              currency.symbol, currency.decimalPlaces)}',
                           style: theme.textTheme.titleLarge?.copyWith(
                             color: AppColors.receivableColor,
                             fontWeight: FontWeight.bold,

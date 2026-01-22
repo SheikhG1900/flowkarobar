@@ -4781,7 +4781,7 @@ class $AppCurrenciesTable extends AppCurrencies
   late final GeneratedColumn<String> symbol = GeneratedColumn<String>(
       'symbol', aliasedName, false,
       additionalChecks:
-          GeneratedColumn.checkTextLength(minTextLength: 1, maxTextLength: 10),
+          GeneratedColumn.checkTextLength(minTextLength: 0, maxTextLength: 10),
       type: DriftSqlType.string,
       requiredDuringInsert: true);
   static const VerificationMeta _codeMeta = const VerificationMeta('code');

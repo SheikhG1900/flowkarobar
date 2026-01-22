@@ -527,7 +527,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  '${isExpense ? '-' : '+'} ${AmountFormatter.formatWithCurrency(transaction.amount, currency.symbol, currency.decimalPlaces)}',
+                  '${isExpense ? '\u200E-' : '\u200E+'} ${AmountFormatter.formatWithCurrency(transaction.amount, currency.symbol, currency.decimalPlaces)}',
                   style: theme.textTheme.titleLarge?.copyWith(
                     color: isExpense
                         ? (isInactive

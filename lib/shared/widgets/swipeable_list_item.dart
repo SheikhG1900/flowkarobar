@@ -50,8 +50,15 @@ class SwipeableListItem extends StatelessWidget {
         // Add haptic feedback
         HapticFeedback.mediumImpact();
 
+        // We keep the logical directions fixed:
+        // startToEnd (Left-to-Right in LTR, Right-to-Left in RTL) always triggers Edit
+        // endToStart (Right-to-Left in LTR, Left-to-Right in RTL) always triggers Delete
+        // Since we used AlignmentDirectional for the backgrounds, they also flip.
+        // This means in RTL, swiping from right (start) reveals Edit on the right, 
+        // and swiping from left (end) reveals Delete on the left.
+
         if (direction == DismissDirection.endToStart && enableDelete) {
-          // Swipe left to delete
+          // Delete action (Right-to-Left in LTR, Left-to-Right in RTL)
           final confirmed = await _showConfirmDialog(
             context,
             title: l10n.deleteItem,
@@ -65,7 +72,7 @@ class SwipeableListItem extends StatelessWidget {
           }
           return false; // Don't dismiss, let the parent handle the deletion
         } else if (direction == DismissDirection.startToEnd && enableEdit) {
-          // Swipe right to edit
+          // Edit action (Left-to-Right in LTR, Right-to-Left in RTL)
           if (onEdit != null) {
             onEdit!();
           }
@@ -78,9 +85,9 @@ class SwipeableListItem extends StatelessWidget {
           ? Padding(
               padding: const EdgeInsets.symmetric(vertical: 4),
               child: Container(
-                alignment: Alignment.centerLeft,
+                alignment: AlignmentDirectional.centerStart,
                 margin: backgroundMargin,
-                padding: const EdgeInsets.only(left: 20),
+                padding: const EdgeInsetsDirectional.only(start: 20),
                 decoration: BoxDecoration(
                   color: editBackgroundColor.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(borderRadius),
@@ -115,9 +122,9 @@ class SwipeableListItem extends StatelessWidget {
           ? Padding(
               padding: const EdgeInsets.symmetric(vertical: 4),
               child: Container(
-                alignment: Alignment.centerRight,
+                alignment: AlignmentDirectional.centerEnd,
                 margin: backgroundMargin,
-                padding: const EdgeInsets.only(right: 20),
+                padding: const EdgeInsetsDirectional.only(end: 20),
                 decoration: BoxDecoration(
                   color: deleteBackgroundColor.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(borderRadius),

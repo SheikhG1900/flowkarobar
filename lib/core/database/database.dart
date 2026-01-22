@@ -165,7 +165,7 @@ class SyncLog extends Table {
 class AppCurrencies extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get name => text().withLength(min: 1, max: 100)();
-  TextColumn get symbol => text().withLength(min: 1, max: 10)();
+  TextColumn get symbol => text().withLength(min: 0, max: 10)();
   TextColumn get code => text().withLength(min: 3, max: 3)();
   IntColumn get decimalPlaces => integer().withDefault(const Constant(2))();
   BoolColumn get isDefault => boolean().withDefault(const Constant(false))();

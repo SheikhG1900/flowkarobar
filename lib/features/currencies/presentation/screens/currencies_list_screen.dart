@@ -170,14 +170,16 @@ class _CurrencyCard extends ConsumerWidget {
                     ),
                   ),
                   alignment: Alignment.center,
-                  child: Text(
-                    currency.symbol,
-                    style: TextStyle(
-                      fontSize: 24,
-                      color: color,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  child: currency.symbol.isEmpty
+                      ? Icon(Icons.money_off, size: 20, color: color)
+                      : Text(
+                          currency.symbol,
+                          style: TextStyle(
+                            fontSize: 24,
+                            color: color,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(

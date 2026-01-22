@@ -120,8 +120,8 @@ class PayableDetailsDialog extends ConsumerWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    AmountFormatter.formatWithCurrency(payable.amount,
-                        currency.symbol, currency.decimalPlaces),
+                    '\u200E${AmountFormatter.formatWithCurrency(payable.amount,
+                        currency.symbol, currency.decimalPlaces)}',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: AmountFormatter.getFontSize(payable.amount,
@@ -431,7 +431,7 @@ class PayableDetailsDialog extends ConsumerWidget {
                 ),
               ),
               Text(
-                '${isExpense ? '-' : '+'} ${AmountFormatter.formatWithCurrency(transaction.amount, currency.symbol, currency.decimalPlaces)}',
+                '${isExpense ? '\u200E-' : '\u200E+'} ${AmountFormatter.formatWithCurrency(transaction.amount, currency.symbol, currency.decimalPlaces)}',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,

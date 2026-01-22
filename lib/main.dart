@@ -415,7 +415,7 @@ class _DashboardTab extends ConsumerWidget {
               background: Stack(
                 fit: StackFit.expand,
                 children: [
-                  // Gradient Background with Beveled Corner (bottom-right only)
+                  // Gradient Background with Beveled Corner (bottom-right for LTR, bottom-left for RTL)
                   Container(
                     decoration: ShapeDecoration(
                       gradient: LinearGradient(
@@ -430,8 +430,8 @@ class _DashboardTab extends ConsumerWidget {
                         side: BorderSide(
                             color: activeColor.withValues(alpha: 0.3),
                             width: 1),
-                        borderRadius: BorderRadius.only(
-                          bottomRight: Radius.circular(40),
+                        borderRadius: BorderRadiusDirectional.only(
+                          bottomEnd: Radius.circular(40),
                         ),
                       ),
                     ),
@@ -452,8 +452,8 @@ class _DashboardTab extends ConsumerWidget {
                         end: Alignment.bottomCenter,
                       ),
                       shape: const BeveledRectangleBorder(
-                        borderRadius: BorderRadius.only(
-                          bottomRight: Radius.circular(40),
+                        borderRadius: BorderRadiusDirectional.only(
+                          bottomEnd: Radius.circular(40),
                         ),
                       ),
                     ),
@@ -488,9 +488,9 @@ class _DashboardTab extends ConsumerWidget {
                                   decoration: BoxDecoration(
                                     color: activeColor.withValues(
                                         alpha: isDark ? 0.3 : 0.1),
-                                    borderRadius: const BorderRadius.only(
-                                      topLeft: Radius.circular(14),
-                                      bottomRight: Radius.circular(14),
+                                    borderRadius: const BorderRadiusDirectional.only(
+                                      topStart: Radius.circular(14),
+                                      bottomEnd: Radius.circular(14),
                                     ),
                                     boxShadow: [
                                       BoxShadow(
@@ -716,9 +716,9 @@ class _DashboardTab extends ConsumerWidget {
                             decoration: BoxDecoration(
                               gradient: AppColors.getPrimaryGradient(
                                   theme.colorScheme.primary),
-                              borderRadius: const BorderRadius.only(
-                                topLeft: Radius.circular(12),
-                                bottomRight: Radius.circular(12),
+                              borderRadius: const BorderRadiusDirectional.only(
+                                topStart: Radius.circular(12),
+                                bottomEnd: Radius.circular(12),
                               ),
                             ),
                             child: const Icon(Icons.water_drop,
@@ -1257,7 +1257,7 @@ class _DashboardTab extends ConsumerWidget {
                   subtitle: Text(AppDateFormatter.formatDate(transaction.date,
                       pattern: userProfile.dateFormat)),
                   trailing: Text(
-                    '${isExpense ? '-' : '+'} ${AmountFormatter.formatWithCurrency(transaction.amount, currency.symbol, currency.decimalPlaces)}',
+                    '${isExpense ? '\u200E-' : '\u200E+'} ${AmountFormatter.formatWithCurrency(transaction.amount, currency.symbol, currency.decimalPlaces)}',
                     style: TextStyle(
                       color: isExpense
                           ? AppColors.expenseColor
@@ -1311,9 +1311,9 @@ class _QuickActionButton extends StatelessWidget {
           gradient: gradient.withOpacity(0.2),
           border: Border.all(
               color: gradient.colors.first.withValues(alpha: 0.5), width: 1),
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(20),
-            bottomRight: Radius.circular(20),
+          borderRadius: const BorderRadiusDirectional.only(
+            topStart: Radius.circular(20),
+            bottomEnd: Radius.circular(20),
           ),
           // Diagonal beveled
         ),
@@ -1503,7 +1503,7 @@ class _SettingsTab extends ConsumerWidget {
           ),
           ListTile(
             leading: const Icon(Icons.font_download_outlined),
-            title: Text(AppLocalizations.of(context)!.fontSelection),
+            title: const Text('Font Selection'),
             subtitle: Consumer(
               builder: (context, ref, child) {
                 final font = ref.watch(currentFontProvider);
@@ -1669,3 +1669,4 @@ class _SummaryItem {
     this.overdue,
   });
 }
+// Force save to disk

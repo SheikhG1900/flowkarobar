@@ -726,8 +726,8 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      AmountFormatter.formatWithCurrency(payable.amount,
-                          currency.symbol, currency.decimalPlaces),
+                      '\u200E${AmountFormatter.formatWithCurrency(payable.amount,
+                          currency.symbol, currency.decimalPlaces)}',
                       style: theme.textTheme.titleLarge?.copyWith(
                         color: AppColors.payableColor,
                         fontWeight: FontWeight.bold,

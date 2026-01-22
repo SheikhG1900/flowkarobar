@@ -769,7 +769,6 @@ class _ContactSummariesSection extends ConsumerWidget {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
     final currencySymbol = ref.watch(currencySymbolProvider);
-    final decimalPlaces = ref.watch(currencyDecimalPlacesProvider);
 
     return summariesAsync.when(
       data: (summaries) {
@@ -854,8 +853,15 @@ class _ContactSummariesSection extends ConsumerWidget {
                             const SizedBox(height: 4),
                             Row(
                               children: [
+                                Icon(
+                                  Symbols.call_made,
+                                  size: 14,
+                                  color: AppColors.payableColor,
+                                ),
+                                const SizedBox(width: 4),
                                 Text(
-                                  '${l10n.payableShort} ${AmountFormatter.formatWithCurrency(summary.totalPayable, currencySymbol, 0)}',
+                                  AmountFormatter.formatWithCurrency(
+                                      summary.totalPayable, currencySymbol, 0),
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: AppColors.payableColor,
@@ -863,8 +869,17 @@ class _ContactSummariesSection extends ConsumerWidget {
                                   ),
                                 ),
                                 const SizedBox(width: 16),
+                                Icon(
+                                  Symbols.call_received,
+                                  size: 14,
+                                  color: AppColors.receivableColor,
+                                ),
+                                const SizedBox(width: 4),
                                 Text(
-                                  '${l10n.receivableShort} ${AmountFormatter.formatWithCurrency(summary.totalReceivable, currencySymbol, 0)}',
+                                  AmountFormatter.formatWithCurrency(
+                                      summary.totalReceivable,
+                                      currencySymbol,
+                                      0),
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: AppColors.receivableColor,

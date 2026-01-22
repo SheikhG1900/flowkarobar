@@ -137,10 +137,7 @@ class _EditCurrencyScreenState extends ConsumerState<EditCurrencyScreen> {
                 ),
               ),
               validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return l10n.pleaseEnterCurrencySymbol;
-                }
-                if (value.length > 10) {
+                if (value != null && value.length > 10) {
                   return l10n.symbolLengthError;
                 }
                 return null;
@@ -233,14 +230,16 @@ class _EditCurrencyScreenState extends ConsumerState<EditCurrencyScreen> {
                           ),
                         ),
                         alignment: Alignment.center,
-                        child: Text(
-                          _symbolController.text,
-                          style: TextStyle(
-                            fontSize: 24,
-                            color: theme.colorScheme.primary,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                        child: _symbolController.text.isEmpty
+                            ? const Icon(Icons.money_off, size: 20, color: Colors.grey)
+                            : Text(
+                                _symbolController.text,
+                                style: TextStyle(
+                                  fontSize: 24,
+                                  color: theme.colorScheme.primary,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                       ),
                       const SizedBox(width: 16),
                       Expanded(

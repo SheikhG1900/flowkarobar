@@ -103,7 +103,7 @@ class ScheduleListItem extends ConsumerWidget {
                 Padding(
                   padding: const EdgeInsets.only(right: 10),
                   child: Text(
-                    '${isExpense ? '-' : '+'} ${AmountFormatter.formatWithCurrency(schedule.amount, currency.symbol, currency.decimalPlaces)}',
+                    '${isExpense ? '\u200E-' : '\u200E+'} ${AmountFormatter.formatWithCurrency(schedule.amount, currency.symbol, currency.decimalPlaces)}',
                     style: theme.textTheme.titleSmall?.copyWith(
                       color: isExpense
                           ? AppColors.expenseColor

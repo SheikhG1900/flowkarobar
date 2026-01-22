@@ -129,10 +129,7 @@ class _AddCurrencyScreenState extends ConsumerState<AddCurrencyScreen> {
                 ),
               ),
               validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return l10n.pleaseEnterCurrencySymbol;
-                }
-                if (value.length > 10) {
+                if (value != null && value.length > 10) {
                   return l10n.symbolLengthError;
                 }
                 return null;
@@ -225,16 +222,16 @@ class _AddCurrencyScreenState extends ConsumerState<AddCurrencyScreen> {
                           ),
                         ),
                         alignment: Alignment.center,
-                        child: Text(
-                          _symbolController.text.isEmpty
-                              ? '?'
-                              : _symbolController.text,
-                          style: TextStyle(
-                            fontSize: 24,
-                            color: theme.colorScheme.primary,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                        child: _symbolController.text.isEmpty
+                            ? const Icon(Icons.money_off, size: 20, color: Colors.grey)
+                            : Text(
+                                _symbolController.text,
+                                style: TextStyle(
+                                  fontSize: 24,
+                                  color: theme.colorScheme.primary,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                       ),
                       const SizedBox(width: 16),
                       Expanded(
@@ -262,7 +259,7 @@ class _AddCurrencyScreenState extends ConsumerState<AddCurrencyScreen> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    l10n.positiveAmount(AmountFormatter.formatWithCurrency(1234.56, _symbolController.text.isEmpty ? '?' : _symbolController.text, _decimalPlaces)),
+                    l10n.positiveAmount(AmountFormatter.formatWithCurrency(1234.56, _symbolController.text, _decimalPlaces)),
                     style: theme.textTheme.bodyLarge?.copyWith(
                       fontWeight: FontWeight.w600,
                       color: AppColors.success,
@@ -270,7 +267,7 @@ class _AddCurrencyScreenState extends ConsumerState<AddCurrencyScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    l10n.negativeAmount(AmountFormatter.formatWithCurrency(-567.89, _symbolController.text.isEmpty ? '?' : _symbolController.text, _decimalPlaces)),
+                    l10n.negativeAmount(AmountFormatter.formatWithCurrency(-567.89, _symbolController.text, _decimalPlaces)),
                     style: theme.textTheme.bodyLarge?.copyWith(
                       fontWeight: FontWeight.w600,
                       color: AppColors.error,
