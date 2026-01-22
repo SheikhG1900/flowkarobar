@@ -2074,4 +2074,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cashbookCreated => 'Cashbook created successfully';
+
+  @override
+  String get fontSelection => 'Font Selection';
 }

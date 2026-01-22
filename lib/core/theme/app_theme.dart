@@ -5,111 +5,78 @@ import 'package:flowpaisa/core/theme/app_colors.dart';
 /// FlowPaisa Theme System
 /// Modern Material Design 3 with Wortek-inspired gradients
 class AppTheme {
-  // Get text theme based on locale
-  static TextTheme getTextTheme(String languageCode) {
-    switch (languageCode) {
-      case 'hi':
-        return GoogleFonts.notoSansDevanagariTextTheme().copyWith(
-          displayLarge: GoogleFonts.notoSansDevanagari(
-              fontSize: 32, fontWeight: FontWeight.bold),
-          displayMedium: GoogleFonts.notoSansDevanagari(
-              fontSize: 28, fontWeight: FontWeight.bold),
-          displaySmall: GoogleFonts.notoSansDevanagari(
-              fontSize: 24, fontWeight: FontWeight.bold),
-          headlineLarge: GoogleFonts.notoSansDevanagari(
-              fontSize: 22, fontWeight: FontWeight.w600),
-          headlineMedium: GoogleFonts.notoSansDevanagari(
-              fontSize: 20, fontWeight: FontWeight.w600),
-          headlineSmall: GoogleFonts.notoSansDevanagari(
-              fontSize: 18, fontWeight: FontWeight.w600),
-          titleLarge: GoogleFonts.notoSansDevanagari(
-              fontSize: 20, fontWeight: FontWeight.w500),
-          titleMedium: GoogleFonts.notoSansDevanagari(
-              fontSize: 18, fontWeight: FontWeight.w500),
-          titleSmall: GoogleFonts.notoSansDevanagari(
-              fontSize: 16, fontWeight: FontWeight.w500),
-          bodyLarge: GoogleFonts.notoSansDevanagari(
-              fontSize: 16, fontWeight: FontWeight.w400),
-          bodyMedium: GoogleFonts.notoSansDevanagari(
-              fontSize: 14, fontWeight: FontWeight.w400),
-          bodySmall: GoogleFonts.notoSansDevanagari(
-              fontSize: 12, fontWeight: FontWeight.w400),
-          labelLarge: GoogleFonts.notoSansDevanagari(
-              fontSize: 14, fontWeight: FontWeight.w600),
-          labelMedium: GoogleFonts.notoSansDevanagari(
-              fontSize: 12, fontWeight: FontWeight.w600),
-          labelSmall: GoogleFonts.notoSansDevanagari(
-              fontSize: 10, fontWeight: FontWeight.w600),
-        );
-
-      case 'ur':
-        return GoogleFonts.marheyTextTheme().copyWith(
-          displayLarge: GoogleFonts.marhey(
-              fontSize: 36, fontWeight: FontWeight.w400, height: 1.4),
-          displayMedium: GoogleFonts.marhey(
-              fontSize: 32, fontWeight: FontWeight.w400, height: 1.4),
-          displaySmall: GoogleFonts.marhey(
-              fontSize: 28, fontWeight: FontWeight.w400, height: 1.4),
-          headlineLarge: GoogleFonts.marhey(
-              fontSize: 26, fontWeight: FontWeight.w400, height: 1.4),
-          headlineMedium: GoogleFonts.marhey(
-              fontSize: 24, fontWeight: FontWeight.w400, height: 1.4),
-          headlineSmall: GoogleFonts.marhey(
-              fontSize: 22, fontWeight: FontWeight.w400, height: 1.4),
-          titleLarge: GoogleFonts.marhey(
-              fontSize: 22, fontWeight: FontWeight.w400, height: 1.4),
-          titleMedium: GoogleFonts.marhey(
-              fontSize: 20, fontWeight: FontWeight.w400, height: 1.4),
-          titleSmall: GoogleFonts.marhey(
-              fontSize: 18, fontWeight: FontWeight.w400, height: 1.4),
-          bodyLarge: GoogleFonts.marhey(
-              fontSize: 18, fontWeight: FontWeight.w400, height: 1.4),
-          bodyMedium: GoogleFonts.marhey(
-              fontSize: 16, fontWeight: FontWeight.w400, height: 1.4),
-          bodySmall: GoogleFonts.marhey(
-              fontSize: 14, fontWeight: FontWeight.w400, height: 1.4),
-          labelLarge: GoogleFonts.marhey(
-              fontSize: 16, fontWeight: FontWeight.w400, height: 1.4),
-          labelMedium: GoogleFonts.marhey(
-              fontSize: 14, fontWeight: FontWeight.w400, height: 1.4),
-          labelSmall: GoogleFonts.marhey(
-              fontSize: 12, fontWeight: FontWeight.w400, height: 1.4),
-        );
-
-      default: // English
-        return GoogleFonts.interTextTheme().copyWith(
-          displayLarge:
-              GoogleFonts.inter(fontSize: 32, fontWeight: FontWeight.bold),
-          displayMedium:
-              GoogleFonts.inter(fontSize: 28, fontWeight: FontWeight.bold),
-          displaySmall:
-              GoogleFonts.inter(fontSize: 24, fontWeight: FontWeight.bold),
-          headlineLarge:
-              GoogleFonts.inter(fontSize: 22, fontWeight: FontWeight.w700),
-          headlineMedium:
-              GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.w700),
-          headlineSmall:
-              GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w700),
-          titleLarge:
-              GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.w600),
-          titleMedium:
-              GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w600),
-          titleSmall:
-              GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600),
-          bodyLarge:
-              GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w400),
-          bodyMedium:
-              GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w400),
-          bodySmall:
-              GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w400),
-          labelLarge:
-              GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600),
-          labelMedium:
-              GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600),
-          labelSmall:
-              GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w600),
-        );
+  // Get text theme based on locale and selected font
+  static TextTheme getTextTheme(String languageCode, String fontName) {
+    // Helper to get GoogleFont method by name
+    TextStyle getFont(TextStyle baseStyle) {
+      switch (fontName) {
+        case 'Lalezar':
+          return GoogleFonts.lalezar(textStyle: baseStyle);
+        case 'Kufam':
+          return GoogleFonts.kufam(textStyle: baseStyle);
+        case 'Marhey':
+          return GoogleFonts.marhey(textStyle: baseStyle);
+        case 'Noto Sans Devanagari':
+          return GoogleFonts.notoSansDevanagari(textStyle: baseStyle);
+        case 'Inter':
+        default:
+          return GoogleFonts.inter(textStyle: baseStyle);
+      }
     }
+
+    // Map the selected font to the appropriate TextTheme
+    TextTheme baseTextTheme;
+    switch (fontName) {
+      case 'Lalezar':
+        baseTextTheme = GoogleFonts.lalezarTextTheme();
+        break;
+      case 'Kufam':
+        baseTextTheme = GoogleFonts.kufamTextTheme();
+        break;
+      case 'Marhey':
+        baseTextTheme = GoogleFonts.marheyTextTheme();
+        break;
+      case 'Noto Sans Devanagari':
+        baseTextTheme = GoogleFonts.notoSansDevanagariTextTheme();
+        break;
+      case 'Inter':
+      default:
+        baseTextTheme = GoogleFonts.interTextTheme();
+    }
+
+    // Apply custom sizes/weights
+    return baseTextTheme.copyWith(
+      displayLarge:
+          getFont(const TextStyle(fontSize: 32, fontWeight: FontWeight.bold)),
+      displayMedium:
+          getFont(const TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
+      displaySmall:
+          getFont(const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+      headlineLarge:
+          getFont(const TextStyle(fontSize: 22, fontWeight: FontWeight.w700)),
+      headlineMedium:
+          getFont(const TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
+      headlineSmall:
+          getFont(const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+      titleLarge:
+          getFont(const TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
+      titleMedium:
+          getFont(const TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+      titleSmall:
+          getFont(const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+      bodyLarge:
+          getFont(const TextStyle(fontSize: 16, fontWeight: FontWeight.w400)),
+      bodyMedium:
+          getFont(const TextStyle(fontSize: 14, fontWeight: FontWeight.w400)),
+      bodySmall:
+          getFont(const TextStyle(fontSize: 12, fontWeight: FontWeight.w400)),
+      labelLarge:
+          getFont(const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+      labelMedium:
+          getFont(const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+      labelSmall:
+          getFont(const TextStyle(fontSize: 10, fontWeight: FontWeight.w600)),
+    );
   }
 
   // Helper for consistent text shadows
@@ -125,8 +92,9 @@ class AppTheme {
   }
 
   // Light Theme with Wortek colors
-  static ThemeData lightTheme(String languageCode, {Color? primaryColor}) {
-    final textTheme = getTextTheme(languageCode);
+  static ThemeData lightTheme(String languageCode, String fontName,
+      {Color? primaryColor}) {
+    final textTheme = getTextTheme(languageCode, fontName);
     final primary = primaryColor ?? AppColors.brightCyan;
 
     return ThemeData(
@@ -289,8 +257,9 @@ class AppTheme {
   }
 
   // Dark Theme with Wortek colors
-  static ThemeData darkTheme(String languageCode, {Color? primaryColor}) {
-    final textTheme = getTextTheme(languageCode);
+  static ThemeData darkTheme(String languageCode, String fontName,
+      {Color? primaryColor}) {
+    final textTheme = getTextTheme(languageCode, fontName);
     final primary = primaryColor ?? AppColors.brightCyan;
 
     return ThemeData(

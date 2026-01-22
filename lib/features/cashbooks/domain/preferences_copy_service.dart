@@ -25,7 +25,7 @@ class PreferencesCopyService {
       // Copy user profile
       await copyUserProfile(sourceRepo, targetRepo);
 
-      // Copy preferences (date format, currency)
+      // Copy preferences (date format, currency, fonts)
       await _copyPreferencesData(sourceRepo, targetRepo);
 
       // Copy message templates
@@ -52,16 +52,22 @@ class PreferencesCopyService {
     if (address != null) await targetRepo.setUserAddress(address);
   }
 
-  /// Copy preferences (date format, currency)
+  /// Copy preferences (date format, currency, fonts)
   static Future<void> _copyPreferencesData(
     UserPreferencesRepository sourceRepo,
     UserPreferencesRepository targetRepo,
   ) async {
     final dateFormat = await sourceRepo.getDateFormat();
     final currency = await sourceRepo.getCurrency();
+    final fontEn = await sourceRepo.getFontForLanguage('en');
+    final fontHi = await sourceRepo.getFontForLanguage('hi');
+    final fontUr = await sourceRepo.getFontForLanguage('ur');
 
     await targetRepo.setDateFormat(dateFormat);
     await targetRepo.setCurrency(currency);
+    await targetRepo.setFontForLanguage('en', fontEn);
+    await targetRepo.setFontForLanguage('hi', fontHi);
+    await targetRepo.setFontForLanguage('ur', fontUr);
   }
 
   /// Copy all message templates

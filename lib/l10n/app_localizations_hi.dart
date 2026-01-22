@@ -74,7 +74,7 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
-  String get defaultPremiumPrice => '\$9.99';
+  String get defaultPremiumPrice => '₹999';
 
   @override
   String errorOccurred(String error) {
@@ -82,10 +82,10 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
-  String get noDataForTrends => 'No data for trends';
+  String get noDataForTrends => 'रुझानों के लिए कोई डेटा नहीं';
 
   @override
-  String get cancelled => 'Cancelled';
+  String get cancelled => 'रद्द कर दिया गया';
 
   @override
   String minutesAgo(int minutes) {
@@ -174,7 +174,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String deleteCashbookMessage(String name) {
-    return 'Are you sure you want to delete \"$name\"? This will permanently delete all data associated with this cashbook.';
+    return 'क्या आप वाकई \"$name\" को हटाना चाहते हैं? यह इस कैशबुक से जुड़े सभी डेटा को स्थायी रूप से हटा देगा।';
   }
 
   @override
@@ -1822,13 +1822,13 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
-  String get deleteCashbookTitle => 'Delete Cashbook';
+  String get deleteCashbookTitle => 'कैशबुक हटाएं';
 
   @override
-  String get deletePermanently => 'Delete Permanently';
+  String get deletePermanently => 'स्थायी रूप से हटाएं';
 
   @override
-  String get pleaseEnterValidAmount => 'Please enter a valid amount';
+  String get pleaseEnterValidAmount => 'कृपया एक वैध राशि दर्ज करें';
 
   @override
   String get categoryEducation => 'शिक्षा';
@@ -1867,219 +1867,224 @@ class AppLocalizationsHi extends AppLocalizations {
   String get paidTag => 'भुगतान किया गया';
 
   @override
-  String get currencyUSD => 'US Dollar (\$)';
+  String get currencyUSD => 'अमेरिकी डॉलर (\$)';
 
   @override
-  String get currencyINR => 'Indian Rupee (₹)';
+  String get currencyINR => 'भारतीय रुपया (₹)';
 
   @override
-  String get currencyPKR => 'Pakistani Rupee (Rs)';
+  String get currencyPKR => 'पाकिस्तानी रुपया (Rs)';
 
   @override
-  String get inactive => 'Inactive';
+  String get inactive => 'निष्क्रिय';
 
   @override
-  String get sundayShort => 'Sun';
+  String get sundayShort => 'रवि';
 
   @override
-  String get mondayShort => 'Mon';
+  String get mondayShort => 'सोम';
 
   @override
-  String get tuesdayShort => 'Tue';
+  String get tuesdayShort => 'मंगल';
 
   @override
-  String get wednesdayShort => 'Wed';
+  String get wednesdayShort => 'बुध';
 
   @override
-  String get thursdayShort => 'Thu';
+  String get thursdayShort => 'गुरु';
 
   @override
-  String get fridayShort => 'Fri';
+  String get fridayShort => 'शुक्र';
 
   @override
-  String get saturdayShort => 'Sat';
+  String get saturdayShort => 'शनि';
 
   @override
-  String get from => 'From';
+  String get from => 'से';
 
   @override
-  String get to => 'To';
+  String get to => 'तक';
 
   @override
-  String get willReceive => 'Will Receive';
+  String get willReceive => 'प्राप्त होगा';
 
   @override
-  String get selectSchedulePattern => 'Select Schedule Pattern';
+  String get selectSchedulePattern => 'शेड्यूल पैटर्न चुनें';
 
   @override
-  String get daysOfWeek => 'Days of Week';
+  String get daysOfWeek => 'सप्ताह के दिन';
 
   @override
-  String get daysOfMonth => 'Days of Month';
+  String get daysOfMonth => 'महीने के दिन';
 
   @override
-  String get sunday => 'Sunday';
+  String get sunday => 'रविवार';
 
   @override
-  String get monday => 'Monday';
+  String get monday => 'सोमवार';
 
   @override
-  String get tuesday => 'Tuesday';
+  String get tuesday => 'मंगलवार';
 
   @override
-  String get wednesday => 'Wednesday';
+  String get wednesday => 'बुधवार';
 
   @override
-  String get thursday => 'Thursday';
+  String get thursday => 'गुरुवार';
 
   @override
-  String get friday => 'Friday';
+  String get friday => 'शुक्रवार';
 
   @override
-  String get saturday => 'Saturday';
+  String get saturday => 'शनिवार';
 
   @override
-  String get updateReceivable => 'Update Receivable';
+  String get updateReceivable => 'प्राप्य अपडेट करें';
 
   @override
-  String get newCashbook => 'New Cashbook';
+  String get newCashbook => 'नई कैशबुक';
 
   @override
-  String get freeLimitReached => 'Free Limit Reached';
+  String get freeLimitReached => 'मुफ्त सीमा समाप्त';
 
   @override
-  String get cashbookNameHint => 'e.g., Personal, Business';
+  String get cashbookNameHint => 'जैसे, व्यक्तिगत, व्यवसाय';
 
   @override
-  String get selectIcon => 'Select Icon';
+  String get selectIcon => 'आइकन चुनें';
 
   @override
-  String get selectColor => 'Select Color';
+  String get selectColor => 'रंग चुनें';
 
   @override
-  String get updateCashbook => 'Update Cashbook';
+  String get updateCashbook => 'कैशबुक अपडेट करें';
 
   @override
-  String get noOtherCashbooks => 'No other cashbooks available to copy from.';
+  String get noOtherCashbooks =>
+      'कॉपी करने के लिए कोई अन्य कैशबुक उपलब्ध नहीं है।';
 
   @override
-  String get selectSourceCashbook => 'Select Source Cashbook';
+  String get selectSourceCashbook => 'स्रोत कैशबुक चुनें';
 
   @override
   String toTarget(String name) {
-    return 'To: $name';
+    return 'लक्ष्य: $name';
   }
 
   @override
-  String get whatToCopy => 'What to Copy?';
+  String get whatToCopy => 'क्या कॉपी करना है?';
 
   @override
-  String get userProfile => 'User Profile';
+  String get userProfile => 'उपयोगकर्ता प्रोफ़ाइल';
 
   @override
-  String get userProfileDescription => 'Name, Email, and basic info';
+  String get userProfileDescription => 'नाम, ईमेल और बुनियादी जानकारी';
 
   @override
-  String get preferencesDescription => 'Currency and Date Format settings';
+  String get preferencesDescription => 'मुद्रा और तिथि प्रारूप सेटिंग्स';
 
   @override
-  String get messageTemplatesDescription => 'WhatsApp message templates';
+  String get messageTemplatesDescription => 'व्हाट्सएप संदेश टेम्प्लेट';
 
   @override
-  String get copy => 'Copy';
+  String get copy => 'कॉपी करें';
 
   @override
-  String get pleaseSelectSource => 'Please select a source cashbook';
+  String get pleaseSelectSource => 'कृपया एक स्रोत कैशबुक चुनें';
 
   @override
   String get pleaseSelectAtLeastOne =>
-      'Please select at least one item to copy';
+      'कृपया कॉपी करने के लिए कम से कम एक आइटम चुनें';
 
   @override
-  String get preferencesCopied => 'Preferences copied successfully';
+  String get preferencesCopied => 'पसंद सफलतापूर्वक कॉपी की गईं';
 
   @override
   String errorCopyingPreferences(String error) {
-    return 'Error copying preferences: $error';
+    return 'पसंद कॉपी करने में त्रुटि: $error';
   }
 
   @override
-  String get reset => 'Reset';
+  String get reset => 'रीसेट करें';
 
   @override
-  String get template => 'Template';
+  String get template => 'टेम्प्लेट';
 
   @override
-  String get variables => 'Variables';
+  String get variables => 'वेरिएबल्स';
 
   @override
-  String get close => 'Close';
+  String get close => 'बंद करें';
 
   @override
-  String get dashboard => 'Dashboard';
+  String get dashboard => 'डैशबोर्ड';
 
   @override
-  String get error => 'Error';
+  String get error => 'त्रुटि';
 
   @override
-  String get currencies => 'Currencies';
+  String get currencies => 'मुद्राएं';
 
   @override
-  String get backup => 'Backup';
+  String get backup => 'बैकअप';
 
   @override
-  String get premium => 'Premium';
+  String get premium => 'प्रीमियम';
 
   @override
-  String get free => 'Free';
+  String get free => 'मुफ्त';
 
   @override
-  String get transactionAlreadyImported => 'Transaction already imported';
+  String get transactionAlreadyImported =>
+      'लेनदेन पहले ही आयात किया जा चुका है';
 
   @override
   String get pleaseSelectContactLinked =>
-      'Please select a contact for linked transaction';
+      'कृपया लिंक किए गए लेनदेन के लिए एक संपर्क चुनें';
 
   @override
   String get transactionLinkedAdded =>
-      'Transaction linked and added successfully';
+      'लेनदेन लिंक किया गया और सफलतापूर्वक जोड़ा गया';
 
   @override
-  String get transactionAdded => 'Transaction added successfully';
+  String get transactionAdded => 'लेनदेन सफलतापूर्वक जोड़ा गया';
 
   @override
   String createCategoryNamed(String name) {
-    return 'Create category \"$name\"';
+    return '\"$name\" श्रेणी बनाएं';
   }
 
   @override
-  String get tapToAddCategory => 'Tap to add this category';
+  String get tapToAddCategory => 'इस श्रेणी को जोड़ने के लिए टैप करें';
 
   @override
-  String get frequent => 'Frequent';
+  String get frequent => 'अक्सर';
 
   @override
-  String get saving => 'Saving...';
+  String get saving => 'सहेजा जा रहा है...';
 
   @override
   String get transactionDeletedSuccessfully =>
-      'Transaction deleted successfully';
+      'लेनदेन सफलतापूर्वक हटा दिया गया';
 
   @override
-  String get googleDrive => 'Google Drive';
+  String get googleDrive => 'गूगल ड्राइव';
 
   @override
-  String get backupToFile => 'Backup to File';
+  String get backupToFile => 'फ़ाइल में बैकअप लें';
 
   @override
-  String get restoreFromFile => 'Restore from File';
+  String get restoreFromFile => 'फ़ाइल से पुनर्स्थापित करें';
 
   @override
-  String get clearData => 'Clear Data';
+  String get clearData => 'डेटा साफ़ करें';
 
   @override
-  String get addCashbook => 'Add Cashbook';
+  String get addCashbook => 'कैशबुक जोड़ें';
 
   @override
-  String get cashbookCreated => 'Cashbook created successfully';
+  String get cashbookCreated => 'कैशबुक सफलतापूर्वक बनाई गई';
+
+  @override
+  String get fontSelection => 'फ़ॉन्ट चयन';
 }

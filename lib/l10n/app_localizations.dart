@@ -3903,6 +3903,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cashbook created successfully'**
   String get cashbookCreated;
+
+  /// No description provided for @fontSelection.
+  ///
+  /// In en, this message translates to:
+  /// **'Font Selection'**
+  String get fontSelection;
 }
 
 class _AppLocalizationsDelegate

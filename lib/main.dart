@@ -21,6 +21,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flowpaisa/features/analytics/presentation/screens/analytics_screen.dart';
 import 'package:flowpaisa/features/backup/presentation/screens/backup_screen.dart';
 import 'package:flowpaisa/features/settings/presentation/screens/language_selector_screen.dart';
+import 'package:flowpaisa/features/settings/presentation/screens/font_selector_screen.dart';
 import 'package:flowpaisa/features/settings/presentation/screens/theme_selector_screen.dart';
 import 'package:flowpaisa/features/settings/presentation/screens/about_screen.dart';
 import 'package:flowpaisa/features/settings/presentation/screens/profile_screen.dart';
@@ -121,7 +122,9 @@ Future<void> _initializeFonts() async {
   await GoogleFonts.pendingFonts([
     GoogleFonts.inter(),
     GoogleFonts.notoSansDevanagari(),
-    GoogleFonts.notoNastaliqUrdu(),
+    GoogleFonts.marhey(),
+    GoogleFonts.lalezar(),
+    GoogleFonts.kufam(),
   ]);
 }
 
@@ -137,6 +140,7 @@ class _FlowPaisaAppState extends ConsumerState<FlowPaisaApp> {
   Widget build(BuildContext context) {
     // Watch language and theme mode from providers
     final currentLocale = ref.watch(languageProvider);
+    final currentFont = ref.watch(currentFontProvider);
     final currentThemeMode = ref.watch(themeModeProvider);
     final activeCashbook = ref.watch(activeCashbookProvider);
     final activeColor = activeCashbook.color;
@@ -170,9 +174,9 @@ class _FlowPaisaAppState extends ConsumerState<FlowPaisaApp> {
       },
 
       // Theme
-      theme: AppTheme.lightTheme(currentLocale.languageCode,
+      theme: AppTheme.lightTheme(currentLocale.languageCode, currentFont,
           primaryColor: activeColor),
-      darkTheme: AppTheme.darkTheme(currentLocale.languageCode,
+      darkTheme: AppTheme.darkTheme(currentLocale.languageCode, currentFont,
           primaryColor: activeColor),
       themeMode: currentThemeMode,
 
@@ -1493,6 +1497,25 @@ class _SettingsTab extends ConsumerWidget {
                 context,
                 MaterialPageRoute(
                   builder: (context) => const LanguageSelectorScreen(),
+                ),
+              );
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.font_download_outlined),
+            title: Text(AppLocalizations.of(context)!.fontSelection),
+            subtitle: Consumer(
+              builder: (context, ref, child) {
+                final font = ref.watch(currentFontProvider);
+                return Text(font);
+              },
+            ),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const FontSelectorScreen(),
                 ),
               );
             },

@@ -1169,5 +1169,6 @@
   "restoreFromFile": "Restore from File",
   "clearData": "Clear Data",
   "addCashbook": "Add Cashbook",
-  "cashbookCreated": "Cashbook created successfully"
+  "cashbookCreated": "Cashbook created successfully",
+  "fontSelection": "Font Selection"
 }

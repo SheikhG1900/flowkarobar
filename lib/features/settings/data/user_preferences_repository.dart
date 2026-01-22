@@ -16,6 +16,9 @@ class UserPreferencesRepository {
   static const String keyUserEmail = 'user_email';
   static const String keyUserPhone = 'user_phone';
   static const String keyUserAddress = 'user_address';
+  static const String keyFontEn = 'font_en';
+  static const String keyFontHi = 'font_hi';
+  static const String keyFontUr = 'font_ur';
 
   // Get a preference value by key
   Future<String?> getPreference(String key) async {
@@ -130,6 +133,39 @@ class UserPreferencesRepository {
 
   Future<void> setUserAddress(String address) async {
     await setPreference(keyUserAddress, address);
+  }
+
+  // Font Preferences
+  Future<String> getFontForLanguage(String languageCode) async {
+    final key = _getFontKeyForLanguage(languageCode);
+    final value = await getPreference(key);
+    if (value != null) return value;
+
+    // Defaults
+    switch (languageCode) {
+      case 'hi':
+        return 'Noto Sans Devanagari';
+      case 'ur':
+        return 'Marhey';
+      default:
+        return 'Inter';
+    }
+  }
+
+  Future<void> setFontForLanguage(String languageCode, String fontName) async {
+    final key = _getFontKeyForLanguage(languageCode);
+    await setPreference(key, fontName);
+  }
+
+  String _getFontKeyForLanguage(String languageCode) {
+    switch (languageCode) {
+      case 'hi':
+        return keyFontHi;
+      case 'ur':
+        return keyFontUr;
+      default:
+        return keyFontEn;
+    }
   }
 
   // Get all preferences as a map

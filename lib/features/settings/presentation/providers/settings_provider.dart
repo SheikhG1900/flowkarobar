@@ -206,3 +206,42 @@ final userProfileProvider =
     NotifierProvider<UserProfileNotifier, UserProfileState>(() {
   return UserProfileNotifier();
 });
+
+// Font State Notifier
+class FontNotifier extends Notifier<Map<String, String>> {
+  late UserPreferencesRepository _repository;
+
+  @override
+  Map<String, String> build() {
+    _repository = ref.watch(userPreferencesRepositoryProvider);
+    _loadFonts();
+    return {
+      'en': 'Inter',
+      'hi': 'Noto Sans Devanagari',
+      'ur': 'Marhey',
+    }; // Initial default state
+  }
+
+  Future<void> _loadFonts() async {
+    final en = await _repository.getFontForLanguage('en');
+    final hi = await _repository.getFontForLanguage('hi');
+    final ur = await _repository.getFontForLanguage('ur');
+    state = {'en': en, 'hi': hi, 'ur': ur};
+  }
+
+  Future<void> setFont(String languageCode, String fontName) async {
+    await _repository.setFontForLanguage(languageCode, fontName);
+    state = {...state, languageCode: fontName};
+  }
+}
+
+final fontProvider = NotifierProvider<FontNotifier, Map<String, String>>(() {
+  return FontNotifier();
+});
+
+// Helper provider to get the font for the CURRENT language
+final currentFontProvider = Provider<String>((ref) {
+  final fonts = ref.watch(fontProvider);
+  final currentLocale = ref.watch(languageProvider);
+  return fonts[currentLocale.languageCode] ?? 'Inter';
+});

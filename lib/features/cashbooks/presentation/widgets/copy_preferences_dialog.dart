@@ -5,7 +5,6 @@ import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/features/settings/data/user_preferences_repository.dart';
 import 'package:flowpaisa/features/cashbooks/domain/preferences_copy_service.dart';
 import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
-import 'package:flowpaisa/features/cashbooks/domain/models/cashbook.dart';
 
 import 'package:flowpaisa/l10n/app_localizations.dart';
 
@@ -29,11 +28,25 @@ class _CopyPreferencesSheetState extends ConsumerState<CopyPreferencesSheet> {
   bool _isLoading = false;
 
   @override
+  void initState() {
+    super.initState();
+    // Initialize with the first available source
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final cashbooks = ref.read(cashbooksProvider);
+      final availableSources = cashbooks.where((c) => c.id != widget.targetCashbookId).toList();
+      if (availableSources.isNotEmpty) {
+        setState(() {
+          _selectedSourceCashbookId = availableSources.first.id;
+        });
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
     final cashbooks = ref.watch(cashbooksProvider);
-    final targetCashbook = cashbooks.firstWhere((c) => c.id == widget.targetCashbookId);
     final availableSources = cashbooks.where((c) => c.id != widget.targetCashbookId).toList();
 
     if (availableSources.isEmpty) {
@@ -115,7 +128,7 @@ class _CopyPreferencesSheetState extends ConsumerState<CopyPreferencesSheet> {
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
-                    value: _selectedSourceCashbookId ?? availableSources.first.id,
+                    value: _selectedSourceCashbookId,
                     decoration: InputDecoration(
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -132,6 +145,16 @@ class _CopyPreferencesSheetState extends ConsumerState<CopyPreferencesSheet> {
                             )
                           : null,
                     ),
+                    selectedItemBuilder: (BuildContext context) {
+                      return availableSources.map((cashbook) {
+                        return Row(
+                          children: [
+                            const SizedBox(width: 8),
+                            Text(cashbook.name),
+                          ],
+                        );
+                      }).toList();
+                    },
                     items: availableSources.map((cashbook) {
                       return DropdownMenuItem<String>(
                         value: cashbook.id,
@@ -184,7 +207,7 @@ class _CopyPreferencesSheetState extends ConsumerState<CopyPreferencesSheet> {
                         const Divider(height: 1),
                         CheckboxListTile(
                           title: Text(l10n.preferencesDescription),
-                          subtitle: Text(l10n.preferencesDescription),
+                          subtitle: Text('${l10n.preferencesDescription} (Currency, Date, Fonts)'),
                           value: _copyPreferences,
                           onChanged: (value) {
                             setState(() {
@@ -285,8 +308,15 @@ class _CopyPreferencesSheetState extends ConsumerState<CopyPreferencesSheet> {
             final targetRepo = UserPreferencesRepository(targetDb);
             final dateFormat = await sourceRepo.getDateFormat();
             final currency = await sourceRepo.getCurrency();
+            final fontEn = await sourceRepo.getFontForLanguage('en');
+            final fontHi = await sourceRepo.getFontForLanguage('hi');
+            final fontUr = await sourceRepo.getFontForLanguage('ur');
+
             await targetRepo.setDateFormat(dateFormat);
             await targetRepo.setCurrency(currency);
+            await targetRepo.setFontForLanguage('en', fontEn);
+            await targetRepo.setFontForLanguage('hi', fontHi);
+            await targetRepo.setFontForLanguage('ur', fontUr);
           } finally {
             await sourceDb.close();
             await targetDb.close();
