@@ -460,8 +460,8 @@ class _DashboardTab extends ConsumerWidget {
                   ),
                   // Main Content
                   Positioned(
-                    left: 20,
-                    right: 20,
+                    left: 12,
+                    right: 12,
                     top: MediaQuery.of(context).padding.top + 16,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -488,7 +488,8 @@ class _DashboardTab extends ConsumerWidget {
                                   decoration: BoxDecoration(
                                     color: activeColor.withValues(
                                         alpha: isDark ? 0.3 : 0.1),
-                                    borderRadius: const BorderRadiusDirectional.only(
+                                    borderRadius:
+                                        const BorderRadiusDirectional.only(
                                       topStart: Radius.circular(14),
                                       bottomEnd: Radius.circular(14),
                                     ),
@@ -816,8 +817,9 @@ class _DashboardTab extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final activeCashbook = ref.watch(activeCashbookProvider);
     final isMonthly = currentFilter == DashboardFilter.monthly;
-    final label =
-        isMonthly ? AppDateFormatter.formatMonth(DateTime.now(), context: context) : l10n.all;
+    final label = isMonthly
+        ? AppDateFormatter.formatMonth(DateTime.now(), context: context)
+        : l10n.all;
     final icon = isMonthly ? Icons.calendar_today : Icons.all_inclusive;
 
     return ActionChip(
@@ -883,7 +885,7 @@ class _DashboardTab extends ConsumerWidget {
             final isLast = items.indexOf(item) == items.length - 1;
             return Expanded(
               child: Container(
-                margin: EdgeInsets.only(right: isLast ? 0 : 8),
+                margin: EdgeInsetsDirectional.only(end: isLast ? 0 : 6),
                 padding:
                     const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
                 decoration: BoxDecoration(

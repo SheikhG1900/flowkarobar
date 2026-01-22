@@ -1155,7 +1155,7 @@ class AppLocalizationsUr extends AppLocalizations {
   String get add => 'شامل کریں';
 
   @override
-  String get scan => 'اسکین کریں';
+  String get scan => 'اسکین';
 
   @override
   String get recentTransactions => 'حالیہ لین دین';
