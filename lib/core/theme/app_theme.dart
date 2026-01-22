@@ -43,37 +43,37 @@ class AppTheme {
         );
 
       case 'ur':
-        return GoogleFonts.notoNastaliqUrduTextTheme().copyWith(
-          displayLarge: GoogleFonts.notoNastaliqUrdu(
-              fontSize: 36, fontWeight: FontWeight.w400, height: 1.8),
-          displayMedium: GoogleFonts.notoNastaliqUrdu(
-              fontSize: 32, fontWeight: FontWeight.w400, height: 1.8),
-          displaySmall: GoogleFonts.notoNastaliqUrdu(
-              fontSize: 28, fontWeight: FontWeight.w400, height: 1.8),
-          headlineLarge: GoogleFonts.notoNastaliqUrdu(
-              fontSize: 26, fontWeight: FontWeight.w400, height: 1.8),
-          headlineMedium: GoogleFonts.notoNastaliqUrdu(
-              fontSize: 24, fontWeight: FontWeight.w400, height: 1.8),
-          headlineSmall: GoogleFonts.notoNastaliqUrdu(
-              fontSize: 22, fontWeight: FontWeight.w400, height: 1.8),
-          titleLarge: GoogleFonts.notoNastaliqUrdu(
-              fontSize: 22, fontWeight: FontWeight.w400, height: 1.8),
-          titleMedium: GoogleFonts.notoNastaliqUrdu(
-              fontSize: 20, fontWeight: FontWeight.w400, height: 1.8),
-          titleSmall: GoogleFonts.notoNastaliqUrdu(
-              fontSize: 18, fontWeight: FontWeight.w400, height: 1.8),
-          bodyLarge: GoogleFonts.notoNastaliqUrdu(
-              fontSize: 18, fontWeight: FontWeight.w400, height: 1.8),
-          bodyMedium: GoogleFonts.notoNastaliqUrdu(
-              fontSize: 16, fontWeight: FontWeight.w400, height: 1.8),
-          bodySmall: GoogleFonts.notoNastaliqUrdu(
-              fontSize: 14, fontWeight: FontWeight.w400, height: 1.8),
-          labelLarge: GoogleFonts.notoNastaliqUrdu(
-              fontSize: 16, fontWeight: FontWeight.w400, height: 1.8),
-          labelMedium: GoogleFonts.notoNastaliqUrdu(
-              fontSize: 14, fontWeight: FontWeight.w400, height: 1.8),
-          labelSmall: GoogleFonts.notoNastaliqUrdu(
-              fontSize: 12, fontWeight: FontWeight.w400, height: 1.8),
+        return GoogleFonts.marheyTextTheme().copyWith(
+          displayLarge: GoogleFonts.marhey(
+              fontSize: 36, fontWeight: FontWeight.w400, height: 1.4),
+          displayMedium: GoogleFonts.marhey(
+              fontSize: 32, fontWeight: FontWeight.w400, height: 1.4),
+          displaySmall: GoogleFonts.marhey(
+              fontSize: 28, fontWeight: FontWeight.w400, height: 1.4),
+          headlineLarge: GoogleFonts.marhey(
+              fontSize: 26, fontWeight: FontWeight.w400, height: 1.4),
+          headlineMedium: GoogleFonts.marhey(
+              fontSize: 24, fontWeight: FontWeight.w400, height: 1.4),
+          headlineSmall: GoogleFonts.marhey(
+              fontSize: 22, fontWeight: FontWeight.w400, height: 1.4),
+          titleLarge: GoogleFonts.marhey(
+              fontSize: 22, fontWeight: FontWeight.w400, height: 1.4),
+          titleMedium: GoogleFonts.marhey(
+              fontSize: 20, fontWeight: FontWeight.w400, height: 1.4),
+          titleSmall: GoogleFonts.marhey(
+              fontSize: 18, fontWeight: FontWeight.w400, height: 1.4),
+          bodyLarge: GoogleFonts.marhey(
+              fontSize: 18, fontWeight: FontWeight.w400, height: 1.4),
+          bodyMedium: GoogleFonts.marhey(
+              fontSize: 16, fontWeight: FontWeight.w400, height: 1.4),
+          bodySmall: GoogleFonts.marhey(
+              fontSize: 14, fontWeight: FontWeight.w400, height: 1.4),
+          labelLarge: GoogleFonts.marhey(
+              fontSize: 16, fontWeight: FontWeight.w400, height: 1.4),
+          labelMedium: GoogleFonts.marhey(
+              fontSize: 14, fontWeight: FontWeight.w400, height: 1.4),
+          labelSmall: GoogleFonts.marhey(
+              fontSize: 12, fontWeight: FontWeight.w400, height: 1.4),
         );
 
       default: // English
