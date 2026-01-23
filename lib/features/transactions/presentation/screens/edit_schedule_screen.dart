@@ -37,7 +37,7 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
 
   Category? _selectedCategory;
   Contact? _selectedContact;
-  int? _selectedContactId;
+  String? _selectedContactUuid;
   String? _paidRelationship;
   DateTime? _dueDate;
   DateTime? _startDate;
@@ -56,7 +56,7 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
     _selectedType = widget.schedule.type;
     _selectedCategory = null; // Will be loaded
     _selectedContact = null; // Will be loaded
-    _selectedContactId = widget.schedule.contactId;
+    _selectedContactUuid = widget.schedule.contactUuid;
     _paidRelationship = widget.schedule.paidRelationship;
     _dueDate = widget.schedule.dueDate;
     _startDate = widget.schedule.startDate;
@@ -89,13 +89,13 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
   }
 
   Future<void> _loadCategoryAndContact() async {
-    if (widget.schedule.categoryId != null) {
+    if (widget.schedule.categoryUuid != null) {
       // Load category
       final categories =
           await ref.read(categoriesByTypeProvider(widget.schedule.type).future);
       try {
         final category =
-            categories.firstWhere((c) => c.id == widget.schedule.categoryId);
+            categories.firstWhere((c) => c.uuid == widget.schedule.categoryUuid);
         if (mounted) {
           setState(() {
             _selectedCategory = category;
@@ -106,12 +106,12 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
       }
     }
 
-    if (widget.schedule.contactId != null) {
+    if (widget.schedule.contactUuid != null) {
       // Load contact
       final contacts = await ref.read(contactsListProvider.future);
       try {
         final contact =
-            contacts.firstWhere((c) => c.id == widget.schedule.contactId);
+            contacts.firstWhere((c) => c.uuid == widget.schedule.contactUuid);
         if (mounted) {
           setState(() {
             _selectedContact = contact;
@@ -148,12 +148,12 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
           : _descriptionController.text;
 
       await scheduleService.updateSchedule(
-        widget.schedule.id,
+        widget.schedule.uuid,
         amount: amount,
         type: _selectedType,
         description: description,
-        categoryId: _selectedCategory?.id,
-        contactId: _selectedContactId,
+        categoryUuid: _selectedCategory?.uuid,
+        contactUuid: _selectedContactUuid,
         paidRelationship: _paidRelationship,
         dueDate: _dueDate,
         scheduleType: _scheduleType,
@@ -254,7 +254,7 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
         }
         setState(() {
           _selectedContact = contact;
-          _selectedContactId = contact.id;
+          _selectedContactUuid = contact.uuid;
         });
       }
 
@@ -335,7 +335,7 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
                               ),
                             ),
                             title: Text(category.name),
-                            trailing: _selectedCategory?.id == category.id
+                            trailing: _selectedCategory?.uuid == category.uuid
                                 ? Icon(Icons.check_circle, color: color)
                                 : null,
                             onTap: () {
@@ -344,7 +344,7 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
                               });
                               Navigator.pop(context);
                             },
-                            selected: _selectedCategory?.id == category.id,
+                            selected: _selectedCategory?.uuid == category.uuid,
                           );
                         },
                       );
@@ -426,14 +426,14 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
                             subtitle: contact.phone != null
                                 ? Text(contact.phone!)
                                 : null,
-                            trailing: _selectedContactId == contact.id
+                            trailing: _selectedContactUuid == contact.uuid
                                 ? Icon(Icons.check_circle,
                                     color: theme.colorScheme.primary)
                                 : null,
                             onTap: () {
                               Navigator.pop(context, contact);
                             },
-                            selected: _selectedContactId == contact.id,
+                            selected: _selectedContactUuid == contact.uuid,
                           );
                         },
                       );
@@ -687,7 +687,7 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
                   if (contact != null) {
                     setState(() {
                       _selectedContact = contact;
-                      _selectedContactId = contact.id;
+                      _selectedContactUuid = contact.uuid;
                     });
                   }
                 },
@@ -762,7 +762,7 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
                           onPressed: () {
                             setState(() {
                               _selectedContact = null;
-                              _selectedContactId = null;
+                              _selectedContactUuid = null;
                               // Clear relationship when contact is removed
                               _paidRelationship = null;
                               _dueDate = null;

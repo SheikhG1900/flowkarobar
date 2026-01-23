@@ -91,6 +91,7 @@ class TransactionsPaginatedNotifier
     extends Notifier<PaginatedState<TransactionWithDetails>> {
   StreamSubscription<List<TransactionWithDetails>>? _subscription;
   late TransactionsRepository _repository;
+  String _searchQuery = '';
 
   @override
   PaginatedState<TransactionWithDetails> build() {
@@ -113,25 +114,42 @@ class TransactionsPaginatedNotifier
 
     try {
       // Load first page
-      final initialItems =
-          await _repository.getTransactionsWithDetailsPaginated(
-        limit: state.pageSize,
-        offset: 0,
-      );
+      final List<TransactionWithDetails> initialItems;
+      if (_searchQuery.isEmpty) {
+        initialItems = await _repository.getTransactionsWithDetailsPaginated(
+          limit: state.pageSize,
+          offset: 0,
+        );
+      } else {
+        initialItems =
+            await _repository.getTransactionsWithDetailsSearchPaginated(
+          query: _searchQuery,
+          limit: state.pageSize,
+          offset: 0,
+        );
+      }
 
       state = state.replaceItems(initialItems,
           hasMore: initialItems.length == state.pageSize);
 
       // Watch for real-time updates to loaded items
       _subscription?.cancel();
-      _subscription = _repository
-          .watchTransactionsWithDetailsPaginated(
-        limit: initialItems.length > state.pageSize
-            ? initialItems.length
-            : state.pageSize,
-        offset: 0,
-      )
-          .listen((updatedItems) {
+      final stream = _searchQuery.isEmpty
+          ? _repository.watchTransactionsWithDetailsPaginated(
+              limit: initialItems.length > state.pageSize
+                  ? initialItems.length
+                  : state.pageSize,
+              offset: 0,
+            )
+          : _repository.watchTransactionsWithDetailsSearchPaginated(
+              query: _searchQuery,
+              limit: initialItems.length > state.pageSize
+                  ? initialItems.length
+                  : state.pageSize,
+              offset: 0,
+            );
+
+      _subscription = stream.listen((updatedItems) {
         if (!state.isLoadingMore) {
           state = state.copyWith(items: updatedItems);
         }
@@ -150,10 +168,19 @@ class TransactionsPaginatedNotifier
     state = state.copyWith(isLoadingMore: true);
 
     try {
-      final newItems = await _repository.getTransactionsWithDetailsPaginated(
-        limit: state.pageSize,
-        offset: state.currentOffset,
-      );
+      final List<TransactionWithDetails> newItems;
+      if (_searchQuery.isEmpty) {
+        newItems = await _repository.getTransactionsWithDetailsPaginated(
+          limit: state.pageSize,
+          offset: state.currentOffset,
+        );
+      } else {
+        newItems = await _repository.getTransactionsWithDetailsSearchPaginated(
+          query: _searchQuery,
+          limit: state.pageSize,
+          offset: state.currentOffset,
+        );
+      }
 
       if (newItems.isEmpty) {
         state = state.copyWith(
@@ -168,14 +195,22 @@ class TransactionsPaginatedNotifier
 
         // Update subscription to watch all loaded items
         _subscription?.cancel();
-        _subscription = _repository
-            .watchTransactionsWithDetailsPaginated(
-          limit: state.items.length > state.pageSize
-              ? state.items.length
-              : state.pageSize,
-          offset: 0,
-        )
-            .listen((updatedItems) {
+        final stream = _searchQuery.isEmpty
+            ? _repository.watchTransactionsWithDetailsPaginated(
+                limit: state.items.length > state.pageSize
+                    ? state.items.length
+                    : state.pageSize,
+                offset: 0,
+              )
+            : _repository.watchTransactionsWithDetailsSearchPaginated(
+                query: _searchQuery,
+                limit: state.items.length > state.pageSize
+                    ? state.items.length
+                    : state.pageSize,
+                offset: 0,
+              );
+
+        _subscription = stream.listen((updatedItems) {
           if (!state.isLoadingMore) {
             state = state.copyWith(items: updatedItems);
           }
@@ -187,6 +222,14 @@ class TransactionsPaginatedNotifier
         error: e.toString(),
       );
     }
+  }
+
+  Future<void> search(String query) async {
+    if (_searchQuery == query) return;
+    _searchQuery = query;
+    _subscription?.cancel();
+    state = state.copyWith(items: [], isLoading: true, hasMore: true);
+    await _loadInitial();
   }
 
   Future<void> refresh() async {

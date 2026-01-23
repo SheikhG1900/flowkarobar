@@ -36,7 +36,7 @@ final contactsSearchProvider = StreamProvider.family<List<Contact>, String>((ref
 });
 
 // Stats provider (reactive)
-final contactStatisticsProvider = StreamProvider.family<ContactStatistics, int>((ref, contactId) {
+final contactStatisticsProvider = StreamProvider.family<ContactStatistics, String>((ref, contactUuid) {
   final repository = ref.watch(contactsRepositoryProvider);
-  return repository.watchContactStatistics(contactId);
+  return repository.watchContactStatistics(contactUuid);
 });

@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:flowpaisa/core/database/database.dart';
+import 'package:uuid/uuid.dart';
 
 class CategoriesRepository {
   final AppDatabase _database;
@@ -28,8 +29,8 @@ class CategoriesRepository {
     final query = _database.select(_database.categories).join([
       leftOuterJoin(
         _database.categoryUsageStats,
-        _database.categoryUsageStats.categoryId
-            .equalsExp(_database.categories.id),
+        _database.categoryUsageStats.categoryUuid
+            .equalsExp(_database.categories.uuid),
       ),
     ])
       ..where(_database.categories.type.equals(type))
@@ -52,16 +53,18 @@ class CategoriesRepository {
     });
   }
 
-  /// Get category by ID
-  Future<Category?> getCategoryById(int id) {
+  /// Get category by UUID
+  Future<Category?> getCategoryByUuid(String uuid) {
     return (_database.select(_database.categories)
-          ..where((c) => c.id.equals(id)))
+          ..where((c) => c.uuid.equals(uuid)))
         .getSingleOrNull();
   }
 
   /// Create category
-  Future<int> createCategory(CategoriesCompanion category) {
-    return _database.into(_database.categories).insert(category);
+  Future<String> createCategory(CategoriesCompanion category) async {
+    final uuid = category.uuid.present ? category.uuid.value : Uuid().v4();
+    await _database.into(_database.categories).insert(category.copyWith(uuid: Value(uuid)));
+    return uuid;
   }
 
   /// Update category
@@ -71,19 +74,19 @@ class CategoriesRepository {
   }
 
   /// Check if category has associated transactions
-  Future<bool> categoryHasTransactions(int categoryId) async {
+  Future<bool> categoryHasTransactions(String categoryUuid) async {
     final count = await (_database.selectOnly(_database.transactions)
-          ..addColumns([_database.transactions.id.count()])
-          ..where(_database.transactions.categoryId.equals(categoryId)))
+          ..addColumns([_database.transactions.uuid.count()])
+          ..where(_database.transactions.categoryUuid.equals(categoryUuid)))
         .getSingle();
     
-    final transactionCount = count.read(_database.transactions.id.count()) ?? 0;
+    final transactionCount = count.read(_database.transactions.uuid.count()) ?? 0;
     return transactionCount > 0;
   }
 
   /// Smart delete: soft-delete if transactions exist, hard-delete otherwise
-  Future<void> softDeleteCategory(int id) async {
-    final category = await getCategoryById(id);
+  Future<void> softDeleteCategory(String uuid) async {
+    final category = await getCategoryByUuid(uuid);
     if (category == null) {
       throw Exception('Category not found');
     }
@@ -93,39 +96,27 @@ class CategoriesRepository {
     }
 
     // Check if category has transactions
-    final hasTransactions = await categoryHasTransactions(id);
+    final hasTransactions = await categoryHasTransactions(uuid);
 
     if (hasTransactions) {
       // Soft delete: mark as deleted
       await (_database.update(_database.categories)
-            ..where((c) => c.id.equals(id)))
+            ..where((c) => c.uuid.equals(uuid)))
           .write(CategoriesCompanion(isDeleted: Value(true)));
     } else {
       // Hard delete: remove from database
       await (_database.delete(_database.categories)
-            ..where((c) => c.id.equals(id)))
+            ..where((c) => c.uuid.equals(uuid)))
           .go();
     }
   }
 
-  /// Delete category (only if not default) - DEPRECATED, use softDeleteCategory
-  Future<int> deleteCategory(int id) async {
-    final category = await getCategoryById(id);
-    if (category == null || category.isDefault) {
-      throw Exception('Cannot delete default category');
-    }
-
-    return (_database.delete(_database.categories)
-          ..where((c) => c.id.equals(id)))
-        .go();
-  }
-
   /// Increment category usage count
-  Future<void> incrementUsageCount(int categoryId) async {
+  Future<void> incrementUsageCount(String categoryUuid) async {
     await _database.transaction(() async {
       // Check if usage stat exists
       final existingStat = await (_database.select(_database.categoryUsageStats)
-            ..where((s) => s.categoryId.equals(categoryId)))
+            ..where((s) => s.categoryUuid.equals(categoryUuid)))
           .getSingleOrNull();
 
       if (existingStat != null) {
@@ -140,7 +131,7 @@ class CategoriesRepository {
         // Create new
         await _database.into(_database.categoryUsageStats).insert(
               CategoryUsageStatsCompanion(
-                categoryId: Value(categoryId),
+                categoryUuid: Value(categoryUuid),
                 usageCount: const Value(1),
                 lastUsed: Value(DateTime.now()),
               ),
@@ -150,11 +141,11 @@ class CategoriesRepository {
   }
 
   /// Decrement category usage count
-  Future<void> decrementUsageCount(int categoryId) async {
+  Future<void> decrementUsageCount(String categoryUuid) async {
     await _database.transaction(() async {
       // Check if usage stat exists
       final existingStat = await (_database.select(_database.categoryUsageStats)
-            ..where((s) => s.categoryId.equals(categoryId)))
+            ..where((s) => s.categoryUuid.equals(categoryUuid)))
           .getSingleOrNull();
 
       if (existingStat != null && existingStat.usageCount > 0) {
@@ -173,8 +164,8 @@ class CategoriesRepository {
     final query = _database.select(_database.categories).join([
       leftOuterJoin(
         _database.categoryUsageStats,
-        _database.categoryUsageStats.categoryId
-            .equalsExp(_database.categories.id),
+        _database.categoryUsageStats.categoryUuid
+            .equalsExp(_database.categories.uuid),
       ),
     ])
       ..where(_database.categories.type.equals(type))
@@ -201,8 +192,8 @@ class CategoriesRepository {
     final query = _database.select(_database.categories).join([
       innerJoin(
         _database.categoryUsageStats,
-        _database.categoryUsageStats.categoryId
-            .equalsExp(_database.categories.id),
+        _database.categoryUsageStats.categoryUuid
+            .equalsExp(_database.categories.uuid),
       ),
     ])
       ..where(_database.categories.type.equals(type))

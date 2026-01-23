@@ -55,7 +55,7 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
   bool _isDuplicate = false;
 
   Contact? _selectedContact;
-  int? _selectedContactId;
+  String? _selectedContactUuid;
 
   @override
   void initState() {
@@ -118,7 +118,7 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
         if (mounted) {
           setState(() {
             _selectedContact = contact;
-            _selectedContactId = contact!.id;
+            _selectedContactUuid = contact!.uuid;
           });
         }
       }
@@ -150,7 +150,7 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
     }
 
     final l10n = AppLocalizations.of(context)!;
-    if (_selectedContactId == null) {
+    if (_selectedContactUuid == null) {
       ToastUtils.showErrorToast(context, ref, l10n.pleaseSelectContact);
       return;
     }
@@ -162,7 +162,7 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
     try {
       final repository = ref.read(payablesRepositoryProvider);
       final payable = PayablesCompanion(
-        contactId: drift.Value(_selectedContactId!),
+        contactUuid: drift.Value(_selectedContactUuid!),
         amount: drift.Value(double.parse(_amountController.text)),
         description: drift.Value(_descriptionController.text.isEmpty
             ? null
@@ -177,7 +177,7 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
       );
 
       // Create payable and get the ID
-      final payableId = await repository.createPayable(payable);
+      final payableUuid = await repository.createPayable(payable);
 
       // Increment usage count for free users
       if (!PremiumGate.isPremium(ref)) {
@@ -190,7 +190,7 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
       if (mounted) {
         // Fetch full payable with linked data
         final payableWithLinkedData =
-            await repository.getPayableWithLinkedDataById(payableId);
+            await repository.getPayableWithLinkedDataByUuid(payableUuid);
 
         if (payableWithLinkedData != null) {
           final activeColor = ref.read(activeCashbookProvider).color;
@@ -361,12 +361,12 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
                             onTap: () {
                               setState(() {
                                 _selectedContact = contact;
-                                _selectedContactId = contact.id;
+                                _selectedContactUuid = contact.uuid;
                               });
                               Navigator.pop(context);
                             },
-                            selected: _selectedContactId == contact.id,
-                            trailing: _selectedContactId == contact.id
+                            selected: _selectedContactUuid == contact.uuid,
+                            trailing: _selectedContactUuid == contact.uuid
                                 ? const Icon(Icons.check_circle,
                                     color: AppColors.payableColor)
                                 : null,
@@ -562,7 +562,7 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
                           onPressed: () {
                             setState(() {
                               _selectedContact = null;
-                              _selectedContactId = null;
+                              _selectedContactUuid = null;
                             });
                           },
                         ),
@@ -572,7 +572,7 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
                           onPressed: () async {
                             final contactsRepo =
                                 ref.read(contactsRepositoryProvider);
-                            final id = await contactsRepo.createContact(
+                            final uuid = await contactsRepo.createContact(
                               ContactsCompanion(
                                 name: drift.Value(widget.initialContactName!),
                                 phone: drift.Value(widget.initialContactPhone),
@@ -582,10 +582,10 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
                             );
                             final newContact =
                                 (await contactsRepo.watchAllContacts().first)
-                                    .firstWhere((c) => c.id == id);
+                                    .firstWhere((c) => c.uuid == uuid);
                             setState(() {
                               _selectedContact = newContact;
-                              _selectedContactId = id;
+                              _selectedContactUuid = uuid;
                             });
                           },
                           icon: const Icon(Icons.add, size: 16),

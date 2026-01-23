@@ -200,6 +200,7 @@
     }
   },
   "search": "Search",
+  "searchTransactions": "Search transactions...",
   "noTransactions": "No transactions found",
   "selectCategory": "Select Category",
   "all": "All",
@@ -1165,6 +1166,26 @@
   "saving": "Saving...",
   "transactionDeletedSuccessfully": "Transaction deleted successfully",
   "googleDrive": "Google Drive",
+  "activeCashbook": "Active Cashbook",
+  "syncAndBackupApplyTo": "All sync and backup actions below apply to this cashbook only.",
+  "synchronization": "Synchronization",
+  "syncActive": "Sync active",
+  "syncDescription": "Synchronization keeps your data updated across all your devices by merging small changes. It is fast and runs automatically.",
+  "syncNow": "Sync Now",
+  "syncTriggered": "Sync triggered in background",
+  "backupDescription": "A full backup creates a complete snapshot of your database. Use this for historical records or to recover from major issues.",
+  "syncRecovery": "Sync Recovery",
+  "syncRecoveryDescription": "If you restored this backup to fix a sync error, you should reset the cloud sync to this version. This makes this restored data the \"source of truth\".",
+  "resetCloudSync": "Reset Cloud Sync",
+  "syncManifestReset": "Sync manifest reset successfully",
+  "failedToResetSync": "Failed to reset sync: {error}",
+  "@failedToResetSync": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "backupToFile": "Backup to File",
   "restoreFromFile": "Restore from File",
   "clearData": "Clear Data",

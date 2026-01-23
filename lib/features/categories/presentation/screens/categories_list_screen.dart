@@ -146,12 +146,12 @@ class _CategoryCard extends ConsumerWidget {
 
     // Check if category has transactions
     final hasTransactions =
-        await repository.categoryHasTransactions(category.id);
+        await repository.categoryHasTransactions(category.uuid);
 
     if (!context.mounted) return;
 
     try {
-      await repository.softDeleteCategory(category.id);
+      await repository.softDeleteCategory(category.uuid);
       if (context.mounted) {
         ToastUtils.showSuccessToast(
           context,

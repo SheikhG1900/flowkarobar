@@ -29,8 +29,8 @@ class PayableDetailsDialog extends ConsumerWidget {
   bool _canEditPayable(Payable payable) {
     // Can edit only if PENDING and not linked to any transaction
     return payable.status == 'PENDING' &&
-        payable.linkedExpenseId == null &&
-        payable.linkedIncomeId == null;
+        payable.linkedExpenseUuid == null &&
+        payable.linkedIncomeUuid == null;
   }
 
   @override
@@ -68,7 +68,7 @@ class PayableDetailsDialog extends ConsumerWidget {
                   context,
                   MaterialPageRoute(
                     builder: (context) =>
-                        EditPayableScreen(payableId: payable.id),
+                        EditPayableScreen(payableUuid: payable.uuid),
                   ),
                 );
               },
@@ -77,7 +77,7 @@ class PayableDetailsDialog extends ConsumerWidget {
           if (payable.status != 'PAID')
             IconButton(
               icon: const Icon(Icons.delete),
-              onPressed: () => _deletePayable(context, ref, payable.id),
+              onPressed: () => _deletePayable(context, ref, payable.uuid),
             ),
         ],
       ),
@@ -241,6 +241,8 @@ class PayableDetailsDialog extends ConsumerWidget {
               const SizedBox(height: 24),
               const Divider(),
               const SizedBox(height: 16),
+              const Divider(),
+              const SizedBox(height: 16),
             ],
 
             // Details Section
@@ -294,7 +296,7 @@ class PayableDetailsDialog extends ConsumerWidget {
               SizedBox(
                 width: double.infinity,
                 child: FilledButton.icon(
-                  onPressed: () => _markAsPaid(context, ref, payable.id),
+                  onPressed: () => _markAsPaid(context, ref, payable.uuid),
                   icon: const Icon(Icons.check_circle),
                   label: Text(l10n.markAsPaid),
                   style: FilledButton.styleFrom(
@@ -463,7 +465,7 @@ class PayableDetailsDialog extends ConsumerWidget {
   }
 
   Future<void> _deletePayable(
-      BuildContext context, WidgetRef ref, int payableId) async {
+      BuildContext context, WidgetRef ref, String payableUuid) async {
     final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
@@ -487,7 +489,7 @@ class PayableDetailsDialog extends ConsumerWidget {
     if (confirmed == true && context.mounted) {
       try {
         final repository = ref.read(payablesRepositoryProvider);
-        await repository.deletePayable(payableId);
+        await repository.deletePayable(payableUuid);
 
         if (context.mounted) {
           Navigator.pop(context);
@@ -503,16 +505,16 @@ class PayableDetailsDialog extends ConsumerWidget {
   }
 
   Future<void> _markAsPaid(
-      BuildContext context, WidgetRef ref, int payableId) async {
+      BuildContext context, WidgetRef ref, String payableUuid) async {
     final l10n = AppLocalizations.of(context)!;
     try {
       final repository = ref.read(payablesRepositoryProvider);
-      await repository.markAsPaid(payableId);
+      await repository.markAsPaid(payableUuid);
 
       if (context.mounted) {
         // Refresh item to get updated status and externalLinkId
         final updatedItem =
-            await repository.getPayableWithLinkedDataById(payableId);
+            await repository.getPayableWithLinkedDataByUuid(payableUuid);
 
         if (context.mounted) {
           final activeColor = ref.read(activeCashbookProvider).color;

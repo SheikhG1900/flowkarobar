@@ -9,15 +9,11 @@ class $CategoriesTable extends Categories
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $CategoriesTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  static const VerificationMeta _uuidMeta = const VerificationMeta('uuid');
   @override
-  late final GeneratedColumn<int> id = GeneratedColumn<int>(
-      'id', aliasedName, false,
-      hasAutoIncrement: true,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  late final GeneratedColumn<String> uuid = GeneratedColumn<String>(
+      'uuid', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
   static const VerificationMeta _nameMeta = const VerificationMeta('name');
   @override
   late final GeneratedColumn<String> name = GeneratedColumn<String>(
@@ -69,9 +65,37 @@ class $CategoriesTable extends Categories
       type: DriftSqlType.dateTime,
       requiredDuringInsert: false,
       defaultValue: currentDateAndTime);
+  static const VerificationMeta _updatedAtMeta =
+      const VerificationMeta('updatedAt');
   @override
-  List<GeneratedColumn> get $columns =>
-      [id, name, icon, color, type, isDefault, isDeleted, createdAt];
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+      'updated_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _isNotSyncedMeta =
+      const VerificationMeta('isNotSynced');
+  @override
+  late final GeneratedColumn<bool> isNotSynced = GeneratedColumn<bool>(
+      'is_not_synced', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("is_not_synced" IN (0, 1))'),
+      defaultValue: const Constant(true));
+  @override
+  List<GeneratedColumn> get $columns => [
+        uuid,
+        name,
+        icon,
+        color,
+        type,
+        isDefault,
+        isDeleted,
+        createdAt,
+        updatedAt,
+        isNotSynced
+      ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -82,8 +106,11 @@ class $CategoriesTable extends Categories
       {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
-    if (data.containsKey('id')) {
-      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    if (data.containsKey('uuid')) {
+      context.handle(
+          _uuidMeta, uuid.isAcceptableOrUnknown(data['uuid']!, _uuidMeta));
+    } else if (isInserting) {
+      context.missing(_uuidMeta);
     }
     if (data.containsKey('name')) {
       context.handle(
@@ -117,17 +144,27 @@ class $CategoriesTable extends Categories
       context.handle(_createdAtMeta,
           createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
     }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta,
+          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    }
+    if (data.containsKey('is_not_synced')) {
+      context.handle(
+          _isNotSyncedMeta,
+          isNotSynced.isAcceptableOrUnknown(
+              data['is_not_synced']!, _isNotSyncedMeta));
+    }
     return context;
   }
 
   @override
-  Set<GeneratedColumn> get $primaryKey => {id};
+  Set<GeneratedColumn> get $primaryKey => {uuid};
   @override
   Category map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return Category(
-      id: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      uuid: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}uuid'])!,
       name: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
       icon: attachedDatabase.typeMapping
@@ -142,6 +179,10 @@ class $CategoriesTable extends Categories
           .read(DriftSqlType.bool, data['${effectivePrefix}is_deleted'])!,
       createdAt: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      updatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
+      isNotSynced: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_not_synced'])!,
     );
   }
 
@@ -152,7 +193,7 @@ class $CategoriesTable extends Categories
 }
 
 class Category extends DataClass implements Insertable<Category> {
-  final int id;
+  final String uuid;
   final String name;
   final String? icon;
   final String? color;
@@ -160,19 +201,23 @@ class Category extends DataClass implements Insertable<Category> {
   final bool isDefault;
   final bool isDeleted;
   final DateTime createdAt;
+  final DateTime updatedAt;
+  final bool isNotSynced;
   const Category(
-      {required this.id,
+      {required this.uuid,
       required this.name,
       this.icon,
       this.color,
       required this.type,
       required this.isDefault,
       required this.isDeleted,
-      required this.createdAt});
+      required this.createdAt,
+      required this.updatedAt,
+      required this.isNotSynced});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    map['id'] = Variable<int>(id);
+    map['uuid'] = Variable<String>(uuid);
     map['name'] = Variable<String>(name);
     if (!nullToAbsent || icon != null) {
       map['icon'] = Variable<String>(icon);
@@ -184,12 +229,14 @@ class Category extends DataClass implements Insertable<Category> {
     map['is_default'] = Variable<bool>(isDefault);
     map['is_deleted'] = Variable<bool>(isDeleted);
     map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    map['is_not_synced'] = Variable<bool>(isNotSynced);
     return map;
   }
 
   CategoriesCompanion toCompanion(bool nullToAbsent) {
     return CategoriesCompanion(
-      id: Value(id),
+      uuid: Value(uuid),
       name: Value(name),
       icon: icon == null && nullToAbsent ? const Value.absent() : Value(icon),
       color:
@@ -198,6 +245,8 @@ class Category extends DataClass implements Insertable<Category> {
       isDefault: Value(isDefault),
       isDeleted: Value(isDeleted),
       createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      isNotSynced: Value(isNotSynced),
     );
   }
 
@@ -205,7 +254,7 @@ class Category extends DataClass implements Insertable<Category> {
       {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return Category(
-      id: serializer.fromJson<int>(json['id']),
+      uuid: serializer.fromJson<String>(json['uuid']),
       name: serializer.fromJson<String>(json['name']),
       icon: serializer.fromJson<String?>(json['icon']),
       color: serializer.fromJson<String?>(json['color']),
@@ -213,13 +262,15 @@ class Category extends DataClass implements Insertable<Category> {
       isDefault: serializer.fromJson<bool>(json['isDefault']),
       isDeleted: serializer.fromJson<bool>(json['isDeleted']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      isNotSynced: serializer.fromJson<bool>(json['isNotSynced']),
     );
   }
   @override
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
-      'id': serializer.toJson<int>(id),
+      'uuid': serializer.toJson<String>(uuid),
       'name': serializer.toJson<String>(name),
       'icon': serializer.toJson<String?>(icon),
       'color': serializer.toJson<String?>(color),
@@ -227,20 +278,24 @@ class Category extends DataClass implements Insertable<Category> {
       'isDefault': serializer.toJson<bool>(isDefault),
       'isDeleted': serializer.toJson<bool>(isDeleted),
       'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'isNotSynced': serializer.toJson<bool>(isNotSynced),
     };
   }
 
   Category copyWith(
-          {int? id,
+          {String? uuid,
           String? name,
           Value<String?> icon = const Value.absent(),
           Value<String?> color = const Value.absent(),
           String? type,
           bool? isDefault,
           bool? isDeleted,
-          DateTime? createdAt}) =>
+          DateTime? createdAt,
+          DateTime? updatedAt,
+          bool? isNotSynced}) =>
       Category(
-        id: id ?? this.id,
+        uuid: uuid ?? this.uuid,
         name: name ?? this.name,
         icon: icon.present ? icon.value : this.icon,
         color: color.present ? color.value : this.color,
@@ -248,10 +303,12 @@ class Category extends DataClass implements Insertable<Category> {
         isDefault: isDefault ?? this.isDefault,
         isDeleted: isDeleted ?? this.isDeleted,
         createdAt: createdAt ?? this.createdAt,
+        updatedAt: updatedAt ?? this.updatedAt,
+        isNotSynced: isNotSynced ?? this.isNotSynced,
       );
   Category copyWithCompanion(CategoriesCompanion data) {
     return Category(
-      id: data.id.present ? data.id.value : this.id,
+      uuid: data.uuid.present ? data.uuid.value : this.uuid,
       name: data.name.present ? data.name.value : this.name,
       icon: data.icon.present ? data.icon.value : this.icon,
       color: data.color.present ? data.color.value : this.color,
@@ -259,43 +316,50 @@ class Category extends DataClass implements Insertable<Category> {
       isDefault: data.isDefault.present ? data.isDefault.value : this.isDefault,
       isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      isNotSynced:
+          data.isNotSynced.present ? data.isNotSynced.value : this.isNotSynced,
     );
   }
 
   @override
   String toString() {
     return (StringBuffer('Category(')
-          ..write('id: $id, ')
+          ..write('uuid: $uuid, ')
           ..write('name: $name, ')
           ..write('icon: $icon, ')
           ..write('color: $color, ')
           ..write('type: $type, ')
           ..write('isDefault: $isDefault, ')
           ..write('isDeleted: $isDeleted, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('isNotSynced: $isNotSynced')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, name, icon, color, type, isDefault, isDeleted, createdAt);
+  int get hashCode => Object.hash(uuid, name, icon, color, type, isDefault,
+      isDeleted, createdAt, updatedAt, isNotSynced);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is Category &&
-          other.id == this.id &&
+          other.uuid == this.uuid &&
           other.name == this.name &&
           other.icon == this.icon &&
           other.color == this.color &&
           other.type == this.type &&
           other.isDefault == this.isDefault &&
           other.isDeleted == this.isDeleted &&
-          other.createdAt == this.createdAt);
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.isNotSynced == this.isNotSynced);
 }
 
 class CategoriesCompanion extends UpdateCompanion<Category> {
-  final Value<int> id;
+  final Value<String> uuid;
   final Value<String> name;
   final Value<String?> icon;
   final Value<String?> color;
@@ -303,8 +367,11 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
   final Value<bool> isDefault;
   final Value<bool> isDeleted;
   final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<bool> isNotSynced;
+  final Value<int> rowid;
   const CategoriesCompanion({
-    this.id = const Value.absent(),
+    this.uuid = const Value.absent(),
     this.name = const Value.absent(),
     this.icon = const Value.absent(),
     this.color = const Value.absent(),
@@ -312,9 +379,12 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
     this.isDefault = const Value.absent(),
     this.isDeleted = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.isNotSynced = const Value.absent(),
+    this.rowid = const Value.absent(),
   });
   CategoriesCompanion.insert({
-    this.id = const Value.absent(),
+    required String uuid,
     required String name,
     this.icon = const Value.absent(),
     this.color = const Value.absent(),
@@ -322,10 +392,14 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
     this.isDefault = const Value.absent(),
     this.isDeleted = const Value.absent(),
     this.createdAt = const Value.absent(),
-  })  : name = Value(name),
+    this.updatedAt = const Value.absent(),
+    this.isNotSynced = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : uuid = Value(uuid),
+        name = Value(name),
         type = Value(type);
   static Insertable<Category> custom({
-    Expression<int>? id,
+    Expression<String>? uuid,
     Expression<String>? name,
     Expression<String>? icon,
     Expression<String>? color,
@@ -333,9 +407,12 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
     Expression<bool>? isDefault,
     Expression<bool>? isDeleted,
     Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<bool>? isNotSynced,
+    Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
-      if (id != null) 'id': id,
+      if (uuid != null) 'uuid': uuid,
       if (name != null) 'name': name,
       if (icon != null) 'icon': icon,
       if (color != null) 'color': color,
@@ -343,20 +420,26 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
       if (isDefault != null) 'is_default': isDefault,
       if (isDeleted != null) 'is_deleted': isDeleted,
       if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (isNotSynced != null) 'is_not_synced': isNotSynced,
+      if (rowid != null) 'rowid': rowid,
     });
   }
 
   CategoriesCompanion copyWith(
-      {Value<int>? id,
+      {Value<String>? uuid,
       Value<String>? name,
       Value<String?>? icon,
       Value<String?>? color,
       Value<String>? type,
       Value<bool>? isDefault,
       Value<bool>? isDeleted,
-      Value<DateTime>? createdAt}) {
+      Value<DateTime>? createdAt,
+      Value<DateTime>? updatedAt,
+      Value<bool>? isNotSynced,
+      Value<int>? rowid}) {
     return CategoriesCompanion(
-      id: id ?? this.id,
+      uuid: uuid ?? this.uuid,
       name: name ?? this.name,
       icon: icon ?? this.icon,
       color: color ?? this.color,
@@ -364,14 +447,17 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
       isDefault: isDefault ?? this.isDefault,
       isDeleted: isDeleted ?? this.isDeleted,
       createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      isNotSynced: isNotSynced ?? this.isNotSynced,
+      rowid: rowid ?? this.rowid,
     );
   }
 
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    if (id.present) {
-      map['id'] = Variable<int>(id.value);
+    if (uuid.present) {
+      map['uuid'] = Variable<String>(uuid.value);
     }
     if (name.present) {
       map['name'] = Variable<String>(name.value);
@@ -394,20 +480,32 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (isNotSynced.present) {
+      map['is_not_synced'] = Variable<bool>(isNotSynced.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
     return map;
   }
 
   @override
   String toString() {
     return (StringBuffer('CategoriesCompanion(')
-          ..write('id: $id, ')
+          ..write('uuid: $uuid, ')
           ..write('name: $name, ')
           ..write('icon: $icon, ')
           ..write('color: $color, ')
           ..write('type: $type, ')
           ..write('isDefault: $isDefault, ')
           ..write('isDeleted: $isDeleted, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('isNotSynced: $isNotSynced, ')
+          ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
@@ -418,15 +516,11 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $ContactsTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  static const VerificationMeta _uuidMeta = const VerificationMeta('uuid');
   @override
-  late final GeneratedColumn<int> id = GeneratedColumn<int>(
-      'id', aliasedName, false,
-      hasAutoIncrement: true,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  late final GeneratedColumn<String> uuid = GeneratedColumn<String>(
+      'uuid', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
   static const VerificationMeta _nameMeta = const VerificationMeta('name');
   @override
   late final GeneratedColumn<String> name = GeneratedColumn<String>(
@@ -466,9 +560,38 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
       type: DriftSqlType.dateTime,
       requiredDuringInsert: false,
       defaultValue: currentDateAndTime);
+  static const VerificationMeta _isDeletedMeta =
+      const VerificationMeta('isDeleted');
   @override
-  List<GeneratedColumn> get $columns =>
-      [id, name, phone, email, notes, createdAt, updatedAt];
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+      'is_deleted', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_deleted" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _isNotSyncedMeta =
+      const VerificationMeta('isNotSynced');
+  @override
+  late final GeneratedColumn<bool> isNotSynced = GeneratedColumn<bool>(
+      'is_not_synced', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("is_not_synced" IN (0, 1))'),
+      defaultValue: const Constant(true));
+  @override
+  List<GeneratedColumn> get $columns => [
+        uuid,
+        name,
+        phone,
+        email,
+        notes,
+        createdAt,
+        updatedAt,
+        isDeleted,
+        isNotSynced
+      ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -479,8 +602,11 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
       {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
-    if (data.containsKey('id')) {
-      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    if (data.containsKey('uuid')) {
+      context.handle(
+          _uuidMeta, uuid.isAcceptableOrUnknown(data['uuid']!, _uuidMeta));
+    } else if (isInserting) {
+      context.missing(_uuidMeta);
     }
     if (data.containsKey('name')) {
       context.handle(
@@ -508,17 +634,27 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
       context.handle(_updatedAtMeta,
           updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
     }
+    if (data.containsKey('is_deleted')) {
+      context.handle(_isDeletedMeta,
+          isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta));
+    }
+    if (data.containsKey('is_not_synced')) {
+      context.handle(
+          _isNotSyncedMeta,
+          isNotSynced.isAcceptableOrUnknown(
+              data['is_not_synced']!, _isNotSyncedMeta));
+    }
     return context;
   }
 
   @override
-  Set<GeneratedColumn> get $primaryKey => {id};
+  Set<GeneratedColumn> get $primaryKey => {uuid};
   @override
   Contact map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return Contact(
-      id: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      uuid: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}uuid'])!,
       name: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
       phone: attachedDatabase.typeMapping
@@ -531,6 +667,10 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
           .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
       updatedAt: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
+      isDeleted: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_deleted'])!,
+      isNotSynced: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_not_synced'])!,
     );
   }
 
@@ -541,25 +681,29 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
 }
 
 class Contact extends DataClass implements Insertable<Contact> {
-  final int id;
+  final String uuid;
   final String name;
   final String? phone;
   final String? email;
   final String? notes;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final bool isDeleted;
+  final bool isNotSynced;
   const Contact(
-      {required this.id,
+      {required this.uuid,
       required this.name,
       this.phone,
       this.email,
       this.notes,
       required this.createdAt,
-      required this.updatedAt});
+      required this.updatedAt,
+      required this.isDeleted,
+      required this.isNotSynced});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    map['id'] = Variable<int>(id);
+    map['uuid'] = Variable<String>(uuid);
     map['name'] = Variable<String>(name);
     if (!nullToAbsent || phone != null) {
       map['phone'] = Variable<String>(phone);
@@ -572,12 +716,14 @@ class Contact extends DataClass implements Insertable<Contact> {
     }
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    map['is_not_synced'] = Variable<bool>(isNotSynced);
     return map;
   }
 
   ContactsCompanion toCompanion(bool nullToAbsent) {
     return ContactsCompanion(
-      id: Value(id),
+      uuid: Value(uuid),
       name: Value(name),
       phone:
           phone == null && nullToAbsent ? const Value.absent() : Value(phone),
@@ -587,6 +733,8 @@ class Contact extends DataClass implements Insertable<Contact> {
           notes == null && nullToAbsent ? const Value.absent() : Value(notes),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
+      isDeleted: Value(isDeleted),
+      isNotSynced: Value(isNotSynced),
     );
   }
 
@@ -594,158 +742,195 @@ class Contact extends DataClass implements Insertable<Contact> {
       {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return Contact(
-      id: serializer.fromJson<int>(json['id']),
+      uuid: serializer.fromJson<String>(json['uuid']),
       name: serializer.fromJson<String>(json['name']),
       phone: serializer.fromJson<String?>(json['phone']),
       email: serializer.fromJson<String?>(json['email']),
       notes: serializer.fromJson<String?>(json['notes']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+      isNotSynced: serializer.fromJson<bool>(json['isNotSynced']),
     );
   }
   @override
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
-      'id': serializer.toJson<int>(id),
+      'uuid': serializer.toJson<String>(uuid),
       'name': serializer.toJson<String>(name),
       'phone': serializer.toJson<String?>(phone),
       'email': serializer.toJson<String?>(email),
       'notes': serializer.toJson<String?>(notes),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+      'isNotSynced': serializer.toJson<bool>(isNotSynced),
     };
   }
 
   Contact copyWith(
-          {int? id,
+          {String? uuid,
           String? name,
           Value<String?> phone = const Value.absent(),
           Value<String?> email = const Value.absent(),
           Value<String?> notes = const Value.absent(),
           DateTime? createdAt,
-          DateTime? updatedAt}) =>
+          DateTime? updatedAt,
+          bool? isDeleted,
+          bool? isNotSynced}) =>
       Contact(
-        id: id ?? this.id,
+        uuid: uuid ?? this.uuid,
         name: name ?? this.name,
         phone: phone.present ? phone.value : this.phone,
         email: email.present ? email.value : this.email,
         notes: notes.present ? notes.value : this.notes,
         createdAt: createdAt ?? this.createdAt,
         updatedAt: updatedAt ?? this.updatedAt,
+        isDeleted: isDeleted ?? this.isDeleted,
+        isNotSynced: isNotSynced ?? this.isNotSynced,
       );
   Contact copyWithCompanion(ContactsCompanion data) {
     return Contact(
-      id: data.id.present ? data.id.value : this.id,
+      uuid: data.uuid.present ? data.uuid.value : this.uuid,
       name: data.name.present ? data.name.value : this.name,
       phone: data.phone.present ? data.phone.value : this.phone,
       email: data.email.present ? data.email.value : this.email,
       notes: data.notes.present ? data.notes.value : this.notes,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+      isNotSynced:
+          data.isNotSynced.present ? data.isNotSynced.value : this.isNotSynced,
     );
   }
 
   @override
   String toString() {
     return (StringBuffer('Contact(')
-          ..write('id: $id, ')
+          ..write('uuid: $uuid, ')
           ..write('name: $name, ')
           ..write('phone: $phone, ')
           ..write('email: $email, ')
           ..write('notes: $notes, ')
           ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('isNotSynced: $isNotSynced')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, name, phone, email, notes, createdAt, updatedAt);
+  int get hashCode => Object.hash(uuid, name, phone, email, notes, createdAt,
+      updatedAt, isDeleted, isNotSynced);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is Contact &&
-          other.id == this.id &&
+          other.uuid == this.uuid &&
           other.name == this.name &&
           other.phone == this.phone &&
           other.email == this.email &&
           other.notes == this.notes &&
           other.createdAt == this.createdAt &&
-          other.updatedAt == this.updatedAt);
+          other.updatedAt == this.updatedAt &&
+          other.isDeleted == this.isDeleted &&
+          other.isNotSynced == this.isNotSynced);
 }
 
 class ContactsCompanion extends UpdateCompanion<Contact> {
-  final Value<int> id;
+  final Value<String> uuid;
   final Value<String> name;
   final Value<String?> phone;
   final Value<String?> email;
   final Value<String?> notes;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
+  final Value<bool> isDeleted;
+  final Value<bool> isNotSynced;
+  final Value<int> rowid;
   const ContactsCompanion({
-    this.id = const Value.absent(),
+    this.uuid = const Value.absent(),
     this.name = const Value.absent(),
     this.phone = const Value.absent(),
     this.email = const Value.absent(),
     this.notes = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.isNotSynced = const Value.absent(),
+    this.rowid = const Value.absent(),
   });
   ContactsCompanion.insert({
-    this.id = const Value.absent(),
+    required String uuid,
     required String name,
     this.phone = const Value.absent(),
     this.email = const Value.absent(),
     this.notes = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
-  }) : name = Value(name);
+    this.isDeleted = const Value.absent(),
+    this.isNotSynced = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : uuid = Value(uuid),
+        name = Value(name);
   static Insertable<Contact> custom({
-    Expression<int>? id,
+    Expression<String>? uuid,
     Expression<String>? name,
     Expression<String>? phone,
     Expression<String>? email,
     Expression<String>? notes,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
+    Expression<bool>? isDeleted,
+    Expression<bool>? isNotSynced,
+    Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
-      if (id != null) 'id': id,
+      if (uuid != null) 'uuid': uuid,
       if (name != null) 'name': name,
       if (phone != null) 'phone': phone,
       if (email != null) 'email': email,
       if (notes != null) 'notes': notes,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (isNotSynced != null) 'is_not_synced': isNotSynced,
+      if (rowid != null) 'rowid': rowid,
     });
   }
 
   ContactsCompanion copyWith(
-      {Value<int>? id,
+      {Value<String>? uuid,
       Value<String>? name,
       Value<String?>? phone,
       Value<String?>? email,
       Value<String?>? notes,
       Value<DateTime>? createdAt,
-      Value<DateTime>? updatedAt}) {
+      Value<DateTime>? updatedAt,
+      Value<bool>? isDeleted,
+      Value<bool>? isNotSynced,
+      Value<int>? rowid}) {
     return ContactsCompanion(
-      id: id ?? this.id,
+      uuid: uuid ?? this.uuid,
       name: name ?? this.name,
       phone: phone ?? this.phone,
       email: email ?? this.email,
       notes: notes ?? this.notes,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      isDeleted: isDeleted ?? this.isDeleted,
+      isNotSynced: isNotSynced ?? this.isNotSynced,
+      rowid: rowid ?? this.rowid,
     );
   }
 
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    if (id.present) {
-      map['id'] = Variable<int>(id.value);
+    if (uuid.present) {
+      map['uuid'] = Variable<String>(uuid.value);
     }
     if (name.present) {
       map['name'] = Variable<String>(name.value);
@@ -765,19 +950,31 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(updatedAt.value);
     }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (isNotSynced.present) {
+      map['is_not_synced'] = Variable<bool>(isNotSynced.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
     return map;
   }
 
   @override
   String toString() {
     return (StringBuffer('ContactsCompanion(')
-          ..write('id: $id, ')
+          ..write('uuid: $uuid, ')
           ..write('name: $name, ')
           ..write('phone: $phone, ')
           ..write('email: $email, ')
           ..write('notes: $notes, ')
           ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('isNotSynced: $isNotSynced, ')
+          ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
@@ -789,15 +986,11 @@ class $TransactionsTable extends Transactions
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $TransactionsTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  static const VerificationMeta _uuidMeta = const VerificationMeta('uuid');
   @override
-  late final GeneratedColumn<int> id = GeneratedColumn<int>(
-      'id', aliasedName, false,
-      hasAutoIncrement: true,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  late final GeneratedColumn<String> uuid = GeneratedColumn<String>(
+      'uuid', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
   static const VerificationMeta _amountMeta = const VerificationMeta('amount');
   @override
   late final GeneratedColumn<double> amount = GeneratedColumn<double>(
@@ -808,24 +1001,24 @@ class $TransactionsTable extends Transactions
   late final GeneratedColumn<String> type = GeneratedColumn<String>(
       'type', aliasedName, false,
       type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _categoryIdMeta =
-      const VerificationMeta('categoryId');
+  static const VerificationMeta _categoryUuidMeta =
+      const VerificationMeta('categoryUuid');
   @override
-  late final GeneratedColumn<int> categoryId = GeneratedColumn<int>(
-      'category_id', aliasedName, true,
-      type: DriftSqlType.int,
+  late final GeneratedColumn<String> categoryUuid = GeneratedColumn<String>(
+      'category_uuid', aliasedName, true,
+      type: DriftSqlType.string,
       requiredDuringInsert: false,
       defaultConstraints:
-          GeneratedColumn.constraintIsAlways('REFERENCES categories (id)'));
-  static const VerificationMeta _contactIdMeta =
-      const VerificationMeta('contactId');
+          GeneratedColumn.constraintIsAlways('REFERENCES categories (uuid)'));
+  static const VerificationMeta _contactUuidMeta =
+      const VerificationMeta('contactUuid');
   @override
-  late final GeneratedColumn<int> contactId = GeneratedColumn<int>(
-      'contact_id', aliasedName, true,
-      type: DriftSqlType.int,
+  late final GeneratedColumn<String> contactUuid = GeneratedColumn<String>(
+      'contact_uuid', aliasedName, true,
+      type: DriftSqlType.string,
       requiredDuringInsert: false,
       defaultConstraints:
-          GeneratedColumn.constraintIsAlways('REFERENCES contacts (id)'));
+          GeneratedColumn.constraintIsAlways('REFERENCES contacts (uuid)'));
   static const VerificationMeta _descriptionMeta =
       const VerificationMeta('description');
   @override
@@ -837,18 +1030,18 @@ class $TransactionsTable extends Transactions
   late final GeneratedColumn<DateTime> date = GeneratedColumn<DateTime>(
       'date', aliasedName, false,
       type: DriftSqlType.dateTime, requiredDuringInsert: true);
-  static const VerificationMeta _linkedReceivableIdMeta =
-      const VerificationMeta('linkedReceivableId');
+  static const VerificationMeta _linkedReceivableUuidMeta =
+      const VerificationMeta('linkedReceivableUuid');
   @override
-  late final GeneratedColumn<int> linkedReceivableId = GeneratedColumn<int>(
-      'linked_receivable_id', aliasedName, true,
-      type: DriftSqlType.int, requiredDuringInsert: false);
-  static const VerificationMeta _linkedPayableIdMeta =
-      const VerificationMeta('linkedPayableId');
+  late final GeneratedColumn<String> linkedReceivableUuid =
+      GeneratedColumn<String>('linked_receivable_uuid', aliasedName, true,
+          type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _linkedPayableUuidMeta =
+      const VerificationMeta('linkedPayableUuid');
   @override
-  late final GeneratedColumn<int> linkedPayableId = GeneratedColumn<int>(
-      'linked_payable_id', aliasedName, true,
-      type: DriftSqlType.int, requiredDuringInsert: false);
+  late final GeneratedColumn<String> linkedPayableUuid =
+      GeneratedColumn<String>('linked_payable_uuid', aliasedName, true,
+          type: DriftSqlType.string, requiredDuringInsert: false);
   static const VerificationMeta _paidRelationshipMeta =
       const VerificationMeta('paidRelationship');
   @override
@@ -899,23 +1092,45 @@ class $TransactionsTable extends Transactions
       type: DriftSqlType.dateTime,
       requiredDuringInsert: false,
       defaultValue: currentDateAndTime);
+  static const VerificationMeta _isDeletedMeta =
+      const VerificationMeta('isDeleted');
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+      'is_deleted', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_deleted" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _isNotSyncedMeta =
+      const VerificationMeta('isNotSynced');
+  @override
+  late final GeneratedColumn<bool> isNotSynced = GeneratedColumn<bool>(
+      'is_not_synced', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("is_not_synced" IN (0, 1))'),
+      defaultValue: const Constant(true));
   @override
   List<GeneratedColumn> get $columns => [
-        id,
+        uuid,
         amount,
         type,
-        categoryId,
-        contactId,
+        categoryUuid,
+        contactUuid,
         description,
         date,
-        linkedReceivableId,
-        linkedPayableId,
+        linkedReceivableUuid,
+        linkedPayableUuid,
         paidRelationship,
         isAutoGenerated,
         isScheduled,
         externalLinkId,
         createdAt,
-        updatedAt
+        updatedAt,
+        isDeleted,
+        isNotSynced
       ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -927,8 +1142,11 @@ class $TransactionsTable extends Transactions
       {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
-    if (data.containsKey('id')) {
-      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    if (data.containsKey('uuid')) {
+      context.handle(
+          _uuidMeta, uuid.isAcceptableOrUnknown(data['uuid']!, _uuidMeta));
+    } else if (isInserting) {
+      context.missing(_uuidMeta);
     }
     if (data.containsKey('amount')) {
       context.handle(_amountMeta,
@@ -942,15 +1160,17 @@ class $TransactionsTable extends Transactions
     } else if (isInserting) {
       context.missing(_typeMeta);
     }
-    if (data.containsKey('category_id')) {
+    if (data.containsKey('category_uuid')) {
       context.handle(
-          _categoryIdMeta,
-          categoryId.isAcceptableOrUnknown(
-              data['category_id']!, _categoryIdMeta));
+          _categoryUuidMeta,
+          categoryUuid.isAcceptableOrUnknown(
+              data['category_uuid']!, _categoryUuidMeta));
     }
-    if (data.containsKey('contact_id')) {
-      context.handle(_contactIdMeta,
-          contactId.isAcceptableOrUnknown(data['contact_id']!, _contactIdMeta));
+    if (data.containsKey('contact_uuid')) {
+      context.handle(
+          _contactUuidMeta,
+          contactUuid.isAcceptableOrUnknown(
+              data['contact_uuid']!, _contactUuidMeta));
     }
     if (data.containsKey('description')) {
       context.handle(
@@ -964,17 +1184,17 @@ class $TransactionsTable extends Transactions
     } else if (isInserting) {
       context.missing(_dateMeta);
     }
-    if (data.containsKey('linked_receivable_id')) {
+    if (data.containsKey('linked_receivable_uuid')) {
       context.handle(
-          _linkedReceivableIdMeta,
-          linkedReceivableId.isAcceptableOrUnknown(
-              data['linked_receivable_id']!, _linkedReceivableIdMeta));
+          _linkedReceivableUuidMeta,
+          linkedReceivableUuid.isAcceptableOrUnknown(
+              data['linked_receivable_uuid']!, _linkedReceivableUuidMeta));
     }
-    if (data.containsKey('linked_payable_id')) {
+    if (data.containsKey('linked_payable_uuid')) {
       context.handle(
-          _linkedPayableIdMeta,
-          linkedPayableId.isAcceptableOrUnknown(
-              data['linked_payable_id']!, _linkedPayableIdMeta));
+          _linkedPayableUuidMeta,
+          linkedPayableUuid.isAcceptableOrUnknown(
+              data['linked_payable_uuid']!, _linkedPayableUuidMeta));
     }
     if (data.containsKey('paid_relationship')) {
       context.handle(
@@ -1008,33 +1228,44 @@ class $TransactionsTable extends Transactions
       context.handle(_updatedAtMeta,
           updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
     }
+    if (data.containsKey('is_deleted')) {
+      context.handle(_isDeletedMeta,
+          isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta));
+    }
+    if (data.containsKey('is_not_synced')) {
+      context.handle(
+          _isNotSyncedMeta,
+          isNotSynced.isAcceptableOrUnknown(
+              data['is_not_synced']!, _isNotSyncedMeta));
+    }
     return context;
   }
 
   @override
-  Set<GeneratedColumn> get $primaryKey => {id};
+  Set<GeneratedColumn> get $primaryKey => {uuid};
   @override
   Transaction map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return Transaction(
-      id: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      uuid: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}uuid'])!,
       amount: attachedDatabase.typeMapping
           .read(DriftSqlType.double, data['${effectivePrefix}amount'])!,
       type: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}type'])!,
-      categoryId: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}category_id']),
-      contactId: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}contact_id']),
+      categoryUuid: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}category_uuid']),
+      contactUuid: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}contact_uuid']),
       description: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}description']),
       date: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}date'])!,
-      linkedReceivableId: attachedDatabase.typeMapping.read(
-          DriftSqlType.int, data['${effectivePrefix}linked_receivable_id']),
-      linkedPayableId: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}linked_payable_id']),
+      linkedReceivableUuid: attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}linked_receivable_uuid']),
+      linkedPayableUuid: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}linked_payable_uuid']),
       paidRelationship: attachedDatabase.typeMapping.read(
           DriftSqlType.string, data['${effectivePrefix}paid_relationship']),
       isAutoGenerated: attachedDatabase.typeMapping.read(
@@ -1047,6 +1278,10 @@ class $TransactionsTable extends Transactions
           .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
       updatedAt: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
+      isDeleted: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_deleted'])!,
+      isNotSynced: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_not_synced'])!,
     );
   }
 
@@ -1057,58 +1292,62 @@ class $TransactionsTable extends Transactions
 }
 
 class Transaction extends DataClass implements Insertable<Transaction> {
-  final int id;
+  final String uuid;
   final double amount;
   final String type;
-  final int? categoryId;
-  final int? contactId;
+  final String? categoryUuid;
+  final String? contactUuid;
   final String? description;
   final DateTime date;
-  final int? linkedReceivableId;
-  final int? linkedPayableId;
+  final String? linkedReceivableUuid;
+  final String? linkedPayableUuid;
   final String? paidRelationship;
   final bool isAutoGenerated;
   final bool isScheduled;
   final String? externalLinkId;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final bool isDeleted;
+  final bool isNotSynced;
   const Transaction(
-      {required this.id,
+      {required this.uuid,
       required this.amount,
       required this.type,
-      this.categoryId,
-      this.contactId,
+      this.categoryUuid,
+      this.contactUuid,
       this.description,
       required this.date,
-      this.linkedReceivableId,
-      this.linkedPayableId,
+      this.linkedReceivableUuid,
+      this.linkedPayableUuid,
       this.paidRelationship,
       required this.isAutoGenerated,
       required this.isScheduled,
       this.externalLinkId,
       required this.createdAt,
-      required this.updatedAt});
+      required this.updatedAt,
+      required this.isDeleted,
+      required this.isNotSynced});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    map['id'] = Variable<int>(id);
+    map['uuid'] = Variable<String>(uuid);
     map['amount'] = Variable<double>(amount);
     map['type'] = Variable<String>(type);
-    if (!nullToAbsent || categoryId != null) {
-      map['category_id'] = Variable<int>(categoryId);
+    if (!nullToAbsent || categoryUuid != null) {
+      map['category_uuid'] = Variable<String>(categoryUuid);
     }
-    if (!nullToAbsent || contactId != null) {
-      map['contact_id'] = Variable<int>(contactId);
+    if (!nullToAbsent || contactUuid != null) {
+      map['contact_uuid'] = Variable<String>(contactUuid);
     }
     if (!nullToAbsent || description != null) {
       map['description'] = Variable<String>(description);
     }
     map['date'] = Variable<DateTime>(date);
-    if (!nullToAbsent || linkedReceivableId != null) {
-      map['linked_receivable_id'] = Variable<int>(linkedReceivableId);
+    if (!nullToAbsent || linkedReceivableUuid != null) {
+      map['linked_receivable_uuid'] = Variable<String>(linkedReceivableUuid);
     }
-    if (!nullToAbsent || linkedPayableId != null) {
-      map['linked_payable_id'] = Variable<int>(linkedPayableId);
+    if (!nullToAbsent || linkedPayableUuid != null) {
+      map['linked_payable_uuid'] = Variable<String>(linkedPayableUuid);
     }
     if (!nullToAbsent || paidRelationship != null) {
       map['paid_relationship'] = Variable<String>(paidRelationship);
@@ -1120,30 +1359,32 @@ class Transaction extends DataClass implements Insertable<Transaction> {
     }
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    map['is_not_synced'] = Variable<bool>(isNotSynced);
     return map;
   }
 
   TransactionsCompanion toCompanion(bool nullToAbsent) {
     return TransactionsCompanion(
-      id: Value(id),
+      uuid: Value(uuid),
       amount: Value(amount),
       type: Value(type),
-      categoryId: categoryId == null && nullToAbsent
+      categoryUuid: categoryUuid == null && nullToAbsent
           ? const Value.absent()
-          : Value(categoryId),
-      contactId: contactId == null && nullToAbsent
+          : Value(categoryUuid),
+      contactUuid: contactUuid == null && nullToAbsent
           ? const Value.absent()
-          : Value(contactId),
+          : Value(contactUuid),
       description: description == null && nullToAbsent
           ? const Value.absent()
           : Value(description),
       date: Value(date),
-      linkedReceivableId: linkedReceivableId == null && nullToAbsent
+      linkedReceivableUuid: linkedReceivableUuid == null && nullToAbsent
           ? const Value.absent()
-          : Value(linkedReceivableId),
-      linkedPayableId: linkedPayableId == null && nullToAbsent
+          : Value(linkedReceivableUuid),
+      linkedPayableUuid: linkedPayableUuid == null && nullToAbsent
           ? const Value.absent()
-          : Value(linkedPayableId),
+          : Value(linkedPayableUuid),
       paidRelationship: paidRelationship == null && nullToAbsent
           ? const Value.absent()
           : Value(paidRelationship),
@@ -1154,6 +1395,8 @@ class Transaction extends DataClass implements Insertable<Transaction> {
           : Value(externalLinkId),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
+      isDeleted: Value(isDeleted),
+      isNotSynced: Value(isNotSynced),
     );
   }
 
@@ -1161,75 +1404,84 @@ class Transaction extends DataClass implements Insertable<Transaction> {
       {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return Transaction(
-      id: serializer.fromJson<int>(json['id']),
+      uuid: serializer.fromJson<String>(json['uuid']),
       amount: serializer.fromJson<double>(json['amount']),
       type: serializer.fromJson<String>(json['type']),
-      categoryId: serializer.fromJson<int?>(json['categoryId']),
-      contactId: serializer.fromJson<int?>(json['contactId']),
+      categoryUuid: serializer.fromJson<String?>(json['categoryUuid']),
+      contactUuid: serializer.fromJson<String?>(json['contactUuid']),
       description: serializer.fromJson<String?>(json['description']),
       date: serializer.fromJson<DateTime>(json['date']),
-      linkedReceivableId: serializer.fromJson<int?>(json['linkedReceivableId']),
-      linkedPayableId: serializer.fromJson<int?>(json['linkedPayableId']),
+      linkedReceivableUuid:
+          serializer.fromJson<String?>(json['linkedReceivableUuid']),
+      linkedPayableUuid:
+          serializer.fromJson<String?>(json['linkedPayableUuid']),
       paidRelationship: serializer.fromJson<String?>(json['paidRelationship']),
       isAutoGenerated: serializer.fromJson<bool>(json['isAutoGenerated']),
       isScheduled: serializer.fromJson<bool>(json['isScheduled']),
       externalLinkId: serializer.fromJson<String?>(json['externalLinkId']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+      isNotSynced: serializer.fromJson<bool>(json['isNotSynced']),
     );
   }
   @override
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
-      'id': serializer.toJson<int>(id),
+      'uuid': serializer.toJson<String>(uuid),
       'amount': serializer.toJson<double>(amount),
       'type': serializer.toJson<String>(type),
-      'categoryId': serializer.toJson<int?>(categoryId),
-      'contactId': serializer.toJson<int?>(contactId),
+      'categoryUuid': serializer.toJson<String?>(categoryUuid),
+      'contactUuid': serializer.toJson<String?>(contactUuid),
       'description': serializer.toJson<String?>(description),
       'date': serializer.toJson<DateTime>(date),
-      'linkedReceivableId': serializer.toJson<int?>(linkedReceivableId),
-      'linkedPayableId': serializer.toJson<int?>(linkedPayableId),
+      'linkedReceivableUuid': serializer.toJson<String?>(linkedReceivableUuid),
+      'linkedPayableUuid': serializer.toJson<String?>(linkedPayableUuid),
       'paidRelationship': serializer.toJson<String?>(paidRelationship),
       'isAutoGenerated': serializer.toJson<bool>(isAutoGenerated),
       'isScheduled': serializer.toJson<bool>(isScheduled),
       'externalLinkId': serializer.toJson<String?>(externalLinkId),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+      'isNotSynced': serializer.toJson<bool>(isNotSynced),
     };
   }
 
   Transaction copyWith(
-          {int? id,
+          {String? uuid,
           double? amount,
           String? type,
-          Value<int?> categoryId = const Value.absent(),
-          Value<int?> contactId = const Value.absent(),
+          Value<String?> categoryUuid = const Value.absent(),
+          Value<String?> contactUuid = const Value.absent(),
           Value<String?> description = const Value.absent(),
           DateTime? date,
-          Value<int?> linkedReceivableId = const Value.absent(),
-          Value<int?> linkedPayableId = const Value.absent(),
+          Value<String?> linkedReceivableUuid = const Value.absent(),
+          Value<String?> linkedPayableUuid = const Value.absent(),
           Value<String?> paidRelationship = const Value.absent(),
           bool? isAutoGenerated,
           bool? isScheduled,
           Value<String?> externalLinkId = const Value.absent(),
           DateTime? createdAt,
-          DateTime? updatedAt}) =>
+          DateTime? updatedAt,
+          bool? isDeleted,
+          bool? isNotSynced}) =>
       Transaction(
-        id: id ?? this.id,
+        uuid: uuid ?? this.uuid,
         amount: amount ?? this.amount,
         type: type ?? this.type,
-        categoryId: categoryId.present ? categoryId.value : this.categoryId,
-        contactId: contactId.present ? contactId.value : this.contactId,
+        categoryUuid:
+            categoryUuid.present ? categoryUuid.value : this.categoryUuid,
+        contactUuid: contactUuid.present ? contactUuid.value : this.contactUuid,
         description: description.present ? description.value : this.description,
         date: date ?? this.date,
-        linkedReceivableId: linkedReceivableId.present
-            ? linkedReceivableId.value
-            : this.linkedReceivableId,
-        linkedPayableId: linkedPayableId.present
-            ? linkedPayableId.value
-            : this.linkedPayableId,
+        linkedReceivableUuid: linkedReceivableUuid.present
+            ? linkedReceivableUuid.value
+            : this.linkedReceivableUuid,
+        linkedPayableUuid: linkedPayableUuid.present
+            ? linkedPayableUuid.value
+            : this.linkedPayableUuid,
         paidRelationship: paidRelationship.present
             ? paidRelationship.value
             : this.paidRelationship,
@@ -1239,24 +1491,28 @@ class Transaction extends DataClass implements Insertable<Transaction> {
             externalLinkId.present ? externalLinkId.value : this.externalLinkId,
         createdAt: createdAt ?? this.createdAt,
         updatedAt: updatedAt ?? this.updatedAt,
+        isDeleted: isDeleted ?? this.isDeleted,
+        isNotSynced: isNotSynced ?? this.isNotSynced,
       );
   Transaction copyWithCompanion(TransactionsCompanion data) {
     return Transaction(
-      id: data.id.present ? data.id.value : this.id,
+      uuid: data.uuid.present ? data.uuid.value : this.uuid,
       amount: data.amount.present ? data.amount.value : this.amount,
       type: data.type.present ? data.type.value : this.type,
-      categoryId:
-          data.categoryId.present ? data.categoryId.value : this.categoryId,
-      contactId: data.contactId.present ? data.contactId.value : this.contactId,
+      categoryUuid: data.categoryUuid.present
+          ? data.categoryUuid.value
+          : this.categoryUuid,
+      contactUuid:
+          data.contactUuid.present ? data.contactUuid.value : this.contactUuid,
       description:
           data.description.present ? data.description.value : this.description,
       date: data.date.present ? data.date.value : this.date,
-      linkedReceivableId: data.linkedReceivableId.present
-          ? data.linkedReceivableId.value
-          : this.linkedReceivableId,
-      linkedPayableId: data.linkedPayableId.present
-          ? data.linkedPayableId.value
-          : this.linkedPayableId,
+      linkedReceivableUuid: data.linkedReceivableUuid.present
+          ? data.linkedReceivableUuid.value
+          : this.linkedReceivableUuid,
+      linkedPayableUuid: data.linkedPayableUuid.present
+          ? data.linkedPayableUuid.value
+          : this.linkedPayableUuid,
       paidRelationship: data.paidRelationship.present
           ? data.paidRelationship.value
           : this.paidRelationship,
@@ -1270,198 +1526,229 @@ class Transaction extends DataClass implements Insertable<Transaction> {
           : this.externalLinkId,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+      isNotSynced:
+          data.isNotSynced.present ? data.isNotSynced.value : this.isNotSynced,
     );
   }
 
   @override
   String toString() {
     return (StringBuffer('Transaction(')
-          ..write('id: $id, ')
+          ..write('uuid: $uuid, ')
           ..write('amount: $amount, ')
           ..write('type: $type, ')
-          ..write('categoryId: $categoryId, ')
-          ..write('contactId: $contactId, ')
+          ..write('categoryUuid: $categoryUuid, ')
+          ..write('contactUuid: $contactUuid, ')
           ..write('description: $description, ')
           ..write('date: $date, ')
-          ..write('linkedReceivableId: $linkedReceivableId, ')
-          ..write('linkedPayableId: $linkedPayableId, ')
+          ..write('linkedReceivableUuid: $linkedReceivableUuid, ')
+          ..write('linkedPayableUuid: $linkedPayableUuid, ')
           ..write('paidRelationship: $paidRelationship, ')
           ..write('isAutoGenerated: $isAutoGenerated, ')
           ..write('isScheduled: $isScheduled, ')
           ..write('externalLinkId: $externalLinkId, ')
           ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('isNotSynced: $isNotSynced')
           ..write(')'))
         .toString();
   }
 
   @override
   int get hashCode => Object.hash(
-      id,
+      uuid,
       amount,
       type,
-      categoryId,
-      contactId,
+      categoryUuid,
+      contactUuid,
       description,
       date,
-      linkedReceivableId,
-      linkedPayableId,
+      linkedReceivableUuid,
+      linkedPayableUuid,
       paidRelationship,
       isAutoGenerated,
       isScheduled,
       externalLinkId,
       createdAt,
-      updatedAt);
+      updatedAt,
+      isDeleted,
+      isNotSynced);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is Transaction &&
-          other.id == this.id &&
+          other.uuid == this.uuid &&
           other.amount == this.amount &&
           other.type == this.type &&
-          other.categoryId == this.categoryId &&
-          other.contactId == this.contactId &&
+          other.categoryUuid == this.categoryUuid &&
+          other.contactUuid == this.contactUuid &&
           other.description == this.description &&
           other.date == this.date &&
-          other.linkedReceivableId == this.linkedReceivableId &&
-          other.linkedPayableId == this.linkedPayableId &&
+          other.linkedReceivableUuid == this.linkedReceivableUuid &&
+          other.linkedPayableUuid == this.linkedPayableUuid &&
           other.paidRelationship == this.paidRelationship &&
           other.isAutoGenerated == this.isAutoGenerated &&
           other.isScheduled == this.isScheduled &&
           other.externalLinkId == this.externalLinkId &&
           other.createdAt == this.createdAt &&
-          other.updatedAt == this.updatedAt);
+          other.updatedAt == this.updatedAt &&
+          other.isDeleted == this.isDeleted &&
+          other.isNotSynced == this.isNotSynced);
 }
 
 class TransactionsCompanion extends UpdateCompanion<Transaction> {
-  final Value<int> id;
+  final Value<String> uuid;
   final Value<double> amount;
   final Value<String> type;
-  final Value<int?> categoryId;
-  final Value<int?> contactId;
+  final Value<String?> categoryUuid;
+  final Value<String?> contactUuid;
   final Value<String?> description;
   final Value<DateTime> date;
-  final Value<int?> linkedReceivableId;
-  final Value<int?> linkedPayableId;
+  final Value<String?> linkedReceivableUuid;
+  final Value<String?> linkedPayableUuid;
   final Value<String?> paidRelationship;
   final Value<bool> isAutoGenerated;
   final Value<bool> isScheduled;
   final Value<String?> externalLinkId;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
+  final Value<bool> isDeleted;
+  final Value<bool> isNotSynced;
+  final Value<int> rowid;
   const TransactionsCompanion({
-    this.id = const Value.absent(),
+    this.uuid = const Value.absent(),
     this.amount = const Value.absent(),
     this.type = const Value.absent(),
-    this.categoryId = const Value.absent(),
-    this.contactId = const Value.absent(),
+    this.categoryUuid = const Value.absent(),
+    this.contactUuid = const Value.absent(),
     this.description = const Value.absent(),
     this.date = const Value.absent(),
-    this.linkedReceivableId = const Value.absent(),
-    this.linkedPayableId = const Value.absent(),
+    this.linkedReceivableUuid = const Value.absent(),
+    this.linkedPayableUuid = const Value.absent(),
     this.paidRelationship = const Value.absent(),
     this.isAutoGenerated = const Value.absent(),
     this.isScheduled = const Value.absent(),
     this.externalLinkId = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.isNotSynced = const Value.absent(),
+    this.rowid = const Value.absent(),
   });
   TransactionsCompanion.insert({
-    this.id = const Value.absent(),
+    required String uuid,
     required double amount,
     required String type,
-    this.categoryId = const Value.absent(),
-    this.contactId = const Value.absent(),
+    this.categoryUuid = const Value.absent(),
+    this.contactUuid = const Value.absent(),
     this.description = const Value.absent(),
     required DateTime date,
-    this.linkedReceivableId = const Value.absent(),
-    this.linkedPayableId = const Value.absent(),
+    this.linkedReceivableUuid = const Value.absent(),
+    this.linkedPayableUuid = const Value.absent(),
     this.paidRelationship = const Value.absent(),
     this.isAutoGenerated = const Value.absent(),
     this.isScheduled = const Value.absent(),
     this.externalLinkId = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
-  })  : amount = Value(amount),
+    this.isDeleted = const Value.absent(),
+    this.isNotSynced = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : uuid = Value(uuid),
+        amount = Value(amount),
         type = Value(type),
         date = Value(date);
   static Insertable<Transaction> custom({
-    Expression<int>? id,
+    Expression<String>? uuid,
     Expression<double>? amount,
     Expression<String>? type,
-    Expression<int>? categoryId,
-    Expression<int>? contactId,
+    Expression<String>? categoryUuid,
+    Expression<String>? contactUuid,
     Expression<String>? description,
     Expression<DateTime>? date,
-    Expression<int>? linkedReceivableId,
-    Expression<int>? linkedPayableId,
+    Expression<String>? linkedReceivableUuid,
+    Expression<String>? linkedPayableUuid,
     Expression<String>? paidRelationship,
     Expression<bool>? isAutoGenerated,
     Expression<bool>? isScheduled,
     Expression<String>? externalLinkId,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
+    Expression<bool>? isDeleted,
+    Expression<bool>? isNotSynced,
+    Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
-      if (id != null) 'id': id,
+      if (uuid != null) 'uuid': uuid,
       if (amount != null) 'amount': amount,
       if (type != null) 'type': type,
-      if (categoryId != null) 'category_id': categoryId,
-      if (contactId != null) 'contact_id': contactId,
+      if (categoryUuid != null) 'category_uuid': categoryUuid,
+      if (contactUuid != null) 'contact_uuid': contactUuid,
       if (description != null) 'description': description,
       if (date != null) 'date': date,
-      if (linkedReceivableId != null)
-        'linked_receivable_id': linkedReceivableId,
-      if (linkedPayableId != null) 'linked_payable_id': linkedPayableId,
+      if (linkedReceivableUuid != null)
+        'linked_receivable_uuid': linkedReceivableUuid,
+      if (linkedPayableUuid != null) 'linked_payable_uuid': linkedPayableUuid,
       if (paidRelationship != null) 'paid_relationship': paidRelationship,
       if (isAutoGenerated != null) 'is_auto_generated': isAutoGenerated,
       if (isScheduled != null) 'is_scheduled': isScheduled,
       if (externalLinkId != null) 'external_link_id': externalLinkId,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (isNotSynced != null) 'is_not_synced': isNotSynced,
+      if (rowid != null) 'rowid': rowid,
     });
   }
 
   TransactionsCompanion copyWith(
-      {Value<int>? id,
+      {Value<String>? uuid,
       Value<double>? amount,
       Value<String>? type,
-      Value<int?>? categoryId,
-      Value<int?>? contactId,
+      Value<String?>? categoryUuid,
+      Value<String?>? contactUuid,
       Value<String?>? description,
       Value<DateTime>? date,
-      Value<int?>? linkedReceivableId,
-      Value<int?>? linkedPayableId,
+      Value<String?>? linkedReceivableUuid,
+      Value<String?>? linkedPayableUuid,
       Value<String?>? paidRelationship,
       Value<bool>? isAutoGenerated,
       Value<bool>? isScheduled,
       Value<String?>? externalLinkId,
       Value<DateTime>? createdAt,
-      Value<DateTime>? updatedAt}) {
+      Value<DateTime>? updatedAt,
+      Value<bool>? isDeleted,
+      Value<bool>? isNotSynced,
+      Value<int>? rowid}) {
     return TransactionsCompanion(
-      id: id ?? this.id,
+      uuid: uuid ?? this.uuid,
       amount: amount ?? this.amount,
       type: type ?? this.type,
-      categoryId: categoryId ?? this.categoryId,
-      contactId: contactId ?? this.contactId,
+      categoryUuid: categoryUuid ?? this.categoryUuid,
+      contactUuid: contactUuid ?? this.contactUuid,
       description: description ?? this.description,
       date: date ?? this.date,
-      linkedReceivableId: linkedReceivableId ?? this.linkedReceivableId,
-      linkedPayableId: linkedPayableId ?? this.linkedPayableId,
+      linkedReceivableUuid: linkedReceivableUuid ?? this.linkedReceivableUuid,
+      linkedPayableUuid: linkedPayableUuid ?? this.linkedPayableUuid,
       paidRelationship: paidRelationship ?? this.paidRelationship,
       isAutoGenerated: isAutoGenerated ?? this.isAutoGenerated,
       isScheduled: isScheduled ?? this.isScheduled,
       externalLinkId: externalLinkId ?? this.externalLinkId,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      isDeleted: isDeleted ?? this.isDeleted,
+      isNotSynced: isNotSynced ?? this.isNotSynced,
+      rowid: rowid ?? this.rowid,
     );
   }
 
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    if (id.present) {
-      map['id'] = Variable<int>(id.value);
+    if (uuid.present) {
+      map['uuid'] = Variable<String>(uuid.value);
     }
     if (amount.present) {
       map['amount'] = Variable<double>(amount.value);
@@ -1469,11 +1756,11 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
     if (type.present) {
       map['type'] = Variable<String>(type.value);
     }
-    if (categoryId.present) {
-      map['category_id'] = Variable<int>(categoryId.value);
+    if (categoryUuid.present) {
+      map['category_uuid'] = Variable<String>(categoryUuid.value);
     }
-    if (contactId.present) {
-      map['contact_id'] = Variable<int>(contactId.value);
+    if (contactUuid.present) {
+      map['contact_uuid'] = Variable<String>(contactUuid.value);
     }
     if (description.present) {
       map['description'] = Variable<String>(description.value);
@@ -1481,11 +1768,12 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
     if (date.present) {
       map['date'] = Variable<DateTime>(date.value);
     }
-    if (linkedReceivableId.present) {
-      map['linked_receivable_id'] = Variable<int>(linkedReceivableId.value);
+    if (linkedReceivableUuid.present) {
+      map['linked_receivable_uuid'] =
+          Variable<String>(linkedReceivableUuid.value);
     }
-    if (linkedPayableId.present) {
-      map['linked_payable_id'] = Variable<int>(linkedPayableId.value);
+    if (linkedPayableUuid.present) {
+      map['linked_payable_uuid'] = Variable<String>(linkedPayableUuid.value);
     }
     if (paidRelationship.present) {
       map['paid_relationship'] = Variable<String>(paidRelationship.value);
@@ -1505,27 +1793,39 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(updatedAt.value);
     }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (isNotSynced.present) {
+      map['is_not_synced'] = Variable<bool>(isNotSynced.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
     return map;
   }
 
   @override
   String toString() {
     return (StringBuffer('TransactionsCompanion(')
-          ..write('id: $id, ')
+          ..write('uuid: $uuid, ')
           ..write('amount: $amount, ')
           ..write('type: $type, ')
-          ..write('categoryId: $categoryId, ')
-          ..write('contactId: $contactId, ')
+          ..write('categoryUuid: $categoryUuid, ')
+          ..write('contactUuid: $contactUuid, ')
           ..write('description: $description, ')
           ..write('date: $date, ')
-          ..write('linkedReceivableId: $linkedReceivableId, ')
-          ..write('linkedPayableId: $linkedPayableId, ')
+          ..write('linkedReceivableUuid: $linkedReceivableUuid, ')
+          ..write('linkedPayableUuid: $linkedPayableUuid, ')
           ..write('paidRelationship: $paidRelationship, ')
           ..write('isAutoGenerated: $isAutoGenerated, ')
           ..write('isScheduled: $isScheduled, ')
           ..write('externalLinkId: $externalLinkId, ')
           ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('isNotSynced: $isNotSynced, ')
+          ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
@@ -1537,24 +1837,20 @@ class $ReceivablesTable extends Receivables
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $ReceivablesTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  static const VerificationMeta _uuidMeta = const VerificationMeta('uuid');
   @override
-  late final GeneratedColumn<int> id = GeneratedColumn<int>(
-      'id', aliasedName, false,
-      hasAutoIncrement: true,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
-  static const VerificationMeta _contactIdMeta =
-      const VerificationMeta('contactId');
+  late final GeneratedColumn<String> uuid = GeneratedColumn<String>(
+      'uuid', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _contactUuidMeta =
+      const VerificationMeta('contactUuid');
   @override
-  late final GeneratedColumn<int> contactId = GeneratedColumn<int>(
-      'contact_id', aliasedName, false,
-      type: DriftSqlType.int,
+  late final GeneratedColumn<String> contactUuid = GeneratedColumn<String>(
+      'contact_uuid', aliasedName, false,
+      type: DriftSqlType.string,
       requiredDuringInsert: true,
       defaultConstraints:
-          GeneratedColumn.constraintIsAlways('REFERENCES contacts (id)'));
+          GeneratedColumn.constraintIsAlways('REFERENCES contacts (uuid)'));
   static const VerificationMeta _amountMeta = const VerificationMeta('amount');
   @override
   late final GeneratedColumn<double> amount = GeneratedColumn<double>(
@@ -1590,24 +1886,24 @@ class $ReceivablesTable extends Receivables
   late final GeneratedColumn<DateTime> receivedDate = GeneratedColumn<DateTime>(
       'received_date', aliasedName, true,
       type: DriftSqlType.dateTime, requiredDuringInsert: false);
-  static const VerificationMeta _linkedExpenseIdMeta =
-      const VerificationMeta('linkedExpenseId');
+  static const VerificationMeta _linkedExpenseUuidMeta =
+      const VerificationMeta('linkedExpenseUuid');
   @override
-  late final GeneratedColumn<int> linkedExpenseId = GeneratedColumn<int>(
-      'linked_expense_id', aliasedName, true,
-      type: DriftSqlType.int,
+  late final GeneratedColumn<String> linkedExpenseUuid =
+      GeneratedColumn<String>('linked_expense_uuid', aliasedName, true,
+          type: DriftSqlType.string,
+          requiredDuringInsert: false,
+          defaultConstraints: GeneratedColumn.constraintIsAlways(
+              'REFERENCES transactions (uuid)'));
+  static const VerificationMeta _linkedIncomeUuidMeta =
+      const VerificationMeta('linkedIncomeUuid');
+  @override
+  late final GeneratedColumn<String> linkedIncomeUuid = GeneratedColumn<String>(
+      'linked_income_uuid', aliasedName, true,
+      type: DriftSqlType.string,
       requiredDuringInsert: false,
       defaultConstraints:
-          GeneratedColumn.constraintIsAlways('REFERENCES transactions (id)'));
-  static const VerificationMeta _linkedIncomeIdMeta =
-      const VerificationMeta('linkedIncomeId');
-  @override
-  late final GeneratedColumn<int> linkedIncomeId = GeneratedColumn<int>(
-      'linked_income_id', aliasedName, true,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('REFERENCES transactions (id)'));
+          GeneratedColumn.constraintIsAlways('REFERENCES transactions (uuid)'));
   static const VerificationMeta _autoCreateIncomeMeta =
       const VerificationMeta('autoCreateIncome');
   @override
@@ -1642,22 +1938,44 @@ class $ReceivablesTable extends Receivables
       type: DriftSqlType.dateTime,
       requiredDuringInsert: false,
       defaultValue: currentDateAndTime);
+  static const VerificationMeta _isDeletedMeta =
+      const VerificationMeta('isDeleted');
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+      'is_deleted', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_deleted" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _isNotSyncedMeta =
+      const VerificationMeta('isNotSynced');
+  @override
+  late final GeneratedColumn<bool> isNotSynced = GeneratedColumn<bool>(
+      'is_not_synced', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("is_not_synced" IN (0, 1))'),
+      defaultValue: const Constant(true));
   @override
   List<GeneratedColumn> get $columns => [
-        id,
-        contactId,
+        uuid,
+        contactUuid,
         amount,
         description,
         date,
         dueDate,
         status,
         receivedDate,
-        linkedExpenseId,
-        linkedIncomeId,
+        linkedExpenseUuid,
+        linkedIncomeUuid,
         autoCreateIncome,
         externalLinkId,
         createdAt,
-        updatedAt
+        updatedAt,
+        isDeleted,
+        isNotSynced
       ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1669,14 +1987,19 @@ class $ReceivablesTable extends Receivables
       {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
-    if (data.containsKey('id')) {
-      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
-    }
-    if (data.containsKey('contact_id')) {
-      context.handle(_contactIdMeta,
-          contactId.isAcceptableOrUnknown(data['contact_id']!, _contactIdMeta));
+    if (data.containsKey('uuid')) {
+      context.handle(
+          _uuidMeta, uuid.isAcceptableOrUnknown(data['uuid']!, _uuidMeta));
     } else if (isInserting) {
-      context.missing(_contactIdMeta);
+      context.missing(_uuidMeta);
+    }
+    if (data.containsKey('contact_uuid')) {
+      context.handle(
+          _contactUuidMeta,
+          contactUuid.isAcceptableOrUnknown(
+              data['contact_uuid']!, _contactUuidMeta));
+    } else if (isInserting) {
+      context.missing(_contactUuidMeta);
     }
     if (data.containsKey('amount')) {
       context.handle(_amountMeta,
@@ -1710,17 +2033,17 @@ class $ReceivablesTable extends Receivables
           receivedDate.isAcceptableOrUnknown(
               data['received_date']!, _receivedDateMeta));
     }
-    if (data.containsKey('linked_expense_id')) {
+    if (data.containsKey('linked_expense_uuid')) {
       context.handle(
-          _linkedExpenseIdMeta,
-          linkedExpenseId.isAcceptableOrUnknown(
-              data['linked_expense_id']!, _linkedExpenseIdMeta));
+          _linkedExpenseUuidMeta,
+          linkedExpenseUuid.isAcceptableOrUnknown(
+              data['linked_expense_uuid']!, _linkedExpenseUuidMeta));
     }
-    if (data.containsKey('linked_income_id')) {
+    if (data.containsKey('linked_income_uuid')) {
       context.handle(
-          _linkedIncomeIdMeta,
-          linkedIncomeId.isAcceptableOrUnknown(
-              data['linked_income_id']!, _linkedIncomeIdMeta));
+          _linkedIncomeUuidMeta,
+          linkedIncomeUuid.isAcceptableOrUnknown(
+              data['linked_income_uuid']!, _linkedIncomeUuidMeta));
     }
     if (data.containsKey('auto_create_income')) {
       context.handle(
@@ -1742,19 +2065,29 @@ class $ReceivablesTable extends Receivables
       context.handle(_updatedAtMeta,
           updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
     }
+    if (data.containsKey('is_deleted')) {
+      context.handle(_isDeletedMeta,
+          isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta));
+    }
+    if (data.containsKey('is_not_synced')) {
+      context.handle(
+          _isNotSyncedMeta,
+          isNotSynced.isAcceptableOrUnknown(
+              data['is_not_synced']!, _isNotSyncedMeta));
+    }
     return context;
   }
 
   @override
-  Set<GeneratedColumn> get $primaryKey => {id};
+  Set<GeneratedColumn> get $primaryKey => {uuid};
   @override
   Receivable map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return Receivable(
-      id: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
-      contactId: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}contact_id'])!,
+      uuid: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}uuid'])!,
+      contactUuid: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}contact_uuid'])!,
       amount: attachedDatabase.typeMapping
           .read(DriftSqlType.double, data['${effectivePrefix}amount'])!,
       description: attachedDatabase.typeMapping
@@ -1767,10 +2100,10 @@ class $ReceivablesTable extends Receivables
           .read(DriftSqlType.string, data['${effectivePrefix}status'])!,
       receivedDate: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}received_date']),
-      linkedExpenseId: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}linked_expense_id']),
-      linkedIncomeId: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}linked_income_id']),
+      linkedExpenseUuid: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}linked_expense_uuid']),
+      linkedIncomeUuid: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}linked_income_uuid']),
       autoCreateIncome: attachedDatabase.typeMapping.read(
           DriftSqlType.bool, data['${effectivePrefix}auto_create_income'])!,
       externalLinkId: attachedDatabase.typeMapping.read(
@@ -1779,6 +2112,10 @@ class $ReceivablesTable extends Receivables
           .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
       updatedAt: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
+      isDeleted: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_deleted'])!,
+      isNotSynced: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_not_synced'])!,
     );
   }
 
@@ -1789,40 +2126,44 @@ class $ReceivablesTable extends Receivables
 }
 
 class Receivable extends DataClass implements Insertable<Receivable> {
-  final int id;
-  final int contactId;
+  final String uuid;
+  final String contactUuid;
   final double amount;
   final String? description;
   final DateTime date;
   final DateTime? dueDate;
   final String status;
   final DateTime? receivedDate;
-  final int? linkedExpenseId;
-  final int? linkedIncomeId;
+  final String? linkedExpenseUuid;
+  final String? linkedIncomeUuid;
   final bool autoCreateIncome;
   final String? externalLinkId;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final bool isDeleted;
+  final bool isNotSynced;
   const Receivable(
-      {required this.id,
-      required this.contactId,
+      {required this.uuid,
+      required this.contactUuid,
       required this.amount,
       this.description,
       required this.date,
       this.dueDate,
       required this.status,
       this.receivedDate,
-      this.linkedExpenseId,
-      this.linkedIncomeId,
+      this.linkedExpenseUuid,
+      this.linkedIncomeUuid,
       required this.autoCreateIncome,
       this.externalLinkId,
       required this.createdAt,
-      required this.updatedAt});
+      required this.updatedAt,
+      required this.isDeleted,
+      required this.isNotSynced});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    map['id'] = Variable<int>(id);
-    map['contact_id'] = Variable<int>(contactId);
+    map['uuid'] = Variable<String>(uuid);
+    map['contact_uuid'] = Variable<String>(contactUuid);
     map['amount'] = Variable<double>(amount);
     if (!nullToAbsent || description != null) {
       map['description'] = Variable<String>(description);
@@ -1835,11 +2176,11 @@ class Receivable extends DataClass implements Insertable<Receivable> {
     if (!nullToAbsent || receivedDate != null) {
       map['received_date'] = Variable<DateTime>(receivedDate);
     }
-    if (!nullToAbsent || linkedExpenseId != null) {
-      map['linked_expense_id'] = Variable<int>(linkedExpenseId);
+    if (!nullToAbsent || linkedExpenseUuid != null) {
+      map['linked_expense_uuid'] = Variable<String>(linkedExpenseUuid);
     }
-    if (!nullToAbsent || linkedIncomeId != null) {
-      map['linked_income_id'] = Variable<int>(linkedIncomeId);
+    if (!nullToAbsent || linkedIncomeUuid != null) {
+      map['linked_income_uuid'] = Variable<String>(linkedIncomeUuid);
     }
     map['auto_create_income'] = Variable<bool>(autoCreateIncome);
     if (!nullToAbsent || externalLinkId != null) {
@@ -1847,13 +2188,15 @@ class Receivable extends DataClass implements Insertable<Receivable> {
     }
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    map['is_not_synced'] = Variable<bool>(isNotSynced);
     return map;
   }
 
   ReceivablesCompanion toCompanion(bool nullToAbsent) {
     return ReceivablesCompanion(
-      id: Value(id),
-      contactId: Value(contactId),
+      uuid: Value(uuid),
+      contactUuid: Value(contactUuid),
       amount: Value(amount),
       description: description == null && nullToAbsent
           ? const Value.absent()
@@ -1866,18 +2209,20 @@ class Receivable extends DataClass implements Insertable<Receivable> {
       receivedDate: receivedDate == null && nullToAbsent
           ? const Value.absent()
           : Value(receivedDate),
-      linkedExpenseId: linkedExpenseId == null && nullToAbsent
+      linkedExpenseUuid: linkedExpenseUuid == null && nullToAbsent
           ? const Value.absent()
-          : Value(linkedExpenseId),
-      linkedIncomeId: linkedIncomeId == null && nullToAbsent
+          : Value(linkedExpenseUuid),
+      linkedIncomeUuid: linkedIncomeUuid == null && nullToAbsent
           ? const Value.absent()
-          : Value(linkedIncomeId),
+          : Value(linkedIncomeUuid),
       autoCreateIncome: Value(autoCreateIncome),
       externalLinkId: externalLinkId == null && nullToAbsent
           ? const Value.absent()
           : Value(externalLinkId),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
+      isDeleted: Value(isDeleted),
+      isNotSynced: Value(isNotSynced),
     );
   }
 
@@ -1885,61 +2230,68 @@ class Receivable extends DataClass implements Insertable<Receivable> {
       {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return Receivable(
-      id: serializer.fromJson<int>(json['id']),
-      contactId: serializer.fromJson<int>(json['contactId']),
+      uuid: serializer.fromJson<String>(json['uuid']),
+      contactUuid: serializer.fromJson<String>(json['contactUuid']),
       amount: serializer.fromJson<double>(json['amount']),
       description: serializer.fromJson<String?>(json['description']),
       date: serializer.fromJson<DateTime>(json['date']),
       dueDate: serializer.fromJson<DateTime?>(json['dueDate']),
       status: serializer.fromJson<String>(json['status']),
       receivedDate: serializer.fromJson<DateTime?>(json['receivedDate']),
-      linkedExpenseId: serializer.fromJson<int?>(json['linkedExpenseId']),
-      linkedIncomeId: serializer.fromJson<int?>(json['linkedIncomeId']),
+      linkedExpenseUuid:
+          serializer.fromJson<String?>(json['linkedExpenseUuid']),
+      linkedIncomeUuid: serializer.fromJson<String?>(json['linkedIncomeUuid']),
       autoCreateIncome: serializer.fromJson<bool>(json['autoCreateIncome']),
       externalLinkId: serializer.fromJson<String?>(json['externalLinkId']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+      isNotSynced: serializer.fromJson<bool>(json['isNotSynced']),
     );
   }
   @override
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
-      'id': serializer.toJson<int>(id),
-      'contactId': serializer.toJson<int>(contactId),
+      'uuid': serializer.toJson<String>(uuid),
+      'contactUuid': serializer.toJson<String>(contactUuid),
       'amount': serializer.toJson<double>(amount),
       'description': serializer.toJson<String?>(description),
       'date': serializer.toJson<DateTime>(date),
       'dueDate': serializer.toJson<DateTime?>(dueDate),
       'status': serializer.toJson<String>(status),
       'receivedDate': serializer.toJson<DateTime?>(receivedDate),
-      'linkedExpenseId': serializer.toJson<int?>(linkedExpenseId),
-      'linkedIncomeId': serializer.toJson<int?>(linkedIncomeId),
+      'linkedExpenseUuid': serializer.toJson<String?>(linkedExpenseUuid),
+      'linkedIncomeUuid': serializer.toJson<String?>(linkedIncomeUuid),
       'autoCreateIncome': serializer.toJson<bool>(autoCreateIncome),
       'externalLinkId': serializer.toJson<String?>(externalLinkId),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+      'isNotSynced': serializer.toJson<bool>(isNotSynced),
     };
   }
 
   Receivable copyWith(
-          {int? id,
-          int? contactId,
+          {String? uuid,
+          String? contactUuid,
           double? amount,
           Value<String?> description = const Value.absent(),
           DateTime? date,
           Value<DateTime?> dueDate = const Value.absent(),
           String? status,
           Value<DateTime?> receivedDate = const Value.absent(),
-          Value<int?> linkedExpenseId = const Value.absent(),
-          Value<int?> linkedIncomeId = const Value.absent(),
+          Value<String?> linkedExpenseUuid = const Value.absent(),
+          Value<String?> linkedIncomeUuid = const Value.absent(),
           bool? autoCreateIncome,
           Value<String?> externalLinkId = const Value.absent(),
           DateTime? createdAt,
-          DateTime? updatedAt}) =>
+          DateTime? updatedAt,
+          bool? isDeleted,
+          bool? isNotSynced}) =>
       Receivable(
-        id: id ?? this.id,
-        contactId: contactId ?? this.contactId,
+        uuid: uuid ?? this.uuid,
+        contactUuid: contactUuid ?? this.contactUuid,
         amount: amount ?? this.amount,
         description: description.present ? description.value : this.description,
         date: date ?? this.date,
@@ -1947,21 +2299,25 @@ class Receivable extends DataClass implements Insertable<Receivable> {
         status: status ?? this.status,
         receivedDate:
             receivedDate.present ? receivedDate.value : this.receivedDate,
-        linkedExpenseId: linkedExpenseId.present
-            ? linkedExpenseId.value
-            : this.linkedExpenseId,
-        linkedIncomeId:
-            linkedIncomeId.present ? linkedIncomeId.value : this.linkedIncomeId,
+        linkedExpenseUuid: linkedExpenseUuid.present
+            ? linkedExpenseUuid.value
+            : this.linkedExpenseUuid,
+        linkedIncomeUuid: linkedIncomeUuid.present
+            ? linkedIncomeUuid.value
+            : this.linkedIncomeUuid,
         autoCreateIncome: autoCreateIncome ?? this.autoCreateIncome,
         externalLinkId:
             externalLinkId.present ? externalLinkId.value : this.externalLinkId,
         createdAt: createdAt ?? this.createdAt,
         updatedAt: updatedAt ?? this.updatedAt,
+        isDeleted: isDeleted ?? this.isDeleted,
+        isNotSynced: isNotSynced ?? this.isNotSynced,
       );
   Receivable copyWithCompanion(ReceivablesCompanion data) {
     return Receivable(
-      id: data.id.present ? data.id.value : this.id,
-      contactId: data.contactId.present ? data.contactId.value : this.contactId,
+      uuid: data.uuid.present ? data.uuid.value : this.uuid,
+      contactUuid:
+          data.contactUuid.present ? data.contactUuid.value : this.contactUuid,
       amount: data.amount.present ? data.amount.value : this.amount,
       description:
           data.description.present ? data.description.value : this.description,
@@ -1971,12 +2327,12 @@ class Receivable extends DataClass implements Insertable<Receivable> {
       receivedDate: data.receivedDate.present
           ? data.receivedDate.value
           : this.receivedDate,
-      linkedExpenseId: data.linkedExpenseId.present
-          ? data.linkedExpenseId.value
-          : this.linkedExpenseId,
-      linkedIncomeId: data.linkedIncomeId.present
-          ? data.linkedIncomeId.value
-          : this.linkedIncomeId,
+      linkedExpenseUuid: data.linkedExpenseUuid.present
+          ? data.linkedExpenseUuid.value
+          : this.linkedExpenseUuid,
+      linkedIncomeUuid: data.linkedIncomeUuid.present
+          ? data.linkedIncomeUuid.value
+          : this.linkedIncomeUuid,
       autoCreateIncome: data.autoCreateIncome.present
           ? data.autoCreateIncome.value
           : this.autoCreateIncome,
@@ -1985,190 +2341,221 @@ class Receivable extends DataClass implements Insertable<Receivable> {
           : this.externalLinkId,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+      isNotSynced:
+          data.isNotSynced.present ? data.isNotSynced.value : this.isNotSynced,
     );
   }
 
   @override
   String toString() {
     return (StringBuffer('Receivable(')
-          ..write('id: $id, ')
-          ..write('contactId: $contactId, ')
+          ..write('uuid: $uuid, ')
+          ..write('contactUuid: $contactUuid, ')
           ..write('amount: $amount, ')
           ..write('description: $description, ')
           ..write('date: $date, ')
           ..write('dueDate: $dueDate, ')
           ..write('status: $status, ')
           ..write('receivedDate: $receivedDate, ')
-          ..write('linkedExpenseId: $linkedExpenseId, ')
-          ..write('linkedIncomeId: $linkedIncomeId, ')
+          ..write('linkedExpenseUuid: $linkedExpenseUuid, ')
+          ..write('linkedIncomeUuid: $linkedIncomeUuid, ')
           ..write('autoCreateIncome: $autoCreateIncome, ')
           ..write('externalLinkId: $externalLinkId, ')
           ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('isNotSynced: $isNotSynced')
           ..write(')'))
         .toString();
   }
 
   @override
   int get hashCode => Object.hash(
-      id,
-      contactId,
+      uuid,
+      contactUuid,
       amount,
       description,
       date,
       dueDate,
       status,
       receivedDate,
-      linkedExpenseId,
-      linkedIncomeId,
+      linkedExpenseUuid,
+      linkedIncomeUuid,
       autoCreateIncome,
       externalLinkId,
       createdAt,
-      updatedAt);
+      updatedAt,
+      isDeleted,
+      isNotSynced);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is Receivable &&
-          other.id == this.id &&
-          other.contactId == this.contactId &&
+          other.uuid == this.uuid &&
+          other.contactUuid == this.contactUuid &&
           other.amount == this.amount &&
           other.description == this.description &&
           other.date == this.date &&
           other.dueDate == this.dueDate &&
           other.status == this.status &&
           other.receivedDate == this.receivedDate &&
-          other.linkedExpenseId == this.linkedExpenseId &&
-          other.linkedIncomeId == this.linkedIncomeId &&
+          other.linkedExpenseUuid == this.linkedExpenseUuid &&
+          other.linkedIncomeUuid == this.linkedIncomeUuid &&
           other.autoCreateIncome == this.autoCreateIncome &&
           other.externalLinkId == this.externalLinkId &&
           other.createdAt == this.createdAt &&
-          other.updatedAt == this.updatedAt);
+          other.updatedAt == this.updatedAt &&
+          other.isDeleted == this.isDeleted &&
+          other.isNotSynced == this.isNotSynced);
 }
 
 class ReceivablesCompanion extends UpdateCompanion<Receivable> {
-  final Value<int> id;
-  final Value<int> contactId;
+  final Value<String> uuid;
+  final Value<String> contactUuid;
   final Value<double> amount;
   final Value<String?> description;
   final Value<DateTime> date;
   final Value<DateTime?> dueDate;
   final Value<String> status;
   final Value<DateTime?> receivedDate;
-  final Value<int?> linkedExpenseId;
-  final Value<int?> linkedIncomeId;
+  final Value<String?> linkedExpenseUuid;
+  final Value<String?> linkedIncomeUuid;
   final Value<bool> autoCreateIncome;
   final Value<String?> externalLinkId;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
+  final Value<bool> isDeleted;
+  final Value<bool> isNotSynced;
+  final Value<int> rowid;
   const ReceivablesCompanion({
-    this.id = const Value.absent(),
-    this.contactId = const Value.absent(),
+    this.uuid = const Value.absent(),
+    this.contactUuid = const Value.absent(),
     this.amount = const Value.absent(),
     this.description = const Value.absent(),
     this.date = const Value.absent(),
     this.dueDate = const Value.absent(),
     this.status = const Value.absent(),
     this.receivedDate = const Value.absent(),
-    this.linkedExpenseId = const Value.absent(),
-    this.linkedIncomeId = const Value.absent(),
+    this.linkedExpenseUuid = const Value.absent(),
+    this.linkedIncomeUuid = const Value.absent(),
     this.autoCreateIncome = const Value.absent(),
     this.externalLinkId = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.isNotSynced = const Value.absent(),
+    this.rowid = const Value.absent(),
   });
   ReceivablesCompanion.insert({
-    this.id = const Value.absent(),
-    required int contactId,
+    required String uuid,
+    required String contactUuid,
     required double amount,
     this.description = const Value.absent(),
     required DateTime date,
     this.dueDate = const Value.absent(),
     this.status = const Value.absent(),
     this.receivedDate = const Value.absent(),
-    this.linkedExpenseId = const Value.absent(),
-    this.linkedIncomeId = const Value.absent(),
+    this.linkedExpenseUuid = const Value.absent(),
+    this.linkedIncomeUuid = const Value.absent(),
     this.autoCreateIncome = const Value.absent(),
     this.externalLinkId = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
-  })  : contactId = Value(contactId),
+    this.isDeleted = const Value.absent(),
+    this.isNotSynced = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : uuid = Value(uuid),
+        contactUuid = Value(contactUuid),
         amount = Value(amount),
         date = Value(date);
   static Insertable<Receivable> custom({
-    Expression<int>? id,
-    Expression<int>? contactId,
+    Expression<String>? uuid,
+    Expression<String>? contactUuid,
     Expression<double>? amount,
     Expression<String>? description,
     Expression<DateTime>? date,
     Expression<DateTime>? dueDate,
     Expression<String>? status,
     Expression<DateTime>? receivedDate,
-    Expression<int>? linkedExpenseId,
-    Expression<int>? linkedIncomeId,
+    Expression<String>? linkedExpenseUuid,
+    Expression<String>? linkedIncomeUuid,
     Expression<bool>? autoCreateIncome,
     Expression<String>? externalLinkId,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
+    Expression<bool>? isDeleted,
+    Expression<bool>? isNotSynced,
+    Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
-      if (id != null) 'id': id,
-      if (contactId != null) 'contact_id': contactId,
+      if (uuid != null) 'uuid': uuid,
+      if (contactUuid != null) 'contact_uuid': contactUuid,
       if (amount != null) 'amount': amount,
       if (description != null) 'description': description,
       if (date != null) 'date': date,
       if (dueDate != null) 'due_date': dueDate,
       if (status != null) 'status': status,
       if (receivedDate != null) 'received_date': receivedDate,
-      if (linkedExpenseId != null) 'linked_expense_id': linkedExpenseId,
-      if (linkedIncomeId != null) 'linked_income_id': linkedIncomeId,
+      if (linkedExpenseUuid != null) 'linked_expense_uuid': linkedExpenseUuid,
+      if (linkedIncomeUuid != null) 'linked_income_uuid': linkedIncomeUuid,
       if (autoCreateIncome != null) 'auto_create_income': autoCreateIncome,
       if (externalLinkId != null) 'external_link_id': externalLinkId,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (isNotSynced != null) 'is_not_synced': isNotSynced,
+      if (rowid != null) 'rowid': rowid,
     });
   }
 
   ReceivablesCompanion copyWith(
-      {Value<int>? id,
-      Value<int>? contactId,
+      {Value<String>? uuid,
+      Value<String>? contactUuid,
       Value<double>? amount,
       Value<String?>? description,
       Value<DateTime>? date,
       Value<DateTime?>? dueDate,
       Value<String>? status,
       Value<DateTime?>? receivedDate,
-      Value<int?>? linkedExpenseId,
-      Value<int?>? linkedIncomeId,
+      Value<String?>? linkedExpenseUuid,
+      Value<String?>? linkedIncomeUuid,
       Value<bool>? autoCreateIncome,
       Value<String?>? externalLinkId,
       Value<DateTime>? createdAt,
-      Value<DateTime>? updatedAt}) {
+      Value<DateTime>? updatedAt,
+      Value<bool>? isDeleted,
+      Value<bool>? isNotSynced,
+      Value<int>? rowid}) {
     return ReceivablesCompanion(
-      id: id ?? this.id,
-      contactId: contactId ?? this.contactId,
+      uuid: uuid ?? this.uuid,
+      contactUuid: contactUuid ?? this.contactUuid,
       amount: amount ?? this.amount,
       description: description ?? this.description,
       date: date ?? this.date,
       dueDate: dueDate ?? this.dueDate,
       status: status ?? this.status,
       receivedDate: receivedDate ?? this.receivedDate,
-      linkedExpenseId: linkedExpenseId ?? this.linkedExpenseId,
-      linkedIncomeId: linkedIncomeId ?? this.linkedIncomeId,
+      linkedExpenseUuid: linkedExpenseUuid ?? this.linkedExpenseUuid,
+      linkedIncomeUuid: linkedIncomeUuid ?? this.linkedIncomeUuid,
       autoCreateIncome: autoCreateIncome ?? this.autoCreateIncome,
       externalLinkId: externalLinkId ?? this.externalLinkId,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      isDeleted: isDeleted ?? this.isDeleted,
+      isNotSynced: isNotSynced ?? this.isNotSynced,
+      rowid: rowid ?? this.rowid,
     );
   }
 
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    if (id.present) {
-      map['id'] = Variable<int>(id.value);
+    if (uuid.present) {
+      map['uuid'] = Variable<String>(uuid.value);
     }
-    if (contactId.present) {
-      map['contact_id'] = Variable<int>(contactId.value);
+    if (contactUuid.present) {
+      map['contact_uuid'] = Variable<String>(contactUuid.value);
     }
     if (amount.present) {
       map['amount'] = Variable<double>(amount.value);
@@ -2188,11 +2575,11 @@ class ReceivablesCompanion extends UpdateCompanion<Receivable> {
     if (receivedDate.present) {
       map['received_date'] = Variable<DateTime>(receivedDate.value);
     }
-    if (linkedExpenseId.present) {
-      map['linked_expense_id'] = Variable<int>(linkedExpenseId.value);
+    if (linkedExpenseUuid.present) {
+      map['linked_expense_uuid'] = Variable<String>(linkedExpenseUuid.value);
     }
-    if (linkedIncomeId.present) {
-      map['linked_income_id'] = Variable<int>(linkedIncomeId.value);
+    if (linkedIncomeUuid.present) {
+      map['linked_income_uuid'] = Variable<String>(linkedIncomeUuid.value);
     }
     if (autoCreateIncome.present) {
       map['auto_create_income'] = Variable<bool>(autoCreateIncome.value);
@@ -2206,26 +2593,38 @@ class ReceivablesCompanion extends UpdateCompanion<Receivable> {
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(updatedAt.value);
     }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (isNotSynced.present) {
+      map['is_not_synced'] = Variable<bool>(isNotSynced.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
     return map;
   }
 
   @override
   String toString() {
     return (StringBuffer('ReceivablesCompanion(')
-          ..write('id: $id, ')
-          ..write('contactId: $contactId, ')
+          ..write('uuid: $uuid, ')
+          ..write('contactUuid: $contactUuid, ')
           ..write('amount: $amount, ')
           ..write('description: $description, ')
           ..write('date: $date, ')
           ..write('dueDate: $dueDate, ')
           ..write('status: $status, ')
           ..write('receivedDate: $receivedDate, ')
-          ..write('linkedExpenseId: $linkedExpenseId, ')
-          ..write('linkedIncomeId: $linkedIncomeId, ')
+          ..write('linkedExpenseUuid: $linkedExpenseUuid, ')
+          ..write('linkedIncomeUuid: $linkedIncomeUuid, ')
           ..write('autoCreateIncome: $autoCreateIncome, ')
           ..write('externalLinkId: $externalLinkId, ')
           ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('isNotSynced: $isNotSynced, ')
+          ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
@@ -2236,24 +2635,20 @@ class $PayablesTable extends Payables with TableInfo<$PayablesTable, Payable> {
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $PayablesTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  static const VerificationMeta _uuidMeta = const VerificationMeta('uuid');
   @override
-  late final GeneratedColumn<int> id = GeneratedColumn<int>(
-      'id', aliasedName, false,
-      hasAutoIncrement: true,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
-  static const VerificationMeta _contactIdMeta =
-      const VerificationMeta('contactId');
+  late final GeneratedColumn<String> uuid = GeneratedColumn<String>(
+      'uuid', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _contactUuidMeta =
+      const VerificationMeta('contactUuid');
   @override
-  late final GeneratedColumn<int> contactId = GeneratedColumn<int>(
-      'contact_id', aliasedName, false,
-      type: DriftSqlType.int,
+  late final GeneratedColumn<String> contactUuid = GeneratedColumn<String>(
+      'contact_uuid', aliasedName, false,
+      type: DriftSqlType.string,
       requiredDuringInsert: true,
       defaultConstraints:
-          GeneratedColumn.constraintIsAlways('REFERENCES contacts (id)'));
+          GeneratedColumn.constraintIsAlways('REFERENCES contacts (uuid)'));
   static const VerificationMeta _amountMeta = const VerificationMeta('amount');
   @override
   late final GeneratedColumn<double> amount = GeneratedColumn<double>(
@@ -2289,24 +2684,24 @@ class $PayablesTable extends Payables with TableInfo<$PayablesTable, Payable> {
   late final GeneratedColumn<DateTime> paidDate = GeneratedColumn<DateTime>(
       'paid_date', aliasedName, true,
       type: DriftSqlType.dateTime, requiredDuringInsert: false);
-  static const VerificationMeta _linkedExpenseIdMeta =
-      const VerificationMeta('linkedExpenseId');
+  static const VerificationMeta _linkedExpenseUuidMeta =
+      const VerificationMeta('linkedExpenseUuid');
   @override
-  late final GeneratedColumn<int> linkedExpenseId = GeneratedColumn<int>(
-      'linked_expense_id', aliasedName, true,
-      type: DriftSqlType.int,
+  late final GeneratedColumn<String> linkedExpenseUuid =
+      GeneratedColumn<String>('linked_expense_uuid', aliasedName, true,
+          type: DriftSqlType.string,
+          requiredDuringInsert: false,
+          defaultConstraints: GeneratedColumn.constraintIsAlways(
+              'REFERENCES transactions (uuid)'));
+  static const VerificationMeta _linkedIncomeUuidMeta =
+      const VerificationMeta('linkedIncomeUuid');
+  @override
+  late final GeneratedColumn<String> linkedIncomeUuid = GeneratedColumn<String>(
+      'linked_income_uuid', aliasedName, true,
+      type: DriftSqlType.string,
       requiredDuringInsert: false,
       defaultConstraints:
-          GeneratedColumn.constraintIsAlways('REFERENCES transactions (id)'));
-  static const VerificationMeta _linkedIncomeIdMeta =
-      const VerificationMeta('linkedIncomeId');
-  @override
-  late final GeneratedColumn<int> linkedIncomeId = GeneratedColumn<int>(
-      'linked_income_id', aliasedName, true,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('REFERENCES transactions (id)'));
+          GeneratedColumn.constraintIsAlways('REFERENCES transactions (uuid)'));
   static const VerificationMeta _autoCreateExpenseMeta =
       const VerificationMeta('autoCreateExpense');
   @override
@@ -2341,22 +2736,44 @@ class $PayablesTable extends Payables with TableInfo<$PayablesTable, Payable> {
       type: DriftSqlType.dateTime,
       requiredDuringInsert: false,
       defaultValue: currentDateAndTime);
+  static const VerificationMeta _isDeletedMeta =
+      const VerificationMeta('isDeleted');
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+      'is_deleted', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_deleted" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _isNotSyncedMeta =
+      const VerificationMeta('isNotSynced');
+  @override
+  late final GeneratedColumn<bool> isNotSynced = GeneratedColumn<bool>(
+      'is_not_synced', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("is_not_synced" IN (0, 1))'),
+      defaultValue: const Constant(true));
   @override
   List<GeneratedColumn> get $columns => [
-        id,
-        contactId,
+        uuid,
+        contactUuid,
         amount,
         description,
         date,
         dueDate,
         status,
         paidDate,
-        linkedExpenseId,
-        linkedIncomeId,
+        linkedExpenseUuid,
+        linkedIncomeUuid,
         autoCreateExpense,
         externalLinkId,
         createdAt,
-        updatedAt
+        updatedAt,
+        isDeleted,
+        isNotSynced
       ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -2368,14 +2785,19 @@ class $PayablesTable extends Payables with TableInfo<$PayablesTable, Payable> {
       {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
-    if (data.containsKey('id')) {
-      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
-    }
-    if (data.containsKey('contact_id')) {
-      context.handle(_contactIdMeta,
-          contactId.isAcceptableOrUnknown(data['contact_id']!, _contactIdMeta));
+    if (data.containsKey('uuid')) {
+      context.handle(
+          _uuidMeta, uuid.isAcceptableOrUnknown(data['uuid']!, _uuidMeta));
     } else if (isInserting) {
-      context.missing(_contactIdMeta);
+      context.missing(_uuidMeta);
+    }
+    if (data.containsKey('contact_uuid')) {
+      context.handle(
+          _contactUuidMeta,
+          contactUuid.isAcceptableOrUnknown(
+              data['contact_uuid']!, _contactUuidMeta));
+    } else if (isInserting) {
+      context.missing(_contactUuidMeta);
     }
     if (data.containsKey('amount')) {
       context.handle(_amountMeta,
@@ -2407,17 +2829,17 @@ class $PayablesTable extends Payables with TableInfo<$PayablesTable, Payable> {
       context.handle(_paidDateMeta,
           paidDate.isAcceptableOrUnknown(data['paid_date']!, _paidDateMeta));
     }
-    if (data.containsKey('linked_expense_id')) {
+    if (data.containsKey('linked_expense_uuid')) {
       context.handle(
-          _linkedExpenseIdMeta,
-          linkedExpenseId.isAcceptableOrUnknown(
-              data['linked_expense_id']!, _linkedExpenseIdMeta));
+          _linkedExpenseUuidMeta,
+          linkedExpenseUuid.isAcceptableOrUnknown(
+              data['linked_expense_uuid']!, _linkedExpenseUuidMeta));
     }
-    if (data.containsKey('linked_income_id')) {
+    if (data.containsKey('linked_income_uuid')) {
       context.handle(
-          _linkedIncomeIdMeta,
-          linkedIncomeId.isAcceptableOrUnknown(
-              data['linked_income_id']!, _linkedIncomeIdMeta));
+          _linkedIncomeUuidMeta,
+          linkedIncomeUuid.isAcceptableOrUnknown(
+              data['linked_income_uuid']!, _linkedIncomeUuidMeta));
     }
     if (data.containsKey('auto_create_expense')) {
       context.handle(
@@ -2439,19 +2861,29 @@ class $PayablesTable extends Payables with TableInfo<$PayablesTable, Payable> {
       context.handle(_updatedAtMeta,
           updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
     }
+    if (data.containsKey('is_deleted')) {
+      context.handle(_isDeletedMeta,
+          isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta));
+    }
+    if (data.containsKey('is_not_synced')) {
+      context.handle(
+          _isNotSyncedMeta,
+          isNotSynced.isAcceptableOrUnknown(
+              data['is_not_synced']!, _isNotSyncedMeta));
+    }
     return context;
   }
 
   @override
-  Set<GeneratedColumn> get $primaryKey => {id};
+  Set<GeneratedColumn> get $primaryKey => {uuid};
   @override
   Payable map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return Payable(
-      id: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
-      contactId: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}contact_id'])!,
+      uuid: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}uuid'])!,
+      contactUuid: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}contact_uuid'])!,
       amount: attachedDatabase.typeMapping
           .read(DriftSqlType.double, data['${effectivePrefix}amount'])!,
       description: attachedDatabase.typeMapping
@@ -2464,10 +2896,10 @@ class $PayablesTable extends Payables with TableInfo<$PayablesTable, Payable> {
           .read(DriftSqlType.string, data['${effectivePrefix}status'])!,
       paidDate: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}paid_date']),
-      linkedExpenseId: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}linked_expense_id']),
-      linkedIncomeId: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}linked_income_id']),
+      linkedExpenseUuid: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}linked_expense_uuid']),
+      linkedIncomeUuid: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}linked_income_uuid']),
       autoCreateExpense: attachedDatabase.typeMapping.read(
           DriftSqlType.bool, data['${effectivePrefix}auto_create_expense'])!,
       externalLinkId: attachedDatabase.typeMapping.read(
@@ -2476,6 +2908,10 @@ class $PayablesTable extends Payables with TableInfo<$PayablesTable, Payable> {
           .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
       updatedAt: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
+      isDeleted: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_deleted'])!,
+      isNotSynced: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_not_synced'])!,
     );
   }
 
@@ -2486,40 +2922,44 @@ class $PayablesTable extends Payables with TableInfo<$PayablesTable, Payable> {
 }
 
 class Payable extends DataClass implements Insertable<Payable> {
-  final int id;
-  final int contactId;
+  final String uuid;
+  final String contactUuid;
   final double amount;
   final String? description;
   final DateTime date;
   final DateTime? dueDate;
   final String status;
   final DateTime? paidDate;
-  final int? linkedExpenseId;
-  final int? linkedIncomeId;
+  final String? linkedExpenseUuid;
+  final String? linkedIncomeUuid;
   final bool autoCreateExpense;
   final String? externalLinkId;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final bool isDeleted;
+  final bool isNotSynced;
   const Payable(
-      {required this.id,
-      required this.contactId,
+      {required this.uuid,
+      required this.contactUuid,
       required this.amount,
       this.description,
       required this.date,
       this.dueDate,
       required this.status,
       this.paidDate,
-      this.linkedExpenseId,
-      this.linkedIncomeId,
+      this.linkedExpenseUuid,
+      this.linkedIncomeUuid,
       required this.autoCreateExpense,
       this.externalLinkId,
       required this.createdAt,
-      required this.updatedAt});
+      required this.updatedAt,
+      required this.isDeleted,
+      required this.isNotSynced});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    map['id'] = Variable<int>(id);
-    map['contact_id'] = Variable<int>(contactId);
+    map['uuid'] = Variable<String>(uuid);
+    map['contact_uuid'] = Variable<String>(contactUuid);
     map['amount'] = Variable<double>(amount);
     if (!nullToAbsent || description != null) {
       map['description'] = Variable<String>(description);
@@ -2532,11 +2972,11 @@ class Payable extends DataClass implements Insertable<Payable> {
     if (!nullToAbsent || paidDate != null) {
       map['paid_date'] = Variable<DateTime>(paidDate);
     }
-    if (!nullToAbsent || linkedExpenseId != null) {
-      map['linked_expense_id'] = Variable<int>(linkedExpenseId);
+    if (!nullToAbsent || linkedExpenseUuid != null) {
+      map['linked_expense_uuid'] = Variable<String>(linkedExpenseUuid);
     }
-    if (!nullToAbsent || linkedIncomeId != null) {
-      map['linked_income_id'] = Variable<int>(linkedIncomeId);
+    if (!nullToAbsent || linkedIncomeUuid != null) {
+      map['linked_income_uuid'] = Variable<String>(linkedIncomeUuid);
     }
     map['auto_create_expense'] = Variable<bool>(autoCreateExpense);
     if (!nullToAbsent || externalLinkId != null) {
@@ -2544,13 +2984,15 @@ class Payable extends DataClass implements Insertable<Payable> {
     }
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    map['is_not_synced'] = Variable<bool>(isNotSynced);
     return map;
   }
 
   PayablesCompanion toCompanion(bool nullToAbsent) {
     return PayablesCompanion(
-      id: Value(id),
-      contactId: Value(contactId),
+      uuid: Value(uuid),
+      contactUuid: Value(contactUuid),
       amount: Value(amount),
       description: description == null && nullToAbsent
           ? const Value.absent()
@@ -2563,18 +3005,20 @@ class Payable extends DataClass implements Insertable<Payable> {
       paidDate: paidDate == null && nullToAbsent
           ? const Value.absent()
           : Value(paidDate),
-      linkedExpenseId: linkedExpenseId == null && nullToAbsent
+      linkedExpenseUuid: linkedExpenseUuid == null && nullToAbsent
           ? const Value.absent()
-          : Value(linkedExpenseId),
-      linkedIncomeId: linkedIncomeId == null && nullToAbsent
+          : Value(linkedExpenseUuid),
+      linkedIncomeUuid: linkedIncomeUuid == null && nullToAbsent
           ? const Value.absent()
-          : Value(linkedIncomeId),
+          : Value(linkedIncomeUuid),
       autoCreateExpense: Value(autoCreateExpense),
       externalLinkId: externalLinkId == null && nullToAbsent
           ? const Value.absent()
           : Value(externalLinkId),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
+      isDeleted: Value(isDeleted),
+      isNotSynced: Value(isNotSynced),
     );
   }
 
@@ -2582,82 +3026,93 @@ class Payable extends DataClass implements Insertable<Payable> {
       {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return Payable(
-      id: serializer.fromJson<int>(json['id']),
-      contactId: serializer.fromJson<int>(json['contactId']),
+      uuid: serializer.fromJson<String>(json['uuid']),
+      contactUuid: serializer.fromJson<String>(json['contactUuid']),
       amount: serializer.fromJson<double>(json['amount']),
       description: serializer.fromJson<String?>(json['description']),
       date: serializer.fromJson<DateTime>(json['date']),
       dueDate: serializer.fromJson<DateTime?>(json['dueDate']),
       status: serializer.fromJson<String>(json['status']),
       paidDate: serializer.fromJson<DateTime?>(json['paidDate']),
-      linkedExpenseId: serializer.fromJson<int?>(json['linkedExpenseId']),
-      linkedIncomeId: serializer.fromJson<int?>(json['linkedIncomeId']),
+      linkedExpenseUuid:
+          serializer.fromJson<String?>(json['linkedExpenseUuid']),
+      linkedIncomeUuid: serializer.fromJson<String?>(json['linkedIncomeUuid']),
       autoCreateExpense: serializer.fromJson<bool>(json['autoCreateExpense']),
       externalLinkId: serializer.fromJson<String?>(json['externalLinkId']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+      isNotSynced: serializer.fromJson<bool>(json['isNotSynced']),
     );
   }
   @override
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
-      'id': serializer.toJson<int>(id),
-      'contactId': serializer.toJson<int>(contactId),
+      'uuid': serializer.toJson<String>(uuid),
+      'contactUuid': serializer.toJson<String>(contactUuid),
       'amount': serializer.toJson<double>(amount),
       'description': serializer.toJson<String?>(description),
       'date': serializer.toJson<DateTime>(date),
       'dueDate': serializer.toJson<DateTime?>(dueDate),
       'status': serializer.toJson<String>(status),
       'paidDate': serializer.toJson<DateTime?>(paidDate),
-      'linkedExpenseId': serializer.toJson<int?>(linkedExpenseId),
-      'linkedIncomeId': serializer.toJson<int?>(linkedIncomeId),
+      'linkedExpenseUuid': serializer.toJson<String?>(linkedExpenseUuid),
+      'linkedIncomeUuid': serializer.toJson<String?>(linkedIncomeUuid),
       'autoCreateExpense': serializer.toJson<bool>(autoCreateExpense),
       'externalLinkId': serializer.toJson<String?>(externalLinkId),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+      'isNotSynced': serializer.toJson<bool>(isNotSynced),
     };
   }
 
   Payable copyWith(
-          {int? id,
-          int? contactId,
+          {String? uuid,
+          String? contactUuid,
           double? amount,
           Value<String?> description = const Value.absent(),
           DateTime? date,
           Value<DateTime?> dueDate = const Value.absent(),
           String? status,
           Value<DateTime?> paidDate = const Value.absent(),
-          Value<int?> linkedExpenseId = const Value.absent(),
-          Value<int?> linkedIncomeId = const Value.absent(),
+          Value<String?> linkedExpenseUuid = const Value.absent(),
+          Value<String?> linkedIncomeUuid = const Value.absent(),
           bool? autoCreateExpense,
           Value<String?> externalLinkId = const Value.absent(),
           DateTime? createdAt,
-          DateTime? updatedAt}) =>
+          DateTime? updatedAt,
+          bool? isDeleted,
+          bool? isNotSynced}) =>
       Payable(
-        id: id ?? this.id,
-        contactId: contactId ?? this.contactId,
+        uuid: uuid ?? this.uuid,
+        contactUuid: contactUuid ?? this.contactUuid,
         amount: amount ?? this.amount,
         description: description.present ? description.value : this.description,
         date: date ?? this.date,
         dueDate: dueDate.present ? dueDate.value : this.dueDate,
         status: status ?? this.status,
         paidDate: paidDate.present ? paidDate.value : this.paidDate,
-        linkedExpenseId: linkedExpenseId.present
-            ? linkedExpenseId.value
-            : this.linkedExpenseId,
-        linkedIncomeId:
-            linkedIncomeId.present ? linkedIncomeId.value : this.linkedIncomeId,
+        linkedExpenseUuid: linkedExpenseUuid.present
+            ? linkedExpenseUuid.value
+            : this.linkedExpenseUuid,
+        linkedIncomeUuid: linkedIncomeUuid.present
+            ? linkedIncomeUuid.value
+            : this.linkedIncomeUuid,
         autoCreateExpense: autoCreateExpense ?? this.autoCreateExpense,
         externalLinkId:
             externalLinkId.present ? externalLinkId.value : this.externalLinkId,
         createdAt: createdAt ?? this.createdAt,
         updatedAt: updatedAt ?? this.updatedAt,
+        isDeleted: isDeleted ?? this.isDeleted,
+        isNotSynced: isNotSynced ?? this.isNotSynced,
       );
   Payable copyWithCompanion(PayablesCompanion data) {
     return Payable(
-      id: data.id.present ? data.id.value : this.id,
-      contactId: data.contactId.present ? data.contactId.value : this.contactId,
+      uuid: data.uuid.present ? data.uuid.value : this.uuid,
+      contactUuid:
+          data.contactUuid.present ? data.contactUuid.value : this.contactUuid,
       amount: data.amount.present ? data.amount.value : this.amount,
       description:
           data.description.present ? data.description.value : this.description,
@@ -2665,12 +3120,12 @@ class Payable extends DataClass implements Insertable<Payable> {
       dueDate: data.dueDate.present ? data.dueDate.value : this.dueDate,
       status: data.status.present ? data.status.value : this.status,
       paidDate: data.paidDate.present ? data.paidDate.value : this.paidDate,
-      linkedExpenseId: data.linkedExpenseId.present
-          ? data.linkedExpenseId.value
-          : this.linkedExpenseId,
-      linkedIncomeId: data.linkedIncomeId.present
-          ? data.linkedIncomeId.value
-          : this.linkedIncomeId,
+      linkedExpenseUuid: data.linkedExpenseUuid.present
+          ? data.linkedExpenseUuid.value
+          : this.linkedExpenseUuid,
+      linkedIncomeUuid: data.linkedIncomeUuid.present
+          ? data.linkedIncomeUuid.value
+          : this.linkedIncomeUuid,
       autoCreateExpense: data.autoCreateExpense.present
           ? data.autoCreateExpense.value
           : this.autoCreateExpense,
@@ -2679,190 +3134,221 @@ class Payable extends DataClass implements Insertable<Payable> {
           : this.externalLinkId,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+      isNotSynced:
+          data.isNotSynced.present ? data.isNotSynced.value : this.isNotSynced,
     );
   }
 
   @override
   String toString() {
     return (StringBuffer('Payable(')
-          ..write('id: $id, ')
-          ..write('contactId: $contactId, ')
+          ..write('uuid: $uuid, ')
+          ..write('contactUuid: $contactUuid, ')
           ..write('amount: $amount, ')
           ..write('description: $description, ')
           ..write('date: $date, ')
           ..write('dueDate: $dueDate, ')
           ..write('status: $status, ')
           ..write('paidDate: $paidDate, ')
-          ..write('linkedExpenseId: $linkedExpenseId, ')
-          ..write('linkedIncomeId: $linkedIncomeId, ')
+          ..write('linkedExpenseUuid: $linkedExpenseUuid, ')
+          ..write('linkedIncomeUuid: $linkedIncomeUuid, ')
           ..write('autoCreateExpense: $autoCreateExpense, ')
           ..write('externalLinkId: $externalLinkId, ')
           ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('isNotSynced: $isNotSynced')
           ..write(')'))
         .toString();
   }
 
   @override
   int get hashCode => Object.hash(
-      id,
-      contactId,
+      uuid,
+      contactUuid,
       amount,
       description,
       date,
       dueDate,
       status,
       paidDate,
-      linkedExpenseId,
-      linkedIncomeId,
+      linkedExpenseUuid,
+      linkedIncomeUuid,
       autoCreateExpense,
       externalLinkId,
       createdAt,
-      updatedAt);
+      updatedAt,
+      isDeleted,
+      isNotSynced);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is Payable &&
-          other.id == this.id &&
-          other.contactId == this.contactId &&
+          other.uuid == this.uuid &&
+          other.contactUuid == this.contactUuid &&
           other.amount == this.amount &&
           other.description == this.description &&
           other.date == this.date &&
           other.dueDate == this.dueDate &&
           other.status == this.status &&
           other.paidDate == this.paidDate &&
-          other.linkedExpenseId == this.linkedExpenseId &&
-          other.linkedIncomeId == this.linkedIncomeId &&
+          other.linkedExpenseUuid == this.linkedExpenseUuid &&
+          other.linkedIncomeUuid == this.linkedIncomeUuid &&
           other.autoCreateExpense == this.autoCreateExpense &&
           other.externalLinkId == this.externalLinkId &&
           other.createdAt == this.createdAt &&
-          other.updatedAt == this.updatedAt);
+          other.updatedAt == this.updatedAt &&
+          other.isDeleted == this.isDeleted &&
+          other.isNotSynced == this.isNotSynced);
 }
 
 class PayablesCompanion extends UpdateCompanion<Payable> {
-  final Value<int> id;
-  final Value<int> contactId;
+  final Value<String> uuid;
+  final Value<String> contactUuid;
   final Value<double> amount;
   final Value<String?> description;
   final Value<DateTime> date;
   final Value<DateTime?> dueDate;
   final Value<String> status;
   final Value<DateTime?> paidDate;
-  final Value<int?> linkedExpenseId;
-  final Value<int?> linkedIncomeId;
+  final Value<String?> linkedExpenseUuid;
+  final Value<String?> linkedIncomeUuid;
   final Value<bool> autoCreateExpense;
   final Value<String?> externalLinkId;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
+  final Value<bool> isDeleted;
+  final Value<bool> isNotSynced;
+  final Value<int> rowid;
   const PayablesCompanion({
-    this.id = const Value.absent(),
-    this.contactId = const Value.absent(),
+    this.uuid = const Value.absent(),
+    this.contactUuid = const Value.absent(),
     this.amount = const Value.absent(),
     this.description = const Value.absent(),
     this.date = const Value.absent(),
     this.dueDate = const Value.absent(),
     this.status = const Value.absent(),
     this.paidDate = const Value.absent(),
-    this.linkedExpenseId = const Value.absent(),
-    this.linkedIncomeId = const Value.absent(),
+    this.linkedExpenseUuid = const Value.absent(),
+    this.linkedIncomeUuid = const Value.absent(),
     this.autoCreateExpense = const Value.absent(),
     this.externalLinkId = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.isNotSynced = const Value.absent(),
+    this.rowid = const Value.absent(),
   });
   PayablesCompanion.insert({
-    this.id = const Value.absent(),
-    required int contactId,
+    required String uuid,
+    required String contactUuid,
     required double amount,
     this.description = const Value.absent(),
     required DateTime date,
     this.dueDate = const Value.absent(),
     this.status = const Value.absent(),
     this.paidDate = const Value.absent(),
-    this.linkedExpenseId = const Value.absent(),
-    this.linkedIncomeId = const Value.absent(),
+    this.linkedExpenseUuid = const Value.absent(),
+    this.linkedIncomeUuid = const Value.absent(),
     this.autoCreateExpense = const Value.absent(),
     this.externalLinkId = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
-  })  : contactId = Value(contactId),
+    this.isDeleted = const Value.absent(),
+    this.isNotSynced = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : uuid = Value(uuid),
+        contactUuid = Value(contactUuid),
         amount = Value(amount),
         date = Value(date);
   static Insertable<Payable> custom({
-    Expression<int>? id,
-    Expression<int>? contactId,
+    Expression<String>? uuid,
+    Expression<String>? contactUuid,
     Expression<double>? amount,
     Expression<String>? description,
     Expression<DateTime>? date,
     Expression<DateTime>? dueDate,
     Expression<String>? status,
     Expression<DateTime>? paidDate,
-    Expression<int>? linkedExpenseId,
-    Expression<int>? linkedIncomeId,
+    Expression<String>? linkedExpenseUuid,
+    Expression<String>? linkedIncomeUuid,
     Expression<bool>? autoCreateExpense,
     Expression<String>? externalLinkId,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
+    Expression<bool>? isDeleted,
+    Expression<bool>? isNotSynced,
+    Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
-      if (id != null) 'id': id,
-      if (contactId != null) 'contact_id': contactId,
+      if (uuid != null) 'uuid': uuid,
+      if (contactUuid != null) 'contact_uuid': contactUuid,
       if (amount != null) 'amount': amount,
       if (description != null) 'description': description,
       if (date != null) 'date': date,
       if (dueDate != null) 'due_date': dueDate,
       if (status != null) 'status': status,
       if (paidDate != null) 'paid_date': paidDate,
-      if (linkedExpenseId != null) 'linked_expense_id': linkedExpenseId,
-      if (linkedIncomeId != null) 'linked_income_id': linkedIncomeId,
+      if (linkedExpenseUuid != null) 'linked_expense_uuid': linkedExpenseUuid,
+      if (linkedIncomeUuid != null) 'linked_income_uuid': linkedIncomeUuid,
       if (autoCreateExpense != null) 'auto_create_expense': autoCreateExpense,
       if (externalLinkId != null) 'external_link_id': externalLinkId,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (isNotSynced != null) 'is_not_synced': isNotSynced,
+      if (rowid != null) 'rowid': rowid,
     });
   }
 
   PayablesCompanion copyWith(
-      {Value<int>? id,
-      Value<int>? contactId,
+      {Value<String>? uuid,
+      Value<String>? contactUuid,
       Value<double>? amount,
       Value<String?>? description,
       Value<DateTime>? date,
       Value<DateTime?>? dueDate,
       Value<String>? status,
       Value<DateTime?>? paidDate,
-      Value<int?>? linkedExpenseId,
-      Value<int?>? linkedIncomeId,
+      Value<String?>? linkedExpenseUuid,
+      Value<String?>? linkedIncomeUuid,
       Value<bool>? autoCreateExpense,
       Value<String?>? externalLinkId,
       Value<DateTime>? createdAt,
-      Value<DateTime>? updatedAt}) {
+      Value<DateTime>? updatedAt,
+      Value<bool>? isDeleted,
+      Value<bool>? isNotSynced,
+      Value<int>? rowid}) {
     return PayablesCompanion(
-      id: id ?? this.id,
-      contactId: contactId ?? this.contactId,
+      uuid: uuid ?? this.uuid,
+      contactUuid: contactUuid ?? this.contactUuid,
       amount: amount ?? this.amount,
       description: description ?? this.description,
       date: date ?? this.date,
       dueDate: dueDate ?? this.dueDate,
       status: status ?? this.status,
       paidDate: paidDate ?? this.paidDate,
-      linkedExpenseId: linkedExpenseId ?? this.linkedExpenseId,
-      linkedIncomeId: linkedIncomeId ?? this.linkedIncomeId,
+      linkedExpenseUuid: linkedExpenseUuid ?? this.linkedExpenseUuid,
+      linkedIncomeUuid: linkedIncomeUuid ?? this.linkedIncomeUuid,
       autoCreateExpense: autoCreateExpense ?? this.autoCreateExpense,
       externalLinkId: externalLinkId ?? this.externalLinkId,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      isDeleted: isDeleted ?? this.isDeleted,
+      isNotSynced: isNotSynced ?? this.isNotSynced,
+      rowid: rowid ?? this.rowid,
     );
   }
 
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    if (id.present) {
-      map['id'] = Variable<int>(id.value);
+    if (uuid.present) {
+      map['uuid'] = Variable<String>(uuid.value);
     }
-    if (contactId.present) {
-      map['contact_id'] = Variable<int>(contactId.value);
+    if (contactUuid.present) {
+      map['contact_uuid'] = Variable<String>(contactUuid.value);
     }
     if (amount.present) {
       map['amount'] = Variable<double>(amount.value);
@@ -2882,11 +3368,11 @@ class PayablesCompanion extends UpdateCompanion<Payable> {
     if (paidDate.present) {
       map['paid_date'] = Variable<DateTime>(paidDate.value);
     }
-    if (linkedExpenseId.present) {
-      map['linked_expense_id'] = Variable<int>(linkedExpenseId.value);
+    if (linkedExpenseUuid.present) {
+      map['linked_expense_uuid'] = Variable<String>(linkedExpenseUuid.value);
     }
-    if (linkedIncomeId.present) {
-      map['linked_income_id'] = Variable<int>(linkedIncomeId.value);
+    if (linkedIncomeUuid.present) {
+      map['linked_income_uuid'] = Variable<String>(linkedIncomeUuid.value);
     }
     if (autoCreateExpense.present) {
       map['auto_create_expense'] = Variable<bool>(autoCreateExpense.value);
@@ -2900,26 +3386,38 @@ class PayablesCompanion extends UpdateCompanion<Payable> {
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(updatedAt.value);
     }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (isNotSynced.present) {
+      map['is_not_synced'] = Variable<bool>(isNotSynced.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
     return map;
   }
 
   @override
   String toString() {
     return (StringBuffer('PayablesCompanion(')
-          ..write('id: $id, ')
-          ..write('contactId: $contactId, ')
+          ..write('uuid: $uuid, ')
+          ..write('contactUuid: $contactUuid, ')
           ..write('amount: $amount, ')
           ..write('description: $description, ')
           ..write('date: $date, ')
           ..write('dueDate: $dueDate, ')
           ..write('status: $status, ')
           ..write('paidDate: $paidDate, ')
-          ..write('linkedExpenseId: $linkedExpenseId, ')
-          ..write('linkedIncomeId: $linkedIncomeId, ')
+          ..write('linkedExpenseUuid: $linkedExpenseUuid, ')
+          ..write('linkedIncomeUuid: $linkedIncomeUuid, ')
           ..write('autoCreateExpense: $autoCreateExpense, ')
           ..write('externalLinkId: $externalLinkId, ')
           ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('isNotSynced: $isNotSynced, ')
+          ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
@@ -2931,26 +3429,22 @@ class $RemindersTable extends Reminders
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $RemindersTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  static const VerificationMeta _uuidMeta = const VerificationMeta('uuid');
   @override
-  late final GeneratedColumn<int> id = GeneratedColumn<int>(
-      'id', aliasedName, false,
-      hasAutoIncrement: true,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  late final GeneratedColumn<String> uuid = GeneratedColumn<String>(
+      'uuid', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
   static const VerificationMeta _typeMeta = const VerificationMeta('type');
   @override
   late final GeneratedColumn<String> type = GeneratedColumn<String>(
       'type', aliasedName, false,
       type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _referenceIdMeta =
-      const VerificationMeta('referenceId');
+  static const VerificationMeta _referenceUuidMeta =
+      const VerificationMeta('referenceUuid');
   @override
-  late final GeneratedColumn<int> referenceId = GeneratedColumn<int>(
-      'reference_id', aliasedName, false,
-      type: DriftSqlType.int, requiredDuringInsert: true);
+  late final GeneratedColumn<String> referenceUuid = GeneratedColumn<String>(
+      'reference_uuid', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
   static const VerificationMeta _reminderDateMeta =
       const VerificationMeta('reminderDate');
   @override
@@ -2975,9 +3469,46 @@ class $RemindersTable extends Reminders
       type: DriftSqlType.dateTime,
       requiredDuringInsert: false,
       defaultValue: currentDateAndTime);
+  static const VerificationMeta _updatedAtMeta =
+      const VerificationMeta('updatedAt');
   @override
-  List<GeneratedColumn> get $columns =>
-      [id, type, referenceId, reminderDate, isTriggered, createdAt];
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+      'updated_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _isDeletedMeta =
+      const VerificationMeta('isDeleted');
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+      'is_deleted', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_deleted" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _isNotSyncedMeta =
+      const VerificationMeta('isNotSynced');
+  @override
+  late final GeneratedColumn<bool> isNotSynced = GeneratedColumn<bool>(
+      'is_not_synced', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("is_not_synced" IN (0, 1))'),
+      defaultValue: const Constant(true));
+  @override
+  List<GeneratedColumn> get $columns => [
+        uuid,
+        type,
+        referenceUuid,
+        reminderDate,
+        isTriggered,
+        createdAt,
+        updatedAt,
+        isDeleted,
+        isNotSynced
+      ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -2988,8 +3519,11 @@ class $RemindersTable extends Reminders
       {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
-    if (data.containsKey('id')) {
-      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    if (data.containsKey('uuid')) {
+      context.handle(
+          _uuidMeta, uuid.isAcceptableOrUnknown(data['uuid']!, _uuidMeta));
+    } else if (isInserting) {
+      context.missing(_uuidMeta);
     }
     if (data.containsKey('type')) {
       context.handle(
@@ -2997,13 +3531,13 @@ class $RemindersTable extends Reminders
     } else if (isInserting) {
       context.missing(_typeMeta);
     }
-    if (data.containsKey('reference_id')) {
+    if (data.containsKey('reference_uuid')) {
       context.handle(
-          _referenceIdMeta,
-          referenceId.isAcceptableOrUnknown(
-              data['reference_id']!, _referenceIdMeta));
+          _referenceUuidMeta,
+          referenceUuid.isAcceptableOrUnknown(
+              data['reference_uuid']!, _referenceUuidMeta));
     } else if (isInserting) {
-      context.missing(_referenceIdMeta);
+      context.missing(_referenceUuidMeta);
     }
     if (data.containsKey('reminder_date')) {
       context.handle(
@@ -3023,27 +3557,47 @@ class $RemindersTable extends Reminders
       context.handle(_createdAtMeta,
           createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
     }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta,
+          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(_isDeletedMeta,
+          isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta));
+    }
+    if (data.containsKey('is_not_synced')) {
+      context.handle(
+          _isNotSyncedMeta,
+          isNotSynced.isAcceptableOrUnknown(
+              data['is_not_synced']!, _isNotSyncedMeta));
+    }
     return context;
   }
 
   @override
-  Set<GeneratedColumn> get $primaryKey => {id};
+  Set<GeneratedColumn> get $primaryKey => {uuid};
   @override
   Reminder map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return Reminder(
-      id: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      uuid: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}uuid'])!,
       type: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}type'])!,
-      referenceId: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}reference_id'])!,
+      referenceUuid: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}reference_uuid'])!,
       reminderDate: attachedDatabase.typeMapping.read(
           DriftSqlType.dateTime, data['${effectivePrefix}reminder_date'])!,
       isTriggered: attachedDatabase.typeMapping
           .read(DriftSqlType.bool, data['${effectivePrefix}is_triggered'])!,
       createdAt: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      updatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
+      isDeleted: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_deleted'])!,
+      isNotSynced: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_not_synced'])!,
     );
   }
 
@@ -3054,39 +3608,51 @@ class $RemindersTable extends Reminders
 }
 
 class Reminder extends DataClass implements Insertable<Reminder> {
-  final int id;
+  final String uuid;
   final String type;
-  final int referenceId;
+  final String referenceUuid;
   final DateTime reminderDate;
   final bool isTriggered;
   final DateTime createdAt;
+  final DateTime updatedAt;
+  final bool isDeleted;
+  final bool isNotSynced;
   const Reminder(
-      {required this.id,
+      {required this.uuid,
       required this.type,
-      required this.referenceId,
+      required this.referenceUuid,
       required this.reminderDate,
       required this.isTriggered,
-      required this.createdAt});
+      required this.createdAt,
+      required this.updatedAt,
+      required this.isDeleted,
+      required this.isNotSynced});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    map['id'] = Variable<int>(id);
+    map['uuid'] = Variable<String>(uuid);
     map['type'] = Variable<String>(type);
-    map['reference_id'] = Variable<int>(referenceId);
+    map['reference_uuid'] = Variable<String>(referenceUuid);
     map['reminder_date'] = Variable<DateTime>(reminderDate);
     map['is_triggered'] = Variable<bool>(isTriggered);
     map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    map['is_not_synced'] = Variable<bool>(isNotSynced);
     return map;
   }
 
   RemindersCompanion toCompanion(bool nullToAbsent) {
     return RemindersCompanion(
-      id: Value(id),
+      uuid: Value(uuid),
       type: Value(type),
-      referenceId: Value(referenceId),
+      referenceUuid: Value(referenceUuid),
       reminderDate: Value(reminderDate),
       isTriggered: Value(isTriggered),
       createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      isDeleted: Value(isDeleted),
+      isNotSynced: Value(isNotSynced),
     );
   }
 
@@ -3094,156 +3660,208 @@ class Reminder extends DataClass implements Insertable<Reminder> {
       {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return Reminder(
-      id: serializer.fromJson<int>(json['id']),
+      uuid: serializer.fromJson<String>(json['uuid']),
       type: serializer.fromJson<String>(json['type']),
-      referenceId: serializer.fromJson<int>(json['referenceId']),
+      referenceUuid: serializer.fromJson<String>(json['referenceUuid']),
       reminderDate: serializer.fromJson<DateTime>(json['reminderDate']),
       isTriggered: serializer.fromJson<bool>(json['isTriggered']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+      isNotSynced: serializer.fromJson<bool>(json['isNotSynced']),
     );
   }
   @override
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
-      'id': serializer.toJson<int>(id),
+      'uuid': serializer.toJson<String>(uuid),
       'type': serializer.toJson<String>(type),
-      'referenceId': serializer.toJson<int>(referenceId),
+      'referenceUuid': serializer.toJson<String>(referenceUuid),
       'reminderDate': serializer.toJson<DateTime>(reminderDate),
       'isTriggered': serializer.toJson<bool>(isTriggered),
       'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+      'isNotSynced': serializer.toJson<bool>(isNotSynced),
     };
   }
 
   Reminder copyWith(
-          {int? id,
+          {String? uuid,
           String? type,
-          int? referenceId,
+          String? referenceUuid,
           DateTime? reminderDate,
           bool? isTriggered,
-          DateTime? createdAt}) =>
+          DateTime? createdAt,
+          DateTime? updatedAt,
+          bool? isDeleted,
+          bool? isNotSynced}) =>
       Reminder(
-        id: id ?? this.id,
+        uuid: uuid ?? this.uuid,
         type: type ?? this.type,
-        referenceId: referenceId ?? this.referenceId,
+        referenceUuid: referenceUuid ?? this.referenceUuid,
         reminderDate: reminderDate ?? this.reminderDate,
         isTriggered: isTriggered ?? this.isTriggered,
         createdAt: createdAt ?? this.createdAt,
+        updatedAt: updatedAt ?? this.updatedAt,
+        isDeleted: isDeleted ?? this.isDeleted,
+        isNotSynced: isNotSynced ?? this.isNotSynced,
       );
   Reminder copyWithCompanion(RemindersCompanion data) {
     return Reminder(
-      id: data.id.present ? data.id.value : this.id,
+      uuid: data.uuid.present ? data.uuid.value : this.uuid,
       type: data.type.present ? data.type.value : this.type,
-      referenceId:
-          data.referenceId.present ? data.referenceId.value : this.referenceId,
+      referenceUuid: data.referenceUuid.present
+          ? data.referenceUuid.value
+          : this.referenceUuid,
       reminderDate: data.reminderDate.present
           ? data.reminderDate.value
           : this.reminderDate,
       isTriggered:
           data.isTriggered.present ? data.isTriggered.value : this.isTriggered,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+      isNotSynced:
+          data.isNotSynced.present ? data.isNotSynced.value : this.isNotSynced,
     );
   }
 
   @override
   String toString() {
     return (StringBuffer('Reminder(')
-          ..write('id: $id, ')
+          ..write('uuid: $uuid, ')
           ..write('type: $type, ')
-          ..write('referenceId: $referenceId, ')
+          ..write('referenceUuid: $referenceUuid, ')
           ..write('reminderDate: $reminderDate, ')
           ..write('isTriggered: $isTriggered, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('isNotSynced: $isNotSynced')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, type, referenceId, reminderDate, isTriggered, createdAt);
+  int get hashCode => Object.hash(uuid, type, referenceUuid, reminderDate,
+      isTriggered, createdAt, updatedAt, isDeleted, isNotSynced);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is Reminder &&
-          other.id == this.id &&
+          other.uuid == this.uuid &&
           other.type == this.type &&
-          other.referenceId == this.referenceId &&
+          other.referenceUuid == this.referenceUuid &&
           other.reminderDate == this.reminderDate &&
           other.isTriggered == this.isTriggered &&
-          other.createdAt == this.createdAt);
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.isDeleted == this.isDeleted &&
+          other.isNotSynced == this.isNotSynced);
 }
 
 class RemindersCompanion extends UpdateCompanion<Reminder> {
-  final Value<int> id;
+  final Value<String> uuid;
   final Value<String> type;
-  final Value<int> referenceId;
+  final Value<String> referenceUuid;
   final Value<DateTime> reminderDate;
   final Value<bool> isTriggered;
   final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<bool> isDeleted;
+  final Value<bool> isNotSynced;
+  final Value<int> rowid;
   const RemindersCompanion({
-    this.id = const Value.absent(),
+    this.uuid = const Value.absent(),
     this.type = const Value.absent(),
-    this.referenceId = const Value.absent(),
+    this.referenceUuid = const Value.absent(),
     this.reminderDate = const Value.absent(),
     this.isTriggered = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.isNotSynced = const Value.absent(),
+    this.rowid = const Value.absent(),
   });
   RemindersCompanion.insert({
-    this.id = const Value.absent(),
+    required String uuid,
     required String type,
-    required int referenceId,
+    required String referenceUuid,
     required DateTime reminderDate,
     this.isTriggered = const Value.absent(),
     this.createdAt = const Value.absent(),
-  })  : type = Value(type),
-        referenceId = Value(referenceId),
+    this.updatedAt = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.isNotSynced = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : uuid = Value(uuid),
+        type = Value(type),
+        referenceUuid = Value(referenceUuid),
         reminderDate = Value(reminderDate);
   static Insertable<Reminder> custom({
-    Expression<int>? id,
+    Expression<String>? uuid,
     Expression<String>? type,
-    Expression<int>? referenceId,
+    Expression<String>? referenceUuid,
     Expression<DateTime>? reminderDate,
     Expression<bool>? isTriggered,
     Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<bool>? isDeleted,
+    Expression<bool>? isNotSynced,
+    Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
-      if (id != null) 'id': id,
+      if (uuid != null) 'uuid': uuid,
       if (type != null) 'type': type,
-      if (referenceId != null) 'reference_id': referenceId,
+      if (referenceUuid != null) 'reference_uuid': referenceUuid,
       if (reminderDate != null) 'reminder_date': reminderDate,
       if (isTriggered != null) 'is_triggered': isTriggered,
       if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (isNotSynced != null) 'is_not_synced': isNotSynced,
+      if (rowid != null) 'rowid': rowid,
     });
   }
 
   RemindersCompanion copyWith(
-      {Value<int>? id,
+      {Value<String>? uuid,
       Value<String>? type,
-      Value<int>? referenceId,
+      Value<String>? referenceUuid,
       Value<DateTime>? reminderDate,
       Value<bool>? isTriggered,
-      Value<DateTime>? createdAt}) {
+      Value<DateTime>? createdAt,
+      Value<DateTime>? updatedAt,
+      Value<bool>? isDeleted,
+      Value<bool>? isNotSynced,
+      Value<int>? rowid}) {
     return RemindersCompanion(
-      id: id ?? this.id,
+      uuid: uuid ?? this.uuid,
       type: type ?? this.type,
-      referenceId: referenceId ?? this.referenceId,
+      referenceUuid: referenceUuid ?? this.referenceUuid,
       reminderDate: reminderDate ?? this.reminderDate,
       isTriggered: isTriggered ?? this.isTriggered,
       createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      isDeleted: isDeleted ?? this.isDeleted,
+      isNotSynced: isNotSynced ?? this.isNotSynced,
+      rowid: rowid ?? this.rowid,
     );
   }
 
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    if (id.present) {
-      map['id'] = Variable<int>(id.value);
+    if (uuid.present) {
+      map['uuid'] = Variable<String>(uuid.value);
     }
     if (type.present) {
       map['type'] = Variable<String>(type.value);
     }
-    if (referenceId.present) {
-      map['reference_id'] = Variable<int>(referenceId.value);
+    if (referenceUuid.present) {
+      map['reference_uuid'] = Variable<String>(referenceUuid.value);
     }
     if (reminderDate.present) {
       map['reminder_date'] = Variable<DateTime>(reminderDate.value);
@@ -3254,18 +3872,34 @@ class RemindersCompanion extends UpdateCompanion<Reminder> {
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (isNotSynced.present) {
+      map['is_not_synced'] = Variable<bool>(isNotSynced.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
     return map;
   }
 
   @override
   String toString() {
     return (StringBuffer('RemindersCompanion(')
-          ..write('id: $id, ')
+          ..write('uuid: $uuid, ')
           ..write('type: $type, ')
-          ..write('referenceId: $referenceId, ')
+          ..write('referenceUuid: $referenceUuid, ')
           ..write('reminderDate: $reminderDate, ')
           ..write('isTriggered: $isTriggered, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('isNotSynced: $isNotSynced, ')
+          ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
@@ -3286,15 +3920,15 @@ class $WhatsAppQueueTable extends WhatsAppQueue
       requiredDuringInsert: false,
       defaultConstraints:
           GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
-  static const VerificationMeta _contactIdMeta =
-      const VerificationMeta('contactId');
+  static const VerificationMeta _contactUuidMeta =
+      const VerificationMeta('contactUuid');
   @override
-  late final GeneratedColumn<int> contactId = GeneratedColumn<int>(
-      'contact_id', aliasedName, false,
-      type: DriftSqlType.int,
+  late final GeneratedColumn<String> contactUuid = GeneratedColumn<String>(
+      'contact_uuid', aliasedName, false,
+      type: DriftSqlType.string,
       requiredDuringInsert: true,
       defaultConstraints:
-          GeneratedColumn.constraintIsAlways('REFERENCES contacts (id)'));
+          GeneratedColumn.constraintIsAlways('REFERENCES contacts (uuid)'));
   static const VerificationMeta _messageMeta =
       const VerificationMeta('message');
   @override
@@ -3324,7 +3958,7 @@ class $WhatsAppQueueTable extends WhatsAppQueue
       defaultValue: currentDateAndTime);
   @override
   List<GeneratedColumn> get $columns =>
-      [id, contactId, message, deepLink, status, createdAt];
+      [id, contactUuid, message, deepLink, status, createdAt];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -3338,11 +3972,13 @@ class $WhatsAppQueueTable extends WhatsAppQueue
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     }
-    if (data.containsKey('contact_id')) {
-      context.handle(_contactIdMeta,
-          contactId.isAcceptableOrUnknown(data['contact_id']!, _contactIdMeta));
+    if (data.containsKey('contact_uuid')) {
+      context.handle(
+          _contactUuidMeta,
+          contactUuid.isAcceptableOrUnknown(
+              data['contact_uuid']!, _contactUuidMeta));
     } else if (isInserting) {
-      context.missing(_contactIdMeta);
+      context.missing(_contactUuidMeta);
     }
     if (data.containsKey('message')) {
       context.handle(_messageMeta,
@@ -3373,8 +4009,8 @@ class $WhatsAppQueueTable extends WhatsAppQueue
     return WhatsAppQueueData(
       id: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
-      contactId: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}contact_id'])!,
+      contactUuid: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}contact_uuid'])!,
       message: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}message'])!,
       deepLink: attachedDatabase.typeMapping
@@ -3395,14 +4031,14 @@ class $WhatsAppQueueTable extends WhatsAppQueue
 class WhatsAppQueueData extends DataClass
     implements Insertable<WhatsAppQueueData> {
   final int id;
-  final int contactId;
+  final String contactUuid;
   final String message;
   final String? deepLink;
   final String status;
   final DateTime createdAt;
   const WhatsAppQueueData(
       {required this.id,
-      required this.contactId,
+      required this.contactUuid,
       required this.message,
       this.deepLink,
       required this.status,
@@ -3411,7 +4047,7 @@ class WhatsAppQueueData extends DataClass
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
-    map['contact_id'] = Variable<int>(contactId);
+    map['contact_uuid'] = Variable<String>(contactUuid);
     map['message'] = Variable<String>(message);
     if (!nullToAbsent || deepLink != null) {
       map['deep_link'] = Variable<String>(deepLink);
@@ -3424,7 +4060,7 @@ class WhatsAppQueueData extends DataClass
   WhatsAppQueueCompanion toCompanion(bool nullToAbsent) {
     return WhatsAppQueueCompanion(
       id: Value(id),
-      contactId: Value(contactId),
+      contactUuid: Value(contactUuid),
       message: Value(message),
       deepLink: deepLink == null && nullToAbsent
           ? const Value.absent()
@@ -3439,7 +4075,7 @@ class WhatsAppQueueData extends DataClass
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return WhatsAppQueueData(
       id: serializer.fromJson<int>(json['id']),
-      contactId: serializer.fromJson<int>(json['contactId']),
+      contactUuid: serializer.fromJson<String>(json['contactUuid']),
       message: serializer.fromJson<String>(json['message']),
       deepLink: serializer.fromJson<String?>(json['deepLink']),
       status: serializer.fromJson<String>(json['status']),
@@ -3451,7 +4087,7 @@ class WhatsAppQueueData extends DataClass
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
-      'contactId': serializer.toJson<int>(contactId),
+      'contactUuid': serializer.toJson<String>(contactUuid),
       'message': serializer.toJson<String>(message),
       'deepLink': serializer.toJson<String?>(deepLink),
       'status': serializer.toJson<String>(status),
@@ -3461,14 +4097,14 @@ class WhatsAppQueueData extends DataClass
 
   WhatsAppQueueData copyWith(
           {int? id,
-          int? contactId,
+          String? contactUuid,
           String? message,
           Value<String?> deepLink = const Value.absent(),
           String? status,
           DateTime? createdAt}) =>
       WhatsAppQueueData(
         id: id ?? this.id,
-        contactId: contactId ?? this.contactId,
+        contactUuid: contactUuid ?? this.contactUuid,
         message: message ?? this.message,
         deepLink: deepLink.present ? deepLink.value : this.deepLink,
         status: status ?? this.status,
@@ -3477,7 +4113,8 @@ class WhatsAppQueueData extends DataClass
   WhatsAppQueueData copyWithCompanion(WhatsAppQueueCompanion data) {
     return WhatsAppQueueData(
       id: data.id.present ? data.id.value : this.id,
-      contactId: data.contactId.present ? data.contactId.value : this.contactId,
+      contactUuid:
+          data.contactUuid.present ? data.contactUuid.value : this.contactUuid,
       message: data.message.present ? data.message.value : this.message,
       deepLink: data.deepLink.present ? data.deepLink.value : this.deepLink,
       status: data.status.present ? data.status.value : this.status,
@@ -3489,7 +4126,7 @@ class WhatsAppQueueData extends DataClass
   String toString() {
     return (StringBuffer('WhatsAppQueueData(')
           ..write('id: $id, ')
-          ..write('contactId: $contactId, ')
+          ..write('contactUuid: $contactUuid, ')
           ..write('message: $message, ')
           ..write('deepLink: $deepLink, ')
           ..write('status: $status, ')
@@ -3500,13 +4137,13 @@ class WhatsAppQueueData extends DataClass
 
   @override
   int get hashCode =>
-      Object.hash(id, contactId, message, deepLink, status, createdAt);
+      Object.hash(id, contactUuid, message, deepLink, status, createdAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is WhatsAppQueueData &&
           other.id == this.id &&
-          other.contactId == this.contactId &&
+          other.contactUuid == this.contactUuid &&
           other.message == this.message &&
           other.deepLink == this.deepLink &&
           other.status == this.status &&
@@ -3515,14 +4152,14 @@ class WhatsAppQueueData extends DataClass
 
 class WhatsAppQueueCompanion extends UpdateCompanion<WhatsAppQueueData> {
   final Value<int> id;
-  final Value<int> contactId;
+  final Value<String> contactUuid;
   final Value<String> message;
   final Value<String?> deepLink;
   final Value<String> status;
   final Value<DateTime> createdAt;
   const WhatsAppQueueCompanion({
     this.id = const Value.absent(),
-    this.contactId = const Value.absent(),
+    this.contactUuid = const Value.absent(),
     this.message = const Value.absent(),
     this.deepLink = const Value.absent(),
     this.status = const Value.absent(),
@@ -3530,16 +4167,16 @@ class WhatsAppQueueCompanion extends UpdateCompanion<WhatsAppQueueData> {
   });
   WhatsAppQueueCompanion.insert({
     this.id = const Value.absent(),
-    required int contactId,
+    required String contactUuid,
     required String message,
     this.deepLink = const Value.absent(),
     this.status = const Value.absent(),
     this.createdAt = const Value.absent(),
-  })  : contactId = Value(contactId),
+  })  : contactUuid = Value(contactUuid),
         message = Value(message);
   static Insertable<WhatsAppQueueData> custom({
     Expression<int>? id,
-    Expression<int>? contactId,
+    Expression<String>? contactUuid,
     Expression<String>? message,
     Expression<String>? deepLink,
     Expression<String>? status,
@@ -3547,7 +4184,7 @@ class WhatsAppQueueCompanion extends UpdateCompanion<WhatsAppQueueData> {
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
-      if (contactId != null) 'contact_id': contactId,
+      if (contactUuid != null) 'contact_uuid': contactUuid,
       if (message != null) 'message': message,
       if (deepLink != null) 'deep_link': deepLink,
       if (status != null) 'status': status,
@@ -3557,14 +4194,14 @@ class WhatsAppQueueCompanion extends UpdateCompanion<WhatsAppQueueData> {
 
   WhatsAppQueueCompanion copyWith(
       {Value<int>? id,
-      Value<int>? contactId,
+      Value<String>? contactUuid,
       Value<String>? message,
       Value<String?>? deepLink,
       Value<String>? status,
       Value<DateTime>? createdAt}) {
     return WhatsAppQueueCompanion(
       id: id ?? this.id,
-      contactId: contactId ?? this.contactId,
+      contactUuid: contactUuid ?? this.contactUuid,
       message: message ?? this.message,
       deepLink: deepLink ?? this.deepLink,
       status: status ?? this.status,
@@ -3578,8 +4215,8 @@ class WhatsAppQueueCompanion extends UpdateCompanion<WhatsAppQueueData> {
     if (id.present) {
       map['id'] = Variable<int>(id.value);
     }
-    if (contactId.present) {
-      map['contact_id'] = Variable<int>(contactId.value);
+    if (contactUuid.present) {
+      map['contact_uuid'] = Variable<String>(contactUuid.value);
     }
     if (message.present) {
       map['message'] = Variable<String>(message.value);
@@ -3600,7 +4237,7 @@ class WhatsAppQueueCompanion extends UpdateCompanion<WhatsAppQueueData> {
   String toString() {
     return (StringBuffer('WhatsAppQueueCompanion(')
           ..write('id: $id, ')
-          ..write('contactId: $contactId, ')
+          ..write('contactUuid: $contactUuid, ')
           ..write('message: $message, ')
           ..write('deepLink: $deepLink, ')
           ..write('status: $status, ')
@@ -3625,15 +4262,15 @@ class $CategoryUsageStatsTable extends CategoryUsageStats
       requiredDuringInsert: false,
       defaultConstraints:
           GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
-  static const VerificationMeta _categoryIdMeta =
-      const VerificationMeta('categoryId');
+  static const VerificationMeta _categoryUuidMeta =
+      const VerificationMeta('categoryUuid');
   @override
-  late final GeneratedColumn<int> categoryId = GeneratedColumn<int>(
-      'category_id', aliasedName, false,
-      type: DriftSqlType.int,
+  late final GeneratedColumn<String> categoryUuid = GeneratedColumn<String>(
+      'category_uuid', aliasedName, false,
+      type: DriftSqlType.string,
       requiredDuringInsert: true,
       defaultConstraints:
-          GeneratedColumn.constraintIsAlways('REFERENCES categories (id)'));
+          GeneratedColumn.constraintIsAlways('REFERENCES categories (uuid)'));
   static const VerificationMeta _usageCountMeta =
       const VerificationMeta('usageCount');
   @override
@@ -3649,7 +4286,8 @@ class $CategoryUsageStatsTable extends CategoryUsageStats
       'last_used', aliasedName, true,
       type: DriftSqlType.dateTime, requiredDuringInsert: false);
   @override
-  List<GeneratedColumn> get $columns => [id, categoryId, usageCount, lastUsed];
+  List<GeneratedColumn> get $columns =>
+      [id, categoryUuid, usageCount, lastUsed];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -3663,13 +4301,13 @@ class $CategoryUsageStatsTable extends CategoryUsageStats
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     }
-    if (data.containsKey('category_id')) {
+    if (data.containsKey('category_uuid')) {
       context.handle(
-          _categoryIdMeta,
-          categoryId.isAcceptableOrUnknown(
-              data['category_id']!, _categoryIdMeta));
+          _categoryUuidMeta,
+          categoryUuid.isAcceptableOrUnknown(
+              data['category_uuid']!, _categoryUuidMeta));
     } else if (isInserting) {
-      context.missing(_categoryIdMeta);
+      context.missing(_categoryUuidMeta);
     }
     if (data.containsKey('usage_count')) {
       context.handle(
@@ -3692,8 +4330,8 @@ class $CategoryUsageStatsTable extends CategoryUsageStats
     return CategoryUsageStat(
       id: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
-      categoryId: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}category_id'])!,
+      categoryUuid: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}category_uuid'])!,
       usageCount: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}usage_count'])!,
       lastUsed: attachedDatabase.typeMapping
@@ -3710,19 +4348,19 @@ class $CategoryUsageStatsTable extends CategoryUsageStats
 class CategoryUsageStat extends DataClass
     implements Insertable<CategoryUsageStat> {
   final int id;
-  final int categoryId;
+  final String categoryUuid;
   final int usageCount;
   final DateTime? lastUsed;
   const CategoryUsageStat(
       {required this.id,
-      required this.categoryId,
+      required this.categoryUuid,
       required this.usageCount,
       this.lastUsed});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
-    map['category_id'] = Variable<int>(categoryId);
+    map['category_uuid'] = Variable<String>(categoryUuid);
     map['usage_count'] = Variable<int>(usageCount);
     if (!nullToAbsent || lastUsed != null) {
       map['last_used'] = Variable<DateTime>(lastUsed);
@@ -3733,7 +4371,7 @@ class CategoryUsageStat extends DataClass
   CategoryUsageStatsCompanion toCompanion(bool nullToAbsent) {
     return CategoryUsageStatsCompanion(
       id: Value(id),
-      categoryId: Value(categoryId),
+      categoryUuid: Value(categoryUuid),
       usageCount: Value(usageCount),
       lastUsed: lastUsed == null && nullToAbsent
           ? const Value.absent()
@@ -3746,7 +4384,7 @@ class CategoryUsageStat extends DataClass
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return CategoryUsageStat(
       id: serializer.fromJson<int>(json['id']),
-      categoryId: serializer.fromJson<int>(json['categoryId']),
+      categoryUuid: serializer.fromJson<String>(json['categoryUuid']),
       usageCount: serializer.fromJson<int>(json['usageCount']),
       lastUsed: serializer.fromJson<DateTime?>(json['lastUsed']),
     );
@@ -3756,7 +4394,7 @@ class CategoryUsageStat extends DataClass
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
-      'categoryId': serializer.toJson<int>(categoryId),
+      'categoryUuid': serializer.toJson<String>(categoryUuid),
       'usageCount': serializer.toJson<int>(usageCount),
       'lastUsed': serializer.toJson<DateTime?>(lastUsed),
     };
@@ -3764,20 +4402,21 @@ class CategoryUsageStat extends DataClass
 
   CategoryUsageStat copyWith(
           {int? id,
-          int? categoryId,
+          String? categoryUuid,
           int? usageCount,
           Value<DateTime?> lastUsed = const Value.absent()}) =>
       CategoryUsageStat(
         id: id ?? this.id,
-        categoryId: categoryId ?? this.categoryId,
+        categoryUuid: categoryUuid ?? this.categoryUuid,
         usageCount: usageCount ?? this.usageCount,
         lastUsed: lastUsed.present ? lastUsed.value : this.lastUsed,
       );
   CategoryUsageStat copyWithCompanion(CategoryUsageStatsCompanion data) {
     return CategoryUsageStat(
       id: data.id.present ? data.id.value : this.id,
-      categoryId:
-          data.categoryId.present ? data.categoryId.value : this.categoryId,
+      categoryUuid: data.categoryUuid.present
+          ? data.categoryUuid.value
+          : this.categoryUuid,
       usageCount:
           data.usageCount.present ? data.usageCount.value : this.usageCount,
       lastUsed: data.lastUsed.present ? data.lastUsed.value : this.lastUsed,
@@ -3788,7 +4427,7 @@ class CategoryUsageStat extends DataClass
   String toString() {
     return (StringBuffer('CategoryUsageStat(')
           ..write('id: $id, ')
-          ..write('categoryId: $categoryId, ')
+          ..write('categoryUuid: $categoryUuid, ')
           ..write('usageCount: $usageCount, ')
           ..write('lastUsed: $lastUsed')
           ..write(')'))
@@ -3796,43 +4435,43 @@ class CategoryUsageStat extends DataClass
   }
 
   @override
-  int get hashCode => Object.hash(id, categoryId, usageCount, lastUsed);
+  int get hashCode => Object.hash(id, categoryUuid, usageCount, lastUsed);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is CategoryUsageStat &&
           other.id == this.id &&
-          other.categoryId == this.categoryId &&
+          other.categoryUuid == this.categoryUuid &&
           other.usageCount == this.usageCount &&
           other.lastUsed == this.lastUsed);
 }
 
 class CategoryUsageStatsCompanion extends UpdateCompanion<CategoryUsageStat> {
   final Value<int> id;
-  final Value<int> categoryId;
+  final Value<String> categoryUuid;
   final Value<int> usageCount;
   final Value<DateTime?> lastUsed;
   const CategoryUsageStatsCompanion({
     this.id = const Value.absent(),
-    this.categoryId = const Value.absent(),
+    this.categoryUuid = const Value.absent(),
     this.usageCount = const Value.absent(),
     this.lastUsed = const Value.absent(),
   });
   CategoryUsageStatsCompanion.insert({
     this.id = const Value.absent(),
-    required int categoryId,
+    required String categoryUuid,
     this.usageCount = const Value.absent(),
     this.lastUsed = const Value.absent(),
-  }) : categoryId = Value(categoryId);
+  }) : categoryUuid = Value(categoryUuid);
   static Insertable<CategoryUsageStat> custom({
     Expression<int>? id,
-    Expression<int>? categoryId,
+    Expression<String>? categoryUuid,
     Expression<int>? usageCount,
     Expression<DateTime>? lastUsed,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
-      if (categoryId != null) 'category_id': categoryId,
+      if (categoryUuid != null) 'category_uuid': categoryUuid,
       if (usageCount != null) 'usage_count': usageCount,
       if (lastUsed != null) 'last_used': lastUsed,
     });
@@ -3840,12 +4479,12 @@ class CategoryUsageStatsCompanion extends UpdateCompanion<CategoryUsageStat> {
 
   CategoryUsageStatsCompanion copyWith(
       {Value<int>? id,
-      Value<int>? categoryId,
+      Value<String>? categoryUuid,
       Value<int>? usageCount,
       Value<DateTime?>? lastUsed}) {
     return CategoryUsageStatsCompanion(
       id: id ?? this.id,
-      categoryId: categoryId ?? this.categoryId,
+      categoryUuid: categoryUuid ?? this.categoryUuid,
       usageCount: usageCount ?? this.usageCount,
       lastUsed: lastUsed ?? this.lastUsed,
     );
@@ -3857,8 +4496,8 @@ class CategoryUsageStatsCompanion extends UpdateCompanion<CategoryUsageStat> {
     if (id.present) {
       map['id'] = Variable<int>(id.value);
     }
-    if (categoryId.present) {
-      map['category_id'] = Variable<int>(categoryId.value);
+    if (categoryUuid.present) {
+      map['category_uuid'] = Variable<String>(categoryUuid.value);
     }
     if (usageCount.present) {
       map['usage_count'] = Variable<int>(usageCount.value);
@@ -3873,7 +4512,7 @@ class CategoryUsageStatsCompanion extends UpdateCompanion<CategoryUsageStat> {
   String toString() {
     return (StringBuffer('CategoryUsageStatsCompanion(')
           ..write('id: $id, ')
-          ..write('categoryId: $categoryId, ')
+          ..write('categoryUuid: $categoryUuid, ')
           ..write('usageCount: $usageCount, ')
           ..write('lastUsed: $lastUsed')
           ..write(')'))
@@ -3896,15 +4535,15 @@ class $ContactUsageStatsTable extends ContactUsageStats
       requiredDuringInsert: false,
       defaultConstraints:
           GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
-  static const VerificationMeta _contactIdMeta =
-      const VerificationMeta('contactId');
+  static const VerificationMeta _contactUuidMeta =
+      const VerificationMeta('contactUuid');
   @override
-  late final GeneratedColumn<int> contactId = GeneratedColumn<int>(
-      'contact_id', aliasedName, false,
-      type: DriftSqlType.int,
+  late final GeneratedColumn<String> contactUuid = GeneratedColumn<String>(
+      'contact_uuid', aliasedName, false,
+      type: DriftSqlType.string,
       requiredDuringInsert: true,
       defaultConstraints:
-          GeneratedColumn.constraintIsAlways('REFERENCES contacts (id)'));
+          GeneratedColumn.constraintIsAlways('REFERENCES contacts (uuid)'));
   static const VerificationMeta _usageCountMeta =
       const VerificationMeta('usageCount');
   @override
@@ -3920,7 +4559,7 @@ class $ContactUsageStatsTable extends ContactUsageStats
       'last_used', aliasedName, true,
       type: DriftSqlType.dateTime, requiredDuringInsert: false);
   @override
-  List<GeneratedColumn> get $columns => [id, contactId, usageCount, lastUsed];
+  List<GeneratedColumn> get $columns => [id, contactUuid, usageCount, lastUsed];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -3934,11 +4573,13 @@ class $ContactUsageStatsTable extends ContactUsageStats
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     }
-    if (data.containsKey('contact_id')) {
-      context.handle(_contactIdMeta,
-          contactId.isAcceptableOrUnknown(data['contact_id']!, _contactIdMeta));
+    if (data.containsKey('contact_uuid')) {
+      context.handle(
+          _contactUuidMeta,
+          contactUuid.isAcceptableOrUnknown(
+              data['contact_uuid']!, _contactUuidMeta));
     } else if (isInserting) {
-      context.missing(_contactIdMeta);
+      context.missing(_contactUuidMeta);
     }
     if (data.containsKey('usage_count')) {
       context.handle(
@@ -3961,8 +4602,8 @@ class $ContactUsageStatsTable extends ContactUsageStats
     return ContactUsageStat(
       id: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
-      contactId: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}contact_id'])!,
+      contactUuid: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}contact_uuid'])!,
       usageCount: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}usage_count'])!,
       lastUsed: attachedDatabase.typeMapping
@@ -3979,19 +4620,19 @@ class $ContactUsageStatsTable extends ContactUsageStats
 class ContactUsageStat extends DataClass
     implements Insertable<ContactUsageStat> {
   final int id;
-  final int contactId;
+  final String contactUuid;
   final int usageCount;
   final DateTime? lastUsed;
   const ContactUsageStat(
       {required this.id,
-      required this.contactId,
+      required this.contactUuid,
       required this.usageCount,
       this.lastUsed});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
-    map['contact_id'] = Variable<int>(contactId);
+    map['contact_uuid'] = Variable<String>(contactUuid);
     map['usage_count'] = Variable<int>(usageCount);
     if (!nullToAbsent || lastUsed != null) {
       map['last_used'] = Variable<DateTime>(lastUsed);
@@ -4002,7 +4643,7 @@ class ContactUsageStat extends DataClass
   ContactUsageStatsCompanion toCompanion(bool nullToAbsent) {
     return ContactUsageStatsCompanion(
       id: Value(id),
-      contactId: Value(contactId),
+      contactUuid: Value(contactUuid),
       usageCount: Value(usageCount),
       lastUsed: lastUsed == null && nullToAbsent
           ? const Value.absent()
@@ -4015,7 +4656,7 @@ class ContactUsageStat extends DataClass
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return ContactUsageStat(
       id: serializer.fromJson<int>(json['id']),
-      contactId: serializer.fromJson<int>(json['contactId']),
+      contactUuid: serializer.fromJson<String>(json['contactUuid']),
       usageCount: serializer.fromJson<int>(json['usageCount']),
       lastUsed: serializer.fromJson<DateTime?>(json['lastUsed']),
     );
@@ -4025,7 +4666,7 @@ class ContactUsageStat extends DataClass
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
-      'contactId': serializer.toJson<int>(contactId),
+      'contactUuid': serializer.toJson<String>(contactUuid),
       'usageCount': serializer.toJson<int>(usageCount),
       'lastUsed': serializer.toJson<DateTime?>(lastUsed),
     };
@@ -4033,19 +4674,20 @@ class ContactUsageStat extends DataClass
 
   ContactUsageStat copyWith(
           {int? id,
-          int? contactId,
+          String? contactUuid,
           int? usageCount,
           Value<DateTime?> lastUsed = const Value.absent()}) =>
       ContactUsageStat(
         id: id ?? this.id,
-        contactId: contactId ?? this.contactId,
+        contactUuid: contactUuid ?? this.contactUuid,
         usageCount: usageCount ?? this.usageCount,
         lastUsed: lastUsed.present ? lastUsed.value : this.lastUsed,
       );
   ContactUsageStat copyWithCompanion(ContactUsageStatsCompanion data) {
     return ContactUsageStat(
       id: data.id.present ? data.id.value : this.id,
-      contactId: data.contactId.present ? data.contactId.value : this.contactId,
+      contactUuid:
+          data.contactUuid.present ? data.contactUuid.value : this.contactUuid,
       usageCount:
           data.usageCount.present ? data.usageCount.value : this.usageCount,
       lastUsed: data.lastUsed.present ? data.lastUsed.value : this.lastUsed,
@@ -4056,7 +4698,7 @@ class ContactUsageStat extends DataClass
   String toString() {
     return (StringBuffer('ContactUsageStat(')
           ..write('id: $id, ')
-          ..write('contactId: $contactId, ')
+          ..write('contactUuid: $contactUuid, ')
           ..write('usageCount: $usageCount, ')
           ..write('lastUsed: $lastUsed')
           ..write(')'))
@@ -4064,43 +4706,43 @@ class ContactUsageStat extends DataClass
   }
 
   @override
-  int get hashCode => Object.hash(id, contactId, usageCount, lastUsed);
+  int get hashCode => Object.hash(id, contactUuid, usageCount, lastUsed);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is ContactUsageStat &&
           other.id == this.id &&
-          other.contactId == this.contactId &&
+          other.contactUuid == this.contactUuid &&
           other.usageCount == this.usageCount &&
           other.lastUsed == this.lastUsed);
 }
 
 class ContactUsageStatsCompanion extends UpdateCompanion<ContactUsageStat> {
   final Value<int> id;
-  final Value<int> contactId;
+  final Value<String> contactUuid;
   final Value<int> usageCount;
   final Value<DateTime?> lastUsed;
   const ContactUsageStatsCompanion({
     this.id = const Value.absent(),
-    this.contactId = const Value.absent(),
+    this.contactUuid = const Value.absent(),
     this.usageCount = const Value.absent(),
     this.lastUsed = const Value.absent(),
   });
   ContactUsageStatsCompanion.insert({
     this.id = const Value.absent(),
-    required int contactId,
+    required String contactUuid,
     this.usageCount = const Value.absent(),
     this.lastUsed = const Value.absent(),
-  }) : contactId = Value(contactId);
+  }) : contactUuid = Value(contactUuid);
   static Insertable<ContactUsageStat> custom({
     Expression<int>? id,
-    Expression<int>? contactId,
+    Expression<String>? contactUuid,
     Expression<int>? usageCount,
     Expression<DateTime>? lastUsed,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
-      if (contactId != null) 'contact_id': contactId,
+      if (contactUuid != null) 'contact_uuid': contactUuid,
       if (usageCount != null) 'usage_count': usageCount,
       if (lastUsed != null) 'last_used': lastUsed,
     });
@@ -4108,12 +4750,12 @@ class ContactUsageStatsCompanion extends UpdateCompanion<ContactUsageStat> {
 
   ContactUsageStatsCompanion copyWith(
       {Value<int>? id,
-      Value<int>? contactId,
+      Value<String>? contactUuid,
       Value<int>? usageCount,
       Value<DateTime?>? lastUsed}) {
     return ContactUsageStatsCompanion(
       id: id ?? this.id,
-      contactId: contactId ?? this.contactId,
+      contactUuid: contactUuid ?? this.contactUuid,
       usageCount: usageCount ?? this.usageCount,
       lastUsed: lastUsed ?? this.lastUsed,
     );
@@ -4125,8 +4767,8 @@ class ContactUsageStatsCompanion extends UpdateCompanion<ContactUsageStat> {
     if (id.present) {
       map['id'] = Variable<int>(id.value);
     }
-    if (contactId.present) {
-      map['contact_id'] = Variable<int>(contactId.value);
+    if (contactUuid.present) {
+      map['contact_uuid'] = Variable<String>(contactUuid.value);
     }
     if (usageCount.present) {
       map['usage_count'] = Variable<int>(usageCount.value);
@@ -4141,7 +4783,7 @@ class ContactUsageStatsCompanion extends UpdateCompanion<ContactUsageStat> {
   String toString() {
     return (StringBuffer('ContactUsageStatsCompanion(')
           ..write('id: $id, ')
-          ..write('contactId: $contactId, ')
+          ..write('contactUuid: $contactUuid, ')
           ..write('usageCount: $usageCount, ')
           ..write('lastUsed: $lastUsed')
           ..write(')'))
@@ -4759,15 +5401,11 @@ class $AppCurrenciesTable extends AppCurrencies
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $AppCurrenciesTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  static const VerificationMeta _uuidMeta = const VerificationMeta('uuid');
   @override
-  late final GeneratedColumn<int> id = GeneratedColumn<int>(
-      'id', aliasedName, false,
-      hasAutoIncrement: true,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  late final GeneratedColumn<String> uuid = GeneratedColumn<String>(
+      'uuid', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
   static const VerificationMeta _nameMeta = const VerificationMeta('name');
   @override
   late final GeneratedColumn<String> name = GeneratedColumn<String>(
@@ -4828,9 +5466,48 @@ class $AppCurrenciesTable extends AppCurrencies
       type: DriftSqlType.dateTime,
       requiredDuringInsert: false,
       defaultValue: currentDateAndTime);
+  static const VerificationMeta _updatedAtMeta =
+      const VerificationMeta('updatedAt');
   @override
-  List<GeneratedColumn> get $columns =>
-      [id, name, symbol, code, decimalPlaces, isDefault, isActive, createdAt];
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+      'updated_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _isDeletedMeta =
+      const VerificationMeta('isDeleted');
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+      'is_deleted', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_deleted" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _isNotSyncedMeta =
+      const VerificationMeta('isNotSynced');
+  @override
+  late final GeneratedColumn<bool> isNotSynced = GeneratedColumn<bool>(
+      'is_not_synced', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("is_not_synced" IN (0, 1))'),
+      defaultValue: const Constant(true));
+  @override
+  List<GeneratedColumn> get $columns => [
+        uuid,
+        name,
+        symbol,
+        code,
+        decimalPlaces,
+        isDefault,
+        isActive,
+        createdAt,
+        updatedAt,
+        isDeleted,
+        isNotSynced
+      ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -4841,8 +5518,11 @@ class $AppCurrenciesTable extends AppCurrencies
       {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
-    if (data.containsKey('id')) {
-      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    if (data.containsKey('uuid')) {
+      context.handle(
+          _uuidMeta, uuid.isAcceptableOrUnknown(data['uuid']!, _uuidMeta));
+    } else if (isInserting) {
+      context.missing(_uuidMeta);
     }
     if (data.containsKey('name')) {
       context.handle(
@@ -4880,17 +5560,31 @@ class $AppCurrenciesTable extends AppCurrencies
       context.handle(_createdAtMeta,
           createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
     }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta,
+          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(_isDeletedMeta,
+          isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta));
+    }
+    if (data.containsKey('is_not_synced')) {
+      context.handle(
+          _isNotSyncedMeta,
+          isNotSynced.isAcceptableOrUnknown(
+              data['is_not_synced']!, _isNotSyncedMeta));
+    }
     return context;
   }
 
   @override
-  Set<GeneratedColumn> get $primaryKey => {id};
+  Set<GeneratedColumn> get $primaryKey => {uuid};
   @override
   AppCurrency map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return AppCurrency(
-      id: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      uuid: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}uuid'])!,
       name: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
       symbol: attachedDatabase.typeMapping
@@ -4905,6 +5599,12 @@ class $AppCurrenciesTable extends AppCurrencies
           .read(DriftSqlType.bool, data['${effectivePrefix}is_active'])!,
       createdAt: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      updatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
+      isDeleted: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_deleted'])!,
+      isNotSynced: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_not_synced'])!,
     );
   }
 
@@ -4915,7 +5615,7 @@ class $AppCurrenciesTable extends AppCurrencies
 }
 
 class AppCurrency extends DataClass implements Insertable<AppCurrency> {
-  final int id;
+  final String uuid;
   final String name;
   final String symbol;
   final String code;
@@ -4923,19 +5623,25 @@ class AppCurrency extends DataClass implements Insertable<AppCurrency> {
   final bool isDefault;
   final bool isActive;
   final DateTime createdAt;
+  final DateTime updatedAt;
+  final bool isDeleted;
+  final bool isNotSynced;
   const AppCurrency(
-      {required this.id,
+      {required this.uuid,
       required this.name,
       required this.symbol,
       required this.code,
       required this.decimalPlaces,
       required this.isDefault,
       required this.isActive,
-      required this.createdAt});
+      required this.createdAt,
+      required this.updatedAt,
+      required this.isDeleted,
+      required this.isNotSynced});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    map['id'] = Variable<int>(id);
+    map['uuid'] = Variable<String>(uuid);
     map['name'] = Variable<String>(name);
     map['symbol'] = Variable<String>(symbol);
     map['code'] = Variable<String>(code);
@@ -4943,12 +5649,15 @@ class AppCurrency extends DataClass implements Insertable<AppCurrency> {
     map['is_default'] = Variable<bool>(isDefault);
     map['is_active'] = Variable<bool>(isActive);
     map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    map['is_not_synced'] = Variable<bool>(isNotSynced);
     return map;
   }
 
   AppCurrenciesCompanion toCompanion(bool nullToAbsent) {
     return AppCurrenciesCompanion(
-      id: Value(id),
+      uuid: Value(uuid),
       name: Value(name),
       symbol: Value(symbol),
       code: Value(code),
@@ -4956,6 +5665,9 @@ class AppCurrency extends DataClass implements Insertable<AppCurrency> {
       isDefault: Value(isDefault),
       isActive: Value(isActive),
       createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      isDeleted: Value(isDeleted),
+      isNotSynced: Value(isNotSynced),
     );
   }
 
@@ -4963,7 +5675,7 @@ class AppCurrency extends DataClass implements Insertable<AppCurrency> {
       {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return AppCurrency(
-      id: serializer.fromJson<int>(json['id']),
+      uuid: serializer.fromJson<String>(json['uuid']),
       name: serializer.fromJson<String>(json['name']),
       symbol: serializer.fromJson<String>(json['symbol']),
       code: serializer.fromJson<String>(json['code']),
@@ -4971,13 +5683,16 @@ class AppCurrency extends DataClass implements Insertable<AppCurrency> {
       isDefault: serializer.fromJson<bool>(json['isDefault']),
       isActive: serializer.fromJson<bool>(json['isActive']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+      isNotSynced: serializer.fromJson<bool>(json['isNotSynced']),
     );
   }
   @override
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
-      'id': serializer.toJson<int>(id),
+      'uuid': serializer.toJson<String>(uuid),
       'name': serializer.toJson<String>(name),
       'symbol': serializer.toJson<String>(symbol),
       'code': serializer.toJson<String>(code),
@@ -4985,20 +5700,26 @@ class AppCurrency extends DataClass implements Insertable<AppCurrency> {
       'isDefault': serializer.toJson<bool>(isDefault),
       'isActive': serializer.toJson<bool>(isActive),
       'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+      'isNotSynced': serializer.toJson<bool>(isNotSynced),
     };
   }
 
   AppCurrency copyWith(
-          {int? id,
+          {String? uuid,
           String? name,
           String? symbol,
           String? code,
           int? decimalPlaces,
           bool? isDefault,
           bool? isActive,
-          DateTime? createdAt}) =>
+          DateTime? createdAt,
+          DateTime? updatedAt,
+          bool? isDeleted,
+          bool? isNotSynced}) =>
       AppCurrency(
-        id: id ?? this.id,
+        uuid: uuid ?? this.uuid,
         name: name ?? this.name,
         symbol: symbol ?? this.symbol,
         code: code ?? this.code,
@@ -5006,10 +5727,13 @@ class AppCurrency extends DataClass implements Insertable<AppCurrency> {
         isDefault: isDefault ?? this.isDefault,
         isActive: isActive ?? this.isActive,
         createdAt: createdAt ?? this.createdAt,
+        updatedAt: updatedAt ?? this.updatedAt,
+        isDeleted: isDeleted ?? this.isDeleted,
+        isNotSynced: isNotSynced ?? this.isNotSynced,
       );
   AppCurrency copyWithCompanion(AppCurrenciesCompanion data) {
     return AppCurrency(
-      id: data.id.present ? data.id.value : this.id,
+      uuid: data.uuid.present ? data.uuid.value : this.uuid,
       name: data.name.present ? data.name.value : this.name,
       symbol: data.symbol.present ? data.symbol.value : this.symbol,
       code: data.code.present ? data.code.value : this.code,
@@ -5019,43 +5743,53 @@ class AppCurrency extends DataClass implements Insertable<AppCurrency> {
       isDefault: data.isDefault.present ? data.isDefault.value : this.isDefault,
       isActive: data.isActive.present ? data.isActive.value : this.isActive,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+      isNotSynced:
+          data.isNotSynced.present ? data.isNotSynced.value : this.isNotSynced,
     );
   }
 
   @override
   String toString() {
     return (StringBuffer('AppCurrency(')
-          ..write('id: $id, ')
+          ..write('uuid: $uuid, ')
           ..write('name: $name, ')
           ..write('symbol: $symbol, ')
           ..write('code: $code, ')
           ..write('decimalPlaces: $decimalPlaces, ')
           ..write('isDefault: $isDefault, ')
           ..write('isActive: $isActive, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('isNotSynced: $isNotSynced')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(
-      id, name, symbol, code, decimalPlaces, isDefault, isActive, createdAt);
+  int get hashCode => Object.hash(uuid, name, symbol, code, decimalPlaces,
+      isDefault, isActive, createdAt, updatedAt, isDeleted, isNotSynced);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is AppCurrency &&
-          other.id == this.id &&
+          other.uuid == this.uuid &&
           other.name == this.name &&
           other.symbol == this.symbol &&
           other.code == this.code &&
           other.decimalPlaces == this.decimalPlaces &&
           other.isDefault == this.isDefault &&
           other.isActive == this.isActive &&
-          other.createdAt == this.createdAt);
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.isDeleted == this.isDeleted &&
+          other.isNotSynced == this.isNotSynced);
 }
 
 class AppCurrenciesCompanion extends UpdateCompanion<AppCurrency> {
-  final Value<int> id;
+  final Value<String> uuid;
   final Value<String> name;
   final Value<String> symbol;
   final Value<String> code;
@@ -5063,8 +5797,12 @@ class AppCurrenciesCompanion extends UpdateCompanion<AppCurrency> {
   final Value<bool> isDefault;
   final Value<bool> isActive;
   final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<bool> isDeleted;
+  final Value<bool> isNotSynced;
+  final Value<int> rowid;
   const AppCurrenciesCompanion({
-    this.id = const Value.absent(),
+    this.uuid = const Value.absent(),
     this.name = const Value.absent(),
     this.symbol = const Value.absent(),
     this.code = const Value.absent(),
@@ -5072,9 +5810,13 @@ class AppCurrenciesCompanion extends UpdateCompanion<AppCurrency> {
     this.isDefault = const Value.absent(),
     this.isActive = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.isNotSynced = const Value.absent(),
+    this.rowid = const Value.absent(),
   });
   AppCurrenciesCompanion.insert({
-    this.id = const Value.absent(),
+    required String uuid,
     required String name,
     required String symbol,
     required String code,
@@ -5082,11 +5824,16 @@ class AppCurrenciesCompanion extends UpdateCompanion<AppCurrency> {
     this.isDefault = const Value.absent(),
     this.isActive = const Value.absent(),
     this.createdAt = const Value.absent(),
-  })  : name = Value(name),
+    this.updatedAt = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.isNotSynced = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : uuid = Value(uuid),
+        name = Value(name),
         symbol = Value(symbol),
         code = Value(code);
   static Insertable<AppCurrency> custom({
-    Expression<int>? id,
+    Expression<String>? uuid,
     Expression<String>? name,
     Expression<String>? symbol,
     Expression<String>? code,
@@ -5094,9 +5841,13 @@ class AppCurrenciesCompanion extends UpdateCompanion<AppCurrency> {
     Expression<bool>? isDefault,
     Expression<bool>? isActive,
     Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<bool>? isDeleted,
+    Expression<bool>? isNotSynced,
+    Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
-      if (id != null) 'id': id,
+      if (uuid != null) 'uuid': uuid,
       if (name != null) 'name': name,
       if (symbol != null) 'symbol': symbol,
       if (code != null) 'code': code,
@@ -5104,20 +5855,28 @@ class AppCurrenciesCompanion extends UpdateCompanion<AppCurrency> {
       if (isDefault != null) 'is_default': isDefault,
       if (isActive != null) 'is_active': isActive,
       if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (isNotSynced != null) 'is_not_synced': isNotSynced,
+      if (rowid != null) 'rowid': rowid,
     });
   }
 
   AppCurrenciesCompanion copyWith(
-      {Value<int>? id,
+      {Value<String>? uuid,
       Value<String>? name,
       Value<String>? symbol,
       Value<String>? code,
       Value<int>? decimalPlaces,
       Value<bool>? isDefault,
       Value<bool>? isActive,
-      Value<DateTime>? createdAt}) {
+      Value<DateTime>? createdAt,
+      Value<DateTime>? updatedAt,
+      Value<bool>? isDeleted,
+      Value<bool>? isNotSynced,
+      Value<int>? rowid}) {
     return AppCurrenciesCompanion(
-      id: id ?? this.id,
+      uuid: uuid ?? this.uuid,
       name: name ?? this.name,
       symbol: symbol ?? this.symbol,
       code: code ?? this.code,
@@ -5125,14 +5884,18 @@ class AppCurrenciesCompanion extends UpdateCompanion<AppCurrency> {
       isDefault: isDefault ?? this.isDefault,
       isActive: isActive ?? this.isActive,
       createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      isDeleted: isDeleted ?? this.isDeleted,
+      isNotSynced: isNotSynced ?? this.isNotSynced,
+      rowid: rowid ?? this.rowid,
     );
   }
 
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    if (id.present) {
-      map['id'] = Variable<int>(id.value);
+    if (uuid.present) {
+      map['uuid'] = Variable<String>(uuid.value);
     }
     if (name.present) {
       map['name'] = Variable<String>(name.value);
@@ -5155,20 +5918,36 @@ class AppCurrenciesCompanion extends UpdateCompanion<AppCurrency> {
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (isNotSynced.present) {
+      map['is_not_synced'] = Variable<bool>(isNotSynced.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
     return map;
   }
 
   @override
   String toString() {
     return (StringBuffer('AppCurrenciesCompanion(')
-          ..write('id: $id, ')
+          ..write('uuid: $uuid, ')
           ..write('name: $name, ')
           ..write('symbol: $symbol, ')
           ..write('code: $code, ')
           ..write('decimalPlaces: $decimalPlaces, ')
           ..write('isDefault: $isDefault, ')
           ..write('isActive: $isActive, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('isNotSynced: $isNotSynced, ')
+          ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
@@ -5180,15 +5959,11 @@ class $TransactionSchedulesTable extends TransactionSchedules
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $TransactionSchedulesTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  static const VerificationMeta _uuidMeta = const VerificationMeta('uuid');
   @override
-  late final GeneratedColumn<int> id = GeneratedColumn<int>(
-      'id', aliasedName, false,
-      hasAutoIncrement: true,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  late final GeneratedColumn<String> uuid = GeneratedColumn<String>(
+      'uuid', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
   static const VerificationMeta _amountMeta = const VerificationMeta('amount');
   @override
   late final GeneratedColumn<double> amount = GeneratedColumn<double>(
@@ -5199,24 +5974,24 @@ class $TransactionSchedulesTable extends TransactionSchedules
   late final GeneratedColumn<String> type = GeneratedColumn<String>(
       'type', aliasedName, false,
       type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _categoryIdMeta =
-      const VerificationMeta('categoryId');
+  static const VerificationMeta _categoryUuidMeta =
+      const VerificationMeta('categoryUuid');
   @override
-  late final GeneratedColumn<int> categoryId = GeneratedColumn<int>(
-      'category_id', aliasedName, true,
-      type: DriftSqlType.int,
+  late final GeneratedColumn<String> categoryUuid = GeneratedColumn<String>(
+      'category_uuid', aliasedName, true,
+      type: DriftSqlType.string,
       requiredDuringInsert: false,
       defaultConstraints:
-          GeneratedColumn.constraintIsAlways('REFERENCES categories (id)'));
-  static const VerificationMeta _contactIdMeta =
-      const VerificationMeta('contactId');
+          GeneratedColumn.constraintIsAlways('REFERENCES categories (uuid)'));
+  static const VerificationMeta _contactUuidMeta =
+      const VerificationMeta('contactUuid');
   @override
-  late final GeneratedColumn<int> contactId = GeneratedColumn<int>(
-      'contact_id', aliasedName, true,
-      type: DriftSqlType.int,
+  late final GeneratedColumn<String> contactUuid = GeneratedColumn<String>(
+      'contact_uuid', aliasedName, true,
+      type: DriftSqlType.string,
       requiredDuringInsert: false,
       defaultConstraints:
-          GeneratedColumn.constraintIsAlways('REFERENCES contacts (id)'));
+          GeneratedColumn.constraintIsAlways('REFERENCES contacts (uuid)'));
   static const VerificationMeta _descriptionMeta =
       const VerificationMeta('description');
   @override
@@ -5297,13 +6072,33 @@ class $TransactionSchedulesTable extends TransactionSchedules
       type: DriftSqlType.dateTime,
       requiredDuringInsert: false,
       defaultValue: currentDateAndTime);
+  static const VerificationMeta _isDeletedMeta =
+      const VerificationMeta('isDeleted');
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+      'is_deleted', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_deleted" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _isNotSyncedMeta =
+      const VerificationMeta('isNotSynced');
+  @override
+  late final GeneratedColumn<bool> isNotSynced = GeneratedColumn<bool>(
+      'is_not_synced', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("is_not_synced" IN (0, 1))'),
+      defaultValue: const Constant(true));
   @override
   List<GeneratedColumn> get $columns => [
-        id,
+        uuid,
         amount,
         type,
-        categoryId,
-        contactId,
+        categoryUuid,
+        contactUuid,
         description,
         paidRelationship,
         dueDate,
@@ -5315,7 +6110,9 @@ class $TransactionSchedulesTable extends TransactionSchedules
         startDate,
         endDate,
         createdAt,
-        updatedAt
+        updatedAt,
+        isDeleted,
+        isNotSynced
       ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -5328,8 +6125,11 @@ class $TransactionSchedulesTable extends TransactionSchedules
       {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
-    if (data.containsKey('id')) {
-      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    if (data.containsKey('uuid')) {
+      context.handle(
+          _uuidMeta, uuid.isAcceptableOrUnknown(data['uuid']!, _uuidMeta));
+    } else if (isInserting) {
+      context.missing(_uuidMeta);
     }
     if (data.containsKey('amount')) {
       context.handle(_amountMeta,
@@ -5343,15 +6143,17 @@ class $TransactionSchedulesTable extends TransactionSchedules
     } else if (isInserting) {
       context.missing(_typeMeta);
     }
-    if (data.containsKey('category_id')) {
+    if (data.containsKey('category_uuid')) {
       context.handle(
-          _categoryIdMeta,
-          categoryId.isAcceptableOrUnknown(
-              data['category_id']!, _categoryIdMeta));
+          _categoryUuidMeta,
+          categoryUuid.isAcceptableOrUnknown(
+              data['category_uuid']!, _categoryUuidMeta));
     }
-    if (data.containsKey('contact_id')) {
-      context.handle(_contactIdMeta,
-          contactId.isAcceptableOrUnknown(data['contact_id']!, _contactIdMeta));
+    if (data.containsKey('contact_uuid')) {
+      context.handle(
+          _contactUuidMeta,
+          contactUuid.isAcceptableOrUnknown(
+              data['contact_uuid']!, _contactUuidMeta));
     }
     if (data.containsKey('description')) {
       context.handle(
@@ -5415,25 +6217,35 @@ class $TransactionSchedulesTable extends TransactionSchedules
       context.handle(_updatedAtMeta,
           updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
     }
+    if (data.containsKey('is_deleted')) {
+      context.handle(_isDeletedMeta,
+          isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta));
+    }
+    if (data.containsKey('is_not_synced')) {
+      context.handle(
+          _isNotSyncedMeta,
+          isNotSynced.isAcceptableOrUnknown(
+              data['is_not_synced']!, _isNotSyncedMeta));
+    }
     return context;
   }
 
   @override
-  Set<GeneratedColumn> get $primaryKey => {id};
+  Set<GeneratedColumn> get $primaryKey => {uuid};
   @override
   TransactionSchedule map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return TransactionSchedule(
-      id: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      uuid: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}uuid'])!,
       amount: attachedDatabase.typeMapping
           .read(DriftSqlType.double, data['${effectivePrefix}amount'])!,
       type: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}type'])!,
-      categoryId: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}category_id']),
-      contactId: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}contact_id']),
+      categoryUuid: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}category_uuid']),
+      contactUuid: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}contact_uuid']),
       description: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}description']),
       paidRelationship: attachedDatabase.typeMapping.read(
@@ -5459,6 +6271,10 @@ class $TransactionSchedulesTable extends TransactionSchedules
           .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
       updatedAt: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
+      isDeleted: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_deleted'])!,
+      isNotSynced: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_not_synced'])!,
     );
   }
 
@@ -5470,11 +6286,11 @@ class $TransactionSchedulesTable extends TransactionSchedules
 
 class TransactionSchedule extends DataClass
     implements Insertable<TransactionSchedule> {
-  final int id;
+  final String uuid;
   final double amount;
   final String type;
-  final int? categoryId;
-  final int? contactId;
+  final String? categoryUuid;
+  final String? contactUuid;
   final String? description;
   final String? paidRelationship;
   final DateTime? dueDate;
@@ -5487,12 +6303,14 @@ class TransactionSchedule extends DataClass
   final DateTime? endDate;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final bool isDeleted;
+  final bool isNotSynced;
   const TransactionSchedule(
-      {required this.id,
+      {required this.uuid,
       required this.amount,
       required this.type,
-      this.categoryId,
-      this.contactId,
+      this.categoryUuid,
+      this.contactUuid,
       this.description,
       this.paidRelationship,
       this.dueDate,
@@ -5504,18 +6322,20 @@ class TransactionSchedule extends DataClass
       this.startDate,
       this.endDate,
       required this.createdAt,
-      required this.updatedAt});
+      required this.updatedAt,
+      required this.isDeleted,
+      required this.isNotSynced});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    map['id'] = Variable<int>(id);
+    map['uuid'] = Variable<String>(uuid);
     map['amount'] = Variable<double>(amount);
     map['type'] = Variable<String>(type);
-    if (!nullToAbsent || categoryId != null) {
-      map['category_id'] = Variable<int>(categoryId);
+    if (!nullToAbsent || categoryUuid != null) {
+      map['category_uuid'] = Variable<String>(categoryUuid);
     }
-    if (!nullToAbsent || contactId != null) {
-      map['contact_id'] = Variable<int>(contactId);
+    if (!nullToAbsent || contactUuid != null) {
+      map['contact_uuid'] = Variable<String>(contactUuid);
     }
     if (!nullToAbsent || description != null) {
       map['description'] = Variable<String>(description);
@@ -5545,20 +6365,22 @@ class TransactionSchedule extends DataClass
     }
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    map['is_not_synced'] = Variable<bool>(isNotSynced);
     return map;
   }
 
   TransactionSchedulesCompanion toCompanion(bool nullToAbsent) {
     return TransactionSchedulesCompanion(
-      id: Value(id),
+      uuid: Value(uuid),
       amount: Value(amount),
       type: Value(type),
-      categoryId: categoryId == null && nullToAbsent
+      categoryUuid: categoryUuid == null && nullToAbsent
           ? const Value.absent()
-          : Value(categoryId),
-      contactId: contactId == null && nullToAbsent
+          : Value(categoryUuid),
+      contactUuid: contactUuid == null && nullToAbsent
           ? const Value.absent()
-          : Value(contactId),
+          : Value(contactUuid),
       description: description == null && nullToAbsent
           ? const Value.absent()
           : Value(description),
@@ -5587,6 +6409,8 @@ class TransactionSchedule extends DataClass
           : Value(endDate),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
+      isDeleted: Value(isDeleted),
+      isNotSynced: Value(isNotSynced),
     );
   }
 
@@ -5594,11 +6418,11 @@ class TransactionSchedule extends DataClass
       {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return TransactionSchedule(
-      id: serializer.fromJson<int>(json['id']),
+      uuid: serializer.fromJson<String>(json['uuid']),
       amount: serializer.fromJson<double>(json['amount']),
       type: serializer.fromJson<String>(json['type']),
-      categoryId: serializer.fromJson<int?>(json['categoryId']),
-      contactId: serializer.fromJson<int?>(json['contactId']),
+      categoryUuid: serializer.fromJson<String?>(json['categoryUuid']),
+      contactUuid: serializer.fromJson<String?>(json['contactUuid']),
       description: serializer.fromJson<String?>(json['description']),
       paidRelationship: serializer.fromJson<String?>(json['paidRelationship']),
       dueDate: serializer.fromJson<DateTime?>(json['dueDate']),
@@ -5614,17 +6438,19 @@ class TransactionSchedule extends DataClass
       endDate: serializer.fromJson<DateTime?>(json['endDate']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+      isNotSynced: serializer.fromJson<bool>(json['isNotSynced']),
     );
   }
   @override
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
-      'id': serializer.toJson<int>(id),
+      'uuid': serializer.toJson<String>(uuid),
       'amount': serializer.toJson<double>(amount),
       'type': serializer.toJson<String>(type),
-      'categoryId': serializer.toJson<int?>(categoryId),
-      'contactId': serializer.toJson<int?>(contactId),
+      'categoryUuid': serializer.toJson<String?>(categoryUuid),
+      'contactUuid': serializer.toJson<String?>(contactUuid),
       'description': serializer.toJson<String?>(description),
       'paidRelationship': serializer.toJson<String?>(paidRelationship),
       'dueDate': serializer.toJson<DateTime?>(dueDate),
@@ -5637,15 +6463,17 @@ class TransactionSchedule extends DataClass
       'endDate': serializer.toJson<DateTime?>(endDate),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+      'isNotSynced': serializer.toJson<bool>(isNotSynced),
     };
   }
 
   TransactionSchedule copyWith(
-          {int? id,
+          {String? uuid,
           double? amount,
           String? type,
-          Value<int?> categoryId = const Value.absent(),
-          Value<int?> contactId = const Value.absent(),
+          Value<String?> categoryUuid = const Value.absent(),
+          Value<String?> contactUuid = const Value.absent(),
           Value<String?> description = const Value.absent(),
           Value<String?> paidRelationship = const Value.absent(),
           Value<DateTime?> dueDate = const Value.absent(),
@@ -5657,13 +6485,16 @@ class TransactionSchedule extends DataClass
           Value<DateTime?> startDate = const Value.absent(),
           Value<DateTime?> endDate = const Value.absent(),
           DateTime? createdAt,
-          DateTime? updatedAt}) =>
+          DateTime? updatedAt,
+          bool? isDeleted,
+          bool? isNotSynced}) =>
       TransactionSchedule(
-        id: id ?? this.id,
+        uuid: uuid ?? this.uuid,
         amount: amount ?? this.amount,
         type: type ?? this.type,
-        categoryId: categoryId.present ? categoryId.value : this.categoryId,
-        contactId: contactId.present ? contactId.value : this.contactId,
+        categoryUuid:
+            categoryUuid.present ? categoryUuid.value : this.categoryUuid,
+        contactUuid: contactUuid.present ? contactUuid.value : this.contactUuid,
         description: description.present ? description.value : this.description,
         paidRelationship: paidRelationship.present
             ? paidRelationship.value
@@ -5684,15 +6515,19 @@ class TransactionSchedule extends DataClass
         endDate: endDate.present ? endDate.value : this.endDate,
         createdAt: createdAt ?? this.createdAt,
         updatedAt: updatedAt ?? this.updatedAt,
+        isDeleted: isDeleted ?? this.isDeleted,
+        isNotSynced: isNotSynced ?? this.isNotSynced,
       );
   TransactionSchedule copyWithCompanion(TransactionSchedulesCompanion data) {
     return TransactionSchedule(
-      id: data.id.present ? data.id.value : this.id,
+      uuid: data.uuid.present ? data.uuid.value : this.uuid,
       amount: data.amount.present ? data.amount.value : this.amount,
       type: data.type.present ? data.type.value : this.type,
-      categoryId:
-          data.categoryId.present ? data.categoryId.value : this.categoryId,
-      contactId: data.contactId.present ? data.contactId.value : this.contactId,
+      categoryUuid: data.categoryUuid.present
+          ? data.categoryUuid.value
+          : this.categoryUuid,
+      contactUuid:
+          data.contactUuid.present ? data.contactUuid.value : this.contactUuid,
       description:
           data.description.present ? data.description.value : this.description,
       paidRelationship: data.paidRelationship.present
@@ -5716,17 +6551,20 @@ class TransactionSchedule extends DataClass
       endDate: data.endDate.present ? data.endDate.value : this.endDate,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+      isNotSynced:
+          data.isNotSynced.present ? data.isNotSynced.value : this.isNotSynced,
     );
   }
 
   @override
   String toString() {
     return (StringBuffer('TransactionSchedule(')
-          ..write('id: $id, ')
+          ..write('uuid: $uuid, ')
           ..write('amount: $amount, ')
           ..write('type: $type, ')
-          ..write('categoryId: $categoryId, ')
-          ..write('contactId: $contactId, ')
+          ..write('categoryUuid: $categoryUuid, ')
+          ..write('contactUuid: $contactUuid, ')
           ..write('description: $description, ')
           ..write('paidRelationship: $paidRelationship, ')
           ..write('dueDate: $dueDate, ')
@@ -5738,18 +6576,20 @@ class TransactionSchedule extends DataClass
           ..write('startDate: $startDate, ')
           ..write('endDate: $endDate, ')
           ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('isNotSynced: $isNotSynced')
           ..write(')'))
         .toString();
   }
 
   @override
   int get hashCode => Object.hash(
-      id,
+      uuid,
       amount,
       type,
-      categoryId,
-      contactId,
+      categoryUuid,
+      contactUuid,
       description,
       paidRelationship,
       dueDate,
@@ -5761,16 +6601,18 @@ class TransactionSchedule extends DataClass
       startDate,
       endDate,
       createdAt,
-      updatedAt);
+      updatedAt,
+      isDeleted,
+      isNotSynced);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is TransactionSchedule &&
-          other.id == this.id &&
+          other.uuid == this.uuid &&
           other.amount == this.amount &&
           other.type == this.type &&
-          other.categoryId == this.categoryId &&
-          other.contactId == this.contactId &&
+          other.categoryUuid == this.categoryUuid &&
+          other.contactUuid == this.contactUuid &&
           other.description == this.description &&
           other.paidRelationship == this.paidRelationship &&
           other.dueDate == this.dueDate &&
@@ -5782,16 +6624,18 @@ class TransactionSchedule extends DataClass
           other.startDate == this.startDate &&
           other.endDate == this.endDate &&
           other.createdAt == this.createdAt &&
-          other.updatedAt == this.updatedAt);
+          other.updatedAt == this.updatedAt &&
+          other.isDeleted == this.isDeleted &&
+          other.isNotSynced == this.isNotSynced);
 }
 
 class TransactionSchedulesCompanion
     extends UpdateCompanion<TransactionSchedule> {
-  final Value<int> id;
+  final Value<String> uuid;
   final Value<double> amount;
   final Value<String> type;
-  final Value<int?> categoryId;
-  final Value<int?> contactId;
+  final Value<String?> categoryUuid;
+  final Value<String?> contactUuid;
   final Value<String?> description;
   final Value<String?> paidRelationship;
   final Value<DateTime?> dueDate;
@@ -5804,12 +6648,15 @@ class TransactionSchedulesCompanion
   final Value<DateTime?> endDate;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
+  final Value<bool> isDeleted;
+  final Value<bool> isNotSynced;
+  final Value<int> rowid;
   const TransactionSchedulesCompanion({
-    this.id = const Value.absent(),
+    this.uuid = const Value.absent(),
     this.amount = const Value.absent(),
     this.type = const Value.absent(),
-    this.categoryId = const Value.absent(),
-    this.contactId = const Value.absent(),
+    this.categoryUuid = const Value.absent(),
+    this.contactUuid = const Value.absent(),
     this.description = const Value.absent(),
     this.paidRelationship = const Value.absent(),
     this.dueDate = const Value.absent(),
@@ -5822,13 +6669,16 @@ class TransactionSchedulesCompanion
     this.endDate = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.isNotSynced = const Value.absent(),
+    this.rowid = const Value.absent(),
   });
   TransactionSchedulesCompanion.insert({
-    this.id = const Value.absent(),
+    required String uuid,
     required double amount,
     required String type,
-    this.categoryId = const Value.absent(),
-    this.contactId = const Value.absent(),
+    this.categoryUuid = const Value.absent(),
+    this.contactUuid = const Value.absent(),
     this.description = const Value.absent(),
     this.paidRelationship = const Value.absent(),
     this.dueDate = const Value.absent(),
@@ -5841,15 +6691,19 @@ class TransactionSchedulesCompanion
     this.endDate = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
-  })  : amount = Value(amount),
+    this.isDeleted = const Value.absent(),
+    this.isNotSynced = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : uuid = Value(uuid),
+        amount = Value(amount),
         type = Value(type),
         scheduleType = Value(scheduleType);
   static Insertable<TransactionSchedule> custom({
-    Expression<int>? id,
+    Expression<String>? uuid,
     Expression<double>? amount,
     Expression<String>? type,
-    Expression<int>? categoryId,
-    Expression<int>? contactId,
+    Expression<String>? categoryUuid,
+    Expression<String>? contactUuid,
     Expression<String>? description,
     Expression<String>? paidRelationship,
     Expression<DateTime>? dueDate,
@@ -5862,13 +6716,16 @@ class TransactionSchedulesCompanion
     Expression<DateTime>? endDate,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
+    Expression<bool>? isDeleted,
+    Expression<bool>? isNotSynced,
+    Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
-      if (id != null) 'id': id,
+      if (uuid != null) 'uuid': uuid,
       if (amount != null) 'amount': amount,
       if (type != null) 'type': type,
-      if (categoryId != null) 'category_id': categoryId,
-      if (contactId != null) 'contact_id': contactId,
+      if (categoryUuid != null) 'category_uuid': categoryUuid,
+      if (contactUuid != null) 'contact_uuid': contactUuid,
       if (description != null) 'description': description,
       if (paidRelationship != null) 'paid_relationship': paidRelationship,
       if (dueDate != null) 'due_date': dueDate,
@@ -5883,15 +6740,18 @@ class TransactionSchedulesCompanion
       if (endDate != null) 'end_date': endDate,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (isNotSynced != null) 'is_not_synced': isNotSynced,
+      if (rowid != null) 'rowid': rowid,
     });
   }
 
   TransactionSchedulesCompanion copyWith(
-      {Value<int>? id,
+      {Value<String>? uuid,
       Value<double>? amount,
       Value<String>? type,
-      Value<int?>? categoryId,
-      Value<int?>? contactId,
+      Value<String?>? categoryUuid,
+      Value<String?>? contactUuid,
       Value<String?>? description,
       Value<String?>? paidRelationship,
       Value<DateTime?>? dueDate,
@@ -5903,13 +6763,16 @@ class TransactionSchedulesCompanion
       Value<DateTime?>? startDate,
       Value<DateTime?>? endDate,
       Value<DateTime>? createdAt,
-      Value<DateTime>? updatedAt}) {
+      Value<DateTime>? updatedAt,
+      Value<bool>? isDeleted,
+      Value<bool>? isNotSynced,
+      Value<int>? rowid}) {
     return TransactionSchedulesCompanion(
-      id: id ?? this.id,
+      uuid: uuid ?? this.uuid,
       amount: amount ?? this.amount,
       type: type ?? this.type,
-      categoryId: categoryId ?? this.categoryId,
-      contactId: contactId ?? this.contactId,
+      categoryUuid: categoryUuid ?? this.categoryUuid,
+      contactUuid: contactUuid ?? this.contactUuid,
       description: description ?? this.description,
       paidRelationship: paidRelationship ?? this.paidRelationship,
       dueDate: dueDate ?? this.dueDate,
@@ -5922,14 +6785,17 @@ class TransactionSchedulesCompanion
       endDate: endDate ?? this.endDate,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      isDeleted: isDeleted ?? this.isDeleted,
+      isNotSynced: isNotSynced ?? this.isNotSynced,
+      rowid: rowid ?? this.rowid,
     );
   }
 
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    if (id.present) {
-      map['id'] = Variable<int>(id.value);
+    if (uuid.present) {
+      map['uuid'] = Variable<String>(uuid.value);
     }
     if (amount.present) {
       map['amount'] = Variable<double>(amount.value);
@@ -5937,11 +6803,11 @@ class TransactionSchedulesCompanion
     if (type.present) {
       map['type'] = Variable<String>(type.value);
     }
-    if (categoryId.present) {
-      map['category_id'] = Variable<int>(categoryId.value);
+    if (categoryUuid.present) {
+      map['category_uuid'] = Variable<String>(categoryUuid.value);
     }
-    if (contactId.present) {
-      map['contact_id'] = Variable<int>(contactId.value);
+    if (contactUuid.present) {
+      map['contact_uuid'] = Variable<String>(contactUuid.value);
     }
     if (description.present) {
       map['description'] = Variable<String>(description.value);
@@ -5980,17 +6846,26 @@ class TransactionSchedulesCompanion
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(updatedAt.value);
     }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (isNotSynced.present) {
+      map['is_not_synced'] = Variable<bool>(isNotSynced.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
     return map;
   }
 
   @override
   String toString() {
     return (StringBuffer('TransactionSchedulesCompanion(')
-          ..write('id: $id, ')
+          ..write('uuid: $uuid, ')
           ..write('amount: $amount, ')
           ..write('type: $type, ')
-          ..write('categoryId: $categoryId, ')
-          ..write('contactId: $contactId, ')
+          ..write('categoryUuid: $categoryUuid, ')
+          ..write('contactUuid: $contactUuid, ')
           ..write('description: $description, ')
           ..write('paidRelationship: $paidRelationship, ')
           ..write('dueDate: $dueDate, ')
@@ -6002,7 +6877,248 @@ class TransactionSchedulesCompanion
           ..write('startDate: $startDate, ')
           ..write('endDate: $endDate, ')
           ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('isNotSynced: $isNotSynced, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $SyncMetadataTable extends SyncMetadata
+    with TableInfo<$SyncMetadataTable, SyncMetadataData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SyncMetadataTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _deviceIdMeta =
+      const VerificationMeta('deviceId');
+  @override
+  late final GeneratedColumn<String> deviceId = GeneratedColumn<String>(
+      'device_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _versionMeta =
+      const VerificationMeta('version');
+  @override
+  late final GeneratedColumn<int> version = GeneratedColumn<int>(
+      'version', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _lastSyncAtMeta =
+      const VerificationMeta('lastSyncAt');
+  @override
+  late final GeneratedColumn<DateTime> lastSyncAt = GeneratedColumn<DateTime>(
+      'last_sync_at', aliasedName, true,
+      type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  @override
+  List<GeneratedColumn> get $columns => [deviceId, version, lastSyncAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'sync_metadata';
+  @override
+  VerificationContext validateIntegrity(Insertable<SyncMetadataData> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('device_id')) {
+      context.handle(_deviceIdMeta,
+          deviceId.isAcceptableOrUnknown(data['device_id']!, _deviceIdMeta));
+    } else if (isInserting) {
+      context.missing(_deviceIdMeta);
+    }
+    if (data.containsKey('version')) {
+      context.handle(_versionMeta,
+          version.isAcceptableOrUnknown(data['version']!, _versionMeta));
+    }
+    if (data.containsKey('last_sync_at')) {
+      context.handle(
+          _lastSyncAtMeta,
+          lastSyncAt.isAcceptableOrUnknown(
+              data['last_sync_at']!, _lastSyncAtMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {deviceId};
+  @override
+  SyncMetadataData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SyncMetadataData(
+      deviceId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}device_id'])!,
+      version: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}version'])!,
+      lastSyncAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}last_sync_at']),
+    );
+  }
+
+  @override
+  $SyncMetadataTable createAlias(String alias) {
+    return $SyncMetadataTable(attachedDatabase, alias);
+  }
+}
+
+class SyncMetadataData extends DataClass
+    implements Insertable<SyncMetadataData> {
+  final String deviceId;
+  final int version;
+  final DateTime? lastSyncAt;
+  const SyncMetadataData(
+      {required this.deviceId, required this.version, this.lastSyncAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['device_id'] = Variable<String>(deviceId);
+    map['version'] = Variable<int>(version);
+    if (!nullToAbsent || lastSyncAt != null) {
+      map['last_sync_at'] = Variable<DateTime>(lastSyncAt);
+    }
+    return map;
+  }
+
+  SyncMetadataCompanion toCompanion(bool nullToAbsent) {
+    return SyncMetadataCompanion(
+      deviceId: Value(deviceId),
+      version: Value(version),
+      lastSyncAt: lastSyncAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastSyncAt),
+    );
+  }
+
+  factory SyncMetadataData.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SyncMetadataData(
+      deviceId: serializer.fromJson<String>(json['deviceId']),
+      version: serializer.fromJson<int>(json['version']),
+      lastSyncAt: serializer.fromJson<DateTime?>(json['lastSyncAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'deviceId': serializer.toJson<String>(deviceId),
+      'version': serializer.toJson<int>(version),
+      'lastSyncAt': serializer.toJson<DateTime?>(lastSyncAt),
+    };
+  }
+
+  SyncMetadataData copyWith(
+          {String? deviceId,
+          int? version,
+          Value<DateTime?> lastSyncAt = const Value.absent()}) =>
+      SyncMetadataData(
+        deviceId: deviceId ?? this.deviceId,
+        version: version ?? this.version,
+        lastSyncAt: lastSyncAt.present ? lastSyncAt.value : this.lastSyncAt,
+      );
+  SyncMetadataData copyWithCompanion(SyncMetadataCompanion data) {
+    return SyncMetadataData(
+      deviceId: data.deviceId.present ? data.deviceId.value : this.deviceId,
+      version: data.version.present ? data.version.value : this.version,
+      lastSyncAt:
+          data.lastSyncAt.present ? data.lastSyncAt.value : this.lastSyncAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SyncMetadataData(')
+          ..write('deviceId: $deviceId, ')
+          ..write('version: $version, ')
+          ..write('lastSyncAt: $lastSyncAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(deviceId, version, lastSyncAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SyncMetadataData &&
+          other.deviceId == this.deviceId &&
+          other.version == this.version &&
+          other.lastSyncAt == this.lastSyncAt);
+}
+
+class SyncMetadataCompanion extends UpdateCompanion<SyncMetadataData> {
+  final Value<String> deviceId;
+  final Value<int> version;
+  final Value<DateTime?> lastSyncAt;
+  final Value<int> rowid;
+  const SyncMetadataCompanion({
+    this.deviceId = const Value.absent(),
+    this.version = const Value.absent(),
+    this.lastSyncAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  SyncMetadataCompanion.insert({
+    required String deviceId,
+    this.version = const Value.absent(),
+    this.lastSyncAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : deviceId = Value(deviceId);
+  static Insertable<SyncMetadataData> custom({
+    Expression<String>? deviceId,
+    Expression<int>? version,
+    Expression<DateTime>? lastSyncAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (deviceId != null) 'device_id': deviceId,
+      if (version != null) 'version': version,
+      if (lastSyncAt != null) 'last_sync_at': lastSyncAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  SyncMetadataCompanion copyWith(
+      {Value<String>? deviceId,
+      Value<int>? version,
+      Value<DateTime?>? lastSyncAt,
+      Value<int>? rowid}) {
+    return SyncMetadataCompanion(
+      deviceId: deviceId ?? this.deviceId,
+      version: version ?? this.version,
+      lastSyncAt: lastSyncAt ?? this.lastSyncAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (deviceId.present) {
+      map['device_id'] = Variable<String>(deviceId.value);
+    }
+    if (version.present) {
+      map['version'] = Variable<int>(version.value);
+    }
+    if (lastSyncAt.present) {
+      map['last_sync_at'] = Variable<DateTime>(lastSyncAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SyncMetadataCompanion(')
+          ..write('deviceId: $deviceId, ')
+          ..write('version: $version, ')
+          ..write('lastSyncAt: $lastSyncAt, ')
+          ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
@@ -6028,6 +7144,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $AppCurrenciesTable appCurrencies = $AppCurrenciesTable(this);
   late final $TransactionSchedulesTable transactionSchedules =
       $TransactionSchedulesTable(this);
+  late final $SyncMetadataTable syncMetadata = $SyncMetadataTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -6045,12 +7162,13 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         userPreferences,
         syncLog,
         appCurrencies,
-        transactionSchedules
+        transactionSchedules,
+        syncMetadata
       ];
 }
 
 typedef $$CategoriesTableCreateCompanionBuilder = CategoriesCompanion Function({
-  Value<int> id,
+  required String uuid,
   required String name,
   Value<String?> icon,
   Value<String?> color,
@@ -6058,9 +7176,12 @@ typedef $$CategoriesTableCreateCompanionBuilder = CategoriesCompanion Function({
   Value<bool> isDefault,
   Value<bool> isDeleted,
   Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<bool> isNotSynced,
+  Value<int> rowid,
 });
 typedef $$CategoriesTableUpdateCompanionBuilder = CategoriesCompanion Function({
-  Value<int> id,
+  Value<String> uuid,
   Value<String> name,
   Value<String?> icon,
   Value<String?> color,
@@ -6068,6 +7189,9 @@ typedef $$CategoriesTableUpdateCompanionBuilder = CategoriesCompanion Function({
   Value<bool> isDefault,
   Value<bool> isDeleted,
   Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<bool> isNotSynced,
+  Value<int> rowid,
 });
 
 final class $$CategoriesTableReferences
@@ -6078,11 +7202,12 @@ final class $$CategoriesTableReferences
       _transactionsRefsTable(_$AppDatabase db) =>
           MultiTypedResultKey.fromTable(db.transactions,
               aliasName: $_aliasNameGenerator(
-                  db.categories.id, db.transactions.categoryId));
+                  db.categories.uuid, db.transactions.categoryUuid));
 
   $$TransactionsTableProcessedTableManager get transactionsRefs {
     final manager = $$TransactionsTableTableManager($_db, $_db.transactions)
-        .filter((f) => f.categoryId.id.sqlEquals($_itemColumn<int>('id')!));
+        .filter((f) =>
+            f.categoryUuid.uuid.sqlEquals($_itemColumn<String>('uuid')!));
 
     final cache = $_typedResult.readTableOrNull(_transactionsRefsTable($_db));
     return ProcessedTableManager(
@@ -6093,12 +7218,13 @@ final class $$CategoriesTableReferences
       _categoryUsageStatsRefsTable(_$AppDatabase db) =>
           MultiTypedResultKey.fromTable(db.categoryUsageStats,
               aliasName: $_aliasNameGenerator(
-                  db.categories.id, db.categoryUsageStats.categoryId));
+                  db.categories.uuid, db.categoryUsageStats.categoryUuid));
 
   $$CategoryUsageStatsTableProcessedTableManager get categoryUsageStatsRefs {
     final manager =
         $$CategoryUsageStatsTableTableManager($_db, $_db.categoryUsageStats)
-            .filter((f) => f.categoryId.id.sqlEquals($_itemColumn<int>('id')!));
+            .filter((f) =>
+                f.categoryUuid.uuid.sqlEquals($_itemColumn<String>('uuid')!));
 
     final cache =
         $_typedResult.readTableOrNull(_categoryUsageStatsRefsTable($_db));
@@ -6111,13 +7237,14 @@ final class $$CategoriesTableReferences
           _$AppDatabase db) =>
       MultiTypedResultKey.fromTable(db.transactionSchedules,
           aliasName: $_aliasNameGenerator(
-              db.categories.id, db.transactionSchedules.categoryId));
+              db.categories.uuid, db.transactionSchedules.categoryUuid));
 
   $$TransactionSchedulesTableProcessedTableManager
       get transactionSchedulesRefs {
     final manager =
         $$TransactionSchedulesTableTableManager($_db, $_db.transactionSchedules)
-            .filter((f) => f.categoryId.id.sqlEquals($_itemColumn<int>('id')!));
+            .filter((f) =>
+                f.categoryUuid.uuid.sqlEquals($_itemColumn<String>('uuid')!));
 
     final cache =
         $_typedResult.readTableOrNull(_transactionSchedulesRefsTable($_db));
@@ -6135,8 +7262,8 @@ class $$CategoriesTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get id => $composableBuilder(
-      column: $table.id, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get uuid => $composableBuilder(
+      column: $table.uuid, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get name => $composableBuilder(
       column: $table.name, builder: (column) => ColumnFilters(column));
@@ -6159,13 +7286,19 @@ class $$CategoriesTableFilterComposer
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnFilters(column));
 
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => ColumnFilters(column));
+
   Expression<bool> transactionsRefs(
       Expression<bool> Function($$TransactionsTableFilterComposer f) f) {
     final $$TransactionsTableFilterComposer composer = $composerBuilder(
         composer: this,
-        getCurrentColumn: (t) => t.id,
+        getCurrentColumn: (t) => t.uuid,
         referencedTable: $db.transactions,
-        getReferencedColumn: (t) => t.categoryId,
+        getReferencedColumn: (t) => t.categoryUuid,
         builder: (joinBuilder,
                 {$addJoinBuilderToRootComposer,
                 $removeJoinBuilderFromRootComposer}) =>
@@ -6184,9 +7317,9 @@ class $$CategoriesTableFilterComposer
       Expression<bool> Function($$CategoryUsageStatsTableFilterComposer f) f) {
     final $$CategoryUsageStatsTableFilterComposer composer = $composerBuilder(
         composer: this,
-        getCurrentColumn: (t) => t.id,
+        getCurrentColumn: (t) => t.uuid,
         referencedTable: $db.categoryUsageStats,
-        getReferencedColumn: (t) => t.categoryId,
+        getReferencedColumn: (t) => t.categoryUuid,
         builder: (joinBuilder,
                 {$addJoinBuilderToRootComposer,
                 $removeJoinBuilderFromRootComposer}) =>
@@ -6206,9 +7339,9 @@ class $$CategoriesTableFilterComposer
           f) {
     final $$TransactionSchedulesTableFilterComposer composer = $composerBuilder(
         composer: this,
-        getCurrentColumn: (t) => t.id,
+        getCurrentColumn: (t) => t.uuid,
         referencedTable: $db.transactionSchedules,
-        getReferencedColumn: (t) => t.categoryId,
+        getReferencedColumn: (t) => t.categoryUuid,
         builder: (joinBuilder,
                 {$addJoinBuilderToRootComposer,
                 $removeJoinBuilderFromRootComposer}) =>
@@ -6233,8 +7366,8 @@ class $$CategoriesTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get id => $composableBuilder(
-      column: $table.id, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get uuid => $composableBuilder(
+      column: $table.uuid, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get name => $composableBuilder(
       column: $table.name, builder: (column) => ColumnOrderings(column));
@@ -6256,6 +7389,12 @@ class $$CategoriesTableOrderingComposer
 
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => ColumnOrderings(column));
 }
 
 class $$CategoriesTableAnnotationComposer
@@ -6267,8 +7406,8 @@ class $$CategoriesTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
+  GeneratedColumn<String> get uuid =>
+      $composableBuilder(column: $table.uuid, builder: (column) => column);
 
   GeneratedColumn<String> get name =>
       $composableBuilder(column: $table.name, builder: (column) => column);
@@ -6291,13 +7430,19 @@ class $$CategoriesTableAnnotationComposer
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => column);
+
   Expression<T> transactionsRefs<T extends Object>(
       Expression<T> Function($$TransactionsTableAnnotationComposer a) f) {
     final $$TransactionsTableAnnotationComposer composer = $composerBuilder(
         composer: this,
-        getCurrentColumn: (t) => t.id,
+        getCurrentColumn: (t) => t.uuid,
         referencedTable: $db.transactions,
-        getReferencedColumn: (t) => t.categoryId,
+        getReferencedColumn: (t) => t.categoryUuid,
         builder: (joinBuilder,
                 {$addJoinBuilderToRootComposer,
                 $removeJoinBuilderFromRootComposer}) =>
@@ -6317,9 +7462,9 @@ class $$CategoriesTableAnnotationComposer
     final $$CategoryUsageStatsTableAnnotationComposer composer =
         $composerBuilder(
             composer: this,
-            getCurrentColumn: (t) => t.id,
+            getCurrentColumn: (t) => t.uuid,
             referencedTable: $db.categoryUsageStats,
-            getReferencedColumn: (t) => t.categoryId,
+            getReferencedColumn: (t) => t.categoryUuid,
             builder: (joinBuilder,
                     {$addJoinBuilderToRootComposer,
                     $removeJoinBuilderFromRootComposer}) =>
@@ -6340,9 +7485,9 @@ class $$CategoriesTableAnnotationComposer
     final $$TransactionSchedulesTableAnnotationComposer composer =
         $composerBuilder(
             composer: this,
-            getCurrentColumn: (t) => t.id,
+            getCurrentColumn: (t) => t.uuid,
             referencedTable: $db.transactionSchedules,
-            getReferencedColumn: (t) => t.categoryId,
+            getReferencedColumn: (t) => t.categoryUuid,
             builder: (joinBuilder,
                     {$addJoinBuilderToRootComposer,
                     $removeJoinBuilderFromRootComposer}) =>
@@ -6384,7 +7529,7 @@ class $$CategoriesTableTableManager extends RootTableManager<
           createComputedFieldComposer: () =>
               $$CategoriesTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback: ({
-            Value<int> id = const Value.absent(),
+            Value<String> uuid = const Value.absent(),
             Value<String> name = const Value.absent(),
             Value<String?> icon = const Value.absent(),
             Value<String?> color = const Value.absent(),
@@ -6392,9 +7537,12 @@ class $$CategoriesTableTableManager extends RootTableManager<
             Value<bool> isDefault = const Value.absent(),
             Value<bool> isDeleted = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<bool> isNotSynced = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
           }) =>
               CategoriesCompanion(
-            id: id,
+            uuid: uuid,
             name: name,
             icon: icon,
             color: color,
@@ -6402,9 +7550,12 @@ class $$CategoriesTableTableManager extends RootTableManager<
             isDefault: isDefault,
             isDeleted: isDeleted,
             createdAt: createdAt,
+            updatedAt: updatedAt,
+            isNotSynced: isNotSynced,
+            rowid: rowid,
           ),
           createCompanionCallback: ({
-            Value<int> id = const Value.absent(),
+            required String uuid,
             required String name,
             Value<String?> icon = const Value.absent(),
             Value<String?> color = const Value.absent(),
@@ -6412,9 +7563,12 @@ class $$CategoriesTableTableManager extends RootTableManager<
             Value<bool> isDefault = const Value.absent(),
             Value<bool> isDeleted = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<bool> isNotSynced = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
           }) =>
               CategoriesCompanion.insert(
-            id: id,
+            uuid: uuid,
             name: name,
             icon: icon,
             color: color,
@@ -6422,6 +7576,9 @@ class $$CategoriesTableTableManager extends RootTableManager<
             isDefault: isDefault,
             isDeleted: isDeleted,
             createdAt: createdAt,
+            updatedAt: updatedAt,
+            isNotSynced: isNotSynced,
+            rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (
@@ -6454,7 +7611,7 @@ class $$CategoriesTableTableManager extends RootTableManager<
                                 .transactionsRefs,
                         referencedItemsForCurrentItem:
                             (item, referencedItems) => referencedItems
-                                .where((e) => e.categoryId == item.id),
+                                .where((e) => e.categoryUuid == item.uuid),
                         typedResults: items),
                   if (categoryUsageStatsRefs)
                     await $_getPrefetchedData<Category, $CategoriesTable,
@@ -6467,7 +7624,7 @@ class $$CategoriesTableTableManager extends RootTableManager<
                                 .categoryUsageStatsRefs,
                         referencedItemsForCurrentItem:
                             (item, referencedItems) => referencedItems
-                                .where((e) => e.categoryId == item.id),
+                                .where((e) => e.categoryUuid == item.uuid),
                         typedResults: items),
                   if (transactionSchedulesRefs)
                     await $_getPrefetchedData<Category, $CategoriesTable,
@@ -6480,7 +7637,7 @@ class $$CategoriesTableTableManager extends RootTableManager<
                                 .transactionSchedulesRefs,
                         referencedItemsForCurrentItem:
                             (item, referencedItems) => referencedItems
-                                .where((e) => e.categoryId == item.id),
+                                .where((e) => e.categoryUuid == item.uuid),
                         typedResults: items)
                 ];
               },
@@ -6505,22 +7662,28 @@ typedef $$CategoriesTableProcessedTableManager = ProcessedTableManager<
         bool categoryUsageStatsRefs,
         bool transactionSchedulesRefs})>;
 typedef $$ContactsTableCreateCompanionBuilder = ContactsCompanion Function({
-  Value<int> id,
+  required String uuid,
   required String name,
   Value<String?> phone,
   Value<String?> email,
   Value<String?> notes,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
+  Value<bool> isDeleted,
+  Value<bool> isNotSynced,
+  Value<int> rowid,
 });
 typedef $$ContactsTableUpdateCompanionBuilder = ContactsCompanion Function({
-  Value<int> id,
+  Value<String> uuid,
   Value<String> name,
   Value<String?> phone,
   Value<String?> email,
   Value<String?> notes,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
+  Value<bool> isDeleted,
+  Value<bool> isNotSynced,
+  Value<int> rowid,
 });
 
 final class $$ContactsTableReferences
@@ -6528,14 +7691,15 @@ final class $$ContactsTableReferences
   $$ContactsTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
   static MultiTypedResultKey<$TransactionsTable, List<Transaction>>
-      _transactionsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
-          db.transactions,
-          aliasName:
-              $_aliasNameGenerator(db.contacts.id, db.transactions.contactId));
+      _transactionsRefsTable(_$AppDatabase db) =>
+          MultiTypedResultKey.fromTable(db.transactions,
+              aliasName: $_aliasNameGenerator(
+                  db.contacts.uuid, db.transactions.contactUuid));
 
   $$TransactionsTableProcessedTableManager get transactionsRefs {
     final manager = $$TransactionsTableTableManager($_db, $_db.transactions)
-        .filter((f) => f.contactId.id.sqlEquals($_itemColumn<int>('id')!));
+        .filter(
+            (f) => f.contactUuid.uuid.sqlEquals($_itemColumn<String>('uuid')!));
 
     final cache = $_typedResult.readTableOrNull(_transactionsRefsTable($_db));
     return ProcessedTableManager(
@@ -6543,14 +7707,15 @@ final class $$ContactsTableReferences
   }
 
   static MultiTypedResultKey<$ReceivablesTable, List<Receivable>>
-      _receivablesRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
-          db.receivables,
-          aliasName:
-              $_aliasNameGenerator(db.contacts.id, db.receivables.contactId));
+      _receivablesRefsTable(_$AppDatabase db) =>
+          MultiTypedResultKey.fromTable(db.receivables,
+              aliasName: $_aliasNameGenerator(
+                  db.contacts.uuid, db.receivables.contactUuid));
 
   $$ReceivablesTableProcessedTableManager get receivablesRefs {
     final manager = $$ReceivablesTableTableManager($_db, $_db.receivables)
-        .filter((f) => f.contactId.id.sqlEquals($_itemColumn<int>('id')!));
+        .filter(
+            (f) => f.contactUuid.uuid.sqlEquals($_itemColumn<String>('uuid')!));
 
     final cache = $_typedResult.readTableOrNull(_receivablesRefsTable($_db));
     return ProcessedTableManager(
@@ -6561,11 +7726,11 @@ final class $$ContactsTableReferences
           _$AppDatabase db) =>
       MultiTypedResultKey.fromTable(db.payables,
           aliasName:
-              $_aliasNameGenerator(db.contacts.id, db.payables.contactId));
+              $_aliasNameGenerator(db.contacts.uuid, db.payables.contactUuid));
 
   $$PayablesTableProcessedTableManager get payablesRefs {
-    final manager = $$PayablesTableTableManager($_db, $_db.payables)
-        .filter((f) => f.contactId.id.sqlEquals($_itemColumn<int>('id')!));
+    final manager = $$PayablesTableTableManager($_db, $_db.payables).filter(
+        (f) => f.contactUuid.uuid.sqlEquals($_itemColumn<String>('uuid')!));
 
     final cache = $_typedResult.readTableOrNull(_payablesRefsTable($_db));
     return ProcessedTableManager(
@@ -6576,11 +7741,12 @@ final class $$ContactsTableReferences
       _whatsAppQueueRefsTable(_$AppDatabase db) =>
           MultiTypedResultKey.fromTable(db.whatsAppQueue,
               aliasName: $_aliasNameGenerator(
-                  db.contacts.id, db.whatsAppQueue.contactId));
+                  db.contacts.uuid, db.whatsAppQueue.contactUuid));
 
   $$WhatsAppQueueTableProcessedTableManager get whatsAppQueueRefs {
     final manager = $$WhatsAppQueueTableTableManager($_db, $_db.whatsAppQueue)
-        .filter((f) => f.contactId.id.sqlEquals($_itemColumn<int>('id')!));
+        .filter(
+            (f) => f.contactUuid.uuid.sqlEquals($_itemColumn<String>('uuid')!));
 
     final cache = $_typedResult.readTableOrNull(_whatsAppQueueRefsTable($_db));
     return ProcessedTableManager(
@@ -6591,12 +7757,13 @@ final class $$ContactsTableReferences
       _contactUsageStatsRefsTable(_$AppDatabase db) =>
           MultiTypedResultKey.fromTable(db.contactUsageStats,
               aliasName: $_aliasNameGenerator(
-                  db.contacts.id, db.contactUsageStats.contactId));
+                  db.contacts.uuid, db.contactUsageStats.contactUuid));
 
   $$ContactUsageStatsTableProcessedTableManager get contactUsageStatsRefs {
-    final manager =
-        $$ContactUsageStatsTableTableManager($_db, $_db.contactUsageStats)
-            .filter((f) => f.contactId.id.sqlEquals($_itemColumn<int>('id')!));
+    final manager = $$ContactUsageStatsTableTableManager(
+            $_db, $_db.contactUsageStats)
+        .filter(
+            (f) => f.contactUuid.uuid.sqlEquals($_itemColumn<String>('uuid')!));
 
     final cache =
         $_typedResult.readTableOrNull(_contactUsageStatsRefsTable($_db));
@@ -6609,13 +7776,14 @@ final class $$ContactsTableReferences
           _$AppDatabase db) =>
       MultiTypedResultKey.fromTable(db.transactionSchedules,
           aliasName: $_aliasNameGenerator(
-              db.contacts.id, db.transactionSchedules.contactId));
+              db.contacts.uuid, db.transactionSchedules.contactUuid));
 
   $$TransactionSchedulesTableProcessedTableManager
       get transactionSchedulesRefs {
-    final manager =
-        $$TransactionSchedulesTableTableManager($_db, $_db.transactionSchedules)
-            .filter((f) => f.contactId.id.sqlEquals($_itemColumn<int>('id')!));
+    final manager = $$TransactionSchedulesTableTableManager(
+            $_db, $_db.transactionSchedules)
+        .filter(
+            (f) => f.contactUuid.uuid.sqlEquals($_itemColumn<String>('uuid')!));
 
     final cache =
         $_typedResult.readTableOrNull(_transactionSchedulesRefsTable($_db));
@@ -6633,8 +7801,8 @@ class $$ContactsTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get id => $composableBuilder(
-      column: $table.id, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get uuid => $composableBuilder(
+      column: $table.uuid, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get name => $composableBuilder(
       column: $table.name, builder: (column) => ColumnFilters(column));
@@ -6654,13 +7822,19 @@ class $$ContactsTableFilterComposer
   ColumnFilters<DateTime> get updatedAt => $composableBuilder(
       column: $table.updatedAt, builder: (column) => ColumnFilters(column));
 
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+      column: $table.isDeleted, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => ColumnFilters(column));
+
   Expression<bool> transactionsRefs(
       Expression<bool> Function($$TransactionsTableFilterComposer f) f) {
     final $$TransactionsTableFilterComposer composer = $composerBuilder(
         composer: this,
-        getCurrentColumn: (t) => t.id,
+        getCurrentColumn: (t) => t.uuid,
         referencedTable: $db.transactions,
-        getReferencedColumn: (t) => t.contactId,
+        getReferencedColumn: (t) => t.contactUuid,
         builder: (joinBuilder,
                 {$addJoinBuilderToRootComposer,
                 $removeJoinBuilderFromRootComposer}) =>
@@ -6679,9 +7853,9 @@ class $$ContactsTableFilterComposer
       Expression<bool> Function($$ReceivablesTableFilterComposer f) f) {
     final $$ReceivablesTableFilterComposer composer = $composerBuilder(
         composer: this,
-        getCurrentColumn: (t) => t.id,
+        getCurrentColumn: (t) => t.uuid,
         referencedTable: $db.receivables,
-        getReferencedColumn: (t) => t.contactId,
+        getReferencedColumn: (t) => t.contactUuid,
         builder: (joinBuilder,
                 {$addJoinBuilderToRootComposer,
                 $removeJoinBuilderFromRootComposer}) =>
@@ -6700,9 +7874,9 @@ class $$ContactsTableFilterComposer
       Expression<bool> Function($$PayablesTableFilterComposer f) f) {
     final $$PayablesTableFilterComposer composer = $composerBuilder(
         composer: this,
-        getCurrentColumn: (t) => t.id,
+        getCurrentColumn: (t) => t.uuid,
         referencedTable: $db.payables,
-        getReferencedColumn: (t) => t.contactId,
+        getReferencedColumn: (t) => t.contactUuid,
         builder: (joinBuilder,
                 {$addJoinBuilderToRootComposer,
                 $removeJoinBuilderFromRootComposer}) =>
@@ -6721,9 +7895,9 @@ class $$ContactsTableFilterComposer
       Expression<bool> Function($$WhatsAppQueueTableFilterComposer f) f) {
     final $$WhatsAppQueueTableFilterComposer composer = $composerBuilder(
         composer: this,
-        getCurrentColumn: (t) => t.id,
+        getCurrentColumn: (t) => t.uuid,
         referencedTable: $db.whatsAppQueue,
-        getReferencedColumn: (t) => t.contactId,
+        getReferencedColumn: (t) => t.contactUuid,
         builder: (joinBuilder,
                 {$addJoinBuilderToRootComposer,
                 $removeJoinBuilderFromRootComposer}) =>
@@ -6742,9 +7916,9 @@ class $$ContactsTableFilterComposer
       Expression<bool> Function($$ContactUsageStatsTableFilterComposer f) f) {
     final $$ContactUsageStatsTableFilterComposer composer = $composerBuilder(
         composer: this,
-        getCurrentColumn: (t) => t.id,
+        getCurrentColumn: (t) => t.uuid,
         referencedTable: $db.contactUsageStats,
-        getReferencedColumn: (t) => t.contactId,
+        getReferencedColumn: (t) => t.contactUuid,
         builder: (joinBuilder,
                 {$addJoinBuilderToRootComposer,
                 $removeJoinBuilderFromRootComposer}) =>
@@ -6764,9 +7938,9 @@ class $$ContactsTableFilterComposer
           f) {
     final $$TransactionSchedulesTableFilterComposer composer = $composerBuilder(
         composer: this,
-        getCurrentColumn: (t) => t.id,
+        getCurrentColumn: (t) => t.uuid,
         referencedTable: $db.transactionSchedules,
-        getReferencedColumn: (t) => t.contactId,
+        getReferencedColumn: (t) => t.contactUuid,
         builder: (joinBuilder,
                 {$addJoinBuilderToRootComposer,
                 $removeJoinBuilderFromRootComposer}) =>
@@ -6791,8 +7965,8 @@ class $$ContactsTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get id => $composableBuilder(
-      column: $table.id, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get uuid => $composableBuilder(
+      column: $table.uuid, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get name => $composableBuilder(
       column: $table.name, builder: (column) => ColumnOrderings(column));
@@ -6811,6 +7985,12 @@ class $$ContactsTableOrderingComposer
 
   ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
       column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+      column: $table.isDeleted, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => ColumnOrderings(column));
 }
 
 class $$ContactsTableAnnotationComposer
@@ -6822,8 +8002,8 @@ class $$ContactsTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
+  GeneratedColumn<String> get uuid =>
+      $composableBuilder(column: $table.uuid, builder: (column) => column);
 
   GeneratedColumn<String> get name =>
       $composableBuilder(column: $table.name, builder: (column) => column);
@@ -6843,13 +8023,19 @@ class $$ContactsTableAnnotationComposer
   GeneratedColumn<DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+
+  GeneratedColumn<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => column);
+
   Expression<T> transactionsRefs<T extends Object>(
       Expression<T> Function($$TransactionsTableAnnotationComposer a) f) {
     final $$TransactionsTableAnnotationComposer composer = $composerBuilder(
         composer: this,
-        getCurrentColumn: (t) => t.id,
+        getCurrentColumn: (t) => t.uuid,
         referencedTable: $db.transactions,
-        getReferencedColumn: (t) => t.contactId,
+        getReferencedColumn: (t) => t.contactUuid,
         builder: (joinBuilder,
                 {$addJoinBuilderToRootComposer,
                 $removeJoinBuilderFromRootComposer}) =>
@@ -6868,9 +8054,9 @@ class $$ContactsTableAnnotationComposer
       Expression<T> Function($$ReceivablesTableAnnotationComposer a) f) {
     final $$ReceivablesTableAnnotationComposer composer = $composerBuilder(
         composer: this,
-        getCurrentColumn: (t) => t.id,
+        getCurrentColumn: (t) => t.uuid,
         referencedTable: $db.receivables,
-        getReferencedColumn: (t) => t.contactId,
+        getReferencedColumn: (t) => t.contactUuid,
         builder: (joinBuilder,
                 {$addJoinBuilderToRootComposer,
                 $removeJoinBuilderFromRootComposer}) =>
@@ -6889,9 +8075,9 @@ class $$ContactsTableAnnotationComposer
       Expression<T> Function($$PayablesTableAnnotationComposer a) f) {
     final $$PayablesTableAnnotationComposer composer = $composerBuilder(
         composer: this,
-        getCurrentColumn: (t) => t.id,
+        getCurrentColumn: (t) => t.uuid,
         referencedTable: $db.payables,
-        getReferencedColumn: (t) => t.contactId,
+        getReferencedColumn: (t) => t.contactUuid,
         builder: (joinBuilder,
                 {$addJoinBuilderToRootComposer,
                 $removeJoinBuilderFromRootComposer}) =>
@@ -6910,9 +8096,9 @@ class $$ContactsTableAnnotationComposer
       Expression<T> Function($$WhatsAppQueueTableAnnotationComposer a) f) {
     final $$WhatsAppQueueTableAnnotationComposer composer = $composerBuilder(
         composer: this,
-        getCurrentColumn: (t) => t.id,
+        getCurrentColumn: (t) => t.uuid,
         referencedTable: $db.whatsAppQueue,
-        getReferencedColumn: (t) => t.contactId,
+        getReferencedColumn: (t) => t.contactUuid,
         builder: (joinBuilder,
                 {$addJoinBuilderToRootComposer,
                 $removeJoinBuilderFromRootComposer}) =>
@@ -6932,9 +8118,9 @@ class $$ContactsTableAnnotationComposer
     final $$ContactUsageStatsTableAnnotationComposer composer =
         $composerBuilder(
             composer: this,
-            getCurrentColumn: (t) => t.id,
+            getCurrentColumn: (t) => t.uuid,
             referencedTable: $db.contactUsageStats,
-            getReferencedColumn: (t) => t.contactId,
+            getReferencedColumn: (t) => t.contactUuid,
             builder: (joinBuilder,
                     {$addJoinBuilderToRootComposer,
                     $removeJoinBuilderFromRootComposer}) =>
@@ -6955,9 +8141,9 @@ class $$ContactsTableAnnotationComposer
     final $$TransactionSchedulesTableAnnotationComposer composer =
         $composerBuilder(
             composer: this,
-            getCurrentColumn: (t) => t.id,
+            getCurrentColumn: (t) => t.uuid,
             referencedTable: $db.transactionSchedules,
-            getReferencedColumn: (t) => t.contactId,
+            getReferencedColumn: (t) => t.contactUuid,
             builder: (joinBuilder,
                     {$addJoinBuilderToRootComposer,
                     $removeJoinBuilderFromRootComposer}) =>
@@ -7002,40 +8188,52 @@ class $$ContactsTableTableManager extends RootTableManager<
           createComputedFieldComposer: () =>
               $$ContactsTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback: ({
-            Value<int> id = const Value.absent(),
+            Value<String> uuid = const Value.absent(),
             Value<String> name = const Value.absent(),
             Value<String?> phone = const Value.absent(),
             Value<String?> email = const Value.absent(),
             Value<String?> notes = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
+            Value<bool> isDeleted = const Value.absent(),
+            Value<bool> isNotSynced = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
           }) =>
               ContactsCompanion(
-            id: id,
+            uuid: uuid,
             name: name,
             phone: phone,
             email: email,
             notes: notes,
             createdAt: createdAt,
             updatedAt: updatedAt,
+            isDeleted: isDeleted,
+            isNotSynced: isNotSynced,
+            rowid: rowid,
           ),
           createCompanionCallback: ({
-            Value<int> id = const Value.absent(),
+            required String uuid,
             required String name,
             Value<String?> phone = const Value.absent(),
             Value<String?> email = const Value.absent(),
             Value<String?> notes = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
+            Value<bool> isDeleted = const Value.absent(),
+            Value<bool> isNotSynced = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
           }) =>
               ContactsCompanion.insert(
-            id: id,
+            uuid: uuid,
             name: name,
             phone: phone,
             email: email,
             notes: notes,
             createdAt: createdAt,
             updatedAt: updatedAt,
+            isDeleted: isDeleted,
+            isNotSynced: isNotSynced,
+            rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0
               .map((e) =>
@@ -7072,7 +8270,7 @@ class $$ContactsTableTableManager extends RootTableManager<
                                 .transactionsRefs,
                         referencedItemsForCurrentItem:
                             (item, referencedItems) => referencedItems
-                                .where((e) => e.contactId == item.id),
+                                .where((e) => e.contactUuid == item.uuid),
                         typedResults: items),
                   if (receivablesRefs)
                     await $_getPrefetchedData<Contact, $ContactsTable,
@@ -7085,7 +8283,7 @@ class $$ContactsTableTableManager extends RootTableManager<
                                 .receivablesRefs,
                         referencedItemsForCurrentItem:
                             (item, referencedItems) => referencedItems
-                                .where((e) => e.contactId == item.id),
+                                .where((e) => e.contactUuid == item.uuid),
                         typedResults: items),
                   if (payablesRefs)
                     await $_getPrefetchedData<Contact, $ContactsTable, Payable>(
@@ -7097,7 +8295,7 @@ class $$ContactsTableTableManager extends RootTableManager<
                                 .payablesRefs,
                         referencedItemsForCurrentItem:
                             (item, referencedItems) => referencedItems
-                                .where((e) => e.contactId == item.id),
+                                .where((e) => e.contactUuid == item.uuid),
                         typedResults: items),
                   if (whatsAppQueueRefs)
                     await $_getPrefetchedData<Contact, $ContactsTable,
@@ -7110,7 +8308,7 @@ class $$ContactsTableTableManager extends RootTableManager<
                                 .whatsAppQueueRefs,
                         referencedItemsForCurrentItem:
                             (item, referencedItems) => referencedItems
-                                .where((e) => e.contactId == item.id),
+                                .where((e) => e.contactUuid == item.uuid),
                         typedResults: items),
                   if (contactUsageStatsRefs)
                     await $_getPrefetchedData<Contact, $ContactsTable,
@@ -7123,7 +8321,7 @@ class $$ContactsTableTableManager extends RootTableManager<
                                 .contactUsageStatsRefs,
                         referencedItemsForCurrentItem:
                             (item, referencedItems) => referencedItems
-                                .where((e) => e.contactId == item.id),
+                                .where((e) => e.contactUuid == item.uuid),
                         typedResults: items),
                   if (transactionSchedulesRefs)
                     await $_getPrefetchedData<Contact, $ContactsTable,
@@ -7136,7 +8334,7 @@ class $$ContactsTableTableManager extends RootTableManager<
                                 .transactionSchedulesRefs,
                         referencedItemsForCurrentItem:
                             (item, referencedItems) => referencedItems
-                                .where((e) => e.contactId == item.id),
+                                .where((e) => e.contactUuid == item.uuid),
                         typedResults: items)
                 ];
               },
@@ -7165,70 +8363,76 @@ typedef $$ContactsTableProcessedTableManager = ProcessedTableManager<
         bool transactionSchedulesRefs})>;
 typedef $$TransactionsTableCreateCompanionBuilder = TransactionsCompanion
     Function({
-  Value<int> id,
+  required String uuid,
   required double amount,
   required String type,
-  Value<int?> categoryId,
-  Value<int?> contactId,
+  Value<String?> categoryUuid,
+  Value<String?> contactUuid,
   Value<String?> description,
   required DateTime date,
-  Value<int?> linkedReceivableId,
-  Value<int?> linkedPayableId,
+  Value<String?> linkedReceivableUuid,
+  Value<String?> linkedPayableUuid,
   Value<String?> paidRelationship,
   Value<bool> isAutoGenerated,
   Value<bool> isScheduled,
   Value<String?> externalLinkId,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
+  Value<bool> isDeleted,
+  Value<bool> isNotSynced,
+  Value<int> rowid,
 });
 typedef $$TransactionsTableUpdateCompanionBuilder = TransactionsCompanion
     Function({
-  Value<int> id,
+  Value<String> uuid,
   Value<double> amount,
   Value<String> type,
-  Value<int?> categoryId,
-  Value<int?> contactId,
+  Value<String?> categoryUuid,
+  Value<String?> contactUuid,
   Value<String?> description,
   Value<DateTime> date,
-  Value<int?> linkedReceivableId,
-  Value<int?> linkedPayableId,
+  Value<String?> linkedReceivableUuid,
+  Value<String?> linkedPayableUuid,
   Value<String?> paidRelationship,
   Value<bool> isAutoGenerated,
   Value<bool> isScheduled,
   Value<String?> externalLinkId,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
+  Value<bool> isDeleted,
+  Value<bool> isNotSynced,
+  Value<int> rowid,
 });
 
 final class $$TransactionsTableReferences
     extends BaseReferences<_$AppDatabase, $TransactionsTable, Transaction> {
   $$TransactionsTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
-  static $CategoriesTable _categoryIdTable(_$AppDatabase db) =>
-      db.categories.createAlias(
-          $_aliasNameGenerator(db.transactions.categoryId, db.categories.id));
+  static $CategoriesTable _categoryUuidTable(_$AppDatabase db) =>
+      db.categories.createAlias($_aliasNameGenerator(
+          db.transactions.categoryUuid, db.categories.uuid));
 
-  $$CategoriesTableProcessedTableManager? get categoryId {
-    final $_column = $_itemColumn<int>('category_id');
+  $$CategoriesTableProcessedTableManager? get categoryUuid {
+    final $_column = $_itemColumn<String>('category_uuid');
     if ($_column == null) return null;
     final manager = $$CategoriesTableTableManager($_db, $_db.categories)
-        .filter((f) => f.id.sqlEquals($_column));
-    final item = $_typedResult.readTableOrNull(_categoryIdTable($_db));
+        .filter((f) => f.uuid.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_categoryUuidTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
         manager.$state.copyWith(prefetchedData: [item]));
   }
 
-  static $ContactsTable _contactIdTable(_$AppDatabase db) =>
+  static $ContactsTable _contactUuidTable(_$AppDatabase db) =>
       db.contacts.createAlias(
-          $_aliasNameGenerator(db.transactions.contactId, db.contacts.id));
+          $_aliasNameGenerator(db.transactions.contactUuid, db.contacts.uuid));
 
-  $$ContactsTableProcessedTableManager? get contactId {
-    final $_column = $_itemColumn<int>('contact_id');
+  $$ContactsTableProcessedTableManager? get contactUuid {
+    final $_column = $_itemColumn<String>('contact_uuid');
     if ($_column == null) return null;
     final manager = $$ContactsTableTableManager($_db, $_db.contacts)
-        .filter((f) => f.id.sqlEquals($_column));
-    final item = $_typedResult.readTableOrNull(_contactIdTable($_db));
+        .filter((f) => f.uuid.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_contactUuidTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
         manager.$state.copyWith(prefetchedData: [item]));
@@ -7244,8 +8448,8 @@ class $$TransactionsTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get id => $composableBuilder(
-      column: $table.id, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get uuid => $composableBuilder(
+      column: $table.uuid, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<double> get amount => $composableBuilder(
       column: $table.amount, builder: (column) => ColumnFilters(column));
@@ -7259,12 +8463,12 @@ class $$TransactionsTableFilterComposer
   ColumnFilters<DateTime> get date => $composableBuilder(
       column: $table.date, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get linkedReceivableId => $composableBuilder(
-      column: $table.linkedReceivableId,
+  ColumnFilters<String> get linkedReceivableUuid => $composableBuilder(
+      column: $table.linkedReceivableUuid,
       builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get linkedPayableId => $composableBuilder(
-      column: $table.linkedPayableId,
+  ColumnFilters<String> get linkedPayableUuid => $composableBuilder(
+      column: $table.linkedPayableUuid,
       builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get paidRelationship => $composableBuilder(
@@ -7288,12 +8492,18 @@ class $$TransactionsTableFilterComposer
   ColumnFilters<DateTime> get updatedAt => $composableBuilder(
       column: $table.updatedAt, builder: (column) => ColumnFilters(column));
 
-  $$CategoriesTableFilterComposer get categoryId {
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+      column: $table.isDeleted, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => ColumnFilters(column));
+
+  $$CategoriesTableFilterComposer get categoryUuid {
     final $$CategoriesTableFilterComposer composer = $composerBuilder(
         composer: this,
-        getCurrentColumn: (t) => t.categoryId,
+        getCurrentColumn: (t) => t.categoryUuid,
         referencedTable: $db.categories,
-        getReferencedColumn: (t) => t.id,
+        getReferencedColumn: (t) => t.uuid,
         builder: (joinBuilder,
                 {$addJoinBuilderToRootComposer,
                 $removeJoinBuilderFromRootComposer}) =>
@@ -7308,12 +8518,12 @@ class $$TransactionsTableFilterComposer
     return composer;
   }
 
-  $$ContactsTableFilterComposer get contactId {
+  $$ContactsTableFilterComposer get contactUuid {
     final $$ContactsTableFilterComposer composer = $composerBuilder(
         composer: this,
-        getCurrentColumn: (t) => t.contactId,
+        getCurrentColumn: (t) => t.contactUuid,
         referencedTable: $db.contacts,
-        getReferencedColumn: (t) => t.id,
+        getReferencedColumn: (t) => t.uuid,
         builder: (joinBuilder,
                 {$addJoinBuilderToRootComposer,
                 $removeJoinBuilderFromRootComposer}) =>
@@ -7338,8 +8548,8 @@ class $$TransactionsTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get id => $composableBuilder(
-      column: $table.id, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get uuid => $composableBuilder(
+      column: $table.uuid, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<double> get amount => $composableBuilder(
       column: $table.amount, builder: (column) => ColumnOrderings(column));
@@ -7353,12 +8563,12 @@ class $$TransactionsTableOrderingComposer
   ColumnOrderings<DateTime> get date => $composableBuilder(
       column: $table.date, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get linkedReceivableId => $composableBuilder(
-      column: $table.linkedReceivableId,
+  ColumnOrderings<String> get linkedReceivableUuid => $composableBuilder(
+      column: $table.linkedReceivableUuid,
       builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get linkedPayableId => $composableBuilder(
-      column: $table.linkedPayableId,
+  ColumnOrderings<String> get linkedPayableUuid => $composableBuilder(
+      column: $table.linkedPayableUuid,
       builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get paidRelationship => $composableBuilder(
@@ -7382,12 +8592,18 @@ class $$TransactionsTableOrderingComposer
   ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
       column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
 
-  $$CategoriesTableOrderingComposer get categoryId {
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+      column: $table.isDeleted, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => ColumnOrderings(column));
+
+  $$CategoriesTableOrderingComposer get categoryUuid {
     final $$CategoriesTableOrderingComposer composer = $composerBuilder(
         composer: this,
-        getCurrentColumn: (t) => t.categoryId,
+        getCurrentColumn: (t) => t.categoryUuid,
         referencedTable: $db.categories,
-        getReferencedColumn: (t) => t.id,
+        getReferencedColumn: (t) => t.uuid,
         builder: (joinBuilder,
                 {$addJoinBuilderToRootComposer,
                 $removeJoinBuilderFromRootComposer}) =>
@@ -7402,12 +8618,12 @@ class $$TransactionsTableOrderingComposer
     return composer;
   }
 
-  $$ContactsTableOrderingComposer get contactId {
+  $$ContactsTableOrderingComposer get contactUuid {
     final $$ContactsTableOrderingComposer composer = $composerBuilder(
         composer: this,
-        getCurrentColumn: (t) => t.contactId,
+        getCurrentColumn: (t) => t.contactUuid,
         referencedTable: $db.contacts,
-        getReferencedColumn: (t) => t.id,
+        getReferencedColumn: (t) => t.uuid,
         builder: (joinBuilder,
                 {$addJoinBuilderToRootComposer,
                 $removeJoinBuilderFromRootComposer}) =>
@@ -7432,8 +8648,8 @@ class $$TransactionsTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
+  GeneratedColumn<String> get uuid =>
+      $composableBuilder(column: $table.uuid, builder: (column) => column);
 
   GeneratedColumn<double> get amount =>
       $composableBuilder(column: $table.amount, builder: (column) => column);
@@ -7447,11 +8663,11 @@ class $$TransactionsTableAnnotationComposer
   GeneratedColumn<DateTime> get date =>
       $composableBuilder(column: $table.date, builder: (column) => column);
 
-  GeneratedColumn<int> get linkedReceivableId => $composableBuilder(
-      column: $table.linkedReceivableId, builder: (column) => column);
+  GeneratedColumn<String> get linkedReceivableUuid => $composableBuilder(
+      column: $table.linkedReceivableUuid, builder: (column) => column);
 
-  GeneratedColumn<int> get linkedPayableId => $composableBuilder(
-      column: $table.linkedPayableId, builder: (column) => column);
+  GeneratedColumn<String> get linkedPayableUuid => $composableBuilder(
+      column: $table.linkedPayableUuid, builder: (column) => column);
 
   GeneratedColumn<String> get paidRelationship => $composableBuilder(
       column: $table.paidRelationship, builder: (column) => column);
@@ -7471,12 +8687,18 @@ class $$TransactionsTableAnnotationComposer
   GeneratedColumn<DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 
-  $$CategoriesTableAnnotationComposer get categoryId {
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+
+  GeneratedColumn<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => column);
+
+  $$CategoriesTableAnnotationComposer get categoryUuid {
     final $$CategoriesTableAnnotationComposer composer = $composerBuilder(
         composer: this,
-        getCurrentColumn: (t) => t.categoryId,
+        getCurrentColumn: (t) => t.categoryUuid,
         referencedTable: $db.categories,
-        getReferencedColumn: (t) => t.id,
+        getReferencedColumn: (t) => t.uuid,
         builder: (joinBuilder,
                 {$addJoinBuilderToRootComposer,
                 $removeJoinBuilderFromRootComposer}) =>
@@ -7491,12 +8713,12 @@ class $$TransactionsTableAnnotationComposer
     return composer;
   }
 
-  $$ContactsTableAnnotationComposer get contactId {
+  $$ContactsTableAnnotationComposer get contactUuid {
     final $$ContactsTableAnnotationComposer composer = $composerBuilder(
         composer: this,
-        getCurrentColumn: (t) => t.contactId,
+        getCurrentColumn: (t) => t.contactUuid,
         referencedTable: $db.contacts,
-        getReferencedColumn: (t) => t.id,
+        getReferencedColumn: (t) => t.uuid,
         builder: (joinBuilder,
                 {$addJoinBuilderToRootComposer,
                 $removeJoinBuilderFromRootComposer}) =>
@@ -7523,7 +8745,7 @@ class $$TransactionsTableTableManager extends RootTableManager<
     $$TransactionsTableUpdateCompanionBuilder,
     (Transaction, $$TransactionsTableReferences),
     Transaction,
-    PrefetchHooks Function({bool categoryId, bool contactId})> {
+    PrefetchHooks Function({bool categoryUuid, bool contactUuid})> {
   $$TransactionsTableTableManager(_$AppDatabase db, $TransactionsTable table)
       : super(TableManagerState(
           db: db,
@@ -7535,72 +8757,84 @@ class $$TransactionsTableTableManager extends RootTableManager<
           createComputedFieldComposer: () =>
               $$TransactionsTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback: ({
-            Value<int> id = const Value.absent(),
+            Value<String> uuid = const Value.absent(),
             Value<double> amount = const Value.absent(),
             Value<String> type = const Value.absent(),
-            Value<int?> categoryId = const Value.absent(),
-            Value<int?> contactId = const Value.absent(),
+            Value<String?> categoryUuid = const Value.absent(),
+            Value<String?> contactUuid = const Value.absent(),
             Value<String?> description = const Value.absent(),
             Value<DateTime> date = const Value.absent(),
-            Value<int?> linkedReceivableId = const Value.absent(),
-            Value<int?> linkedPayableId = const Value.absent(),
+            Value<String?> linkedReceivableUuid = const Value.absent(),
+            Value<String?> linkedPayableUuid = const Value.absent(),
             Value<String?> paidRelationship = const Value.absent(),
             Value<bool> isAutoGenerated = const Value.absent(),
             Value<bool> isScheduled = const Value.absent(),
             Value<String?> externalLinkId = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
+            Value<bool> isDeleted = const Value.absent(),
+            Value<bool> isNotSynced = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
           }) =>
               TransactionsCompanion(
-            id: id,
+            uuid: uuid,
             amount: amount,
             type: type,
-            categoryId: categoryId,
-            contactId: contactId,
+            categoryUuid: categoryUuid,
+            contactUuid: contactUuid,
             description: description,
             date: date,
-            linkedReceivableId: linkedReceivableId,
-            linkedPayableId: linkedPayableId,
+            linkedReceivableUuid: linkedReceivableUuid,
+            linkedPayableUuid: linkedPayableUuid,
             paidRelationship: paidRelationship,
             isAutoGenerated: isAutoGenerated,
             isScheduled: isScheduled,
             externalLinkId: externalLinkId,
             createdAt: createdAt,
             updatedAt: updatedAt,
+            isDeleted: isDeleted,
+            isNotSynced: isNotSynced,
+            rowid: rowid,
           ),
           createCompanionCallback: ({
-            Value<int> id = const Value.absent(),
+            required String uuid,
             required double amount,
             required String type,
-            Value<int?> categoryId = const Value.absent(),
-            Value<int?> contactId = const Value.absent(),
+            Value<String?> categoryUuid = const Value.absent(),
+            Value<String?> contactUuid = const Value.absent(),
             Value<String?> description = const Value.absent(),
             required DateTime date,
-            Value<int?> linkedReceivableId = const Value.absent(),
-            Value<int?> linkedPayableId = const Value.absent(),
+            Value<String?> linkedReceivableUuid = const Value.absent(),
+            Value<String?> linkedPayableUuid = const Value.absent(),
             Value<String?> paidRelationship = const Value.absent(),
             Value<bool> isAutoGenerated = const Value.absent(),
             Value<bool> isScheduled = const Value.absent(),
             Value<String?> externalLinkId = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
+            Value<bool> isDeleted = const Value.absent(),
+            Value<bool> isNotSynced = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
           }) =>
               TransactionsCompanion.insert(
-            id: id,
+            uuid: uuid,
             amount: amount,
             type: type,
-            categoryId: categoryId,
-            contactId: contactId,
+            categoryUuid: categoryUuid,
+            contactUuid: contactUuid,
             description: description,
             date: date,
-            linkedReceivableId: linkedReceivableId,
-            linkedPayableId: linkedPayableId,
+            linkedReceivableUuid: linkedReceivableUuid,
+            linkedPayableUuid: linkedPayableUuid,
             paidRelationship: paidRelationship,
             isAutoGenerated: isAutoGenerated,
             isScheduled: isScheduled,
             externalLinkId: externalLinkId,
             createdAt: createdAt,
             updatedAt: updatedAt,
+            isDeleted: isDeleted,
+            isNotSynced: isNotSynced,
+            rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (
@@ -7608,7 +8842,7 @@ class $$TransactionsTableTableManager extends RootTableManager<
                     $$TransactionsTableReferences(db, table, e)
                   ))
               .toList(),
-          prefetchHooksCallback: ({categoryId = false, contactId = false}) {
+          prefetchHooksCallback: ({categoryUuid = false, contactUuid = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [],
@@ -7625,24 +8859,26 @@ class $$TransactionsTableTableManager extends RootTableManager<
                       dynamic,
                       dynamic,
                       dynamic>>(state) {
-                if (categoryId) {
+                if (categoryUuid) {
                   state = state.withJoin(
                     currentTable: table,
-                    currentColumn: table.categoryId,
+                    currentColumn: table.categoryUuid,
                     referencedTable:
-                        $$TransactionsTableReferences._categoryIdTable(db),
-                    referencedColumn:
-                        $$TransactionsTableReferences._categoryIdTable(db).id,
+                        $$TransactionsTableReferences._categoryUuidTable(db),
+                    referencedColumn: $$TransactionsTableReferences
+                        ._categoryUuidTable(db)
+                        .uuid,
                   ) as T;
                 }
-                if (contactId) {
+                if (contactUuid) {
                   state = state.withJoin(
                     currentTable: table,
-                    currentColumn: table.contactId,
+                    currentColumn: table.contactUuid,
                     referencedTable:
-                        $$TransactionsTableReferences._contactIdTable(db),
-                    referencedColumn:
-                        $$TransactionsTableReferences._contactIdTable(db).id,
+                        $$TransactionsTableReferences._contactUuidTable(db),
+                    referencedColumn: $$TransactionsTableReferences
+                        ._contactUuidTable(db)
+                        .uuid,
                   ) as T;
                 }
 
@@ -7667,86 +8903,92 @@ typedef $$TransactionsTableProcessedTableManager = ProcessedTableManager<
     $$TransactionsTableUpdateCompanionBuilder,
     (Transaction, $$TransactionsTableReferences),
     Transaction,
-    PrefetchHooks Function({bool categoryId, bool contactId})>;
+    PrefetchHooks Function({bool categoryUuid, bool contactUuid})>;
 typedef $$ReceivablesTableCreateCompanionBuilder = ReceivablesCompanion
     Function({
-  Value<int> id,
-  required int contactId,
+  required String uuid,
+  required String contactUuid,
   required double amount,
   Value<String?> description,
   required DateTime date,
   Value<DateTime?> dueDate,
   Value<String> status,
   Value<DateTime?> receivedDate,
-  Value<int?> linkedExpenseId,
-  Value<int?> linkedIncomeId,
+  Value<String?> linkedExpenseUuid,
+  Value<String?> linkedIncomeUuid,
   Value<bool> autoCreateIncome,
   Value<String?> externalLinkId,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
+  Value<bool> isDeleted,
+  Value<bool> isNotSynced,
+  Value<int> rowid,
 });
 typedef $$ReceivablesTableUpdateCompanionBuilder = ReceivablesCompanion
     Function({
-  Value<int> id,
-  Value<int> contactId,
+  Value<String> uuid,
+  Value<String> contactUuid,
   Value<double> amount,
   Value<String?> description,
   Value<DateTime> date,
   Value<DateTime?> dueDate,
   Value<String> status,
   Value<DateTime?> receivedDate,
-  Value<int?> linkedExpenseId,
-  Value<int?> linkedIncomeId,
+  Value<String?> linkedExpenseUuid,
+  Value<String?> linkedIncomeUuid,
   Value<bool> autoCreateIncome,
   Value<String?> externalLinkId,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
+  Value<bool> isDeleted,
+  Value<bool> isNotSynced,
+  Value<int> rowid,
 });
 
 final class $$ReceivablesTableReferences
     extends BaseReferences<_$AppDatabase, $ReceivablesTable, Receivable> {
   $$ReceivablesTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
-  static $ContactsTable _contactIdTable(_$AppDatabase db) =>
+  static $ContactsTable _contactUuidTable(_$AppDatabase db) =>
       db.contacts.createAlias(
-          $_aliasNameGenerator(db.receivables.contactId, db.contacts.id));
+          $_aliasNameGenerator(db.receivables.contactUuid, db.contacts.uuid));
 
-  $$ContactsTableProcessedTableManager get contactId {
-    final $_column = $_itemColumn<int>('contact_id')!;
+  $$ContactsTableProcessedTableManager get contactUuid {
+    final $_column = $_itemColumn<String>('contact_uuid')!;
 
     final manager = $$ContactsTableTableManager($_db, $_db.contacts)
-        .filter((f) => f.id.sqlEquals($_column));
-    final item = $_typedResult.readTableOrNull(_contactIdTable($_db));
+        .filter((f) => f.uuid.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_contactUuidTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
         manager.$state.copyWith(prefetchedData: [item]));
   }
 
-  static $TransactionsTable _linkedExpenseIdTable(_$AppDatabase db) =>
+  static $TransactionsTable _linkedExpenseUuidTable(_$AppDatabase db) =>
       db.transactions.createAlias($_aliasNameGenerator(
-          db.receivables.linkedExpenseId, db.transactions.id));
+          db.receivables.linkedExpenseUuid, db.transactions.uuid));
 
-  $$TransactionsTableProcessedTableManager? get linkedExpenseId {
-    final $_column = $_itemColumn<int>('linked_expense_id');
+  $$TransactionsTableProcessedTableManager? get linkedExpenseUuid {
+    final $_column = $_itemColumn<String>('linked_expense_uuid');
     if ($_column == null) return null;
     final manager = $$TransactionsTableTableManager($_db, $_db.transactions)
-        .filter((f) => f.id.sqlEquals($_column));
-    final item = $_typedResult.readTableOrNull(_linkedExpenseIdTable($_db));
+        .filter((f) => f.uuid.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_linkedExpenseUuidTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
         manager.$state.copyWith(prefetchedData: [item]));
   }
 
-  static $TransactionsTable _linkedIncomeIdTable(_$AppDatabase db) =>
+  static $TransactionsTable _linkedIncomeUuidTable(_$AppDatabase db) =>
       db.transactions.createAlias($_aliasNameGenerator(
-          db.receivables.linkedIncomeId, db.transactions.id));
+          db.receivables.linkedIncomeUuid, db.transactions.uuid));
 
-  $$TransactionsTableProcessedTableManager? get linkedIncomeId {
-    final $_column = $_itemColumn<int>('linked_income_id');
+  $$TransactionsTableProcessedTableManager? get linkedIncomeUuid {
+    final $_column = $_itemColumn<String>('linked_income_uuid');
     if ($_column == null) return null;
     final manager = $$TransactionsTableTableManager($_db, $_db.transactions)
-        .filter((f) => f.id.sqlEquals($_column));
-    final item = $_typedResult.readTableOrNull(_linkedIncomeIdTable($_db));
+        .filter((f) => f.uuid.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_linkedIncomeUuidTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
         manager.$state.copyWith(prefetchedData: [item]));
@@ -7762,8 +9004,8 @@ class $$ReceivablesTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get id => $composableBuilder(
-      column: $table.id, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get uuid => $composableBuilder(
+      column: $table.uuid, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<double> get amount => $composableBuilder(
       column: $table.amount, builder: (column) => ColumnFilters(column));
@@ -7797,12 +9039,18 @@ class $$ReceivablesTableFilterComposer
   ColumnFilters<DateTime> get updatedAt => $composableBuilder(
       column: $table.updatedAt, builder: (column) => ColumnFilters(column));
 
-  $$ContactsTableFilterComposer get contactId {
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+      column: $table.isDeleted, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => ColumnFilters(column));
+
+  $$ContactsTableFilterComposer get contactUuid {
     final $$ContactsTableFilterComposer composer = $composerBuilder(
         composer: this,
-        getCurrentColumn: (t) => t.contactId,
+        getCurrentColumn: (t) => t.contactUuid,
         referencedTable: $db.contacts,
-        getReferencedColumn: (t) => t.id,
+        getReferencedColumn: (t) => t.uuid,
         builder: (joinBuilder,
                 {$addJoinBuilderToRootComposer,
                 $removeJoinBuilderFromRootComposer}) =>
@@ -7817,12 +9065,12 @@ class $$ReceivablesTableFilterComposer
     return composer;
   }
 
-  $$TransactionsTableFilterComposer get linkedExpenseId {
+  $$TransactionsTableFilterComposer get linkedExpenseUuid {
     final $$TransactionsTableFilterComposer composer = $composerBuilder(
         composer: this,
-        getCurrentColumn: (t) => t.linkedExpenseId,
+        getCurrentColumn: (t) => t.linkedExpenseUuid,
         referencedTable: $db.transactions,
-        getReferencedColumn: (t) => t.id,
+        getReferencedColumn: (t) => t.uuid,
         builder: (joinBuilder,
                 {$addJoinBuilderToRootComposer,
                 $removeJoinBuilderFromRootComposer}) =>
@@ -7837,12 +9085,12 @@ class $$ReceivablesTableFilterComposer
     return composer;
   }
 
-  $$TransactionsTableFilterComposer get linkedIncomeId {
+  $$TransactionsTableFilterComposer get linkedIncomeUuid {
     final $$TransactionsTableFilterComposer composer = $composerBuilder(
         composer: this,
-        getCurrentColumn: (t) => t.linkedIncomeId,
+        getCurrentColumn: (t) => t.linkedIncomeUuid,
         referencedTable: $db.transactions,
-        getReferencedColumn: (t) => t.id,
+        getReferencedColumn: (t) => t.uuid,
         builder: (joinBuilder,
                 {$addJoinBuilderToRootComposer,
                 $removeJoinBuilderFromRootComposer}) =>
@@ -7867,8 +9115,8 @@ class $$ReceivablesTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get id => $composableBuilder(
-      column: $table.id, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get uuid => $composableBuilder(
+      column: $table.uuid, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<double> get amount => $composableBuilder(
       column: $table.amount, builder: (column) => ColumnOrderings(column));
@@ -7903,12 +9151,18 @@ class $$ReceivablesTableOrderingComposer
   ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
       column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
 
-  $$ContactsTableOrderingComposer get contactId {
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+      column: $table.isDeleted, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => ColumnOrderings(column));
+
+  $$ContactsTableOrderingComposer get contactUuid {
     final $$ContactsTableOrderingComposer composer = $composerBuilder(
         composer: this,
-        getCurrentColumn: (t) => t.contactId,
+        getCurrentColumn: (t) => t.contactUuid,
         referencedTable: $db.contacts,
-        getReferencedColumn: (t) => t.id,
+        getReferencedColumn: (t) => t.uuid,
         builder: (joinBuilder,
                 {$addJoinBuilderToRootComposer,
                 $removeJoinBuilderFromRootComposer}) =>
@@ -7923,12 +9177,12 @@ class $$ReceivablesTableOrderingComposer
     return composer;
   }
 
-  $$TransactionsTableOrderingComposer get linkedExpenseId {
+  $$TransactionsTableOrderingComposer get linkedExpenseUuid {
     final $$TransactionsTableOrderingComposer composer = $composerBuilder(
         composer: this,
-        getCurrentColumn: (t) => t.linkedExpenseId,
+        getCurrentColumn: (t) => t.linkedExpenseUuid,
         referencedTable: $db.transactions,
-        getReferencedColumn: (t) => t.id,
+        getReferencedColumn: (t) => t.uuid,
         builder: (joinBuilder,
                 {$addJoinBuilderToRootComposer,
                 $removeJoinBuilderFromRootComposer}) =>
@@ -7943,12 +9197,12 @@ class $$ReceivablesTableOrderingComposer
     return composer;
   }
 
-  $$TransactionsTableOrderingComposer get linkedIncomeId {
+  $$TransactionsTableOrderingComposer get linkedIncomeUuid {
     final $$TransactionsTableOrderingComposer composer = $composerBuilder(
         composer: this,
-        getCurrentColumn: (t) => t.linkedIncomeId,
+        getCurrentColumn: (t) => t.linkedIncomeUuid,
         referencedTable: $db.transactions,
-        getReferencedColumn: (t) => t.id,
+        getReferencedColumn: (t) => t.uuid,
         builder: (joinBuilder,
                 {$addJoinBuilderToRootComposer,
                 $removeJoinBuilderFromRootComposer}) =>
@@ -7973,8 +9227,8 @@ class $$ReceivablesTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
+  GeneratedColumn<String> get uuid =>
+      $composableBuilder(column: $table.uuid, builder: (column) => column);
 
   GeneratedColumn<double> get amount =>
       $composableBuilder(column: $table.amount, builder: (column) => column);
@@ -8006,12 +9260,18 @@ class $$ReceivablesTableAnnotationComposer
   GeneratedColumn<DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 
-  $$ContactsTableAnnotationComposer get contactId {
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+
+  GeneratedColumn<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => column);
+
+  $$ContactsTableAnnotationComposer get contactUuid {
     final $$ContactsTableAnnotationComposer composer = $composerBuilder(
         composer: this,
-        getCurrentColumn: (t) => t.contactId,
+        getCurrentColumn: (t) => t.contactUuid,
         referencedTable: $db.contacts,
-        getReferencedColumn: (t) => t.id,
+        getReferencedColumn: (t) => t.uuid,
         builder: (joinBuilder,
                 {$addJoinBuilderToRootComposer,
                 $removeJoinBuilderFromRootComposer}) =>
@@ -8026,12 +9286,12 @@ class $$ReceivablesTableAnnotationComposer
     return composer;
   }
 
-  $$TransactionsTableAnnotationComposer get linkedExpenseId {
+  $$TransactionsTableAnnotationComposer get linkedExpenseUuid {
     final $$TransactionsTableAnnotationComposer composer = $composerBuilder(
         composer: this,
-        getCurrentColumn: (t) => t.linkedExpenseId,
+        getCurrentColumn: (t) => t.linkedExpenseUuid,
         referencedTable: $db.transactions,
-        getReferencedColumn: (t) => t.id,
+        getReferencedColumn: (t) => t.uuid,
         builder: (joinBuilder,
                 {$addJoinBuilderToRootComposer,
                 $removeJoinBuilderFromRootComposer}) =>
@@ -8046,12 +9306,12 @@ class $$ReceivablesTableAnnotationComposer
     return composer;
   }
 
-  $$TransactionsTableAnnotationComposer get linkedIncomeId {
+  $$TransactionsTableAnnotationComposer get linkedIncomeUuid {
     final $$TransactionsTableAnnotationComposer composer = $composerBuilder(
         composer: this,
-        getCurrentColumn: (t) => t.linkedIncomeId,
+        getCurrentColumn: (t) => t.linkedIncomeUuid,
         referencedTable: $db.transactions,
-        getReferencedColumn: (t) => t.id,
+        getReferencedColumn: (t) => t.uuid,
         builder: (joinBuilder,
                 {$addJoinBuilderToRootComposer,
                 $removeJoinBuilderFromRootComposer}) =>
@@ -8079,7 +9339,7 @@ class $$ReceivablesTableTableManager extends RootTableManager<
     (Receivable, $$ReceivablesTableReferences),
     Receivable,
     PrefetchHooks Function(
-        {bool contactId, bool linkedExpenseId, bool linkedIncomeId})> {
+        {bool contactUuid, bool linkedExpenseUuid, bool linkedIncomeUuid})> {
   $$ReceivablesTableTableManager(_$AppDatabase db, $ReceivablesTable table)
       : super(TableManagerState(
           db: db,
@@ -8091,68 +9351,80 @@ class $$ReceivablesTableTableManager extends RootTableManager<
           createComputedFieldComposer: () =>
               $$ReceivablesTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback: ({
-            Value<int> id = const Value.absent(),
-            Value<int> contactId = const Value.absent(),
+            Value<String> uuid = const Value.absent(),
+            Value<String> contactUuid = const Value.absent(),
             Value<double> amount = const Value.absent(),
             Value<String?> description = const Value.absent(),
             Value<DateTime> date = const Value.absent(),
             Value<DateTime?> dueDate = const Value.absent(),
             Value<String> status = const Value.absent(),
             Value<DateTime?> receivedDate = const Value.absent(),
-            Value<int?> linkedExpenseId = const Value.absent(),
-            Value<int?> linkedIncomeId = const Value.absent(),
+            Value<String?> linkedExpenseUuid = const Value.absent(),
+            Value<String?> linkedIncomeUuid = const Value.absent(),
             Value<bool> autoCreateIncome = const Value.absent(),
             Value<String?> externalLinkId = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
+            Value<bool> isDeleted = const Value.absent(),
+            Value<bool> isNotSynced = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
           }) =>
               ReceivablesCompanion(
-            id: id,
-            contactId: contactId,
+            uuid: uuid,
+            contactUuid: contactUuid,
             amount: amount,
             description: description,
             date: date,
             dueDate: dueDate,
             status: status,
             receivedDate: receivedDate,
-            linkedExpenseId: linkedExpenseId,
-            linkedIncomeId: linkedIncomeId,
+            linkedExpenseUuid: linkedExpenseUuid,
+            linkedIncomeUuid: linkedIncomeUuid,
             autoCreateIncome: autoCreateIncome,
             externalLinkId: externalLinkId,
             createdAt: createdAt,
             updatedAt: updatedAt,
+            isDeleted: isDeleted,
+            isNotSynced: isNotSynced,
+            rowid: rowid,
           ),
           createCompanionCallback: ({
-            Value<int> id = const Value.absent(),
-            required int contactId,
+            required String uuid,
+            required String contactUuid,
             required double amount,
             Value<String?> description = const Value.absent(),
             required DateTime date,
             Value<DateTime?> dueDate = const Value.absent(),
             Value<String> status = const Value.absent(),
             Value<DateTime?> receivedDate = const Value.absent(),
-            Value<int?> linkedExpenseId = const Value.absent(),
-            Value<int?> linkedIncomeId = const Value.absent(),
+            Value<String?> linkedExpenseUuid = const Value.absent(),
+            Value<String?> linkedIncomeUuid = const Value.absent(),
             Value<bool> autoCreateIncome = const Value.absent(),
             Value<String?> externalLinkId = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
+            Value<bool> isDeleted = const Value.absent(),
+            Value<bool> isNotSynced = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
           }) =>
               ReceivablesCompanion.insert(
-            id: id,
-            contactId: contactId,
+            uuid: uuid,
+            contactUuid: contactUuid,
             amount: amount,
             description: description,
             date: date,
             dueDate: dueDate,
             status: status,
             receivedDate: receivedDate,
-            linkedExpenseId: linkedExpenseId,
-            linkedIncomeId: linkedIncomeId,
+            linkedExpenseUuid: linkedExpenseUuid,
+            linkedIncomeUuid: linkedIncomeUuid,
             autoCreateIncome: autoCreateIncome,
             externalLinkId: externalLinkId,
             createdAt: createdAt,
             updatedAt: updatedAt,
+            isDeleted: isDeleted,
+            isNotSynced: isNotSynced,
+            rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (
@@ -8161,9 +9433,9 @@ class $$ReceivablesTableTableManager extends RootTableManager<
                   ))
               .toList(),
           prefetchHooksCallback: (
-              {contactId = false,
-              linkedExpenseId = false,
-              linkedIncomeId = false}) {
+              {contactUuid = false,
+              linkedExpenseUuid = false,
+              linkedIncomeUuid = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [],
@@ -8180,36 +9452,36 @@ class $$ReceivablesTableTableManager extends RootTableManager<
                       dynamic,
                       dynamic,
                       dynamic>>(state) {
-                if (contactId) {
+                if (contactUuid) {
                   state = state.withJoin(
                     currentTable: table,
-                    currentColumn: table.contactId,
+                    currentColumn: table.contactUuid,
                     referencedTable:
-                        $$ReceivablesTableReferences._contactIdTable(db),
+                        $$ReceivablesTableReferences._contactUuidTable(db),
                     referencedColumn:
-                        $$ReceivablesTableReferences._contactIdTable(db).id,
+                        $$ReceivablesTableReferences._contactUuidTable(db).uuid,
                   ) as T;
                 }
-                if (linkedExpenseId) {
+                if (linkedExpenseUuid) {
                   state = state.withJoin(
                     currentTable: table,
-                    currentColumn: table.linkedExpenseId,
-                    referencedTable:
-                        $$ReceivablesTableReferences._linkedExpenseIdTable(db),
+                    currentColumn: table.linkedExpenseUuid,
+                    referencedTable: $$ReceivablesTableReferences
+                        ._linkedExpenseUuidTable(db),
                     referencedColumn: $$ReceivablesTableReferences
-                        ._linkedExpenseIdTable(db)
-                        .id,
+                        ._linkedExpenseUuidTable(db)
+                        .uuid,
                   ) as T;
                 }
-                if (linkedIncomeId) {
+                if (linkedIncomeUuid) {
                   state = state.withJoin(
                     currentTable: table,
-                    currentColumn: table.linkedIncomeId,
+                    currentColumn: table.linkedIncomeUuid,
                     referencedTable:
-                        $$ReceivablesTableReferences._linkedIncomeIdTable(db),
+                        $$ReceivablesTableReferences._linkedIncomeUuidTable(db),
                     referencedColumn: $$ReceivablesTableReferences
-                        ._linkedIncomeIdTable(db)
-                        .id,
+                        ._linkedIncomeUuidTable(db)
+                        .uuid,
                   ) as T;
                 }
 
@@ -8235,83 +9507,90 @@ typedef $$ReceivablesTableProcessedTableManager = ProcessedTableManager<
     (Receivable, $$ReceivablesTableReferences),
     Receivable,
     PrefetchHooks Function(
-        {bool contactId, bool linkedExpenseId, bool linkedIncomeId})>;
+        {bool contactUuid, bool linkedExpenseUuid, bool linkedIncomeUuid})>;
 typedef $$PayablesTableCreateCompanionBuilder = PayablesCompanion Function({
-  Value<int> id,
-  required int contactId,
+  required String uuid,
+  required String contactUuid,
   required double amount,
   Value<String?> description,
   required DateTime date,
   Value<DateTime?> dueDate,
   Value<String> status,
   Value<DateTime?> paidDate,
-  Value<int?> linkedExpenseId,
-  Value<int?> linkedIncomeId,
+  Value<String?> linkedExpenseUuid,
+  Value<String?> linkedIncomeUuid,
   Value<bool> autoCreateExpense,
   Value<String?> externalLinkId,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
+  Value<bool> isDeleted,
+  Value<bool> isNotSynced,
+  Value<int> rowid,
 });
 typedef $$PayablesTableUpdateCompanionBuilder = PayablesCompanion Function({
-  Value<int> id,
-  Value<int> contactId,
+  Value<String> uuid,
+  Value<String> contactUuid,
   Value<double> amount,
   Value<String?> description,
   Value<DateTime> date,
   Value<DateTime?> dueDate,
   Value<String> status,
   Value<DateTime?> paidDate,
-  Value<int?> linkedExpenseId,
-  Value<int?> linkedIncomeId,
+  Value<String?> linkedExpenseUuid,
+  Value<String?> linkedIncomeUuid,
   Value<bool> autoCreateExpense,
   Value<String?> externalLinkId,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
+  Value<bool> isDeleted,
+  Value<bool> isNotSynced,
+  Value<int> rowid,
 });
 
 final class $$PayablesTableReferences
     extends BaseReferences<_$AppDatabase, $PayablesTable, Payable> {
   $$PayablesTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
-  static $ContactsTable _contactIdTable(_$AppDatabase db) => db.contacts
-      .createAlias($_aliasNameGenerator(db.payables.contactId, db.contacts.id));
+  static $ContactsTable _contactUuidTable(_$AppDatabase db) =>
+      db.contacts.createAlias(
+          $_aliasNameGenerator(db.payables.contactUuid, db.contacts.uuid));
 
-  $$ContactsTableProcessedTableManager get contactId {
-    final $_column = $_itemColumn<int>('contact_id')!;
+  $$ContactsTableProcessedTableManager get contactUuid {
+    final $_column = $_itemColumn<String>('contact_uuid')!;
 
     final manager = $$ContactsTableTableManager($_db, $_db.contacts)
-        .filter((f) => f.id.sqlEquals($_column));
-    final item = $_typedResult.readTableOrNull(_contactIdTable($_db));
+        .filter((f) => f.uuid.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_contactUuidTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
         manager.$state.copyWith(prefetchedData: [item]));
   }
 
-  static $TransactionsTable _linkedExpenseIdTable(_$AppDatabase db) =>
+  static $TransactionsTable _linkedExpenseUuidTable(_$AppDatabase db) =>
       db.transactions.createAlias($_aliasNameGenerator(
-          db.payables.linkedExpenseId, db.transactions.id));
+          db.payables.linkedExpenseUuid, db.transactions.uuid));
 
-  $$TransactionsTableProcessedTableManager? get linkedExpenseId {
-    final $_column = $_itemColumn<int>('linked_expense_id');
+  $$TransactionsTableProcessedTableManager? get linkedExpenseUuid {
+    final $_column = $_itemColumn<String>('linked_expense_uuid');
     if ($_column == null) return null;
     final manager = $$TransactionsTableTableManager($_db, $_db.transactions)
-        .filter((f) => f.id.sqlEquals($_column));
-    final item = $_typedResult.readTableOrNull(_linkedExpenseIdTable($_db));
+        .filter((f) => f.uuid.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_linkedExpenseUuidTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
         manager.$state.copyWith(prefetchedData: [item]));
   }
 
-  static $TransactionsTable _linkedIncomeIdTable(_$AppDatabase db) =>
-      db.transactions.createAlias(
-          $_aliasNameGenerator(db.payables.linkedIncomeId, db.transactions.id));
+  static $TransactionsTable _linkedIncomeUuidTable(_$AppDatabase db) =>
+      db.transactions.createAlias($_aliasNameGenerator(
+          db.payables.linkedIncomeUuid, db.transactions.uuid));
 
-  $$TransactionsTableProcessedTableManager? get linkedIncomeId {
-    final $_column = $_itemColumn<int>('linked_income_id');
+  $$TransactionsTableProcessedTableManager? get linkedIncomeUuid {
+    final $_column = $_itemColumn<String>('linked_income_uuid');
     if ($_column == null) return null;
     final manager = $$TransactionsTableTableManager($_db, $_db.transactions)
-        .filter((f) => f.id.sqlEquals($_column));
-    final item = $_typedResult.readTableOrNull(_linkedIncomeIdTable($_db));
+        .filter((f) => f.uuid.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_linkedIncomeUuidTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
         manager.$state.copyWith(prefetchedData: [item]));
@@ -8327,8 +9606,8 @@ class $$PayablesTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get id => $composableBuilder(
-      column: $table.id, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get uuid => $composableBuilder(
+      column: $table.uuid, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<double> get amount => $composableBuilder(
       column: $table.amount, builder: (column) => ColumnFilters(column));
@@ -8362,12 +9641,18 @@ class $$PayablesTableFilterComposer
   ColumnFilters<DateTime> get updatedAt => $composableBuilder(
       column: $table.updatedAt, builder: (column) => ColumnFilters(column));
 
-  $$ContactsTableFilterComposer get contactId {
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+      column: $table.isDeleted, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => ColumnFilters(column));
+
+  $$ContactsTableFilterComposer get contactUuid {
     final $$ContactsTableFilterComposer composer = $composerBuilder(
         composer: this,
-        getCurrentColumn: (t) => t.contactId,
+        getCurrentColumn: (t) => t.contactUuid,
         referencedTable: $db.contacts,
-        getReferencedColumn: (t) => t.id,
+        getReferencedColumn: (t) => t.uuid,
         builder: (joinBuilder,
                 {$addJoinBuilderToRootComposer,
                 $removeJoinBuilderFromRootComposer}) =>
@@ -8382,12 +9667,12 @@ class $$PayablesTableFilterComposer
     return composer;
   }
 
-  $$TransactionsTableFilterComposer get linkedExpenseId {
+  $$TransactionsTableFilterComposer get linkedExpenseUuid {
     final $$TransactionsTableFilterComposer composer = $composerBuilder(
         composer: this,
-        getCurrentColumn: (t) => t.linkedExpenseId,
+        getCurrentColumn: (t) => t.linkedExpenseUuid,
         referencedTable: $db.transactions,
-        getReferencedColumn: (t) => t.id,
+        getReferencedColumn: (t) => t.uuid,
         builder: (joinBuilder,
                 {$addJoinBuilderToRootComposer,
                 $removeJoinBuilderFromRootComposer}) =>
@@ -8402,12 +9687,12 @@ class $$PayablesTableFilterComposer
     return composer;
   }
 
-  $$TransactionsTableFilterComposer get linkedIncomeId {
+  $$TransactionsTableFilterComposer get linkedIncomeUuid {
     final $$TransactionsTableFilterComposer composer = $composerBuilder(
         composer: this,
-        getCurrentColumn: (t) => t.linkedIncomeId,
+        getCurrentColumn: (t) => t.linkedIncomeUuid,
         referencedTable: $db.transactions,
-        getReferencedColumn: (t) => t.id,
+        getReferencedColumn: (t) => t.uuid,
         builder: (joinBuilder,
                 {$addJoinBuilderToRootComposer,
                 $removeJoinBuilderFromRootComposer}) =>
@@ -8432,8 +9717,8 @@ class $$PayablesTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get id => $composableBuilder(
-      column: $table.id, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get uuid => $composableBuilder(
+      column: $table.uuid, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<double> get amount => $composableBuilder(
       column: $table.amount, builder: (column) => ColumnOrderings(column));
@@ -8467,12 +9752,18 @@ class $$PayablesTableOrderingComposer
   ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
       column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
 
-  $$ContactsTableOrderingComposer get contactId {
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+      column: $table.isDeleted, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => ColumnOrderings(column));
+
+  $$ContactsTableOrderingComposer get contactUuid {
     final $$ContactsTableOrderingComposer composer = $composerBuilder(
         composer: this,
-        getCurrentColumn: (t) => t.contactId,
+        getCurrentColumn: (t) => t.contactUuid,
         referencedTable: $db.contacts,
-        getReferencedColumn: (t) => t.id,
+        getReferencedColumn: (t) => t.uuid,
         builder: (joinBuilder,
                 {$addJoinBuilderToRootComposer,
                 $removeJoinBuilderFromRootComposer}) =>
@@ -8487,12 +9778,12 @@ class $$PayablesTableOrderingComposer
     return composer;
   }
 
-  $$TransactionsTableOrderingComposer get linkedExpenseId {
+  $$TransactionsTableOrderingComposer get linkedExpenseUuid {
     final $$TransactionsTableOrderingComposer composer = $composerBuilder(
         composer: this,
-        getCurrentColumn: (t) => t.linkedExpenseId,
+        getCurrentColumn: (t) => t.linkedExpenseUuid,
         referencedTable: $db.transactions,
-        getReferencedColumn: (t) => t.id,
+        getReferencedColumn: (t) => t.uuid,
         builder: (joinBuilder,
                 {$addJoinBuilderToRootComposer,
                 $removeJoinBuilderFromRootComposer}) =>
@@ -8507,12 +9798,12 @@ class $$PayablesTableOrderingComposer
     return composer;
   }
 
-  $$TransactionsTableOrderingComposer get linkedIncomeId {
+  $$TransactionsTableOrderingComposer get linkedIncomeUuid {
     final $$TransactionsTableOrderingComposer composer = $composerBuilder(
         composer: this,
-        getCurrentColumn: (t) => t.linkedIncomeId,
+        getCurrentColumn: (t) => t.linkedIncomeUuid,
         referencedTable: $db.transactions,
-        getReferencedColumn: (t) => t.id,
+        getReferencedColumn: (t) => t.uuid,
         builder: (joinBuilder,
                 {$addJoinBuilderToRootComposer,
                 $removeJoinBuilderFromRootComposer}) =>
@@ -8537,8 +9828,8 @@ class $$PayablesTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
+  GeneratedColumn<String> get uuid =>
+      $composableBuilder(column: $table.uuid, builder: (column) => column);
 
   GeneratedColumn<double> get amount =>
       $composableBuilder(column: $table.amount, builder: (column) => column);
@@ -8570,12 +9861,18 @@ class $$PayablesTableAnnotationComposer
   GeneratedColumn<DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 
-  $$ContactsTableAnnotationComposer get contactId {
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+
+  GeneratedColumn<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => column);
+
+  $$ContactsTableAnnotationComposer get contactUuid {
     final $$ContactsTableAnnotationComposer composer = $composerBuilder(
         composer: this,
-        getCurrentColumn: (t) => t.contactId,
+        getCurrentColumn: (t) => t.contactUuid,
         referencedTable: $db.contacts,
-        getReferencedColumn: (t) => t.id,
+        getReferencedColumn: (t) => t.uuid,
         builder: (joinBuilder,
                 {$addJoinBuilderToRootComposer,
                 $removeJoinBuilderFromRootComposer}) =>
@@ -8590,12 +9887,12 @@ class $$PayablesTableAnnotationComposer
     return composer;
   }
 
-  $$TransactionsTableAnnotationComposer get linkedExpenseId {
+  $$TransactionsTableAnnotationComposer get linkedExpenseUuid {
     final $$TransactionsTableAnnotationComposer composer = $composerBuilder(
         composer: this,
-        getCurrentColumn: (t) => t.linkedExpenseId,
+        getCurrentColumn: (t) => t.linkedExpenseUuid,
         referencedTable: $db.transactions,
-        getReferencedColumn: (t) => t.id,
+        getReferencedColumn: (t) => t.uuid,
         builder: (joinBuilder,
                 {$addJoinBuilderToRootComposer,
                 $removeJoinBuilderFromRootComposer}) =>
@@ -8610,12 +9907,12 @@ class $$PayablesTableAnnotationComposer
     return composer;
   }
 
-  $$TransactionsTableAnnotationComposer get linkedIncomeId {
+  $$TransactionsTableAnnotationComposer get linkedIncomeUuid {
     final $$TransactionsTableAnnotationComposer composer = $composerBuilder(
         composer: this,
-        getCurrentColumn: (t) => t.linkedIncomeId,
+        getCurrentColumn: (t) => t.linkedIncomeUuid,
         referencedTable: $db.transactions,
-        getReferencedColumn: (t) => t.id,
+        getReferencedColumn: (t) => t.uuid,
         builder: (joinBuilder,
                 {$addJoinBuilderToRootComposer,
                 $removeJoinBuilderFromRootComposer}) =>
@@ -8643,7 +9940,7 @@ class $$PayablesTableTableManager extends RootTableManager<
     (Payable, $$PayablesTableReferences),
     Payable,
     PrefetchHooks Function(
-        {bool contactId, bool linkedExpenseId, bool linkedIncomeId})> {
+        {bool contactUuid, bool linkedExpenseUuid, bool linkedIncomeUuid})> {
   $$PayablesTableTableManager(_$AppDatabase db, $PayablesTable table)
       : super(TableManagerState(
           db: db,
@@ -8655,77 +9952,89 @@ class $$PayablesTableTableManager extends RootTableManager<
           createComputedFieldComposer: () =>
               $$PayablesTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback: ({
-            Value<int> id = const Value.absent(),
-            Value<int> contactId = const Value.absent(),
+            Value<String> uuid = const Value.absent(),
+            Value<String> contactUuid = const Value.absent(),
             Value<double> amount = const Value.absent(),
             Value<String?> description = const Value.absent(),
             Value<DateTime> date = const Value.absent(),
             Value<DateTime?> dueDate = const Value.absent(),
             Value<String> status = const Value.absent(),
             Value<DateTime?> paidDate = const Value.absent(),
-            Value<int?> linkedExpenseId = const Value.absent(),
-            Value<int?> linkedIncomeId = const Value.absent(),
+            Value<String?> linkedExpenseUuid = const Value.absent(),
+            Value<String?> linkedIncomeUuid = const Value.absent(),
             Value<bool> autoCreateExpense = const Value.absent(),
             Value<String?> externalLinkId = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
+            Value<bool> isDeleted = const Value.absent(),
+            Value<bool> isNotSynced = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
           }) =>
               PayablesCompanion(
-            id: id,
-            contactId: contactId,
+            uuid: uuid,
+            contactUuid: contactUuid,
             amount: amount,
             description: description,
             date: date,
             dueDate: dueDate,
             status: status,
             paidDate: paidDate,
-            linkedExpenseId: linkedExpenseId,
-            linkedIncomeId: linkedIncomeId,
+            linkedExpenseUuid: linkedExpenseUuid,
+            linkedIncomeUuid: linkedIncomeUuid,
             autoCreateExpense: autoCreateExpense,
             externalLinkId: externalLinkId,
             createdAt: createdAt,
             updatedAt: updatedAt,
+            isDeleted: isDeleted,
+            isNotSynced: isNotSynced,
+            rowid: rowid,
           ),
           createCompanionCallback: ({
-            Value<int> id = const Value.absent(),
-            required int contactId,
+            required String uuid,
+            required String contactUuid,
             required double amount,
             Value<String?> description = const Value.absent(),
             required DateTime date,
             Value<DateTime?> dueDate = const Value.absent(),
             Value<String> status = const Value.absent(),
             Value<DateTime?> paidDate = const Value.absent(),
-            Value<int?> linkedExpenseId = const Value.absent(),
-            Value<int?> linkedIncomeId = const Value.absent(),
+            Value<String?> linkedExpenseUuid = const Value.absent(),
+            Value<String?> linkedIncomeUuid = const Value.absent(),
             Value<bool> autoCreateExpense = const Value.absent(),
             Value<String?> externalLinkId = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
+            Value<bool> isDeleted = const Value.absent(),
+            Value<bool> isNotSynced = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
           }) =>
               PayablesCompanion.insert(
-            id: id,
-            contactId: contactId,
+            uuid: uuid,
+            contactUuid: contactUuid,
             amount: amount,
             description: description,
             date: date,
             dueDate: dueDate,
             status: status,
             paidDate: paidDate,
-            linkedExpenseId: linkedExpenseId,
-            linkedIncomeId: linkedIncomeId,
+            linkedExpenseUuid: linkedExpenseUuid,
+            linkedIncomeUuid: linkedIncomeUuid,
             autoCreateExpense: autoCreateExpense,
             externalLinkId: externalLinkId,
             createdAt: createdAt,
             updatedAt: updatedAt,
+            isDeleted: isDeleted,
+            isNotSynced: isNotSynced,
+            rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0
               .map((e) =>
                   (e.readTable(table), $$PayablesTableReferences(db, table, e)))
               .toList(),
           prefetchHooksCallback: (
-              {contactId = false,
-              linkedExpenseId = false,
-              linkedIncomeId = false}) {
+              {contactUuid = false,
+              linkedExpenseUuid = false,
+              linkedIncomeUuid = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [],
@@ -8742,34 +10051,36 @@ class $$PayablesTableTableManager extends RootTableManager<
                       dynamic,
                       dynamic,
                       dynamic>>(state) {
-                if (contactId) {
+                if (contactUuid) {
                   state = state.withJoin(
                     currentTable: table,
-                    currentColumn: table.contactId,
+                    currentColumn: table.contactUuid,
                     referencedTable:
-                        $$PayablesTableReferences._contactIdTable(db),
+                        $$PayablesTableReferences._contactUuidTable(db),
                     referencedColumn:
-                        $$PayablesTableReferences._contactIdTable(db).id,
+                        $$PayablesTableReferences._contactUuidTable(db).uuid,
                   ) as T;
                 }
-                if (linkedExpenseId) {
+                if (linkedExpenseUuid) {
                   state = state.withJoin(
                     currentTable: table,
-                    currentColumn: table.linkedExpenseId,
+                    currentColumn: table.linkedExpenseUuid,
                     referencedTable:
-                        $$PayablesTableReferences._linkedExpenseIdTable(db),
-                    referencedColumn:
-                        $$PayablesTableReferences._linkedExpenseIdTable(db).id,
+                        $$PayablesTableReferences._linkedExpenseUuidTable(db),
+                    referencedColumn: $$PayablesTableReferences
+                        ._linkedExpenseUuidTable(db)
+                        .uuid,
                   ) as T;
                 }
-                if (linkedIncomeId) {
+                if (linkedIncomeUuid) {
                   state = state.withJoin(
                     currentTable: table,
-                    currentColumn: table.linkedIncomeId,
+                    currentColumn: table.linkedIncomeUuid,
                     referencedTable:
-                        $$PayablesTableReferences._linkedIncomeIdTable(db),
-                    referencedColumn:
-                        $$PayablesTableReferences._linkedIncomeIdTable(db).id,
+                        $$PayablesTableReferences._linkedIncomeUuidTable(db),
+                    referencedColumn: $$PayablesTableReferences
+                        ._linkedIncomeUuidTable(db)
+                        .uuid,
                   ) as T;
                 }
 
@@ -8795,22 +10106,30 @@ typedef $$PayablesTableProcessedTableManager = ProcessedTableManager<
     (Payable, $$PayablesTableReferences),
     Payable,
     PrefetchHooks Function(
-        {bool contactId, bool linkedExpenseId, bool linkedIncomeId})>;
+        {bool contactUuid, bool linkedExpenseUuid, bool linkedIncomeUuid})>;
 typedef $$RemindersTableCreateCompanionBuilder = RemindersCompanion Function({
-  Value<int> id,
+  required String uuid,
   required String type,
-  required int referenceId,
+  required String referenceUuid,
   required DateTime reminderDate,
   Value<bool> isTriggered,
   Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<bool> isDeleted,
+  Value<bool> isNotSynced,
+  Value<int> rowid,
 });
 typedef $$RemindersTableUpdateCompanionBuilder = RemindersCompanion Function({
-  Value<int> id,
+  Value<String> uuid,
   Value<String> type,
-  Value<int> referenceId,
+  Value<String> referenceUuid,
   Value<DateTime> reminderDate,
   Value<bool> isTriggered,
   Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<bool> isDeleted,
+  Value<bool> isNotSynced,
+  Value<int> rowid,
 });
 
 class $$RemindersTableFilterComposer
@@ -8822,14 +10141,14 @@ class $$RemindersTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get id => $composableBuilder(
-      column: $table.id, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get uuid => $composableBuilder(
+      column: $table.uuid, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get type => $composableBuilder(
       column: $table.type, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get referenceId => $composableBuilder(
-      column: $table.referenceId, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get referenceUuid => $composableBuilder(
+      column: $table.referenceUuid, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get reminderDate => $composableBuilder(
       column: $table.reminderDate, builder: (column) => ColumnFilters(column));
@@ -8839,6 +10158,15 @@ class $$RemindersTableFilterComposer
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+      column: $table.isDeleted, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => ColumnFilters(column));
 }
 
 class $$RemindersTableOrderingComposer
@@ -8850,14 +10178,15 @@ class $$RemindersTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get id => $composableBuilder(
-      column: $table.id, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get uuid => $composableBuilder(
+      column: $table.uuid, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get type => $composableBuilder(
       column: $table.type, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get referenceId => $composableBuilder(
-      column: $table.referenceId, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get referenceUuid => $composableBuilder(
+      column: $table.referenceUuid,
+      builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<DateTime> get reminderDate => $composableBuilder(
       column: $table.reminderDate,
@@ -8868,6 +10197,15 @@ class $$RemindersTableOrderingComposer
 
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+      column: $table.isDeleted, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => ColumnOrderings(column));
 }
 
 class $$RemindersTableAnnotationComposer
@@ -8879,14 +10217,14 @@ class $$RemindersTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
+  GeneratedColumn<String> get uuid =>
+      $composableBuilder(column: $table.uuid, builder: (column) => column);
 
   GeneratedColumn<String> get type =>
       $composableBuilder(column: $table.type, builder: (column) => column);
 
-  GeneratedColumn<int> get referenceId => $composableBuilder(
-      column: $table.referenceId, builder: (column) => column);
+  GeneratedColumn<String> get referenceUuid => $composableBuilder(
+      column: $table.referenceUuid, builder: (column) => column);
 
   GeneratedColumn<DateTime> get reminderDate => $composableBuilder(
       column: $table.reminderDate, builder: (column) => column);
@@ -8896,6 +10234,15 @@ class $$RemindersTableAnnotationComposer
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+
+  GeneratedColumn<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => column);
 }
 
 class $$RemindersTableTableManager extends RootTableManager<
@@ -8921,36 +10268,52 @@ class $$RemindersTableTableManager extends RootTableManager<
           createComputedFieldComposer: () =>
               $$RemindersTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback: ({
-            Value<int> id = const Value.absent(),
+            Value<String> uuid = const Value.absent(),
             Value<String> type = const Value.absent(),
-            Value<int> referenceId = const Value.absent(),
+            Value<String> referenceUuid = const Value.absent(),
             Value<DateTime> reminderDate = const Value.absent(),
             Value<bool> isTriggered = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<bool> isDeleted = const Value.absent(),
+            Value<bool> isNotSynced = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
           }) =>
               RemindersCompanion(
-            id: id,
+            uuid: uuid,
             type: type,
-            referenceId: referenceId,
+            referenceUuid: referenceUuid,
             reminderDate: reminderDate,
             isTriggered: isTriggered,
             createdAt: createdAt,
+            updatedAt: updatedAt,
+            isDeleted: isDeleted,
+            isNotSynced: isNotSynced,
+            rowid: rowid,
           ),
           createCompanionCallback: ({
-            Value<int> id = const Value.absent(),
+            required String uuid,
             required String type,
-            required int referenceId,
+            required String referenceUuid,
             required DateTime reminderDate,
             Value<bool> isTriggered = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<bool> isDeleted = const Value.absent(),
+            Value<bool> isNotSynced = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
           }) =>
               RemindersCompanion.insert(
-            id: id,
+            uuid: uuid,
             type: type,
-            referenceId: referenceId,
+            referenceUuid: referenceUuid,
             reminderDate: reminderDate,
             isTriggered: isTriggered,
             createdAt: createdAt,
+            updatedAt: updatedAt,
+            isDeleted: isDeleted,
+            isNotSynced: isNotSynced,
+            rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
@@ -8974,7 +10337,7 @@ typedef $$RemindersTableProcessedTableManager = ProcessedTableManager<
 typedef $$WhatsAppQueueTableCreateCompanionBuilder = WhatsAppQueueCompanion
     Function({
   Value<int> id,
-  required int contactId,
+  required String contactUuid,
   required String message,
   Value<String?> deepLink,
   Value<String> status,
@@ -8983,7 +10346,7 @@ typedef $$WhatsAppQueueTableCreateCompanionBuilder = WhatsAppQueueCompanion
 typedef $$WhatsAppQueueTableUpdateCompanionBuilder = WhatsAppQueueCompanion
     Function({
   Value<int> id,
-  Value<int> contactId,
+  Value<String> contactUuid,
   Value<String> message,
   Value<String?> deepLink,
   Value<String> status,
@@ -8995,16 +10358,16 @@ final class $$WhatsAppQueueTableReferences extends BaseReferences<_$AppDatabase,
   $$WhatsAppQueueTableReferences(
       super.$_db, super.$_table, super.$_typedResult);
 
-  static $ContactsTable _contactIdTable(_$AppDatabase db) =>
+  static $ContactsTable _contactUuidTable(_$AppDatabase db) =>
       db.contacts.createAlias(
-          $_aliasNameGenerator(db.whatsAppQueue.contactId, db.contacts.id));
+          $_aliasNameGenerator(db.whatsAppQueue.contactUuid, db.contacts.uuid));
 
-  $$ContactsTableProcessedTableManager get contactId {
-    final $_column = $_itemColumn<int>('contact_id')!;
+  $$ContactsTableProcessedTableManager get contactUuid {
+    final $_column = $_itemColumn<String>('contact_uuid')!;
 
     final manager = $$ContactsTableTableManager($_db, $_db.contacts)
-        .filter((f) => f.id.sqlEquals($_column));
-    final item = $_typedResult.readTableOrNull(_contactIdTable($_db));
+        .filter((f) => f.uuid.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_contactUuidTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
         manager.$state.copyWith(prefetchedData: [item]));
@@ -9035,12 +10398,12 @@ class $$WhatsAppQueueTableFilterComposer
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnFilters(column));
 
-  $$ContactsTableFilterComposer get contactId {
+  $$ContactsTableFilterComposer get contactUuid {
     final $$ContactsTableFilterComposer composer = $composerBuilder(
         composer: this,
-        getCurrentColumn: (t) => t.contactId,
+        getCurrentColumn: (t) => t.contactUuid,
         referencedTable: $db.contacts,
-        getReferencedColumn: (t) => t.id,
+        getReferencedColumn: (t) => t.uuid,
         builder: (joinBuilder,
                 {$addJoinBuilderToRootComposer,
                 $removeJoinBuilderFromRootComposer}) =>
@@ -9080,12 +10443,12 @@ class $$WhatsAppQueueTableOrderingComposer
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnOrderings(column));
 
-  $$ContactsTableOrderingComposer get contactId {
+  $$ContactsTableOrderingComposer get contactUuid {
     final $$ContactsTableOrderingComposer composer = $composerBuilder(
         composer: this,
-        getCurrentColumn: (t) => t.contactId,
+        getCurrentColumn: (t) => t.contactUuid,
         referencedTable: $db.contacts,
-        getReferencedColumn: (t) => t.id,
+        getReferencedColumn: (t) => t.uuid,
         builder: (joinBuilder,
                 {$addJoinBuilderToRootComposer,
                 $removeJoinBuilderFromRootComposer}) =>
@@ -9125,12 +10488,12 @@ class $$WhatsAppQueueTableAnnotationComposer
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
-  $$ContactsTableAnnotationComposer get contactId {
+  $$ContactsTableAnnotationComposer get contactUuid {
     final $$ContactsTableAnnotationComposer composer = $composerBuilder(
         composer: this,
-        getCurrentColumn: (t) => t.contactId,
+        getCurrentColumn: (t) => t.contactUuid,
         referencedTable: $db.contacts,
-        getReferencedColumn: (t) => t.id,
+        getReferencedColumn: (t) => t.uuid,
         builder: (joinBuilder,
                 {$addJoinBuilderToRootComposer,
                 $removeJoinBuilderFromRootComposer}) =>
@@ -9157,7 +10520,7 @@ class $$WhatsAppQueueTableTableManager extends RootTableManager<
     $$WhatsAppQueueTableUpdateCompanionBuilder,
     (WhatsAppQueueData, $$WhatsAppQueueTableReferences),
     WhatsAppQueueData,
-    PrefetchHooks Function({bool contactId})> {
+    PrefetchHooks Function({bool contactUuid})> {
   $$WhatsAppQueueTableTableManager(_$AppDatabase db, $WhatsAppQueueTable table)
       : super(TableManagerState(
           db: db,
@@ -9170,7 +10533,7 @@ class $$WhatsAppQueueTableTableManager extends RootTableManager<
               $$WhatsAppQueueTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback: ({
             Value<int> id = const Value.absent(),
-            Value<int> contactId = const Value.absent(),
+            Value<String> contactUuid = const Value.absent(),
             Value<String> message = const Value.absent(),
             Value<String?> deepLink = const Value.absent(),
             Value<String> status = const Value.absent(),
@@ -9178,7 +10541,7 @@ class $$WhatsAppQueueTableTableManager extends RootTableManager<
           }) =>
               WhatsAppQueueCompanion(
             id: id,
-            contactId: contactId,
+            contactUuid: contactUuid,
             message: message,
             deepLink: deepLink,
             status: status,
@@ -9186,7 +10549,7 @@ class $$WhatsAppQueueTableTableManager extends RootTableManager<
           ),
           createCompanionCallback: ({
             Value<int> id = const Value.absent(),
-            required int contactId,
+            required String contactUuid,
             required String message,
             Value<String?> deepLink = const Value.absent(),
             Value<String> status = const Value.absent(),
@@ -9194,7 +10557,7 @@ class $$WhatsAppQueueTableTableManager extends RootTableManager<
           }) =>
               WhatsAppQueueCompanion.insert(
             id: id,
-            contactId: contactId,
+            contactUuid: contactUuid,
             message: message,
             deepLink: deepLink,
             status: status,
@@ -9206,7 +10569,7 @@ class $$WhatsAppQueueTableTableManager extends RootTableManager<
                     $$WhatsAppQueueTableReferences(db, table, e)
                   ))
               .toList(),
-          prefetchHooksCallback: ({contactId = false}) {
+          prefetchHooksCallback: ({contactUuid = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [],
@@ -9223,14 +10586,15 @@ class $$WhatsAppQueueTableTableManager extends RootTableManager<
                       dynamic,
                       dynamic,
                       dynamic>>(state) {
-                if (contactId) {
+                if (contactUuid) {
                   state = state.withJoin(
                     currentTable: table,
-                    currentColumn: table.contactId,
+                    currentColumn: table.contactUuid,
                     referencedTable:
-                        $$WhatsAppQueueTableReferences._contactIdTable(db),
-                    referencedColumn:
-                        $$WhatsAppQueueTableReferences._contactIdTable(db).id,
+                        $$WhatsAppQueueTableReferences._contactUuidTable(db),
+                    referencedColumn: $$WhatsAppQueueTableReferences
+                        ._contactUuidTable(db)
+                        .uuid,
                   ) as T;
                 }
 
@@ -9255,18 +10619,18 @@ typedef $$WhatsAppQueueTableProcessedTableManager = ProcessedTableManager<
     $$WhatsAppQueueTableUpdateCompanionBuilder,
     (WhatsAppQueueData, $$WhatsAppQueueTableReferences),
     WhatsAppQueueData,
-    PrefetchHooks Function({bool contactId})>;
+    PrefetchHooks Function({bool contactUuid})>;
 typedef $$CategoryUsageStatsTableCreateCompanionBuilder
     = CategoryUsageStatsCompanion Function({
   Value<int> id,
-  required int categoryId,
+  required String categoryUuid,
   Value<int> usageCount,
   Value<DateTime?> lastUsed,
 });
 typedef $$CategoryUsageStatsTableUpdateCompanionBuilder
     = CategoryUsageStatsCompanion Function({
   Value<int> id,
-  Value<int> categoryId,
+  Value<String> categoryUuid,
   Value<int> usageCount,
   Value<DateTime?> lastUsed,
 });
@@ -9276,16 +10640,16 @@ final class $$CategoryUsageStatsTableReferences extends BaseReferences<
   $$CategoryUsageStatsTableReferences(
       super.$_db, super.$_table, super.$_typedResult);
 
-  static $CategoriesTable _categoryIdTable(_$AppDatabase db) =>
+  static $CategoriesTable _categoryUuidTable(_$AppDatabase db) =>
       db.categories.createAlias($_aliasNameGenerator(
-          db.categoryUsageStats.categoryId, db.categories.id));
+          db.categoryUsageStats.categoryUuid, db.categories.uuid));
 
-  $$CategoriesTableProcessedTableManager get categoryId {
-    final $_column = $_itemColumn<int>('category_id')!;
+  $$CategoriesTableProcessedTableManager get categoryUuid {
+    final $_column = $_itemColumn<String>('category_uuid')!;
 
     final manager = $$CategoriesTableTableManager($_db, $_db.categories)
-        .filter((f) => f.id.sqlEquals($_column));
-    final item = $_typedResult.readTableOrNull(_categoryIdTable($_db));
+        .filter((f) => f.uuid.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_categoryUuidTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
         manager.$state.copyWith(prefetchedData: [item]));
@@ -9310,12 +10674,12 @@ class $$CategoryUsageStatsTableFilterComposer
   ColumnFilters<DateTime> get lastUsed => $composableBuilder(
       column: $table.lastUsed, builder: (column) => ColumnFilters(column));
 
-  $$CategoriesTableFilterComposer get categoryId {
+  $$CategoriesTableFilterComposer get categoryUuid {
     final $$CategoriesTableFilterComposer composer = $composerBuilder(
         composer: this,
-        getCurrentColumn: (t) => t.categoryId,
+        getCurrentColumn: (t) => t.categoryUuid,
         referencedTable: $db.categories,
-        getReferencedColumn: (t) => t.id,
+        getReferencedColumn: (t) => t.uuid,
         builder: (joinBuilder,
                 {$addJoinBuilderToRootComposer,
                 $removeJoinBuilderFromRootComposer}) =>
@@ -9349,12 +10713,12 @@ class $$CategoryUsageStatsTableOrderingComposer
   ColumnOrderings<DateTime> get lastUsed => $composableBuilder(
       column: $table.lastUsed, builder: (column) => ColumnOrderings(column));
 
-  $$CategoriesTableOrderingComposer get categoryId {
+  $$CategoriesTableOrderingComposer get categoryUuid {
     final $$CategoriesTableOrderingComposer composer = $composerBuilder(
         composer: this,
-        getCurrentColumn: (t) => t.categoryId,
+        getCurrentColumn: (t) => t.categoryUuid,
         referencedTable: $db.categories,
-        getReferencedColumn: (t) => t.id,
+        getReferencedColumn: (t) => t.uuid,
         builder: (joinBuilder,
                 {$addJoinBuilderToRootComposer,
                 $removeJoinBuilderFromRootComposer}) =>
@@ -9388,12 +10752,12 @@ class $$CategoryUsageStatsTableAnnotationComposer
   GeneratedColumn<DateTime> get lastUsed =>
       $composableBuilder(column: $table.lastUsed, builder: (column) => column);
 
-  $$CategoriesTableAnnotationComposer get categoryId {
+  $$CategoriesTableAnnotationComposer get categoryUuid {
     final $$CategoriesTableAnnotationComposer composer = $composerBuilder(
         composer: this,
-        getCurrentColumn: (t) => t.categoryId,
+        getCurrentColumn: (t) => t.categoryUuid,
         referencedTable: $db.categories,
-        getReferencedColumn: (t) => t.id,
+        getReferencedColumn: (t) => t.uuid,
         builder: (joinBuilder,
                 {$addJoinBuilderToRootComposer,
                 $removeJoinBuilderFromRootComposer}) =>
@@ -9420,7 +10784,7 @@ class $$CategoryUsageStatsTableTableManager extends RootTableManager<
     $$CategoryUsageStatsTableUpdateCompanionBuilder,
     (CategoryUsageStat, $$CategoryUsageStatsTableReferences),
     CategoryUsageStat,
-    PrefetchHooks Function({bool categoryId})> {
+    PrefetchHooks Function({bool categoryUuid})> {
   $$CategoryUsageStatsTableTableManager(
       _$AppDatabase db, $CategoryUsageStatsTable table)
       : super(TableManagerState(
@@ -9435,25 +10799,25 @@ class $$CategoryUsageStatsTableTableManager extends RootTableManager<
                   $db: db, $table: table),
           updateCompanionCallback: ({
             Value<int> id = const Value.absent(),
-            Value<int> categoryId = const Value.absent(),
+            Value<String> categoryUuid = const Value.absent(),
             Value<int> usageCount = const Value.absent(),
             Value<DateTime?> lastUsed = const Value.absent(),
           }) =>
               CategoryUsageStatsCompanion(
             id: id,
-            categoryId: categoryId,
+            categoryUuid: categoryUuid,
             usageCount: usageCount,
             lastUsed: lastUsed,
           ),
           createCompanionCallback: ({
             Value<int> id = const Value.absent(),
-            required int categoryId,
+            required String categoryUuid,
             Value<int> usageCount = const Value.absent(),
             Value<DateTime?> lastUsed = const Value.absent(),
           }) =>
               CategoryUsageStatsCompanion.insert(
             id: id,
-            categoryId: categoryId,
+            categoryUuid: categoryUuid,
             usageCount: usageCount,
             lastUsed: lastUsed,
           ),
@@ -9463,7 +10827,7 @@ class $$CategoryUsageStatsTableTableManager extends RootTableManager<
                     $$CategoryUsageStatsTableReferences(db, table, e)
                   ))
               .toList(),
-          prefetchHooksCallback: ({categoryId = false}) {
+          prefetchHooksCallback: ({categoryUuid = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [],
@@ -9480,15 +10844,15 @@ class $$CategoryUsageStatsTableTableManager extends RootTableManager<
                       dynamic,
                       dynamic,
                       dynamic>>(state) {
-                if (categoryId) {
+                if (categoryUuid) {
                   state = state.withJoin(
                     currentTable: table,
-                    currentColumn: table.categoryId,
+                    currentColumn: table.categoryUuid,
                     referencedTable: $$CategoryUsageStatsTableReferences
-                        ._categoryIdTable(db),
+                        ._categoryUuidTable(db),
                     referencedColumn: $$CategoryUsageStatsTableReferences
-                        ._categoryIdTable(db)
-                        .id,
+                        ._categoryUuidTable(db)
+                        .uuid,
                   ) as T;
                 }
 
@@ -9513,18 +10877,18 @@ typedef $$CategoryUsageStatsTableProcessedTableManager = ProcessedTableManager<
     $$CategoryUsageStatsTableUpdateCompanionBuilder,
     (CategoryUsageStat, $$CategoryUsageStatsTableReferences),
     CategoryUsageStat,
-    PrefetchHooks Function({bool categoryId})>;
+    PrefetchHooks Function({bool categoryUuid})>;
 typedef $$ContactUsageStatsTableCreateCompanionBuilder
     = ContactUsageStatsCompanion Function({
   Value<int> id,
-  required int contactId,
+  required String contactUuid,
   Value<int> usageCount,
   Value<DateTime?> lastUsed,
 });
 typedef $$ContactUsageStatsTableUpdateCompanionBuilder
     = ContactUsageStatsCompanion Function({
   Value<int> id,
-  Value<int> contactId,
+  Value<String> contactUuid,
   Value<int> usageCount,
   Value<DateTime?> lastUsed,
 });
@@ -9534,16 +10898,16 @@ final class $$ContactUsageStatsTableReferences extends BaseReferences<
   $$ContactUsageStatsTableReferences(
       super.$_db, super.$_table, super.$_typedResult);
 
-  static $ContactsTable _contactIdTable(_$AppDatabase db) =>
-      db.contacts.createAlias(
-          $_aliasNameGenerator(db.contactUsageStats.contactId, db.contacts.id));
+  static $ContactsTable _contactUuidTable(_$AppDatabase db) =>
+      db.contacts.createAlias($_aliasNameGenerator(
+          db.contactUsageStats.contactUuid, db.contacts.uuid));
 
-  $$ContactsTableProcessedTableManager get contactId {
-    final $_column = $_itemColumn<int>('contact_id')!;
+  $$ContactsTableProcessedTableManager get contactUuid {
+    final $_column = $_itemColumn<String>('contact_uuid')!;
 
     final manager = $$ContactsTableTableManager($_db, $_db.contacts)
-        .filter((f) => f.id.sqlEquals($_column));
-    final item = $_typedResult.readTableOrNull(_contactIdTable($_db));
+        .filter((f) => f.uuid.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_contactUuidTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
         manager.$state.copyWith(prefetchedData: [item]));
@@ -9568,12 +10932,12 @@ class $$ContactUsageStatsTableFilterComposer
   ColumnFilters<DateTime> get lastUsed => $composableBuilder(
       column: $table.lastUsed, builder: (column) => ColumnFilters(column));
 
-  $$ContactsTableFilterComposer get contactId {
+  $$ContactsTableFilterComposer get contactUuid {
     final $$ContactsTableFilterComposer composer = $composerBuilder(
         composer: this,
-        getCurrentColumn: (t) => t.contactId,
+        getCurrentColumn: (t) => t.contactUuid,
         referencedTable: $db.contacts,
-        getReferencedColumn: (t) => t.id,
+        getReferencedColumn: (t) => t.uuid,
         builder: (joinBuilder,
                 {$addJoinBuilderToRootComposer,
                 $removeJoinBuilderFromRootComposer}) =>
@@ -9607,12 +10971,12 @@ class $$ContactUsageStatsTableOrderingComposer
   ColumnOrderings<DateTime> get lastUsed => $composableBuilder(
       column: $table.lastUsed, builder: (column) => ColumnOrderings(column));
 
-  $$ContactsTableOrderingComposer get contactId {
+  $$ContactsTableOrderingComposer get contactUuid {
     final $$ContactsTableOrderingComposer composer = $composerBuilder(
         composer: this,
-        getCurrentColumn: (t) => t.contactId,
+        getCurrentColumn: (t) => t.contactUuid,
         referencedTable: $db.contacts,
-        getReferencedColumn: (t) => t.id,
+        getReferencedColumn: (t) => t.uuid,
         builder: (joinBuilder,
                 {$addJoinBuilderToRootComposer,
                 $removeJoinBuilderFromRootComposer}) =>
@@ -9646,12 +11010,12 @@ class $$ContactUsageStatsTableAnnotationComposer
   GeneratedColumn<DateTime> get lastUsed =>
       $composableBuilder(column: $table.lastUsed, builder: (column) => column);
 
-  $$ContactsTableAnnotationComposer get contactId {
+  $$ContactsTableAnnotationComposer get contactUuid {
     final $$ContactsTableAnnotationComposer composer = $composerBuilder(
         composer: this,
-        getCurrentColumn: (t) => t.contactId,
+        getCurrentColumn: (t) => t.contactUuid,
         referencedTable: $db.contacts,
-        getReferencedColumn: (t) => t.id,
+        getReferencedColumn: (t) => t.uuid,
         builder: (joinBuilder,
                 {$addJoinBuilderToRootComposer,
                 $removeJoinBuilderFromRootComposer}) =>
@@ -9678,7 +11042,7 @@ class $$ContactUsageStatsTableTableManager extends RootTableManager<
     $$ContactUsageStatsTableUpdateCompanionBuilder,
     (ContactUsageStat, $$ContactUsageStatsTableReferences),
     ContactUsageStat,
-    PrefetchHooks Function({bool contactId})> {
+    PrefetchHooks Function({bool contactUuid})> {
   $$ContactUsageStatsTableTableManager(
       _$AppDatabase db, $ContactUsageStatsTable table)
       : super(TableManagerState(
@@ -9693,25 +11057,25 @@ class $$ContactUsageStatsTableTableManager extends RootTableManager<
                   $db: db, $table: table),
           updateCompanionCallback: ({
             Value<int> id = const Value.absent(),
-            Value<int> contactId = const Value.absent(),
+            Value<String> contactUuid = const Value.absent(),
             Value<int> usageCount = const Value.absent(),
             Value<DateTime?> lastUsed = const Value.absent(),
           }) =>
               ContactUsageStatsCompanion(
             id: id,
-            contactId: contactId,
+            contactUuid: contactUuid,
             usageCount: usageCount,
             lastUsed: lastUsed,
           ),
           createCompanionCallback: ({
             Value<int> id = const Value.absent(),
-            required int contactId,
+            required String contactUuid,
             Value<int> usageCount = const Value.absent(),
             Value<DateTime?> lastUsed = const Value.absent(),
           }) =>
               ContactUsageStatsCompanion.insert(
             id: id,
-            contactId: contactId,
+            contactUuid: contactUuid,
             usageCount: usageCount,
             lastUsed: lastUsed,
           ),
@@ -9721,7 +11085,7 @@ class $$ContactUsageStatsTableTableManager extends RootTableManager<
                     $$ContactUsageStatsTableReferences(db, table, e)
                   ))
               .toList(),
-          prefetchHooksCallback: ({contactId = false}) {
+          prefetchHooksCallback: ({contactUuid = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [],
@@ -9738,15 +11102,15 @@ class $$ContactUsageStatsTableTableManager extends RootTableManager<
                       dynamic,
                       dynamic,
                       dynamic>>(state) {
-                if (contactId) {
+                if (contactUuid) {
                   state = state.withJoin(
                     currentTable: table,
-                    currentColumn: table.contactId,
-                    referencedTable:
-                        $$ContactUsageStatsTableReferences._contactIdTable(db),
+                    currentColumn: table.contactUuid,
+                    referencedTable: $$ContactUsageStatsTableReferences
+                        ._contactUuidTable(db),
                     referencedColumn: $$ContactUsageStatsTableReferences
-                        ._contactIdTable(db)
-                        .id,
+                        ._contactUuidTable(db)
+                        .uuid,
                   ) as T;
                 }
 
@@ -9771,7 +11135,7 @@ typedef $$ContactUsageStatsTableProcessedTableManager = ProcessedTableManager<
     $$ContactUsageStatsTableUpdateCompanionBuilder,
     (ContactUsageStat, $$ContactUsageStatsTableReferences),
     ContactUsageStat,
-    PrefetchHooks Function({bool contactId})>;
+    PrefetchHooks Function({bool contactUuid})>;
 typedef $$UserPreferencesTableCreateCompanionBuilder = UserPreferencesCompanion
     Function({
   Value<int> id,
@@ -10101,7 +11465,7 @@ typedef $$SyncLogTableProcessedTableManager = ProcessedTableManager<
     PrefetchHooks Function()>;
 typedef $$AppCurrenciesTableCreateCompanionBuilder = AppCurrenciesCompanion
     Function({
-  Value<int> id,
+  required String uuid,
   required String name,
   required String symbol,
   required String code,
@@ -10109,10 +11473,14 @@ typedef $$AppCurrenciesTableCreateCompanionBuilder = AppCurrenciesCompanion
   Value<bool> isDefault,
   Value<bool> isActive,
   Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<bool> isDeleted,
+  Value<bool> isNotSynced,
+  Value<int> rowid,
 });
 typedef $$AppCurrenciesTableUpdateCompanionBuilder = AppCurrenciesCompanion
     Function({
-  Value<int> id,
+  Value<String> uuid,
   Value<String> name,
   Value<String> symbol,
   Value<String> code,
@@ -10120,6 +11488,10 @@ typedef $$AppCurrenciesTableUpdateCompanionBuilder = AppCurrenciesCompanion
   Value<bool> isDefault,
   Value<bool> isActive,
   Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<bool> isDeleted,
+  Value<bool> isNotSynced,
+  Value<int> rowid,
 });
 
 class $$AppCurrenciesTableFilterComposer
@@ -10131,8 +11503,8 @@ class $$AppCurrenciesTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get id => $composableBuilder(
-      column: $table.id, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get uuid => $composableBuilder(
+      column: $table.uuid, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get name => $composableBuilder(
       column: $table.name, builder: (column) => ColumnFilters(column));
@@ -10154,6 +11526,15 @@ class $$AppCurrenciesTableFilterComposer
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+      column: $table.isDeleted, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => ColumnFilters(column));
 }
 
 class $$AppCurrenciesTableOrderingComposer
@@ -10165,8 +11546,8 @@ class $$AppCurrenciesTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get id => $composableBuilder(
-      column: $table.id, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get uuid => $composableBuilder(
+      column: $table.uuid, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get name => $composableBuilder(
       column: $table.name, builder: (column) => ColumnOrderings(column));
@@ -10189,6 +11570,15 @@ class $$AppCurrenciesTableOrderingComposer
 
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+      column: $table.isDeleted, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => ColumnOrderings(column));
 }
 
 class $$AppCurrenciesTableAnnotationComposer
@@ -10200,8 +11590,8 @@ class $$AppCurrenciesTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
+  GeneratedColumn<String> get uuid =>
+      $composableBuilder(column: $table.uuid, builder: (column) => column);
 
   GeneratedColumn<String> get name =>
       $composableBuilder(column: $table.name, builder: (column) => column);
@@ -10223,6 +11613,15 @@ class $$AppCurrenciesTableAnnotationComposer
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+
+  GeneratedColumn<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => column);
 }
 
 class $$AppCurrenciesTableTableManager extends RootTableManager<
@@ -10251,7 +11650,7 @@ class $$AppCurrenciesTableTableManager extends RootTableManager<
           createComputedFieldComposer: () =>
               $$AppCurrenciesTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback: ({
-            Value<int> id = const Value.absent(),
+            Value<String> uuid = const Value.absent(),
             Value<String> name = const Value.absent(),
             Value<String> symbol = const Value.absent(),
             Value<String> code = const Value.absent(),
@@ -10259,9 +11658,13 @@ class $$AppCurrenciesTableTableManager extends RootTableManager<
             Value<bool> isDefault = const Value.absent(),
             Value<bool> isActive = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<bool> isDeleted = const Value.absent(),
+            Value<bool> isNotSynced = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
           }) =>
               AppCurrenciesCompanion(
-            id: id,
+            uuid: uuid,
             name: name,
             symbol: symbol,
             code: code,
@@ -10269,9 +11672,13 @@ class $$AppCurrenciesTableTableManager extends RootTableManager<
             isDefault: isDefault,
             isActive: isActive,
             createdAt: createdAt,
+            updatedAt: updatedAt,
+            isDeleted: isDeleted,
+            isNotSynced: isNotSynced,
+            rowid: rowid,
           ),
           createCompanionCallback: ({
-            Value<int> id = const Value.absent(),
+            required String uuid,
             required String name,
             required String symbol,
             required String code,
@@ -10279,9 +11686,13 @@ class $$AppCurrenciesTableTableManager extends RootTableManager<
             Value<bool> isDefault = const Value.absent(),
             Value<bool> isActive = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<bool> isDeleted = const Value.absent(),
+            Value<bool> isNotSynced = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
           }) =>
               AppCurrenciesCompanion.insert(
-            id: id,
+            uuid: uuid,
             name: name,
             symbol: symbol,
             code: code,
@@ -10289,6 +11700,10 @@ class $$AppCurrenciesTableTableManager extends RootTableManager<
             isDefault: isDefault,
             isActive: isActive,
             createdAt: createdAt,
+            updatedAt: updatedAt,
+            isDeleted: isDeleted,
+            isNotSynced: isNotSynced,
+            rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
@@ -10314,11 +11729,11 @@ typedef $$AppCurrenciesTableProcessedTableManager = ProcessedTableManager<
     PrefetchHooks Function()>;
 typedef $$TransactionSchedulesTableCreateCompanionBuilder
     = TransactionSchedulesCompanion Function({
-  Value<int> id,
+  required String uuid,
   required double amount,
   required String type,
-  Value<int?> categoryId,
-  Value<int?> contactId,
+  Value<String?> categoryUuid,
+  Value<String?> contactUuid,
   Value<String?> description,
   Value<String?> paidRelationship,
   Value<DateTime?> dueDate,
@@ -10331,14 +11746,17 @@ typedef $$TransactionSchedulesTableCreateCompanionBuilder
   Value<DateTime?> endDate,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
+  Value<bool> isDeleted,
+  Value<bool> isNotSynced,
+  Value<int> rowid,
 });
 typedef $$TransactionSchedulesTableUpdateCompanionBuilder
     = TransactionSchedulesCompanion Function({
-  Value<int> id,
+  Value<String> uuid,
   Value<double> amount,
   Value<String> type,
-  Value<int?> categoryId,
-  Value<int?> contactId,
+  Value<String?> categoryUuid,
+  Value<String?> contactUuid,
   Value<String?> description,
   Value<String?> paidRelationship,
   Value<DateTime?> dueDate,
@@ -10351,6 +11769,9 @@ typedef $$TransactionSchedulesTableUpdateCompanionBuilder
   Value<DateTime?> endDate,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
+  Value<bool> isDeleted,
+  Value<bool> isNotSynced,
+  Value<int> rowid,
 });
 
 final class $$TransactionSchedulesTableReferences extends BaseReferences<
@@ -10358,31 +11779,31 @@ final class $$TransactionSchedulesTableReferences extends BaseReferences<
   $$TransactionSchedulesTableReferences(
       super.$_db, super.$_table, super.$_typedResult);
 
-  static $CategoriesTable _categoryIdTable(_$AppDatabase db) =>
+  static $CategoriesTable _categoryUuidTable(_$AppDatabase db) =>
       db.categories.createAlias($_aliasNameGenerator(
-          db.transactionSchedules.categoryId, db.categories.id));
+          db.transactionSchedules.categoryUuid, db.categories.uuid));
 
-  $$CategoriesTableProcessedTableManager? get categoryId {
-    final $_column = $_itemColumn<int>('category_id');
+  $$CategoriesTableProcessedTableManager? get categoryUuid {
+    final $_column = $_itemColumn<String>('category_uuid');
     if ($_column == null) return null;
     final manager = $$CategoriesTableTableManager($_db, $_db.categories)
-        .filter((f) => f.id.sqlEquals($_column));
-    final item = $_typedResult.readTableOrNull(_categoryIdTable($_db));
+        .filter((f) => f.uuid.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_categoryUuidTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
         manager.$state.copyWith(prefetchedData: [item]));
   }
 
-  static $ContactsTable _contactIdTable(_$AppDatabase db) =>
+  static $ContactsTable _contactUuidTable(_$AppDatabase db) =>
       db.contacts.createAlias($_aliasNameGenerator(
-          db.transactionSchedules.contactId, db.contacts.id));
+          db.transactionSchedules.contactUuid, db.contacts.uuid));
 
-  $$ContactsTableProcessedTableManager? get contactId {
-    final $_column = $_itemColumn<int>('contact_id');
+  $$ContactsTableProcessedTableManager? get contactUuid {
+    final $_column = $_itemColumn<String>('contact_uuid');
     if ($_column == null) return null;
     final manager = $$ContactsTableTableManager($_db, $_db.contacts)
-        .filter((f) => f.id.sqlEquals($_column));
-    final item = $_typedResult.readTableOrNull(_contactIdTable($_db));
+        .filter((f) => f.uuid.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_contactUuidTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
         manager.$state.copyWith(prefetchedData: [item]));
@@ -10398,8 +11819,8 @@ class $$TransactionSchedulesTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get id => $composableBuilder(
-      column: $table.id, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get uuid => $composableBuilder(
+      column: $table.uuid, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<double> get amount => $composableBuilder(
       column: $table.amount, builder: (column) => ColumnFilters(column));
@@ -10447,12 +11868,18 @@ class $$TransactionSchedulesTableFilterComposer
   ColumnFilters<DateTime> get updatedAt => $composableBuilder(
       column: $table.updatedAt, builder: (column) => ColumnFilters(column));
 
-  $$CategoriesTableFilterComposer get categoryId {
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+      column: $table.isDeleted, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => ColumnFilters(column));
+
+  $$CategoriesTableFilterComposer get categoryUuid {
     final $$CategoriesTableFilterComposer composer = $composerBuilder(
         composer: this,
-        getCurrentColumn: (t) => t.categoryId,
+        getCurrentColumn: (t) => t.categoryUuid,
         referencedTable: $db.categories,
-        getReferencedColumn: (t) => t.id,
+        getReferencedColumn: (t) => t.uuid,
         builder: (joinBuilder,
                 {$addJoinBuilderToRootComposer,
                 $removeJoinBuilderFromRootComposer}) =>
@@ -10467,12 +11894,12 @@ class $$TransactionSchedulesTableFilterComposer
     return composer;
   }
 
-  $$ContactsTableFilterComposer get contactId {
+  $$ContactsTableFilterComposer get contactUuid {
     final $$ContactsTableFilterComposer composer = $composerBuilder(
         composer: this,
-        getCurrentColumn: (t) => t.contactId,
+        getCurrentColumn: (t) => t.contactUuid,
         referencedTable: $db.contacts,
-        getReferencedColumn: (t) => t.id,
+        getReferencedColumn: (t) => t.uuid,
         builder: (joinBuilder,
                 {$addJoinBuilderToRootComposer,
                 $removeJoinBuilderFromRootComposer}) =>
@@ -10497,8 +11924,8 @@ class $$TransactionSchedulesTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get id => $composableBuilder(
-      column: $table.id, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get uuid => $composableBuilder(
+      column: $table.uuid, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<double> get amount => $composableBuilder(
       column: $table.amount, builder: (column) => ColumnOrderings(column));
@@ -10547,12 +11974,18 @@ class $$TransactionSchedulesTableOrderingComposer
   ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
       column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
 
-  $$CategoriesTableOrderingComposer get categoryId {
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+      column: $table.isDeleted, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => ColumnOrderings(column));
+
+  $$CategoriesTableOrderingComposer get categoryUuid {
     final $$CategoriesTableOrderingComposer composer = $composerBuilder(
         composer: this,
-        getCurrentColumn: (t) => t.categoryId,
+        getCurrentColumn: (t) => t.categoryUuid,
         referencedTable: $db.categories,
-        getReferencedColumn: (t) => t.id,
+        getReferencedColumn: (t) => t.uuid,
         builder: (joinBuilder,
                 {$addJoinBuilderToRootComposer,
                 $removeJoinBuilderFromRootComposer}) =>
@@ -10567,12 +12000,12 @@ class $$TransactionSchedulesTableOrderingComposer
     return composer;
   }
 
-  $$ContactsTableOrderingComposer get contactId {
+  $$ContactsTableOrderingComposer get contactUuid {
     final $$ContactsTableOrderingComposer composer = $composerBuilder(
         composer: this,
-        getCurrentColumn: (t) => t.contactId,
+        getCurrentColumn: (t) => t.contactUuid,
         referencedTable: $db.contacts,
-        getReferencedColumn: (t) => t.id,
+        getReferencedColumn: (t) => t.uuid,
         builder: (joinBuilder,
                 {$addJoinBuilderToRootComposer,
                 $removeJoinBuilderFromRootComposer}) =>
@@ -10597,8 +12030,8 @@ class $$TransactionSchedulesTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
+  GeneratedColumn<String> get uuid =>
+      $composableBuilder(column: $table.uuid, builder: (column) => column);
 
   GeneratedColumn<double> get amount =>
       $composableBuilder(column: $table.amount, builder: (column) => column);
@@ -10642,12 +12075,18 @@ class $$TransactionSchedulesTableAnnotationComposer
   GeneratedColumn<DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 
-  $$CategoriesTableAnnotationComposer get categoryId {
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+
+  GeneratedColumn<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => column);
+
+  $$CategoriesTableAnnotationComposer get categoryUuid {
     final $$CategoriesTableAnnotationComposer composer = $composerBuilder(
         composer: this,
-        getCurrentColumn: (t) => t.categoryId,
+        getCurrentColumn: (t) => t.categoryUuid,
         referencedTable: $db.categories,
-        getReferencedColumn: (t) => t.id,
+        getReferencedColumn: (t) => t.uuid,
         builder: (joinBuilder,
                 {$addJoinBuilderToRootComposer,
                 $removeJoinBuilderFromRootComposer}) =>
@@ -10662,12 +12101,12 @@ class $$TransactionSchedulesTableAnnotationComposer
     return composer;
   }
 
-  $$ContactsTableAnnotationComposer get contactId {
+  $$ContactsTableAnnotationComposer get contactUuid {
     final $$ContactsTableAnnotationComposer composer = $composerBuilder(
         composer: this,
-        getCurrentColumn: (t) => t.contactId,
+        getCurrentColumn: (t) => t.contactUuid,
         referencedTable: $db.contacts,
-        getReferencedColumn: (t) => t.id,
+        getReferencedColumn: (t) => t.uuid,
         builder: (joinBuilder,
                 {$addJoinBuilderToRootComposer,
                 $removeJoinBuilderFromRootComposer}) =>
@@ -10694,7 +12133,7 @@ class $$TransactionSchedulesTableTableManager extends RootTableManager<
     $$TransactionSchedulesTableUpdateCompanionBuilder,
     (TransactionSchedule, $$TransactionSchedulesTableReferences),
     TransactionSchedule,
-    PrefetchHooks Function({bool categoryId, bool contactId})> {
+    PrefetchHooks Function({bool categoryUuid, bool contactUuid})> {
   $$TransactionSchedulesTableTableManager(
       _$AppDatabase db, $TransactionSchedulesTable table)
       : super(TableManagerState(
@@ -10709,11 +12148,11 @@ class $$TransactionSchedulesTableTableManager extends RootTableManager<
               $$TransactionSchedulesTableAnnotationComposer(
                   $db: db, $table: table),
           updateCompanionCallback: ({
-            Value<int> id = const Value.absent(),
+            Value<String> uuid = const Value.absent(),
             Value<double> amount = const Value.absent(),
             Value<String> type = const Value.absent(),
-            Value<int?> categoryId = const Value.absent(),
-            Value<int?> contactId = const Value.absent(),
+            Value<String?> categoryUuid = const Value.absent(),
+            Value<String?> contactUuid = const Value.absent(),
             Value<String?> description = const Value.absent(),
             Value<String?> paidRelationship = const Value.absent(),
             Value<DateTime?> dueDate = const Value.absent(),
@@ -10726,13 +12165,16 @@ class $$TransactionSchedulesTableTableManager extends RootTableManager<
             Value<DateTime?> endDate = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
+            Value<bool> isDeleted = const Value.absent(),
+            Value<bool> isNotSynced = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
           }) =>
               TransactionSchedulesCompanion(
-            id: id,
+            uuid: uuid,
             amount: amount,
             type: type,
-            categoryId: categoryId,
-            contactId: contactId,
+            categoryUuid: categoryUuid,
+            contactUuid: contactUuid,
             description: description,
             paidRelationship: paidRelationship,
             dueDate: dueDate,
@@ -10745,13 +12187,16 @@ class $$TransactionSchedulesTableTableManager extends RootTableManager<
             endDate: endDate,
             createdAt: createdAt,
             updatedAt: updatedAt,
+            isDeleted: isDeleted,
+            isNotSynced: isNotSynced,
+            rowid: rowid,
           ),
           createCompanionCallback: ({
-            Value<int> id = const Value.absent(),
+            required String uuid,
             required double amount,
             required String type,
-            Value<int?> categoryId = const Value.absent(),
-            Value<int?> contactId = const Value.absent(),
+            Value<String?> categoryUuid = const Value.absent(),
+            Value<String?> contactUuid = const Value.absent(),
             Value<String?> description = const Value.absent(),
             Value<String?> paidRelationship = const Value.absent(),
             Value<DateTime?> dueDate = const Value.absent(),
@@ -10764,13 +12209,16 @@ class $$TransactionSchedulesTableTableManager extends RootTableManager<
             Value<DateTime?> endDate = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
+            Value<bool> isDeleted = const Value.absent(),
+            Value<bool> isNotSynced = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
           }) =>
               TransactionSchedulesCompanion.insert(
-            id: id,
+            uuid: uuid,
             amount: amount,
             type: type,
-            categoryId: categoryId,
-            contactId: contactId,
+            categoryUuid: categoryUuid,
+            contactUuid: contactUuid,
             description: description,
             paidRelationship: paidRelationship,
             dueDate: dueDate,
@@ -10783,6 +12231,9 @@ class $$TransactionSchedulesTableTableManager extends RootTableManager<
             endDate: endDate,
             createdAt: createdAt,
             updatedAt: updatedAt,
+            isDeleted: isDeleted,
+            isNotSynced: isNotSynced,
+            rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (
@@ -10790,7 +12241,7 @@ class $$TransactionSchedulesTableTableManager extends RootTableManager<
                     $$TransactionSchedulesTableReferences(db, table, e)
                   ))
               .toList(),
-          prefetchHooksCallback: ({categoryId = false, contactId = false}) {
+          prefetchHooksCallback: ({categoryUuid = false, contactUuid = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [],
@@ -10807,26 +12258,26 @@ class $$TransactionSchedulesTableTableManager extends RootTableManager<
                       dynamic,
                       dynamic,
                       dynamic>>(state) {
-                if (categoryId) {
+                if (categoryUuid) {
                   state = state.withJoin(
                     currentTable: table,
-                    currentColumn: table.categoryId,
+                    currentColumn: table.categoryUuid,
                     referencedTable: $$TransactionSchedulesTableReferences
-                        ._categoryIdTable(db),
+                        ._categoryUuidTable(db),
                     referencedColumn: $$TransactionSchedulesTableReferences
-                        ._categoryIdTable(db)
-                        .id,
+                        ._categoryUuidTable(db)
+                        .uuid,
                   ) as T;
                 }
-                if (contactId) {
+                if (contactUuid) {
                   state = state.withJoin(
                     currentTable: table,
-                    currentColumn: table.contactId,
+                    currentColumn: table.contactUuid,
                     referencedTable: $$TransactionSchedulesTableReferences
-                        ._contactIdTable(db),
+                        ._contactUuidTable(db),
                     referencedColumn: $$TransactionSchedulesTableReferences
-                        ._contactIdTable(db)
-                        .id,
+                        ._contactUuidTable(db)
+                        .uuid,
                   ) as T;
                 }
 
@@ -10852,7 +12303,150 @@ typedef $$TransactionSchedulesTableProcessedTableManager
         $$TransactionSchedulesTableUpdateCompanionBuilder,
         (TransactionSchedule, $$TransactionSchedulesTableReferences),
         TransactionSchedule,
-        PrefetchHooks Function({bool categoryId, bool contactId})>;
+        PrefetchHooks Function({bool categoryUuid, bool contactUuid})>;
+typedef $$SyncMetadataTableCreateCompanionBuilder = SyncMetadataCompanion
+    Function({
+  required String deviceId,
+  Value<int> version,
+  Value<DateTime?> lastSyncAt,
+  Value<int> rowid,
+});
+typedef $$SyncMetadataTableUpdateCompanionBuilder = SyncMetadataCompanion
+    Function({
+  Value<String> deviceId,
+  Value<int> version,
+  Value<DateTime?> lastSyncAt,
+  Value<int> rowid,
+});
+
+class $$SyncMetadataTableFilterComposer
+    extends Composer<_$AppDatabase, $SyncMetadataTable> {
+  $$SyncMetadataTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get deviceId => $composableBuilder(
+      column: $table.deviceId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get version => $composableBuilder(
+      column: $table.version, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get lastSyncAt => $composableBuilder(
+      column: $table.lastSyncAt, builder: (column) => ColumnFilters(column));
+}
+
+class $$SyncMetadataTableOrderingComposer
+    extends Composer<_$AppDatabase, $SyncMetadataTable> {
+  $$SyncMetadataTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get deviceId => $composableBuilder(
+      column: $table.deviceId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get version => $composableBuilder(
+      column: $table.version, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get lastSyncAt => $composableBuilder(
+      column: $table.lastSyncAt, builder: (column) => ColumnOrderings(column));
+}
+
+class $$SyncMetadataTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SyncMetadataTable> {
+  $$SyncMetadataTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get deviceId =>
+      $composableBuilder(column: $table.deviceId, builder: (column) => column);
+
+  GeneratedColumn<int> get version =>
+      $composableBuilder(column: $table.version, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get lastSyncAt => $composableBuilder(
+      column: $table.lastSyncAt, builder: (column) => column);
+}
+
+class $$SyncMetadataTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $SyncMetadataTable,
+    SyncMetadataData,
+    $$SyncMetadataTableFilterComposer,
+    $$SyncMetadataTableOrderingComposer,
+    $$SyncMetadataTableAnnotationComposer,
+    $$SyncMetadataTableCreateCompanionBuilder,
+    $$SyncMetadataTableUpdateCompanionBuilder,
+    (
+      SyncMetadataData,
+      BaseReferences<_$AppDatabase, $SyncMetadataTable, SyncMetadataData>
+    ),
+    SyncMetadataData,
+    PrefetchHooks Function()> {
+  $$SyncMetadataTableTableManager(_$AppDatabase db, $SyncMetadataTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SyncMetadataTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SyncMetadataTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$SyncMetadataTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> deviceId = const Value.absent(),
+            Value<int> version = const Value.absent(),
+            Value<DateTime?> lastSyncAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              SyncMetadataCompanion(
+            deviceId: deviceId,
+            version: version,
+            lastSyncAt: lastSyncAt,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String deviceId,
+            Value<int> version = const Value.absent(),
+            Value<DateTime?> lastSyncAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              SyncMetadataCompanion.insert(
+            deviceId: deviceId,
+            version: version,
+            lastSyncAt: lastSyncAt,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$SyncMetadataTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $SyncMetadataTable,
+    SyncMetadataData,
+    $$SyncMetadataTableFilterComposer,
+    $$SyncMetadataTableOrderingComposer,
+    $$SyncMetadataTableAnnotationComposer,
+    $$SyncMetadataTableCreateCompanionBuilder,
+    $$SyncMetadataTableUpdateCompanionBuilder,
+    (
+      SyncMetadataData,
+      BaseReferences<_$AppDatabase, $SyncMetadataTable, SyncMetadataData>
+    ),
+    SyncMetadataData,
+    PrefetchHooks Function()>;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -10883,4 +12477,6 @@ class $AppDatabaseManager {
       $$AppCurrenciesTableTableManager(_db, _db.appCurrencies);
   $$TransactionSchedulesTableTableManager get transactionSchedules =>
       $$TransactionSchedulesTableTableManager(_db, _db.transactionSchedules);
+  $$SyncMetadataTableTableManager get syncMetadata =>
+      $$SyncMetadataTableTableManager(_db, _db.syncMetadata);
 }

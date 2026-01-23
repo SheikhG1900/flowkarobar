@@ -30,8 +30,8 @@ class ReceivableDetailsDialog extends ConsumerWidget {
   bool _canEditReceivable(Receivable receivable) {
     // Can edit only if PENDING and not linked to any transaction
     return receivable.status == 'PENDING' &&
-        receivable.linkedExpenseId == null &&
-        receivable.linkedIncomeId == null;
+        receivable.linkedExpenseUuid == null &&
+        receivable.linkedIncomeUuid == null;
   }
 
   @override
@@ -69,7 +69,7 @@ class ReceivableDetailsDialog extends ConsumerWidget {
                   context,
                   MaterialPageRoute(
                     builder: (context) =>
-                        EditReceivableScreen(receivableId: receivable.id),
+                        EditReceivableScreen(receivableUuid: receivable.uuid),
                   ),
                 );
               },
@@ -78,7 +78,7 @@ class ReceivableDetailsDialog extends ConsumerWidget {
           if (receivable.status != 'RECEIVED')
             IconButton(
               icon: const Icon(Icons.delete),
-              onPressed: () => _deleteReceivable(context, ref, receivable.id),
+              onPressed: () => _deleteReceivable(context, ref, receivable.uuid),
             ),
         ],
       ),
@@ -298,7 +298,7 @@ class ReceivableDetailsDialog extends ConsumerWidget {
               SizedBox(
                 width: double.infinity,
                 child: FilledButton.icon(
-                  onPressed: () => _markAsReceived(context, ref, receivable.id),
+                  onPressed: () => _markAsReceived(context, ref, receivable.uuid),
                   icon: const Icon(Icons.check_circle),
                   label: Text(l10n.markAsReceived),
                   style: FilledButton.styleFrom(
@@ -466,7 +466,7 @@ class ReceivableDetailsDialog extends ConsumerWidget {
   }
 
   Future<void> _deleteReceivable(
-      BuildContext context, WidgetRef ref, int receivableId) async {
+      BuildContext context, WidgetRef ref, String receivableUuid) async {
     final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
@@ -490,7 +490,7 @@ class ReceivableDetailsDialog extends ConsumerWidget {
     if (confirmed == true && context.mounted) {
       try {
         final repository = ref.read(receivablesRepositoryProvider);
-        await repository.deleteReceivable(receivableId);
+        await repository.deleteReceivable(receivableUuid);
 
         if (context.mounted) {
           Navigator.pop(context);
@@ -507,16 +507,16 @@ class ReceivableDetailsDialog extends ConsumerWidget {
   }
 
   Future<void> _markAsReceived(
-      BuildContext context, WidgetRef ref, int receivableId) async {
+      BuildContext context, WidgetRef ref, String receivableUuid) async {
     final l10n = AppLocalizations.of(context)!;
     try {
       final repository = ref.read(receivablesRepositoryProvider);
-      await repository.markAsReceived(receivableId);
+      await repository.markAsReceived(receivableUuid);
 
       if (context.mounted) {
         // Refresh item to get updated status and externalLinkId
         final updatedItem =
-            await repository.getReceivableWithLinkedDataById(receivableId);
+            await repository.getReceivableWithLinkedDataByUuid(receivableUuid);
 
         if (context.mounted) {
           final activeColor = ref.read(activeCashbookProvider).color;

@@ -3,6 +3,7 @@ import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/features/transactions/domain/models.dart';
 import 'package:flowpaisa/features/dashboard/domain/models.dart';
 import 'package:rxdart/rxdart.dart';
+import 'package:uuid/uuid.dart';
 
 class TransactionsRepository {
   final AppDatabase _database;
@@ -72,8 +73,8 @@ class TransactionsRepository {
         query.join([
           leftOuterJoin(
             _database.receivables,
-            _database.receivables.id
-                .equalsExp(_database.transactions.linkedReceivableId),
+            _database.receivables.uuid
+                .equalsExp(_database.transactions.linkedReceivableUuid),
           ),
         ]);
         query.where(_database.transactions.paidRelationship.isNull() |
@@ -85,8 +86,8 @@ class TransactionsRepository {
         query.join([
           leftOuterJoin(
             _database.payables,
-            _database.payables.id
-                .equalsExp(_database.transactions.linkedPayableId),
+            _database.payables.uuid
+                .equalsExp(_database.transactions.linkedPayableUuid),
           ),
         ]);
         query.where(_database.transactions.paidRelationship.isNull() |
@@ -122,36 +123,36 @@ class TransactionsRepository {
         .get();
   }
 
-  // Get transaction by ID
-  Future<Transaction?> getTransactionById(int id) {
+  // Get transaction by UUID
+  Future<Transaction?> getTransactionByUuid(String uuid) {
     return (_database.select(_database.transactions)
-          ..where((t) => t.id.equals(id)))
+          ..where((t) => t.uuid.equals(uuid)))
         .getSingleOrNull();
   }
 
-  // Get transaction with details by ID
-  Future<TransactionWithDetails?> getTransactionWithDetailsById(int id) async {
+  // Get transaction with details by UUID
+  Future<TransactionWithDetails?> getTransactionWithDetailsByUuid(String uuid) async {
     final query = _database.select(_database.transactions).join([
       leftOuterJoin(
         _database.categories,
-        _database.categories.id.equalsExp(_database.transactions.categoryId),
+        _database.categories.uuid.equalsExp(_database.transactions.categoryUuid),
       ),
       leftOuterJoin(
         _database.contacts,
-        _database.contacts.id.equalsExp(_database.transactions.contactId),
+        _database.contacts.uuid.equalsExp(_database.transactions.contactUuid),
       ),
       leftOuterJoin(
         _database.payables,
-        _database.payables.id.equalsExp(_database.transactions.linkedPayableId),
+        _database.payables.uuid.equalsExp(_database.transactions.linkedPayableUuid),
       ),
       leftOuterJoin(
         _database.receivables,
-        _database.receivables.id
-            .equalsExp(_database.transactions.linkedReceivableId),
+        _database.receivables.uuid
+            .equalsExp(_database.transactions.linkedReceivableUuid),
       ),
     ]);
 
-    query.where(_database.transactions.id.equals(id));
+    query.where(_database.transactions.uuid.equals(uuid));
 
     final rows = await query.get();
     if (rows.isEmpty) return null;
@@ -167,29 +168,33 @@ class TransactionsRepository {
   }
 
   // Create transaction
-  Future<int> createTransaction(TransactionsCompanion transaction) {
-    return _database.into(_database.transactions).insert(transaction);
+  Future<String> createTransaction(TransactionsCompanion transaction) async {
+    final uuid = transaction.uuid.present ? transaction.uuid.value : Uuid().v4();
+    await _database.into(_database.transactions).insert(transaction.copyWith(uuid: Value(uuid)));
+    return uuid;
   }
 
   // Helper method to create transaction with individual parameters
-  Future<int> createTransactionSimple({
+  Future<String> createTransactionSimple({
     required double amount,
     required String type,
     String? description,
     required DateTime date,
-    int? categoryId,
-    int? contactId,
+    String? categoryUuid,
+    String? contactUuid,
   }) {
+    final uuid = const Uuid().v4();
     return createTransaction(
       TransactionsCompanion(
+        uuid: Value(uuid),
         amount: Value(amount),
         type: Value(type),
         description: Value(description),
         date: Value(date),
-        categoryId: Value(categoryId),
-        contactId: Value(contactId),
+        categoryUuid: Value(categoryUuid),
+        contactUuid: Value(contactUuid),
       ),
-    );
+    ).then((_) => uuid);
   }
 
   // Update transaction
@@ -198,9 +203,9 @@ class TransactionsRepository {
   }
 
   // Delete transaction
-  Future<int> deleteTransaction(int id) {
+  Future<int> deleteTransaction(String uuid) {
     return (_database.delete(_database.transactions)
-          ..where((t) => t.id.equals(id)))
+          ..where((t) => t.uuid.equals(uuid)))
         .go();
   }
 
@@ -213,9 +218,9 @@ class TransactionsRepository {
   }
 
   // Get transactions by category
-  Stream<List<Transaction>> watchTransactionsByCategory(int categoryId) {
+  Stream<List<Transaction>> watchTransactionsByCategory(String categoryUuid) {
     return (_database.select(_database.transactions)
-          ..where((t) => t.categoryId.equals(categoryId))
+          ..where((t) => t.categoryUuid.equals(categoryUuid))
           ..orderBy([(t) => OrderingTerm.desc(t.date)]))
         .watch();
   }
@@ -274,7 +279,7 @@ class TransactionsRepository {
     final query = _database.select(_database.transactions).join([
       leftOuterJoin(
         _database.categories,
-        _database.categories.id.equalsExp(_database.transactions.categoryId),
+        _database.categories.uuid.equalsExp(_database.transactions.categoryUuid),
       ),
     ])
       ..orderBy([OrderingTerm.desc(_database.transactions.date)]);
@@ -295,20 +300,20 @@ class TransactionsRepository {
     final query = _database.select(_database.transactions).join([
       leftOuterJoin(
         _database.categories,
-        _database.categories.id.equalsExp(_database.transactions.categoryId),
+        _database.categories.uuid.equalsExp(_database.transactions.categoryUuid),
       ),
       leftOuterJoin(
         _database.contacts,
-        _database.contacts.id.equalsExp(_database.transactions.contactId),
+        _database.contacts.uuid.equalsExp(_database.transactions.contactUuid),
       ),
       leftOuterJoin(
         _database.payables,
-        _database.payables.id.equalsExp(_database.transactions.linkedPayableId),
+        _database.payables.uuid.equalsExp(_database.transactions.linkedPayableUuid),
       ),
       leftOuterJoin(
         _database.receivables,
-        _database.receivables.id
-            .equalsExp(_database.transactions.linkedReceivableId),
+        _database.receivables.uuid
+            .equalsExp(_database.transactions.linkedReceivableUuid),
       ),
     ])
       ..orderBy([OrderingTerm.desc(_database.transactions.date)]);
@@ -334,20 +339,20 @@ class TransactionsRepository {
     final query = _database.select(_database.transactions).join([
       leftOuterJoin(
         _database.categories,
-        _database.categories.id.equalsExp(_database.transactions.categoryId),
+        _database.categories.uuid.equalsExp(_database.transactions.categoryUuid),
       ),
       leftOuterJoin(
         _database.contacts,
-        _database.contacts.id.equalsExp(_database.transactions.contactId),
+        _database.contacts.uuid.equalsExp(_database.transactions.contactUuid),
       ),
       leftOuterJoin(
         _database.payables,
-        _database.payables.id.equalsExp(_database.transactions.linkedPayableId),
+        _database.payables.uuid.equalsExp(_database.transactions.linkedPayableUuid),
       ),
       leftOuterJoin(
         _database.receivables,
-        _database.receivables.id
-            .equalsExp(_database.transactions.linkedReceivableId),
+        _database.receivables.uuid
+            .equalsExp(_database.transactions.linkedReceivableUuid),
       ),
     ]);
 
@@ -368,14 +373,100 @@ class TransactionsRepository {
   }
 
   // Update transaction (with companion for partial updates)
-  Future<int> updateTransactionWithCompanion(
-      int id, TransactionsCompanion companion) {
-    return (_database.update(_database.transactions)
-          ..where((t) => t.id.equals(id)))
+  Future<void> updateTransactionWithCompanion(
+      String uuid, TransactionsCompanion companion) async {
+    await (_database.update(_database.transactions)
+          ..where((t) => t.uuid.equals(uuid)))
         .write(companion);
   }
 
-  // Watch transactions with details (paginated) - Stream version
+  // Search transactions with details (paginated) - Stream version
+  Stream<List<TransactionWithDetails>> watchTransactionsWithDetailsSearchPaginated({
+    required String query,
+    int limit = 50,
+    int offset = 0,
+  }) {
+    final dbQuery = _database.select(_database.transactions).join([
+      leftOuterJoin(
+        _database.categories,
+        _database.categories.uuid.equalsExp(_database.transactions.categoryUuid),
+      ),
+      leftOuterJoin(
+        _database.contacts,
+        _database.contacts.uuid.equalsExp(_database.transactions.contactUuid),
+      ),
+      leftOuterJoin(
+        _database.payables,
+        _database.payables.uuid.equalsExp(_database.transactions.linkedPayableUuid),
+      ),
+      leftOuterJoin(
+        _database.receivables,
+        _database.receivables.uuid
+            .equalsExp(_database.transactions.linkedReceivableUuid),
+      ),
+    ]);
+
+    dbQuery.where(_database.transactions.description.contains(query));
+    dbQuery.orderBy([OrderingTerm.desc(_database.transactions.date)]);
+    dbQuery.limit(limit, offset: offset);
+
+    return dbQuery.watch().map((rows) {
+      return rows.map((row) {
+        return TransactionWithDetails(
+          transaction: row.readTable(_database.transactions),
+          category: row.readTableOrNull(_database.categories),
+          contact: row.readTableOrNull(_database.contacts),
+          linkedPayable: row.readTableOrNull(_database.payables),
+          linkedReceivable: row.readTableOrNull(_database.receivables),
+        );
+      }).toList();
+    });
+  }
+
+  // Search transactions with details (paginated) - Future version
+  Future<List<TransactionWithDetails>> getTransactionsWithDetailsSearchPaginated({
+    required String query,
+    int limit = 50,
+    int offset = 0,
+  }) {
+    final dbQuery = _database.select(_database.transactions).join([
+      leftOuterJoin(
+        _database.categories,
+        _database.categories.uuid.equalsExp(_database.transactions.categoryUuid),
+      ),
+      leftOuterJoin(
+        _database.contacts,
+        _database.contacts.uuid.equalsExp(_database.transactions.contactUuid),
+      ),
+      leftOuterJoin(
+        _database.payables,
+        _database.payables.uuid.equalsExp(_database.transactions.linkedPayableUuid),
+      ),
+      leftOuterJoin(
+        _database.receivables,
+        _database.receivables.uuid
+            .equalsExp(_database.transactions.linkedReceivableUuid),
+      ),
+    ]);
+
+    dbQuery.where(_database.transactions.description.contains(query));
+    dbQuery.orderBy([OrderingTerm.desc(_database.transactions.date)]);
+    dbQuery.limit(limit, offset: offset);
+
+    return dbQuery.get().then((rows) {
+      return rows.map((row) {
+        return TransactionWithDetails(
+          transaction: row.readTable(_database.transactions),
+          category: row.readTableOrNull(_database.categories),
+          contact: row.readTableOrNull(_database.contacts),
+          linkedPayable: row.readTableOrNull(_database.payables),
+          linkedReceivable: row.readTableOrNull(_database.receivables),
+        );
+      }).toList();
+    });
+  }
+
+  // Get transactions with details (paginated) - Stream version
   Stream<List<TransactionWithDetails>> watchTransactionsWithDetailsPaginated({
     int limit = 50,
     int offset = 0,
@@ -383,20 +474,20 @@ class TransactionsRepository {
     final query = _database.select(_database.transactions).join([
       leftOuterJoin(
         _database.categories,
-        _database.categories.id.equalsExp(_database.transactions.categoryId),
+        _database.categories.uuid.equalsExp(_database.transactions.categoryUuid),
       ),
       leftOuterJoin(
         _database.contacts,
-        _database.contacts.id.equalsExp(_database.transactions.contactId),
+        _database.contacts.uuid.equalsExp(_database.transactions.contactUuid),
       ),
       leftOuterJoin(
         _database.payables,
-        _database.payables.id.equalsExp(_database.transactions.linkedPayableId),
+        _database.payables.uuid.equalsExp(_database.transactions.linkedPayableUuid),
       ),
       leftOuterJoin(
         _database.receivables,
-        _database.receivables.id
-            .equalsExp(_database.transactions.linkedReceivableId),
+        _database.receivables.uuid
+            .equalsExp(_database.transactions.linkedReceivableUuid),
       ),
     ])
       ..orderBy([OrderingTerm.desc(_database.transactions.date)])
@@ -423,20 +514,20 @@ class TransactionsRepository {
     final query = _database.select(_database.transactions).join([
       leftOuterJoin(
         _database.categories,
-        _database.categories.id.equalsExp(_database.transactions.categoryId),
+        _database.categories.uuid.equalsExp(_database.transactions.categoryUuid),
       ),
       leftOuterJoin(
         _database.contacts,
-        _database.contacts.id.equalsExp(_database.transactions.contactId),
+        _database.contacts.uuid.equalsExp(_database.transactions.contactUuid),
       ),
       leftOuterJoin(
         _database.payables,
-        _database.payables.id.equalsExp(_database.transactions.linkedPayableId),
+        _database.payables.uuid.equalsExp(_database.transactions.linkedPayableUuid),
       ),
       leftOuterJoin(
         _database.receivables,
-        _database.receivables.id
-            .equalsExp(_database.transactions.linkedReceivableId),
+        _database.receivables.uuid
+            .equalsExp(_database.transactions.linkedReceivableUuid),
       ),
     ])
       ..orderBy([OrderingTerm.desc(_database.transactions.date)])

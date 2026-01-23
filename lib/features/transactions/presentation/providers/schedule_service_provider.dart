@@ -31,12 +31,12 @@ class ScheduleService {
   });
 
   /// Create a schedule from transaction template
-  Future<int> createSchedule({
+  Future<String> createSchedule({
     required double amount,
     required String type,
     String? description,
-    int? categoryId,
-    int? contactId,
+    String? categoryUuid,
+    String? contactUuid,
     String? paidRelationship,
     DateTime? dueDate,
     required String scheduleType, // 'DAILY', 'WEEKLY', 'MONTHLY'
@@ -56,13 +56,13 @@ class ScheduleService {
       daysOfMonthJson = jsonEncode(selectedDaysOfMonth);
     }
 
-    final scheduleId = await schedulesRepository.createSchedule(
+    final String scheduleUuid = await schedulesRepository.createSchedule(
       TransactionSchedulesCompanion(
         amount: Value(amount),
         type: Value(type),
         description: Value(description),
-        categoryId: Value(categoryId),
-        contactId: Value(contactId),
+        categoryUuid: Value(categoryUuid),
+        contactUuid: Value(contactUuid),
         paidRelationship: Value(paidRelationship),
         dueDate: Value(dueDate),
         scheduleType: Value(scheduleType),
@@ -76,12 +76,12 @@ class ScheduleService {
       ),
     );
 
-    return scheduleId;
+    return scheduleUuid;
   }
 
   /// Generate transactions from a schedule for missed dates
-  Future<int> generateTransactionsFromSchedule(int scheduleId) async {
-    final schedule = await schedulesRepository.getScheduleById(scheduleId);
+  Future<int> generateTransactionsFromSchedule(String scheduleUuid) async {
+    final schedule = await schedulesRepository.getScheduleByUuid(scheduleUuid);
     if (schedule == null) {
       throw Exception('Schedule not found');
     }
@@ -135,20 +135,20 @@ class ScheduleService {
 
     for (final date in datesToGenerate) {
       try {
-        final transactionId = await transactionService.createTransaction(
+        final transactionUuid = await transactionService.createTransaction(
           amount: schedule.amount,
           type: schedule.type,
           date: date,
           description: schedule.description,
-          categoryId: schedule.categoryId,
-          contactId: schedule.contactId,
+          categoryUuid: schedule.categoryUuid,
+          contactUuid: schedule.contactUuid,
           paidRelationship: schedule.paidRelationship,
           dueDate: schedule.dueDate,
         );
 
         // Mark transaction as scheduled
         await transactionsRepository.updateTransactionWithCompanion(
-          transactionId,
+          transactionUuid,
           TransactionsCompanion(
             isScheduled: const Value(true),
             updatedAt: Value(DateTime.now()),
@@ -166,7 +166,7 @@ class ScheduleService {
     // Update lastGeneratedDate to the latest generated date
     if (latestGeneratedDate != null) {
       await schedulesRepository.updateLastGeneratedDate(
-        scheduleId,
+        scheduleUuid,
         latestGeneratedDate,
       );
     }
@@ -242,28 +242,28 @@ class ScheduleService {
   }
 
   /// Pause a schedule
-  Future<bool> pauseSchedule(int scheduleId) async {
-    return await schedulesRepository.pauseSchedule(scheduleId);
+  Future<bool> pauseSchedule(String scheduleUuid) async {
+    return await schedulesRepository.pauseSchedule(scheduleUuid);
   }
 
   /// Resume a schedule (set lastGeneratedDate to day before resume date)
-  Future<bool> resumeSchedule(int scheduleId, DateTime resumeDate) async {
-    return await schedulesRepository.resumeSchedule(scheduleId, resumeDate);
+  Future<bool> resumeSchedule(String scheduleUuid, DateTime resumeDate) async {
+    return await schedulesRepository.resumeSchedule(scheduleUuid, resumeDate);
   }
 
   /// Delete a schedule
-  Future<bool> deleteSchedule(int scheduleId) async {
-    return await schedulesRepository.deleteSchedule(scheduleId);
+  Future<bool> deleteSchedule(String scheduleUuid) async {
+    return await schedulesRepository.deleteSchedule(scheduleUuid);
   }
 
   /// Update a schedule
   Future<bool> updateSchedule(
-    int scheduleId, {
+    String scheduleUuid, {
     double? amount,
     String? type,
     String? description,
-    int? categoryId,
-    int? contactId,
+    String? categoryUuid,
+    String? contactUuid,
     String? paidRelationship,
     DateTime? dueDate,
     String? scheduleType,
@@ -291,15 +291,15 @@ class ScheduleService {
     }
 
     return await schedulesRepository.updateSchedule(
-      scheduleId,
+      scheduleUuid,
       TransactionSchedulesCompanion(
         amount: amount != null ? Value(amount) : const Value.absent(),
         type: type != null ? Value(type) : const Value.absent(),
         description:
             description != null ? Value(description) : const Value.absent(),
-        categoryId:
-            categoryId != null ? Value(categoryId) : const Value.absent(),
-        contactId: contactId != null ? Value(contactId) : const Value.absent(),
+        categoryUuid:
+            categoryUuid != null ? Value(categoryUuid) : const Value.absent(),
+        contactUuid: contactUuid != null ? Value(contactUuid) : const Value.absent(),
         paidRelationship: paidRelationship != null
             ? Value(paidRelationship)
             : const Value.absent(),

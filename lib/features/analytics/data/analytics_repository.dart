@@ -10,17 +10,17 @@ class AnalyticsRepository {
     final startOfMonth = DateTime(month.year, month.month, 1);
     final endOfMonth = DateTime(month.year, month.month + 1, 0, 23, 59, 59);
     final query = _database.selectOnly(_database.transactions)
-      ..addColumns([_database.transactions.categoryId, _database.transactions.amount.sum()])
+      ..addColumns([_database.transactions.categoryUuid, _database.transactions.amount.sum()])
       ..where(_database.transactions.date.isBetweenValues(startOfMonth, endOfMonth))
       ..where(_database.transactions.type.equals('EXPENSE'))
-      ..groupBy([_database.transactions.categoryId]);
+      ..groupBy([_database.transactions.categoryUuid]);
     final results = await query.get();
     final List<CategoryExpense> categoryExpenses = [];
     for (final row in results) {
-      final categoryId = row.read(_database.transactions.categoryId);
+      final categoryUuid = row.read(_database.transactions.categoryUuid);
       final totalAmount = row.read(_database.transactions.amount.sum()) ?? 0.0;
-      if (categoryId != null && totalAmount > 0) {
-        final category = await (_database.select(_database.categories)..where((c) => c.id.equals(categoryId))).getSingleOrNull();
+      if (categoryUuid != null && totalAmount > 0) {
+        final category = await (_database.select(_database.categories)..where((c) => c.uuid.equals(categoryUuid))).getSingleOrNull();
         if (category != null) {
           categoryExpenses.add(CategoryExpense(category: category, totalAmount: totalAmount));
         }
@@ -55,29 +55,29 @@ class AnalyticsRepository {
 
   Future<List<ContactSummary>> getContactSummaries(DateTime start, DateTime end) async {
     final contactsWithPayables = await (_database.selectOnly(_database.payables)
-          ..addColumns([_database.payables.contactId])
+          ..addColumns([_database.payables.contactUuid])
           ..where(_database.payables.date.isBetweenValues(start, end))
-          ..groupBy([_database.payables.contactId]))
-        .get().then((rows) => rows.map((r) => r.read(_database.payables.contactId)!).toSet());
+          ..groupBy([_database.payables.contactUuid]))
+        .get().then((rows) => rows.map((r) => r.read(_database.payables.contactUuid)!).toSet());
     final contactsWithReceivables = await (_database.selectOnly(_database.receivables)
-          ..addColumns([_database.receivables.contactId])
+          ..addColumns([_database.receivables.contactUuid])
           ..where(_database.receivables.date.isBetweenValues(start, end))
-          ..groupBy([_database.receivables.contactId]))
-        .get().then((rows) => rows.map((r) => r.read(_database.receivables.contactId)!).toSet());
-    final allContactIds = {...contactsWithPayables, ...contactsWithReceivables};
-    if (allContactIds.isEmpty) return [];
+          ..groupBy([_database.receivables.contactUuid]))
+        .get().then((rows) => rows.map((r) => r.read(_database.receivables.contactUuid)!).toSet());
+    final allContactUuids = {...contactsWithPayables, ...contactsWithReceivables};
+    if (allContactUuids.isEmpty) return [];
     final List<ContactSummary> summaries = [];
-    for (final contactId in allContactIds) {
-      final contact = await (_database.select(_database.contacts)..where((c) => c.id.equals(contactId))).getSingleOrNull();
+    for (final contactUuid in allContactUuids) {
+      final contact = await (_database.select(_database.contacts)..where((c) => c.uuid.equals(contactUuid))).getSingleOrNull();
       if (contact == null) continue;
       final totalPayable = await (_database.selectOnly(_database.payables)
             ..addColumns([_database.payables.amount.sum()])
-            ..where(_database.payables.contactId.equals(contactId))
+            ..where(_database.payables.contactUuid.equals(contactUuid))
             ..where(_database.payables.date.isBetweenValues(start, end)))
           .getSingle().then((row) => row.read(_database.payables.amount.sum()) ?? 0.0);
       final totalReceivable = await (_database.selectOnly(_database.receivables)
             ..addColumns([_database.receivables.amount.sum()])
-            ..where(_database.receivables.contactId.equals(contactId))
+            ..where(_database.receivables.contactUuid.equals(contactUuid))
             ..where(_database.receivables.date.isBetweenValues(start, end)))
           .getSingle().then((row) => row.read(_database.receivables.amount.sum()) ?? 0.0);
       summaries.add(ContactSummary(contact: contact, totalPayable: totalPayable, totalReceivable: totalReceivable));
@@ -87,16 +87,16 @@ class AnalyticsRepository {
   }
 
   Future<List<ContactSummary>> getAllTimeContactSummaries() async {
-    final contactsWithPayables = await (_database.selectOnly(_database.payables)..addColumns([_database.payables.contactId])..groupBy([_database.payables.contactId])).get().then((rows) => rows.map((r) => r.read(_database.payables.contactId)!).toSet());
-    final contactsWithReceivables = await (_database.selectOnly(_database.receivables)..addColumns([_database.receivables.contactId])..groupBy([_database.receivables.contactId])).get().then((rows) => rows.map((r) => r.read(_database.receivables.contactId)!).toSet());
-    final allContactIds = {...contactsWithPayables, ...contactsWithReceivables};
-    if (allContactIds.isEmpty) return [];
+    final contactsWithPayables = await (_database.selectOnly(_database.payables)..addColumns([_database.payables.contactUuid])..groupBy([_database.payables.contactUuid])).get().then((rows) => rows.map((r) => r.read(_database.payables.contactUuid)!).toSet());
+    final contactsWithReceivables = await (_database.selectOnly(_database.receivables)..addColumns([_database.receivables.contactUuid])..groupBy([_database.receivables.contactUuid])).get().then((rows) => rows.map((r) => r.read(_database.receivables.contactUuid)!).toSet());
+    final allContactUuids = {...contactsWithPayables, ...contactsWithReceivables};
+    if (allContactUuids.isEmpty) return [];
     final List<ContactSummary> summaries = [];
-    for (final contactId in allContactIds) {
-      final contact = await (_database.select(_database.contacts)..where((c) => c.id.equals(contactId))).getSingleOrNull();
+    for (final contactUuid in allContactUuids) {
+      final contact = await (_database.select(_database.contacts)..where((c) => c.uuid.equals(contactUuid))).getSingleOrNull();
       if (contact == null) continue;
-      final totalPayable = await (_database.selectOnly(_database.payables)..addColumns([_database.payables.amount.sum()])..where(_database.payables.contactId.equals(contactId))).getSingle().then((row) => row.read(_database.payables.amount.sum()) ?? 0.0);
-      final totalReceivable = await (_database.selectOnly(_database.receivables)..addColumns([_database.receivables.amount.sum()])..where(_database.receivables.contactId.equals(contactId))).getSingle().then((row) => row.read(_database.receivables.amount.sum()) ?? 0.0);
+      final totalPayable = await (_database.selectOnly(_database.payables)..addColumns([_database.payables.amount.sum()])..where(_database.payables.contactUuid.equals(contactUuid))).getSingle().then((row) => row.read(_database.payables.amount.sum()) ?? 0.0);
+      final totalReceivable = await (_database.selectOnly(_database.receivables)..addColumns([_database.receivables.amount.sum()])..where(_database.receivables.contactUuid.equals(contactUuid))).getSingle().then((row) => row.read(_database.receivables.amount.sum()) ?? 0.0);
       summaries.add(ContactSummary(contact: contact, totalPayable: totalPayable, totalReceivable: totalReceivable));
     }
     summaries.sort((a, b) => b.balance.abs().compareTo(a.balance.abs()));
@@ -150,17 +150,17 @@ class AnalyticsRepository {
 
   Future<List<CategoryIncome>> getIncomeByCategory(DateTime start, DateTime end) async {
     final query = _database.selectOnly(_database.transactions)
-      ..addColumns([_database.transactions.categoryId, _database.transactions.amount.sum()])
+      ..addColumns([_database.transactions.categoryUuid, _database.transactions.amount.sum()])
       ..where(_database.transactions.date.isBetweenValues(start, end))
       ..where(_database.transactions.type.equals('INCOME'))
-      ..groupBy([_database.transactions.categoryId]);
+      ..groupBy([_database.transactions.categoryUuid]);
     final results = await query.get();
     final List<CategoryIncome> categoryIncomes = [];
     for (final row in results) {
-      final categoryId = row.read(_database.transactions.categoryId);
+      final categoryUuid = row.read(_database.transactions.categoryUuid);
       final totalAmount = row.read(_database.transactions.amount.sum()) ?? 0.0;
-      if (categoryId != null && totalAmount > 0) {
-        final category = await (_database.select(_database.categories)..where((c) => c.id.equals(categoryId))).getSingleOrNull();
+      if (categoryUuid != null && totalAmount > 0) {
+        final category = await (_database.select(_database.categories)..where((c) => c.uuid.equals(categoryUuid))).getSingleOrNull();
         if (category != null) {
           categoryIncomes.add(CategoryIncome(category: category, totalAmount: totalAmount));
         }

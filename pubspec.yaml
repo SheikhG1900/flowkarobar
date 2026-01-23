@@ -82,6 +82,7 @@ dependencies:
   # Sticky Headers
   flutter_sticky_header: ^0.8.0
   rxdart: ^0.28.0
+  device_info_plus: ^12.3.0
 
 dev_dependencies:
   flutter_test:

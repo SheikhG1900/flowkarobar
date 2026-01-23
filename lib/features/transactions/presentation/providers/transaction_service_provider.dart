@@ -43,13 +43,13 @@ class TransactionService {
     required this.contactsRepository,
   });
 
-  Future<int> createTransaction({
+  Future<String> createTransaction({
     required double amount,
     required String type,
     required DateTime date,
     String? description,
-    int? categoryId,
-    int? contactId,
+    String? categoryUuid,
+    String? contactUuid,
     String?
         paidRelationship, // 'PAID_FOR', 'PAID_BY', 'RECEIVED_FROM', 'WILL_RECEIVE'
     bool createLinkedEntry = false,
@@ -62,12 +62,12 @@ class TransactionService {
           externalLinkId ?? DeepLinkService().generateExternalLinkId();
 
       // 1. Create the main transaction
-      final transactionId = await transactionsRepository.createTransaction(
+      final transactionUuid = await transactionsRepository.createTransaction(
         TransactionsCompanion(
           amount: Value(amount),
           type: Value(type),
-          contactId: Value(contactId),
-          categoryId: Value(categoryId),
+          contactUuid: Value(contactUuid),
+          categoryUuid: Value(categoryUuid),
           description: Value(description),
           date: Value(date),
           paidRelationship: Value(paidRelationship),
@@ -78,29 +78,29 @@ class TransactionService {
       );
 
       // 2. Increment usage counts
-      if (categoryId != null) {
-        await categoriesRepository.incrementUsageCount(categoryId);
+      if (categoryUuid != null) {
+        await categoriesRepository.incrementUsageCount(categoryUuid);
       }
-      if (contactId != null) {
-        await contactsRepository.incrementUsageCount(contactId);
+      if (contactUuid != null) {
+        await contactsRepository.incrementUsageCount(contactUuid);
       }
 
       // 3. Create linked entries based on logic
-      if (createLinkedEntry && contactId != null) {
+      if (createLinkedEntry && contactUuid != null) {
         // --- EXPENSE LOGIC ---
         if (type == 'EXPENSE') {
           if (paidRelationship == 'PAID_FOR') {
             // Logic: You paid FOR someone -> It's an expense for you (cash out),
             // but you expect to be paid back (Receivable).
-            final receivableId = await receivablesRepository.createReceivable(
+            final String receivableUuid = await receivablesRepository.createReceivable(
               ReceivablesCompanion(
-                contactId: Value(contactId),
+                contactUuid: Value(contactUuid),
                 amount: Value(amount),
                 description: Value(description),
                 date: Value(date),
                 dueDate: Value(dueDate),
                 status: const Value('PENDING'),
-                linkedExpenseId: Value(transactionId),
+                linkedExpenseUuid: Value(transactionUuid),
                 autoCreateIncome:
                     const Value(true), // When they pay back, it becomes income
                 externalLinkId: Value(effectiveExternalId),
@@ -110,24 +110,24 @@ class TransactionService {
             );
             // Update transaction with linked receivable ID
             await transactionsRepository.updateTransactionWithCompanion(
-              transactionId,
+              transactionUuid,
               TransactionsCompanion(
-                linkedReceivableId: Value(receivableId),
+                linkedReceivableUuid: Value(receivableUuid),
                 updatedAt: Value(DateTime.now()),
               ),
             );
           } else if (paidRelationship == 'PAID_BY') {
             // Logic: Someone paid FOR you -> You consumed (Expense recorded),
             // but you didn't pay cash yet. You owe them (Payable).
-            final payableId = await payablesRepository.createPayable(
+            final String payableUuid = await payablesRepository.createPayable(
               PayablesCompanion(
-                contactId: Value(contactId),
+                contactUuid: Value(contactUuid),
                 amount: Value(amount),
                 description: Value(description),
                 date: Value(date),
                 dueDate: Value(dueDate),
                 status: const Value('PENDING'),
-                linkedExpenseId: Value(transactionId),
+                linkedExpenseUuid: Value(transactionUuid),
                 autoCreateExpense: const Value(
                     false), // Don't create new transaction, activate existing one when marked
                 externalLinkId: Value(effectiveExternalId),
@@ -137,9 +137,9 @@ class TransactionService {
             );
             // Update transaction with linked payable ID
             await transactionsRepository.updateTransactionWithCompanion(
-              transactionId,
+              transactionUuid,
               TransactionsCompanion(
-                linkedPayableId: Value(payableId),
+                linkedPayableUuid: Value(payableUuid),
                 updatedAt: Value(DateTime.now()),
               ),
             );
@@ -150,15 +150,15 @@ class TransactionService {
           if (paidRelationship == 'RECEIVED_FROM') {
             // Logic: You received money FROM someone (Loan/Advance) -> You owe them (Payable).
             // Cash Balance INCREASES (handled by DashboardProvider).
-            final payableId = await payablesRepository.createPayable(
+            final String payableUuid = await payablesRepository.createPayable(
               PayablesCompanion(
-                contactId: Value(contactId),
+                contactUuid: Value(contactUuid),
                 amount: Value(amount),
                 description: Value(description),
                 date: Value(date),
                 dueDate: Value(dueDate),
                 status: const Value('PENDING'),
-                linkedIncomeId: Value(transactionId),
+                linkedIncomeUuid: Value(transactionUuid),
                 autoCreateExpense:
                     const Value(true), // When you pay back, it becomes expense
                 externalLinkId: Value(effectiveExternalId),
@@ -168,9 +168,9 @@ class TransactionService {
             );
             // Update transaction with linked payable ID
             await transactionsRepository.updateTransactionWithCompanion(
-              transactionId,
+              transactionUuid,
               TransactionsCompanion(
-                linkedPayableId: Value(payableId),
+                linkedPayableUuid: Value(payableUuid),
                 updatedAt: Value(DateTime.now()),
               ),
             );
@@ -178,15 +178,15 @@ class TransactionService {
             // Logic: You earned money but haven't received it yet (Accrued Income).
             // Cash Balance UNCHANGED (handled by DashboardProvider).
             // Create Receivable.
-            final receivableId = await receivablesRepository.createReceivable(
+            final String receivableUuid = await receivablesRepository.createReceivable(
               ReceivablesCompanion(
-                contactId: Value(contactId),
+                contactUuid: Value(contactUuid),
                 amount: Value(amount),
                 description: Value(description),
                 date: Value(date),
                 dueDate: Value(dueDate),
                 status: const Value('PENDING'),
-                linkedIncomeId: Value(transactionId), // Store as linked income
+                linkedIncomeUuid: Value(transactionUuid), // Store as linked income
                 autoCreateIncome: const Value(
                     false), // Don't create new transaction, activate existing one when marked
                 externalLinkId: Value(effectiveExternalId),
@@ -196,24 +196,24 @@ class TransactionService {
             );
             // Update transaction with linked receivable ID
             await transactionsRepository.updateTransactionWithCompanion(
-              transactionId,
+              transactionUuid,
               TransactionsCompanion(
-                linkedReceivableId: Value(receivableId),
+                linkedReceivableUuid: Value(receivableUuid),
                 updatedAt: Value(DateTime.now()),
               ),
             );
           }
         }
       }
-      return transactionId;
+      return transactionUuid;
     });
   }
 
   /// Ensure a transaction and its linked entries have a consistent externalLinkId
   Future<String> ensureExternalLinkId({
-    int? transactionId,
-    int? payableId,
-    int? receivableId,
+    String? transactionUuid,
+    String? payableUuid,
+    String? receivableUuid,
   }) async {
     return await database.transaction(() async {
       String? existingId;
@@ -222,54 +222,54 @@ class TransactionService {
       Receivable? receivable;
 
       // 1. Fetch existing objects and find if any already has an ID
-      if (transactionId != null) {
+      if (transactionUuid != null) {
         transaction =
-            await transactionsRepository.getTransactionById(transactionId);
+            await transactionsRepository.getTransactionByUuid(transactionUuid);
         existingId ??= transaction?.externalLinkId;
       }
-      if (payableId != null) {
-        payable = await payablesRepository.getPayableById(payableId);
+      if (payableUuid != null) {
+        payable = await payablesRepository.getPayableByUuid(payableUuid);
         existingId ??= payable?.externalLinkId;
       }
-      if (receivableId != null) {
+      if (receivableUuid != null) {
         receivable =
-            await receivablesRepository.getReceivableById(receivableId);
+            await receivablesRepository.getReceivableByUuid(receivableUuid);
         existingId ??= receivable?.externalLinkId;
       }
 
       // Also check linked objects if we only have one ID
       if (existingId == null) {
         if (transaction != null) {
-          if (transaction.linkedPayableId != null) {
+          if (transaction.linkedPayableUuid != null) {
             payable = await payablesRepository
-                .getPayableById(transaction.linkedPayableId!);
+                .getPayableByUuid(transaction.linkedPayableUuid!);
             existingId ??= payable?.externalLinkId;
           }
-          if (transaction.linkedReceivableId != null) {
+          if (transaction.linkedReceivableUuid != null) {
             receivable = await receivablesRepository
-                .getReceivableById(transaction.linkedReceivableId!);
+                .getReceivableByUuid(transaction.linkedReceivableUuid!);
             existingId ??= receivable?.externalLinkId;
           }
         } else if (payable != null) {
-          if (payable.linkedExpenseId != null) {
+          if (payable.linkedExpenseUuid != null) {
             transaction = await transactionsRepository
-                .getTransactionById(payable.linkedExpenseId!);
+                .getTransactionByUuid(payable.linkedExpenseUuid!);
             existingId ??= transaction?.externalLinkId;
           }
-          if (payable.linkedIncomeId != null) {
+          if (payable.linkedIncomeUuid != null) {
             transaction = await transactionsRepository
-                .getTransactionById(payable.linkedIncomeId!);
+                .getTransactionByUuid(payable.linkedIncomeUuid!);
             existingId ??= transaction?.externalLinkId;
           }
         } else if (receivable != null) {
-          if (receivable.linkedExpenseId != null) {
+          if (receivable.linkedExpenseUuid != null) {
             transaction = await transactionsRepository
-                .getTransactionById(receivable.linkedExpenseId!);
+                .getTransactionByUuid(receivable.linkedExpenseUuid!);
             existingId ??= transaction?.externalLinkId;
           }
-          if (receivable.linkedIncomeId != null) {
+          if (receivable.linkedIncomeUuid != null) {
             transaction = await transactionsRepository
-                .getTransactionById(receivable.linkedIncomeId!);
+                .getTransactionByUuid(receivable.linkedIncomeUuid!);
             existingId ??= transaction?.externalLinkId;
           }
         }
@@ -281,40 +281,40 @@ class TransactionService {
 
       // 3. Update all related records with this ID
       // Update transaction
-      if (transactionId != null) {
+      if (transactionUuid != null) {
         await transactionsRepository.updateTransactionWithCompanion(
-          transactionId,
+          transactionUuid,
           TransactionsCompanion(externalLinkId: Value(finalId)),
         );
       } else if (transaction != null) {
         await transactionsRepository.updateTransactionWithCompanion(
-          transaction.id,
+          transaction.uuid,
           TransactionsCompanion(externalLinkId: Value(finalId)),
         );
       }
 
       // Update payable
-      if (payableId != null) {
+      if (payableUuid != null) {
         await payablesRepository.updatePayableWithCompanion(
-          payableId,
+          payableUuid,
           PayablesCompanion(externalLinkId: Value(finalId)),
         );
       } else if (payable != null) {
         await payablesRepository.updatePayableWithCompanion(
-          payable.id,
+          payable.uuid,
           PayablesCompanion(externalLinkId: Value(finalId)),
         );
       }
 
       // Update receivable
-      if (receivableId != null) {
+      if (receivableUuid != null) {
         await receivablesRepository.updateReceivableWithCompanion(
-          receivableId,
+          receivableUuid,
           ReceivablesCompanion(externalLinkId: Value(finalId)),
         );
       } else if (receivable != null) {
         await receivablesRepository.updateReceivableWithCompanion(
-          receivable.id,
+          receivable.uuid,
           ReceivablesCompanion(externalLinkId: Value(finalId)),
         );
       }
@@ -326,20 +326,20 @@ class TransactionService {
   /// Update a transaction and sync the amount/description with linked entries
   /// If type or relationship changes significantly, linked entries are recreated
   Future<void> updateTransaction({
-    required int transactionId,
+    required String transactionUuid,
     required double amount,
     required String type,
     required DateTime date,
     String? description,
-    int? categoryId,
-    int? contactId,
+    String? categoryUuid,
+    String? contactUuid,
     String? paidRelationship,
     DateTime? dueDate,
   }) async {
     await database.transaction(() async {
       // 1. Get the existing transaction to check for linked entries
       final existingTransaction =
-          await transactionsRepository.getTransactionById(transactionId);
+          await transactionsRepository.getTransactionByUuid(transactionUuid);
 
       if (existingTransaction == null) {
         throw Exception('Transaction not found');
@@ -351,8 +351,8 @@ class TransactionService {
           existingTransaction.paidRelationship != paidRelationship;
 
       // Determine if we need to DELETE old links
-      final hasOldLinks = existingTransaction.linkedPayableId != null ||
-          existingTransaction.linkedReceivableId != null;
+      final hasOldLinks = existingTransaction.linkedPayableUuid != null ||
+          existingTransaction.linkedReceivableUuid != null;
       final shouldDeleteOldLinks =
           hasOldLinks && (typeChanged || relationshipChanged);
 
@@ -361,7 +361,7 @@ class TransactionService {
       // 1. We have a valid relationship and contact
       // 2. AND (We deleted old links OR we didn't have links before OR the relationship/type changed)
       final hasValidNewRelationship =
-          contactId != null && paidRelationship != null;
+          contactUuid != null && paidRelationship != null;
       final shouldCreateNewLinks = hasValidNewRelationship &&
           (shouldDeleteOldLinks ||
               !hasOldLinks ||
@@ -369,57 +369,57 @@ class TransactionService {
               typeChanged);
 
       // 3. If significant change, delete old linked entries
-      int? oldLinkedPayableId = existingTransaction.linkedPayableId;
-      int? oldLinkedReceivableId = existingTransaction.linkedReceivableId;
+      String? oldLinkedPayableUuid = existingTransaction.linkedPayableUuid;
+      String? oldLinkedReceivableUuid = existingTransaction.linkedReceivableUuid;
 
       if (shouldDeleteOldLinks) {
-        if (existingTransaction.linkedPayableId != null) {
+        if (existingTransaction.linkedPayableUuid != null) {
           await payablesRepository
-              .deletePayable(existingTransaction.linkedPayableId!);
+              .deletePayable(existingTransaction.linkedPayableUuid!);
         }
-        if (existingTransaction.linkedReceivableId != null) {
+        if (existingTransaction.linkedReceivableUuid != null) {
           await receivablesRepository
-              .deleteReceivable(existingTransaction.linkedReceivableId!);
+              .deleteReceivable(existingTransaction.linkedReceivableUuid!);
         }
-        oldLinkedPayableId = null;
-        oldLinkedReceivableId = null;
+        oldLinkedPayableUuid = null;
+        oldLinkedReceivableUuid = null;
       }
 
       // 4. Update the transaction
       await transactionsRepository.updateTransactionWithCompanion(
-        transactionId,
+        transactionUuid,
         TransactionsCompanion(
           amount: Value(amount),
           type: Value(type),
-          contactId: Value(contactId),
-          categoryId: Value(categoryId),
+          contactUuid: Value(contactUuid),
+          categoryUuid: Value(categoryUuid),
           description: Value(description),
           date: Value(date),
           paidRelationship: Value(paidRelationship),
-          linkedPayableId: Value(oldLinkedPayableId),
-          linkedReceivableId: Value(oldLinkedReceivableId),
+          linkedPayableUuid: Value(oldLinkedPayableUuid),
+          linkedReceivableUuid: Value(oldLinkedReceivableUuid),
           updatedAt: Value(DateTime.now()),
         ),
       );
 
       // 5. Recreate linked entries if needed
       if (shouldCreateNewLinks) {
-        int? newLinkedPayableId;
-        int? newLinkedReceivableId;
+        String? newLinkedPayableUuid;
+        String? newLinkedReceivableUuid;
 
         if (type == 'EXPENSE') {
           if (paidRelationship == 'PAID_FOR') {
             // Create receivable
-            newLinkedReceivableId =
+            newLinkedReceivableUuid =
                 await receivablesRepository.createReceivable(
               ReceivablesCompanion(
-                contactId: Value(contactId),
+                contactUuid: Value(contactUuid),
                 amount: Value(amount),
                 description: Value(description),
                 date: Value(date),
                 dueDate: Value(dueDate),
                 status: const Value('PENDING'),
-                linkedExpenseId: Value(transactionId),
+                linkedExpenseUuid: Value(transactionUuid),
                 autoCreateIncome: const Value(true),
                 createdAt: Value(DateTime.now()),
                 updatedAt: Value(DateTime.now()),
@@ -427,15 +427,15 @@ class TransactionService {
             );
           } else if (paidRelationship == 'PAID_BY') {
             // Create payable
-            newLinkedPayableId = await payablesRepository.createPayable(
+            newLinkedPayableUuid = await payablesRepository.createPayable(
               PayablesCompanion(
-                contactId: Value(contactId),
+                contactUuid: Value(contactUuid),
                 amount: Value(amount),
                 description: Value(description),
                 date: Value(date),
                 dueDate: Value(dueDate),
                 status: const Value('PENDING'),
-                linkedExpenseId: Value(transactionId),
+                linkedExpenseUuid: Value(transactionUuid),
                 autoCreateExpense: const Value(false),
                 createdAt: Value(DateTime.now()),
                 updatedAt: Value(DateTime.now()),
@@ -445,15 +445,15 @@ class TransactionService {
         } else if (type == 'INCOME') {
           if (paidRelationship == 'RECEIVED_FROM') {
             // Create payable
-            newLinkedPayableId = await payablesRepository.createPayable(
+            newLinkedPayableUuid = await payablesRepository.createPayable(
               PayablesCompanion(
-                contactId: Value(contactId),
+                contactUuid: Value(contactUuid),
                 amount: Value(amount),
                 description: Value(description),
                 date: Value(date),
                 dueDate: Value(dueDate),
                 status: const Value('PENDING'),
-                linkedIncomeId: Value(transactionId),
+                linkedIncomeUuid: Value(transactionUuid),
                 autoCreateExpense: const Value(true),
                 createdAt: Value(DateTime.now()),
                 updatedAt: Value(DateTime.now()),
@@ -461,16 +461,16 @@ class TransactionService {
             );
           } else if (paidRelationship == 'WILL_RECEIVE') {
             // Create receivable
-            newLinkedReceivableId =
+            newLinkedReceivableUuid =
                 await receivablesRepository.createReceivable(
               ReceivablesCompanion(
-                contactId: Value(contactId),
+                contactUuid: Value(contactUuid),
                 amount: Value(amount),
                 description: Value(description),
                 date: Value(date),
                 dueDate: Value(dueDate),
                 status: const Value('PENDING'),
-                linkedIncomeId: Value(transactionId),
+                linkedIncomeUuid: Value(transactionUuid),
                 autoCreateIncome: const Value(false),
                 createdAt: Value(DateTime.now()),
                 updatedAt: Value(DateTime.now()),
@@ -480,12 +480,12 @@ class TransactionService {
         }
 
         // Update transaction with new linked IDs
-        if (newLinkedPayableId != null || newLinkedReceivableId != null) {
+        if (newLinkedPayableUuid != null || newLinkedReceivableUuid != null) {
           await transactionsRepository.updateTransactionWithCompanion(
-            transactionId,
+            transactionUuid,
             TransactionsCompanion(
-              linkedPayableId: Value(newLinkedPayableId),
-              linkedReceivableId: Value(newLinkedReceivableId),
+              linkedPayableUuid: Value(newLinkedPayableUuid),
+              linkedReceivableUuid: Value(newLinkedReceivableUuid),
               updatedAt: Value(DateTime.now()),
             ),
           );
@@ -493,7 +493,7 @@ class TransactionService {
       }
       // 6. If no recreation needed but linked entries exist, just sync them
       else if (!shouldCreateNewLinks && !shouldDeleteOldLinks) {
-        if (existingTransaction.linkedPayableId != null) {
+        if (existingTransaction.linkedPayableUuid != null) {
           final payableCompanion = PayablesCompanion(
             amount: Value(amount),
             description: Value(description),
@@ -501,20 +501,20 @@ class TransactionService {
             dueDate: Value(dueDate),
             updatedAt: Value(DateTime.now()),
           );
-          if (contactId != null) {
+          if (contactUuid != null) {
             await payablesRepository.updatePayableWithCompanion(
-              existingTransaction.linkedPayableId!,
-              payableCompanion.copyWith(contactId: Value(contactId)),
+              existingTransaction.linkedPayableUuid!,
+              payableCompanion.copyWith(contactUuid: Value(contactUuid)),
             );
           } else {
             await payablesRepository.updatePayableWithCompanion(
-              existingTransaction.linkedPayableId!,
+              existingTransaction.linkedPayableUuid!,
               payableCompanion,
             );
           }
         }
 
-        if (existingTransaction.linkedReceivableId != null) {
+        if (existingTransaction.linkedReceivableUuid != null) {
           final receivableCompanion = ReceivablesCompanion(
             amount: Value(amount),
             description: Value(description),
@@ -522,14 +522,14 @@ class TransactionService {
             dueDate: Value(dueDate),
             updatedAt: Value(DateTime.now()),
           );
-          if (contactId != null) {
+          if (contactUuid != null) {
             await receivablesRepository.updateReceivableWithCompanion(
-              existingTransaction.linkedReceivableId!,
-              receivableCompanion.copyWith(contactId: Value(contactId)),
+              existingTransaction.linkedReceivableUuid!,
+              receivableCompanion.copyWith(contactUuid: Value(contactUuid)),
             );
           } else {
             await receivablesRepository.updateReceivableWithCompanion(
-              existingTransaction.linkedReceivableId!,
+              existingTransaction.linkedReceivableUuid!,
               receivableCompanion,
             );
           }
@@ -537,62 +537,62 @@ class TransactionService {
       }
 
       // 7. Update usage counts if categories/contacts changed
-      if (categoryId != existingTransaction.categoryId) {
-        if (existingTransaction.categoryId != null) {
+      if (categoryUuid != existingTransaction.categoryUuid) {
+        if (existingTransaction.categoryUuid != null) {
           await categoriesRepository
-              .decrementUsageCount(existingTransaction.categoryId!);
+              .decrementUsageCount(existingTransaction.categoryUuid!);
         }
-        if (categoryId != null) {
-          await categoriesRepository.incrementUsageCount(categoryId);
+        if (categoryUuid != null) {
+          await categoriesRepository.incrementUsageCount(categoryUuid);
         }
       }
 
-      if (contactId != existingTransaction.contactId) {
-        if (existingTransaction.contactId != null) {
+      if (contactUuid != existingTransaction.contactUuid) {
+        if (existingTransaction.contactUuid != null) {
           await contactsRepository
-              .decrementUsageCount(existingTransaction.contactId!);
+              .decrementUsageCount(existingTransaction.contactUuid!);
         }
-        if (contactId != null) {
-          await contactsRepository.incrementUsageCount(contactId);
+        if (contactUuid != null) {
+          await contactsRepository.incrementUsageCount(contactUuid);
         }
       }
     });
   }
 
   /// Delete a transaction and its linked entries
-  Future<void> deleteTransaction(int transactionId) async {
+  Future<void> deleteTransaction(String transactionUuid) async {
     await database.transaction(() async {
       // 1. Get the existing transaction to check for linked entries
       final existingTransaction =
-          await transactionsRepository.getTransactionById(transactionId);
+          await transactionsRepository.getTransactionByUuid(transactionUuid);
 
       if (existingTransaction == null) {
         throw Exception('Transaction not found');
       }
 
       // 2. Delete linked entries first
-      if (existingTransaction.linkedPayableId != null) {
+      if (existingTransaction.linkedPayableUuid != null) {
         await payablesRepository
-            .deletePayable(existingTransaction.linkedPayableId!);
+            .deletePayable(existingTransaction.linkedPayableUuid!);
       }
 
-      if (existingTransaction.linkedReceivableId != null) {
+      if (existingTransaction.linkedReceivableUuid != null) {
         await receivablesRepository
-            .deleteReceivable(existingTransaction.linkedReceivableId!);
+            .deleteReceivable(existingTransaction.linkedReceivableUuid!);
       }
 
       // 3. Decrement usage counts
-      if (existingTransaction.categoryId != null) {
+      if (existingTransaction.categoryUuid != null) {
         await categoriesRepository
-            .decrementUsageCount(existingTransaction.categoryId!);
+            .decrementUsageCount(existingTransaction.categoryUuid!);
       }
-      if (existingTransaction.contactId != null) {
+      if (existingTransaction.contactUuid != null) {
         await contactsRepository
-            .decrementUsageCount(existingTransaction.contactId!);
+            .decrementUsageCount(existingTransaction.contactUuid!);
       }
 
       // 4. Delete the transaction
-      await transactionsRepository.deleteTransaction(transactionId);
+      await transactionsRepository.deleteTransaction(transactionUuid);
     });
   }
 
@@ -635,15 +635,15 @@ class TransactionService {
 
       // Pick random category
       final categories = isExpense ? expenseCategories : incomeCategories;
-      int? categoryId;
+      String? categoryUuid;
       if (categories.isNotEmpty) {
-        categoryId = categories[i % categories.length].id;
+        categoryUuid = categories[i % categories.length].uuid;
       }
 
       // Pick random contact (optional)
-      int? contactId;
+      String? contactUuid;
       if (contacts.isNotEmpty && i % 4 == 0) {
-        contactId = contacts[i % contacts.length].id;
+        contactUuid = contacts[i % contacts.length].uuid;
       }
 
       // Pick random description
@@ -654,8 +654,8 @@ class TransactionService {
         type: type,
         date: date,
         description: description,
-        categoryId: categoryId,
-        contactId: contactId,
+        categoryUuid: categoryUuid,
+        contactUuid: contactUuid,
       );
     }
   }

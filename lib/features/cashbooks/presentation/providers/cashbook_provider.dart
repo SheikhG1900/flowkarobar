@@ -134,12 +134,22 @@ class CashbookNotifier extends Notifier<List<Cashbook>> {
     await _saveCashbooks(newList);
     state = newList;
 
-    // Delete the database file
+    // Delete the database file and sync metadata
     try {
       final dbFolder = await getApplicationDocumentsDirectory();
       final file = File(p.join(dbFolder.path, cashbookToDelete.dbPath));
       if (await file.exists()) {
         await file.delete();
+      }
+
+      // Also clear sync metadata for this cashbook
+      final db = AppDatabase(fileName: cashbookToDelete.dbPath);
+      try {
+        await (db.delete(db.syncMetadata)).go();
+      } catch (e) {
+        // Ignore if table doesn't exist yet
+      } finally {
+        await db.close();
       }
     } catch (e) {
       // Log error but continue

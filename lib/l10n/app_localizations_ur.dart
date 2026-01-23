@@ -191,6 +191,9 @@ class AppLocalizationsUr extends AppLocalizations {
   String get search => 'تلاش کریں';
 
   @override
+  String get searchTransactions => 'Search transactions...';
+
+  @override
   String get noTransactions => 'کوئی لین دین نہیں ملا';
 
   @override
@@ -2074,6 +2077,51 @@ class AppLocalizationsUr extends AppLocalizations {
 
   @override
   String get googleDrive => 'گوگل ڈرائیو';
+
+  @override
+  String get activeCashbook => 'فعال کیش بک';
+
+  @override
+  String get syncAndBackupApplyTo =>
+      'نیچے دی گئی تمام سنک اور بیک اپ کارروائیاں صرف اسی کیش بک پر لاگو ہوتی ہیں۔';
+
+  @override
+  String get synchronization => 'سنکرونائزیشن';
+
+  @override
+  String get syncActive => 'سنک فعال ہے';
+
+  @override
+  String get syncDescription =>
+      'سنکرونائزیشن چھوٹی تبدیلیوں کو ضم کر کے آپ کے ڈیٹا کو آپ کے تمام آلات پر اپ ڈیٹ رکھتا ہے۔ یہ تیز ہے اور خودکار طور پر چلتا ہے۔';
+
+  @override
+  String get syncNow => 'ابھی سنک کریں';
+
+  @override
+  String get syncTriggered => 'بیک گراؤنڈ میں سنک شروع ہو گیا ہے';
+
+  @override
+  String get backupDescription =>
+      'ایک مکمل بیک اپ آپ کے ڈیٹا بیس کا ایک مکمل اسنیپ شاٹ بناتا ہے۔ اسے تاریخی ریکارڈ یا بڑے مسائل سے نمٹنے کے لیے استعمال کریں۔';
+
+  @override
+  String get syncRecovery => 'سنک ریکوری';
+
+  @override
+  String get syncRecoveryDescription =>
+      'اگر آپ نے سنک کی غلطی کو ٹھیک کرنے کے لیے اس بیک اپ کو بحال کیا ہے، تو آپ کو کلاؤڈ سنک کو اس ورژن پر ری سیٹ کرنا چاہیے۔ یہ اس بحال شدہ ڈیٹا کو \"سچائی کا ذریعہ\" بناتا ہے۔';
+
+  @override
+  String get resetCloudSync => 'کلاؤڈ سنک ری سیٹ کریں';
+
+  @override
+  String get syncManifestReset => 'سنک مینی فیسٹ کامیابی سے ری سیٹ ہو گیا';
+
+  @override
+  String failedToResetSync(String error) {
+    return 'سنک ری سیٹ کرنے میں ناکامی: $error';
+  }
 
   @override
   String get backupToFile => 'فائل میں بیک اپ لیں';

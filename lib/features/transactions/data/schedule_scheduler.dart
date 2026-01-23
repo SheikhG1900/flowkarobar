@@ -72,10 +72,10 @@ Future<void> processSchedules() async {
         // Process each schedule
         for (final schedule in activeSchedules) {
           try {
-            await scheduleService.generateTransactionsFromSchedule(schedule.id);
+            await scheduleService.generateTransactionsFromSchedule(schedule.uuid);
           } catch (e) {
             print(
-                'Error processing schedule ${schedule.id} in ${cashbook.name}: $e');
+                'Error processing schedule ${schedule.uuid} in ${cashbook.name}: $e');
           }
         }
 
@@ -122,10 +122,10 @@ Future<void> processSchedulesFromContext(WidgetRef ref) async {
 
       for (final schedule in activeSchedules) {
         try {
-          await scheduleService.generateTransactionsFromSchedule(schedule.id);
+          await scheduleService.generateTransactionsFromSchedule(schedule.uuid);
         } catch (e) {
           print(
-              'Error processing schedule ${schedule.id} in ${cashbook.name}: $e');
+              'Error processing schedule ${schedule.uuid} in ${cashbook.name}: $e');
         }
       }
 

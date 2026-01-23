@@ -58,7 +58,7 @@ class CurrenciesListScreen extends ConsumerWidget {
             itemCount: currencies.length,
             itemBuilder: (context, index) {
               final currency = currencies[index];
-              final isSelected = currency.id == selectedCurrencyId;
+              final isSelected = currency.uuid == selectedCurrencyId;
               return _CurrencyCard(
                 currency: currency,
                 isSelected: isSelected,
@@ -98,7 +98,7 @@ class _CurrencyCard extends ConsumerWidget {
     final repository = ref.read(currenciesRepositoryProvider);
 
     try {
-      await repository.deleteCurrency(currency.id);
+      await repository.deleteCurrency(currency.uuid);
       if (context.mounted) {
         ToastUtils.showSuccessToast(
             context, ref, l10n.currencyDeleted);
@@ -113,7 +113,7 @@ class _CurrencyCard extends ConsumerWidget {
   Future<void> _selectCurrency(BuildContext context, WidgetRef ref) async {
     final l10n = AppLocalizations.of(context)!;
     final notifier = ref.read(currencyNotifierProvider.notifier);
-    await notifier.setSelectedCurrency(currency.id);
+    await notifier.setSelectedCurrency(currency.uuid);
 
     if (context.mounted) {
       ToastUtils.showSuccessToast(

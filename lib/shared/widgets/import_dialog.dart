@@ -57,7 +57,7 @@ class _ImportDialogState extends ConsumerState<ImportDialog> {
       if (payable != null) {
         exists = true;
         _existingItemWithLinkedData =
-            await payablesRepo.getPayableWithLinkedDataById(payable.id);
+            await payablesRepo.getPayableWithLinkedDataByUuid(payable.uuid);
         debugPrint("ImportDialog: Found matching Payable.");
       } else {
         final receivablesRepo = ref.read(receivablesRepositoryProvider);
@@ -66,7 +66,7 @@ class _ImportDialogState extends ConsumerState<ImportDialog> {
         if (receivable != null) {
           exists = true;
           _existingItemWithLinkedData = await receivablesRepo
-              .getReceivableWithLinkedDataById(receivable.id);
+              .getReceivableWithLinkedDataByUuid(receivable.uuid);
           debugPrint("ImportDialog: Found matching Receivable.");
         } else {
           exists = await ref

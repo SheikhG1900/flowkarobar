@@ -15,8 +15,8 @@ final currenciesListProvider = StreamProvider<List<AppCurrency>>((ref) {
   return repository.watchAllCurrencies();
 });
 
-// Get currency by ID
-final currencyByIdProvider = FutureProvider.family<AppCurrency?, int>((ref, id) async {
+// Get currency by UUID
+final currencyByUuidProvider = FutureProvider.family<AppCurrency?, String>((ref, uuid) async {
   final repository = ref.read(currenciesRepositoryProvider);
-  return repository.getCurrencyById(id);
+  return repository.getCurrencyByUuid(uuid);
 });

@@ -376,6 +376,12 @@ abstract class AppLocalizations {
   /// **'Search'**
   String get search;
 
+  /// No description provided for @searchTransactions.
+  ///
+  /// In en, this message translates to:
+  /// **'Search transactions...'**
+  String get searchTransactions;
+
   /// No description provided for @noTransactions.
   ///
   /// In en, this message translates to:
@@ -3873,6 +3879,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Google Drive'**
   String get googleDrive;
+
+  /// No description provided for @activeCashbook.
+  ///
+  /// In en, this message translates to:
+  /// **'Active Cashbook'**
+  String get activeCashbook;
+
+  /// No description provided for @syncAndBackupApplyTo.
+  ///
+  /// In en, this message translates to:
+  /// **'All sync and backup actions below apply to this cashbook only.'**
+  String get syncAndBackupApplyTo;
+
+  /// No description provided for @synchronization.
+  ///
+  /// In en, this message translates to:
+  /// **'Synchronization'**
+  String get synchronization;
+
+  /// No description provided for @syncActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync active'**
+  String get syncActive;
+
+  /// No description provided for @syncDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Synchronization keeps your data updated across all your devices by merging small changes. It is fast and runs automatically.'**
+  String get syncDescription;
+
+  /// No description provided for @syncNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync Now'**
+  String get syncNow;
+
+  /// No description provided for @syncTriggered.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync triggered in background'**
+  String get syncTriggered;
+
+  /// No description provided for @backupDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'A full backup creates a complete snapshot of your database. Use this for historical records or to recover from major issues.'**
+  String get backupDescription;
+
+  /// No description provided for @syncRecovery.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync Recovery'**
+  String get syncRecovery;
+
+  /// No description provided for @syncRecoveryDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'If you restored this backup to fix a sync error, you should reset the cloud sync to this version. This makes this restored data the \"source of truth\".'**
+  String get syncRecoveryDescription;
+
+  /// No description provided for @resetCloudSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset Cloud Sync'**
+  String get resetCloudSync;
+
+  /// No description provided for @syncManifestReset.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync manifest reset successfully'**
+  String get syncManifestReset;
+
+  /// No description provided for @failedToResetSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to reset sync: {error}'**
+  String failedToResetSync(String error);
 
   /// No description provided for @backupToFile.
   ///

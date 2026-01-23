@@ -76,7 +76,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
   Contact? _selectedContact;
 
   // Linked transaction fields
-  int? _selectedContactId;
+  String? _selectedContactUuid;
   String?
       _paidRelationship; // 'PAID_FOR', 'PAID_BY', 'RECEIVED_FROM', 'WILL_RECEIVE' or null
   bool _createLinkedEntry = false;
@@ -154,7 +154,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
         if (mounted) {
           setState(() {
             _selectedContact = contact;
-            _selectedContactId = contact!.id;
+            _selectedContactUuid = contact!.uuid;
           });
         }
       } else if (widget.initialContactName != null) {
@@ -235,8 +235,8 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
         amount: amount,
         type: _selectedType,
         description: description,
-        categoryId: _selectedCategory?.id,
-        contactId: _selectedContactId,
+        categoryUuid: _selectedCategory?.uuid,
+        contactUuid: _selectedContactUuid,
         paidRelationship: _paidRelationship,
         dueDate: _dueDate,
         scheduleType: result.scheduleType,
@@ -308,13 +308,13 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
           : _descriptionController.text;
 
       // Create transaction and get the ID
-      final transactionId = await transactionService.createTransaction(
+      final transactionUuid = await transactionService.createTransaction(
         amount: amount,
         type: _selectedType,
         date: _selectedDate,
         description: description,
-        contactId: _selectedContactId,
-        categoryId: _selectedCategory?.id,
+        contactUuid: _selectedContactUuid,
+        categoryUuid: _selectedCategory?.uuid,
         paidRelationship: _paidRelationship,
         createLinkedEntry: _createLinkedEntry,
         dueDate: _dueDate,
@@ -335,7 +335,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
         // Fetch full transaction with details
         final repository = ref.read(transactionsRepositoryProvider);
         final transactionWithDetails =
-            await repository.getTransactionWithDetailsById(transactionId);
+            await repository.getTransactionWithDetailsByUuid(transactionUuid);
 
         if (transactionWithDetails != null) {
           final activeColor = ref.read(activeCashbookProvider).color;
@@ -649,7 +649,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                                       ),
                                     ),
                                   ),
-                                if (_selectedCategory?.id == category.id)
+                                if (_selectedCategory?.uuid == category.uuid)
                                   Icon(Icons.check_circle, color: color),
                               ],
                             ),
@@ -659,7 +659,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                               });
                               Navigator.pop(context);
                             },
-                            selected: _selectedCategory?.id == category.id,
+                            selected: _selectedCategory?.uuid == category.uuid,
                           );
                         },
                       );
@@ -785,7 +785,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                                       ),
                                     ),
                                   ),
-                                if (_selectedContactId == contact.id)
+                                if (_selectedContactUuid == contact.uuid)
                                   Icon(Icons.check_circle,
                                       color: theme.colorScheme.primary),
                               ],
@@ -793,7 +793,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                             onTap: () {
                               Navigator.pop(context, contact);
                             },
-                            selected: _selectedContactId == contact.id,
+                            selected: _selectedContactUuid == contact.uuid,
                           );
                         },
                       );
@@ -827,7 +827,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
             _paidRelationship = value;
             _createLinkedEntry = true;
             _selectedContact = contact;
-            _selectedContactId = contact.id;
+            _selectedContactUuid = contact.uuid;
             // Keep existing due date if already set
           });
         }
@@ -1096,7 +1096,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                   if (contact != null) {
                     setState(() {
                       _selectedContact = contact;
-                      _selectedContactId = contact.id;
+                      _selectedContactUuid = contact.uuid;
                     });
                   }
                 },
@@ -1173,7 +1173,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                           onPressed: () {
                             setState(() {
                               _selectedContact = null;
-                              _selectedContactId = null;
+                              _selectedContactUuid = null;
                               _paidRelationship = null;
                               _createLinkedEntry = false;
                               _dueDate = null;
@@ -1186,7 +1186,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                           onPressed: () async {
                             final contactsRepo =
                                 ref.read(contactsRepositoryProvider);
-                            final id = await contactsRepo.createContact(
+                            final String uuid = await contactsRepo.createContact(
                               ContactsCompanion(
                                 name: drift.Value(widget.initialContactName!),
                                 phone: drift.Value(widget.initialContactPhone),
@@ -1196,10 +1196,10 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                             );
                             final newContact =
                                 (await contactsRepo.watchAllContacts().first)
-                                    .firstWhere((c) => c.id == id);
+                                    .firstWhere((c) => c.uuid == uuid);
                             setState(() {
                               _selectedContact = newContact;
-                              _selectedContactId = id;
+                              _selectedContactUuid = uuid;
                             });
                           },
                           icon: const Icon(Icons.add, size: 16),

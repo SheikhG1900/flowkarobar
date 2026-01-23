@@ -4,6 +4,7 @@ import 'package:flowpaisa/features/contacts/data/contacts_repository.dart';
 import 'package:flowpaisa/features/receivables/domain/models.dart';
 import 'package:flowpaisa/features/dashboard/domain/models.dart';
 import 'package:rxdart/rxdart.dart';
+import 'package:uuid/uuid.dart';
 
 class ReceivablesRepository {
   final AppDatabase _database;
@@ -70,7 +71,7 @@ class ReceivablesRepository {
     final query = _database.select(_database.receivables).join([
       leftOuterJoin(
         _database.contacts,
-        _database.contacts.id.equalsExp(_database.receivables.contactId),
+        _database.contacts.uuid.equalsExp(_database.receivables.contactUuid),
       ),
     ]);
 
@@ -93,7 +94,7 @@ class ReceivablesRepository {
     final query = _database.select(_database.receivables).join([
       leftOuterJoin(
         _database.contacts,
-        _database.contacts.id.equalsExp(_database.receivables.contactId),
+        _database.contacts.uuid.equalsExp(_database.receivables.contactUuid),
       ),
     ]);
 
@@ -117,18 +118,18 @@ class ReceivablesRepository {
     final query = _database.select(_database.receivables).join([
       leftOuterJoin(
         _database.contacts,
-        _database.contacts.id.equalsExp(_database.receivables.contactId),
+        _database.contacts.uuid.equalsExp(_database.receivables.contactUuid),
       ),
       leftOuterJoin(
         _database.transactions,
-        _database.transactions.id
-                .equalsExp(_database.receivables.linkedExpenseId) |
-            _database.transactions.id
-                .equalsExp(_database.receivables.linkedIncomeId),
+        _database.transactions.uuid
+                .equalsExp(_database.receivables.linkedExpenseUuid) |
+            _database.transactions.uuid
+                .equalsExp(_database.receivables.linkedIncomeUuid),
       ),
       leftOuterJoin(
         _database.categories,
-        _database.categories.id.equalsExp(_database.transactions.categoryId),
+        _database.categories.uuid.equalsExp(_database.transactions.categoryUuid),
       ),
     ]);
 
@@ -149,41 +150,41 @@ class ReceivablesRepository {
 
   /// Update receivable (with companion for partial updates)
   Future<int> updateReceivableWithCompanion(
-      int id, ReceivablesCompanion companion) {
+      String uuid, ReceivablesCompanion companion) {
     return (_database.update(_database.receivables)
-          ..where((r) => r.id.equals(id)))
+          ..where((r) => r.uuid.equals(uuid)))
         .write(companion);
   }
 
-  /// Get receivable by ID
-  Future<Receivable?> getReceivableById(int id) {
+  /// Get receivable by UUID
+  Future<Receivable?> getReceivableByUuid(String uuid) {
     return (_database.select(_database.receivables)
-          ..where((r) => r.id.equals(id)))
+          ..where((r) => r.uuid.equals(uuid)))
         .getSingleOrNull();
   }
 
-  /// Get receivable with linked data by ID
-  Future<ReceivableWithLinkedData?> getReceivableWithLinkedDataById(
-      int id) async {
+  /// Get receivable with linked data by UUID
+  Future<ReceivableWithLinkedData?> getReceivableWithLinkedDataByUuid(
+      String uuid) async {
     final query = _database.select(_database.receivables).join([
       leftOuterJoin(
         _database.contacts,
-        _database.contacts.id.equalsExp(_database.receivables.contactId),
+        _database.contacts.uuid.equalsExp(_database.receivables.contactUuid),
       ),
       leftOuterJoin(
         _database.transactions,
-        _database.transactions.id
-                .equalsExp(_database.receivables.linkedExpenseId) |
-            _database.transactions.id
-                .equalsExp(_database.receivables.linkedIncomeId),
+        _database.transactions.uuid
+                .equalsExp(_database.receivables.linkedExpenseUuid) |
+            _database.transactions.uuid
+                .equalsExp(_database.receivables.linkedIncomeUuid),
       ),
       leftOuterJoin(
         _database.categories,
-        _database.categories.id.equalsExp(_database.transactions.categoryId),
+        _database.categories.uuid.equalsExp(_database.transactions.categoryUuid),
       ),
     ]);
 
-    query.where(_database.receivables.id.equals(id));
+    query.where(_database.receivables.uuid.equals(uuid));
 
     final rows = await query.get();
     if (rows.isEmpty) return null;
@@ -198,8 +199,10 @@ class ReceivablesRepository {
   }
 
   /// Create receivable
-  Future<int> createReceivable(ReceivablesCompanion receivable) {
-    return _database.into(_database.receivables).insert(receivable);
+  Future<String> createReceivable(ReceivablesCompanion receivable) async {
+    final uuid = receivable.uuid.present ? receivable.uuid.value : Uuid().v4();
+    await _database.into(_database.receivables).insert(receivable.copyWith(uuid: Value(uuid)));
+    return uuid;
   }
 
   /// Update receivable
@@ -208,16 +211,16 @@ class ReceivablesRepository {
   }
 
   /// Delete receivable
-  Future<int> deleteReceivable(int id) {
+  Future<int> deleteReceivable(String uuid) {
     return (_database.delete(_database.receivables)
-          ..where((r) => r.id.equals(id)))
+          ..where((r) => r.uuid.equals(uuid)))
         .go();
   }
 
   /// Mark receivable as received and activate linked transaction
-  Future<void> markAsReceived(int receivableId) async {
+  Future<void> markAsReceived(String receivableUuid) async {
     await _database.transaction(() async {
-      final receivable = await getReceivableById(receivableId);
+      final receivable = await getReceivableByUuid(receivableUuid);
       if (receivable == null) return;
 
       // Update receivable status and store received date
@@ -230,17 +233,19 @@ class ReceivablesRepository {
           );
 
       // Auto-create income if enabled (for PAID_FOR receivables and standalone receivables)
-      // Skip if linkedIncomeId exists (WILL_RECEIVE case - already has linked income)
-      if (receivable.autoCreateIncome && receivable.linkedIncomeId == null) {
-        final incomeId = await _database.into(_database.transactions).insert(
+      // Skip if linkedIncomeUuid exists (WILL_RECEIVE case - already has linked income)
+      if (receivable.autoCreateIncome && receivable.linkedIncomeUuid == null) {
+        final incomeUuid = const Uuid().v4();
+        await _database.into(_database.transactions).insert(
               TransactionsCompanion(
+                uuid: Value(incomeUuid),
                 amount: Value(receivable.amount),
                 type: const Value('INCOME'),
-                categoryId: Value(null),
-                contactId: Value(receivable.contactId),
+                categoryUuid: Value(null),
+                contactUuid: Value(receivable.contactUuid),
                 description: Value(receivable.description),
                 date: Value(DateTime.now()),
-                linkedReceivableId: Value(receivableId),
+                linkedReceivableUuid: Value(receivableUuid),
                 isAutoGenerated: const Value(true), // Mark as auto-generated
                 createdAt: Value(DateTime.now()),
                 updatedAt: Value(DateTime.now()),
@@ -250,7 +255,7 @@ class ReceivablesRepository {
         // Link the income back to receivable
         await _database.update(_database.receivables).replace(
               receivable.copyWith(
-                linkedIncomeId: Value(incomeId),
+                linkedIncomeUuid: Value(incomeUuid),
                 status: 'RECEIVED',
                 receivedDate: Value(DateTime.now()),
                 updatedAt: DateTime.now(),
@@ -274,7 +279,7 @@ class ReceivablesRepository {
   Future<int> getOverdueReceivablesCount() async {
     final now = DateTime.now();
     final query = _database.selectOnly(_database.receivables)
-      ..addColumns([_database.receivables.id.count()])
+      ..addColumns([_database.receivables.uuid.count()])
       ..where(
         _database.receivables.status.equals('PENDING') &
         _database.receivables.dueDate.isNotNull() &
@@ -282,13 +287,13 @@ class ReceivablesRepository {
       );
 
     final result = await query.getSingle();
-    return result.read(_database.receivables.id.count()) ?? 0;
+    return result.read(_database.receivables.uuid.count()) ?? 0;
   }
 
   /// Get receivables by contact
-  Stream<List<Receivable>> watchReceivablesByContact(int contactId) {
+  Stream<List<Receivable>> watchReceivablesByContact(String contactUuid) {
     return (_database.select(_database.receivables)
-          ..where((r) => r.contactId.equals(contactId))
+          ..where((r) => r.contactUuid.equals(contactUuid))
           ..orderBy([(r) => OrderingTerm.desc(r.date)]))
         .watch();
   }
@@ -310,29 +315,31 @@ class ReceivablesRepository {
   Future<void> markAsReceivedByExternalLinkId(String externalLinkId) async {
     final receivable = await getReceivableByExternalLinkId(externalLinkId);
     if (receivable != null && receivable.status == 'PENDING') {
-      await markAsReceived(receivable.id);
+      await markAsReceived(receivable.uuid);
     }
   }
 
   /// Import receivable from shared link
-  Future<int> importFromSharedLink(dynamic sharedData) async {
+  Future<String> importFromSharedLink(dynamic sharedData) async {
     // Import shared data (dynamic type for flexibility with SharedData classes)
     // Extract contact ID or create contact
-    int? contactId;
+    String? contactUuid;
 
     if (sharedData.contactPhone != null &&
         sharedData.contactPhone!.isNotEmpty) {
       // Find or create contact
       final contactsRepo = ContactsRepository(_database);
-      contactId = await contactsRepo.findOrCreateContactByPhone(
+      contactUuid = await contactsRepo.findOrCreateContactByPhone(
         phone: sharedData.contactPhone!,
         name: sharedData.contactName ?? 'Unknown',
       );
     }
 
-    return await createReceivable(
+    final uuid = const Uuid().v4();
+    await createReceivable(
       ReceivablesCompanion(
-        contactId: Value(contactId!),
+        uuid: Value(uuid),
+        contactUuid: Value(contactUuid!),
         amount: Value(sharedData.amount),
         description: Value(sharedData.description),
         date: Value(sharedData.date),
@@ -342,6 +349,7 @@ class ReceivablesRepository {
         autoCreateIncome: const Value(true),
       ),
     );
+    return uuid;
   }
 
   /// Get receivables with contact information by date range
@@ -352,7 +360,7 @@ class ReceivablesRepository {
     final query = _database.select(_database.receivables).join([
       leftOuterJoin(
         _database.contacts,
-        _database.contacts.id.equalsExp(_database.receivables.contactId),
+        _database.contacts.uuid.equalsExp(_database.receivables.contactUuid),
       ),
     ]);
 
@@ -379,18 +387,18 @@ class ReceivablesRepository {
     final query = _database.select(_database.receivables).join([
       leftOuterJoin(
         _database.contacts,
-        _database.contacts.id.equalsExp(_database.receivables.contactId),
+        _database.contacts.uuid.equalsExp(_database.receivables.contactUuid),
       ),
       leftOuterJoin(
         _database.transactions,
-        _database.transactions.id
-                .equalsExp(_database.receivables.linkedExpenseId) |
-            _database.transactions.id
-                .equalsExp(_database.receivables.linkedIncomeId),
+        _database.transactions.uuid
+                .equalsExp(_database.receivables.linkedExpenseUuid) |
+            _database.transactions.uuid
+                .equalsExp(_database.receivables.linkedIncomeUuid),
       ),
       leftOuterJoin(
         _database.categories,
-        _database.categories.id.equalsExp(_database.transactions.categoryId),
+        _database.categories.uuid.equalsExp(_database.transactions.categoryUuid),
       ),
     ]);
 
@@ -419,18 +427,18 @@ class ReceivablesRepository {
     final query = _database.select(_database.receivables).join([
       leftOuterJoin(
         _database.contacts,
-        _database.contacts.id.equalsExp(_database.receivables.contactId),
+        _database.contacts.uuid.equalsExp(_database.receivables.contactUuid),
       ),
       leftOuterJoin(
         _database.transactions,
-        _database.transactions.id
-                .equalsExp(_database.receivables.linkedExpenseId) |
-            _database.transactions.id
-                .equalsExp(_database.receivables.linkedIncomeId),
+        _database.transactions.uuid
+                .equalsExp(_database.receivables.linkedExpenseUuid) |
+            _database.transactions.uuid
+                .equalsExp(_database.receivables.linkedIncomeUuid),
       ),
       leftOuterJoin(
         _database.categories,
-        _database.categories.id.equalsExp(_database.transactions.categoryId),
+        _database.categories.uuid.equalsExp(_database.transactions.categoryUuid),
       ),
     ]);
 
@@ -457,18 +465,18 @@ class ReceivablesRepository {
     final query = _database.select(_database.receivables).join([
       leftOuterJoin(
         _database.contacts,
-        _database.contacts.id.equalsExp(_database.receivables.contactId),
+        _database.contacts.uuid.equalsExp(_database.receivables.contactUuid),
       ),
       leftOuterJoin(
         _database.transactions,
-        _database.transactions.id
-                .equalsExp(_database.receivables.linkedExpenseId) |
-            _database.transactions.id
-                .equalsExp(_database.receivables.linkedIncomeId),
+        _database.transactions.uuid
+                .equalsExp(_database.receivables.linkedExpenseUuid) |
+            _database.transactions.uuid
+                .equalsExp(_database.receivables.linkedIncomeUuid),
       ),
       leftOuterJoin(
         _database.categories,
-        _database.categories.id.equalsExp(_database.transactions.categoryId),
+        _database.categories.uuid.equalsExp(_database.transactions.categoryUuid),
       ),
     ]);
 
@@ -501,18 +509,18 @@ class ReceivablesRepository {
     final query = _database.select(_database.receivables).join([
       leftOuterJoin(
         _database.contacts,
-        _database.contacts.id.equalsExp(_database.receivables.contactId),
+        _database.contacts.uuid.equalsExp(_database.receivables.contactUuid),
       ),
       leftOuterJoin(
         _database.transactions,
-        _database.transactions.id
-                .equalsExp(_database.receivables.linkedExpenseId) |
-            _database.transactions.id
-                .equalsExp(_database.receivables.linkedIncomeId),
+        _database.transactions.uuid
+                .equalsExp(_database.receivables.linkedExpenseUuid) |
+            _database.transactions.uuid
+                .equalsExp(_database.receivables.linkedIncomeUuid),
       ),
       leftOuterJoin(
         _database.categories,
-        _database.categories.id.equalsExp(_database.transactions.categoryId),
+        _database.categories.uuid.equalsExp(_database.transactions.categoryUuid),
       ),
     ]);
 
@@ -546,18 +554,18 @@ class ReceivablesRepository {
     final query = _database.select(_database.receivables).join([
       leftOuterJoin(
         _database.contacts,
-        _database.contacts.id.equalsExp(_database.receivables.contactId),
+        _database.contacts.uuid.equalsExp(_database.receivables.contactUuid),
       ),
       leftOuterJoin(
         _database.transactions,
-        _database.transactions.id
-                .equalsExp(_database.receivables.linkedExpenseId) |
-            _database.transactions.id
-                .equalsExp(_database.receivables.linkedIncomeId),
+        _database.transactions.uuid
+                .equalsExp(_database.receivables.linkedExpenseUuid) |
+            _database.transactions.uuid
+                .equalsExp(_database.receivables.linkedIncomeUuid),
       ),
       leftOuterJoin(
         _database.categories,
-        _database.categories.id.equalsExp(_database.transactions.categoryId),
+        _database.categories.uuid.equalsExp(_database.transactions.categoryUuid),
       ),
     ]);
 

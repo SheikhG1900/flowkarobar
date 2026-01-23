@@ -33,31 +33,32 @@ class SchedulesRepository {
         .get();
   }
 
-  // Get schedule by ID
-  Future<TransactionSchedule?> getScheduleById(int id) {
+  // Get schedule by UUID
+  Future<TransactionSchedule?> getScheduleByUuid(String uuid) {
     return (_database.select(_database.transactionSchedules)
-          ..where((s) => s.id.equals(id)))
+          ..where((s) => s.uuid.equals(uuid)))
         .getSingleOrNull();
   }
 
   // Create schedule
-  Future<int> createSchedule(TransactionSchedulesCompanion schedule) {
-    return _database.into(_database.transactionSchedules).insert(schedule);
+  Future<String> createSchedule(TransactionSchedulesCompanion schedule) async {
+    await _database.into(_database.transactionSchedules).insert(schedule);
+    return schedule.uuid.value;
   }
 
   // Update schedule
   Future<bool> updateSchedule(
-      int id, TransactionSchedulesCompanion schedule) async {
+      String uuid, TransactionSchedulesCompanion schedule) async {
     final result = await (_database.update(_database.transactionSchedules)
-          ..where((s) => s.id.equals(id)))
+          ..where((s) => s.uuid.equals(uuid)))
         .write(schedule);
     return result > 0;
   }
 
   // Update lastGeneratedDate
-  Future<bool> updateLastGeneratedDate(int id, DateTime date) async {
+  Future<bool> updateLastGeneratedDate(String uuid, DateTime date) async {
     final result = await (_database.update(_database.transactionSchedules)
-          ..where((s) => s.id.equals(id)))
+          ..where((s) => s.uuid.equals(uuid)))
         .write(TransactionSchedulesCompanion(
       lastGeneratedDate: Value(date),
       updatedAt: Value(DateTime.now()),
@@ -66,9 +67,9 @@ class SchedulesRepository {
   }
 
   // Pause schedule
-  Future<bool> pauseSchedule(int id) async {
+  Future<bool> pauseSchedule(String uuid) async {
     final result = await (_database.update(_database.transactionSchedules)
-          ..where((s) => s.id.equals(id)))
+          ..where((s) => s.uuid.equals(uuid)))
         .write(TransactionSchedulesCompanion(
       isPaused: const Value(true),
       updatedAt: Value(DateTime.now()),
@@ -77,10 +78,10 @@ class SchedulesRepository {
   }
 
   // Resume schedule (set lastGeneratedDate to day before resume date)
-  Future<bool> resumeSchedule(int id, DateTime resumeDate) async {
+  Future<bool> resumeSchedule(String uuid, DateTime resumeDate) async {
     final dayBefore = resumeDate.subtract(const Duration(days: 1));
     final result = await (_database.update(_database.transactionSchedules)
-          ..where((s) => s.id.equals(id)))
+          ..where((s) => s.uuid.equals(uuid)))
         .write(TransactionSchedulesCompanion(
       isPaused: const Value(false),
       lastGeneratedDate: Value(dayBefore),
@@ -90,9 +91,9 @@ class SchedulesRepository {
   }
 
   // Delete schedule
-  Future<bool> deleteSchedule(int id) async {
+  Future<bool> deleteSchedule(String uuid) async {
     final result = await (_database.delete(_database.transactionSchedules)
-          ..where((s) => s.id.equals(id)))
+          ..where((s) => s.uuid.equals(uuid)))
         .go();
     return result > 0;
   }

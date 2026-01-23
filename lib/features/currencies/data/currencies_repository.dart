@@ -14,10 +14,10 @@ class CurrenciesRepository {
         .watch();
   }
 
-  /// Get currency by ID
-  Future<AppCurrency?> getCurrencyById(int id) {
+  /// Get currency by UUID
+  Future<AppCurrency?> getCurrencyByUuid(String uuid) {
     return (_database.select(_database.appCurrencies)
-          ..where((c) => c.id.equals(id)))
+          ..where((c) => c.uuid.equals(uuid)))
         .getSingleOrNull();
   }
 
@@ -41,8 +41,8 @@ class CurrenciesRepository {
   }
 
   /// Soft delete currency (only non-default currencies)
-  Future<void> deleteCurrency(int id) async {
-    final currency = await getCurrencyById(id);
+  Future<void> deleteCurrency(String uuid) async {
+    final currency = await getCurrencyByUuid(uuid);
     if (currency == null) {
       throw Exception('Currency not found');
     }
@@ -53,7 +53,7 @@ class CurrenciesRepository {
 
     // Soft delete: mark as inactive
     await (_database.update(_database.appCurrencies)
-          ..where((c) => c.id.equals(id)))
+          ..where((c) => c.uuid.equals(uuid)))
         .write(AppCurrenciesCompanion(isActive: Value(false)));
   }
 

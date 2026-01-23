@@ -4,6 +4,8 @@ import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/features/backup/presentation/providers/backup_provider.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
 import 'package:flowpaisa/core/utils/date_formatter.dart';
+import 'package:flowpaisa/features/backup/data/sync/sync_scheduler.dart';
+import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
 import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
@@ -53,6 +55,10 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                       _buildAuthSection(context, state, notifier, l10n),
 
                       if (state.currentUser != null) ...[
+                        const SizedBox(height: 24),
+                        _buildCashbookHeader(context, theme),
+                        const SizedBox(height: 24),
+                        _buildSyncSection(context, state, l10n),
                         const SizedBox(height: 24),
                         _buildBackupControls(context, state, notifier, l10n),
                         const SizedBox(height: 24),
@@ -134,6 +140,62 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                 ),
               ),
             ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCashbookHeader(BuildContext context, ThemeData theme) {
+    final activeCashbook = ref.watch(activeCashbookProvider);
+    final l10n = AppLocalizations.of(context)!;
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.primaryContainer.withValues(alpha: 0.2),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.1)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: activeCashbook.color.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              activeCashbook.icon,
+              color: activeCashbook.color,
+              size: 24,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.activeCashbook,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.colorScheme.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  activeCashbook.name,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  l10n.syncAndBackupApplyTo,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -230,6 +292,75 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
     }
   }
 
+  Widget _buildSyncSection(
+    BuildContext context,
+    BackupState state,
+    AppLocalizations l10n,
+  ) {
+    final theme = Theme.of(context);
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          l10n.synchronization,
+          style: theme.textTheme.titleLarge,
+        ),
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: theme.cardColor,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: theme.dividerColor),
+          ),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.sync, size: 20, color: Colors.grey),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          l10n.syncActive,
+                          style: theme.textTheme.bodyMedium,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          l10n.syncDescription,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              GradientButton(
+                label: l10n.syncNow,
+                gradient: AppColors.getPrimaryGradient(theme.colorScheme.primary),
+                icon: Icons.sync,
+                onPressed: () async {
+                  await SyncScheduler.triggerOnDemandSync();
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(l10n.syncTriggered)),
+                    );
+                  }
+                },
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildBackupControls(
     BuildContext context,
     BackupState state,
@@ -254,6 +385,21 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
           ),
           child: Column(
             children: [
+              Row(
+                children: [
+                  const Icon(Icons.info_outline, size: 20, color: Colors.grey),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      l10n.backupDescription,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
               if (state.lastBackupTime != null)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 16),
@@ -370,7 +516,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
               try {
                 await notifier.restore(fileId);
                 if (context.mounted) {
-                  _showRestartDialog(context, l10n);
+                  _showPostRestoreOptions(context, notifier, l10n);
                 }
               } catch (e) {
                 if (context.mounted) {
@@ -386,20 +532,85 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
     );
   }
 
-  void _showRestartDialog(BuildContext context, AppLocalizations l10n) {
+  void _showPostRestoreOptions(
+    BuildContext context,
+    BackupNotifier notifier,
+    AppLocalizations l10n,
+  ) {
+    final theme = Theme.of(context);
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: Text(l10n.restoreSuccessful),
-        content: Text(l10n.restoreSuccessfulMessage),
+        title: Row(
+          children: [
+            const Icon(Icons.check_circle, color: Colors.green),
+            const SizedBox(width: 12),
+            Text(l10n.restoreSuccessful),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(l10n.restoreSuccessfulMessage),
+            const SizedBox(height: 24),
+              Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.2)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.sync_problem, size: 20, color: theme.colorScheme.primary),
+                      const SizedBox(width: 8),
+                      Text(
+                        l10n.syncRecovery,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: theme.colorScheme.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    l10n.syncRecoveryDescription,
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () async {
+                        try {
+                          await notifier.resetSyncAfterRestore();
+                          if (context.mounted) {
+                            ToastUtils.showSuccessToast(context, ref, l10n.syncManifestReset);
+                          }
+                        } catch (e) {
+                          if (context.mounted) {
+                            ToastUtils.showErrorToast(context, ref, l10n.failedToResetSync(e.toString()));
+                          }
+                        }
+                      },
+                      icon: const Icon(Icons.restart_alt, size: 18),
+                      label: Text(l10n.resetCloudSync),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
         actions: [
           FilledButton(
-            onPressed: () {
-              // We can't easily kill the app on iOS, but on Android we can.
-              // For now, just pop.
-              Navigator.pop(context);
-            },
+            onPressed: () => Navigator.pop(context),
             child: Text(l10n.ok),
           ),
         ],

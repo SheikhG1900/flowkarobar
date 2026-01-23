@@ -49,6 +49,7 @@ import 'package:material_symbols_icons/symbols.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workmanager/workmanager.dart';
 import 'package:flowpaisa/features/transactions/data/schedule_scheduler.dart';
+import 'package:flowpaisa/features/backup/data/sync/sync_scheduler.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -95,6 +96,10 @@ void main() async {
       networkType: NetworkType.notRequired,
     ),
   );
+
+  // Initialize Sync Scheduler
+  await SyncScheduler.init();
+  await SyncScheduler.scheduleDailySync();
 
   runApp(
     ProviderScope(
@@ -885,7 +890,7 @@ class _DashboardTab extends ConsumerWidget {
             final isLast = items.indexOf(item) == items.length - 1;
             return Expanded(
               child: Container(
-                margin: EdgeInsetsDirectional.only(end: isLast ? 0 : 6),
+                margin: EdgeInsetsDirectional.only(end: isLast ? 0 : 8),
                 padding:
                     const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
                 decoration: BoxDecoration(

@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:flowpaisa/core/database/database.dart';
+import 'package:uuid/uuid.dart';
 
 class ContactsRepository {
   final AppDatabase _database;
@@ -18,8 +19,8 @@ class ContactsRepository {
     final query = _database.select(_database.contacts).join([
       leftOuterJoin(
         _database.contactUsageStats,
-        _database.contactUsageStats.contactId
-            .equalsExp(_database.contacts.id),
+        _database.contactUsageStats.contactUuid
+            .equalsExp(_database.contacts.uuid),
       ),
     ])
       ..orderBy([
@@ -40,17 +41,17 @@ class ContactsRepository {
     });
   }
 
-  /// Get contact by ID
-  Future<Contact?> getContactById(int id) {
+  /// Get contact by UUID
+  Future<Contact?> getContactByUuid(String uuid) {
     return (_database.select(_database.contacts)
-          ..where((c) => c.id.equals(id)))
+          ..where((c) => c.uuid.equals(uuid)))
         .getSingleOrNull();
   }
 
-  /// Watch contact by ID (reactive)
-  Stream<Contact?> watchContactById(int id) {
+  /// Watch contact by UUID (reactive)
+  Stream<Contact?> watchContactByUuid(String uuid) {
     return (_database.select(_database.contacts)
-          ..where((c) => c.id.equals(id)))
+          ..where((c) => c.uuid.equals(uuid)))
         .watchSingleOrNull();
   }
 
@@ -62,8 +63,10 @@ class ContactsRepository {
   }
 
   /// Create contact
-  Future<int> createContact(ContactsCompanion contact) {
-    return _database.into(_database.contacts).insert(contact);
+  Future<String> createContact(ContactsCompanion contact) async {
+    final uuid = contact.uuid.present ? contact.uuid.value : const Uuid().v4();
+    await _database.into(_database.contacts).insert(contact.copyWith(uuid: Value(uuid)));
+    return uuid;
   }
 
   /// Update contact
@@ -72,9 +75,9 @@ class ContactsRepository {
   }
 
   /// Delete contact
-  Future<int> deleteContact(int id) {
+  Future<int> deleteContact(String uuid) {
     return (_database.delete(_database.contacts)
-          ..where((c) => c.id.equals(id)))
+          ..where((c) => c.uuid.equals(uuid)))
         .go();
   }
 
@@ -87,11 +90,11 @@ class ContactsRepository {
   }
 
   /// Increment contact usage count
-  Future<void> incrementUsageCount(int contactId) async {
+  Future<void> incrementUsageCount(String contactUuid) async {
     await _database.transaction(() async {
       // Check if usage stat exists
       final existingStat = await (_database.select(_database.contactUsageStats)
-            ..where((s) => s.contactId.equals(contactId)))
+            ..where((s) => s.contactUuid.equals(contactUuid)))
           .getSingleOrNull();
 
       if (existingStat != null) {
@@ -106,7 +109,7 @@ class ContactsRepository {
         // Create new
         await _database.into(_database.contactUsageStats).insert(
               ContactUsageStatsCompanion(
-                contactId: Value(contactId),
+                contactUuid: Value(contactUuid),
                 usageCount: const Value(1),
                 lastUsed: Value(DateTime.now()),
               ),
@@ -116,11 +119,11 @@ class ContactsRepository {
   }
 
   /// Decrement contact usage count
-  Future<void> decrementUsageCount(int contactId) async {
+  Future<void> decrementUsageCount(String contactUuid) async {
     await _database.transaction(() async {
       // Check if usage stat exists
       final existingStat = await (_database.select(_database.contactUsageStats)
-            ..where((s) => s.contactId.equals(contactId)))
+            ..where((s) => s.contactUuid.equals(contactUuid)))
           .getSingleOrNull();
 
       if (existingStat != null && existingStat.usageCount > 0) {
@@ -139,8 +142,8 @@ class ContactsRepository {
     final query = _database.select(_database.contacts).join([
       innerJoin(
         _database.contactUsageStats,
-        _database.contactUsageStats.contactId
-            .equalsExp(_database.contacts.id),
+        _database.contactUsageStats.contactUuid
+            .equalsExp(_database.contacts.uuid),
       ),
     ])
       ..orderBy([
@@ -165,8 +168,8 @@ class ContactsRepository {
     final query = _database.select(_database.contacts).join([
       innerJoin(
         _database.contactUsageStats,
-        _database.contactUsageStats.contactId
-            .equalsExp(_database.contacts.id),
+        _database.contactUsageStats.contactUuid
+            .equalsExp(_database.contacts.uuid),
       ),
     ])
       ..orderBy([
@@ -187,7 +190,7 @@ class ContactsRepository {
   }
 
   /// Find contact by phone or create if not exists
-  Future<int> findOrCreateContactByPhone({
+  Future<String> findOrCreateContactByPhone({
     required String phone,
     required String name,
   }) async {
@@ -197,50 +200,53 @@ class ContactsRepository {
     // Try to find existing contact
     final existingContact = await getContactByPhone(cleanPhone);
     if (existingContact != null) {
-      return existingContact.id;
+      return existingContact.uuid;
     }
 
     // Create new contact
-    return await createContact(
+    final uuid = const Uuid().v4();
+    await createContact(
       ContactsCompanion(
+        uuid: Value(uuid),
         name: Value(name),
         phone: Value(cleanPhone),
       ),
     );
+    return uuid;
   }
 
   /// Get contact statistics
-  Future<ContactStatistics> getContactStatistics(int contactId) async {
-    final contact = await getContactById(contactId);
+  Future<ContactStatistics> getContactStatistics(String contactUuid) async {
+    final contact = await getContactByUuid(contactUuid);
     if (contact == null) {
       throw Exception('Contact not found');
     }
 
     // Get transactions count
     final transactionsCount = await (_database.selectOnly(_database.transactions)
-          ..addColumns([_database.transactions.id.count()])
-          ..where(_database.transactions.contactId.equals(contactId)))
+          ..addColumns([_database.transactions.uuid.count()])
+          ..where(_database.transactions.contactUuid.equals(contactUuid)))
         .getSingle()
-        .then((row) => row.read(_database.transactions.id.count()) ?? 0);
+        .then((row) => row.read(_database.transactions.uuid.count()) ?? 0);
 
     // Get receivables count
     final receivablesCount = await (_database.selectOnly(_database.receivables)
-          ..addColumns([_database.receivables.id.count()])
-          ..where(_database.receivables.contactId.equals(contactId)))
+          ..addColumns([_database.receivables.uuid.count()])
+          ..where(_database.receivables.contactUuid.equals(contactUuid)))
         .getSingle()
-        .then((row) => row.read(_database.receivables.id.count()) ?? 0);
+        .then((row) => row.read(_database.receivables.uuid.count()) ?? 0);
 
     // Get payables count
     final payablesCount = await (_database.selectOnly(_database.payables)
-          ..addColumns([_database.payables.id.count()])
-          ..where(_database.payables.contactId.equals(contactId)))
+          ..addColumns([_database.payables.uuid.count()])
+          ..where(_database.payables.contactUuid.equals(contactUuid)))
         .getSingle()
-        .then((row) => row.read(_database.payables.id.count()) ?? 0);
+        .then((row) => row.read(_database.payables.uuid.count()) ?? 0);
 
     // Get total receivable amount
     final totalReceivable = await (_database.selectOnly(_database.receivables)
           ..addColumns([_database.receivables.amount.sum()])
-          ..where(_database.receivables.contactId.equals(contactId))
+          ..where(_database.receivables.contactUuid.equals(contactUuid))
           ..where(_database.receivables.status.equals('PENDING')))
         .getSingle()
         .then((row) => row.read(_database.receivables.amount.sum()) ?? 0.0);
@@ -248,7 +254,7 @@ class ContactsRepository {
     // Get total payable amount
     final totalPayable = await (_database.selectOnly(_database.payables)
           ..addColumns([_database.payables.amount.sum()])
-          ..where(_database.payables.contactId.equals(contactId))
+          ..where(_database.payables.contactUuid.equals(contactUuid))
           ..where(_database.payables.status.equals('PENDING')))
         .getSingle()
         .then((row) => row.read(_database.payables.amount.sum()) ?? 0.0);
@@ -264,37 +270,37 @@ class ContactsRepository {
   }
 
   /// Watch contact statistics (reactive version)
-  Stream<ContactStatistics> watchContactStatistics(int contactId) {
-    return watchContactById(contactId).asyncMap((contact) async {
+  Stream<ContactStatistics> watchContactStatistics(String contactUuid) {
+    return watchContactByUuid(contactUuid).asyncMap((contact) async {
       if (contact == null) {
         throw Exception('Contact not found');
       }
 
       // Get transactions count
       final transactionsCount = await (_database.selectOnly(_database.transactions)
-            ..addColumns([_database.transactions.id.count()])
-            ..where(_database.transactions.contactId.equals(contactId)))
+            ..addColumns([_database.transactions.uuid.count()])
+            ..where(_database.transactions.contactUuid.equals(contactUuid)))
           .getSingle()
-          .then((row) => row.read(_database.transactions.id.count()) ?? 0);
+          .then((row) => row.read(_database.transactions.uuid.count()) ?? 0);
 
       // Get receivables count
       final receivablesCount = await (_database.selectOnly(_database.receivables)
-            ..addColumns([_database.receivables.id.count()])
-            ..where(_database.receivables.contactId.equals(contactId)))
+            ..addColumns([_database.receivables.uuid.count()])
+            ..where(_database.receivables.contactUuid.equals(contactUuid)))
           .getSingle()
-          .then((row) => row.read(_database.receivables.id.count()) ?? 0);
+          .then((row) => row.read(_database.receivables.uuid.count()) ?? 0);
 
       // Get payables count
       final payablesCount = await (_database.selectOnly(_database.payables)
-            ..addColumns([_database.payables.id.count()])
-            ..where(_database.payables.contactId.equals(contactId)))
+            ..addColumns([_database.payables.uuid.count()])
+            ..where(_database.payables.contactUuid.equals(contactUuid)))
           .getSingle()
-          .then((row) => row.read(_database.payables.id.count()) ?? 0);
+          .then((row) => row.read(_database.payables.uuid.count()) ?? 0);
 
       // Get total receivable amount
       final totalReceivable = await (_database.selectOnly(_database.receivables)
             ..addColumns([_database.receivables.amount.sum()])
-            ..where(_database.receivables.contactId.equals(contactId))
+            ..where(_database.receivables.contactUuid.equals(contactUuid))
             ..where(_database.receivables.status.equals('PENDING')))
           .getSingle()
           .then((row) => row.read(_database.receivables.amount.sum()) ?? 0.0);
@@ -302,7 +308,7 @@ class ContactsRepository {
       // Get total payable amount
       final totalPayable = await (_database.selectOnly(_database.payables)
             ..addColumns([_database.payables.amount.sum()])
-            ..where(_database.payables.contactId.equals(contactId))
+            ..where(_database.payables.contactUuid.equals(contactUuid))
             ..where(_database.payables.status.equals('PENDING')))
           .getSingle()
           .then((row) => row.read(_database.payables.amount.sum()) ?? 0.0);

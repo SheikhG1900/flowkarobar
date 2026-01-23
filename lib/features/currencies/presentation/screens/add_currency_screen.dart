@@ -2,6 +2,7 @@ import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:drift/drift.dart' as drift;
+import 'package:uuid/uuid.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
@@ -54,9 +55,11 @@ class _AddCurrencyScreenState extends ConsumerState<AddCurrencyScreen> {
 
     try {
       final repository = ref.read(currenciesRepositoryProvider);
+      final newUuid = const Uuid().v4();
 
       await repository.createCurrency(
         AppCurrenciesCompanion.insert(
+          uuid: newUuid,
           name: _nameController.text,
           symbol: _symbolController.text,
           code: _codeController.text.toUpperCase(),

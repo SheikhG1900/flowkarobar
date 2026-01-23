@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:convert';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:googleapis/drive/v3.dart' as drive;
 import 'package:extension_google_sign_in_as_googleapis_auth/extension_google_sign_in_as_googleapis_auth.dart';
@@ -138,14 +139,17 @@ class GoogleDriveService {
     }
   }
 
-  /// Get or Create "FlowPaisa Backups" folder
-  Future<String> _getOrCreateBackupFolder() async {
+  /// Get or Create a folder in appDataFolder
+  Future<String> _getOrCreateFolder(String folderName, {String? parentId}) async {
     if (_driveApi == null) throw Exception('Drive API not initialized');
     
-    const folderName = 'FlowPaisa Backups';
-    const query = "mimeType = 'application/vnd.google-apps.folder' and name = '$folderName' and trashed = false";
+    final parentQuery = parentId != null ? "'$parentId' in parents" : "'appDataFolder' in parents";
+    final query = "mimeType = 'application/vnd.google-apps.folder' and name = '$folderName' and $parentQuery and trashed = false";
     
-    final list = await _driveApi!.files.list(q: query);
+    final list = await _driveApi!.files.list(
+      q: query,
+      spaces: 'appDataFolder',
+    );
     
     if (list.files?.isNotEmpty == true) {
       return list.files!.first.id!;
@@ -153,10 +157,114 @@ class GoogleDriveService {
       // Create folder
       final folder = drive.File()
         ..name = folderName
-        ..mimeType = 'application/vnd.google-apps.folder';
+        ..mimeType = 'application/vnd.google-apps.folder'
+        ..parents = [parentId ?? 'appDataFolder'];
       
-      final result = await _driveApi!.files.create(folder);
+      final result = await _driveApi!.files.create(
+        folder,
+        uploadMedia: null,
+      );
       return result.id!;
     }
+  }
+
+  /// Download a file with its ETag
+  Future<({String content, String etag})> downloadFileWithETag(String fileId) async {
+    if (_driveApi == null) throw Exception('Drive API not initialized');
+
+    final response = await _driveApi!.files.get(
+      fileId,
+      downloadOptions: drive.DownloadOptions.fullMedia,
+    ) as drive.Media;
+
+    final dynamic driveFileObj = await _driveApi!.files.get(fileId, $fields: 'etag');
+    final String etagValue = (driveFileObj.etag as String?) ?? '';
+    
+    final content = await utf8.decodeStream(response.stream);
+    return (content: content, etag: etagValue);
+  }
+
+  /// Upload or update a file with ETag check (If-Match)
+  Future<String> uploadFile({
+    required String name,
+    required String content,
+    required String parentId,
+    String? etag,
+    String? fileId,
+  }) async {
+    if (_driveApi == null) throw Exception('Drive API not initialized');
+
+    final driveFile = drive.File()
+      ..name = name
+      ..parents = fileId == null ? [parentId] : null;
+
+    final media = drive.Media(
+      Stream.value(utf8.encode(content)),
+      utf8.encode(content).length,
+    );
+
+    if (fileId != null) {
+      // Update existing file
+      final result = await _driveApi!.files.update(
+        driveFile,
+        fileId,
+        uploadMedia: media,
+      );
+      return result.id!;
+    } else {
+      // Create new file
+      final result = await _driveApi!.files.create(
+        driveFile,
+        uploadMedia: media,
+      );
+      return result.id!;
+    }
+  }
+
+  /// Get file ID by name in a specific folder
+  Future<String?> getFileIdByName(String name, String folderId) async {
+    if (_driveApi == null) throw Exception('Drive API not initialized');
+
+    final query = "name = '$name' and '$folderId' in parents and trashed = false";
+    final list = await _driveApi!.files.list(
+      q: query,
+      spaces: 'appDataFolder',
+      $fields: 'files(id)',
+    );
+
+    if (list.files?.isNotEmpty == true) {
+      return list.files!.first.id;
+    }
+    return null;
+  }
+
+  /// Delete a file by ID
+  Future<void> deleteFile(String fileId) async {
+    if (_driveApi == null) throw Exception('Drive API not initialized');
+    await _driveApi!.files.delete(fileId);
+  }
+
+  /// List sync files (v*.json) in a folder
+  Future<List<drive.File>> listSyncFiles(String folderId) async {
+    if (_driveApi == null) throw Exception('Drive API not initialized');
+
+    final query = "'$folderId' in parents and name contains 'v' and name contains '.json' and trashed = false";
+    final list = await _driveApi!.files.list(
+      q: query,
+      spaces: 'appDataFolder',
+      $fields: 'files(id, name)',
+    );
+
+    return list.files ?? [];
+  }
+
+  /// Get or Create "FlowPaisa Backups" folder
+  Future<String> _getOrCreateBackupFolder() async {
+    return _getOrCreateFolder('FlowPaisa Backups');
+  }
+
+  /// Get or Create cashbook folder in appDataFolder
+  Future<String> getOrCreateCashbookFolder(String cashbookId) async {
+    return _getOrCreateFolder(cashbookId);
   }
 }

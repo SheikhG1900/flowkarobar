@@ -51,7 +51,7 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
 
   Category? _selectedCategory;
   Contact? _selectedContact;
-  int? _selectedContactId;
+  String? _selectedContactUuid;
 
   String? _paidRelationship;
 
@@ -65,7 +65,7 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
     _selectedDate = widget.transaction.date;
     _selectedCategory = widget.category;
     _selectedContact = widget.contact;
-    _selectedContactId = widget.transaction.contactId;
+    _selectedContactUuid = widget.transaction.contactUuid;
     _paidRelationship = widget.transaction.paidRelationship;
 
     // Fetch due date from linked payable/receivable if exists
@@ -77,17 +77,17 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
     final payablesRepository = PayablesRepository(database);
     final receivablesRepository = ReceivablesRepository(database);
 
-    if (widget.transaction.linkedPayableId != null) {
+    if (widget.transaction.linkedPayableUuid != null) {
       final payable = await payablesRepository
-          .getPayableById(widget.transaction.linkedPayableId!);
+          .getPayableByUuid(widget.transaction.linkedPayableUuid!);
       if (mounted && payable != null) {
         setState(() {
           _dueDate = payable.dueDate;
         });
       }
-    } else if (widget.transaction.linkedReceivableId != null) {
+    } else if (widget.transaction.linkedReceivableUuid != null) {
       final receivable = await receivablesRepository
-          .getReceivableById(widget.transaction.linkedReceivableId!);
+          .getReceivableByUuid(widget.transaction.linkedReceivableUuid!);
       if (mounted && receivable != null) {
         setState(() {
           _dueDate = receivable.dueDate;
@@ -147,8 +147,8 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
         amount: amount,
         type: _selectedType,
         description: description,
-        categoryId: _selectedCategory?.id,
-        contactId: _selectedContactId,
+        categoryUuid: _selectedCategory?.uuid,
+        contactUuid: _selectedContactUuid,
         paidRelationship: _paidRelationship,
         dueDate: _dueDate,
         scheduleType: result.scheduleType,
@@ -210,13 +210,13 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
 
       // Update the transaction
       await service.updateTransaction(
-        transactionId: widget.transaction.id,
+        transactionUuid: widget.transaction.uuid,
         amount: amount,
         type: _selectedType,
         date: _selectedDate,
         description: description,
-        contactId: _selectedContactId,
-        categoryId: _selectedCategory?.id,
+        contactUuid: _selectedContactUuid,
+        categoryUuid: _selectedCategory?.uuid,
         paidRelationship: _paidRelationship,
         dueDate: _dueDate,
       );
@@ -368,7 +368,7 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                               ),
                             ),
                             title: Text(category.name),
-                            trailing: _selectedCategory?.id == category.id
+                            trailing: _selectedCategory?.uuid == category.uuid
                                 ? Icon(Icons.check_circle, color: color)
                                 : null,
                             onTap: () {
@@ -463,14 +463,14 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                             subtitle: contact.phone != null
                                 ? Text(contact.phone!)
                                 : null,
-                            trailing: _selectedContactId == contact.id
+                            trailing: _selectedContactUuid == contact.uuid
                                 ? Icon(Icons.check_circle,
                                     color: theme.colorScheme.primary)
                                 : null,
                             onTap: () {
                               setState(() {
                                 _selectedContact = contact;
-                                _selectedContactId = contact.id;
+                                _selectedContactUuid = contact.uuid;
                               });
                               Navigator.pop(context);
                             },
@@ -800,7 +800,7 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                           onPressed: () {
                             setState(() {
                               _selectedContact = null;
-                              _selectedContactId = null;
+                              _selectedContactUuid = null;
                             });
                           },
                         ),

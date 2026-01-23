@@ -169,12 +169,12 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
                       try {
                         final contacts =
                             await contactsRepo.watchAllContacts().first;
-                        int defaultContactId;
+                        String defaultContactUuid;
                         if (contacts.isNotEmpty) {
-                          defaultContactId = contacts[0].id;
+                          defaultContactUuid = contacts[0].uuid;
                         } else {
                           // Create a default contact if none exists
-                          defaultContactId = await contactsRepo.createContact(
+                          defaultContactUuid = await contactsRepo.createContact(
                             ContactsCompanion(
                               name: const Value('Default Contact'),
                               createdAt: Value(DateTime.now()),
@@ -188,13 +188,13 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
                           final date =
                               DateTime.now().subtract(Duration(days: daysAgo));
                           final amount = (50.0 + (i * 15.3) % 2000).roundToDouble();
-                          final contactId = contacts.isNotEmpty
-                              ? contacts[i % contacts.length].id
-                              : defaultContactId;
+                          final contactUuid = contacts.isNotEmpty
+                              ? contacts[i % contacts.length].uuid
+                              : defaultContactUuid;
 
                           await repository.createReceivable(
                             ReceivablesCompanion(
-                              contactId: Value(contactId),
+                              contactUuid: Value(contactUuid),
                               amount: Value(amount),
                               description: Value('Dummy Receivable #${i + 1}'),
                               date: Value(date),
@@ -426,8 +426,8 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
                   final item = dateItems[itemIndex];
                   // Restrict editing/deleting for received or linked receivables
                   final canEdit = item.receivable.status == 'PENDING' &&
-                      item.receivable.linkedExpenseId == null &&
-                      item.receivable.linkedIncomeId == null;
+                      item.receivable.linkedExpenseUuid == null &&
+                      item.receivable.linkedIncomeUuid == null;
 
                   return Padding(
                     padding:
@@ -442,7 +442,7 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
                                 context,
                                 MaterialPageRoute(
                                   builder: (context) => EditReceivableScreen(
-                                      receivableId: item.receivable.id),
+                                      receivableUuid: item.receivable.uuid),
                                 ),
                               );
                             }
@@ -453,7 +453,7 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
                                   final repository =
                                       ref.read(receivablesRepositoryProvider);
                                   await repository
-                                      .deleteReceivable(item.receivable.id);
+                                      .deleteReceivable(item.receivable.uuid);
                                   if (context.mounted) {
                                     ToastUtils.showSuccessToast(
                                         context, ref, l10n.receivableDeleted);

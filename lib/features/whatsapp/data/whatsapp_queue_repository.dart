@@ -8,13 +8,13 @@ class WhatsAppQueueRepository {
 
   /// Add a message to the queue
   Future<int> queueMessage({
-    required int contactId,
+    required String contactUuid,
     required String message,
     String? deepLink,
   }) {
     return _database.into(_database.whatsAppQueue).insert(
           WhatsAppQueueCompanion(
-            contactId: Value(contactId),
+            contactUuid: Value(contactUuid),
             message: Value(message),
             deepLink: Value(deepLink),
             status: const Value('PENDING'),

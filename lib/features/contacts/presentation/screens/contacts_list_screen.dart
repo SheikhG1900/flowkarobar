@@ -173,7 +173,7 @@ class _ContactCard extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     try {
       final repository = ref.read(contactsRepositoryProvider);
-      await repository.deleteContact(contact.id);
+      await repository.deleteContact(contact.uuid);
       if (context.mounted) {
         ToastUtils.showSuccessToast(
             context, ref, l10n.contactDeletedSuccessfully);
@@ -188,7 +188,6 @@ class _ContactCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final l10n = AppLocalizations.of(context)!;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
@@ -233,7 +232,7 @@ class _ContactCard extends ConsumerWidget {
                   context,
                   MaterialPageRoute(
                     builder: (context) =>
-                        ContactDetailsScreen(contactId: contact.id),
+                        ContactDetailsScreen(contactUuid: contact.uuid),
                   ),
                 );
               },

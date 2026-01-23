@@ -1,6 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/features/backup/data/google_drive_service.dart';
 import 'package:flowpaisa/features/backup/data/backup_repository.dart';
+import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
+import 'package:flowpaisa/core/database/database.dart';
 import 'package:googleapis/drive/v3.dart' as drive;
 import 'package:google_sign_in/google_sign_in.dart';
 
@@ -137,6 +139,35 @@ class BackupNotifier extends Notifier<BackupState> {
     try {
       state = state.copyWith(isLoading: true, error: null);
       await _repository.restore(fileId);
+      state = state.copyWith(isLoading: false);
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+      rethrow;
+    }
+  }
+
+  Future<void> resetSyncAfterRestore() async {
+    try {
+      state = state.copyWith(isLoading: true, error: null);
+      
+      final activeCashbook = ref.read(activeCashbookProvider);
+      
+      // 1. Get local version from restored DB
+      final db = AppDatabase(fileName: activeCashbook.dbPath);
+      int localVersion = 0;
+      try {
+        final metadata = await (db.select(db.syncMetadata)).get();
+        if (metadata.isNotEmpty) {
+          // Find max version or version for this device
+          localVersion = metadata.map((m) => m.version).fold(0, (prev, v) => v > prev ? v : prev);
+        }
+      } finally {
+        await db.close();
+      }
+
+      // 2. Reset cloud manifest to this version
+      await _repository.resetSyncToVersion(activeCashbook.id, localVersion);
+      
       state = state.copyWith(isLoading: false);
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());

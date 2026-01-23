@@ -28,7 +28,7 @@ final currencyInitializerProvider = FutureProvider<void>((ref) async {
       print(
           '💵 Currency Initializer: Found currency: ${currency.name} (${currency.symbol})');
       await prefsRepository.setPreference(
-          'selected_currency_id', currency.id.toString());
+          'selected_currency_id', currency.uuid);
     } else {
       print(
           '💵 Currency Initializer: Currency code $currencyCode not found, using default');
@@ -37,7 +37,7 @@ final currencyInitializerProvider = FutureProvider<void>((ref) async {
       print(
           '💵 Currency Initializer: Using default: ${defaultCurrency.name} (${defaultCurrency.symbol})');
       await prefsRepository.setPreference(
-          'selected_currency_id', defaultCurrency.id.toString());
+          'selected_currency_id', defaultCurrency.uuid);
     }
     await prefsRepository.setPreference('currency_initialized', 'true');
     print('💵 Currency Initializer: Initialization complete');
@@ -47,17 +47,14 @@ final currencyInitializerProvider = FutureProvider<void>((ref) async {
 });
 
 /// Provider for the currently selected currency ID
-final selectedCurrencyIdProvider = FutureProvider<int?>((ref) async {
+final selectedCurrencyIdProvider = FutureProvider<String?>((ref) async {
   // Ensure currency initialization is complete
   await ref.watch(currencyInitializerProvider.future);
 
   final prefsRepository = ref.watch(userPreferencesRepositoryProvider);
   final idString = await prefsRepository.getPreference('selected_currency_id');
 
-  if (idString != null) {
-    return int.tryParse(idString);
-  }
-  return null;
+  return idString;
 });
 
 /// Provider for the current currency object
@@ -66,7 +63,7 @@ final currentCurrencyProvider = FutureProvider<AppCurrency>((ref) async {
 
   if (currencyId != null) {
     final repository = ref.read(currenciesRepositoryProvider);
-    final currency = await repository.getCurrencyById(currencyId);
+    final currency = await repository.getCurrencyByUuid(currencyId);
     if (currency != null) {
       return currency;
     }
@@ -102,10 +99,10 @@ class CurrencyNotifier extends Notifier<void> {
   @override
   void build() {}
 
-  Future<void> setSelectedCurrency(int currencyId) async {
+  Future<void> setSelectedCurrency(String currencyUuid) async {
     final prefsRepository = ref.read(userPreferencesRepositoryProvider);
     await prefsRepository.setPreference(
-        'selected_currency_id', currencyId.toString());
+        'selected_currency_id', currencyUuid);
 
     // Invalidate providers to refresh the UI
     ref.invalidate(selectedCurrencyIdProvider);

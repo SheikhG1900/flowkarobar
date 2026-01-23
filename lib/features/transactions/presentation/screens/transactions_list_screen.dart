@@ -37,6 +37,8 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
     with SingleTickerProviderStateMixin {
   late ScrollController _scrollController;
   late TabController _tabController;
+  late TextEditingController _searchController;
+  bool _isSearching = false;
 
   @override
   void initState() {
@@ -44,12 +46,14 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
     _scrollController = ScrollController();
     _scrollController.addListener(_onScroll);
     _tabController = TabController(length: 2, vsync: this);
+    _searchController = TextEditingController();
   }
 
   @override
   void dispose() {
     _scrollController.dispose();
     _tabController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -72,8 +76,26 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.transactions),
-        bottom: hasSchedules
+        title: _isSearching
+            ? TextField(
+                controller: _searchController,
+                autofocus: true,
+                decoration: InputDecoration(
+                  hintText: l10n.searchTransactions,
+                  border: InputBorder.none,
+                  hintStyle: theme.textTheme.bodyLarge?.copyWith(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                  ),
+                ),
+                style: theme.textTheme.bodyLarge,
+                onChanged: (value) {
+                  ref
+                      .read(transactionsPaginatedProvider.notifier)
+                      .search(value);
+                },
+              )
+            : Text(l10n.transactions),
+        bottom: hasSchedules && !_isSearching
             ? TabBar(
                 controller: _tabController,
                 tabs: [
@@ -83,8 +105,22 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
               )
             : null,
         actions: [
+          IconButton(
+            icon: Icon(_isSearching ? Icons.close : Icons.search),
+            onPressed: () {
+              setState(() {
+                if (_isSearching) {
+                  _isSearching = false;
+                  _searchController.clear();
+                  ref.read(transactionsPaginatedProvider.notifier).search('');
+                } else {
+                  _isSearching = true;
+                }
+              });
+            },
+          ),
           // Debug button to generate dummy transactions (only in debug mode)
-          if (kDebugMode)
+          if (kDebugMode && !_isSearching)
             PopupMenuButton<String>(
               icon: const Icon(Icons.bug_report),
               onSelected: (value) async {
@@ -189,13 +225,13 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              Icons.receipt_long_outlined,
+              _isSearching ? Icons.search_off : Icons.receipt_long_outlined,
               size: 120,
               color: Colors.grey[300],
             ),
             const SizedBox(height: 24),
             Text(
-              l10n.noTransactionsYet,
+              _isSearching ? l10n.noTransactions : l10n.noTransactionsYet,
               style: theme.textTheme.titleLarge?.copyWith(
                 color: Colors.grey[600],
                 fontWeight: FontWeight.w600,
@@ -203,7 +239,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
             ),
             const SizedBox(height: 12),
             Text(
-              l10n.tapToAddFirst,
+              _isSearching ? l10n.trySearchingDifferentName : l10n.tapToAddFirst,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: Colors.grey[500],
               ),
@@ -670,7 +706,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
             },
             onDelete: () async {
               final service = ref.read(scheduleServiceProvider);
-              await service.deleteSchedule(schedule.id);
+              await service.deleteSchedule(schedule.uuid);
               if (context.mounted) {
                 ToastUtils.showSuccessToast(
                     context, ref, l10n.scheduleDeleted);
@@ -682,9 +718,9 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
               onToggle: () async {
                 final service = ref.read(scheduleServiceProvider);
                 if (schedule.isPaused) {
-                  await service.resumeSchedule(schedule.id, DateTime.now());
+                  await service.resumeSchedule(schedule.uuid, DateTime.now());
                 } else {
-                  await service.pauseSchedule(schedule.id);
+                  await service.pauseSchedule(schedule.uuid);
                 }
                 ref.invalidate(allSchedulesProvider);
               },

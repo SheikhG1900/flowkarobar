@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:drift/drift.dart' as drift;
+import 'package:uuid/uuid.dart';
 import 'package:flutter_contacts/flutter_contacts.dart' as fc;
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/core/database/database.dart';
@@ -244,8 +245,10 @@ class _AddContactScreenState extends ConsumerState<AddContactScreen> {
         createdOrUpdatedContact = updatedContact;
       } else {
         // Create new
-        final contactId = await repository.createContact(
+        final newUuid = const Uuid().v4();
+        await repository.createContact(
           ContactsCompanion(
+            uuid: drift.Value(newUuid),
             name: drift.Value(name),
             phone: drift.Value(phone),
             email: drift.Value(email),
@@ -253,7 +256,7 @@ class _AddContactScreenState extends ConsumerState<AddContactScreen> {
           ),
         );
         // Get the created contact to return it
-        createdOrUpdatedContact = await repository.getContactById(contactId);
+        createdOrUpdatedContact = await repository.getContactByUuid(newUuid);
       }
 
       if (mounted) {

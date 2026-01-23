@@ -4,6 +4,7 @@ import 'package:flowpaisa/features/contacts/data/contacts_repository.dart';
 import 'package:flowpaisa/features/payables/domain/models.dart';
 import 'package:flowpaisa/features/dashboard/domain/models.dart';
 import 'package:rxdart/rxdart.dart';
+import 'package:uuid/uuid.dart';
 
 class PayablesRepository {
   final AppDatabase _database;
@@ -70,7 +71,7 @@ class PayablesRepository {
     final query = _database.select(_database.payables).join([
       leftOuterJoin(
         _database.contacts,
-        _database.contacts.id.equalsExp(_database.payables.contactId),
+        _database.contacts.uuid.equalsExp(_database.payables.contactUuid),
       ),
     ]);
 
@@ -93,7 +94,7 @@ class PayablesRepository {
     final query = _database.select(_database.payables).join([
       leftOuterJoin(
         _database.contacts,
-        _database.contacts.id.equalsExp(_database.payables.contactId),
+        _database.contacts.uuid.equalsExp(_database.payables.contactUuid),
       ),
     ]);
 
@@ -117,18 +118,18 @@ class PayablesRepository {
     final query = _database.select(_database.payables).join([
       leftOuterJoin(
         _database.contacts,
-        _database.contacts.id.equalsExp(_database.payables.contactId),
+        _database.contacts.uuid.equalsExp(_database.payables.contactUuid),
       ),
       leftOuterJoin(
         _database.transactions,
-        _database.transactions.id
-                .equalsExp(_database.payables.linkedExpenseId) |
-            _database.transactions.id
-                .equalsExp(_database.payables.linkedIncomeId),
+        _database.transactions.uuid
+                .equalsExp(_database.payables.linkedExpenseUuid) |
+            _database.transactions.uuid
+                .equalsExp(_database.payables.linkedIncomeUuid),
       ),
       leftOuterJoin(
         _database.categories,
-        _database.categories.id.equalsExp(_database.transactions.categoryId),
+        _database.categories.uuid.equalsExp(_database.transactions.categoryUuid),
       ),
     ]);
 
@@ -148,38 +149,38 @@ class PayablesRepository {
   }
 
   /// Update payable (with companion for partial updates)
-  Future<int> updatePayableWithCompanion(int id, PayablesCompanion companion) {
-    return (_database.update(_database.payables)..where((p) => p.id.equals(id)))
+  Future<int> updatePayableWithCompanion(String uuid, PayablesCompanion companion) {
+    return (_database.update(_database.payables)..where((p) => p.uuid.equals(uuid)))
         .write(companion);
   }
 
-  /// Get payable by ID
-  Future<Payable?> getPayableById(int id) {
-    return (_database.select(_database.payables)..where((p) => p.id.equals(id)))
+  /// Get payable by UUID
+  Future<Payable?> getPayableByUuid(String uuid) {
+    return (_database.select(_database.payables)..where((p) => p.uuid.equals(uuid)))
         .getSingleOrNull();
   }
 
-  /// Get payable with linked data by ID
-  Future<PayableWithLinkedData?> getPayableWithLinkedDataById(int id) async {
+  /// Get payable with linked data by UUID
+  Future<PayableWithLinkedData?> getPayableWithLinkedDataByUuid(String uuid) async {
     final query = _database.select(_database.payables).join([
       leftOuterJoin(
         _database.contacts,
-        _database.contacts.id.equalsExp(_database.payables.contactId),
+        _database.contacts.uuid.equalsExp(_database.payables.contactUuid),
       ),
       leftOuterJoin(
         _database.transactions,
-        _database.transactions.id
-                .equalsExp(_database.payables.linkedExpenseId) |
-            _database.transactions.id
-                .equalsExp(_database.payables.linkedIncomeId),
+        _database.transactions.uuid
+                .equalsExp(_database.payables.linkedExpenseUuid) |
+            _database.transactions.uuid
+                .equalsExp(_database.payables.linkedIncomeUuid),
       ),
       leftOuterJoin(
         _database.categories,
-        _database.categories.id.equalsExp(_database.transactions.categoryId),
+        _database.categories.uuid.equalsExp(_database.transactions.categoryUuid),
       ),
     ]);
 
-    query.where(_database.payables.id.equals(id));
+    query.where(_database.payables.uuid.equals(uuid));
 
     final rows = await query.get();
     if (rows.isEmpty) return null;
@@ -194,8 +195,10 @@ class PayablesRepository {
   }
 
   /// Create payable
-  Future<int> createPayable(PayablesCompanion payable) {
-    return _database.into(_database.payables).insert(payable);
+  Future<String> createPayable(PayablesCompanion payable) async {
+    final uuid = payable.uuid.present ? payable.uuid.value : Uuid().v4();
+    await _database.into(_database.payables).insert(payable.copyWith(uuid: Value(uuid)));
+    return uuid;
   }
 
   /// Update payable
@@ -204,15 +207,15 @@ class PayablesRepository {
   }
 
   /// Delete payable
-  Future<int> deletePayable(int id) {
-    return (_database.delete(_database.payables)..where((p) => p.id.equals(id)))
+  Future<int> deletePayable(String uuid) {
+    return (_database.delete(_database.payables)..where((p) => p.uuid.equals(uuid)))
         .go();
   }
 
   /// Mark payable as paid and activate linked transaction
-  Future<void> markAsPaid(int payableId) async {
+  Future<void> markAsPaid(String payableUuid) async {
     await _database.transaction(() async {
-      final payable = await getPayableById(payableId);
+      final payable = await getPayableByUuid(payableUuid);
       if (payable == null) return;
 
       // Update payable status and store paid date
@@ -225,16 +228,18 @@ class PayablesRepository {
           );
 
       // Auto-create expense if enabled (for non-linked payables like PAID_FOR/RECEIVED_FROM)
-      if (payable.autoCreateExpense && payable.linkedExpenseId == null) {
-        final expenseId = await _database.into(_database.transactions).insert(
+      if (payable.autoCreateExpense && payable.linkedExpenseUuid == null) {
+        final expenseUuid = const Uuid().v4();
+        await _database.into(_database.transactions).insert(
               TransactionsCompanion(
+                uuid: Value(expenseUuid),
                 amount: Value(payable.amount),
                 type: const Value('EXPENSE'),
-                categoryId: Value(null),
-                contactId: Value(payable.contactId),
+                categoryUuid: Value(null),
+                contactUuid: Value(payable.contactUuid),
                 description: Value(payable.description),
                 date: Value(DateTime.now()),
-                linkedPayableId: Value(payableId),
+                linkedPayableUuid: Value(payableUuid),
                 isAutoGenerated: const Value(true), // Mark as auto-generated
                 createdAt: Value(DateTime.now()),
                 updatedAt: Value(DateTime.now()),
@@ -244,7 +249,7 @@ class PayablesRepository {
         // Link the expense back to payable
         await _database.update(_database.payables).replace(
               payable.copyWith(
-                linkedExpenseId: Value(expenseId),
+                linkedExpenseUuid: Value(expenseUuid),
                 status: 'PAID',
                 paidDate: Value(DateTime.now()),
                 updatedAt: DateTime.now(),
@@ -268,7 +273,7 @@ class PayablesRepository {
   Future<int> getOverduePayablesCount() async {
     final now = DateTime.now();
     final query = _database.selectOnly(_database.payables)
-      ..addColumns([_database.payables.id.count()])
+      ..addColumns([_database.payables.uuid.count()])
       ..where(
         _database.payables.status.equals('PENDING') &
             _database.payables.dueDate.isNotNull() &
@@ -276,13 +281,13 @@ class PayablesRepository {
       );
 
     final result = await query.getSingle();
-    return result.read(_database.payables.id.count()) ?? 0;
+    return result.read(_database.payables.uuid.count()) ?? 0;
   }
 
   /// Get payables by contact
-  Stream<List<Payable>> watchPayablesByContact(int contactId) {
+  Stream<List<Payable>> watchPayablesByContact(String contactUuid) {
     return (_database.select(_database.payables)
-          ..where((p) => p.contactId.equals(contactId))
+          ..where((p) => p.contactUuid.equals(contactUuid))
           ..orderBy([(p) => OrderingTerm.desc(p.date)]))
         .watch();
   }
@@ -304,29 +309,31 @@ class PayablesRepository {
   Future<void> markAsPaidByExternalLinkId(String externalLinkId) async {
     final payable = await getPayableByExternalLinkId(externalLinkId);
     if (payable != null && payable.status == 'PENDING') {
-      await markAsPaid(payable.id);
+      await markAsPaid(payable.uuid);
     }
   }
 
   /// Import payable from shared link
-  Future<int> importFromSharedLink(dynamic sharedData) async {
+  Future<String> importFromSharedLink(dynamic sharedData) async {
     // Import shared data (dynamic type for flexibility with SharedData classes)
     // Extract contact ID or create contact
-    int? contactId;
+    String? contactUuid;
 
     if (sharedData.contactPhone != null &&
         sharedData.contactPhone!.isNotEmpty) {
       // Find or create contact
       final contactsRepo = ContactsRepository(_database);
-      contactId = await contactsRepo.findOrCreateContactByPhone(
+      contactUuid = await contactsRepo.findOrCreateContactByPhone(
         phone: sharedData.contactPhone!,
         name: sharedData.contactName ?? 'Unknown',
       );
     }
 
-    return await createPayable(
+    final uuid = const Uuid().v4();
+    await createPayable(
       PayablesCompanion(
-        contactId: Value(contactId!),
+        uuid: Value(uuid),
+        contactUuid: Value(contactUuid!),
         amount: Value(sharedData.amount),
         description: Value(sharedData.description),
         date: Value(sharedData.date),
@@ -336,6 +343,7 @@ class PayablesRepository {
         autoCreateExpense: const Value(false),
       ),
     );
+    return uuid;
   }
 
   /// Get payables with contact information by date range
@@ -346,7 +354,7 @@ class PayablesRepository {
     final query = _database.select(_database.payables).join([
       leftOuterJoin(
         _database.contacts,
-        _database.contacts.id.equalsExp(_database.payables.contactId),
+        _database.contacts.uuid.equalsExp(_database.payables.contactUuid),
       ),
     ]);
 
@@ -372,18 +380,18 @@ class PayablesRepository {
     final query = _database.select(_database.payables).join([
       leftOuterJoin(
         _database.contacts,
-        _database.contacts.id.equalsExp(_database.payables.contactId),
+        _database.contacts.uuid.equalsExp(_database.payables.contactUuid),
       ),
       leftOuterJoin(
         _database.transactions,
-        _database.transactions.id
-                .equalsExp(_database.payables.linkedExpenseId) |
-            _database.transactions.id
-                .equalsExp(_database.payables.linkedIncomeId),
+        _database.transactions.uuid
+                .equalsExp(_database.payables.linkedExpenseUuid) |
+            _database.transactions.uuid
+                .equalsExp(_database.payables.linkedIncomeUuid),
       ),
       leftOuterJoin(
         _database.categories,
-        _database.categories.id.equalsExp(_database.transactions.categoryId),
+        _database.categories.uuid.equalsExp(_database.transactions.categoryUuid),
       ),
     ]);
 
@@ -412,18 +420,18 @@ class PayablesRepository {
     final query = _database.select(_database.payables).join([
       leftOuterJoin(
         _database.contacts,
-        _database.contacts.id.equalsExp(_database.payables.contactId),
+        _database.contacts.uuid.equalsExp(_database.payables.contactUuid),
       ),
       leftOuterJoin(
         _database.transactions,
-        _database.transactions.id
-                .equalsExp(_database.payables.linkedExpenseId) |
-            _database.transactions.id
-                .equalsExp(_database.payables.linkedIncomeId),
+        _database.transactions.uuid
+                .equalsExp(_database.payables.linkedExpenseUuid) |
+            _database.transactions.uuid
+                .equalsExp(_database.payables.linkedIncomeUuid),
       ),
       leftOuterJoin(
         _database.categories,
-        _database.categories.id.equalsExp(_database.transactions.categoryId),
+        _database.categories.uuid.equalsExp(_database.transactions.categoryUuid),
       ),
     ]);
 
@@ -449,18 +457,18 @@ class PayablesRepository {
     final query = _database.select(_database.payables).join([
       leftOuterJoin(
         _database.contacts,
-        _database.contacts.id.equalsExp(_database.payables.contactId),
+        _database.contacts.uuid.equalsExp(_database.payables.contactUuid),
       ),
       leftOuterJoin(
         _database.transactions,
-        _database.transactions.id
-                .equalsExp(_database.payables.linkedExpenseId) |
-            _database.transactions.id
-                .equalsExp(_database.payables.linkedIncomeId),
+        _database.transactions.uuid
+                .equalsExp(_database.payables.linkedExpenseUuid) |
+            _database.transactions.uuid
+                .equalsExp(_database.payables.linkedIncomeUuid),
       ),
       leftOuterJoin(
         _database.categories,
-        _database.categories.id.equalsExp(_database.transactions.categoryId),
+        _database.categories.uuid.equalsExp(_database.transactions.categoryUuid),
       ),
     ]);
 
@@ -493,18 +501,18 @@ class PayablesRepository {
     final query = _database.select(_database.payables).join([
       leftOuterJoin(
         _database.contacts,
-        _database.contacts.id.equalsExp(_database.payables.contactId),
+        _database.contacts.uuid.equalsExp(_database.payables.contactUuid),
       ),
       leftOuterJoin(
         _database.transactions,
-        _database.transactions.id
-                .equalsExp(_database.payables.linkedExpenseId) |
-            _database.transactions.id
-                .equalsExp(_database.payables.linkedIncomeId),
+        _database.transactions.uuid
+                .equalsExp(_database.payables.linkedExpenseUuid) |
+            _database.transactions.uuid
+                .equalsExp(_database.payables.linkedIncomeUuid),
       ),
       leftOuterJoin(
         _database.categories,
-        _database.categories.id.equalsExp(_database.transactions.categoryId),
+        _database.categories.uuid.equalsExp(_database.transactions.categoryUuid),
       ),
     ]);
 
@@ -538,18 +546,18 @@ class PayablesRepository {
     final query = _database.select(_database.payables).join([
       leftOuterJoin(
         _database.contacts,
-        _database.contacts.id.equalsExp(_database.payables.contactId),
+        _database.contacts.uuid.equalsExp(_database.payables.contactUuid),
       ),
       leftOuterJoin(
         _database.transactions,
-        _database.transactions.id
-                .equalsExp(_database.payables.linkedExpenseId) |
-            _database.transactions.id
-                .equalsExp(_database.payables.linkedIncomeId),
+        _database.transactions.uuid
+                .equalsExp(_database.payables.linkedExpenseUuid) |
+            _database.transactions.uuid
+                .equalsExp(_database.payables.linkedIncomeUuid),
       ),
       leftOuterJoin(
         _database.categories,
-        _database.categories.id.equalsExp(_database.transactions.categoryId),
+        _database.categories.uuid.equalsExp(_database.transactions.categoryUuid),
       ),
     ]);
 

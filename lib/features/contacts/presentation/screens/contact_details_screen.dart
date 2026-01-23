@@ -11,14 +11,14 @@ import 'package:flowpaisa/shared/providers/currency_provider.dart';
 // For now, we'll just show the stats
 
 class ContactDetailsScreen extends ConsumerWidget {
-  final int contactId;
+  final String contactUuid;
 
-  const ContactDetailsScreen({super.key, required this.contactId});
+  const ContactDetailsScreen({super.key, required this.contactUuid});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final statsAsync = ref.watch(contactStatisticsProvider(contactId));
+    final statsAsync = ref.watch(contactStatisticsProvider(contactUuid));
     final currencySymbol = ref.watch(currencySymbolProvider);
 
     return Scaffold(
@@ -61,7 +61,7 @@ class ContactDetailsScreen extends ConsumerWidget {
                           children: [
                             const SizedBox(height: 40),
                             Hero(
-                              tag: 'contact_avatar_${contact.id}',
+                              tag: 'contact_avatar_${contact.uuid}',
                               child: Container(
                                 width: 100,
                                 height: 100,
@@ -402,7 +402,7 @@ class ContactDetailsScreen extends ConsumerWidget {
             onPressed: () async {
               try {
                 final repository = ref.read(contactsRepositoryProvider);
-                await repository.deleteContact(contactId);
+                await repository.deleteContact(contactUuid);
                 if (context.mounted) {
                   Navigator.pop(context); // Close dialog
                   Navigator.pop(context); // Close details screen

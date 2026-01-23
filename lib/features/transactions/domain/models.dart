@@ -30,6 +30,6 @@ class TransactionWithDetails {
 
   @override
   String toString() {
-    return 'TransactionWithDetails(transaction: ${transaction.id}, category: ${category?.name}, contact: ${contact?.name})';
+    return 'TransactionWithDetails(transaction: ${transaction.uuid}, category: ${category?.name}, contact: ${contact?.name})';
   }
 }

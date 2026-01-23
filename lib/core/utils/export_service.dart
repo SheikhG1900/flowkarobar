@@ -73,14 +73,14 @@ class ExportService {
         bool include = true;
 
         // Exclude "Paid By" expenses (linked Payable) that are 'PENDING'
-        if (t.type == 'EXPENSE' && t.linkedPayableId != null) {
+        if (t.type == 'EXPENSE' && t.linkedPayableUuid != null) {
           if (item.linkedPayable?.status != 'PAID') {
             include = false;
           }
         }
 
         // Exclude "Will Receive" incomes (linked Receivable) that are 'PENDING'
-        if (t.type == 'INCOME' && t.linkedReceivableId != null) {
+        if (t.type == 'INCOME' && t.linkedReceivableUuid != null) {
           if (item.linkedReceivable?.status != 'RECEIVED') {
             include = false;
           }
@@ -293,12 +293,12 @@ class ExportService {
     // Filter transactions (same logic as CSV export)
     final filteredTransactions = transactionsWithDetails.where((item) {
       final t = item.transaction;
-      if (t.type == 'EXPENSE' && t.linkedPayableId != null) {
+      if (t.type == 'EXPENSE' && t.linkedPayableUuid != null) {
         if (item.linkedPayable?.status != 'PAID') {
           return false;
         }
       }
-      if (t.type == 'INCOME' && t.linkedReceivableId != null) {
+      if (t.type == 'INCOME' && t.linkedReceivableUuid != null) {
         if (item.linkedReceivable?.status != 'RECEIVED') {
           return false;
         }

@@ -11,15 +11,14 @@ import 'package:flowpaisa/features/receivables/presentation/providers/receivable
 import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
 import 'package:flowpaisa/features/contacts/presentation/screens/add_contact_screen.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
-import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
 
 class EditReceivableScreen extends ConsumerStatefulWidget {
-  final int receivableId;
+  final String receivableUuid;
 
   const EditReceivableScreen({
     super.key,
-    required this.receivableId,
+    required this.receivableUuid,
   });
 
   @override
@@ -39,7 +38,7 @@ class _EditReceivableScreenState extends ConsumerState<EditReceivableScreen> {
   bool _isLoadingData = true;
 
   Contact? _selectedContact;
-  int? _selectedContactId;
+  String? _selectedContactUuid;
   Receivable? _receivable;
 
   @override
@@ -57,7 +56,7 @@ class _EditReceivableScreenState extends ConsumerState<EditReceivableScreen> {
     try {
       final repository = ref.read(receivablesRepositoryProvider);
       final receivable =
-          await repository.getReceivableById(widget.receivableId);
+          await repository.getReceivableByUuid(widget.receivableUuid);
 
       if (receivable == null) {
         if (mounted) {
@@ -69,7 +68,7 @@ class _EditReceivableScreenState extends ConsumerState<EditReceivableScreen> {
 
       // Load contact data
       final contactsRepo = ref.read(contactsRepositoryProvider);
-      final contact = await contactsRepo.getContactById(receivable.contactId);
+      final contact = await contactsRepo.getContactByUuid(receivable.contactUuid);
 
       if (mounted) {
         setState(() {
@@ -80,7 +79,7 @@ class _EditReceivableScreenState extends ConsumerState<EditReceivableScreen> {
           _dueDate = receivable.dueDate;
           _autoCreateIncome = receivable.autoCreateIncome;
           _selectedContact = contact;
-          _selectedContactId = receivable.contactId;
+          _selectedContactUuid = receivable.contactUuid;
           _isLoadingData = false;
         });
       }
@@ -108,7 +107,7 @@ class _EditReceivableScreenState extends ConsumerState<EditReceivableScreen> {
       return;
     }
 
-    if (_selectedContactId == null) {
+    if (_selectedContactUuid == null) {
       ToastUtils.showErrorToast(context, ref, l10n.pleaseSelectContact);
       return;
     }
@@ -125,7 +124,7 @@ class _EditReceivableScreenState extends ConsumerState<EditReceivableScreen> {
     try {
       final repository = ref.read(receivablesRepositoryProvider);
       final updatedReceivable = _receivable!.copyWith(
-        contactId: _selectedContactId!,
+        contactUuid: _selectedContactUuid!,
         amount: double.parse(_amountController.text),
         description: drift.Value(_descriptionController.text.isEmpty
             ? null
@@ -228,7 +227,7 @@ class _EditReceivableScreenState extends ConsumerState<EditReceivableScreen> {
                           if (newContact != null && mounted) {
                             setState(() {
                               _selectedContact = newContact;
-                              _selectedContactId = newContact.id;
+                              _selectedContactUuid = newContact.uuid;
                             });
                           }
                         },
@@ -273,12 +272,12 @@ class _EditReceivableScreenState extends ConsumerState<EditReceivableScreen> {
                             onTap: () {
                               setState(() {
                                 _selectedContact = contact;
-                                _selectedContactId = contact.id;
+                                _selectedContactUuid = contact.uuid;
                               });
                               Navigator.pop(context);
                             },
-                            selected: _selectedContactId == contact.id,
-                            trailing: _selectedContactId == contact.id
+                            selected: _selectedContactUuid == contact.uuid,
+                            trailing: _selectedContactUuid == contact.uuid
                                 ? const Icon(Icons.check_circle,
                                     color: AppColors.receivableColor)
                                 : null,

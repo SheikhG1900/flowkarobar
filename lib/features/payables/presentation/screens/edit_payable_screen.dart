@@ -7,7 +7,6 @@ import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/core/utils/date_formatter.dart';
-import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 import 'package:flowpaisa/features/payables/presentation/providers/payables_provider.dart';
 import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
 import 'package:flowpaisa/features/contacts/presentation/screens/add_contact_screen.dart';
@@ -15,11 +14,11 @@ import 'package:flowpaisa/shared/widgets/gradient_button.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
 
 class EditPayableScreen extends ConsumerStatefulWidget {
-  final int payableId;
+  final String payableUuid;
 
   const EditPayableScreen({
     super.key,
-    required this.payableId,
+    required this.payableUuid,
   });
 
   @override
@@ -38,7 +37,7 @@ class _EditPayableScreenState extends ConsumerState<EditPayableScreen> {
   bool _isLoadingData = true;
 
   Contact? _selectedContact;
-  int? _selectedContactId;
+  String? _selectedContactUuid;
   Payable? _payable;
 
   @override
@@ -55,7 +54,7 @@ class _EditPayableScreenState extends ConsumerState<EditPayableScreen> {
     final l10n = AppLocalizations.of(context)!;
     try {
       final repository = ref.read(payablesRepositoryProvider);
-      final payable = await repository.getPayableById(widget.payableId);
+      final payable = await repository.getPayableByUuid(widget.payableUuid);
 
       if (payable == null) {
         if (mounted) {
@@ -67,7 +66,7 @@ class _EditPayableScreenState extends ConsumerState<EditPayableScreen> {
 
       // Load contact data
       final contactsRepo = ref.read(contactsRepositoryProvider);
-      final contact = await contactsRepo.getContactById(payable.contactId);
+      final contact = await contactsRepo.getContactByUuid(payable.contactUuid);
 
       if (mounted) {
         setState(() {
@@ -78,7 +77,7 @@ class _EditPayableScreenState extends ConsumerState<EditPayableScreen> {
           _dueDate = payable.dueDate;
           _autoCreateExpense = payable.autoCreateExpense;
           _selectedContact = contact;
-          _selectedContactId = payable.contactId;
+          _selectedContactUuid = payable.contactUuid;
           _isLoadingData = false;
         });
       }
@@ -106,7 +105,7 @@ class _EditPayableScreenState extends ConsumerState<EditPayableScreen> {
       return;
     }
 
-    if (_selectedContactId == null) {
+    if (_selectedContactUuid == null) {
       ToastUtils.showErrorToast(context, ref, l10n.pleaseSelectContact);
       return;
     }
@@ -123,7 +122,7 @@ class _EditPayableScreenState extends ConsumerState<EditPayableScreen> {
     try {
       final repository = ref.read(payablesRepositoryProvider);
       final updatedPayable = _payable!.copyWith(
-        contactId: _selectedContactId!,
+        contactUuid: _selectedContactUuid!,
         amount: double.parse(_amountController.text),
         description: drift.Value(_descriptionController.text.isEmpty
             ? null
@@ -226,7 +225,7 @@ class _EditPayableScreenState extends ConsumerState<EditPayableScreen> {
                           if (newContact != null && mounted) {
                             setState(() {
                               _selectedContact = newContact;
-                              _selectedContactId = newContact.id;
+                              _selectedContactUuid = newContact.uuid;
                             });
                           }
                         },
@@ -271,12 +270,12 @@ class _EditPayableScreenState extends ConsumerState<EditPayableScreen> {
                             onTap: () {
                               setState(() {
                                 _selectedContact = contact;
-                                _selectedContactId = contact.id;
+                                _selectedContactUuid = contact.uuid;
                               });
                               Navigator.pop(context);
                             },
-                            selected: _selectedContactId == contact.id,
-                            trailing: _selectedContactId == contact.id
+                            selected: _selectedContactUuid == contact.uuid,
+                            trailing: _selectedContactUuid == contact.uuid
                                 ? const Icon(Icons.check_circle,
                                     color: AppColors.payableColor)
                                 : null,

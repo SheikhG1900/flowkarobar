@@ -166,43 +166,43 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
                   final repository = ref.read(payablesRepositoryProvider);
                   final contactsRepo = ref.read(contactsRepositoryProvider);
                   try {
-                    final contacts =
-                        await contactsRepo.watchAllContacts().first;
-                    int defaultContactId;
-                    if (contacts.isNotEmpty) {
-                      defaultContactId = contacts[0].id;
-                    } else {
-                      // Create a default contact if none exists
-                      defaultContactId = await contactsRepo.createContact(
-                        ContactsCompanion(
-                          name: const Value('Default Contact'),
-                          createdAt: Value(DateTime.now()),
-                          updatedAt: Value(DateTime.now()),
-                        ),
-                      );
-                    }
+                        final contacts =
+                            await contactsRepo.watchAllContacts().first;
+                        String defaultContactUuid;
+                        if (contacts.isNotEmpty) {
+                          defaultContactUuid = contacts[0].uuid;
+                        } else {
+                          // Create a default contact if none exists
+                          defaultContactUuid = await contactsRepo.createContact(
+                            ContactsCompanion(
+                              name: const Value('Default Contact'),
+                              createdAt: Value(DateTime.now()),
+                              updatedAt: Value(DateTime.now()),
+                            ),
+                          );
+                        }
 
-                    for (int i = 0; i < 100; i++) {
-                      final daysAgo = i ~/ 2;
-                      final date =
-                          DateTime.now().subtract(Duration(days: daysAgo));
-                      final amount = (50.0 + (i * 15.3) % 2000).roundToDouble();
-                      final contactId = contacts.isNotEmpty
-                          ? contacts[i % contacts.length].id
-                          : defaultContactId;
+                        for (int i = 0; i < 100; i++) {
+                          final daysAgo = i ~/ 2;
+                          final date =
+                              DateTime.now().subtract(Duration(days: daysAgo));
+                          final amount = (50.0 + (i * 15.3) % 2000).roundToDouble();
+                          final contactUuid = contacts.isNotEmpty
+                              ? contacts[i % contacts.length].uuid
+                              : defaultContactUuid;
 
-                      await repository.createPayable(
-                        PayablesCompanion(
-                          contactId: Value(contactId),
-                          amount: Value(amount),
-                          description: Value('Dummy Payable #${i + 1}'),
-                          date: Value(date),
-                          status: Value(i % 3 == 0 ? 'PAID' : 'PENDING'),
-                          createdAt: Value(DateTime.now()),
-                          updatedAt: Value(DateTime.now()),
-                        ),
-                      );
-                    }
+                          await repository.createPayable(
+                            PayablesCompanion(
+                              contactUuid: Value(contactUuid),
+                              amount: Value(amount),
+                              description: Value('Dummy Payable #${i + 1}'),
+                              date: Value(date),
+                              status: Value(i % 3 == 0 ? 'PAID' : 'PENDING'),
+                              createdAt: Value(DateTime.now()),
+                              updatedAt: Value(DateTime.now()),
+                            ),
+                          );
+                        }
                     if (context.mounted) {
                       ToastUtils.showSuccessToast(
                           context, ref, l10n.dummyPayablesGenerated);
@@ -421,8 +421,8 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
                   final item = dateItems[itemIndex];
                   // Restrict editing/deleting for paid or linked payables
                   final canEdit = item.payable.status == 'PENDING' &&
-                      item.payable.linkedExpenseId == null &&
-                      item.payable.linkedIncomeId == null;
+                      item.payable.linkedExpenseUuid == null &&
+                      item.payable.linkedIncomeUuid == null;
 
                   return Padding(
                     padding:
@@ -437,14 +437,14 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
                                 context,
                                 MaterialPageRoute(
                                   builder: (context) => EditPayableScreen(
-                                      payableId: item.payable.id),
+                                      payableUuid: item.payable.uuid),
                                 ),
                               );
                             }
                           : null,
                       onDelete: canEdit
                           ? () async {
-                              await repository.deletePayable(item.payable.id);
+                              await repository.deletePayable(item.payable.uuid);
                               if (context.mounted) {
                                 ToastUtils.showSuccessToast(
                                     context, ref, l10n.payableDeleted);

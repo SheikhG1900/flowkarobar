@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:drift/drift.dart' as drift;
+import 'package:uuid/uuid.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
@@ -136,9 +137,11 @@ class _AddCategoryScreenState extends ConsumerState<AddCategoryScreen> {
 
     try {
       final repository = ref.read(categoriesRepositoryProvider);
+      final newUuid = const Uuid().v4();
 
-      final categoryId = await repository.createCategory(
+      await repository.createCategory(
         CategoriesCompanion(
+          uuid: drift.Value(newUuid),
           name: drift.Value(_nameController.text.trim()),
           icon: drift.Value(_selectedIcon),
           color: drift.Value(
@@ -148,8 +151,7 @@ class _AddCategoryScreenState extends ConsumerState<AddCategoryScreen> {
         ),
       );
 
-      // Fetch the created category to return it
-      final newCategory = await repository.getCategoryById(categoryId);
+      final newCategory = await repository.getCategoryByUuid(newUuid);
 
       if (mounted) {
         Navigator.pop(context, newCategory); // Return the created category

@@ -808,7 +808,7 @@ class _ContactSummariesSection extends ConsumerWidget {
                     context,
                     MaterialPageRoute(
                       builder: (context) =>
-                          ContactDetailsScreen(contactId: summary.contact.id),
+                          ContactDetailsScreen(contactUuid: summary.contact.uuid),
                     ),
                   );
                 },

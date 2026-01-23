@@ -56,7 +56,7 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
   bool _isDuplicate = false;
 
   Contact? _selectedContact;
-  int? _selectedContactId;
+  String? _selectedContactUuid;
 
   @override
   void initState() {
@@ -119,7 +119,7 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
         if (mounted) {
           setState(() {
             _selectedContact = contact;
-            _selectedContactId = contact!.id;
+            _selectedContactUuid = contact!.uuid;
           });
         }
       }
@@ -151,7 +151,7 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
       return;
     }
 
-    if (_selectedContactId == null) {
+    if (_selectedContactUuid == null) {
       ToastUtils.showErrorToast(context, ref, l10n.pleaseSelectContact);
       return;
     }
@@ -163,7 +163,7 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
     try {
       final repository = ref.read(receivablesRepositoryProvider);
       final receivable = ReceivablesCompanion(
-        contactId: drift.Value(_selectedContactId!),
+        contactUuid: drift.Value(_selectedContactUuid!),
         amount: drift.Value(double.parse(_amountController.text)),
         description: drift.Value(_descriptionController.text.isEmpty
             ? null
@@ -178,7 +178,7 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
       );
 
       // Create receivable and get the ID
-      final receivableId = await repository.createReceivable(receivable);
+      final receivableUuid = await repository.createReceivable(receivable);
 
       // Increment usage count for free users
       if (!PremiumGate.isPremium(ref)) {
@@ -193,7 +193,7 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
       if (mounted) {
         // Fetch full receivable with linked data
         final receivableWithLinkedData =
-            await repository.getReceivableWithLinkedDataById(receivableId);
+            await repository.getReceivableWithLinkedDataByUuid(receivableUuid);
 
         if (receivableWithLinkedData != null) {
           final activeColor = ref.read(activeCashbookProvider).color;
@@ -364,12 +364,12 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
                             onTap: () {
                               setState(() {
                                 _selectedContact = contact;
-                                _selectedContactId = contact.id;
+                                _selectedContactUuid = contact.uuid;
                               });
                               Navigator.pop(context);
                             },
-                            selected: _selectedContactId == contact.id,
-                            trailing: _selectedContactId == contact.id
+                            selected: _selectedContactUuid == contact.uuid,
+                            trailing: _selectedContactUuid == contact.uuid
                                 ? const Icon(Icons.check_circle,
                                     color: AppColors.receivableColor)
                                 : null,
@@ -565,7 +565,7 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
                           onPressed: () {
                             setState(() {
                               _selectedContact = null;
-                              _selectedContactId = null;
+                              _selectedContactUuid = null;
                             });
                           },
                         ),
@@ -575,7 +575,7 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
                           onPressed: () async {
                             final contactsRepo =
                                 ref.read(contactsRepositoryProvider);
-                            final id = await contactsRepo.createContact(
+                            final uuid = await contactsRepo.createContact(
                               ContactsCompanion(
                                 name: drift.Value(widget.initialContactName!),
                                 phone: drift.Value(widget.initialContactPhone),
@@ -585,10 +585,10 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
                             );
                             final newContact =
                                 (await contactsRepo.watchAllContacts().first)
-                                    .firstWhere((c) => c.id == id);
+                                    .firstWhere((c) => c.uuid == uuid);
                             setState(() {
                               _selectedContact = newContact;
-                              _selectedContactId = id;
+                              _selectedContactUuid = uuid;
                             });
                           },
                           icon: const Icon(Icons.add, size: 16),

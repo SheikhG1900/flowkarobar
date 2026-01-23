@@ -17,6 +17,6 @@ class PayableWithLinkedData {
 
   @override
   String toString() {
-    return 'PayableWithLinkedData(payable: ${payable.id}, contact: ${contact?.name}, linkedCategory: ${linkedCategory?.name})';
+    return 'PayableWithLinkedData(payable: ${payable.uuid}, contact: ${contact?.name}, linkedCategory: ${linkedCategory?.name})';
   }
 }

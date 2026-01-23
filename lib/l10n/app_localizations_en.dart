@@ -191,6 +191,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get search => 'Search';
 
   @override
+  String get searchTransactions => 'Search transactions...';
+
+  @override
   String get noTransactions => 'No transactions found';
 
   @override
@@ -2059,6 +2062,51 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get googleDrive => 'Google Drive';
+
+  @override
+  String get activeCashbook => 'Active Cashbook';
+
+  @override
+  String get syncAndBackupApplyTo =>
+      'All sync and backup actions below apply to this cashbook only.';
+
+  @override
+  String get synchronization => 'Synchronization';
+
+  @override
+  String get syncActive => 'Sync active';
+
+  @override
+  String get syncDescription =>
+      'Synchronization keeps your data updated across all your devices by merging small changes. It is fast and runs automatically.';
+
+  @override
+  String get syncNow => 'Sync Now';
+
+  @override
+  String get syncTriggered => 'Sync triggered in background';
+
+  @override
+  String get backupDescription =>
+      'A full backup creates a complete snapshot of your database. Use this for historical records or to recover from major issues.';
+
+  @override
+  String get syncRecovery => 'Sync Recovery';
+
+  @override
+  String get syncRecoveryDescription =>
+      'If you restored this backup to fix a sync error, you should reset the cloud sync to this version. This makes this restored data the \"source of truth\".';
+
+  @override
+  String get resetCloudSync => 'Reset Cloud Sync';
+
+  @override
+  String get syncManifestReset => 'Sync manifest reset successfully';
+
+  @override
+  String failedToResetSync(String error) {
+    return 'Failed to reset sync: $error';
+  }
 
   @override
   String get backupToFile => 'Backup to File';

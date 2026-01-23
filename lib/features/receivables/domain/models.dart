@@ -17,6 +17,6 @@ class ReceivableWithLinkedData {
 
   @override
   String toString() {
-    return 'ReceivableWithLinkedData(receivable: ${receivable.id}, contact: ${contact?.name}, linkedCategory: ${linkedCategory?.name})';
+    return 'ReceivableWithLinkedData(receivable: ${receivable.uuid}, contact: ${contact?.name}, linkedCategory: ${linkedCategory?.name})';
   }
 }
