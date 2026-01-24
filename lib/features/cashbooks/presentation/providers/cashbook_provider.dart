@@ -118,6 +118,12 @@ class CashbookNotifier extends Notifier<List<Cashbook>> {
     state = newList;
   }
 
+  Future<void> addCashbookFromCloud(Cashbook cashbook) async {
+    final newList = [...state, cashbook];
+    await _saveCashbooks(newList);
+    state = newList;
+  }
+
   Future<void> deleteCashbook(String id) async {
     if (id == 'default') return; // Cannot delete default
 

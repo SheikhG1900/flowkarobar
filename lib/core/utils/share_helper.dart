@@ -16,18 +16,20 @@ import '../../features/messages/data/default_templates.dart';
 class ShareHelper {
   static Future<void> sharePayable(
     BuildContext context,
-    WidgetRef ref,
+    WidgetRef? ref,
     dynamic payable,
     dynamic contact, {
     dynamic currencyOverride,
     dynamic userProfileOverride,
     dynamic transactionServiceOverride,
     dynamic whatsAppServiceOverride,
+    dynamic templateServiceOverride,
+    String? languageOverride,
   }) async {
-    final currency = currencyOverride ?? ref.read(currentCurrencyProvider).value!;
-    final userProfile = userProfileOverride ?? ref.read(userProfileProvider);
-    final whatsAppService = whatsAppServiceOverride ?? ref.read(whatsAppServiceProvider);
-    final transactionService = transactionServiceOverride ?? ref.read(transactionServiceProvider);
+    final currency = currencyOverride ?? ref?.read(currentCurrencyProvider).value!;
+    final userProfile = userProfileOverride ?? ref?.read(userProfileProvider);
+    final whatsAppService = whatsAppServiceOverride ?? ref?.read(whatsAppServiceProvider);
+    final transactionService = transactionServiceOverride ?? ref?.read(transactionServiceProvider);
 
     if (contact != null && contact.phone != null && contact.phone.isNotEmpty) {
       await _sendWhatsAppPayable(
@@ -39,6 +41,8 @@ class ShareHelper {
         userProfile: userProfile,
         whatsAppService: whatsAppService,
         transactionService: transactionService,
+        templateServiceOverride: templateServiceOverride,
+        languageOverride: languageOverride,
       );
     } else {
       await _systemSharePayable(
@@ -55,18 +59,20 @@ class ShareHelper {
 
   static Future<void> shareReceivable(
     BuildContext context,
-    WidgetRef ref,
+    WidgetRef? ref,
     dynamic receivable,
     dynamic contact, {
     dynamic currencyOverride,
     dynamic userProfileOverride,
     dynamic transactionServiceOverride,
     dynamic whatsAppServiceOverride,
+    dynamic templateServiceOverride,
+    String? languageOverride,
   }) async {
-    final currency = currencyOverride ?? ref.read(currentCurrencyProvider).value!;
-    final userProfile = userProfileOverride ?? ref.read(userProfileProvider);
-    final whatsAppService = whatsAppServiceOverride ?? ref.read(whatsAppServiceProvider);
-    final transactionService = transactionServiceOverride ?? ref.read(transactionServiceProvider);
+    final currency = currencyOverride ?? ref?.read(currentCurrencyProvider).value!;
+    final userProfile = userProfileOverride ?? ref?.read(userProfileProvider);
+    final whatsAppService = whatsAppServiceOverride ?? ref?.read(whatsAppServiceProvider);
+    final transactionService = transactionServiceOverride ?? ref?.read(transactionServiceProvider);
 
     if (contact != null && contact.phone != null && contact.phone.isNotEmpty) {
       await _sendWhatsAppReceivable(
@@ -78,6 +84,8 @@ class ShareHelper {
         userProfile: userProfile,
         whatsAppService: whatsAppService,
         transactionService: transactionService,
+        templateServiceOverride: templateServiceOverride,
+        languageOverride: languageOverride,
       );
     } else {
       await _systemShareReceivable(
@@ -94,7 +102,7 @@ class ShareHelper {
 
   static Future<void> shareTransaction(
     BuildContext context,
-    WidgetRef ref,
+    WidgetRef? ref,
     dynamic transaction,
     dynamic contact,
     dynamic category,
@@ -103,11 +111,13 @@ class ShareHelper {
     dynamic userProfileOverride,
     dynamic transactionServiceOverride,
     dynamic whatsAppServiceOverride,
+    dynamic templateServiceOverride,
+    String? languageOverride,
   }) async {
-    final currency = currencyOverride ?? ref.read(currentCurrencyProvider).value!;
-    final userProfile = userProfileOverride ?? ref.read(userProfileProvider);
-    final whatsAppService = whatsAppServiceOverride ?? ref.read(whatsAppServiceProvider);
-    final transactionService = transactionServiceOverride ?? ref.read(transactionServiceProvider);
+    final currency = currencyOverride ?? ref?.read(currentCurrencyProvider).value!;
+    final userProfile = userProfileOverride ?? ref?.read(userProfileProvider);
+    final whatsAppService = whatsAppServiceOverride ?? ref?.read(whatsAppServiceProvider);
+    final transactionService = transactionServiceOverride ?? ref?.read(transactionServiceProvider);
 
     if (contact != null && contact.phone != null && contact.phone.isNotEmpty) {
       await _sendWhatsAppTransaction(
@@ -121,6 +131,8 @@ class ShareHelper {
         userProfile: userProfile,
         whatsAppService: whatsAppService,
         transactionService: transactionService,
+        templateServiceOverride: templateServiceOverride,
+        languageOverride: languageOverride,
       );
     } else {
       await _systemShareTransaction(
@@ -141,17 +153,23 @@ class ShareHelper {
 
   static Future<void> _sendWhatsAppPayable(
     BuildContext context,
-    WidgetRef ref,
+    WidgetRef? ref,
     dynamic contact,
     dynamic payable, {
     required dynamic currency,
     required dynamic userProfile,
     required dynamic whatsAppService,
-    required dynamic transactionService,
+    required TransactionService transactionService,
+    dynamic templateServiceOverride,
+    String? languageOverride,
   }) async {
+    // Capture all needed values from ref before any async gaps
+    final templateService = templateServiceOverride ?? ref?.read(messageTemplateServiceProvider);
+    final language = languageOverride ?? (ref != null ? getCurrentLanguageCode(ref) : 'en');
+
     final deepLinkService = DeepLinkService();
     final isPaid = payable.status == 'PAID';
-    final effectiveExternalId = await transactionService.ensureExternalLinkId(payableId: payable.id);
+    final effectiveExternalId = await transactionService.ensureExternalLinkId(payableUuid: payable.uuid);
 
     final link = deepLinkService.generateReceivableLink(ReceivableShareData(
       amount: payable.amount,
@@ -163,10 +181,6 @@ class ShareHelper {
       externalLinkId: effectiveExternalId,
       status: payable.status,
     ));
-
-    // Get template service and language
-    final templateService = ref.read(messageTemplateServiceProvider);
-    final language = getCurrentLanguageCode(ref);
 
     String message;
     if (isPaid) {
@@ -213,17 +227,23 @@ class ShareHelper {
 
   static Future<void> _sendWhatsAppReceivable(
     BuildContext context,
-    WidgetRef ref,
+    WidgetRef? ref,
     dynamic contact,
     dynamic receivable, {
     required dynamic currency,
     required dynamic userProfile,
     required dynamic whatsAppService,
-    required dynamic transactionService,
+    required TransactionService transactionService,
+    dynamic templateServiceOverride,
+    String? languageOverride,
   }) async {
+    // Capture all needed values from ref before any async gaps
+    final templateService = templateServiceOverride ?? ref?.read(messageTemplateServiceProvider);
+    final language = languageOverride ?? (ref != null ? getCurrentLanguageCode(ref) : 'en');
+
     final deepLinkService = DeepLinkService();
     final isReceived = receivable.status == 'RECEIVED';
-    final effectiveExternalId = await transactionService.ensureExternalLinkId(receivableId: receivable.id);
+    final effectiveExternalId = await transactionService.ensureExternalLinkId(receivableUuid: receivable.uuid);
 
     final link = deepLinkService.generatePayableLink(PayableShareData(
       amount: receivable.amount,
@@ -235,10 +255,6 @@ class ShareHelper {
       externalLinkId: effectiveExternalId,
       status: receivable.status,
     ));
-
-    // Get template service and language
-    final templateService = ref.read(messageTemplateServiceProvider);
-    final language = getCurrentLanguageCode(ref);
 
     String message;
     if (isReceived) {
@@ -285,7 +301,7 @@ class ShareHelper {
 
   static Future<void> _sendWhatsAppTransaction(
     BuildContext context,
-    WidgetRef ref,
+    WidgetRef? ref,
     dynamic contact,
     dynamic transaction,
     dynamic category,
@@ -293,10 +309,16 @@ class ShareHelper {
     required dynamic currency,
     required dynamic userProfile,
     required dynamic whatsAppService,
-    required dynamic transactionService,
+    required TransactionService transactionService,
+    dynamic templateServiceOverride,
+    String? languageOverride,
   }) async {
+    // Capture all needed values from ref before any async gaps
+    final templateService = templateServiceOverride ?? ref?.read(messageTemplateServiceProvider);
+    final language = languageOverride ?? (ref != null ? getCurrentLanguageCode(ref) : 'en');
+
     final deepLinkService = DeepLinkService();
-    final effectiveExternalId = await transactionService.ensureExternalLinkId(transactionId: transaction.id);
+    final effectiveExternalId = await transactionService.ensureExternalLinkId(transactionUuid: transaction.uuid);
 
     String? status;
     if (isMarked) {
@@ -320,10 +342,6 @@ class ShareHelper {
       externalLinkId: effectiveExternalId,
       status: status,
     );
-
-    // Get template service and language
-    final templateService = ref.read(messageTemplateServiceProvider);
-    final language = getCurrentLanguageCode(ref);
 
     String message;
     final formattedAmount = AmountFormatter.formatWithCurrency(transaction.amount, currency.symbol, currency.decimalPlaces);
@@ -367,17 +385,17 @@ class ShareHelper {
 
   static Future<void> _systemSharePayable(
     BuildContext context,
-    WidgetRef ref,
+    WidgetRef? ref,
     dynamic payable,
     dynamic contact, {
     required dynamic currency,
     required dynamic userProfile,
-    required dynamic transactionService,
+    required TransactionService transactionService,
   }) async {
     final l10n = AppLocalizations.of(context)!;
     final deepLinkService = DeepLinkService();
     final isPaid = payable.status == 'PAID';
-    final effectiveExternalId = await transactionService.ensureExternalLinkId(payableId: payable.id);
+    final effectiveExternalId = await transactionService.ensureExternalLinkId(payableUuid: payable.uuid);
 
     final link = deepLinkService.generateReceivableLink(ReceivableShareData(
       amount: payable.amount,
@@ -410,17 +428,17 @@ class ShareHelper {
 
   static Future<void> _systemShareReceivable(
     BuildContext context,
-    WidgetRef ref,
+    WidgetRef? ref,
     dynamic receivable,
     dynamic contact, {
     required dynamic currency,
     required dynamic userProfile,
-    required dynamic transactionService,
+    required TransactionService transactionService,
   }) async {
     final l10n = AppLocalizations.of(context)!;
     final deepLinkService = DeepLinkService();
     final isReceived = receivable.status == 'RECEIVED';
-    final effectiveExternalId = await transactionService.ensureExternalLinkId(receivableId: receivable.id);
+    final effectiveExternalId = await transactionService.ensureExternalLinkId(receivableUuid: receivable.uuid);
 
     final link = deepLinkService.generatePayableLink(PayableShareData(
       amount: receivable.amount,
@@ -453,18 +471,18 @@ class ShareHelper {
 
   static Future<void> _systemShareTransaction(
     BuildContext context,
-    WidgetRef ref,
+    WidgetRef? ref,
     dynamic transaction,
     dynamic contact,
     dynamic category,
     bool isMarked, {
     required dynamic currency,
     required dynamic userProfile,
-    required dynamic transactionService,
+    required TransactionService transactionService,
   }) async {
     final l10n = AppLocalizations.of(context)!;
     final deepLinkService = DeepLinkService();
-    final effectiveExternalId = await transactionService.ensureExternalLinkId(transactionId: transaction.id);
+    final effectiveExternalId = await transactionService.ensureExternalLinkId(transactionUuid: transaction.uuid);
 
     String? status;
     if (isMarked) {

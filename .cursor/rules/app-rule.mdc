@@ -12,3 +12,5 @@ alwaysApply: true
 - first recommendation to use theme colors and styling. 
 
 - for Amount and Date formatting, always use AmountFormatter and AppDateFormatter. for the date default date formatting, use AppDateFormatter.formatDate with the dateformat of user profile.
+
+- always consider the localization and generate the translation for hindi and urdu.

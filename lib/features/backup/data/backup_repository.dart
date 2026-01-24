@@ -11,18 +11,18 @@ class BackupRepository {
   BackupRepository(this._driveService);
 
   /// Get the path to the local database file
-  Future<File> getDatabaseFile() async {
+  Future<File> getDatabaseFile({String? fileName}) async {
     final dbFolder = await getApplicationDocumentsDirectory();
-    return File(p.join(dbFolder.path, 'flowpaisa.db'));
+    return File(p.join(dbFolder.path, fileName ?? 'flowpaisa.db'));
   }
 
   /// Perform Backup
-  Future<void> backup() async {
+  Future<void> backup({String? fileName, String? cashbookId, String? cashbookName, String? color, String? icon}) async {
     if (!_driveService.isSignedIn) {
       throw Exception('User not signed in');
     }
 
-    final dbFile = await getDatabaseFile();
+    final dbFile = await getDatabaseFile(fileName: fileName);
     if (!await dbFile.exists()) {
       throw Exception('Database file not found');
     }
@@ -32,20 +32,27 @@ class BackupRepository {
     // Ideally we should checkpoint, but we can't easily here.
     // Simple copy is usually fine for backup.
     
-    await _driveService.uploadDatabase(dbFile);
+    await _driveService.uploadDatabase(
+      dbFile, 
+      cashbookId: cashbookId, 
+      cashbookName: cashbookName,
+      color: color,
+      icon: icon,
+    );
     
-    // Update last backup time
+    // Update last backup time specifically for this cashbook
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('last_backup_time', DateTime.now().toIso8601String());
+    final key = cashbookId != null ? 'last_backup_time_$cashbookId' : 'last_backup_time';
+    await prefs.setString(key, DateTime.now().toIso8601String());
   }
 
   /// Restore from backup
-  Future<void> restore(String fileId) async {
+  Future<void> restore(String fileId, {String? fileName, String? cashbookId}) async {
     if (!_driveService.isSignedIn) {
       throw Exception('User not signed in');
     }
 
-    final dbFile = await getDatabaseFile();
+    final dbFile = await getDatabaseFile(fileName: fileName);
     
     // Download to a temp file first
     final tempDir = await getTemporaryDirectory();
@@ -62,14 +69,16 @@ class BackupRepository {
     await tempFile.copy(dbFile.path);
     await tempFile.delete();
     
-    // Update last restore time
+    // Update last restore time specifically for this cashbook
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('last_restore_time', DateTime.now().toIso8601String());
+    final key = cashbookId != null ? 'last_restore_time_$cashbookId' : 'last_restore_time';
+    await prefs.setString(key, DateTime.now().toIso8601String());
   }
 
-  Future<DateTime?> getLastBackupTime() async {
+  Future<DateTime?> getLastBackupTime({String? cashbookId}) async {
     final prefs = await SharedPreferences.getInstance();
-    final str = prefs.getString('last_backup_time');
+    final key = cashbookId != null ? 'last_backup_time_$cashbookId' : 'last_backup_time';
+    final str = prefs.getString(key);
     return str != null ? DateTime.tryParse(str) : null;
   }
 

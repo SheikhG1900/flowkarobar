@@ -18,6 +18,7 @@ class GoogleDriveService {
   // Getters
   GoogleSignInAccount? get currentUser => _currentUser;
   bool get isSignedIn => _currentUser != null;
+  bool get isDriveApiInitialized => _driveApi != null;
 
   /// Initialize and try to sign in silently
   Future<void> init() async {
@@ -58,24 +59,57 @@ class GoogleDriveService {
   }
 
   /// Initialize Drive API client
-  Future<void> _initializeDriveApi() async {
-    if (_currentUser == null) return;
+  Future<void> _initializeDriveApi({bool forceRefresh = false}) async {
+    if (_currentUser == null) {
+      print('Cannot initialize Drive API: No user signed in');
+      return;
+    }
     
-    // Use the extension method
-    final client = await _googleSignIn.authenticatedClient();
-    
-    if (client != null) {
-      _driveApi = drive.DriveApi(client);
+    print('Initializing Drive API for user: ${_currentUser!.email} (forceRefresh: $forceRefresh)');
+    try {
+      if (forceRefresh) {
+        // Clear tokens to force a fresh authentication
+        await _googleSignIn.disconnect();
+        final account = await _googleSignIn.signIn();
+        if (account == null) return;
+        _currentUser = account;
+      }
+
+      // Use the extension method
+      final client = await _googleSignIn.authenticatedClient();
+      
+      if (client != null) {
+        _driveApi = drive.DriveApi(client);
+        print('Drive API successfully initialized');
+      } else {
+        print('Failed to get authenticated client');
+      }
+    } catch (e) {
+      print('Error initializing Drive API: $e');
     }
   }
 
+  /// Force re-authentication to fix invalid tokens
+  Future<void> reauthenticate() async {
+    await _initializeDriveApi(forceRefresh: true);
+  }
+
   /// Upload database file
-  Future<String?> uploadDatabase(File file) async {
-    if (_driveApi == null) throw Exception('Drive API not initialized');
+  Future<String?> uploadDatabase(File file, {String? cashbookId, String? cashbookName, String? color, String? icon}) async {
+    if (_driveApi == null) {
+      print('Drive API not initialized during upload attempt');
+      throw Exception('Drive API not initialized');
+    }
 
     try {
       // 1. Check if backup folder exists
-      final folderId = await _getOrCreateBackupFolder();
+      final folderId = await _getOrCreateBackupFolder(
+        cashbookId: cashbookId, 
+        cashbookName: cashbookName,
+        color: color,
+        icon: icon,
+      );
+      print('Backup folder ID: $folderId');
 
       // 2. Create file metadata
       final timestamp = DateTime.now().toIso8601String().replaceAll(':', '-');
@@ -86,30 +120,35 @@ class GoogleDriveService {
         ..parents = [folderId];
 
       // 3. Upload
-      final media = drive.Media(file.openRead(), await file.length());
+      final fileSize = await file.length();
+      print('Uploading file: $fileName, size: $fileSize bytes');
+      
+      final media = drive.Media(file.openRead(), fileSize);
       final result = await _driveApi!.files.create(
         driveFile,
         uploadMedia: media,
       );
 
+      print('Upload complete. File ID: ${result.id}');
       return result.id;
     } catch (e) {
-      print('Upload failed: $e');
+      print('Upload failed in GoogleDriveService: $e');
       rethrow;
     }
   }
 
   /// List available backups
-  Future<List<drive.File>> listBackups() async {
+  Future<List<drive.File>> listBackups({String? cashbookId}) async {
     if (_driveApi == null) throw Exception('Drive API not initialized');
 
     try {
-      final folderId = await _getOrCreateBackupFolder();
+      final folderId = await _getOrCreateBackupFolder(cashbookId: cashbookId);
       final query = "'$folderId' in parents and trashed = false";
       
       final fileList = await _driveApi!.files.list(
         q: query,
         orderBy: 'createdTime desc',
+        spaces: 'appDataFolder',
         $fields: 'files(id, name, createdTime, size)',
       );
       
@@ -259,12 +298,71 @@ class GoogleDriveService {
   }
 
   /// Get or Create "FlowPaisa Backups" folder
-  Future<String> _getOrCreateBackupFolder() async {
-    return _getOrCreateFolder('FlowPaisa Backups');
+  Future<String> _getOrCreateBackupFolder({String? cashbookId, String? cashbookName, String? color, String? icon}) async {
+    final rootFolderId = await _getOrCreateFolder('FlowPaisa Backups');
+    if (cashbookId != null) {
+      // Format: id|name|color|icon
+      String folderName = cashbookId;
+      if (cashbookName != null) {
+        folderName += '|$cashbookName';
+        if (color != null && icon != null) {
+          folderName += '|$color|$icon';
+        }
+      }
+      
+      // Check if folder with this ID exists
+      final query = "mimeType = 'application/vnd.google-apps.folder' and '$rootFolderId' in parents and name contains '$cashbookId' and trashed = false";
+      final list = await _driveApi!.files.list(q: query, spaces: 'appDataFolder');
+      
+      if (list.files?.isNotEmpty == true) {
+        final existingFolder = list.files!.first;
+        // Update folder name if metadata changed
+        if (cashbookName != null && existingFolder.name != folderName) {
+          await _driveApi!.files.update(
+            drive.File()..name = folderName,
+            existingFolder.id!,
+          );
+        }
+        return existingFolder.id!;
+      }
+      
+      return _getOrCreateFolder(folderName, parentId: rootFolderId);
+    }
+    return rootFolderId;
   }
 
   /// Get or Create cashbook folder in appDataFolder
   Future<String> getOrCreateCashbookFolder(String cashbookId) async {
     return _getOrCreateFolder(cashbookId);
+  }
+
+  /// List all folders in appDataFolder to find other cashbooks
+  Future<List<String>> listCashbookIds() async {
+    if (_driveApi == null) throw Exception('Drive API not initialized');
+
+    final rootFolderId = await _getOrCreateFolder('FlowPaisa Backups');
+    final query = "mimeType = 'application/vnd.google-apps.folder' and '$rootFolderId' in parents and trashed = false";
+    final list = await _driveApi!.files.list(
+      q: query,
+      spaces: 'appDataFolder',
+      $fields: 'files(id, name)',
+    );
+
+    return list.files?.map((f) => f.name!).toList() ?? [];
+  }
+
+  /// Get cashbook name from its folder (if available)
+  Future<String?> getCashbookName(String cashbookId) async {
+    if (_driveApi == null) throw Exception('Drive API not initialized');
+    
+    // We can't easily store metadata on folders, but we can look for a manifest
+    final folderId = await getOrCreateCashbookFolder(cashbookId);
+    final manifestId = await getFileIdByName('manifest.json', folderId);
+    if (manifestId != null) {
+      // final result = await downloadFileWithETag(manifestId);
+      // final manifest = SyncManifest.fromJson(result.content);
+      // If we add cashbookName to manifest later, we can return it here
+    }
+    return null;
   }
 }

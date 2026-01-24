@@ -16,6 +16,7 @@ import 'package:flowpaisa/core/utils/share_helper.dart';
 import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
 import 'package:flowpaisa/features/receivables/presentation/screens/edit_receivable_screen.dart';
+import 'package:flowpaisa/features/messages/presentation/providers/message_template_provider.dart';
 import 'package:flowpaisa/features/whatsapp/presentation/providers/whatsapp_provider.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
 
@@ -57,8 +58,27 @@ class ReceivableDetailsDialog extends ConsumerWidget {
           // Share button
           IconButton(
             icon: const Icon(Icons.share),
-            onPressed: () =>
-                ShareHelper.shareReceivable(context, ref, receivable, contact),
+            onPressed: () {
+              final capturedCurrency = currency;
+              final capturedUserProfile = ref.read(userProfileProvider);
+              final capturedTransactionService = ref.read(transactionServiceProvider);
+              final capturedWhatsAppService = ref.read(whatsAppServiceProvider);
+              final capturedTemplateService = ref.read(messageTemplateServiceProvider);
+              final capturedLanguage = getCurrentLanguageCode(ref);
+
+              ShareHelper.shareReceivable(
+                context,
+                ref,
+                receivable,
+                contact,
+                currencyOverride: capturedCurrency,
+                userProfileOverride: capturedUserProfile,
+                transactionServiceOverride: capturedTransactionService,
+                whatsAppServiceOverride: capturedWhatsAppService,
+                templateServiceOverride: capturedTemplateService,
+                languageOverride: capturedLanguage,
+              );
+            },
           ),
           // Edit button (hide if received or linked)
           if (_canEditReceivable(receivable))
@@ -236,8 +256,27 @@ class ReceivableDetailsDialog extends ConsumerWidget {
                   if (contact.phone != null)
                     IconButton(
                       icon: const Icon(Icons.chat, color: Color(0xFF25D366)),
-                      onPressed: () => ShareHelper.shareReceivable(
-                          context, ref, receivable, contact),
+                      onPressed: () {
+                        final capturedCurrency = currency;
+                        final capturedUserProfile = ref.read(userProfileProvider);
+                        final capturedTransactionService = ref.read(transactionServiceProvider);
+                        final capturedWhatsAppService = ref.read(whatsAppServiceProvider);
+                        final capturedTemplateService = ref.read(messageTemplateServiceProvider);
+                        final capturedLanguage = getCurrentLanguageCode(ref);
+
+                        ShareHelper.shareReceivable(
+                          context,
+                          ref,
+                          receivable,
+                          contact,
+                          currencyOverride: capturedCurrency,
+                          userProfileOverride: capturedUserProfile,
+                          transactionServiceOverride: capturedTransactionService,
+                          whatsAppServiceOverride: capturedWhatsAppService,
+                          templateServiceOverride: capturedTemplateService,
+                          languageOverride: capturedLanguage,
+                        );
+                      },
                     ),
                 ],
               ),
@@ -525,6 +564,11 @@ class ReceivableDetailsDialog extends ConsumerWidget {
           final transactionService = ref.read(transactionServiceProvider);
           final whatsAppService = ref.read(whatsAppServiceProvider);
 
+          final capturedCurrency = currency;
+          final capturedUserProfile = userProfile;
+          final capturedTransactionService = transactionService;
+          final capturedWhatsAppService = whatsAppService;
+
           ToastUtils.showSuccessToast(context, ref, l10n.markedAsReceived,
               color: activeColor);
 
@@ -535,10 +579,10 @@ class ReceivableDetailsDialog extends ConsumerWidget {
               updatedItem.receivable,
               updatedItem.contact,
               activeColor: activeColor,
-              currency: currency,
-              userProfile: userProfile,
-              transactionService: transactionService,
-              whatsAppService: whatsAppService,
+              currency: capturedCurrency,
+              userProfile: capturedUserProfile,
+              transactionService: capturedTransactionService,
+              whatsAppService: capturedWhatsAppService,
             );
           }
           Navigator.pop(context);
@@ -563,21 +607,32 @@ class ReceivableDetailsDialog extends ConsumerWidget {
     dynamic whatsAppService,
   }) {
     final l10n = AppLocalizations.of(context)!;
+    final capturedCurrency = currency;
+    final capturedUserProfile = userProfile;
+    final capturedTransactionService = transactionService;
+    final capturedWhatsAppService = whatsAppService;
+    final capturedTemplateService = ref.read(messageTemplateServiceProvider);
+    final capturedLanguage = getCurrentLanguageCode(ref);
+
     ToastUtils.showSuccessToast(
       context,
       ref,
       l10n.informContactSettlement,
       actionLabel: l10n.share,
-      onActionPressed: (snackContext) => ShareHelper.shareReceivable(
-        snackContext,
-        ref,
-        receivable,
-        contact,
-        currencyOverride: currency,
-        userProfileOverride: userProfile,
-        transactionServiceOverride: transactionService,
-        whatsAppServiceOverride: whatsAppService,
-      ),
+      onActionPressed: (snackContext) {
+        ShareHelper.shareReceivable(
+          snackContext,
+          ref,
+          receivable,
+          contact,
+          currencyOverride: capturedCurrency,
+          userProfileOverride: capturedUserProfile,
+          transactionServiceOverride: capturedTransactionService,
+          whatsAppServiceOverride: capturedWhatsAppService,
+          templateServiceOverride: capturedTemplateService,
+          languageOverride: capturedLanguage,
+        );
+      },
       color: activeColor,
     );
   }

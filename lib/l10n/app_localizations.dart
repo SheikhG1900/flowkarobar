@@ -355,7 +355,7 @@ abstract class AppLocalizations {
   /// No description provided for @deleteCashbookMessage.
   ///
   /// In en, this message translates to:
-  /// **'Are you sure you want to delete \"{name}\"? This will permanently delete all data associated with this cashbook.'**
+  /// **'Are you sure you want to delete {name}? This will permanently delete all data associated with this cashbook.'**
   String deleteCashbookMessage(String name);
 
   /// No description provided for @currencySetTo.
@@ -967,7 +967,7 @@ abstract class AppLocalizations {
   /// No description provided for @addContactWithName.
   ///
   /// In en, this message translates to:
-  /// **'Add \"{name}\"'**
+  /// **'Add {name}'**
   String addContactWithName(String name);
 
   /// No description provided for @payables.
@@ -3847,7 +3847,7 @@ abstract class AppLocalizations {
   /// No description provided for @createCategoryNamed.
   ///
   /// In en, this message translates to:
-  /// **'Create category \"{name}\"'**
+  /// **'Create category {name}'**
   String createCategoryNamed(String name);
 
   /// No description provided for @tapToAddCategory.
@@ -3922,6 +3922,60 @@ abstract class AppLocalizations {
   /// **'Sync triggered in background'**
   String get syncTriggered;
 
+  /// No description provided for @autoSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto Sync'**
+  String get autoSync;
+
+  /// No description provided for @syncInterval.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync Interval (Hours)'**
+  String get syncInterval;
+
+  /// No description provided for @hour.
+  ///
+  /// In en, this message translates to:
+  /// **'hour'**
+  String get hour;
+
+  /// No description provided for @hours.
+  ///
+  /// In en, this message translates to:
+  /// **'hours'**
+  String get hours;
+
+  /// No description provided for @localVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Local Version: {version}'**
+  String localVersion(int version);
+
+  /// No description provided for @cloudVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud Version: {version}'**
+  String cloudVersion(int version);
+
+  /// No description provided for @lastSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Last Sync: {time}'**
+  String lastSync(String time);
+
+  /// No description provided for @autoBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto Backup'**
+  String get autoBackup;
+
+  /// No description provided for @manual.
+  ///
+  /// In en, this message translates to:
+  /// **'Manual'**
+  String get manual;
+
   /// No description provided for @backupDescription.
   ///
   /// In en, this message translates to:
@@ -3993,6 +4047,49 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Font Selection'**
   String get fontSelection;
+
+  /// No description provided for @restoreToNewCashbookTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore to New Cashbook?'**
+  String get restoreToNewCashbookTitle;
+
+  /// No description provided for @restoreToNewCashbookMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This backup belongs to \"{cloudCashbookName}\". Restoring it will create a new cashbook entry on this device with its data.'**
+  String restoreToNewCashbookMessage(String cloudCashbookName);
+
+  /// No description provided for @overrideExistingCashbookTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Override Existing Cashbook?'**
+  String get overrideExistingCashbookTitle;
+
+  /// No description provided for @overrideExistingCashbookMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This backup belongs to \"{cloudCashbookName}\". Restoring it will overwrite the data of your currently active cashbook, \"{activeCashbookName}\".'**
+  String overrideExistingCashbookMessage(
+      String cloudCashbookName, String activeCashbookName);
+
+  /// No description provided for @restoreSuccessNew.
+  ///
+  /// In en, this message translates to:
+  /// **'Cashbook {name} created successfully. You can switch to it from the home screen.'**
+  String restoreSuccessNew(String name);
+
+  /// No description provided for @restoreOptionOverride.
+  ///
+  /// In en, this message translates to:
+  /// **'Override'**
+  String get restoreOptionOverride;
+
+  /// No description provided for @restoreOptionNewEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'New Entry'**
+  String get restoreOptionNewEntry;
 }
 
 class _AppLocalizationsDelegate

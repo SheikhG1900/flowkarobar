@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:flowpaisa/l10n/app_localizations.dart';
 
 /// Utility class for centralized date formatting
 class AppDateFormatter {
@@ -48,5 +49,24 @@ class AppDateFormatter {
   /// Get a DateFormat instance for custom needs
   static DateFormat getFormatter(String pattern) {
     return DateFormat(pattern);
+  }
+
+  /// Format a DateTime object to a relative time string (e.g., 2h ago)
+  static String formatRelativeTime(DateTime date, BuildContext context) {
+    final now = DateTime.now();
+    final difference = now.difference(date);
+    final l10n = AppLocalizations.of(context)!;
+
+    if (difference.inSeconds < 60) {
+      return l10n.justNow;
+    } else if (difference.inMinutes < 60) {
+      return l10n.minutesAgo(difference.inMinutes);
+    } else if (difference.inHours < 24) {
+      return l10n.hoursAgo(difference.inHours);
+    } else if (difference.inDays < 7) {
+      return l10n.daysAgo(difference.inDays);
+    } else {
+      return formatMediumDate(date);
+    }
   }
 }

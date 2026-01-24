@@ -125,7 +125,7 @@ class _ShareOptionsSheetState extends State<_ShareOptionsSheet> {
 
       // Ensure external ID is persisted before sharing
       final effectiveExternalId = await transactionService.ensureExternalLinkId(
-        transactionId: widget.transaction.id,
+        transactionUuid: widget.transaction.uuid,
       );
 
       // Generate reciprocal link
@@ -147,25 +147,12 @@ class _ShareOptionsSheetState extends State<_ShareOptionsSheet> {
       // whatsAppService.shareTransactionWithLink uses TransactionShareData.
       // I'll update WhatsAppService later if needed, but for now I'll use the link.
 
-      String relationshipText = '';
-      if (widget.transaction.paidRelationship == 'PAID_FOR') {
-        relationshipText = l10n.transactionSharePaidFor;
-      } else if (widget.transaction.paidRelationship == 'PAID_BY') {
-        relationshipText = l10n.transactionSharePaidBy;
-      } else if (widget.transaction.paidRelationship == 'WILL_RECEIVE') {
-        relationshipText = l10n.transactionShareWillReceive;
-      } else if (widget.transaction.paidRelationship == 'RECEIVED_FROM') {
-        relationshipText = l10n.transactionShareReceivedFrom;
-      } else {
-        relationshipText = l10n.transactionShareGeneric;
-      }
-
       final message = l10n.shareTransactionMessage(
-        amount: AmountFormatter.formatWithCurrency(
+        AmountFormatter.formatWithCurrency(
             widget.transaction.amount, currencySymbol, 2),
-        date: AppDateFormatter.formatDate(widget.transaction.date,
+        AppDateFormatter.formatDate(widget.transaction.date,
             pattern: userProfile.dateFormat),
-        link: link,
+        link,
       );
 
       await whatsAppService.sendMessage(widget.contact?.phone ?? '', message);
@@ -200,7 +187,7 @@ class _ShareOptionsSheetState extends State<_ShareOptionsSheet> {
 
       // Ensure external ID is persisted before sharing
       final effectiveExternalId = await transactionService.ensureExternalLinkId(
-        transactionId: widget.transaction.id,
+        transactionUuid: widget.transaction.uuid,
       );
 
       // Generate reciprocal link

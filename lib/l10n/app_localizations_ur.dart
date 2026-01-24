@@ -499,7 +499,7 @@ class AppLocalizationsUr extends AppLocalizations {
 
   @override
   String addContactWithName(String name) {
-    return '\"$name\" شامل کریں';
+    return '$name شامل کریں';
   }
 
   @override
@@ -667,7 +667,7 @@ class AppLocalizationsUr extends AppLocalizations {
 
   @override
   String get dateFormatInstructions =>
-      'معیاری ICU پیٹرن استعمال کریں جیسے:\ndd: دن، MM: مہینہ، yyyy: سال\nMMM: مختصر مہینہ، EEEE: مکمل دن';
+      'معیاری ICU پیٹرن استعمال کریں جیسے:\ndd: دن, MM: مہینہ, yyyy: سال\nMMM: مختصر مہینہ, EEEE: مکمل دن';
 
   @override
   String get lightThemeDescription => 'ہمیشہ لائٹ تھیم استعمال کریں';
@@ -766,7 +766,7 @@ class AppLocalizationsUr extends AppLocalizations {
   String get month => 'مہینہ';
 
   @override
-  String get quarter => 'سہ ماہی';
+  String get quarter => 'سه ماہی';
 
   @override
   String get year => 'سال';
@@ -919,7 +919,7 @@ class AppLocalizationsUr extends AppLocalizations {
       'گوگل ڈرائیو پر کلاؤڈ بیک اپ پریمیم صارفین کے لیے دستیاب ہے۔';
 
   @override
-  String get signOut => 'سائن آؤٹ';
+  String get signOut => 'Sign Out';
 
   @override
   String get signInGoogleToBackup =>
@@ -1383,7 +1383,7 @@ class AppLocalizationsUr extends AppLocalizations {
   String get codeLengthError => 'کوڈ بالکل 3 حروف کا ہونا چاہیے';
 
   @override
-  String get decimalPlacesLabel => 'دشमलव کے مقامات';
+  String get decimalPlacesLabel => 'اعشاریہ کے مقامات';
 
   @override
   String get decimalPlacesHelper => 'اعشاریہ کے بعد ہندسوں کی تعداد';
@@ -1404,7 +1404,7 @@ class AppLocalizationsUr extends AppLocalizations {
   String get currencyAdded => 'کرنسی کامیابی سے شامل کر دی گئی';
 
   @override
-  String get editCurrency => 'کرنسی میں ترمیم کریں';
+  String get editCurrency => 'کرنسی में ترمیم کریں';
 
   @override
   String get updateCurrency => 'کرنسی اپ ڈیٹ کریں';
@@ -1986,7 +1986,7 @@ class AppLocalizationsUr extends AppLocalizations {
   String get userProfile => 'صارف کا پروفائل';
 
   @override
-  String get userProfileDescription => 'نام، ای میل اور بنیادی معلومات';
+  String get userProfileDescription => 'نام, ای میل اور بنیادی معلومات';
 
   @override
   String get preferencesDescription => 'کرنسی اور تاریخ کے فارمیٹ کی ترتیبات';
@@ -2102,6 +2102,39 @@ class AppLocalizationsUr extends AppLocalizations {
   String get syncTriggered => 'بیک گراؤنڈ میں سنک شروع ہو گیا ہے';
 
   @override
+  String get autoSync => 'آٹو سنک';
+
+  @override
+  String get syncInterval => 'سنک کا وقفہ (گھنٹے)';
+
+  @override
+  String get hour => 'گھنٹہ';
+
+  @override
+  String get hours => 'گھنٹے';
+
+  @override
+  String localVersion(int version) {
+    return 'مقامی ورژن: $version';
+  }
+
+  @override
+  String cloudVersion(int version) {
+    return 'کلاؤڈ ورژن: $version';
+  }
+
+  @override
+  String lastSync(String time) {
+    return 'آخری سنک: $time';
+  }
+
+  @override
+  String get autoBackup => 'آٹو بیک اپ';
+
+  @override
+  String get manual => 'مینول';
+
+  @override
   String get backupDescription =>
       'ایک مکمل بیک اپ آپ کے ڈیٹا بیس کا ایک مکمل اسنیپ شاٹ بناتا ہے۔ اسے تاریخی ریکارڈ یا بڑے مسائل سے نمٹنے کے لیے استعمال کریں۔';
 
@@ -2140,4 +2173,33 @@ class AppLocalizationsUr extends AppLocalizations {
 
   @override
   String get fontSelection => 'فونٹ کا انتخاب';
+
+  @override
+  String get restoreToNewCashbookTitle => 'نئی کیش بک میں بحال کریں؟';
+
+  @override
+  String restoreToNewCashbookMessage(String cloudCashbookName) {
+    return 'یہ بیک اپ $cloudCashbookName کا ہے۔ اسے بحال کرنے سے اس ڈیوائس پر اس کے ڈیٹا کے ساتھ ایک نئی کیش بک انٹری بن جائے گی۔';
+  }
+
+  @override
+  String get overrideExistingCashbookTitle =>
+      'موجودہ کیش بک کو اوور رائٹ کریں؟';
+
+  @override
+  String overrideExistingCashbookMessage(
+      String cloudCashbookName, String activeCashbookName) {
+    return 'یہ بیک اپ $cloudCashbookName کا ہے۔ اسے بحال کرنے سے آپ کی موجودہ فعال کیش بک $activeCashbookName کا ڈیٹا اوور رائٹ ہو جائے گا۔';
+  }
+
+  @override
+  String restoreSuccessNew(String name) {
+    return 'کیش بک $name کامیابی سے بن گئی۔ آپ اسے ہوم اسکرین سے تبدیل کر سکتے ہیں۔';
+  }
+
+  @override
+  String get restoreOptionOverride => 'اوور رائٹ کریں';
+
+  @override
+  String get restoreOptionNewEntry => 'نئی انٹری';
 }

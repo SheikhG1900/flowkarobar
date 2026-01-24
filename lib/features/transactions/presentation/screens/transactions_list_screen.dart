@@ -339,7 +339,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                               final l10n = AppLocalizations.of(context)!;
                               try {
                                 await service
-                                    .deleteTransaction(item.transaction.id);
+                                    .deleteTransaction(item.transaction.uuid);
                                 if (context.mounted) {
                                   ToastUtils.showSuccessToast(
                                       context, ref, l10n.transactionDeleted);

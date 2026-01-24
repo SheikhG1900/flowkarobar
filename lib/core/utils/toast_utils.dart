@@ -188,7 +188,6 @@ class ToastUtils {
                                 child: TextButton(
                                   onPressed: () {
                                     onActionPressed(snackContext);
-                                    scaffoldMessenger.hideCurrentSnackBar();
                                   },
                                   style: TextButton.styleFrom(
                                     backgroundColor:

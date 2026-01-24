@@ -1,3 +1,5 @@
+import 'package:flowpaisa/features/messages/presentation/providers/message_template_provider.dart';
+import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -5,7 +7,6 @@ import 'package:drift/drift.dart' as drift;
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
-import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 import 'package:flowpaisa/features/whatsapp/presentation/providers/whatsapp_provider.dart';
 import 'package:flowpaisa/core/utils/share_helper.dart';
 import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
@@ -344,6 +345,13 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
           final transactionService = ref.read(transactionServiceProvider);
           final whatsAppService = ref.read(whatsAppServiceProvider);
 
+          final capturedCurrency = currency;
+          final capturedUserProfile = userProfile;
+          final capturedTransactionService = transactionService;
+          final capturedWhatsAppService = whatsAppService;
+          final capturedTemplateService = ref.read(messageTemplateServiceProvider);
+          final capturedLanguage = getCurrentLanguageCode(ref);
+
           ToastUtils.showSuccessToast(
             context,
             ref,
@@ -351,18 +359,22 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                 ? l10n.transactionLinkedAdded
                 : l10n.transactionAdded,
             actionLabel: l10n.share,
-            onActionPressed: (snackContext) => ShareHelper.shareTransaction(
-              snackContext,
-              ref,
-              transactionWithDetails.transaction,
-              transactionWithDetails.contact,
-              transactionWithDetails.category,
-              false, // isMarked
-              currencyOverride: currency,
-              userProfileOverride: userProfile,
-              transactionServiceOverride: transactionService,
-              whatsAppServiceOverride: whatsAppService,
-            ),
+            onActionPressed: (snackContext) {
+              ShareHelper.shareTransaction(
+                snackContext,
+                ref, 
+                transactionWithDetails.transaction,
+                transactionWithDetails.contact,
+                transactionWithDetails.category,
+                false, // isMarked
+                currencyOverride: capturedCurrency,
+                userProfileOverride: capturedUserProfile,
+                transactionServiceOverride: capturedTransactionService,
+                whatsAppServiceOverride: capturedWhatsAppService,
+                templateServiceOverride: capturedTemplateService,
+                languageOverride: capturedLanguage,
+              );
+            },
             color: activeColor,
           );
 

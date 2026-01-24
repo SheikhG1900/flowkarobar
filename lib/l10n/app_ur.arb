@@ -163,7 +163,7 @@
   "deleteReceivableMessage": "کیا آپ واقعی اس وصولی کو حذف کرنا چاہتے ہیں؟ اس عمل کو واپس نہیں لیا جا سکتا۔",
   "markedAsReceived": "وصول شدہ کے طور پر نشان زد کر دیا گیا",
   "informContactSettlement": "وصولی وصول شدہ کے طور پر نشان زد کر دی گئی۔ رابطہ کو مطلع کریں؟",
-  "addContactWithName": "\"{name}\" شامل کریں",
+  "addContactWithName": "{name} شامل کریں",
   "@addContactWithName": {
     "placeholders": {
       "name": {
@@ -225,7 +225,7 @@
   "enterCustomDateFormat": "اپنا تاریخ کا فارمیٹ پیٹرن درج کریں",
   "customDateFormat": "حسب ضرورت تاریخ کا فارمیٹ",
   "formatPattern": "فارمیٹ پیٹرن",
-  "dateFormatInstructions": "معیاری ICU پیٹرن استعمال کریں جیسے:\ndd: دن، MM: مہینہ، yyyy: سال\nMMM: مختصر مہینہ، EEEE: مکمل دن",
+  "dateFormatInstructions": "معیاری ICU پیٹرن استعمال کریں جیسے:\ndd: دن, MM: مہینہ, yyyy: سال\nMMM: مختصر مہینہ, EEEE: مکمل دن",
   "themeSet": "تھیم {name} پر سیٹ کر دی گئی",
   "lightThemeDescription": "ہمیشہ لائٹ تھیم استعمال کریں",
   "darkThemeDescription": "ہمیشہ ڈارک تھیم استعمال کریں",
@@ -261,7 +261,7 @@
   "errorSharing": "شیئر کرنے میں غلطی: {error}",
   "errorExporting": "ایکسپورٹ کرنے میں غلطی: {error}",
   "month": "مہینہ",
-  "quarter": "سہ ماہی",
+  "quarter": "سه ماہی",
   "year": "سال",
   "custom": "حسب ضرورت",
   "payableShort": "قابل ادائیگی:",
@@ -312,7 +312,7 @@
   "active": "فعال",
   "googleDriveBackup": "گوگل ڈرائیو بیک اپ",
   "cloudBackupPremiumDesc": "گوگل ڈرائیو پر کلاؤڈ بیک اپ پریمیم صارفین کے لیے دستیاب ہے۔",
-  "signOut": "سائن آؤٹ",
+  "signOut": "Sign Out",
   "signInGoogleToBackup": "اپنے ڈیٹا کا بیک اپ لینے کے لیے گوگل کے ساتھ سائن ان کریں",
   "signInGoogle": "گوگل کے ساتھ سائن ان کریں",
   "googleServicesNote": "نوٹ: بیک اپ کے لیے درست گوگل سروسز کنفیگریشن درکار ہے۔ اگر سائن ان ناکام ہو جائے تو اپنا سیٹ اپ چیک کریں۔",
@@ -457,7 +457,7 @@
   "currencyCodeHelper": "ISO 4217 کوڈ (3 حروف)",
   "pleaseEnterCurrencyCode": "براہ کرم کرنسی کوڈ درج کریں",
   "codeLengthError": "کوڈ بالکل 3 حروف کا ہونا چاہیے",
-  "decimalPlacesLabel": "دشमलव کے مقامات",
+  "decimalPlacesLabel": "اعشاریہ کے مقامات",
   "decimalPlacesHelper": "اعشاریہ کے بعد ہندسوں کی تعداد",
   "noDecimals": "0 (کوئی اعشاریہ نہیں)",
   "oneDecimal": "1 اعشاریہ کا مقام",
@@ -466,7 +466,7 @@
   "negativeAmount": "منفی: {amount}",
   "saveCurrency": "کرنسی محفوظ کریں",
   "currencyAdded": "کرنسی کامیابی سے شامل کر دی گئی",
-  "editCurrency": "کرنسی میں ترمیم کریں",
+  "editCurrency": "کرنسی में ترمیم کریں",
   "updateCurrency": "کرنسی اپ ڈیٹ کریں",
   "currencyUpdated": "کرنسی کامیابی سے اپ ڈیٹ کر دی گئی",
   "selectDateRange": "تاریخ کی حد منتخب کریں",
@@ -662,7 +662,7 @@
   "toTarget": "ہدف: {name}",
   "whatToCopy": "کیا کاپی کرنا ہے؟",
   "userProfile": "صارف کا پروفائل",
-  "userProfileDescription": "نام، ای میل اور بنیادی معلومات",
+  "userProfileDescription": "نام, ای میل اور بنیادی معلومات",
   "preferencesDescription": "کرنسی اور تاریخ کے فارمیٹ کی ترتیبات",
   "messageTemplatesDescription": "واٹس ایپ میسج ٹیمپلیٹس",
   "copy": "کاپی کریں",
@@ -697,6 +697,38 @@
   "syncDescription": "سنکرونائزیشن چھوٹی تبدیلیوں کو ضم کر کے آپ کے ڈیٹا کو آپ کے تمام آلات پر اپ ڈیٹ رکھتا ہے۔ یہ تیز ہے اور خودکار طور پر چلتا ہے۔",
   "syncNow": "ابھی سنک کریں",
   "syncTriggered": "بیک گراؤنڈ میں سنک شروع ہو گیا ہے",
+  "autoSync": "آٹو سنک",
+  "syncInterval": "سنک کا وقفہ (گھنٹے)",
+  "hour": "گھنٹہ",
+  "hours": "گھنٹے",
+  "localVersion": "مقامی ورژن: {version}",
+  "@localVersion": {
+    "placeholders": {
+      "version": {
+        "type": "int"
+      }
+    }
+  },
+  "cloudVersion": "کلاؤڈ ورژن: {version}",
+  "@cloudVersion": {
+    "placeholders": {
+      "version": {
+        "type": "int"
+      }
+    }
+  },
+  "lastSync": "آخری سنک: {time}",
+  "@lastSync": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "autoBackup": "آٹو بیک اپ",
+  "manual": "مینول",
+  "weekly": "ہفتہ وار",
+  "monthly": "ماہانہ",
   "backupDescription": "ایک مکمل بیک اپ آپ کے ڈیٹا بیس کا ایک مکمل اسنیپ شاٹ بناتا ہے۔ اسے تاریخی ریکارڈ یا بڑے مسائل سے نمٹنے کے لیے استعمال کریں۔",
   "syncRecovery": "سنک ریکوری",
   "syncRecoveryDescription": "اگر آپ نے سنک کی غلطی کو ٹھیک کرنے کے لیے اس بیک اپ کو بحال کیا ہے، تو آپ کو کلاؤڈ سنک کو اس ورژن پر ری سیٹ کرنا چاہیے۔ یہ اس بحال شدہ ڈیٹا کو \"سچائی کا ذریعہ\" بناتا ہے۔",
@@ -707,5 +739,36 @@
   "restoreFromFile": "فائل سے بحال کریں",
   "clearData": "ڈیٹا صاف کریں",
   "addCashbook": "کیش بک شامل کریں",
-  "cashbookCreated": "کیش بک کامیابی سے بن گئی"
+  "cashbookCreated": "کیش بک کامیابی سے بن گئی",
+  "restoreToNewCashbookTitle": "نئی کیش بک میں بحال کریں؟",
+  "restoreToNewCashbookMessage": "یہ بیک اپ {cloudCashbookName} کا ہے۔ اسے بحال کرنے سے اس ڈیوائس پر اس کے ڈیٹا کے ساتھ ایک نئی کیش بک انٹری بن جائے گی۔",
+  "@restoreToNewCashbookMessage": {
+    "placeholders": {
+      "cloudCashbookName": {
+        "type": "String"
+      }
+    }
+  },
+  "overrideExistingCashbookTitle": "موجودہ کیش بک کو اوور رائٹ کریں؟",
+  "overrideExistingCashbookMessage": "یہ بیک اپ {cloudCashbookName} کا ہے۔ اسے بحال کرنے سے آپ کی موجودہ فعال کیش بک {activeCashbookName} کا ڈیٹا اوور رائٹ ہو جائے گا۔",
+  "@overrideExistingCashbookMessage": {
+    "placeholders": {
+      "cloudCashbookName": {
+        "type": "String"
+      },
+      "activeCashbookName": {
+        "type": "String"
+      }
+    }
+  },
+  "restoreSuccessNew": "کیش بک {name} کامیابی سے بن گئی۔ آپ اسے ہوم اسکرین سے تبدیل کر سکتے ہیں۔",
+  "@restoreSuccessNew": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "restoreOptionOverride": "اوور رائٹ کریں",
+  "restoreOptionNewEntry": "نئی انٹری"
 }

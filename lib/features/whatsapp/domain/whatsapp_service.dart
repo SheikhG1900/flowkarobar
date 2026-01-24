@@ -5,6 +5,7 @@ import 'package:flowpaisa/features/whatsapp/domain/deep_link_service.dart';
 import 'package:flowpaisa/features/whatsapp/domain/models/shared_data_models.dart';
 import 'package:flowpaisa/features/messages/domain/message_template_service.dart';
 import 'package:flowpaisa/features/messages/data/default_templates.dart';
+import 'dart:convert';
 
 class WhatsAppService {
   final DeepLinkService _deepLinkService = DeepLinkService();
@@ -23,7 +24,9 @@ class WhatsAppService {
           'https://wa.me/$cleanNumber?text=${Uri.encodeComponent(message)}');
 
       if (await canLaunchUrl(whatsappUrl)) {
-        await launchUrl(whatsappUrl, mode: LaunchMode.externalApplication);
+        final launched = await launchUrl(whatsappUrl, mode: LaunchMode.externalApplication);
+        // Add a small delay to allow the OS to process the activity launch
+        await Future.delayed(const Duration(milliseconds: 800));
         return true;
       } else {
         throw Exception('WhatsApp is not installed or phone number is invalid');
@@ -318,7 +321,9 @@ class WhatsAppService {
         final whatsappUrl =
             Uri.parse('https://wa.me/?text=${Uri.encodeComponent(message)}');
         if (await canLaunchUrl(whatsappUrl)) {
-          await launchUrl(whatsappUrl, mode: LaunchMode.externalApplication);
+          final launched = await launchUrl(whatsappUrl, mode: LaunchMode.externalApplication);
+          // Add a small delay to allow the OS to process the activity launch
+          await Future.delayed(const Duration(milliseconds: 800));
           return true;
         }
         return false;
@@ -400,6 +405,8 @@ class WhatsAppService {
             Uri.parse('https://wa.me/?text=${Uri.encodeComponent(message)}');
         if (await canLaunchUrl(whatsappUrl)) {
           await launchUrl(whatsappUrl, mode: LaunchMode.externalApplication);
+          // Add a small delay to allow the OS to process the activity launch
+          await Future.delayed(const Duration(milliseconds: 800));
           return true;
         }
         return false;
@@ -480,6 +487,8 @@ class WhatsAppService {
             Uri.parse('https://wa.me/?text=${Uri.encodeComponent(message)}');
         if (await canLaunchUrl(whatsappUrl)) {
           await launchUrl(whatsappUrl, mode: LaunchMode.externalApplication);
+          // Add a small delay to allow the OS to process the activity launch
+          await Future.delayed(const Duration(milliseconds: 800));
           return true;
         }
         return false;

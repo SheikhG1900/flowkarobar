@@ -175,7 +175,7 @@
       }
     }
   },
-  "deleteCashbookMessage": "Are you sure you want to delete \"{name}\"? This will permanently delete all data associated with this cashbook.",
+  "deleteCashbookMessage": "Are you sure you want to delete {name}? This will permanently delete all data associated with this cashbook.",
   "@deleteCashbookMessage": {
     "placeholders": {
       "name": {
@@ -327,7 +327,7 @@
   "deleteReceivableMessage": "Are you sure you want to delete this receivable? This action cannot be undone.",
   "markedAsReceived": "Marked as received",
   "informContactSettlement": "Receivable marked as received. Inform the contact?",
-  "addContactWithName": "Add \"{name}\"",
+  "addContactWithName": "Add {name}",
   "@addContactWithName": {
     "placeholders": {
       "name": {
@@ -1059,7 +1059,7 @@
     }
   },
   "deleteCashbookTitle": "Delete Cashbook",
-  "deleteCashbookMessage": "Are you sure you want to delete \"{name}\"? This will permanently delete all data associated with this cashbook.",
+  "deleteCashbookMessage": "Are you sure you want to delete {name}? This will permanently delete all data associated with this cashbook.",
   "@deleteCashbookMessage": {
     "placeholders": {
       "name": {
@@ -1153,7 +1153,7 @@
   "pleaseSelectContactLinked": "Please select a contact for linked transaction",
   "transactionLinkedAdded": "Transaction linked and added successfully",
   "transactionAdded": "Transaction added successfully",
-  "createCategoryNamed": "Create category \"{name}\"",
+  "createCategoryNamed": "Create category {name}",
   "@createCategoryNamed": {
     "placeholders": {
       "name": {
@@ -1173,6 +1173,38 @@
   "syncDescription": "Synchronization keeps your data updated across all your devices by merging small changes. It is fast and runs automatically.",
   "syncNow": "Sync Now",
   "syncTriggered": "Sync triggered in background",
+  "autoSync": "Auto Sync",
+  "syncInterval": "Sync Interval (Hours)",
+  "hour": "hour",
+  "hours": "hours",
+  "localVersion": "Local Version: {version}",
+  "@localVersion": {
+    "placeholders": {
+      "version": {
+        "type": "int"
+      }
+    }
+  },
+  "cloudVersion": "Cloud Version: {version}",
+  "@cloudVersion": {
+    "placeholders": {
+      "version": {
+        "type": "int"
+      }
+    }
+  },
+  "lastSync": "Last Sync: {time}",
+  "@lastSync": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "autoBackup": "Auto Backup",
+  "manual": "Manual",
+  "weekly": "Weekly",
+  "monthly": "Monthly",
   "backupDescription": "A full backup creates a complete snapshot of your database. Use this for historical records or to recover from major issues.",
   "syncRecovery": "Sync Recovery",
   "syncRecoveryDescription": "If you restored this backup to fix a sync error, you should reset the cloud sync to this version. This makes this restored data the \"source of truth\".",
@@ -1191,5 +1223,36 @@
   "clearData": "Clear Data",
   "addCashbook": "Add Cashbook",
   "cashbookCreated": "Cashbook created successfully",
-  "fontSelection": "Font Selection"
+  "fontSelection": "Font Selection",
+  "restoreToNewCashbookTitle": "Restore to New Cashbook?",
+  "restoreToNewCashbookMessage": "This backup belongs to \"{cloudCashbookName}\". Restoring it will create a new cashbook entry on this device with its data.",
+  "@restoreToNewCashbookMessage": {
+    "placeholders": {
+      "cloudCashbookName": {
+        "type": "String"
+      }
+    }
+  },
+  "overrideExistingCashbookTitle": "Override Existing Cashbook?",
+  "overrideExistingCashbookMessage": "This backup belongs to \"{cloudCashbookName}\". Restoring it will overwrite the data of your currently active cashbook, \"{activeCashbookName}\".",
+  "@overrideExistingCashbookMessage": {
+    "placeholders": {
+      "cloudCashbookName": {
+        "type": "String"
+      },
+      "activeCashbookName": {
+        "type": "String"
+      }
+    }
+  },
+  "restoreSuccessNew": "Cashbook {name} created successfully. You can switch to it from the home screen.",
+  "@restoreSuccessNew": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "restoreOptionOverride": "Override",
+  "restoreOptionNewEntry": "New Entry"
 }

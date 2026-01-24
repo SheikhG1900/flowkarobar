@@ -52,14 +52,25 @@ class SyncScheduler {
   }
 
   static Future<void> scheduleDailySync() async {
+    final prefs = await SharedPreferences.getInstance();
+    final syncInterval = prefs.getString('sync_interval') ?? 'manual';
+    
+    if (syncInterval == 'manual') {
+      await Workmanager().cancelByUniqueName('daily-sync');
+      return;
+    }
+
+    final intervalHours = int.tryParse(syncInterval) ?? 24;
+
     await Workmanager().registerPeriodicTask(
       'daily-sync',
       syncTaskName,
-      frequency: const Duration(hours: 24),
+      frequency: Duration(hours: intervalHours),
       constraints: Constraints(
         networkType: NetworkType.connected,
         requiresBatteryNotLow: true,
       ),
+      existingWorkPolicy: ExistingPeriodicWorkPolicy.replace,
     );
   }
 

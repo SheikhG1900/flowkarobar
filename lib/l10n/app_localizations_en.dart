@@ -174,7 +174,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String deleteCashbookMessage(String name) {
-    return 'Are you sure you want to delete \"$name\"? This will permanently delete all data associated with this cashbook.';
+    return 'Are you sure you want to delete $name? This will permanently delete all data associated with this cashbook.';
   }
 
   @override
@@ -498,7 +498,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String addContactWithName(String name) {
-    return 'Add \"$name\"';
+    return 'Add $name';
   }
 
   @override
@@ -2044,7 +2044,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String createCategoryNamed(String name) {
-    return 'Create category \"$name\"';
+    return 'Create category $name';
   }
 
   @override
@@ -2087,6 +2087,39 @@ class AppLocalizationsEn extends AppLocalizations {
   String get syncTriggered => 'Sync triggered in background';
 
   @override
+  String get autoSync => 'Auto Sync';
+
+  @override
+  String get syncInterval => 'Sync Interval (Hours)';
+
+  @override
+  String get hour => 'hour';
+
+  @override
+  String get hours => 'hours';
+
+  @override
+  String localVersion(int version) {
+    return 'Local Version: $version';
+  }
+
+  @override
+  String cloudVersion(int version) {
+    return 'Cloud Version: $version';
+  }
+
+  @override
+  String lastSync(String time) {
+    return 'Last Sync: $time';
+  }
+
+  @override
+  String get autoBackup => 'Auto Backup';
+
+  @override
+  String get manual => 'Manual';
+
+  @override
   String get backupDescription =>
       'A full backup creates a complete snapshot of your database. Use this for historical records or to recover from major issues.';
 
@@ -2125,4 +2158,32 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get fontSelection => 'Font Selection';
+
+  @override
+  String get restoreToNewCashbookTitle => 'Restore to New Cashbook?';
+
+  @override
+  String restoreToNewCashbookMessage(String cloudCashbookName) {
+    return 'This backup belongs to \"$cloudCashbookName\". Restoring it will create a new cashbook entry on this device with its data.';
+  }
+
+  @override
+  String get overrideExistingCashbookTitle => 'Override Existing Cashbook?';
+
+  @override
+  String overrideExistingCashbookMessage(
+      String cloudCashbookName, String activeCashbookName) {
+    return 'This backup belongs to \"$cloudCashbookName\". Restoring it will overwrite the data of your currently active cashbook, \"$activeCashbookName\".';
+  }
+
+  @override
+  String restoreSuccessNew(String name) {
+    return 'Cashbook $name created successfully. You can switch to it from the home screen.';
+  }
+
+  @override
+  String get restoreOptionOverride => 'Override';
+
+  @override
+  String get restoreOptionNewEntry => 'New Entry';
 }

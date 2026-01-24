@@ -122,7 +122,7 @@ class _ShareOptionsSheetState extends State<_ShareOptionsSheet> {
 
       // Ensure external ID is persisted before sharing
       final effectiveExternalId = await transactionService.ensureExternalLinkId(
-        payableId: widget.payable.id,
+        payableUuid: widget.payable.uuid,
       );
 
       // Create share data for recipient (Receivable)
@@ -143,19 +143,19 @@ class _ShareOptionsSheetState extends State<_ShareOptionsSheet> {
       String message;
       if (isPaid) {
         message = l10n.sharePayableCompleted(
-          amount: AmountFormatter.formatWithCurrency(widget.payable.amount,
+          AmountFormatter.formatWithCurrency(widget.payable.amount,
               currency?.symbol ?? '', currency?.decimalPlaces ?? 2),
-          date: AppDateFormatter.formatDate(widget.payable.date,
+          AppDateFormatter.formatDate(widget.payable.date,
               pattern: userProfile.dateFormat),
-          link: link,
+          link,
         );
       } else {
         message = l10n.sharePayablePending(
-          amount: AmountFormatter.formatWithCurrency(widget.payable.amount,
+          AmountFormatter.formatWithCurrency(widget.payable.amount,
               currency?.symbol ?? '', currency?.decimalPlaces ?? 2),
-          date: AppDateFormatter.formatDate(widget.payable.date,
+          AppDateFormatter.formatDate(widget.payable.date,
               pattern: userProfile.dateFormat),
-          link: link,
+          link,
         );
       }
 
@@ -191,7 +191,7 @@ class _ShareOptionsSheetState extends State<_ShareOptionsSheet> {
 
       // Ensure external ID is persisted before sharing
       final effectiveExternalId = await transactionService.ensureExternalLinkId(
-        payableId: widget.payable.id,
+        payableUuid: widget.payable.uuid,
       );
 
       // Create share data for recipient (Receivable)
