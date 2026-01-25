@@ -17,6 +17,7 @@ import 'package:flowpaisa/features/receivables/presentation/widgets/receivable_d
 import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
 import 'package:flowpaisa/shared/widgets/swipeable_list_item.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
+import 'package:flowpaisa/shared/widgets/filter_bottom_sheet.dart';
 import 'package:flowpaisa/core/utils/localization_helper.dart';
 import 'package:flowpaisa/core/utils/icon_helper.dart';
 import 'package:material_symbols_icons/symbols.dart';
@@ -34,6 +35,7 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
   TabController? _tabController;
   late ScrollController _scrollController;
   int _previousOverdueCount = -1;
+  bool _isSearching = false;
 
   @override
   void initState() {
@@ -98,6 +100,27 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
     }
   }
 
+  void _showFilterBottomSheet() {
+    final overdueCountAsync = ref.read(overdueReceivablesCountProvider);
+    final hasOverdueTab = (overdueCountAsync.value ?? 0) > 0;
+    final status = _getStatusForTabIndex(_tabController?.index ?? 0, hasOverdueTab);
+    final notifier = ref.read(receivablesPaginatedProvider(status).notifier);
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => FilterBottomSheet(
+        type: FilterType.receivables,
+        initialFilters: notifier.currentFilters,
+        onApply: (filters) {
+          notifier.applyFilters(filters);
+          setState(() {}); // Force rebuild to update badge
+        },
+      ),
+    );
+  }
+
   Widget _buildTabWithCount(String label, int count, {bool isOverdue = false}) {
     return Tab(
       child: Row(
@@ -131,7 +154,6 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
     final pendingCountAsync = ref.watch(pendingReceivablesCountProvider);
     final overdueCountAsync = ref.watch(overdueReceivablesCountProvider);
     final pendingCount = pendingCountAsync.value ?? 0;
@@ -154,11 +176,68 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
       _previousOverdueCount = overdueCount;
     }
 
-        return Scaffold(
-          appBar: AppBar(
-            title: Text(l10n.receivables),
-            actions: [
-              // Debug button to generate dummy receivables (only in debug mode)
+    final l10n = AppLocalizations.of(context)!;
+    final status = _getStatusForTabIndex(_tabController?.index ?? 0, hasOverdueTab);
+    final currentFilters = ref.watch(receivablesPaginatedProvider(status).notifier).currentFilters;
+    final hasActiveFilters = !currentFilters.isEmpty;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: _isSearching
+            ? TextField(
+                autofocus: true,
+                decoration: InputDecoration(
+                  hintText: '${l10n.search}...',
+                  border: InputBorder.none,
+                  hintStyle: const TextStyle(color: Colors.white70),
+                ),
+                style: const TextStyle(color: Colors.white),
+                onChanged: (value) {
+                  ref
+                      .read(receivablesPaginatedProvider(status).notifier)
+                      .updateSearchQuery(value);
+                },
+              )
+            : Text(l10n.receivables),
+        actions: [
+          IconButton(
+            icon: Icon(_isSearching ? Icons.close : Icons.search),
+            onPressed: () {
+              setState(() {
+                if (_isSearching) {
+                  ref
+                      .read(receivablesPaginatedProvider(status).notifier)
+                      .updateSearchQuery('');
+                }
+                _isSearching = !_isSearching;
+              });
+            },
+          ),
+          IconButton(
+            icon: Stack(
+              children: [
+                const Icon(Icons.filter_list),
+                if (hasActiveFilters)
+                  Positioned(
+                    right: 0,
+                    top: 0,
+                    child: Container(
+                      padding: const EdgeInsets.all(2),
+                      decoration: const BoxDecoration(
+                        color: Colors.red,
+                        shape: BoxShape.circle,
+                      ),
+                      constraints: const BoxConstraints(
+                        minWidth: 8,
+                        minHeight: 8,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            onPressed: _showFilterBottomSheet,
+          ),
+          // Debug button to generate dummy receivables (only in debug mode)
               if (kDebugMode)
                 PopupMenuButton<String>(
                   icon: const Icon(Icons.bug_report),

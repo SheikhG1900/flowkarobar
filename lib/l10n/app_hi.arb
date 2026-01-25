@@ -770,5 +770,63 @@
     }
   },
   "restoreOptionOverride": "ओवरराइट करें",
-  "restoreOptionNewEntry": "नई प्रविष्टि"
+  "restoreOptionNewEntry": "नई प्रविष्टि",
+  "filters": "फ़िल्टर",
+  "dateRange": "तारीख सीमा",
+  "transactionType": "लेन-देन का प्रकार",
+  "amountRange": "राशि सीमा",
+  "minAmount": "न्यूनतम राशि",
+  "maxAmount": "अधिकतम राशि",
+  "applyFilters": "फ़िल्टर लागू करें",
+  "filterByDueDate": "देय तिथि के अनुसार फ़िल्टर करें",
+  "from": "से",
+  "to": "तक",
+  "notificationBackupSuccessTitle": "बैकअप सफल",
+  "notificationBackupSuccessMessage": "गूगल ड्राइव पर \"{name}\" का सफलतापूर्वक बैकअप लिया गया।",
+  "@notificationBackupSuccessMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationSyncCompleteTitle": "बैकग्राउंड सिंक पूर्ण",
+  "notificationSyncCompleteMessage": "बैकग्राउंड में {count} कैशबुक सफलतापूर्वक सिंक की गईं।",
+  "@notificationSyncCompleteMessage": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "processing": "प्रसंस्करण...",
+  "cloudCashbooks": "क्लाउड कैशबुक",
+  "main": "मुख्य",
+  "cloudDb": "क्लाउड डेटाबेस",
+  "versions": "संस्करण",
+  "local": "स्थानीय",
+  "cloud": "क्लाउड",
+  "pending": "लंबित",
+  "rows": "{count} पंक्तियाँ",
+  "@rows": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "primeCloudWithLocal": "स्थानीय के साथ क्लाउड को प्राइम करें",
+  "resetCloudVersion": "क्लाउड संस्करण रीसेट करें",
+  "resetCloudVersionMessage": "यह क्लाउड संस्करण को आपके स्थानीय संस्करण ({version}) से मेल खाने के लिए मजबूर करेगा।\n\nइसका उपयोग केवल तभी करें जब आपका क्लाउड मेनिफेस्ट दूषित हो या आपके स्थानीय डेटा के साथ सिंक न हो।",
+  "resetNow": "अभी रीसेट करें",
+  "cloudVersionResetSuccess": "क्लाउड संस्करण सफलतापूर्वक रीसेट हो गया",
+  "cloudVersionResetFailed": "क्लाउड संस्करण रीसेट करने में विफल: {error}",
+  "syncIntervalLabel": "सिंक अंतराल",
+  "resetLocalSyncState": "स्थानीय सिंक स्थिति रीसेट करें",
+  "resetLocalSyncMessage": "यह आपके सभी स्थानीय रिकॉर्ड को \"अनसिंक\" के रूप में चिह्नित करेगा और आपके स्थानीय संस्करण को 0 पर रीसेट कर देगा। इसके बाद \"अभी सिंक करें\" पर टैप करने से आपका सारा डेटा क्लाउड पर फिर से अपलोड हो जाएगा।\n\nइसका उपयोग तब करें जब आप अपने स्थानीय डेटा का पूर्ण पुनः सिंक करना चाहते हैं।",
+  "localSyncResetSuccess": "स्थानीय सिंक स्थिति सफलतापूर्वक रीसेट हो गई",
+  "clearAllCloudData": "सभी क्लाउड डेटा साफ़ करें",
+  "clearAllCloudDataMessage": "यह Google Drive से आपके सभी FlowPaisa बैकअप और सिंक्रनाइज़ेशन डेटा को स्थायी रूप से हटा देगा। इस क्रिया को पूर्ववत नहीं किया जा सकता है।\n\nक्या आप वाकई सभी क्लाउड डेटा साफ़ करना चाहते हैं?",
+  "cloudDataClearedSuccess": "सभी क्लाउड डेटा सफलतापूर्वक साफ़ कर दिया गया",
+  "clearNow": "अभी साफ़ करें"
 }

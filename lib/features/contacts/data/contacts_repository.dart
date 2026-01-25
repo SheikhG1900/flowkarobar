@@ -71,7 +71,9 @@ class ContactsRepository {
 
   /// Update contact
   Future<bool> updateContact(Contact contact) {
-    return _database.update(_database.contacts).replace(contact);
+    return _database
+        .update(_database.contacts)
+        .replace(contact.copyWith(isNotSynced: true));
   }
 
   /// Delete contact

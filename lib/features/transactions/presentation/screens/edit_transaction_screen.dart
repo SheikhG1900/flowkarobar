@@ -10,6 +10,8 @@ import 'package:flowpaisa/features/contacts/presentation/providers/contacts_prov
 import 'package:flowpaisa/features/payables/data/payables_repository.dart';
 import 'package:flowpaisa/features/receivables/data/receivables_repository.dart';
 import 'package:flowpaisa/shared/providers/database_provider.dart';
+import 'package:flowpaisa/features/categories/presentation/screens/add_category_screen.dart';
+import 'package:flowpaisa/features/contacts/presentation/screens/add_contact_screen.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
 import 'package:flowpaisa/core/utils/localization_helper.dart';
 import 'package:flowpaisa/core/utils/date_formatter.dart';
@@ -319,11 +321,38 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
               children: [
                 Padding(
                   padding: const EdgeInsets.all(16),
-                  child: Text(
-                    l10n.selectCategory,
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        l10n.selectCategory,
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                      ),
+                      TextButton.icon(
+                        onPressed: () async {
+                          // Navigate to Add Category Screen
+                          final newCategory = await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => AddCategoryScreen(
+                                initialType: _selectedType,
+                              ),
+                            ),
+                          );
+
+                          if (newCategory != null && newCategory is Category) {
+                            setState(() {
+                              _selectedCategory = newCategory;
+                            });
+                            Navigator.pop(context); // Close picker
+                          }
+                        },
+                        icon: const Icon(Icons.add),
+                        label: Text(l10n.addNew),
+                      ),
+                    ],
                   ),
                 ),
                 Expanded(
@@ -417,11 +446,34 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
               children: [
                 Padding(
                   padding: const EdgeInsets.all(16),
-                  child: Text(
-                    l10n.selectContact,
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        l10n.selectContact,
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                      ),
+                      TextButton.icon(
+                        onPressed: () async {
+                          final newContact = await Navigator.push<Contact>(
+                            context,
+                            MaterialPageRoute(
+                                builder: (_) => const AddContactScreen()),
+                          );
+                          if (newContact != null && context.mounted) {
+                            setState(() {
+                              _selectedContact = newContact;
+                              _selectedContactUuid = newContact.uuid;
+                            });
+                            Navigator.pop(context);
+                          }
+                        },
+                        icon: const Icon(Icons.add),
+                        label: Text(l10n.addNew),
+                      ),
+                    ],
                   ),
                 ),
                 Expanded(

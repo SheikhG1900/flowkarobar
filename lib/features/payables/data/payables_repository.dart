@@ -580,6 +580,158 @@ class PayablesRepository {
       }).toList();
     });
   }
+
+  /// Get payables with details (filtered and paginated) - Future version
+  Future<List<PayableWithLinkedData>> getPayablesWithLinkedDataFilteredPaginated({
+    required PayableFilters filters,
+    required String status,
+    int limit = 50,
+    int offset = 0,
+  }) {
+    final query = _database.select(_database.payables).join([
+      leftOuterJoin(
+        _database.contacts,
+        _database.contacts.uuid.equalsExp(_database.payables.contactUuid),
+      ),
+      leftOuterJoin(
+        _database.transactions,
+        _database.transactions.uuid
+                .equalsExp(_database.payables.linkedExpenseUuid) |
+            _database.transactions.uuid
+                .equalsExp(_database.payables.linkedIncomeUuid),
+      ),
+      leftOuterJoin(
+        _database.categories,
+        _database.categories.uuid.equalsExp(_database.transactions.categoryUuid),
+      ),
+    ]);
+
+    if (status == 'OVERDUE') {
+      final now = DateTime.now();
+      query.where(
+        _database.payables.status.equals('PENDING') &
+            _database.payables.dueDate.isNotNull() &
+            _database.payables.dueDate.isSmallerThanValue(now),
+      );
+    } else {
+      query.where(_database.payables.status.equals(status));
+    }
+
+    final dateField = filters.filterByDueDate ? _database.payables.dueDate : _database.payables.date;
+    if (filters.startDate != null) {
+      query.where(dateField.isBiggerOrEqualValue(filters.startDate!));
+    }
+    if (filters.endDate != null) {
+      query.where(dateField.isSmallerOrEqualValue(filters.endDate!));
+    }
+    if (filters.contactUuids != null && filters.contactUuids!.isNotEmpty) {
+      query.where(_database.payables.contactUuid.isIn(filters.contactUuids!));
+    }
+    if (filters.minAmount != null) {
+      query.where(_database.payables.amount.isBiggerOrEqualValue(filters.minAmount!));
+    }
+    if (filters.maxAmount != null) {
+      query.where(_database.payables.amount.isSmallerOrEqualValue(filters.maxAmount!));
+    }
+
+    if (filters.searchQuery != null && filters.searchQuery!.isNotEmpty) {
+      final searchPattern = '%${filters.searchQuery}%';
+      query.where(
+        _database.payables.description.like(searchPattern) |
+            _database.contacts.name.like(searchPattern),
+      );
+    }
+
+    query.orderBy([OrderingTerm.desc(_database.payables.date)]);
+    query.limit(limit, offset: offset);
+
+    return query.get().then((rows) {
+      return rows.map((row) {
+        return PayableWithLinkedData(
+          payable: row.readTable(_database.payables),
+          contact: row.readTableOrNull(_database.contacts),
+          linkedTransaction: row.readTableOrNull(_database.transactions),
+          linkedCategory: row.readTableOrNull(_database.categories),
+        );
+      }).toList();
+    });
+  }
+
+  /// Watch payables with details (filtered and paginated) - Stream version
+  Stream<List<PayableWithLinkedData>> watchPayablesWithLinkedDataFilteredPaginated({
+    required PayableFilters filters,
+    required String status,
+    int limit = 50,
+    int offset = 0,
+  }) {
+    final query = _database.select(_database.payables).join([
+      leftOuterJoin(
+        _database.contacts,
+        _database.contacts.uuid.equalsExp(_database.payables.contactUuid),
+      ),
+      leftOuterJoin(
+        _database.transactions,
+        _database.transactions.uuid
+                .equalsExp(_database.payables.linkedExpenseUuid) |
+            _database.transactions.uuid
+                .equalsExp(_database.payables.linkedIncomeUuid),
+      ),
+      leftOuterJoin(
+        _database.categories,
+        _database.categories.uuid.equalsExp(_database.transactions.categoryUuid),
+      ),
+    ]);
+
+    if (status == 'OVERDUE') {
+      final now = DateTime.now();
+      query.where(
+        _database.payables.status.equals('PENDING') &
+            _database.payables.dueDate.isNotNull() &
+            _database.payables.dueDate.isSmallerThanValue(now),
+      );
+    } else {
+      query.where(_database.payables.status.equals(status));
+    }
+
+    final dateField = filters.filterByDueDate ? _database.payables.dueDate : _database.payables.date;
+    if (filters.startDate != null) {
+      query.where(dateField.isBiggerOrEqualValue(filters.startDate!));
+    }
+    if (filters.endDate != null) {
+      query.where(dateField.isSmallerOrEqualValue(filters.endDate!));
+    }
+    if (filters.contactUuids != null && filters.contactUuids!.isNotEmpty) {
+      query.where(_database.payables.contactUuid.isIn(filters.contactUuids!));
+    }
+    if (filters.minAmount != null) {
+      query.where(_database.payables.amount.isBiggerOrEqualValue(filters.minAmount!));
+    }
+    if (filters.maxAmount != null) {
+      query.where(_database.payables.amount.isSmallerOrEqualValue(filters.maxAmount!));
+    }
+
+    if (filters.searchQuery != null && filters.searchQuery!.isNotEmpty) {
+      final searchPattern = '%${filters.searchQuery}%';
+      query.where(
+        _database.payables.description.like(searchPattern) |
+            _database.contacts.name.like(searchPattern),
+      );
+    }
+
+    query.orderBy([OrderingTerm.desc(_database.payables.date)]);
+    query.limit(limit, offset: offset);
+
+    return query.watch().map((rows) {
+      return rows.map((row) {
+        return PayableWithLinkedData(
+          payable: row.readTable(_database.payables),
+          contact: row.readTableOrNull(_database.contacts),
+          linkedTransaction: row.readTableOrNull(_database.transactions),
+          linkedCategory: row.readTableOrNull(_database.categories),
+        );
+      }).toList();
+    });
+  }
 }
 
 /// Data class for payable with contact information

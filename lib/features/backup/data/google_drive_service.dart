@@ -23,16 +23,22 @@ class GoogleDriveService {
   /// Initialize and try to sign in silently
   Future<void> init() async {
     _googleSignIn.onCurrentUserChanged.listen((account) {
+      print('GoogleDriveService: User changed to ${account?.email}');
       _currentUser = account;
     });
     
     try {
-      await _googleSignIn.signInSilently();
-      if (_currentUser != null) {
+      print('GoogleDriveService: Attempting silent sign-in...');
+      final account = await _googleSignIn.signInSilently();
+      if (account != null) {
+        _currentUser = account;
+        print('GoogleDriveService: Silent sign-in successful for ${_currentUser!.email}');
         await _initializeDriveApi();
+      } else {
+        print('GoogleDriveService: Silent sign-in returned null');
       }
     } catch (e) {
-      print('Sign in silently failed: $e');
+      print('GoogleDriveService: Silent sign-in failed: $e');
     }
   }
 
@@ -61,11 +67,11 @@ class GoogleDriveService {
   /// Initialize Drive API client
   Future<void> _initializeDriveApi({bool forceRefresh = false}) async {
     if (_currentUser == null) {
-      print('Cannot initialize Drive API: No user signed in');
+      print('GoogleDriveService: Cannot initialize Drive API: No user signed in');
       return;
     }
     
-    print('Initializing Drive API for user: ${_currentUser!.email} (forceRefresh: $forceRefresh)');
+    print('GoogleDriveService: Initializing Drive API for user: ${_currentUser!.email} (forceRefresh: $forceRefresh)');
     try {
       if (forceRefresh) {
         // Clear tokens to force a fresh authentication
@@ -76,16 +82,17 @@ class GoogleDriveService {
       }
 
       // Use the extension method
+      print('GoogleDriveService: Getting authenticated client...');
       final client = await _googleSignIn.authenticatedClient();
       
       if (client != null) {
         _driveApi = drive.DriveApi(client);
-        print('Drive API successfully initialized');
+        print('GoogleDriveService: Drive API successfully initialized');
       } else {
-        print('Failed to get authenticated client');
+        print('GoogleDriveService: Failed to get authenticated client');
       }
     } catch (e) {
-      print('Error initializing Drive API: $e');
+      print('GoogleDriveService: Error initializing Drive API: $e');
     }
   }
 
@@ -211,15 +218,38 @@ class GoogleDriveService {
   Future<({String content, String etag})> downloadFileWithETag(String fileId) async {
     if (_driveApi == null) throw Exception('Drive API not initialized');
 
+    // 1. Get the file content
     final response = await _driveApi!.files.get(
       fileId,
       downloadOptions: drive.DownloadOptions.fullMedia,
     ) as drive.Media;
-
-    final dynamic driveFileObj = await _driveApi!.files.get(fileId, $fields: 'etag');
-    final String etagValue = (driveFileObj.etag as String?) ?? '';
-    
     final content = await utf8.decodeStream(response.stream);
+
+    // 2. Get the file metadata (ETag)
+    // We use a completely dynamic approach to avoid NoSuchMethodError on the File class
+    // NOTE: We use '*' for $fields to get everything, as 'etag' alone might be rejected by some API versions
+    final dynamic metadata = await _driveApi!.files.get(fileId, $fields: '*');
+    
+    String etagValue = '';
+    try {
+      // Use the built-in toJson() method of the googleapis File class
+      // This is safer than json.encode(metadata) which might fail if metadata is not a simple object
+      final Map<String, dynamic> jsonMap = metadata.toJson();
+      etagValue = jsonMap['etag']?.toString() ?? '';
+      print('GoogleDriveService: Extracted ETag via toJson(): $etagValue');
+    } catch (e) {
+      print('GoogleDriveService: toJson() failed, trying JSON bridge: $e');
+      try {
+        // Fallback: Convert to JSON and back to Map to force visibility of internal fields
+        final String encoded = json.encode(metadata);
+        final Map<String, dynamic> decoded = json.decode(encoded);
+        etagValue = decoded['etag']?.toString() ?? '';
+        print('GoogleDriveService: Extracted ETag via JSON bridge: $etagValue');
+      } catch (e2) {
+        print('GoogleDriveService: All ETag extraction methods failed: $e2');
+      }
+    }
+    
     return (content: content, etag: etagValue);
   }
 
@@ -291,7 +321,7 @@ class GoogleDriveService {
     final list = await _driveApi!.files.list(
       q: query,
       spaces: 'appDataFolder',
-      $fields: 'files(id, name)',
+      $fields: 'files(id, name, size, createdTime)',
     );
 
     return list.files ?? [];
@@ -333,7 +363,8 @@ class GoogleDriveService {
 
   /// Get or Create cashbook folder in appDataFolder
   Future<String> getOrCreateCashbookFolder(String cashbookId) async {
-    return _getOrCreateFolder(cashbookId);
+    final rootFolderId = await _getOrCreateBackupFolder();
+    return _getOrCreateFolder(cashbookId, parentId: rootFolderId);
   }
 
   /// List all folders in appDataFolder to find other cashbooks
@@ -349,6 +380,28 @@ class GoogleDriveService {
     );
 
     return list.files?.map((f) => f.name!).toList() ?? [];
+  }
+
+  /// List folders with a custom query
+  Future<List<drive.File>> listFoldersWithQuery(String query) async {
+    if (_driveApi == null) throw Exception('Drive API not initialized');
+    final list = await _driveApi!.files.list(
+      q: query,
+      spaces: 'appDataFolder',
+      $fields: 'files(id, name)',
+    );
+    return list.files ?? [];
+  }
+
+  /// List files with a custom query
+  Future<List<drive.File>> listFilesWithQuery(String query) async {
+    if (_driveApi == null) throw Exception('Drive API not initialized');
+    final list = await _driveApi!.files.list(
+      q: query,
+      spaces: 'appDataFolder',
+      $fields: 'files(id, name)',
+    );
+    return list.files ?? [];
   }
 
   /// Get cashbook name from its folder (if available)

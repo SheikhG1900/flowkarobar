@@ -2,12 +2,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/features/backup/data/google_drive_service.dart';
 import 'package:flowpaisa/features/backup/data/backup_repository.dart';
 import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
-import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/features/cashbooks/domain/models/cashbook.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:flowpaisa/shared/providers/database_provider.dart';
 import 'package:flowpaisa/features/backup/domain/models/sync_manifest.dart';
 import 'package:flowpaisa/features/backup/data/sync/sync_scheduler.dart';
+import 'package:flowpaisa/features/notifications/presentation/providers/notification_provider.dart';
+import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:googleapis/drive/v3.dart' as drive;
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -52,10 +53,15 @@ class BackupState {
   final String backupInterval; // 'manual', 'weekly', 'monthly'
   final int localVersion;
   final int cloudVersion;
+  final String? lockedBy;
+  final DateTime? lockedAt;
   final DateTime? lastSyncTime;
   final List<String> availableCashbookIds;
   final Map<String, CloudCashbookMetadata> cashbookMetadata; // id -> metadata
   final String? selectedCloudCashbookId;
+  final int unsyncedCount;
+  final List<drive.File> deltaFiles;
+  final String syncStatus; // 'Idle', 'Syncing...', 'Success', 'Error: ...'
 
   BackupState({
     this.isLoading = false,
@@ -67,10 +73,15 @@ class BackupState {
     this.backupInterval = 'manual',
     this.localVersion = 0,
     this.cloudVersion = 0,
+    this.lockedBy,
+    this.lockedAt,
     this.lastSyncTime,
     this.availableCashbookIds = const [],
     this.cashbookMetadata = const {},
     this.selectedCloudCashbookId,
+    this.unsyncedCount = 0,
+    this.deltaFiles = const [],
+    this.syncStatus = 'Idle',
   });
 
   factory BackupState.initial() {
@@ -87,10 +98,15 @@ class BackupState {
     String? backupInterval,
     int? localVersion,
     int? cloudVersion,
+    String? lockedBy,
+    DateTime? lockedAt,
     DateTime? lastSyncTime,
     List<String>? availableCashbookIds,
     Map<String, CloudCashbookMetadata>? cashbookMetadata,
     String? selectedCloudCashbookId,
+    int? unsyncedCount,
+    List<drive.File>? deltaFiles,
+    String? syncStatus,
   }) {
     return BackupState(
       isLoading: isLoading ?? this.isLoading,
@@ -102,10 +118,15 @@ class BackupState {
       backupInterval: backupInterval ?? this.backupInterval,
       localVersion: localVersion ?? this.localVersion,
       cloudVersion: cloudVersion ?? this.cloudVersion,
+      lockedBy: lockedBy ?? this.lockedBy,
+      lockedAt: lockedAt ?? this.lockedAt,
       lastSyncTime: lastSyncTime ?? this.lastSyncTime,
       availableCashbookIds: availableCashbookIds ?? this.availableCashbookIds,
       cashbookMetadata: cashbookMetadata ?? this.cashbookMetadata,
       selectedCloudCashbookId: selectedCloudCashbookId ?? this.selectedCloudCashbookId,
+      unsyncedCount: unsyncedCount ?? this.unsyncedCount,
+      deltaFiles: deltaFiles ?? this.deltaFiles,
+      syncStatus: syncStatus ?? this.syncStatus,
     );
   }
 }
@@ -153,17 +174,31 @@ class BackupNotifier extends Notifier<BackupState> {
 
     // Load settings from SharedPreferences
     final prefs = await SharedPreferences.getInstance();
+    final syncInterval = prefs.getString('sync_interval') ?? 'manual';
     state = state.copyWith(
-      syncInterval: prefs.getString('sync_interval') ?? 'manual',
+      syncInterval: syncInterval,
       backupInterval: prefs.getString('backup_interval') ?? 'manual',
     );
 
     await _refreshVersions();
+    _startStatusPolling();
 
     if (_driveService.isSignedIn) {
       await loadBackups();
       await _loadAvailableCashbooks();
+      
+      // Auto-sync on startup if enabled
+      if (syncInterval != 'manual') {
+        print('BackupNotifier: Auto-sync on startup triggered (interval: $syncInterval)');
+        triggerSync(null); 
+      }
     }
+  }
+
+  Future<void> loadAvailableCashbooks() async {
+    state = state.copyWith(isLoading: true);
+    await _loadAvailableCashbooks();
+    state = state.copyWith(isLoading: false);
   }
 
   Future<void> _loadAvailableCashbooks() async {
@@ -220,45 +255,209 @@ class BackupNotifier extends Notifier<BackupState> {
     }
   }
 
-  Future<void> _refreshVersions() async {
+  Future<void> triggerSync(AppLocalizations? l10n) async {
+    try {
+      // Set isLoading to true ONLY if we are not already syncing
+      if (state.syncStatus != 'Syncing...') {
+        state = state.copyWith(isLoading: true, error: null, syncStatus: 'Syncing...');
+      }
+      
+      // 1. Trigger the background task
+      await SyncScheduler.triggerOnDemandSync();
+      
+      // 2. Safety timeout: If background task doesn't report back, clear loading state
+      Future.delayed(const Duration(seconds: 15), () {
+        if (state.isLoading && state.syncStatus == 'Syncing...') {
+          // Check if it's still "Syncing..." in SharedPreferences
+          _checkFinalStatus();
+        }
+      });
+      
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString(), syncStatus: 'Idle');
+    }
+  }
+
+  Future<void> _checkFinalStatus() async {
     final activeCashbook = ref.read(activeCashbookProvider);
+    final prefs = await SharedPreferences.getInstance();
+    final status = prefs.getString('sync_status_${activeCashbook.id}') ?? 'Idle';
     
-    // 1. Get local version and last sync time
-    // Use the existing database instance from the provider to avoid multiple instantiations
+    if (status != 'Syncing...') {
+      state = state.copyWith(isLoading: false, syncStatus: status);
+    } else {
+      // If it's still Syncing after 15s, we allow the user to interact with the screen
+      // while the blue bar continues to show progress
+      state = state.copyWith(isLoading: false);
+    }
+  }
+
+  Future<void> refreshVersions() async {
+    state = state.copyWith(isLoading: true);
+    await _refreshVersions();
+    state = state.copyWith(isLoading: false);
+  }
+
+  Future<void> _refreshVersions() async {
     final db = ref.read(databaseProvider);
-    int localVersion = 0;
-    DateTime? lastSyncTime;
+    
+    // 1. Listen to local version changes
+    final versionStream = db.select(db.syncMetadata).watch();
+    versionStream.listen((metadata) {
+      if (metadata.isNotEmpty) {
+        final localVersion = metadata.map((m) => m.version).fold(0, (prev, v) => v > prev ? v : prev);
+        final lastSyncTime = metadata.map((m) => m.lastSyncAt).fold<DateTime?>(null, (prev, v) => (v != null && (prev == null || v.isAfter(prev))) ? v : prev);
+        state = state.copyWith(
+          localVersion: localVersion,
+          lastSyncTime: lastSyncTime,
+        );
+      } else {
+        state = state.copyWith(localVersion: 0, lastSyncTime: null);
+      }
+    });
+
+    // 2. Get initial local version
     try {
       final metadata = await (db.select(db.syncMetadata)).get();
       if (metadata.isNotEmpty) {
-        localVersion = metadata.map((m) => m.version).fold(0, (prev, v) => v > prev ? v : prev);
-        lastSyncTime = metadata.map((m) => m.lastSyncAt).fold(null, (prev, v) => (v != null && (prev == null || v.isAfter(prev))) ? v : prev);
+        final localVersion = metadata.map((m) => m.version).fold(0, (prev, v) => v > prev ? v : prev);
+        final lastSyncTime = metadata.map((m) => m.lastSyncAt).fold<DateTime?>(null, (prev, v) => (v != null && (prev == null || v.isAfter(prev))) ? v : prev);
+        state = state.copyWith(
+          localVersion: localVersion,
+          lastSyncTime: lastSyncTime,
+        );
       }
     } catch (e) {
       print('Failed to load local version: $e');
     }
 
-    // 2. Get cloud version
-    int cloudVersion = 0;
-    if (_driveService.isSignedIn && _driveService.isDriveApiInitialized) {
+    // 3. Get initial cloud state
+    await _fetchCloudState();
+    
+    // 4. Listen to unsynced counts
+    try {
+      final tables = [
+        'categories', 'contacts', 'transactions', 'receivables', 
+        'payables', 'reminders', 'app_currencies', 'transaction_schedules'
+      ];
+      for (final table in tables) {
+        final countStream = db.customSelect(
+          'SELECT COUNT(*) as count FROM $table WHERE is_not_synced = 1'
+        ).watchSingle();
+        
+        countStream.listen((countResult) {
+          _updateTotalUnsyncedCount();
+          // Also fetch cloud state when a sync might have happened (unsynced count drops to 0)
+          final count = (countResult.data['count'] as num).toInt();
+          if (count == 0) {
+            _fetchCloudState();
+          }
+        });
+      }
+    } catch (e) {
+      print('Failed to load unsynced count: $e');
+    }
+  }
+
+  Future<void> _fetchCloudState() async {
+    if (!_driveService.isSignedIn || !_driveService.isDriveApiInitialized) return;
+    
+    final activeCashbook = ref.read(activeCashbookProvider);
+    try {
+      final folderId = await _driveService.getOrCreateCashbookFolder(activeCashbook.id);
+      
+      // Load manifest
+      int cloudVersion = 0;
+      String? lockedBy;
+      DateTime? lockedAt;
+      final manifestFileId = await _driveService.getFileIdByName('manifest.json', folderId);
+      if (manifestFileId != null) {
+        final result = await _driveService.downloadFileWithETag(manifestFileId);
+        final manifest = SyncManifest.fromJson(result.content);
+        cloudVersion = manifest.version;
+        lockedBy = manifest.lockedBy;
+        lockedAt = manifest.lockedAt;
+      }
+
+      // Load delta files
+      final allDeltas = await _driveService.listSyncFiles(folderId);
+      allDeltas.sort((a, b) {
+        final aVer = int.tryParse(a.name?.replaceAll('v', '').replaceAll('.json', '') ?? '0') ?? 0;
+        final bVer = int.tryParse(b.name?.replaceAll('v', '').replaceAll('.json', '') ?? '0') ?? 0;
+        return bVer.compareTo(aVer);
+      });
+      final deltaFiles = allDeltas.take(5).toList();
+
+      state = state.copyWith(
+        cloudVersion: cloudVersion,
+        lockedBy: lockedBy,
+        lockedAt: lockedAt,
+        deltaFiles: deltaFiles,
+      );
+    } catch (e) {
+      print('Failed to fetch cloud state: $e');
+    }
+  }
+
+  Future<void> _updateTotalUnsyncedCount() async {
+    final db = ref.read(databaseProvider);
+    int total = 0;
+    final tables = [
+      'categories', 'contacts', 'transactions', 'receivables', 
+      'payables', 'reminders', 'app_currencies', 'transaction_schedules'
+    ];
+    for (final table in tables) {
       try {
-        final folderId = await _driveService.getOrCreateCashbookFolder(activeCashbook.id);
-        final manifestFileId = await _driveService.getFileIdByName('manifest.json', folderId);
-        if (manifestFileId != null) {
-          final result = await _driveService.downloadFileWithETag(manifestFileId);
-          final manifest = SyncManifest.fromJson(result.content);
-          cloudVersion = manifest.version;
-        }
+        final countResult = await db.customSelect(
+          'SELECT COUNT(*) as count FROM $table WHERE is_not_synced = 1'
+        ).getSingle();
+        total += (countResult.data['count'] as num).toInt();
       } catch (e) {
-        print('Failed to load cloud manifest version: $e');
+        // Table might not exist yet or other error
       }
     }
+    state = state.copyWith(unsyncedCount: total);
+  }
 
-    state = state.copyWith(
-      localVersion: localVersion,
-      cloudVersion: cloudVersion,
-      lastSyncTime: lastSyncTime,
-    );
+  void _startStatusPolling() {
+    // Poll SharedPreferences for sync status every 1 second for faster feedback
+    Stream.periodic(const Duration(seconds: 1)).listen((_) async {
+      final activeCashbook = ref.read(activeCashbookProvider);
+      final prefs = await SharedPreferences.getInstance();
+      final status = prefs.getString('sync_status_${activeCashbook.id}') ?? 'Idle';
+      
+      // Also update cloud state periodically to catch lock releases or version changes
+      if (DateTime.now().second % 10 == 0) {
+        _fetchCloudState();
+      }
+
+      if (state.syncStatus != status) {
+        state = state.copyWith(
+          syncStatus: status,
+          // Only show global loading if we are explicitly in the "Syncing..." phase
+          // and haven't timed out to allow interaction
+          isLoading: status == 'Syncing...' ? state.isLoading : false,
+        );
+        
+        // If status just changed to Success or Error, ensure loading is cleared
+        if (status != 'Syncing...' && !status.contains('Locked')) {
+          state = state.copyWith(isLoading: false);
+        }
+
+        // If status just changed to Success, refresh versions
+        if (status == 'Success') {
+          _refreshVersions();
+          // Reset status to Idle after a delay
+          Future.delayed(const Duration(seconds: 5), () {
+            prefs.setString('sync_status_${activeCashbook.id}', 'Idle');
+          });
+        }
+      } else if (status.contains('Locked')) {
+        // If it's already Locked and hasn't changed, we still want to refresh the state 
+        // to show any countdown updates if the SyncEngine is still running
+        state = state.copyWith(syncStatus: status);
+      }
+    });
   }
 
   Future<void> setSyncInterval(String interval) async {
@@ -371,7 +570,7 @@ class BackupNotifier extends Notifier<BackupState> {
     }
   }
 
-  Future<void> backup() async {
+  Future<void> backup(AppLocalizations l10n) async {
     try {
       state = state.copyWith(isLoading: true, error: null);
       
@@ -422,6 +621,13 @@ class BackupNotifier extends Notifier<BackupState> {
         lastBackupTime: time,
       );
       print('Backup state updated. Backups found: ${backups.length}');
+
+      // Add local notification
+      ref.read(notificationProvider.notifier).addNotification(
+            title: l10n.notificationBackupSuccessTitle,
+            message: l10n.notificationBackupSuccessMessage(activeCashbook.name),
+            type: NotificationType.backup,
+          );
     } catch (e, stack) {
       print('Backup failed with error: $e');
       print('Stack trace: $stack');
@@ -439,54 +645,52 @@ class BackupNotifier extends Notifier<BackupState> {
     }
   }
 
-  Future<void> deleteCloudCashbook(String cashbookId) async {
+  Future<void> clearAllCloudData() async {
     try {
       state = state.copyWith(isLoading: true, error: null);
       
-      // 1. Find the folder name (could be id or id|name)
-      final folderNames = await _driveService.listCashbookIds();
-      final folderName = folderNames.firstWhere(
-        (name) => name == cashbookId || name.startsWith('$cashbookId|'),
-        orElse: () => '',
-      );
-
-      if (folderName.isNotEmpty) {
-        // 2. Get the root folder ID
-        final rootFolderId = await _driveService.getOrCreateCashbookFolder('FlowPaisa Backups');
-        
-        // 3. Get the specific cashbook folder ID
-        final folderId = await _driveService.getFileIdByName(folderName, rootFolderId);
-        if (folderId != null) {
-          await _driveService.deleteFile(folderId);
-          print('Successfully deleted cloud folder: $folderName ($folderId)');
+      // 1. Find the root folder ID in appDataFolder
+      final query = "name = 'FlowPaisa Backups' and 'appDataFolder' in parents and trashed = false";
+      final list = await _driveService.listFoldersWithQuery(query);
+      
+      // 2. Delete the entire root folder if it exists
+      if (list.isNotEmpty) {
+        for (final folder in list) {
+          if (folder.id != null) {
+            await _driveService.deleteFile(folder.id!);
+            print('BackupNotifier: Successfully deleted root FlowPaisa Backups folder (${folder.id})');
+          }
         }
       }
 
-      // 4. Force state update by removing the ID locally before refreshing
-      final updatedIds = state.availableCashbookIds.where((id) => id != cashbookId).toList();
-      final updatedMetadata = Map<String, CloudCashbookMetadata>.from(state.cashbookMetadata)..remove(cashbookId);
-      
-      state = state.copyWith(
-        availableCashbookIds: updatedIds,
-        cashbookMetadata: updatedMetadata,
-        // If the deleted cashbook was selected, switch back to active cashbook
-        selectedCloudCashbookId: state.selectedCloudCashbookId == cashbookId 
-            ? ref.read(activeCashbookProvider).id 
-            : state.selectedCloudCashbookId,
-      );
-
-      // 5. Refresh from cloud to be sure
-      await _loadAvailableCashbooks();
-      
-      // 6. If we switched selection, load backups for the new selection
-      if (state.selectedCloudCashbookId != null) {
-        await loadBackupsForCashbook(state.selectedCloudCashbookId!);
+      // 3. Also check for any orphaned manifest.json or v*.json in the root appDataFolder
+      // (Just in case they were created there by previous buggy versions)
+      final orphanedQuery = "'appDataFolder' in parents and (name = 'manifest.json' or name contains 'v') and trashed = false";
+      final orphanedFiles = await _driveService.listFilesWithQuery(orphanedQuery);
+      for (final file in orphanedFiles) {
+        if (file.id != null) {
+          await _driveService.deleteFile(file.id!);
+          print('BackupNotifier: Deleted orphaned file: ${file.name} (${file.id})');
+        }
       }
 
+      // 4. Reset local state
+      state = state.copyWith(
+        availableCashbookIds: [],
+        cashbookMetadata: {},
+        backups: [],
+        cloudVersion: 0,
+      );
+
+      // 5. Reload available cashbooks
+      await _loadAvailableCashbooks();
+      await _refreshVersions();
+      
       state = state.copyWith(isLoading: false);
     } catch (e) {
-      print('Error deleting cloud cashbook: $e');
+      print('BackupNotifier: Error clearing all cloud data: $e');
       state = state.copyWith(isLoading: false, error: e.toString());
+      rethrow;
     }
   }
 
@@ -509,7 +713,7 @@ class BackupNotifier extends Notifier<BackupState> {
       final activeCashbook = ref.read(activeCashbookProvider);
       
       // 1. Get local version from restored DB
-      final db = AppDatabase(fileName: activeCashbook.dbPath);
+      final db = ref.read(databaseProvider);
       int localVersion = 0;
       try {
         final metadata = await (db.select(db.syncMetadata)).get();
@@ -517,12 +721,40 @@ class BackupNotifier extends Notifier<BackupState> {
           // Find max version or version for this device
           localVersion = metadata.map((m) => m.version).fold(0, (prev, v) => v > prev ? v : prev);
         }
-      } finally {
-        await db.close();
+      } catch (e) {
+        print('BackupNotifier: Error reading local version for reset: $e');
       }
 
       // 2. Reset cloud manifest to this version
       await _repository.resetSyncToVersion(activeCashbook.id, localVersion);
+      
+      state = state.copyWith(isLoading: false);
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+      rethrow;
+    }
+  }
+
+  Future<void> resetLocalSyncState() async {
+    try {
+      state = state.copyWith(isLoading: true, error: null);
+      final db = ref.read(databaseProvider);
+
+      // 1. Mark all records in all tables as unsynced
+      final tables = [
+        'categories', 'contacts', 'transactions', 'receivables', 
+        'payables', 'reminders', 'app_currencies', 'transaction_schedules'
+      ];
+      
+      for (final table in tables) {
+        await db.customStatement('UPDATE $table SET is_not_synced = 1');
+      }
+
+      // 2. Reset local version to 0
+      await db.customStatement('DELETE FROM sync_metadata');
+      
+      // 3. Refresh state
+      await _refreshVersions();
       
       state = state.copyWith(isLoading: false);
     } catch (e) {

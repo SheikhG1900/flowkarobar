@@ -85,6 +85,7 @@ class PayablesPaginatedNotifier
   late PayablesRepository _repository;
   String? _status;
   bool _isInitialized = false;
+  PayableFilters _filters = PayableFilters();
 
   @override
   PaginatedState<PayableWithLinkedData> build() {
@@ -110,49 +111,32 @@ class PayablesPaginatedNotifier
     try {
       // Load first page
       final List<PayableWithLinkedData> initialItems;
-      if (_status == 'OVERDUE') {
-        initialItems =
-            await _repository.getPayablesWithLinkedDataPaginatedOverdue(
-          limit: state.pageSize,
-          offset: 0,
-        );
-      } else {
-        initialItems = await _repository.getPayablesWithLinkedDataPaginated(
-          status: _status!,
-          limit: state.pageSize,
-          offset: 0,
-        );
-      }
+      initialItems = await _repository.getPayablesWithLinkedDataFilteredPaginated(
+        filters: _filters,
+        status: _status!,
+        limit: state.pageSize,
+        offset: 0,
+      );
 
       state = state.replaceItems(initialItems,
           hasMore: initialItems.length == state.pageSize);
 
       // Watch for real-time updates to loaded items
       _subscription?.cancel();
-      if (_status == 'OVERDUE') {
-        _subscription = _repository
-            .watchPayablesWithLinkedDataPaginatedOverdue(
-          limit: initialItems.length,
-          offset: 0,
-        )
-            .listen((updatedItems) {
-          if (!state.isLoadingMore) {
-            state = state.copyWith(items: updatedItems);
-          }
-        });
-      } else {
-        _subscription = _repository
-            .watchPayablesWithLinkedDataPaginated(
-          status: _status!,
-          limit: initialItems.length,
-          offset: 0,
-        )
-            .listen((updatedItems) {
-          if (!state.isLoadingMore) {
-            state = state.copyWith(items: updatedItems);
-          }
-        });
-      }
+      _subscription = _repository
+          .watchPayablesWithLinkedDataFilteredPaginated(
+        filters: _filters,
+        status: _status!,
+        limit: initialItems.length > state.pageSize
+            ? initialItems.length
+            : state.pageSize,
+        offset: 0,
+      )
+          .listen((updatedItems) {
+        if (!state.isLoadingMore) {
+          state = state.copyWith(items: updatedItems);
+        }
+      });
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
@@ -168,18 +152,12 @@ class PayablesPaginatedNotifier
 
     try {
       final List<PayableWithLinkedData> newItems;
-      if (_status == 'OVERDUE') {
-        newItems = await _repository.getPayablesWithLinkedDataPaginatedOverdue(
-          limit: state.pageSize,
-          offset: state.currentOffset,
-        );
-      } else {
-        newItems = await _repository.getPayablesWithLinkedDataPaginated(
-          status: _status!,
-          limit: state.pageSize,
-          offset: state.currentOffset,
-        );
-      }
+      newItems = await _repository.getPayablesWithLinkedDataFilteredPaginated(
+        filters: _filters,
+        status: _status!,
+        limit: state.pageSize,
+        offset: state.currentOffset,
+      );
 
       if (newItems.isEmpty) {
         state = state.copyWith(
@@ -194,30 +172,20 @@ class PayablesPaginatedNotifier
 
         // Update subscription to watch all loaded items
         _subscription?.cancel();
-        if (_status == 'OVERDUE') {
-          _subscription = _repository
-              .watchPayablesWithLinkedDataPaginatedOverdue(
-            limit: state.items.length,
-            offset: 0,
-          )
-              .listen((updatedItems) {
-            if (!state.isLoadingMore) {
-              state = state.copyWith(items: updatedItems);
-            }
-          });
-        } else {
-          _subscription = _repository
-              .watchPayablesWithLinkedDataPaginated(
-            status: _status!,
-            limit: state.items.length,
-            offset: 0,
-          )
-              .listen((updatedItems) {
-            if (!state.isLoadingMore) {
-              state = state.copyWith(items: updatedItems);
-            }
-          });
-        }
+        _subscription = _repository
+            .watchPayablesWithLinkedDataFilteredPaginated(
+          filters: _filters,
+          status: _status!,
+          limit: state.items.length > state.pageSize
+              ? state.items.length
+              : state.pageSize,
+          offset: 0,
+        )
+            .listen((updatedItems) {
+          if (!state.isLoadingMore) {
+            state = state.copyWith(items: updatedItems);
+          }
+        });
       }
     } catch (e) {
       state = state.copyWith(
@@ -226,6 +194,20 @@ class PayablesPaginatedNotifier
       );
     }
   }
+
+  void applyFilters(PayableFilters filters) {
+    _filters = filters;
+    _subscription?.cancel();
+    state = state.copyWith(items: [], isLoading: true, hasMore: true);
+    _loadInitial();
+  }
+
+  void updateSearchQuery(String query) {
+    if (_filters.searchQuery == query) return;
+    applyFilters(_filters.copyWith(searchQuery: query));
+  }
+
+  PayableFilters get currentFilters => _filters;
 
   Future<void> refresh() async {
     _subscription?.cancel();

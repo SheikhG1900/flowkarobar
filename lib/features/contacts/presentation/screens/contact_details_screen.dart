@@ -4,6 +4,12 @@ import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
 import 'package:flowpaisa/features/contacts/presentation/screens/add_contact_screen.dart';
+import 'package:flowpaisa/features/payables/domain/models.dart';
+import 'package:flowpaisa/features/payables/presentation/providers/payables_provider.dart';
+import 'package:flowpaisa/features/payables/presentation/screens/payables_list_screen.dart';
+import 'package:flowpaisa/features/receivables/domain/models.dart';
+import 'package:flowpaisa/features/receivables/presentation/providers/receivables_provider.dart';
+import 'package:flowpaisa/features/receivables/presentation/screens/receivables_list_screen.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
 
 // Provider to get transactions for a contact
@@ -226,6 +232,24 @@ class ContactDetailsScreen extends ConsumerWidget {
                               color: AppColors.receivableColor,
                               icon: Icons.arrow_downward,
                               currencySymbol: currencySymbol,
+                              onTap: () {
+                                ref
+                                    .read(receivablesPaginatedProvider('PENDING')
+                                        .notifier)
+                                    .applyFilters(
+                                      ReceivableFilters(
+                                        contactUuids: [contactUuid],
+                                      ),
+                                    );
+
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        const ReceivablesListScreen(),
+                                  ),
+                                );
+                              },
                             ),
                           ),
                           const SizedBox(width: 16),
@@ -239,6 +263,24 @@ class ContactDetailsScreen extends ConsumerWidget {
                               color: AppColors.payableColor,
                               icon: Icons.arrow_upward,
                               currencySymbol: currencySymbol,
+                              onTap: () {
+                                ref
+                                    .read(payablesPaginatedProvider('PENDING')
+                                        .notifier)
+                                    .applyFilters(
+                                      PayableFilters(
+                                        contactUuids: [contactUuid],
+                                      ),
+                                    );
+
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        const PayablesListScreen(),
+                                  ),
+                                );
+                              },
                             ),
                           ),
                         ],
@@ -322,63 +364,68 @@ class ContactDetailsScreen extends ConsumerWidget {
     required Color color,
     required IconData icon,
     required String currencySymbol,
+    VoidCallback? onTap,
   }) {
     final theme = Theme.of(context);
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: theme.cardColor,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withValues(alpha: 0.2)),
-        boxShadow: [
-          BoxShadow(
-            color: color.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(icon, size: 16, color: color),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                title,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            '$currencySymbol${amount.toStringAsFixed(2)}',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: color,
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: theme.cardColor,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: color.withValues(alpha: 0.2)),
+          boxShadow: [
+            BoxShadow(
+              color: color.withValues(alpha: 0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            '$count pending',
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(icon, size: 16, color: color),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  title,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
             ),
-          ),
-        ],
+            const SizedBox(height: 12),
+            Text(
+              '$currencySymbol${amount.toStringAsFixed(2)}',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              '$count pending',
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

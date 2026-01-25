@@ -3,47 +3,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/core/utils/date_formatter.dart';
-import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
+import 'package:flowpaisa/features/notifications/presentation/providers/notification_provider.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
-
-// Mock notifications provider - can be enhanced later with actual data
-final notificationsProvider = Provider<List<NotificationItem>>((ref) {
-  // For now, return empty list. Can be connected to actual reminders later
-  return [];
-});
-
-class NotificationItem {
-  final String id;
-  final String title;
-  final String message;
-  final DateTime dateTime;
-  final NotificationType type;
-  final bool isRead;
-
-  NotificationItem({
-    required this.id,
-    required this.title,
-    required this.message,
-    required this.dateTime,
-    required this.type,
-    this.isRead = false,
-  });
-}
-
-enum NotificationType {
-  receivable,
-  payable,
-  milestone,
-  backup,
-  reminder,
-}
 
 class NotificationsScreen extends ConsumerWidget {
   const NotificationsScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final notifications = ref.watch(notificationsProvider);
+    final notifications = ref.watch(notificationProvider);
+    final notifier = ref.read(notificationProvider.notifier);
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
 
@@ -55,7 +24,7 @@ class NotificationsScreen extends ConsumerWidget {
           if (notifications.isNotEmpty)
             TextButton(
               onPressed: () {
-                // TODO: Mark all as read
+                notifier.markAllAsRead();
                 ToastUtils.showSuccessToast(
                     context, ref, l10n.allNotificationsMarkedRead);
               },
@@ -65,7 +34,7 @@ class NotificationsScreen extends ConsumerWidget {
       ),
       body: notifications.isEmpty
           ? _buildEmptyState(context, theme, l10n)
-          : _buildNotificationsList(context, theme, notifications),
+          : _buildNotificationsList(context, theme, notifications, notifier),
     );
   }
 
@@ -154,13 +123,17 @@ class NotificationsScreen extends ConsumerWidget {
     BuildContext context,
     ThemeData theme,
     List<NotificationItem> notifications,
+    NotificationNotifier notifier,
   ) {
     return ListView.builder(
       padding: const EdgeInsets.all(16),
       itemCount: notifications.length,
       itemBuilder: (context, index) {
         final notification = notifications[index];
-        return _NotificationCard(notification: notification);
+        return _NotificationCard(
+          notification: notification,
+          onTap: () => notifier.markAsRead(notification.id),
+        );
       },
     );
   }
@@ -168,8 +141,12 @@ class NotificationsScreen extends ConsumerWidget {
 
 class _NotificationCard extends ConsumerWidget {
   final NotificationItem notification;
+  final VoidCallback onTap;
 
-  const _NotificationCard({required this.notification});
+  const _NotificationCard({
+    required this.notification,
+    required this.onTap,
+  });
 
   IconData _getIcon() {
     switch (notification.type) {
@@ -183,6 +160,8 @@ class _NotificationCard extends ConsumerWidget {
         return Icons.cloud_upload;
       case NotificationType.reminder:
         return Icons.notifications;
+      case NotificationType.sync:
+        return Icons.sync;
     }
   }
 
@@ -198,6 +177,8 @@ class _NotificationCard extends ConsumerWidget {
         return theme.colorScheme.primary;
       case NotificationType.reminder:
         return Colors.orange;
+      case NotificationType.sync:
+        return Colors.blue;
     }
   }
 
@@ -232,9 +213,8 @@ class _NotificationCard extends ConsumerWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: () {
-            // TODO: Handle notification tap (navigate to relevant screen)
-            ToastUtils.showInfoToast(
-                context, ref, l10n.notificationTitlePrefix(notification.title));
+            onTap();
+            // Optional: Handle notification tap (navigate to relevant screen)
           },
           borderRadius: BorderRadius.circular(16),
           child: Padding(

@@ -33,3 +33,52 @@ class TransactionWithDetails {
     return 'TransactionWithDetails(transaction: ${transaction.uuid}, category: ${category?.name}, contact: ${contact?.name})';
   }
 }
+
+class TransactionFilters {
+  final DateTime? startDate;
+  final DateTime? endDate;
+  final String? type; // 'INCOME', 'EXPENSE', or null for All
+  final List<String>? categoryUuids;
+  final List<String>? contactUuids;
+  final double? minAmount;
+  final double? maxAmount;
+
+  TransactionFilters({
+    this.startDate,
+    this.endDate,
+    this.type,
+    this.categoryUuids,
+    this.contactUuids,
+    this.minAmount,
+    this.maxAmount,
+  });
+
+  bool get isEmpty =>
+      startDate == null &&
+      endDate == null &&
+      type == null &&
+      (categoryUuids == null || categoryUuids!.isEmpty) &&
+      (contactUuids == null || contactUuids!.isEmpty) &&
+      minAmount == null &&
+      maxAmount == null;
+
+  TransactionFilters copyWith({
+    DateTime? startDate,
+    DateTime? endDate,
+    String? type,
+    List<String>? categoryUuids,
+    List<String>? contactUuids,
+    double? minAmount,
+    double? maxAmount,
+  }) {
+    return TransactionFilters(
+      startDate: startDate ?? this.startDate,
+      endDate: endDate ?? this.endDate,
+      type: type ?? this.type,
+      categoryUuids: categoryUuids ?? this.categoryUuids,
+      contactUuids: contactUuids ?? this.contactUuids,
+      minAmount: minAmount ?? this.minAmount,
+      maxAmount: maxAmount ?? this.maxAmount,
+    );
+  }
+}

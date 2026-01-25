@@ -463,6 +463,7 @@ class AppDatabase extends _$AppDatabase {
       await delete(contactUsageStats).go();
       await delete(contacts).go();
       await delete(syncLog).go();
+      await delete(syncMetadata).go();
 
       // Only delete non-default categories
       await (delete(categories)..where((tbl) => tbl.isDefault.not())).go();

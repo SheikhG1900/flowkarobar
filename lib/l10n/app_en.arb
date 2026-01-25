@@ -1254,5 +1254,63 @@
     }
   },
   "restoreOptionOverride": "Override",
-  "restoreOptionNewEntry": "New Entry"
+  "restoreOptionNewEntry": "New Entry",
+  "filters": "Filters",
+  "dateRange": "Date Range",
+  "transactionType": "Transaction Type",
+  "amountRange": "Amount Range",
+  "minAmount": "Min Amount",
+  "maxAmount": "Max Amount",
+  "applyFilters": "Apply Filters",
+  "filterByDueDate": "Filter by Due Date",
+  "from": "From",
+  "to": "To",
+  "notificationBackupSuccessTitle": "Backup Successful",
+  "notificationBackupSuccessMessage": "Successfully backed up \"{name}\" to Google Drive.",
+  "@notificationBackupSuccessMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationSyncCompleteTitle": "Background Sync Complete",
+  "notificationSyncCompleteMessage": "Successfully synced {count} cashbook(s) in the background.",
+  "@notificationSyncCompleteMessage": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "processing": "Processing...",
+  "cloudCashbooks": "Cloud Cashbooks",
+  "main": "Main",
+  "cloudDb": "Cloud DB",
+  "versions": "Versions",
+  "local": "Local",
+  "cloud": "Cloud",
+  "pending": "Pending",
+  "rows": "{count} rows",
+  "@rows": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "primeCloudWithLocal": "Prime Cloud with Local",
+  "resetCloudVersion": "Reset Cloud Version",
+  "resetCloudVersionMessage": "This will force the cloud version to match your local version ({version}).\n\nUse this ONLY if your cloud manifest is corrupted or out of sync with your local data.",
+  "resetNow": "Reset Now",
+  "cloudVersionResetSuccess": "Cloud version reset successfully",
+  "cloudVersionResetFailed": "Failed to reset cloud version: {error}",
+  "syncIntervalLabel": "Sync Interval",
+  "resetLocalSyncState": "Reset Local Sync State",
+  "resetLocalSyncMessage": "This will mark all your local records as \"unsynced\" and reset your local version to 0. Tapping \"Sync Now\" after this will re-upload all your data to the cloud.\n\nUse this if you want to force a full re-sync of your local data.",
+  "localSyncResetSuccess": "Local sync state reset successfully",
+  "clearAllCloudData": "Clear All Cloud Data",
+  "clearAllCloudDataMessage": "This will permanently delete ALL your FlowPaisa backups and synchronization data from Google Drive. This action cannot be undone.\n\nAre you sure you want to clear all cloud data?",
+  "cloudDataClearedSuccess": "All cloud data cleared successfully",
+  "clearNow": "Clear Now"
 }

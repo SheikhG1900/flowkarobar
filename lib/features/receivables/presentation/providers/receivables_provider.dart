@@ -87,6 +87,7 @@ class ReceivablesPaginatedNotifier
   late ReceivablesRepository _repository;
   String? _status;
   bool _isInitialized = false;
+  ReceivableFilters _filters = ReceivableFilters();
 
   @override
   PaginatedState<ReceivableWithLinkedData> build() {
@@ -112,49 +113,32 @@ class ReceivablesPaginatedNotifier
     try {
       // Load first page
       final List<ReceivableWithLinkedData> initialItems;
-      if (_status == 'OVERDUE') {
-        initialItems =
-            await _repository.getReceivablesWithLinkedDataPaginatedOverdue(
-          limit: state.pageSize,
-          offset: 0,
-        );
-      } else {
-        initialItems = await _repository.getReceivablesWithLinkedDataPaginated(
-          status: _status!,
-          limit: state.pageSize,
-          offset: 0,
-        );
-      }
+      initialItems = await _repository.getReceivablesWithLinkedDataFilteredPaginated(
+        filters: _filters,
+        status: _status!,
+        limit: state.pageSize,
+        offset: 0,
+      );
 
       state = state.replaceItems(initialItems,
           hasMore: initialItems.length == state.pageSize);
 
       // Watch for real-time updates to loaded items
       _subscription?.cancel();
-      if (_status == 'OVERDUE') {
-        _subscription = _repository
-            .watchReceivablesWithLinkedDataPaginatedOverdue(
-          limit: initialItems.length,
-          offset: 0,
-        )
-            .listen((updatedItems) {
-          if (!state.isLoadingMore) {
-            state = state.copyWith(items: updatedItems);
-          }
-        });
-      } else {
-        _subscription = _repository
-            .watchReceivablesWithLinkedDataPaginated(
-          status: _status!,
-          limit: initialItems.length,
-          offset: 0,
-        )
-            .listen((updatedItems) {
-          if (!state.isLoadingMore) {
-            state = state.copyWith(items: updatedItems);
-          }
-        });
-      }
+      _subscription = _repository
+          .watchReceivablesWithLinkedDataFilteredPaginated(
+        filters: _filters,
+        status: _status!,
+        limit: initialItems.length > state.pageSize
+            ? initialItems.length
+            : state.pageSize,
+        offset: 0,
+      )
+          .listen((updatedItems) {
+        if (!state.isLoadingMore) {
+          state = state.copyWith(items: updatedItems);
+        }
+      });
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
@@ -170,19 +154,12 @@ class ReceivablesPaginatedNotifier
 
     try {
       final List<ReceivableWithLinkedData> newItems;
-      if (_status == 'OVERDUE') {
-        newItems =
-            await _repository.getReceivablesWithLinkedDataPaginatedOverdue(
-          limit: state.pageSize,
-          offset: state.currentOffset,
-        );
-      } else {
-        newItems = await _repository.getReceivablesWithLinkedDataPaginated(
-          status: _status!,
-          limit: state.pageSize,
-          offset: state.currentOffset,
-        );
-      }
+      newItems = await _repository.getReceivablesWithLinkedDataFilteredPaginated(
+        filters: _filters,
+        status: _status!,
+        limit: state.pageSize,
+        offset: state.currentOffset,
+      );
 
       if (newItems.isEmpty) {
         state = state.copyWith(
@@ -197,30 +174,20 @@ class ReceivablesPaginatedNotifier
 
         // Update subscription to watch all loaded items
         _subscription?.cancel();
-        if (_status == 'OVERDUE') {
-          _subscription = _repository
-              .watchReceivablesWithLinkedDataPaginatedOverdue(
-            limit: state.items.length,
-            offset: 0,
-          )
-              .listen((updatedItems) {
-            if (!state.isLoadingMore) {
-              state = state.copyWith(items: updatedItems);
-            }
-          });
-        } else {
-          _subscription = _repository
-              .watchReceivablesWithLinkedDataPaginated(
-            status: _status!,
-            limit: state.items.length,
-            offset: 0,
-          )
-              .listen((updatedItems) {
-            if (!state.isLoadingMore) {
-              state = state.copyWith(items: updatedItems);
-            }
-          });
-        }
+        _subscription = _repository
+            .watchReceivablesWithLinkedDataFilteredPaginated(
+          filters: _filters,
+          status: _status!,
+          limit: state.items.length > state.pageSize
+              ? state.items.length
+              : state.pageSize,
+          offset: 0,
+        )
+            .listen((updatedItems) {
+          if (!state.isLoadingMore) {
+            state = state.copyWith(items: updatedItems);
+          }
+        });
       }
     } catch (e) {
       state = state.copyWith(
@@ -229,6 +196,20 @@ class ReceivablesPaginatedNotifier
       );
     }
   }
+
+  void applyFilters(ReceivableFilters filters) {
+    _filters = filters;
+    _subscription?.cancel();
+    state = state.copyWith(items: [], isLoading: true, hasMore: true);
+    _loadInitial();
+  }
+
+  void updateSearchQuery(String query) {
+    if (_filters.searchQuery == query) return;
+    applyFilters(_filters.copyWith(searchQuery: query));
+  }
+
+  ReceivableFilters get currentFilters => _filters;
 
   Future<void> refresh() async {
     _subscription?.cancel();

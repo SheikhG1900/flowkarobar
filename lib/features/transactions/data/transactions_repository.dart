@@ -199,7 +199,9 @@ class TransactionsRepository {
 
   // Update transaction
   Future<bool> updateTransaction(Transaction transaction) {
-    return _database.update(_database.transactions).replace(transaction);
+    return _database.update(_database.transactions).replace(
+          transaction.copyWith(isNotSynced: true),
+        );
   }
 
   // Delete transaction
@@ -377,7 +379,7 @@ class TransactionsRepository {
       String uuid, TransactionsCompanion companion) async {
     await (_database.update(_database.transactions)
           ..where((t) => t.uuid.equals(uuid)))
-        .write(companion);
+        .write(companion.copyWith(isNotSynced: const Value(true)));
   }
 
   // Search transactions with details (paginated) - Stream version
@@ -454,6 +456,144 @@ class TransactionsRepository {
     dbQuery.limit(limit, offset: offset);
 
     return dbQuery.get().then((rows) {
+      return rows.map((row) {
+        return TransactionWithDetails(
+          transaction: row.readTable(_database.transactions),
+          category: row.readTableOrNull(_database.categories),
+          contact: row.readTableOrNull(_database.contacts),
+          linkedPayable: row.readTableOrNull(_database.payables),
+          linkedReceivable: row.readTableOrNull(_database.receivables),
+        );
+      }).toList();
+    });
+  }
+
+  // Get transactions with details (filtered and paginated) - Future version
+  Future<List<TransactionWithDetails>> getTransactionsWithDetailsFilteredPaginated({
+    required TransactionFilters filters,
+    String? searchQuery,
+    int limit = 50,
+    int offset = 0,
+  }) {
+    final query = _database.select(_database.transactions).join([
+      leftOuterJoin(
+        _database.categories,
+        _database.categories.uuid.equalsExp(_database.transactions.categoryUuid),
+      ),
+      leftOuterJoin(
+        _database.contacts,
+        _database.contacts.uuid.equalsExp(_database.transactions.contactUuid),
+      ),
+      leftOuterJoin(
+        _database.payables,
+        _database.payables.uuid.equalsExp(_database.transactions.linkedPayableUuid),
+      ),
+      leftOuterJoin(
+        _database.receivables,
+        _database.receivables.uuid
+            .equalsExp(_database.transactions.linkedReceivableUuid),
+      ),
+    ]);
+
+    if (searchQuery != null && searchQuery.isNotEmpty) {
+      query.where(_database.transactions.description.contains(searchQuery));
+    }
+
+    if (filters.startDate != null) {
+      query.where(_database.transactions.date.isBiggerOrEqualValue(filters.startDate!));
+    }
+    if (filters.endDate != null) {
+      query.where(_database.transactions.date.isSmallerOrEqualValue(filters.endDate!));
+    }
+    if (filters.type != null) {
+      query.where(_database.transactions.type.equals(filters.type!));
+    }
+    if (filters.categoryUuids != null && filters.categoryUuids!.isNotEmpty) {
+      query.where(_database.transactions.categoryUuid.isIn(filters.categoryUuids!));
+    }
+    if (filters.contactUuids != null && filters.contactUuids!.isNotEmpty) {
+      query.where(_database.transactions.contactUuid.isIn(filters.contactUuids!));
+    }
+    if (filters.minAmount != null) {
+      query.where(_database.transactions.amount.isBiggerOrEqualValue(filters.minAmount!));
+    }
+    if (filters.maxAmount != null) {
+      query.where(_database.transactions.amount.isSmallerOrEqualValue(filters.maxAmount!));
+    }
+
+    query.orderBy([OrderingTerm.desc(_database.transactions.date)]);
+    query.limit(limit, offset: offset);
+
+    return query.get().then((rows) {
+      return rows.map((row) {
+        return TransactionWithDetails(
+          transaction: row.readTable(_database.transactions),
+          category: row.readTableOrNull(_database.categories),
+          contact: row.readTableOrNull(_database.contacts),
+          linkedPayable: row.readTableOrNull(_database.payables),
+          linkedReceivable: row.readTableOrNull(_database.receivables),
+        );
+      }).toList();
+    });
+  }
+
+  // Watch transactions with details (filtered and paginated) - Stream version
+  Stream<List<TransactionWithDetails>> watchTransactionsWithDetailsFilteredPaginated({
+    required TransactionFilters filters,
+    String? searchQuery,
+    int limit = 50,
+    int offset = 0,
+  }) {
+    final query = _database.select(_database.transactions).join([
+      leftOuterJoin(
+        _database.categories,
+        _database.categories.uuid.equalsExp(_database.transactions.categoryUuid),
+      ),
+      leftOuterJoin(
+        _database.contacts,
+        _database.contacts.uuid.equalsExp(_database.transactions.contactUuid),
+      ),
+      leftOuterJoin(
+        _database.payables,
+        _database.payables.uuid.equalsExp(_database.transactions.linkedPayableUuid),
+      ),
+      leftOuterJoin(
+        _database.receivables,
+        _database.receivables.uuid
+            .equalsExp(_database.transactions.linkedReceivableUuid),
+      ),
+    ]);
+
+    if (searchQuery != null && searchQuery.isNotEmpty) {
+      query.where(_database.transactions.description.contains(searchQuery));
+    }
+
+    if (filters.startDate != null) {
+      query.where(_database.transactions.date.isBiggerOrEqualValue(filters.startDate!));
+    }
+    if (filters.endDate != null) {
+      query.where(_database.transactions.date.isSmallerOrEqualValue(filters.endDate!));
+    }
+    if (filters.type != null) {
+      query.where(_database.transactions.type.equals(filters.type!));
+    }
+    if (filters.categoryUuids != null && filters.categoryUuids!.isNotEmpty) {
+      query.where(_database.transactions.categoryUuid.isIn(filters.categoryUuids!));
+    }
+    if (filters.contactUuids != null && filters.contactUuids!.isNotEmpty) {
+      query.where(_database.transactions.contactUuid.isIn(filters.contactUuids!));
+    }
+    if (filters.minAmount != null) {
+      query.where(_database.transactions.amount.isBiggerOrEqualValue(filters.minAmount!));
+    }
+    if (filters.maxAmount != null) {
+      query.where(_database.transactions.amount.isSmallerOrEqualValue(filters.maxAmount!));
+    }
+
+    query.orderBy([OrderingTerm.desc(_database.transactions.date)]);
+    query.limit(limit, offset: offset);
+
+    return query.watch().map((rows) {
       return rows.map((row) {
         return TransactionWithDetails(
           transaction: row.readTable(_database.transactions),

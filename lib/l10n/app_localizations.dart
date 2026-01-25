@@ -4090,6 +4090,204 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'New Entry'**
   String get restoreOptionNewEntry;
+
+  /// No description provided for @filters.
+  ///
+  /// In en, this message translates to:
+  /// **'Filters'**
+  String get filters;
+
+  /// No description provided for @dateRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Date Range'**
+  String get dateRange;
+
+  /// No description provided for @transactionType.
+  ///
+  /// In en, this message translates to:
+  /// **'Transaction Type'**
+  String get transactionType;
+
+  /// No description provided for @amountRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount Range'**
+  String get amountRange;
+
+  /// No description provided for @minAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Min Amount'**
+  String get minAmount;
+
+  /// No description provided for @maxAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Max Amount'**
+  String get maxAmount;
+
+  /// No description provided for @applyFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply Filters'**
+  String get applyFilters;
+
+  /// No description provided for @filterByDueDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter by Due Date'**
+  String get filterByDueDate;
+
+  /// No description provided for @notificationBackupSuccessTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup Successful'**
+  String get notificationBackupSuccessTitle;
+
+  /// No description provided for @notificationBackupSuccessMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Successfully backed up \"{name}\" to Google Drive.'**
+  String notificationBackupSuccessMessage(String name);
+
+  /// No description provided for @notificationSyncCompleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Background Sync Complete'**
+  String get notificationSyncCompleteTitle;
+
+  /// No description provided for @notificationSyncCompleteMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Successfully synced {count} cashbook(s) in the background.'**
+  String notificationSyncCompleteMessage(int count);
+
+  /// No description provided for @cloudCashbooks.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud Cashbooks'**
+  String get cloudCashbooks;
+
+  /// No description provided for @main.
+  ///
+  /// In en, this message translates to:
+  /// **'Main'**
+  String get main;
+
+  /// No description provided for @cloudDb.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud DB'**
+  String get cloudDb;
+
+  /// No description provided for @versions.
+  ///
+  /// In en, this message translates to:
+  /// **'Versions'**
+  String get versions;
+
+  /// No description provided for @local.
+  ///
+  /// In en, this message translates to:
+  /// **'Local'**
+  String get local;
+
+  /// No description provided for @cloud.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud'**
+  String get cloud;
+
+  /// No description provided for @rows.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} rows'**
+  String rows(int count);
+
+  /// No description provided for @primeCloudWithLocal.
+  ///
+  /// In en, this message translates to:
+  /// **'Prime Cloud with Local'**
+  String get primeCloudWithLocal;
+
+  /// No description provided for @resetCloudVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset Cloud Version'**
+  String get resetCloudVersion;
+
+  /// No description provided for @resetCloudVersionMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This will force the cloud version to match your local version ({version}).\n\nUse this ONLY if your cloud manifest is corrupted or out of sync with your local data.'**
+  String resetCloudVersionMessage(Object version);
+
+  /// No description provided for @resetNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset Now'**
+  String get resetNow;
+
+  /// No description provided for @cloudVersionResetSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud version reset successfully'**
+  String get cloudVersionResetSuccess;
+
+  /// No description provided for @cloudVersionResetFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to reset cloud version: {error}'**
+  String cloudVersionResetFailed(Object error);
+
+  /// No description provided for @syncIntervalLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync Interval'**
+  String get syncIntervalLabel;
+
+  /// No description provided for @resetLocalSyncState.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset Local Sync State'**
+  String get resetLocalSyncState;
+
+  /// No description provided for @resetLocalSyncMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This will mark all your local records as \"unsynced\" and reset your local version to 0. Tapping \"Sync Now\" after this will re-upload all your data to the cloud.\n\nUse this if you want to force a full re-sync of your local data.'**
+  String get resetLocalSyncMessage;
+
+  /// No description provided for @localSyncResetSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Local sync state reset successfully'**
+  String get localSyncResetSuccess;
+
+  /// No description provided for @clearAllCloudData.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear All Cloud Data'**
+  String get clearAllCloudData;
+
+  /// No description provided for @clearAllCloudDataMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This will permanently delete ALL your FlowPaisa backups and synchronization data from Google Drive. This action cannot be undone.\n\nAre you sure you want to clear all cloud data?'**
+  String get clearAllCloudDataMessage;
+
+  /// No description provided for @cloudDataClearedSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'All cloud data cleared successfully'**
+  String get cloudDataClearedSuccess;
+
+  /// No description provided for @clearNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear Now'**
+  String get clearNow;
 }
 
 class _AppLocalizationsDelegate

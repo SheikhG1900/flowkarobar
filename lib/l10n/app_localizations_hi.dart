@@ -897,7 +897,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get oneTimePaymentLifetime => 'एक बार भुगतान • लाइफटाइम एक्सेस';
 
   @override
-  String get processing => 'प्रसंस्करण हो रहा है...';
+  String get processing => 'प्रसंस्करण...';
 
   @override
   String get restorePurchases => 'खरीद बहाल करें';
@@ -2192,4 +2192,118 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get restoreOptionNewEntry => 'नई प्रविष्टि';
+
+  @override
+  String get filters => 'फ़िल्टर';
+
+  @override
+  String get dateRange => 'तारीख सीमा';
+
+  @override
+  String get transactionType => 'लेन-देन का प्रकार';
+
+  @override
+  String get amountRange => 'राशि सीमा';
+
+  @override
+  String get minAmount => 'न्यूनतम राशि';
+
+  @override
+  String get maxAmount => 'अधिकतम राशि';
+
+  @override
+  String get applyFilters => 'फ़िल्टर लागू करें';
+
+  @override
+  String get filterByDueDate => 'देय तिथि के अनुसार फ़िल्टर करें';
+
+  @override
+  String get notificationBackupSuccessTitle => 'बैकअप सफल';
+
+  @override
+  String notificationBackupSuccessMessage(String name) {
+    return 'गूगल ड्राइव पर \"$name\" का सफलतापूर्वक बैकअप लिया गया।';
+  }
+
+  @override
+  String get notificationSyncCompleteTitle => 'बैकग्राउंड सिंक पूर्ण';
+
+  @override
+  String notificationSyncCompleteMessage(int count) {
+    return 'बैकग्राउंड में $count कैशबुक सफलतापूर्वक सिंक की गईं।';
+  }
+
+  @override
+  String get cloudCashbooks => 'क्लाउड कैशबुक';
+
+  @override
+  String get main => 'मुख्य';
+
+  @override
+  String get cloudDb => 'क्लाउड डेटाबेस';
+
+  @override
+  String get versions => 'संस्करण';
+
+  @override
+  String get local => 'स्थानीय';
+
+  @override
+  String get cloud => 'क्लाउड';
+
+  @override
+  String rows(int count) {
+    return '$count पंक्तियाँ';
+  }
+
+  @override
+  String get primeCloudWithLocal => 'स्थानीय के साथ क्लाउड को प्राइम करें';
+
+  @override
+  String get resetCloudVersion => 'क्लाउड संस्करण रीसेट करें';
+
+  @override
+  String resetCloudVersionMessage(Object version) {
+    return 'यह क्लाउड संस्करण को आपके स्थानीय संस्करण ($version) से मेल खाने के लिए मजबूर करेगा।\n\nइसका उपयोग केवल तभी करें जब आपका क्लाउड मेनिफेस्ट दूषित हो या आपके स्थानीय डेटा के साथ सिंक न हो।';
+  }
+
+  @override
+  String get resetNow => 'अभी रीसेट करें';
+
+  @override
+  String get cloudVersionResetSuccess =>
+      'क्लाउड संस्करण सफलतापूर्वक रीसेट हो गया';
+
+  @override
+  String cloudVersionResetFailed(Object error) {
+    return 'क्लाउड संस्करण रीसेट करने में विफल: $error';
+  }
+
+  @override
+  String get syncIntervalLabel => 'सिंक अंतराल';
+
+  @override
+  String get resetLocalSyncState => 'स्थानीय सिंक स्थिति रीसेट करें';
+
+  @override
+  String get resetLocalSyncMessage =>
+      'यह आपके सभी स्थानीय रिकॉर्ड को \"अनसिंक\" के रूप में चिह्नित करेगा और आपके स्थानीय संस्करण को 0 पर रीसेट कर देगा। इसके बाद \"अभी सिंक करें\" पर टैप करने से आपका सारा डेटा क्लाउड पर फिर से अपलोड हो जाएगा।\n\nइसका उपयोग तब करें जब आप अपने स्थानीय डेटा का पूर्ण पुनः सिंक करना चाहते हैं।';
+
+  @override
+  String get localSyncResetSuccess =>
+      'स्थानीय सिंक स्थिति सफलतापूर्वक रीसेट हो गई';
+
+  @override
+  String get clearAllCloudData => 'सभी क्लाउड डेटा साफ़ करें';
+
+  @override
+  String get clearAllCloudDataMessage =>
+      'यह Google Drive से आपके सभी FlowPaisa बैकअप और सिंक्रनाइज़ेशन डेटा को स्थायी रूप से हटा देगा। इस क्रिया को पूर्ववत नहीं किया जा सकता है।\n\nक्या आप वाकई सभी क्लाउड डेटा साफ़ करना चाहते हैं?';
+
+  @override
+  String get cloudDataClearedSuccess =>
+      'सभी क्लाउड डेटा सफलतापूर्वक साफ़ कर दिया गया';
+
+  @override
+  String get clearNow => 'अभी साफ़ करें';
 }

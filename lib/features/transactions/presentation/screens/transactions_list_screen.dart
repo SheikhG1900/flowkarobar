@@ -24,6 +24,7 @@ import 'package:flowpaisa/features/transactions/presentation/widgets/schedule_li
 import 'package:flowpaisa/features/transactions/presentation/providers/schedule_service_provider.dart';
 import 'package:flowpaisa/features/transactions/presentation/screens/edit_schedule_screen.dart';
 import 'package:flowpaisa/core/database/database.dart';
+import 'package:flowpaisa/shared/widgets/filter_bottom_sheet.dart';
 
 class TransactionsListScreen extends ConsumerStatefulWidget {
   const TransactionsListScreen({super.key});
@@ -65,6 +66,23 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
     }
   }
 
+  void _showFilterBottomSheet() {
+    final notifier = ref.read(transactionsPaginatedProvider.notifier);
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => FilterBottomSheet(
+        type: FilterType.transactions,
+        initialFilters: notifier.currentFilters,
+        onApply: (filters) {
+          notifier.applyFilters(filters);
+          setState(() {}); // Force rebuild to update badge
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -73,6 +91,8 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
     final theme = Theme.of(context);
     final schedulesAsync = ref.watch(allSchedulesProvider);
     final hasSchedules = schedulesAsync.value?.isNotEmpty ?? false;
+    final currentFilters = ref.watch(transactionsPaginatedProvider.notifier).currentFilters;
+    final hasActiveFilters = !currentFilters.isEmpty;
 
     return Scaffold(
       appBar: AppBar(
@@ -105,6 +125,30 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
               )
             : null,
         actions: [
+          IconButton(
+            icon: Stack(
+              children: [
+                const Icon(Icons.filter_list),
+                if (hasActiveFilters)
+                  Positioned(
+                    right: 0,
+                    top: 0,
+                    child: Container(
+                      padding: const EdgeInsets.all(2),
+                      decoration: const BoxDecoration(
+                        color: Colors.red,
+                        shape: BoxShape.circle,
+                      ),
+                      constraints: const BoxConstraints(
+                        minWidth: 8,
+                        minHeight: 8,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            onPressed: _showFilterBottomSheet,
+          ),
           IconButton(
             icon: Icon(_isSearching ? Icons.close : Icons.search),
             onPressed: () {

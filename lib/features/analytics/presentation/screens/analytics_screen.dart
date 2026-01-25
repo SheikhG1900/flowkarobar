@@ -12,6 +12,15 @@ import 'package:flowpaisa/features/settings/presentation/providers/settings_prov
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/shared/widgets/premium_badge.dart';
 import 'package:flowpaisa/features/contacts/presentation/screens/contact_details_screen.dart';
+import 'package:flowpaisa/features/transactions/domain/models.dart';
+import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
+import 'package:flowpaisa/features/transactions/presentation/screens/transactions_list_screen.dart';
+import 'package:flowpaisa/features/payables/domain/models.dart';
+import 'package:flowpaisa/features/payables/presentation/providers/payables_provider.dart';
+import 'package:flowpaisa/features/payables/presentation/screens/payables_list_screen.dart';
+import 'package:flowpaisa/features/receivables/domain/models.dart';
+import 'package:flowpaisa/features/receivables/presentation/providers/receivables_provider.dart';
+import 'package:flowpaisa/features/receivables/presentation/screens/receivables_list_screen.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
 import 'package:flowpaisa/core/utils/localization_helper.dart';
 import 'package:flowpaisa/core/utils/export_service.dart';
@@ -577,6 +586,21 @@ class _FinancialSummaryCard extends ConsumerWidget {
                           allTimeAmount: allTimeSummary.totalPayable,
                           color: AppColors.payableColor,
                           icon: Icons.arrow_upward,
+                          onTap: () {
+                            final dateRange = ref.read(selectedDateRangeProvider);
+                            ref.read(payablesPaginatedProvider('PENDING').notifier).applyFilters(
+                              PayableFilters(
+                                startDate: dateRange.startDate,
+                                endDate: dateRange.endDate,
+                              ),
+                            );
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const PayablesListScreen(),
+                              ),
+                            );
+                          },
                         ),
                       ),
                       const SizedBox(width: 16),
@@ -587,6 +611,21 @@ class _FinancialSummaryCard extends ConsumerWidget {
                           allTimeAmount: allTimeSummary.totalReceivable,
                           color: AppColors.receivableColor,
                           icon: Icons.arrow_downward,
+                          onTap: () {
+                            final dateRange = ref.read(selectedDateRangeProvider);
+                            ref.read(receivablesPaginatedProvider('PENDING').notifier).applyFilters(
+                              ReceivableFilters(
+                                startDate: dateRange.startDate,
+                                endDate: dateRange.endDate,
+                              ),
+                            );
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const ReceivablesListScreen(),
+                              ),
+                            );
+                          },
                         ),
                       ),
                     ],
@@ -602,6 +641,22 @@ class _FinancialSummaryCard extends ConsumerWidget {
                           allTimeAmount: allTimeSummary.totalExpense,
                           color: AppColors.expenseColor,
                           icon: Icons.shopping_cart,
+                          onTap: () {
+                            final dateRange = ref.read(selectedDateRangeProvider);
+                            ref.read(transactionsPaginatedProvider.notifier).applyFilters(
+                              TransactionFilters(
+                                type: 'EXPENSE',
+                                startDate: dateRange.startDate,
+                                endDate: dateRange.endDate,
+                              ),
+                            );
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const TransactionsListScreen(),
+                              ),
+                            );
+                          },
                         ),
                       ),
                       const SizedBox(width: 16),
@@ -612,63 +667,97 @@ class _FinancialSummaryCard extends ConsumerWidget {
                           allTimeAmount: allTimeSummary.totalIncome,
                           color: AppColors.incomeColor,
                           icon: Icons.account_balance_wallet,
+                          onTap: () {
+                            final dateRange = ref.read(selectedDateRangeProvider);
+                            ref.read(transactionsPaginatedProvider.notifier).applyFilters(
+                              TransactionFilters(
+                                type: 'INCOME',
+                                startDate: dateRange.startDate,
+                                endDate: dateRange.endDate,
+                              ),
+                            );
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const TransactionsListScreen(),
+                              ),
+                            );
+                          },
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 16),
-                  // Net Balance
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      gradient: selectedSummary.netBalance >= 0
-                          ? AppColors.receivableGradient
-                          : AppColors.payableGradient,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Column(
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              l10n.netBalance,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                              ),
+                      // Net Balance
+                      InkWell(
+                        onTap: () {
+                          final dateRange = ref.read(selectedDateRangeProvider);
+                          ref.read(transactionsPaginatedProvider.notifier).applyFilters(
+                            TransactionFilters(
+                              startDate: dateRange.startDate,
+                              endDate: dateRange.endDate,
                             ),
-                            Text(
-                              AmountFormatter.formatWithCurrency(
-                                  selectedSummary.netBalance.abs(),
-                                  currencySymbol,
-                                  2),
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                              ),
+                          );
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const TransactionsListScreen(),
                             ),
-                          ],
+                          );
+                        },
+                        borderRadius: BorderRadius.circular(16),
+                        child: Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            gradient: selectedSummary.netBalance >= 0
+                                ? AppColors.receivableGradient
+                                : AppColors.payableGradient,
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Column(
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    l10n.netBalance,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  Text(
+                                    AmountFormatter.formatWithCurrency(
+                                        selectedSummary.netBalance.abs(),
+                                        currencySymbol,
+                                        2),
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  Text(
+                                    '${l10n.allTime} ${AmountFormatter.formatWithCurrency(allTimeSummary.netBalance.abs(), currencySymbol, 2)}',
+                                    style: TextStyle(
+                                      color: Colors.white.withValues(alpha: 0.7),
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
-                        const SizedBox(height: 4),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            Text(
-                              '${l10n.allTime} ${AmountFormatter.formatWithCurrency(allTimeSummary.netBalance.abs(), currencySymbol, 2)}',
-                              style: TextStyle(
-                                color: Colors.white.withValues(alpha: 0.7),
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
+                      ),
                 ],
               ),
             );
@@ -689,6 +778,7 @@ class _SummaryItem extends ConsumerWidget {
   final double allTimeAmount;
   final Color color;
   final IconData icon;
+  final VoidCallback? onTap;
 
   const _SummaryItem({
     required this.title,
@@ -696,6 +786,7 @@ class _SummaryItem extends ConsumerWidget {
     required this.allTimeAmount,
     required this.color,
     required this.icon,
+    this.onTap,
   });
 
   @override
@@ -705,56 +796,60 @@ class _SummaryItem extends ConsumerWidget {
     final currencySymbol = ref.watch(currencySymbolProvider);
     final decimalPlaces = ref.watch(currencyDecimalPlacesProvider);
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withValues(alpha: 0.2)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(8),
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: color.withValues(alpha: 0.2)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(icon, size: 16, color: color),
                 ),
-                child: Icon(icon, size: 16, color: color),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                title,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                  fontWeight: FontWeight.w600,
+                const SizedBox(width: 8),
+                Text(
+                  title,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              AmountFormatter.formatWithCurrency(
+                  selectedAmount, currencySymbol, decimalPlaces),
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: color,
               ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            AmountFormatter.formatWithCurrency(
-                selectedAmount, currencySymbol, decimalPlaces),
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: color,
             ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            '${l10n.allTime} ${AmountFormatter.formatWithCurrency(allTimeAmount, currencySymbol, 0)}',
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
-              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+            const SizedBox(height: 4),
+            Text(
+              '${l10n.allTime} ${AmountFormatter.formatWithCurrency(allTimeAmount, currencySymbol, 0)}',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+                color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -853,37 +948,96 @@ class _ContactSummariesSection extends ConsumerWidget {
                             const SizedBox(height: 4),
                             Row(
                               children: [
-                                Icon(
-                                  Symbols.call_made,
-                                  size: 14,
-                                  color: AppColors.payableColor,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  AmountFormatter.formatWithCurrency(
-                                      summary.totalPayable, currencySymbol, 0),
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: AppColors.payableColor,
-                                    fontWeight: FontWeight.w500,
+                                InkWell(
+                                  onTap: () {
+                                    final dateRange =
+                                        ref.read(selectedDateRangeProvider);
+                                    ref
+                                        .read(payablesPaginatedProvider('PENDING')
+                                            .notifier)
+                                        .applyFilters(
+                                          PayableFilters(
+                                            contactUuids: [summary.contact.uuid],
+                                            startDate: dateRange.startDate,
+                                            endDate: dateRange.endDate,
+                                          ),
+                                        );
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            const PayablesListScreen(),
+                                      ),
+                                    );
+                                  },
+                                  borderRadius: BorderRadius.circular(4),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Symbols.call_made,
+                                        size: 14,
+                                        color: AppColors.payableColor,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        AmountFormatter.formatWithCurrency(
+                                            summary.totalPayable,
+                                            currencySymbol,
+                                            0),
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: AppColors.payableColor,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                                 const SizedBox(width: 16),
-                                Icon(
-                                  Symbols.call_received,
-                                  size: 14,
-                                  color: AppColors.receivableColor,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  AmountFormatter.formatWithCurrency(
-                                      summary.totalReceivable,
-                                      currencySymbol,
-                                      0),
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: AppColors.receivableColor,
-                                    fontWeight: FontWeight.w500,
+                                InkWell(
+                                  onTap: () {
+                                    final dateRange =
+                                        ref.read(selectedDateRangeProvider);
+                                    ref
+                                        .read(
+                                            receivablesPaginatedProvider('PENDING')
+                                                .notifier)
+                                        .applyFilters(
+                                          ReceivableFilters(
+                                            contactUuids: [summary.contact.uuid],
+                                            startDate: dateRange.startDate,
+                                            endDate: dateRange.endDate,
+                                          ),
+                                        );
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            const ReceivablesListScreen(),
+                                      ),
+                                    );
+                                  },
+                                  borderRadius: BorderRadius.circular(4),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Symbols.call_received,
+                                        size: 14,
+                                        color: AppColors.receivableColor,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        AmountFormatter.formatWithCurrency(
+                                            summary.totalReceivable,
+                                            currencySymbol,
+                                            0),
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: AppColors.receivableColor,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ],
@@ -892,39 +1046,82 @@ class _ContactSummariesSection extends ConsumerWidget {
                         ),
                       ),
                       // Balance
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: isZero
-                              ? theme.colorScheme.surfaceContainerHighest
-                              : (isPositive
-                                      ? AppColors.receivableColor
-                                      : AppColors.payableColor)
-                                  .withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
+                      InkWell(
+                        onTap: () {
+                          final dateRange = ref.read(selectedDateRangeProvider);
+                          if (isPositive) {
+                            ref
+                                .read(receivablesPaginatedProvider('PENDING')
+                                    .notifier)
+                                .applyFilters(
+                                  ReceivableFilters(
+                                    contactUuids: [summary.contact.uuid],
+                                    startDate: dateRange.startDate,
+                                    endDate: dateRange.endDate,
+                                  ),
+                                );
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const ReceivablesListScreen(),
+                              ),
+                            );
+                          } else {
+                            ref
+                                .read(payablesPaginatedProvider('PENDING')
+                                    .notifier)
+                                .applyFilters(
+                                  PayableFilters(
+                                    contactUuids: [summary.contact.uuid],
+                                    startDate: dateRange.startDate,
+                                    endDate: dateRange.endDate,
+                                  ),
+                                );
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const PayablesListScreen(),
+                              ),
+                            );
+                          }
+                        },
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(
                             color: isZero
-                                ? theme.dividerColor
+                                ? theme.colorScheme.surfaceContainerHighest
                                 : (isPositive
                                         ? AppColors.receivableColor
                                         : AppColors.payableColor)
-                                    .withValues(alpha: 0.3),
+                                    .withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: isZero
+                                  ? theme.dividerColor
+                                  : (isPositive
+                                          ? AppColors.receivableColor
+                                          : AppColors.payableColor)
+                                      .withValues(alpha: 0.3),
+                            ),
                           ),
-                        ),
-                        child: Text(
-                          isZero
-                              ? l10n.settled
-                              : AmountFormatter.formatWithCurrency(
-                                  summary.balance.abs(), currencySymbol, 0),
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: isZero
-                                ? theme.colorScheme.onSurfaceVariant
-                                : (isPositive
-                                    ? AppColors.receivableColor
-                                    : AppColors.payableColor),
+                          child: Text(
+                            isZero
+                                ? l10n.settled
+                                : AmountFormatter.formatWithCurrency(
+                                    summary.balance.abs(), currencySymbol, 0),
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: isZero
+                                  ? theme.colorScheme.onSurfaceVariant
+                                  : (isPositive
+                                      ? AppColors.receivableColor
+                                      : AppColors.payableColor),
+                            ),
                           ),
                         ),
                       ),

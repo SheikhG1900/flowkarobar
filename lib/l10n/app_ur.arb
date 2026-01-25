@@ -770,5 +770,63 @@
     }
   },
   "restoreOptionOverride": "اوور رائٹ کریں",
-  "restoreOptionNewEntry": "نئی انٹری"
+  "restoreOptionNewEntry": "نئی انٹری",
+  "filters": "فلٹرز",
+  "dateRange": "تاریخ کی حد",
+  "transactionType": "لین دین کی قسم",
+  "amountRange": "رقم کی حد",
+  "minAmount": "کم از کم رقم",
+  "maxAmount": "زیادہ سے زیادہ رقم",
+  "applyFilters": "فلٹرز لاگو کریں",
+  "filterByDueDate": "واجب الادا تاریخ کے مطابق فلٹر کریں",
+  "from": "سے",
+  "to": "تک",
+  "notificationBackupSuccessTitle": "بیک اپ کامیاب",
+  "notificationBackupSuccessMessage": "گوگل ڈرائیو پر \"{name}\" کا بیک اپ کامیابی سے لے لیا گیا ہے۔",
+  "@notificationBackupSuccessMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationSyncCompleteTitle": "بیک گراؤنڈ سنک مکمل",
+  "notificationSyncCompleteMessage": "بیک گراؤنڈ میں {count} کیش بکس کامیابی سے سنک ہو گئی ہیں۔",
+  "@notificationSyncCompleteMessage": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "processing": "پروسیسنگ...",
+  "cloudCashbooks": "کلاؤڈ کیش بکس",
+  "main": "مین",
+  "cloudDb": "کلاؤڈ ڈیٹا بیس",
+  "versions": "ورژنز",
+  "local": "مقامی",
+  "cloud": "کلاؤڈ",
+  "pending": "زیر التواء",
+  "rows": "{count} قطاریں",
+  "@rows": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "primeCloudWithLocal": "مقامی کے ساتھ کلاؤڈ کو پرائم کریں",
+  "resetCloudVersion": "کلاؤڈ ورژن ری سیٹ کریں",
+  "resetCloudVersionMessage": "یہ کلاؤڈ ورژن کو آپ کے مقامی ورژن ({version}) کے مطابق کرنے پر مجبور کر دے گا۔\n\nاسے صرف اس صورت میں استعمال کریں جب آپ کا کلاؤڈ مینی فیسٹ خراب ہو یا آپ کے مقامی ڈیٹا کے ساتھ سنک نہ ہو۔",
+  "resetNow": "ابھی ری سیٹ کریں",
+  "cloudVersionResetSuccess": "کلاؤڈ ورژن کامیابی سے ری سیٹ ہو گیا",
+  "cloudVersionResetFailed": "کلاؤڈ ورژن ری سیٹ کرنے میں ناکامی: {error}",
+  "syncIntervalLabel": "سنک کا وقفہ",
+  "resetLocalSyncState": "مقامی سنک کی حالت ری سیٹ کریں",
+  "resetLocalSyncMessage": "یہ آپ کے تمام مقامی ریکارڈز کو \"غیر سنک\" کے طور پر نشان زد کرے گا اور آپ کے مقامی ورژن کو 0 پر ری سیٹ کر دے گا۔ اس کے بعد \"ابھی سنک کریں\" پر ٹیپ کرنے سے آپ کا تمام ڈیٹا کلاؤڈ پر دوبارہ اپ لوڈ ہو جائے گا۔\n\nاسے تب استعمال کریں جب آپ اپنے مقامی ڈیٹا کا مکمل دوبارہ سنک کرنا چاہتے ہیں۔",
+  "localSyncResetSuccess": "مقامی سنک کی حالت کامیابی سے ری سیٹ ہو گئی",
+  "clearAllCloudData": "تمام کلاؤڈ ڈیٹا صاف کریں",
+  "clearAllCloudDataMessage": "یہ گوگل ڈرائیو سے آپ کے تمام فلو پیسہ بیک اپ اور سنکرونائزیشن ڈیٹا کو مستقل طور پر حذف کر دے گا۔ اس عمل کو واپس نہیں لیا جا سکتا۔\n\nکیا آپ واقعی تمام کلاؤڈ ڈیٹا صاف کرنا چاہتے ہیں؟",
+  "cloudDataClearedSuccess": "تمام کلاؤڈ ڈیٹا کامیابی سے صاف ہو گیا",
+  "clearNow": "ابھی صاف کریں"
 }

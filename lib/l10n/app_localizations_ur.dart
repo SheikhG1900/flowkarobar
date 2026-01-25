@@ -899,7 +899,7 @@ class AppLocalizationsUr extends AppLocalizations {
   String get oneTimePaymentLifetime => 'ایک بار ادائیگی • تاحیات رسائی';
 
   @override
-  String get processing => 'پروسیسنگ ہو رہی ہے...';
+  String get processing => 'پروسیسنگ...';
 
   @override
   String get restorePurchases => 'خریداری بحال کریں';
@@ -2202,4 +2202,116 @@ class AppLocalizationsUr extends AppLocalizations {
 
   @override
   String get restoreOptionNewEntry => 'نئی انٹری';
+
+  @override
+  String get filters => 'فلٹرز';
+
+  @override
+  String get dateRange => 'تاریخ کی حد';
+
+  @override
+  String get transactionType => 'لین دین کی قسم';
+
+  @override
+  String get amountRange => 'رقم کی حد';
+
+  @override
+  String get minAmount => 'کم از کم رقم';
+
+  @override
+  String get maxAmount => 'زیادہ سے زیادہ رقم';
+
+  @override
+  String get applyFilters => 'فلٹرز لاگو کریں';
+
+  @override
+  String get filterByDueDate => 'واجب الادا تاریخ کے مطابق فلٹر کریں';
+
+  @override
+  String get notificationBackupSuccessTitle => 'بیک اپ کامیاب';
+
+  @override
+  String notificationBackupSuccessMessage(String name) {
+    return 'گوگل ڈرائیو پر \"$name\" کا بیک اپ کامیابی سے لے لیا گیا ہے۔';
+  }
+
+  @override
+  String get notificationSyncCompleteTitle => 'بیک گراؤنڈ سنک مکمل';
+
+  @override
+  String notificationSyncCompleteMessage(int count) {
+    return 'بیک گراؤنڈ میں $count کیش بکس کامیابی سے سنک ہو گئی ہیں۔';
+  }
+
+  @override
+  String get cloudCashbooks => 'کلاؤڈ کیش بکس';
+
+  @override
+  String get main => 'مین';
+
+  @override
+  String get cloudDb => 'کلاؤڈ ڈیٹا بیس';
+
+  @override
+  String get versions => 'ورژنز';
+
+  @override
+  String get local => 'مقامی';
+
+  @override
+  String get cloud => 'کلاؤڈ';
+
+  @override
+  String rows(int count) {
+    return '$count قطاریں';
+  }
+
+  @override
+  String get primeCloudWithLocal => 'مقامی کے ساتھ کلاؤڈ کو پرائم کریں';
+
+  @override
+  String get resetCloudVersion => 'کلاؤڈ ورژن ری سیٹ کریں';
+
+  @override
+  String resetCloudVersionMessage(Object version) {
+    return 'یہ کلاؤڈ ورژن کو آپ کے مقامی ورژن ($version) کے مطابق کرنے پر مجبور کر دے گا۔\n\nاسے صرف اس صورت میں استعمال کریں جب آپ کا کلاؤڈ مینی فیسٹ خراب ہو یا آپ کے مقامی ڈیٹا کے ساتھ سنک نہ ہو۔';
+  }
+
+  @override
+  String get resetNow => 'ابھی ری سیٹ کریں';
+
+  @override
+  String get cloudVersionResetSuccess => 'کلاؤڈ ورژن کامیابی سے ری سیٹ ہو گیا';
+
+  @override
+  String cloudVersionResetFailed(Object error) {
+    return 'کلاؤڈ ورژن ری سیٹ کرنے میں ناکامی: $error';
+  }
+
+  @override
+  String get syncIntervalLabel => 'سنک کا وقفہ';
+
+  @override
+  String get resetLocalSyncState => 'مقامی سنک کی حالت ری سیٹ کریں';
+
+  @override
+  String get resetLocalSyncMessage =>
+      'یہ آپ کے تمام مقامی ریکارڈز کو \"غیر سنک\" کے طور پر نشان زد کرے گا اور آپ کے مقامی ورژن کو 0 پر ری سیٹ کر دے گا۔ اس کے بعد \"ابھی سنک کریں\" پر ٹیپ کرنے سے آپ کا تمام ڈیٹا کلاؤڈ پر دوبارہ اپ لوڈ ہو جائے گا۔\n\nاسے تب استعمال کریں جب آپ اپنے مقامی ڈیٹا کا مکمل دوبارہ سنک کرنا چاہتے ہیں۔';
+
+  @override
+  String get localSyncResetSuccess =>
+      'مقامی سنک کی حالت کامیابی سے ری سیٹ ہو گئی';
+
+  @override
+  String get clearAllCloudData => 'تمام کلاؤڈ ڈیٹا صاف کریں';
+
+  @override
+  String get clearAllCloudDataMessage =>
+      'یہ گوگل ڈرائیو سے آپ کے تمام فلو پیسہ بیک اپ اور سنکرونائزیشن ڈیٹا کو مستقل طور پر حذف کر دے گا۔ اس عمل کو واپس نہیں لیا جا سکتا۔\n\nکیا آپ واقعی تمام کلاؤڈ ڈیٹا صاف کرنا چاہتے ہیں؟';
+
+  @override
+  String get cloudDataClearedSuccess => 'تمام کلاؤڈ ڈیٹا کامیابی سے صاف ہو گیا';
+
+  @override
+  String get clearNow => 'ابھی صاف کریں';
 }

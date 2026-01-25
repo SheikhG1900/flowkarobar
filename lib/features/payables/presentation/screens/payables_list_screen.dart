@@ -17,6 +17,7 @@ import 'package:flowpaisa/features/payables/presentation/widgets/payable_details
 import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
 import 'package:flowpaisa/shared/widgets/swipeable_list_item.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
+import 'package:flowpaisa/shared/widgets/filter_bottom_sheet.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/core/utils/localization_helper.dart';
 import 'package:material_symbols_icons/symbols.dart';
@@ -33,6 +34,7 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
   TabController? _tabController;
   late ScrollController _scrollController;
   int _previousOverdueCount = -1;
+  bool _isSearching = false;
 
   @override
   void initState() {
@@ -97,6 +99,27 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
     }
   }
 
+  void _showFilterBottomSheet() {
+    final overdueCountAsync = ref.read(overduePayablesCountProvider);
+    final hasOverdueTab = (overdueCountAsync.value ?? 0) > 0;
+    final status = _getStatusForTabIndex(_tabController?.index ?? 0, hasOverdueTab);
+    final notifier = ref.read(payablesPaginatedProvider(status).notifier);
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => FilterBottomSheet(
+        type: FilterType.payables,
+        initialFilters: notifier.currentFilters,
+        onApply: (filters) {
+          notifier.applyFilters(filters);
+          setState(() {}); // Force rebuild to update badge
+        },
+      ),
+    );
+  }
+
   Widget _buildTabWithCount(String label, int count, {bool isOverdue = false}) {
     return Tab(
       child: Row(
@@ -153,10 +176,66 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
     }
 
     final l10n = AppLocalizations.of(context)!;
+    final status = _getStatusForTabIndex(_tabController?.index ?? 0, hasOverdueTab);
+    final currentFilters = ref.watch(payablesPaginatedProvider(status).notifier).currentFilters;
+    final hasActiveFilters = !currentFilters.isEmpty;
+
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.payables),
+        title: _isSearching
+            ? TextField(
+                autofocus: true,
+                decoration: InputDecoration(
+                  hintText: '${l10n.search}...',
+                  border: InputBorder.none,
+                  hintStyle: const TextStyle(color: Colors.white70),
+                ),
+                style: const TextStyle(color: Colors.white),
+                onChanged: (value) {
+                  ref
+                      .read(payablesPaginatedProvider(status).notifier)
+                      .updateSearchQuery(value);
+                },
+              )
+            : Text(l10n.payables),
         actions: [
+          IconButton(
+            icon: Icon(_isSearching ? Icons.close : Icons.search),
+            onPressed: () {
+              setState(() {
+                if (_isSearching) {
+                  ref
+                      .read(payablesPaginatedProvider(status).notifier)
+                      .updateSearchQuery('');
+                }
+                _isSearching = !_isSearching;
+              });
+            },
+          ),
+          IconButton(
+            icon: Stack(
+              children: [
+                const Icon(Icons.filter_list),
+                if (hasActiveFilters)
+                  Positioned(
+                    right: 0,
+                    top: 0,
+                    child: Container(
+                      padding: const EdgeInsets.all(2),
+                      decoration: const BoxDecoration(
+                        color: Colors.red,
+                        shape: BoxShape.circle,
+                      ),
+                      constraints: const BoxConstraints(
+                        minWidth: 8,
+                        minHeight: 8,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            onPressed: _showFilterBottomSheet,
+          ),
           // Debug button to generate dummy payables (only in debug mode)
           if (kDebugMode)
             PopupMenuButton<String>(

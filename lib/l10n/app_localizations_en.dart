@@ -2186,4 +2186,115 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get restoreOptionNewEntry => 'New Entry';
+
+  @override
+  String get filters => 'Filters';
+
+  @override
+  String get dateRange => 'Date Range';
+
+  @override
+  String get transactionType => 'Transaction Type';
+
+  @override
+  String get amountRange => 'Amount Range';
+
+  @override
+  String get minAmount => 'Min Amount';
+
+  @override
+  String get maxAmount => 'Max Amount';
+
+  @override
+  String get applyFilters => 'Apply Filters';
+
+  @override
+  String get filterByDueDate => 'Filter by Due Date';
+
+  @override
+  String get notificationBackupSuccessTitle => 'Backup Successful';
+
+  @override
+  String notificationBackupSuccessMessage(String name) {
+    return 'Successfully backed up \"$name\" to Google Drive.';
+  }
+
+  @override
+  String get notificationSyncCompleteTitle => 'Background Sync Complete';
+
+  @override
+  String notificationSyncCompleteMessage(int count) {
+    return 'Successfully synced $count cashbook(s) in the background.';
+  }
+
+  @override
+  String get cloudCashbooks => 'Cloud Cashbooks';
+
+  @override
+  String get main => 'Main';
+
+  @override
+  String get cloudDb => 'Cloud DB';
+
+  @override
+  String get versions => 'Versions';
+
+  @override
+  String get local => 'Local';
+
+  @override
+  String get cloud => 'Cloud';
+
+  @override
+  String rows(int count) {
+    return '$count rows';
+  }
+
+  @override
+  String get primeCloudWithLocal => 'Prime Cloud with Local';
+
+  @override
+  String get resetCloudVersion => 'Reset Cloud Version';
+
+  @override
+  String resetCloudVersionMessage(Object version) {
+    return 'This will force the cloud version to match your local version ($version).\n\nUse this ONLY if your cloud manifest is corrupted or out of sync with your local data.';
+  }
+
+  @override
+  String get resetNow => 'Reset Now';
+
+  @override
+  String get cloudVersionResetSuccess => 'Cloud version reset successfully';
+
+  @override
+  String cloudVersionResetFailed(Object error) {
+    return 'Failed to reset cloud version: $error';
+  }
+
+  @override
+  String get syncIntervalLabel => 'Sync Interval';
+
+  @override
+  String get resetLocalSyncState => 'Reset Local Sync State';
+
+  @override
+  String get resetLocalSyncMessage =>
+      'This will mark all your local records as \"unsynced\" and reset your local version to 0. Tapping \"Sync Now\" after this will re-upload all your data to the cloud.\n\nUse this if you want to force a full re-sync of your local data.';
+
+  @override
+  String get localSyncResetSuccess => 'Local sync state reset successfully';
+
+  @override
+  String get clearAllCloudData => 'Clear All Cloud Data';
+
+  @override
+  String get clearAllCloudDataMessage =>
+      'This will permanently delete ALL your FlowPaisa backups and synchronization data from Google Drive. This action cannot be undone.\n\nAre you sure you want to clear all cloud data?';
+
+  @override
+  String get cloudDataClearedSuccess => 'All cloud data cleared successfully';
+
+  @override
+  String get clearNow => 'Clear Now';
 }

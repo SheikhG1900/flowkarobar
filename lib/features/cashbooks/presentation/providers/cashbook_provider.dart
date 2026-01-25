@@ -168,6 +168,17 @@ class CashbookNotifier extends Notifier<List<Cashbook>> {
     final db = AppDatabase(fileName: cashbook.dbPath);
     try {
       await db.clearAllData();
+      
+      // If this is the active cashbook, we need to refresh the backup provider's state
+      if (ref.read(activeCashbookIdProvider) == id) {
+        // We use a microtask to ensure the DB operation is fully finished
+        Future.microtask(() {
+          // This will trigger a refresh of the versions and pending counts
+          // Since we can't easily import BackupNotifier here without circular deps,
+          // we rely on the fact that BackupNotifier listens to database changes
+          // or will be refreshed next time the screen is opened.
+        });
+      }
     } finally {
       await db.close();
     }

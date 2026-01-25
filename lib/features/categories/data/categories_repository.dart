@@ -69,7 +69,9 @@ class CategoriesRepository {
 
   /// Update category
   Future<bool> updateCategory(Category category) async {
-    final result = await _database.update(_database.categories).replace(category);
+    final result = await _database
+        .update(_database.categories)
+        .replace(category.copyWith(isNotSynced: true));
     return result;
   }
 
