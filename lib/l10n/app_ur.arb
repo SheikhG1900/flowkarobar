@@ -902,5 +902,13 @@
       }
     }
   },
-  "cloudCashbookDeletedSuccess": "کلاؤڈ کیش بک کامیابی سے حذف کر دی گئی"
+  "cloudCashbookDeletedSuccess": "کلاؤڈ کیش بک کامیابی سے حذف کر دی گئی",
+  "myShare": "میرا حصہ",
+  "split": "تقسیم کریں",
+  "add": "شامل کریں",
+  "totalAmount": "کل رقم",
+  "contactShare": "رابطے کا حصہ",
+  "othersShare": "دوسروں کا حصہ",
+  "myShareSuffix": " (میرا حصہ)",
+  "othersShareSuffix": " (دوسروں کا حصہ)"
 }

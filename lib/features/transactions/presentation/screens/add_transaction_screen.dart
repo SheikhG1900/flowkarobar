@@ -82,6 +82,10 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
       _paidRelationship; // 'PAID_FOR', 'PAID_BY', 'RECEIVED_FROM', 'WILL_RECEIVE' or null
   bool _createLinkedEntry = false;
 
+  // My Share fields
+  double? _myShareAmount;
+  bool _isSplitMode = true; // true = Split, false = Add
+
   @override
   void initState() {
     super.initState();
@@ -320,6 +324,9 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
         createLinkedEntry: _createLinkedEntry,
         dueDate: _dueDate,
         externalLinkId: widget.initialExternalLinkId,
+        myShareAmount: _myShareAmount,
+        isSplitMode: _isSplitMode,
+        l10n: l10n,
       );
 
       // Increment usage count for free users
@@ -830,6 +837,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
         _paidRelationship = null;
         _createLinkedEntry = false;
         _dueDate = null;
+        _myShareAmount = null; // Reset My Share
       });
     } else {
       if (_selectedContact == null) {
@@ -851,6 +859,145 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
         });
       }
     }
+  }
+
+  void _showMyShareDialog() {
+    final theme = Theme.of(context);
+    final amount = double.tryParse(_amountController.text) ?? 0.0;
+    final myShareController = TextEditingController(
+        text: _myShareAmount?.toStringAsFixed(2) ?? '');
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) {
+          final myShare = double.tryParse(myShareController.text) ?? 0.0;
+          double contactShare = _isSplitMode ? (amount - myShare) : amount;
+          double totalAmount = _isSplitMode ? amount : (amount + myShare);
+
+          return Container(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom,
+            ),
+            decoration: BoxDecoration(
+              color: theme.scaffoldBackgroundColor,
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: theme.dividerColor,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Text(
+                    l10n.myShare,
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Mode Toggle
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _TypeButton(
+                          label: l10n.split,
+                          icon: Icons.call_split,
+                          isSelected: _isSplitMode,
+                          gradient: AppColors.primaryGradient,
+                          onTap: () {
+                            setModalState(() => _isSplitMode = true);
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _TypeButton(
+                          label: l10n.add,
+                          icon: Icons.add,
+                          isSelected: !_isSplitMode,
+                          gradient: AppColors.primaryGradient,
+                          onTap: () {
+                            setModalState(() => _isSplitMode = false);
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Total Amount (Read-only)
+                  _ReadOnlyAmountField(
+                    label: l10n.totalAmount,
+                    amount: totalAmount,
+                    color: theme.colorScheme.onSurface,
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Contact's Share (Read-only)
+                  _ReadOnlyAmountField(
+                    label: l10n.contactShare,
+                    amount: contactShare,
+                    color: theme.colorScheme.primary,
+                  ),
+                  const SizedBox(height: 24),
+
+                  // My Share Input
+                  TextFormField(
+                    controller: myShareController,
+                    autofocus: true,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    style: theme.textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.expenseColor,
+                    ),
+                    decoration: InputDecoration(
+                      labelText: l10n.myShare,
+                      prefixText: '${ref.read(currencySymbolProvider)} ',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    onChanged: (value) {
+                      setModalState(() {});
+                    },
+                  ),
+                  const SizedBox(height: 24),
+
+                  GradientButton(
+                    label: l10n.confirm,
+                    onPressed: () {
+                      setState(() {
+                        _myShareAmount = double.tryParse(myShareController.text);
+                      });
+                      Navigator.pop(context);
+                    },
+                    gradient: AppColors.primaryGradient,
+                    width: double.infinity,
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
   }
 
   @override
@@ -1384,6 +1531,81 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                 const SizedBox(height: 16),
               ],
 
+              // My Share Button
+              if (_paidRelationship != null) ...[
+                InkWell(
+                  onTap: _showMyShareDialog,
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surface,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: _myShareAmount != null && _myShareAmount! > 0
+                            ? theme.colorScheme.primary
+                            : theme.dividerColor,
+                        width: _myShareAmount != null && _myShareAmount! > 0
+                            ? 1.5
+                            : 1,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primaryContainer,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Icon(
+                            Icons.pie_chart_outline,
+                            color: theme.colorScheme.primary,
+                            size: 20,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              l10n.myShare,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              _myShareAmount != null && _myShareAmount! > 0
+                                  ? '${l10n.myShare} (${_isSplitMode ? "-" : "+"} ${ref.read(currencySymbolProvider)}${_myShareAmount!.toStringAsFixed(2)})'
+                                  : l10n.notSet,
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: _myShareAmount != null && _myShareAmount! > 0
+                                    ? theme.colorScheme.primary
+                                    : null,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const Spacer(),
+                        if (_myShareAmount != null && _myShareAmount! > 0)
+                          IconButton(
+                            icon: const Icon(Icons.clear, size: 20),
+                            onPressed: () {
+                              setState(() {
+                                _myShareAmount = null;
+                              });
+                            },
+                          ),
+                        const Icon(Icons.arrow_forward_ios, size: 16),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+
               // Date Selector
               InkWell(
                 onTap: _selectDate,
@@ -1525,6 +1747,51 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Read-only Amount Field for My Share Dialog
+class _ReadOnlyAmountField extends ConsumerWidget {
+  final String label;
+  final double amount;
+  final Color color;
+
+  const _ReadOnlyAmountField({
+    required this.label,
+    required this.amount,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final currencySymbol = ref.watch(currencySymbolProvider);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          Text(
+            '$currencySymbol ${amount.toStringAsFixed(2)}',
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+        ],
       ),
     );
   }

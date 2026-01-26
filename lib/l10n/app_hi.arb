@@ -902,5 +902,13 @@
       }
     }
   },
-  "cloudCashbookDeletedSuccess": "क्लाउड कैशबुक सफलतापूर्वक हटा दी गई"
+  "cloudCashbookDeletedSuccess": "क्लाउड कैशबुक सफलतापूर्वक हटा दी गई",
+  "myShare": "मेरा हिस्सा",
+  "split": "विभाजित करें",
+  "add": "जोड़ें",
+  "totalAmount": "कुल राशि",
+  "contactShare": "संपर्क का हिस्सा",
+  "othersShare": "दूसरों का हिस्सा",
+  "myShareSuffix": " (मेरा हिस्सा)",
+  "othersShareSuffix": " (दूसरों का हिस्सा)"
 }

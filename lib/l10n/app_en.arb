@@ -1386,5 +1386,13 @@
       }
     }
   },
-  "cloudCashbookDeletedSuccess": "Cloud cashbook deleted successfully"
+  "cloudCashbookDeletedSuccess": "Cloud cashbook deleted successfully",
+  "myShare": "My Share",
+  "split": "Split",
+  "add": "Add",
+  "totalAmount": "Total Amount",
+  "contactShare": "Contact's Share",
+  "othersShare": "Others Share",
+  "myShareSuffix": " (My Share)",
+  "othersShareSuffix": " (Others Share)"
 }

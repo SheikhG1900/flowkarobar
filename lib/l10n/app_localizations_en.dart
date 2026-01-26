@@ -2370,4 +2370,22 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get cloudCashbookDeletedSuccess =>
       'Cloud cashbook deleted successfully';
+
+  @override
+  String get myShare => 'My Share';
+
+  @override
+  String get split => 'Split';
+
+  @override
+  String get contactShare => 'Contact\'s Share';
+
+  @override
+  String get othersShare => 'Others Share';
+
+  @override
+  String get myShareSuffix => ' (My Share)';
+
+  @override
+  String get othersShareSuffix => ' (Others Share)';
 }

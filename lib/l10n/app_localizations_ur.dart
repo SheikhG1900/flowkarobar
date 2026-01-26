@@ -2387,4 +2387,22 @@ class AppLocalizationsUr extends AppLocalizations {
   @override
   String get cloudCashbookDeletedSuccess =>
       'کلاؤڈ کیش بک کامیابی سے حذف کر دی گئی';
+
+  @override
+  String get myShare => 'میرا حصہ';
+
+  @override
+  String get split => 'تقسیم کریں';
+
+  @override
+  String get contactShare => 'رابطے کا حصہ';
+
+  @override
+  String get othersShare => 'دوسروں کا حصہ';
+
+  @override
+  String get myShareSuffix => ' (میرا حصہ)';
+
+  @override
+  String get othersShareSuffix => ' (دوسروں کا حصہ)';
 }

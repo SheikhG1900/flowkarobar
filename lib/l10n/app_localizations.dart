@@ -4408,6 +4408,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cloud cashbook deleted successfully'**
   String get cloudCashbookDeletedSuccess;
+
+  /// No description provided for @myShare.
+  ///
+  /// In en, this message translates to:
+  /// **'My Share'**
+  String get myShare;
+
+  /// No description provided for @split.
+  ///
+  /// In en, this message translates to:
+  /// **'Split'**
+  String get split;
+
+  /// No description provided for @contactShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact\'s Share'**
+  String get contactShare;
+
+  /// No description provided for @othersShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Others Share'**
+  String get othersShare;
+
+  /// No description provided for @myShareSuffix.
+  ///
+  /// In en, this message translates to:
+  /// **' (My Share)'**
+  String get myShareSuffix;
+
+  /// No description provided for @othersShareSuffix.
+  ///
+  /// In en, this message translates to:
+  /// **' (Others Share)'**
+  String get othersShareSuffix;
 }
 
 class _AppLocalizationsDelegate

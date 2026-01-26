@@ -882,7 +882,9 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                   Text(
                     l10n.lastBackupAt(AppDateFormatter.formatDateTime(
                         state.lastBackupTime!.toLocal())),
-                    style: theme.textTheme.bodyMedium,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ],
               ),

@@ -2379,4 +2379,22 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get cloudCashbookDeletedSuccess =>
       'क्लाउड कैशबुक सफलतापूर्वक हटा दी गई';
+
+  @override
+  String get myShare => 'मेरा हिस्सा';
+
+  @override
+  String get split => 'विभाजित करें';
+
+  @override
+  String get contactShare => 'संपर्क का हिस्सा';
+
+  @override
+  String get othersShare => 'दूसरों का हिस्सा';
+
+  @override
+  String get myShareSuffix => ' (मेरा हिस्सा)';
+
+  @override
+  String get othersShareSuffix => ' (दूसरों का हिस्सा)';
 }

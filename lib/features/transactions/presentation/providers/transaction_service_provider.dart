@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/database/database.dart';
+import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/features/transactions/data/transactions_repository.dart';
 import 'package:flowpaisa/features/receivables/data/receivables_repository.dart';
 import 'package:flowpaisa/features/payables/data/payables_repository.dart';
@@ -55,16 +56,32 @@ class TransactionService {
     bool createLinkedEntry = false,
     DateTime? dueDate,
     String? externalLinkId,
+    double? myShareAmount,
+    bool isSplitMode = true,
+    AppLocalizations? l10n,
   }) async {
     return await database.transaction(() async {
       // 0. Ensure we have an externalLinkId if none provided
       final effectiveExternalId =
           externalLinkId ?? DeepLinkService().generateExternalLinkId();
 
-      // 1. Create the main transaction
+      // Determine actual amounts for contact and user
+      double contactAmount = amount;
+
+      if (myShareAmount != null && myShareAmount > 0) {
+        if (isSplitMode) {
+          // Split: amount is total, contact gets (total - myShare)
+          contactAmount = amount - myShareAmount;
+        } else {
+          // Add: amount is contact's share, user gets myShareAmount
+          contactAmount = amount;
+        }
+      }
+
+      // 1. Create the main transaction (Contact's share)
       final transactionUuid = await transactionsRepository.createTransaction(
         TransactionsCompanion(
-          amount: Value(amount),
+          amount: Value(contactAmount),
           type: Value(type),
           contactUuid: Value(contactUuid),
           categoryUuid: Value(categoryUuid),
@@ -77,6 +94,26 @@ class TransactionService {
         ),
       );
 
+      // 1.1 Create "My Share" transaction if applicable
+      if (myShareAmount != null && myShareAmount > 0) {
+        await transactionsRepository.createTransaction(
+          TransactionsCompanion(
+            amount: Value(myShareAmount),
+            type: Value(type),
+            contactUuid: Value(contactUuid), // Keep contact attached
+            categoryUuid: Value(categoryUuid),
+            description: Value(description), // Don't append suffix
+            date: Value(date),
+            createdAt: Value(DateTime.now()),
+            updatedAt: Value(DateTime.now()),
+          ),
+        );
+        // Increment contact usage count for the second transaction as well
+        if (contactUuid != null) {
+          await contactsRepository.incrementUsageCount(contactUuid);
+        }
+      }
+
       // 2. Increment usage counts
       if (categoryUuid != null) {
         await categoriesRepository.incrementUsageCount(categoryUuid);
@@ -85,17 +122,18 @@ class TransactionService {
         await contactsRepository.incrementUsageCount(contactUuid);
       }
 
-      // 3. Create linked entries based on logic
+      // 3. Create linked entries based on logic (using contactAmount)
       if (createLinkedEntry && contactUuid != null) {
         // --- EXPENSE LOGIC ---
         if (type == 'EXPENSE') {
           if (paidRelationship == 'PAID_FOR') {
             // Logic: You paid FOR someone -> It's an expense for you (cash out),
             // but you expect to be paid back (Receivable).
-            final String receivableUuid = await receivablesRepository.createReceivable(
+            final String receivableUuid =
+                await receivablesRepository.createReceivable(
               ReceivablesCompanion(
                 contactUuid: Value(contactUuid),
-                amount: Value(amount),
+                amount: Value(contactAmount),
                 description: Value(description),
                 date: Value(date),
                 dueDate: Value(dueDate),
@@ -122,7 +160,7 @@ class TransactionService {
             final String payableUuid = await payablesRepository.createPayable(
               PayablesCompanion(
                 contactUuid: Value(contactUuid),
-                amount: Value(amount),
+                amount: Value(contactAmount),
                 description: Value(description),
                 date: Value(date),
                 dueDate: Value(dueDate),
@@ -153,7 +191,7 @@ class TransactionService {
             final String payableUuid = await payablesRepository.createPayable(
               PayablesCompanion(
                 contactUuid: Value(contactUuid),
-                amount: Value(amount),
+                amount: Value(contactAmount),
                 description: Value(description),
                 date: Value(date),
                 dueDate: Value(dueDate),
@@ -178,10 +216,11 @@ class TransactionService {
             // Logic: You earned money but haven't received it yet (Accrued Income).
             // Cash Balance UNCHANGED (handled by DashboardProvider).
             // Create Receivable.
-            final String receivableUuid = await receivablesRepository.createReceivable(
+            final String receivableUuid =
+                await receivablesRepository.createReceivable(
               ReceivablesCompanion(
                 contactUuid: Value(contactUuid),
-                amount: Value(amount),
+                amount: Value(contactAmount),
                 description: Value(description),
                 date: Value(date),
                 dueDate: Value(dueDate),
