@@ -2297,4 +2297,77 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get clearNow => 'Clear Now';
+
+  @override
+  String get upcomingSyncDeltas => 'Upcoming Sync Deltas';
+
+  @override
+  String get recentSyncDeltas => 'Recent Sync Deltas';
+
+  @override
+  String get manifestContentLocked => 'Manifest Content (Locked)';
+
+  @override
+  String get deltaContent => 'Delta Content';
+
+  @override
+  String get refreshStatus => 'Refresh Status';
+
+  @override
+  String get refreshBackups => 'Refresh Backups';
+
+  @override
+  String get locked => 'Locked';
+
+  @override
+  String lockedWithTime(int minutes) {
+    return 'Locked (${minutes}m)';
+  }
+
+  @override
+  String get payableOverdue => 'Payable Overdue';
+
+  @override
+  String payableOverdueMessage(String description, String date) {
+    return 'Payment for $description was due on $date';
+  }
+
+  @override
+  String get receivableOverdue => 'Receivable Overdue';
+
+  @override
+  String receivableOverdueMessage(String description, String date) {
+    return 'Payment for $description was due on $date';
+  }
+
+  @override
+  String get upcomingPayable => 'Upcoming Payable';
+
+  @override
+  String upcomingPayableMessage(String description, String date) {
+    return 'Payment for $description is due tomorrow ($date)';
+  }
+
+  @override
+  String get upcomingReceivable => 'Upcoming Receivable';
+
+  @override
+  String upcomingReceivableMessage(String description, String date) {
+    return 'Payment for $description is due tomorrow ($date)';
+  }
+
+  @override
+  String get urgent => 'URGENT';
+
+  @override
+  String get deleteCloudCashbook => 'Delete Cloud Cashbook?';
+
+  @override
+  String deleteCloudCashbookMessage(String name) {
+    return 'Are you sure you want to delete \"$name\" from Google Drive? This will delete all its backups and sync data. This action cannot be undone.';
+  }
+
+  @override
+  String get cloudCashbookDeletedSuccess =>
+      'Cloud cashbook deleted successfully';
 }

@@ -4288,6 +4288,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Clear Now'**
   String get clearNow;
+
+  /// No description provided for @upcomingSyncDeltas.
+  ///
+  /// In en, this message translates to:
+  /// **'Upcoming Sync Deltas'**
+  String get upcomingSyncDeltas;
+
+  /// No description provided for @recentSyncDeltas.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent Sync Deltas'**
+  String get recentSyncDeltas;
+
+  /// No description provided for @manifestContentLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Manifest Content (Locked)'**
+  String get manifestContentLocked;
+
+  /// No description provided for @deltaContent.
+  ///
+  /// In en, this message translates to:
+  /// **'Delta Content'**
+  String get deltaContent;
+
+  /// No description provided for @refreshStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh Status'**
+  String get refreshStatus;
+
+  /// No description provided for @refreshBackups.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh Backups'**
+  String get refreshBackups;
+
+  /// No description provided for @locked.
+  ///
+  /// In en, this message translates to:
+  /// **'Locked'**
+  String get locked;
+
+  /// No description provided for @lockedWithTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Locked ({minutes}m)'**
+  String lockedWithTime(int minutes);
+
+  /// No description provided for @payableOverdue.
+  ///
+  /// In en, this message translates to:
+  /// **'Payable Overdue'**
+  String get payableOverdue;
+
+  /// No description provided for @payableOverdueMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment for {description} was due on {date}'**
+  String payableOverdueMessage(String description, String date);
+
+  /// No description provided for @receivableOverdue.
+  ///
+  /// In en, this message translates to:
+  /// **'Receivable Overdue'**
+  String get receivableOverdue;
+
+  /// No description provided for @receivableOverdueMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment for {description} was due on {date}'**
+  String receivableOverdueMessage(String description, String date);
+
+  /// No description provided for @upcomingPayable.
+  ///
+  /// In en, this message translates to:
+  /// **'Upcoming Payable'**
+  String get upcomingPayable;
+
+  /// No description provided for @upcomingPayableMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment for {description} is due tomorrow ({date})'**
+  String upcomingPayableMessage(String description, String date);
+
+  /// No description provided for @upcomingReceivable.
+  ///
+  /// In en, this message translates to:
+  /// **'Upcoming Receivable'**
+  String get upcomingReceivable;
+
+  /// No description provided for @upcomingReceivableMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment for {description} is due tomorrow ({date})'**
+  String upcomingReceivableMessage(String description, String date);
+
+  /// No description provided for @urgent.
+  ///
+  /// In en, this message translates to:
+  /// **'URGENT'**
+  String get urgent;
+
+  /// No description provided for @deleteCloudCashbook.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Cloud Cashbook?'**
+  String get deleteCloudCashbook;
+
+  /// No description provided for @deleteCloudCashbookMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete \"{name}\" from Google Drive? This will delete all its backups and sync data. This action cannot be undone.'**
+  String deleteCloudCashbookMessage(String name);
+
+  /// No description provided for @cloudCashbookDeletedSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud cashbook deleted successfully'**
+  String get cloudCashbookDeletedSuccess;
 }
 
 class _AppLocalizationsDelegate

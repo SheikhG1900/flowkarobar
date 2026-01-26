@@ -19,6 +19,7 @@ class NotificationItem {
   final DateTime dateTime;
   final NotificationType type;
   final bool isRead;
+  final bool isUrgent;
 
   NotificationItem({
     required this.id,
@@ -27,6 +28,7 @@ class NotificationItem {
     required this.dateTime,
     required this.type,
     this.isRead = false,
+    this.isUrgent = false,
   });
 
   Map<String, dynamic> toJson() => {
@@ -36,6 +38,7 @@ class NotificationItem {
         'dateTime': dateTime.toIso8601String(),
         'type': type.index,
         'isRead': isRead,
+        'isUrgent': isUrgent,
       };
 
   factory NotificationItem.fromJson(Map<String, dynamic> json) => NotificationItem(
@@ -44,16 +47,18 @@ class NotificationItem {
         message: json['message'],
         dateTime: DateTime.parse(json['dateTime']),
         type: NotificationType.values[json['type']],
-        isRead: json['isRead'] ?? false,
+        isRead: json['isRead'] == true,
+        isUrgent: json['isUrgent'] == true,
       );
 
-  NotificationItem copyWith({bool? isRead}) => NotificationItem(
+  NotificationItem copyWith({bool? isRead, bool? isUrgent}) => NotificationItem(
         id: id,
         title: title,
         message: message,
         dateTime: dateTime,
         type: type,
         isRead: isRead ?? this.isRead,
+        isUrgent: isUrgent ?? this.isUrgent,
       );
 }
 
@@ -71,16 +76,30 @@ class NotificationNotifier extends Notifier<List<NotificationItem>> {
     required String title,
     required String message,
     required NotificationType type,
+    bool isUrgent = false,
   }) async {
     final prefs = await SharedPreferences.getInstance();
     final currentData = prefs.getStringList(_storageKey) ?? [];
-    
+
+    // Check for duplicates in stored data
+    final isDuplicate = currentData.any((itemJson) {
+      final item = json.decode(itemJson);
+      final itemTime = DateTime.parse(item['dateTime']);
+      return item['title'] == title &&
+          item['message'] == message &&
+          item['type'] == type.index &&
+          DateTime.now().difference(itemTime).inHours < 24;
+    });
+
+    if (isDuplicate) return;
+
     final newItem = NotificationItem(
       id: const Uuid().v4(),
       title: title,
       message: message,
       dateTime: DateTime.now(),
       type: type,
+      isUrgent: isUrgent,
     );
 
     final updatedData = [json.encode(newItem.toJson()), ...currentData];
@@ -108,13 +127,24 @@ class NotificationNotifier extends Notifier<List<NotificationItem>> {
     required String title,
     required String message,
     required NotificationType type,
+    bool isUrgent = false,
   }) async {
+    // Check if a similar notification already exists to avoid duplicates
+    final isDuplicate = state.any((n) =>
+        n.title == title &&
+        n.message == message &&
+        n.type == type &&
+        DateTime.now().difference(n.dateTime).inHours < 24);
+
+    if (isDuplicate) return;
+
     final newItem = NotificationItem(
       id: const Uuid().v4(),
       title: title,
       message: message,
       dateTime: DateTime.now(),
       type: type,
+      isUrgent: isUrgent,
     );
     state = [newItem, ...state];
     await _saveNotifications();

@@ -23,23 +23,26 @@ class SyncManifest {
     return SyncManifest(
       version: map['version'] ?? 0,
       lockedBy: map['lockedBy'],
-      lockedAt: map['lockedAt'] != null ? DateTime.parse(map['lockedAt']) : null,
+      lockedAt:
+          map['lockedAt'] != null ? DateTime.parse(map['lockedAt']) : null,
     );
   }
 
   String toJson() => json.encode(toMap());
 
-  factory SyncManifest.fromJson(String source) => SyncManifest.fromMap(json.decode(source));
+  factory SyncManifest.fromJson(String source) =>
+      SyncManifest.fromMap(json.decode(source));
 
   SyncManifest copyWith({
     int? version,
     String? lockedBy,
     DateTime? lockedAt,
+    bool clearLock = false,
   }) {
     return SyncManifest(
       version: version ?? this.version,
-      lockedBy: lockedBy ?? this.lockedBy,
-      lockedAt: lockedAt ?? this.lockedAt,
+      lockedBy: clearLock ? null : (lockedBy ?? this.lockedBy),
+      lockedAt: clearLock ? null : (lockedAt ?? this.lockedAt),
     );
   }
 }

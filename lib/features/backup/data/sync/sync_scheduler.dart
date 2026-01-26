@@ -4,7 +4,17 @@ import 'package:flowpaisa/features/backup/data/google_drive_service.dart';
 import 'package:flowpaisa/features/backup/data/sync/sync_engine.dart';
 import 'package:flowpaisa/features/cashbooks/domain/models/cashbook.dart';
 import 'package:flowpaisa/features/notifications/presentation/providers/notification_provider.dart';
+import 'package:flowpaisa/features/transactions/data/schedules_repository.dart';
+import 'package:flowpaisa/features/transactions/data/transactions_repository.dart';
+import 'package:flowpaisa/features/transactions/presentation/providers/schedule_service_provider.dart';
+import 'package:flowpaisa/features/transactions/presentation/providers/transaction_service_provider.dart';
+import 'package:flowpaisa/features/receivables/data/receivables_repository.dart';
+import 'package:flowpaisa/features/payables/data/payables_repository.dart';
+import 'package:flowpaisa/features/categories/data/categories_repository.dart';
+import 'package:flowpaisa/features/contacts/data/contacts_repository.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flowpaisa/l10n/app_localizations.dart';
+import 'package:flutter/material.dart';
 
 const String syncTaskName = 'com.flowpaisa.app.sync_task';
 
@@ -13,6 +23,16 @@ Future<bool> handleSyncTask(String task, Map<String, dynamic>? inputData) async 
   print('SyncScheduler: handleSyncTask started for task: $task');
   try {
     final prefs = await SharedPreferences.getInstance();
+    
+    // Try to get localization for background task
+    AppLocalizations? l10n;
+    try {
+      final localeCode = prefs.getString('language_code') ?? 'en';
+      l10n = await AppLocalizations.delegate.load(Locale(localeCode));
+    } catch (e) {
+      print('SyncScheduler: Could not load l10n for background task: $e');
+    }
+
     final cashbooksJson = prefs.getStringList('cashbooks_list');
     if (cashbooksJson == null || cashbooksJson.isEmpty) {
       print('SyncScheduler: No cashbooks found in SharedPreferences');
@@ -60,6 +80,84 @@ Future<bool> handleSyncTask(String task, Map<String, dynamic>? inputData) async 
       await prefs.setString('sync_status_${cashbook.id}', 'Syncing...');
       
       final db = AppDatabase(fileName: cashbook.dbPath);
+
+      // 1. Process schedules first so any new transactions are synced
+      try {
+        final schedulesRepository = SchedulesRepository(db);
+        final scheduleService = ScheduleService(
+          database: db,
+          schedulesRepository: schedulesRepository,
+          transactionsRepository: TransactionsRepository(db),
+          transactionService: TransactionService(
+            database: db,
+            transactionsRepository: TransactionsRepository(db),
+            receivablesRepository: ReceivablesRepository(db),
+            payablesRepository: PayablesRepository(db),
+            categoriesRepository: CategoriesRepository(db),
+            contactsRepository: ContactsRepository(db),
+          ),
+        );
+        final activeSchedules = await schedulesRepository.getActiveSchedules();
+        for (final schedule in activeSchedules) {
+          await scheduleService.generateTransactionsFromSchedule(schedule.uuid);
+        }
+      } catch (e) {
+        print('SyncScheduler: Error processing schedules for ${cashbook.name}: $e');
+      }
+
+      // 2. Check for overdue payables and receivables
+      try {
+        final payablesRepo = PayablesRepository(db);
+        final receivablesRepo = ReceivablesRepository(db);
+        
+        final overduePayables = await payablesRepo.getOverduePayables();
+        for (final p in overduePayables) {
+          await NotificationNotifier.addNotificationStatic(
+            title: l10n?.payableOverdue ?? 'Payable Overdue',
+            message: l10n?.payableOverdueMessage(p.description ?? 'Payable', p.dueDate?.toString() ?? '') ?? 
+                     'Payment for ${p.description ?? 'Payable'} was due on ${p.dueDate}',
+            type: NotificationType.payable,
+            isUrgent: true,
+          );
+        }
+
+        final overdueReceivables = await receivablesRepo.getOverdueReceivables();
+        for (final r in overdueReceivables) {
+          await NotificationNotifier.addNotificationStatic(
+            title: l10n?.receivableOverdue ?? 'Receivable Overdue',
+            message: l10n?.receivableOverdueMessage(r.description ?? 'Receivable', r.dueDate?.toString() ?? '') ??
+                     'Payment for ${r.description ?? 'Receivable'} was due on ${r.dueDate}',
+            type: NotificationType.receivable,
+            isUrgent: true,
+          );
+        }
+
+        // 2.1 Check for upcoming payables (due within 24 hours)
+        final upcomingPayables = await payablesRepo.getUpcomingPayables(days: 1);
+        for (final p in upcomingPayables) {
+          await NotificationNotifier.addNotificationStatic(
+            title: l10n?.upcomingPayable ?? 'Upcoming Payable',
+            message: l10n?.upcomingPayableMessage(p.description ?? 'Payable', p.dueDate?.toString() ?? '') ??
+                     'Payment for ${p.description ?? 'Payable'} is due tomorrow (${p.dueDate})',
+            type: NotificationType.payable,
+          );
+        }
+
+        // 2.2 Check for upcoming receivables (due within 24 hours)
+        final upcomingReceivables = await receivablesRepo.getUpcomingReceivables(days: 1);
+        for (final r in upcomingReceivables) {
+          await NotificationNotifier.addNotificationStatic(
+            title: l10n?.upcomingReceivable ?? 'Upcoming Receivable',
+            message: l10n?.upcomingReceivableMessage(r.description ?? 'Receivable', r.dueDate?.toString() ?? '') ??
+                     'Payment for ${r.description ?? 'Receivable'} is due tomorrow (${r.dueDate})',
+            type: NotificationType.receivable,
+          );
+        }
+      } catch (e) {
+        print('SyncScheduler: Error checking overdue items for ${cashbook.name}: $e');
+      }
+
+      // 3. Run sync engine
       final syncEngine = SyncEngine(
         db: db,
         driveService: driveService,
@@ -112,6 +210,18 @@ class SyncScheduler {
     await Workmanager().initialize(
       callbackDispatcher,
       isInDebugMode: false,
+    );
+
+    // ALWAYS register the permanent schedule processing task on init
+    // This runs every 24 hours regardless of sync settings
+    await Workmanager().registerPeriodicTask(
+      'permanent-schedule-processing',
+      'schedule-transactions',
+      frequency: const Duration(hours: 24),
+      constraints: Constraints(
+        requiresBatteryNotLow: true,
+      ),
+      existingWorkPolicy: ExistingPeriodicWorkPolicy.update,
     );
   }
 

@@ -2306,4 +2306,77 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get clearNow => 'अभी साफ़ करें';
+
+  @override
+  String get upcomingSyncDeltas => 'आगामी सिंक डेल्टा';
+
+  @override
+  String get recentSyncDeltas => 'हाल के सिंक डेल्टा';
+
+  @override
+  String get manifestContentLocked => 'मेनिफेस्ट सामग्री (लॉक)';
+
+  @override
+  String get deltaContent => 'डेल्टा सामग्री';
+
+  @override
+  String get refreshStatus => 'स्थिति रिफ्रेश करें';
+
+  @override
+  String get refreshBackups => 'बैकअप रिफ्रेश करें';
+
+  @override
+  String get locked => 'लॉक';
+
+  @override
+  String lockedWithTime(int minutes) {
+    return 'लॉक ($minutes मिनट)';
+  }
+
+  @override
+  String get payableOverdue => 'देय अतिदेय';
+
+  @override
+  String payableOverdueMessage(String description, String date) {
+    return '$description के लिए भुगतान $date को देय था';
+  }
+
+  @override
+  String get receivableOverdue => 'प्राप्य अतिदेय';
+
+  @override
+  String receivableOverdueMessage(String description, String date) {
+    return '$description के लिए भुगतान $date को देय था';
+  }
+
+  @override
+  String get upcomingPayable => 'आगामी देय';
+
+  @override
+  String upcomingPayableMessage(String description, String date) {
+    return '$description के लिए भुगतान कल ($date) देय है';
+  }
+
+  @override
+  String get upcomingReceivable => 'आगामी प्राप्य';
+
+  @override
+  String upcomingReceivableMessage(String description, String date) {
+    return '$description के लिए भुगतान कल ($date) देय है';
+  }
+
+  @override
+  String get urgent => 'अत्यावश्यक';
+
+  @override
+  String get deleteCloudCashbook => 'क्लाउड कैशबुक हटाएं?';
+
+  @override
+  String deleteCloudCashbookMessage(String name) {
+    return 'क्या आप वाकई गूगल ड्राइव سے \"$name\" को हटाना चाहते हैं? यह इसके सभी बैकअप और सिंक डेटा को हटा देगा। यह क्रिया वापस नहीं ली जा सकती।';
+  }
+
+  @override
+  String get cloudCashbookDeletedSuccess =>
+      'क्लाउड कैशबुक सफलतापूर्वक हटा दी गई';
 }

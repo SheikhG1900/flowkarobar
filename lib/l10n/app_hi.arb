@@ -828,5 +828,79 @@
   "clearAllCloudData": "सभी क्लाउड डेटा साफ़ करें",
   "clearAllCloudDataMessage": "यह Google Drive से आपके सभी FlowPaisa बैकअप और सिंक्रनाइज़ेशन डेटा को स्थायी रूप से हटा देगा। इस क्रिया को पूर्ववत नहीं किया जा सकता है।\n\nक्या आप वाकई सभी क्लाउड डेटा साफ़ करना चाहते हैं?",
   "cloudDataClearedSuccess": "सभी क्लाउड डेटा सफलतापूर्वक साफ़ कर दिया गया",
-  "clearNow": "अभी साफ़ करें"
+  "clearNow": "अभी साफ़ करें",
+  "upcomingSyncDeltas": "आगामी सिंक डेल्टा",
+  "recentSyncDeltas": "हाल के सिंक डेल्टा",
+  "manifestContentLocked": "मेनिफेस्ट सामग्री (लॉक)",
+  "deltaContent": "डेल्टा सामग्री",
+  "refreshStatus": "स्थिति रिफ्रेश करें",
+  "refreshBackups": "बैकअप रिफ्रेश करें",
+  "locked": "लॉक",
+  "lockedWithTime": "लॉक ({minutes} मिनट)",
+  "@lockedWithTime": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "payableOverdue": "देय अतिदेय",
+  "payableOverdueMessage": "{description} के लिए भुगतान {date} को देय था",
+  "@payableOverdueMessage": {
+    "placeholders": {
+      "description": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "receivableOverdue": "प्राप्य अतिदेय",
+  "receivableOverdueMessage": "{description} के लिए भुगतान {date} को देय था",
+  "@receivableOverdueMessage": {
+    "placeholders": {
+      "description": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "upcomingPayable": "आगामी देय",
+  "upcomingPayableMessage": "{description} के लिए भुगतान कल ({date}) देय है",
+  "@upcomingPayableMessage": {
+    "placeholders": {
+      "description": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "upcomingReceivable": "आगामी प्राप्य",
+  "upcomingReceivableMessage": "{description} के लिए भुगतान कल ({date}) देय है",
+  "@upcomingReceivableMessage": {
+    "placeholders": {
+      "description": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "urgent": "अत्यावश्यक",
+  "deleteCloudCashbook": "क्लाउड कैशबुक हटाएं?",
+  "deleteCloudCashbookMessage": "क्या आप वाकई गूगल ड्राइव سے \"{name}\" को हटाना चाहते हैं? यह इसके सभी बैकअप और सिंक डेटा को हटा देगा। यह क्रिया वापस नहीं ली जा सकती।",
+  "@deleteCloudCashbookMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudCashbookDeletedSuccess": "क्लाउड कैशबुक सफलतापूर्वक हटा दी गई"
 }

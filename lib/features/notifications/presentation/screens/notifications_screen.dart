@@ -191,20 +191,28 @@ class _NotificationCard extends ConsumerWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: notification.isRead
-            ? theme.cardColor
-            : color.withValues(alpha: 0.05),
+        color: (notification.isUrgent == true) && (notification.isRead == false)
+            ? color.withValues(alpha: 0.15)
+            : (notification.isRead == true
+                ? theme.cardColor
+                : color.withValues(alpha: 0.05)),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: notification.isRead
-              ? theme.dividerColor.withValues(alpha: 0.1)
-              : color.withValues(alpha: 0.2),
-          width: notification.isRead ? 1 : 2,
+          color: (notification.isUrgent == true) && (notification.isRead == false)
+              ? color
+              : (notification.isRead == true
+                  ? theme.dividerColor.withValues(alpha: 0.1)
+                  : color.withValues(alpha: 0.2)),
+          width: (notification.isUrgent == true) && (notification.isRead == false)
+              ? 2.5
+              : (notification.isRead == true ? 1 : 2),
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 8,
+            color: (notification.isUrgent == true) && (notification.isRead == false)
+                ? color.withValues(alpha: 0.2)
+                : Colors.black.withValues(alpha: 0.05),
+            blurRadius: (notification.isUrgent == true) && (notification.isRead == false) ? 12 : 8,
             offset: const Offset(0, 2),
           ),
         ],
@@ -214,92 +222,124 @@ class _NotificationCard extends ConsumerWidget {
         child: InkWell(
           onTap: () {
             onTap();
-            // Optional: Handle notification tap (navigate to relevant screen)
           },
           borderRadius: BorderRadius.circular(16),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Icon
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: color.withValues(alpha: 0.3),
-                      width: 2,
+          child: Stack(
+            children: [
+              if ((notification.isUrgent == true) && (notification.isRead == false))
+                Positioned(
+                  top: 0,
+                  right: 0,
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: color,
+                      borderRadius: const BorderRadius.only(
+                        topRight: Radius.circular(14),
+                        bottomLeft: Radius.circular(12),
+                      ),
+                    ),
+                    child: Text(
+                      l10n.urgent,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.5,
+                      ),
                     ),
                   ),
-                  child: Icon(
-                    _getIcon(),
-                    color: color,
-                    size: 24,
-                  ),
                 ),
-                const SizedBox(width: 16),
-
-                // Content
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              notification.title,
-                              style: theme.textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: theme.colorScheme.onSurface,
-                              ),
-                            ),
-                          ),
-                          if (!notification.isRead)
-                            Container(
-                              width: 8,
-                              height: 8,
-                              decoration: BoxDecoration(
-                                color: color,
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        notification.message,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Icon
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: color.withValues(alpha: 0.1),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: color.withValues(alpha: 0.3),
+                          width: 2,
                         ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 8),
-                      Row(
+                      child: Icon(
+                        _getIcon(),
+                        color: color,
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+
+                    // Content
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(
-                            Icons.access_time,
-                            size: 14,
-                            color: theme.colorScheme.onSurfaceVariant,
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  notification.title,
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: theme.colorScheme.onSurface,
+                                  ),
+                                ),
+                              ),
+                              if ((notification.isRead == false) && (notification.isUrgent == false))
+                                Container(
+                                  width: 8,
+                                  height: 8,
+                                  decoration: BoxDecoration(
+                                    color: color,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                            ],
                           ),
-                          const SizedBox(width: 4),
+                          const SizedBox(height: 4),
                           Text(
-                            _formatDateTime(notification.dateTime, ref, l10n, context),
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
+                            notification.message,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: theme.colorScheme.onSurface,
+                              fontWeight: (notification.isUrgent == true) && (notification.isRead == false) 
+                                  ? FontWeight.w600 
+                                  : FontWeight.normal,
                             ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.access_time,
+                                size: 14,
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                _formatDateTime(
+                                    notification.dateTime, ref, l10n, context),
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

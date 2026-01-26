@@ -828,5 +828,79 @@
   "clearAllCloudData": "تمام کلاؤڈ ڈیٹا صاف کریں",
   "clearAllCloudDataMessage": "یہ گوگل ڈرائیو سے آپ کے تمام فلو پیسہ بیک اپ اور سنکرونائزیشن ڈیٹا کو مستقل طور پر حذف کر دے گا۔ اس عمل کو واپس نہیں لیا جا سکتا۔\n\nکیا آپ واقعی تمام کلاؤڈ ڈیٹا صاف کرنا چاہتے ہیں؟",
   "cloudDataClearedSuccess": "تمام کلاؤڈ ڈیٹا کامیابی سے صاف ہو گیا",
-  "clearNow": "ابھی صاف کریں"
+  "clearNow": "ابھی صاف کریں",
+  "upcomingSyncDeltas": "آنے والے سنک ڈیلٹا",
+  "recentSyncDeltas": "حالیہ سنک ڈیلٹا",
+  "manifestContentLocked": "مینی فیسٹ مواد (مقفل)",
+  "deltaContent": "ڈیلٹا مواد",
+  "refreshStatus": "اسٹیٹس ری فریش کریں",
+  "refreshBackups": "بیک اپ ری فریش کریں",
+  "locked": "مقفل",
+  "lockedWithTime": "مقفل ({minutes} منٹ)",
+  "@lockedWithTime": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "payableOverdue": "واجب الادا رقم کی میعاد ختم",
+  "payableOverdueMessage": "{description} کی ادائیگی {date} کو واجب الادا تھی",
+  "@payableOverdueMessage": {
+    "placeholders": {
+      "description": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "receivableOverdue": "وصولی کی میعاد ختم",
+  "receivableOverdueMessage": "{description} کی ادائیگی {date} को واجب الادا تھی",
+  "@receivableOverdueMessage": {
+    "placeholders": {
+      "description": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "upcomingPayable": "آنے والی ادائیگی",
+  "upcomingPayableMessage": "{description} کی ادائیگی کل ({date}) واجب الادا ہے",
+  "@upcomingPayableMessage": {
+    "placeholders": {
+      "description": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "upcomingReceivable": "آنے والی وصولی",
+  "upcomingReceivableMessage": "{description} کی ادائیگی کل ({date}) واجب الادا ہے",
+  "@upcomingReceivableMessage": {
+    "placeholders": {
+      "description": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "urgent": "فوری",
+  "deleteCloudCashbook": "کلاؤڈ کیش بک حذف کریں؟",
+  "deleteCloudCashbookMessage": "کیا آپ واقعی گوگل ڈرائیو سے \"{name}\" کو حذف کرنا چاہتے ہیں؟ یہ اس کے تمام بیک اپ اور سنک ڈیٹا کو حذف کر دے گا۔ اس عمل کو واپس نہیں لیا جا سکتا۔",
+  "@deleteCloudCashbookMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudCashbookDeletedSuccess": "کلاؤڈ کیش بک کامیابی سے حذف کر دی گئی"
 }

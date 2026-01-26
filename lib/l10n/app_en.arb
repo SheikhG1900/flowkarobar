@@ -1312,5 +1312,79 @@
   "clearAllCloudData": "Clear All Cloud Data",
   "clearAllCloudDataMessage": "This will permanently delete ALL your FlowPaisa backups and synchronization data from Google Drive. This action cannot be undone.\n\nAre you sure you want to clear all cloud data?",
   "cloudDataClearedSuccess": "All cloud data cleared successfully",
-  "clearNow": "Clear Now"
+  "clearNow": "Clear Now",
+  "upcomingSyncDeltas": "Upcoming Sync Deltas",
+  "recentSyncDeltas": "Recent Sync Deltas",
+  "manifestContentLocked": "Manifest Content (Locked)",
+  "deltaContent": "Delta Content",
+  "refreshStatus": "Refresh Status",
+  "refreshBackups": "Refresh Backups",
+  "locked": "Locked",
+  "lockedWithTime": "Locked ({minutes}m)",
+  "@lockedWithTime": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "payableOverdue": "Payable Overdue",
+  "payableOverdueMessage": "Payment for {description} was due on {date}",
+  "@payableOverdueMessage": {
+    "placeholders": {
+      "description": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "receivableOverdue": "Receivable Overdue",
+  "receivableOverdueMessage": "Payment for {description} was due on {date}",
+  "@receivableOverdueMessage": {
+    "placeholders": {
+      "description": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "upcomingPayable": "Upcoming Payable",
+  "upcomingPayableMessage": "Payment for {description} is due tomorrow ({date})",
+  "@upcomingPayableMessage": {
+    "placeholders": {
+      "description": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "upcomingReceivable": "Upcoming Receivable",
+  "upcomingReceivableMessage": "Payment for {description} is due tomorrow ({date})",
+  "@upcomingReceivableMessage": {
+    "placeholders": {
+      "description": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "urgent": "URGENT",
+  "deleteCloudCashbook": "Delete Cloud Cashbook?",
+  "deleteCloudCashbookMessage": "Are you sure you want to delete \"{name}\" from Google Drive? This will delete all its backups and sync data. This action cannot be undone.",
+  "@deleteCloudCashbookMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudCashbookDeletedSuccess": "Cloud cashbook deleted successfully"
 }

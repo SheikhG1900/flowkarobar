@@ -65,7 +65,12 @@ class ContactsRepository {
   /// Create contact
   Future<String> createContact(ContactsCompanion contact) async {
     final uuid = contact.uuid.present ? contact.uuid.value : const Uuid().v4();
-    await _database.into(_database.contacts).insert(contact.copyWith(uuid: Value(uuid)));
+    await _database.into(_database.contacts).insert(
+          contact.copyWith(
+            uuid: Value(uuid),
+            isNotSynced: const Value(true),
+          ),
+        );
     return uuid;
   }
 
@@ -78,9 +83,11 @@ class ContactsRepository {
 
   /// Delete contact
   Future<int> deleteContact(String uuid) {
-    return (_database.delete(_database.contacts)
-          ..where((c) => c.uuid.equals(uuid)))
-        .go();
+    return (_database.update(_database.contacts)..where((c) => c.uuid.equals(uuid)))
+        .write(const ContactsCompanion(
+          isDeleted: Value(true),
+          isNotSynced: Value(true),
+        ));
   }
 
   /// Search contacts by name

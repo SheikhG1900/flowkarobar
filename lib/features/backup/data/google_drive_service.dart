@@ -80,7 +80,7 @@ class GoogleDriveService {
         if (account == null) return;
         _currentUser = account;
       }
-
+    
       // Use the extension method
       print('GoogleDriveService: Getting authenticated client...');
       final client = await _googleSignIn.authenticatedClient();
@@ -101,6 +101,109 @@ class GoogleDriveService {
     await _initializeDriveApi(forceRefresh: true);
   }
 
+  /// Get or Create a folder in appDataFolder
+  Future<String> _getOrCreateFolder(String folderName, {String? parentId}) async {
+    if (_driveApi == null) throw Exception('Drive API not initialized');
+    
+    final parentQuery = parentId != null ? "'$parentId' in parents" : "'appDataFolder' in parents";
+    final query = "mimeType = 'application/vnd.google-apps.folder' and name = '$folderName' and $parentQuery and trashed = false";
+    
+    final list = await _driveApi!.files.list(
+      q: query,
+      spaces: 'appDataFolder',
+    );
+    
+    if (list.files?.isNotEmpty == true) {
+      return list.files!.first.id!;
+    } else {
+      // Create folder
+      final folder = drive.File()
+        ..name = folderName
+        ..mimeType = 'application/vnd.google-apps.folder'
+        ..parents = [parentId ?? 'appDataFolder'];
+      
+      final result = await _driveApi!.files.create(
+        folder,
+        uploadMedia: null,
+      );
+      return result.id!;
+    }
+  }
+
+  /// Get or Create cashbook folder in appDataFolder for Sync
+  Future<String> getOrCreateCashbookFolder(String cashbookId, {String? cashbookName, String? color, String? icon}) async {
+    final rootFolderId = await _getOrCreateFolder('FlowPaisa Backups');
+    
+    // We search for the sync folder specifically
+    final syncFolderId = await _getOrCreateFolder('Sync Data', parentId: rootFolderId);
+    
+    if (cashbookId.isEmpty) return syncFolderId;
+
+    // Format: id|name|color|icon
+    String folderName = cashbookId;
+    if (cashbookName != null) {
+      folderName += '|$cashbookName';
+      if (color != null && icon != null) {
+        folderName += '|$color|$icon';
+      }
+    }
+    
+    // Check if folder with this ID exists in Sync Data
+    final query = "mimeType = 'application/vnd.google-apps.folder' and '$syncFolderId' in parents and name contains '$cashbookId' and trashed = false";
+    final list = await _driveApi!.files.list(q: query, spaces: 'appDataFolder');
+    
+    if (list.files?.isNotEmpty == true) {
+      final existingFolder = list.files!.first;
+      // Update folder name if metadata changed
+      if (cashbookName != null && existingFolder.name != folderName) {
+        await _driveApi!.files.update(
+          drive.File()..name = folderName,
+          existingFolder.id!,
+        );
+      }
+      return existingFolder.id!;
+    }
+    
+    return _getOrCreateFolder(folderName, parentId: syncFolderId);
+  }
+
+  /// Get or Create a separate backup folder for full DB snapshots
+  Future<String> getOrCreateBackupFolder(String cashbookId, {String? cashbookName, String? color, String? icon}) async {
+    final rootFolderId = await _getOrCreateFolder('FlowPaisa Backups');
+    
+    // We search for the backups folder specifically
+    final backupRootId = await _getOrCreateFolder('Backups', parentId: rootFolderId);
+    
+    if (cashbookId.isEmpty) return backupRootId;
+
+    // Format: id|name|color|icon
+    String folderName = cashbookId;
+    if (cashbookName != null) {
+      folderName += '|$cashbookName';
+      if (color != null && icon != null) {
+        folderName += '|$color|$icon';
+      }
+    }
+    
+    // Check if folder with this ID exists in Backups
+    final query = "mimeType = 'application/vnd.google-apps.folder' and '$backupRootId' in parents and name contains '$cashbookId' and trashed = false";
+    final list = await _driveApi!.files.list(q: query, spaces: 'appDataFolder');
+    
+    if (list.files?.isNotEmpty == true) {
+      final existingFolder = list.files!.first;
+      // Update folder name if metadata changed
+      if (cashbookName != null && existingFolder.name != folderName) {
+        await _driveApi!.files.update(
+          drive.File()..name = folderName,
+          existingFolder.id!,
+        );
+      }
+      return existingFolder.id!;
+    }
+    
+    return _getOrCreateFolder(folderName, parentId: backupRootId);
+  }
+
   /// Upload database file
   Future<String?> uploadDatabase(File file, {String? cashbookId, String? cashbookName, String? color, String? icon}) async {
     if (_driveApi == null) {
@@ -109,14 +212,19 @@ class GoogleDriveService {
     }
 
     try {
-      // 1. Check if backup folder exists
-      final folderId = await _getOrCreateBackupFolder(
-        cashbookId: cashbookId, 
+      // 1. Check if backup folder exists (in the new 'Backups' subfolder)
+      final folderId = await getOrCreateBackupFolder(
+        cashbookId ?? '', 
         cashbookName: cashbookName,
         color: color,
         icon: icon,
       );
       print('Backup folder ID: $folderId');
+
+      // If file path is empty, we only wanted to update/create the folder metadata
+      if (file.path.isEmpty) {
+        return folderId;
+      }
 
       // 2. Create file metadata
       final timestamp = DateTime.now().toIso8601String().replaceAll(':', '-');
@@ -149,8 +257,9 @@ class GoogleDriveService {
     if (_driveApi == null) throw Exception('Drive API not initialized');
 
     try {
-      final folderId = await _getOrCreateBackupFolder(cashbookId: cashbookId);
-      final query = "'$folderId' in parents and trashed = false";
+      final folderId = await getOrCreateBackupFolder(cashbookId ?? '');
+      // Filter out manifest.json and delta files (v*.json) from the backup list
+      final query = "'$folderId' in parents and trashed = false and name contains '.db'";
       
       final fileList = await _driveApi!.files.list(
         q: query,
@@ -185,35 +294,6 @@ class GoogleDriveService {
     }
   }
 
-  /// Get or Create a folder in appDataFolder
-  Future<String> _getOrCreateFolder(String folderName, {String? parentId}) async {
-    if (_driveApi == null) throw Exception('Drive API not initialized');
-    
-    final parentQuery = parentId != null ? "'$parentId' in parents" : "'appDataFolder' in parents";
-    final query = "mimeType = 'application/vnd.google-apps.folder' and name = '$folderName' and $parentQuery and trashed = false";
-    
-    final list = await _driveApi!.files.list(
-      q: query,
-      spaces: 'appDataFolder',
-    );
-    
-    if (list.files?.isNotEmpty == true) {
-      return list.files!.first.id!;
-    } else {
-      // Create folder
-      final folder = drive.File()
-        ..name = folderName
-        ..mimeType = 'application/vnd.google-apps.folder'
-        ..parents = [parentId ?? 'appDataFolder'];
-      
-      final result = await _driveApi!.files.create(
-        folder,
-        uploadMedia: null,
-      );
-      return result.id!;
-    }
-  }
-
   /// Download a file with its ETag
   Future<({String content, String etag})> downloadFileWithETag(String fileId) async {
     if (_driveApi == null) throw Exception('Drive API not initialized');
@@ -226,25 +306,17 @@ class GoogleDriveService {
     final content = await utf8.decodeStream(response.stream);
 
     // 2. Get the file metadata (ETag)
-    // We use a completely dynamic approach to avoid NoSuchMethodError on the File class
-    // NOTE: We use '*' for $fields to get everything, as 'etag' alone might be rejected by some API versions
     final dynamic metadata = await _driveApi!.files.get(fileId, $fields: '*');
     
     String etagValue = '';
     try {
-      // Use the built-in toJson() method of the googleapis File class
-      // This is safer than json.encode(metadata) which might fail if metadata is not a simple object
       final Map<String, dynamic> jsonMap = metadata.toJson();
       etagValue = jsonMap['etag']?.toString() ?? '';
-      print('GoogleDriveService: Extracted ETag via toJson(): $etagValue');
     } catch (e) {
-      print('GoogleDriveService: toJson() failed, trying JSON bridge: $e');
       try {
-        // Fallback: Convert to JSON and back to Map to force visibility of internal fields
         final String encoded = json.encode(metadata);
         final Map<String, dynamic> decoded = json.decode(encoded);
         etagValue = decoded['etag']?.toString() ?? '';
-        print('GoogleDriveService: Extracted ETag via JSON bridge: $etagValue');
       } catch (e2) {
         print('GoogleDriveService: All ETag extraction methods failed: $e2');
       }
@@ -253,7 +325,7 @@ class GoogleDriveService {
     return (content: content, etag: etagValue);
   }
 
-  /// Upload or update a file with ETag check (If-Match)
+  /// Upload or update a file
   Future<String> uploadFile({
     required String name,
     required String content,
@@ -272,21 +344,33 @@ class GoogleDriveService {
       utf8.encode(content).length,
     );
 
-    if (fileId != null) {
-      // Update existing file
-      final result = await _driveApi!.files.update(
-        driveFile,
-        fileId,
-        uploadMedia: media,
-      );
-      return result.id!;
-    } else {
-      // Create new file
-      final result = await _driveApi!.files.create(
-        driveFile,
-        uploadMedia: media,
-      );
-      return result.id!;
+    try {
+      if (fileId != null) {
+        final result = await _driveApi!.files.update(
+          driveFile,
+          fileId,
+          uploadMedia: media,
+        );
+        return result.id!;
+      } else {
+        final result = await _driveApi!.files.create(
+          driveFile,
+          uploadMedia: media,
+        );
+        return result.id!;
+      }
+    } catch (e) {
+      if (e.toString().contains('Access was denied') || e.toString().contains('invalid_token')) {
+        await reauthenticate();
+        if (fileId != null) {
+          final result = await _driveApi!.files.update(driveFile, fileId, uploadMedia: media);
+          return result.id!;
+        } else {
+          final result = await _driveApi!.files.create(driveFile, uploadMedia: media);
+          return result.id!;
+        }
+      }
+      rethrow;
     }
   }
 
@@ -327,59 +411,29 @@ class GoogleDriveService {
     return list.files ?? [];
   }
 
-  /// Get or Create "FlowPaisa Backups" folder
-  Future<String> _getOrCreateBackupFolder({String? cashbookId, String? cashbookName, String? color, String? icon}) async {
-    final rootFolderId = await _getOrCreateFolder('FlowPaisa Backups');
-    if (cashbookId != null) {
-      // Format: id|name|color|icon
-      String folderName = cashbookId;
-      if (cashbookName != null) {
-        folderName += '|$cashbookName';
-        if (color != null && icon != null) {
-          folderName += '|$color|$icon';
-        }
-      }
-      
-      // Check if folder with this ID exists
-      final query = "mimeType = 'application/vnd.google-apps.folder' and '$rootFolderId' in parents and name contains '$cashbookId' and trashed = false";
-      final list = await _driveApi!.files.list(q: query, spaces: 'appDataFolder');
-      
-      if (list.files?.isNotEmpty == true) {
-        final existingFolder = list.files!.first;
-        // Update folder name if metadata changed
-        if (cashbookName != null && existingFolder.name != folderName) {
-          await _driveApi!.files.update(
-            drive.File()..name = folderName,
-            existingFolder.id!,
-          );
-        }
-        return existingFolder.id!;
-      }
-      
-      return _getOrCreateFolder(folderName, parentId: rootFolderId);
-    }
-    return rootFolderId;
-  }
-
-  /// Get or Create cashbook folder in appDataFolder
-  Future<String> getOrCreateCashbookFolder(String cashbookId) async {
-    final rootFolderId = await _getOrCreateBackupFolder();
-    return _getOrCreateFolder(cashbookId, parentId: rootFolderId);
-  }
-
   /// List all folders in appDataFolder to find other cashbooks
   Future<List<String>> listCashbookIds() async {
     if (_driveApi == null) throw Exception('Drive API not initialized');
 
     final rootFolderId = await _getOrCreateFolder('FlowPaisa Backups');
-    final query = "mimeType = 'application/vnd.google-apps.folder' and '$rootFolderId' in parents and trashed = false";
-    final list = await _driveApi!.files.list(
-      q: query,
-      spaces: 'appDataFolder',
-      $fields: 'files(id, name)',
-    );
+    final syncFolderId = await _getOrCreateFolder('Sync Data', parentId: rootFolderId);
+    final backupFolderId = await _getOrCreateFolder('Backups', parentId: rootFolderId);
+    
+    final List<String> allNames = [];
+    
+    for (final parentId in [syncFolderId, backupFolderId]) {
+      final query = "mimeType = 'application/vnd.google-apps.folder' and '$parentId' in parents and trashed = false";
+      final list = await _driveApi!.files.list(
+        q: query,
+        spaces: 'appDataFolder',
+        $fields: 'files(id, name)',
+      );
+      if (list.files != null) {
+        allNames.addAll(list.files!.map((f) => f.name!));
+      }
+    }
 
-    return list.files?.map((f) => f.name!).toList() ?? [];
+    return allNames.toSet().toList();
   }
 
   /// List folders with a custom query
@@ -404,18 +458,15 @@ class GoogleDriveService {
     return list.files ?? [];
   }
 
-  /// Get cashbook name from its folder (if available)
-  Future<String?> getCashbookName(String cashbookId) async {
+  /// List all files in a folder
+  Future<List<drive.File>> listAllFilesInFolder(String folderId) async {
     if (_driveApi == null) throw Exception('Drive API not initialized');
-    
-    // We can't easily store metadata on folders, but we can look for a manifest
-    final folderId = await getOrCreateCashbookFolder(cashbookId);
-    final manifestId = await getFileIdByName('manifest.json', folderId);
-    if (manifestId != null) {
-      // final result = await downloadFileWithETag(manifestId);
-      // final manifest = SyncManifest.fromJson(result.content);
-      // If we add cashbookName to manifest later, we can return it here
-    }
-    return null;
+    final query = "'$folderId' in parents and trashed = false";
+    final list = await _driveApi!.files.list(
+      q: query,
+      spaces: 'appDataFolder',
+      $fields: 'files(id, name)',
+    );
+    return list.files ?? [];
   }
 }

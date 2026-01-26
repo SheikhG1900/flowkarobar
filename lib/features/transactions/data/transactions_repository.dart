@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:flowpaisa/core/database/database.dart';
+import 'package:flowpaisa/features/contacts/data/contacts_repository.dart';
 import 'package:flowpaisa/features/transactions/domain/models.dart';
 import 'package:flowpaisa/features/dashboard/domain/models.dart';
 import 'package:rxdart/rxdart.dart';
@@ -170,7 +171,12 @@ class TransactionsRepository {
   // Create transaction
   Future<String> createTransaction(TransactionsCompanion transaction) async {
     final uuid = transaction.uuid.present ? transaction.uuid.value : Uuid().v4();
-    await _database.into(_database.transactions).insert(transaction.copyWith(uuid: Value(uuid)));
+    await _database.into(_database.transactions).insert(
+          transaction.copyWith(
+            uuid: Value(uuid),
+            isNotSynced: const Value(true),
+          ),
+        );
     return uuid;
   }
 
@@ -206,9 +212,11 @@ class TransactionsRepository {
 
   // Delete transaction
   Future<int> deleteTransaction(String uuid) {
-    return (_database.delete(_database.transactions)
-          ..where((t) => t.uuid.equals(uuid)))
-        .go();
+    return (_database.update(_database.transactions)..where((t) => t.uuid.equals(uuid)))
+        .write(const TransactionsCompanion(
+          isDeleted: Value(true),
+          isNotSynced: Value(true),
+        ));
   }
 
   // Get transactions by type (EXPENSE or INCOME)
@@ -255,12 +263,34 @@ class TransactionsRepository {
     return result.read(_database.transactions.amount.sum()) ?? 0.0;
   }
 
-  // Search transactions
-  Stream<List<Transaction>> searchTransactions(String query) {
-    return (_database.select(_database.transactions)
-          ..where((t) => t.description.contains(query))
-          ..orderBy([(t) => OrderingTerm.desc(t.date)]))
-        .watch();
+  // Import transaction from shared link
+  Future<String> importFromSharedLink(dynamic sharedData) async {
+    // Extract contact ID or create contact
+    String? contactUuid;
+
+    if (sharedData.contactPhone != null &&
+        sharedData.contactPhone!.isNotEmpty) {
+      // Find or create contact
+      final contactsRepo = ContactsRepository(_database);
+      contactUuid = await contactsRepo.findOrCreateContactByPhone(
+        phone: sharedData.contactPhone!,
+        name: sharedData.contactName ?? 'Unknown',
+      );
+    }
+
+    final uuid = sharedData.externalLinkId ?? const Uuid().v4();
+    await createTransaction(
+      TransactionsCompanion(
+        uuid: Value(uuid),
+        amount: Value(sharedData.amount),
+        type: Value(sharedData.transactionType),
+        description: Value(sharedData.description),
+        date: Value(sharedData.date),
+        contactUuid: Value(contactUuid),
+        externalLinkId: Value(sharedData.externalLinkId),
+      ),
+    );
+    return uuid;
   }
 
   // Get transaction by external link ID

@@ -42,10 +42,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
               icon: const Icon(Icons.delete_forever, color: Colors.red),
               tooltip: l10n.clearAllCloudData,
             ),
-          IconButton(
-            onPressed: () => notifier.loadBackups(),
-            icon: const Icon(Icons.refresh),
-          ),
+          SizedBox(width: 12),
         ],
       ),
       body: LayoutBuilder(
@@ -155,7 +152,8 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                                 const SizedBox(height: 16),
                                 Text(
                                   l10n.premiumFeature,
-                                  style: theme.textTheme.headlineSmall?.copyWith(
+                                  style:
+                                      theme.textTheme.headlineSmall?.copyWith(
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
@@ -366,70 +364,116 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Text(
-                      l10n.synchronization,
-                      style: theme.textTheme.titleLarge,
-                    ),
-                    if (state.lockedBy != null) ...[
-                      const SizedBox(width: 12),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: Colors.orange.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.orange.withOpacity(0.5)),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.lock, size: 14, color: Colors.orange),
-                            const SizedBox(width: 6),
-                            Builder(
-                              builder: (context) {
-                                final lockTime = state.lockedAt;
-                                if (lockTime == null) return const Text('Locked', style: TextStyle(color: Colors.orange, fontSize: 12, fontWeight: FontWeight.bold));
-                                
-                                final diff = DateTime.now().toUtc().difference(lockTime);
-                                final remaining = 60 - diff.inMinutes;
-                                return Text(
-                                  'Locked (${remaining > 0 ? remaining : 0}m)',
-                                  style: theme.textTheme.labelSmall?.copyWith(
-                                    color: Colors.orange,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                );
-                              }
-                            ),
-                          ],
-                        ),
+                Expanded(
+                  child: Wrap(
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      Text(
+                        l10n.synchronization,
+                        style: theme.textTheme.titleLarge,
                       ),
+                      if (state.lockedBy != null)
+                        GestureDetector(
+                          onTap: () async {
+                            final notifier = ref.read(backupProvider.notifier);
+                            final content = await notifier.getManifestContent();
+                            if (context.mounted) {
+                              showDialog(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: Text(l10n.manifestContentLocked),
+                                  content: SingleChildScrollView(
+                                    child: Text(
+                                      content,
+                                      style: const TextStyle(
+                                        fontFamily: 'monospace',
+                                        fontSize: 10,
+                                      ),
+                                    ),
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(context),
+                                      child: Text(l10n.close),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.orange.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                  color: Colors.orange.withOpacity(0.5)),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.lock,
+                                    size: 14, color: Colors.orange),
+                                const SizedBox(width: 6),
+                                Builder(builder: (context) {
+                                  final lockTime = state.lockedAt;
+                                  if (lockTime == null)
+                                    return Text(l10n.locked,
+                                        style: const TextStyle(
+                                            color: Colors.orange,
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.bold));
+
+                                  final diff = DateTime.now()
+                                      .toUtc()
+                                      .difference(lockTime);
+                                  final remaining = 60 - diff.inMinutes;
+                                  return Text(
+                                    l10n.lockedWithTime(
+                                        remaining > 0 ? remaining : 0),
+                                    style: theme.textTheme.labelSmall?.copyWith(
+                                      color: Colors.orange,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  );
+                                }),
+                              ],
+                            ),
+                          ),
+                        ),
                     ],
-                  ],
+                  ),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.refresh, size: 20),
-                  onPressed: () => notifier.refreshVersions(),
-                  tooltip: 'Refresh Status',
+                Transform.translate(
+                  offset: const Offset(8, -8),
+                  child: IconButton(
+                    icon: const Icon(Icons.refresh, size: 20),
+                    onPressed: () => notifier.refreshVersions(),
+                    tooltip: l10n.refreshStatus,
+                  ),
                 ),
               ],
             ),
             if (state.syncStatus != 'Idle')
               Padding(
-                padding: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.only(bottom: 12, top: 12),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
-                    color: state.syncStatus.contains('Error') 
-                        ? Colors.red.withOpacity(0.1) 
-                        : Colors.blue.withOpacity(0.1),
+                    color: state.syncStatus.contains('Error')
+                        ? Colors.red.withValues(alpha: 0.1)
+                        : Colors.blue.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                      color: state.syncStatus.contains('Error') 
-                          ? Colors.red.withOpacity(0.3) 
-                          : Colors.blue.withOpacity(0.3),
+                      color: state.syncStatus.contains('Error')
+                          ? Colors.red.withValues(alpha: 0.3)
+                          : Colors.blue.withValues(alpha: 0.3),
                     ),
                   ),
                   child: Row(
@@ -441,15 +485,19 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       else if (state.syncStatus.contains('Error'))
-                        const Icon(Icons.error_outline, size: 16, color: Colors.red)
+                        const Icon(Icons.error_outline,
+                            size: 16, color: Colors.red)
                       else
-                        const Icon(Icons.check_circle_outline, size: 16, color: Colors.green),
+                        const Icon(Icons.check_circle_outline,
+                            size: 16, color: Colors.green),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           state.syncStatus,
                           style: theme.textTheme.bodySmall?.copyWith(
-                            color: state.syncStatus.contains('Error') ? Colors.red : Colors.blue,
+                            color: state.syncStatus.contains('Error')
+                                ? Colors.red
+                                : Colors.blue,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -464,50 +512,53 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                Expanded(
-                  child: _buildInfoBox(
-                    context,
-                    title: l10n.versions,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildVersionRow(l10n.local, state.localVersion, theme),
-                        const SizedBox(height: 4),
-                        _buildVersionRow(l10n.cloud, state.cloudVersion, theme,
-                            isOrange: state.cloudVersion > state.localVersion),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildInfoBox(
-                    context,
-                    title: l10n.pending,
-                    child: Center(
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                  Expanded(
+                    child: _buildInfoBox(
+                      context,
+                      title: l10n.versions,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(Icons.sync_problem,
-                              size: 20,
-                              color: state.unsyncedCount > 0
-                                  ? Colors.orange
-                                  : Colors.grey),
-                          const SizedBox(width: 8),
-                          Text(
-                            l10n.rows(state.unsyncedCount),
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: state.unsyncedCount > 0
-                                  ? Colors.orange
-                                  : null,
-                            ),
-                          ),
+                          _buildVersionRow(
+                              l10n.local, state.localVersion, theme),
+                          const SizedBox(height: 4),
+                          _buildVersionRow(
+                              l10n.cloud, state.cloudVersion, theme,
+                              isOrange:
+                                  state.cloudVersion > state.localVersion),
                         ],
                       ),
                     ),
                   ),
-                ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildInfoBox(
+                      context,
+                      title: l10n.pending,
+                      child: Center(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.sync_problem,
+                                size: 20,
+                                color: state.unsyncedCount > 0
+                                    ? Colors.orange
+                                    : Colors.grey),
+                            const SizedBox(width: 8),
+                            Text(
+                              l10n.rows(state.unsyncedCount),
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: state.unsyncedCount > 0
+                                    ? Colors.orange
+                                    : null,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -530,7 +581,15 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
             const SizedBox(height: 12),
             if (state.deltaFiles.isNotEmpty) ...[
               Text(
-                'Recent Sync Deltas',
+                state.deltaFiles.any((f) {
+                  final ver = int.tryParse(
+                          f.name?.replaceAll('v', '').replaceAll('.json', '') ??
+                              '0') ??
+                      0;
+                  return ver > state.localVersion;
+                })
+                    ? l10n.upcomingSyncDeltas
+                    : l10n.recentSyncDeltas,
                 style: theme.textTheme.labelSmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                   fontWeight: FontWeight.bold,
@@ -539,20 +598,72 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
               const SizedBox(height: 8),
               Container(
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.2),
+                  color: theme.colorScheme.surfaceContainerHighest
+                      .withOpacity(0.2),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: theme.dividerColor.withOpacity(0.5)),
+                  border:
+                      Border.all(color: theme.dividerColor.withOpacity(0.5)),
                 ),
                 child: Column(
                   children: state.deltaFiles.map((file) {
                     final sizeKb = (int.tryParse(file.size ?? '0') ?? 0) / 1024;
+                    final ver = int.tryParse(file.name
+                                ?.replaceAll('v', '')
+                                .replaceAll('.json', '') ??
+                            '0') ??
+                        0;
+                    final isUpcoming = ver > state.localVersion;
+
                     return ListTile(
                       dense: true,
                       visualDensity: VisualDensity.compact,
-                      leading: const Icon(Icons.history_edu, size: 16),
-                      title: Text(
-                        file.name ?? 'Unknown',
-                        style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold),
+                      onTap: () async {
+                        final notifier = ref.read(backupProvider.notifier);
+                        final content =
+                            await notifier.getDeltaFileContent(file.id!);
+                        if (context.mounted) {
+                          showDialog(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: Text(file.name ?? l10n.deltaContent),
+                              content: SingleChildScrollView(
+                                child: Text(
+                                  content,
+                                  style: const TextStyle(
+                                    fontFamily: 'monospace',
+                                    fontSize: 10,
+                                  ),
+                                ),
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context),
+                                  child: Text(l10n.close),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+                      },
+                      leading: Icon(
+                        isUpcoming ? Icons.upcoming : Icons.history_edu,
+                        size: 16,
+                        color: isUpcoming ? Colors.orange : null,
+                      ),
+                      title: Row(
+                        children: [
+                          Text(
+                            file.name ?? 'Unknown',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: isUpcoming ? Colors.orange : null,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          // We don't have the summary here yet as it's inside the file,
+                          // but we could fetch it or just show the size for now.
+                          // In a future update, we can cache the summary locally.
+                        ],
                       ),
                       trailing: Text(
                         '${sizeKb.toStringAsFixed(1)} KB',
@@ -574,7 +685,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                         .withOpacity(0.8),
                 icon: Icons.sync,
                 onPressed: () async {
-                  // We don't show a toast here anymore because the UI 
+                  // We don't show a toast here anymore because the UI
                   // will now show a persistent "Syncing..." status bar
                   await notifier.triggerSync(l10n);
                 },
@@ -713,7 +824,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                     notifier.loadBackups();
                     notifier.loadAvailableCashbooks();
                   },
-                  tooltip: 'Refresh Backups',
+                  tooltip: l10n.refreshBackups,
                 ),
               ],
             ),
@@ -780,9 +891,9 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
             height: 56,
             child: GradientButton(
               label: l10n.backupNow,
-              gradient: AppColors.getSecondaryGradient(
-                      theme.colorScheme.primary)
-                  .withOpacity(0.8),
+              gradient:
+                  AppColors.getSecondaryGradient(theme.colorScheme.primary)
+                      .withOpacity(0.8),
               icon: Icons.backup,
               onPressed: () async {
                 await notifier.backup(l10n);
@@ -1138,7 +1249,43 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
 
   void _showDeleteCloudCashbookDialog(
       BuildContext context, String id, String name) {
-    // ... existing code ...
+    final l10n = AppLocalizations.of(context)!;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.deleteCloudCashbook),
+        content: Text(l10n.deleteCloudCashbookMessage(name)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(l10n.cancel),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              try {
+                await ref.read(backupProvider.notifier).deleteCloudCashbook(id);
+                if (context.mounted) {
+                  ToastUtils.showSuccessToast(
+                      context, ref, l10n.cloudCashbookDeletedSuccess);
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ToastUtils.showErrorToast(
+                      context, ref, l10n.errorOccurred(e.toString()));
+                }
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: Text(l10n.delete),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showResetCloudVersionDialog(BuildContext context) {

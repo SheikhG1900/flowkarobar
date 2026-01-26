@@ -337,115 +337,77 @@ class AppDatabase extends _$AppDatabase {
       );
 
   Future<void> _insertDefaultCategories() async {
-    final uuid = const Uuid();
-    // Default expense categories
+    // Fixed UUIDs for default categories to prevent duplicates during sync
     final expenseCategories = [
-      ('Food', Symbols.restaurant.codePoint.toString(), '#FF5252', 'EXPENSE'),
-      (
-        'Transport',
-        Symbols.directions_car.codePoint.toString(),
-        '#FF6F00',
-        'EXPENSE'
-      ),
-      (
-        'Shopping',
-        Symbols.shopping_cart.codePoint.toString(),
-        '#E91E63',
-        'EXPENSE'
-      ),
-      (
-        'Bills',
-        Symbols.receipt_long.codePoint.toString(),
-        '#9C27B0',
-        'EXPENSE'
-      ),
-      (
-        'Entertainment',
-        Symbols.movie.codePoint.toString(),
-        '#3F51B5',
-        'EXPENSE'
-      ),
-      (
-        'Health',
-        Symbols.local_hospital.codePoint.toString(),
-        '#00BCD4',
-        'EXPENSE'
-      ),
-      ('Education', Symbols.school.codePoint.toString(), '#4CAF50', 'EXPENSE'),
-      ('Other', Symbols.category.codePoint.toString(), '#757575', 'EXPENSE'),
+      ('Food', Symbols.restaurant.codePoint.toString(), '#FF5252', 'EXPENSE', 'default_cat_food'),
+      ('Transport', Symbols.directions_car.codePoint.toString(), '#FF6F00', 'EXPENSE', 'default_cat_transport'),
+      ('Shopping', Symbols.shopping_cart.codePoint.toString(), '#E91E63', 'EXPENSE', 'default_cat_shopping'),
+      ('Bills', Symbols.receipt_long.codePoint.toString(), '#9C27B0', 'EXPENSE', 'default_cat_bills'),
+      ('Entertainment', Symbols.movie.codePoint.toString(), '#3F51B5', 'EXPENSE', 'default_cat_entertainment'),
+      ('Health', Symbols.local_hospital.codePoint.toString(), '#00BCD4', 'EXPENSE', 'default_cat_health'),
+      ('Education', Symbols.school.codePoint.toString(), '#4CAF50', 'EXPENSE', 'default_cat_education'),
+      ('Other', Symbols.category.codePoint.toString(), '#757575', 'EXPENSE', 'default_cat_other_exp'),
     ];
 
-    // Default income categories
     final incomeCategories = [
-      (
-        'Salary',
-        Symbols.account_balance_wallet.codePoint.toString(),
-        '#4CAF50',
-        'INCOME'
-      ),
-      (
-        'Business',
-        Symbols.business_center.codePoint.toString(),
-        '#2196F3',
-        'INCOME'
-      ),
-      (
-        'Investment',
-        Symbols.trending_up.codePoint.toString(),
-        '#00BCD4',
-        'INCOME'
-      ),
-      ('Gift', Symbols.card_giftcard.codePoint.toString(), '#E91E63', 'INCOME'),
-      ('Other', Symbols.category.codePoint.toString(), '#757575', 'INCOME'),
+      ('Salary', Symbols.account_balance_wallet.codePoint.toString(), '#4CAF50', 'INCOME', 'default_cat_salary'),
+      ('Business', Symbols.business_center.codePoint.toString(), '#2196F3', 'INCOME', 'default_cat_business'),
+      ('Investment', Symbols.trending_up.codePoint.toString(), '#00BCD4', 'INCOME', 'default_cat_investment'),
+      ('Gift', Symbols.card_giftcard.codePoint.toString(), '#E91E63', 'INCOME', 'default_cat_gift'),
+      ('Other', Symbols.category.codePoint.toString(), '#757575', 'INCOME', 'default_cat_other_inc'),
     ];
 
     for (final cat in expenseCategories) {
       await into(categories).insert(
         CategoriesCompanion.insert(
-          uuid: uuid.v4(),
+          uuid: cat.$5,
           name: cat.$1,
           icon: Value(cat.$2),
           color: Value(cat.$3),
           type: cat.$4,
           isDefault: const Value(true),
+          isNotSynced: const Value(false),
         ),
+        mode: InsertMode.insertOrIgnore,
       );
     }
 
     for (final cat in incomeCategories) {
       await into(categories).insert(
         CategoriesCompanion.insert(
-          uuid: uuid.v4(),
+          uuid: cat.$5,
           name: cat.$1,
           icon: Value(cat.$2),
           color: Value(cat.$3),
           type: cat.$4,
           isDefault: const Value(true),
+          isNotSynced: const Value(false),
         ),
+        mode: InsertMode.insertOrIgnore,
       );
     }
   }
 
   Future<void> _insertDefaultCurrencies() async {
-    final uuid = const Uuid();
-    // Default currencies with decimal places
-    // (name, symbol, code, decimalPlaces)
+    // Fixed UUIDs for default currencies to prevent duplicates during sync
     final defaultCurrencies = [
-      ('US Dollar', '\$', 'USD', 2),
-      ('Indian Rupee', '₹', 'INR', 0),
-      ('Pakistani Rupee', 'Rs.', 'PKR', 0),
+      ('US Dollar', '\$', 'USD', 2, 'default_curr_usd'),
+      ('Indian Rupee', '₹', 'INR', 0, 'default_curr_inr'),
+      ('Pakistani Rupee', 'Rs.', 'PKR', 0, 'default_curr_pkr'),
     ];
 
     for (final curr in defaultCurrencies) {
       await into(appCurrencies).insert(
         AppCurrenciesCompanion.insert(
-          uuid: uuid.v4(),
+          uuid: curr.$5,
           name: curr.$1,
           symbol: curr.$2,
           code: curr.$3,
           decimalPlaces: Value(curr.$4),
           isDefault: const Value(true),
+          isNotSynced: const Value(false),
         ),
+        mode: InsertMode.insertOrIgnore,
       );
     }
   }
@@ -463,10 +425,15 @@ class AppDatabase extends _$AppDatabase {
       await delete(contactUsageStats).go();
       await delete(contacts).go();
       await delete(syncLog).go();
+      
+      // Reset sync metadata instead of deleting it, or delete it to start fresh
       await delete(syncMetadata).go();
 
-      // Only delete non-default categories
-      await (delete(categories)..where((tbl) => tbl.isDefault.not())).go();
+      // Delete ALL categories and currencies, then re-insert defaults with fixed UUIDs
+      await delete(categories).go();
+      await delete(appCurrencies).go();
+      await _insertDefaultCategories();
+      await _insertDefaultCurrencies();
     });
   }
 }

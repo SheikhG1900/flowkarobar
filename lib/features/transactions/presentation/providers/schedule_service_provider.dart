@@ -135,6 +135,10 @@ class ScheduleService {
 
     for (final date in datesToGenerate) {
       try {
+        // Use a deterministic UUID based on schedule and date to prevent duplicates during sync
+        final dateStr = "${date.year}-${date.month}-${date.day}";
+        final deterministicUuid = "${scheduleUuid}_$dateStr";
+
         final transactionUuid = await transactionService.createTransaction(
           amount: schedule.amount,
           type: schedule.type,
@@ -144,12 +148,14 @@ class ScheduleService {
           contactUuid: schedule.contactUuid,
           paidRelationship: schedule.paidRelationship,
           dueDate: schedule.dueDate,
+          externalLinkId: deterministicUuid, // Use as external link ID as well
         );
 
-        // Mark transaction as scheduled
+        // Mark transaction as scheduled and ensure the UUID is deterministic
         await transactionsRepository.updateTransactionWithCompanion(
           transactionUuid,
           TransactionsCompanion(
+            uuid: Value(deterministicUuid),
             isScheduled: const Value(true),
             updatedAt: Value(DateTime.now()),
           ),

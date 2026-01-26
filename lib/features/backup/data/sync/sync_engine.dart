@@ -32,7 +32,12 @@ class SyncEngine {
       final deviceId = await _getDeviceId();
       print('SyncEngine: Device ID: $deviceId');
       
-      final cashbookFolderId = await _driveService.getOrCreateCashbookFolder(_cashbook.id);
+      final cashbookFolderId = await _driveService.getOrCreateCashbookFolder(
+        _cashbook.id,
+        cashbookName: _cashbook.name,
+        color: _cashbook.colorCode,
+        icon: _cashbook.iconCodePoint,
+      );
       print('SyncEngine: Cashbook folder ID: $cashbookFolderId');
       
       // Step 1: Catch-up
@@ -112,15 +117,16 @@ class SyncEngine {
 
       // Step 3: Acquire Lock
       print('SyncEngine: Acquiring lock...');
-      manifest = manifest.copyWith(
+      final lockedManifest = manifest.copyWith(
         lockedBy: deviceId,
         lockedAt: DateTime.now().toUtc(),
       );
 
       try {
+        // Use the etag from Step 1 to ensure no one changed it while we were pulling
         manifestFileId = await _driveService.uploadFile(
           name: 'manifest.json',
-          content: manifest.toJson(),
+          content: lockedManifest.toJson(),
           parentId: cashbookFolderId,
           etag: manifestEtag,
           fileId: manifestFileId,
@@ -128,24 +134,34 @@ class SyncEngine {
         print('SyncEngine: Lock acquired, manifest updated.');
       } catch (e) {
         if (e.toString().contains('412')) {
-          print('SyncEngine: Conflict detected (412), restarting sync');
+          print('SyncEngine: Conflict detected (412) while acquiring lock, restarting sync');
           return sync(); // Restart
         }
-        print('SyncEngine: Error uploading manifest: $e');
+        print('SyncEngine: Error uploading manifest to acquire lock: $e');
         rethrow;
       }
 
       // Step 4: Execute & Commit
-      final nextVersion = manifest.version + 1;
+      final nextVersion = lockedManifest.version + 1;
       print('SyncEngine: Committing version $nextVersion...');
+      
+      // Add summary to changes for local display
+      final changesWithSummary = Map<String, List<Map<String, dynamic>>>.from(localChanges);
+      final summary = <Map<String, dynamic>>[];
+      localChanges.forEach((table, rows) {
+        summary.add({'table': table, 'count': rows.length});
+      });
+      changesWithSummary['_summary'] = summary;
+
       final versionFile = SyncVersionFile(
         version: nextVersion,
         createdAt: DateTime.now().toUtc(),
         deviceId: deviceId,
-        changes: localChanges,
+        changes: changesWithSummary,
       );
 
       try {
+        // 1. Upload the version file first (the data)
         await _driveService.uploadFile(
           name: 'v$nextVersion.json',
           content: versionFile.toJson(),
@@ -153,25 +169,35 @@ class SyncEngine {
         );
         print('SyncEngine: Version file v$nextVersion.json uploaded.');
 
-        // Update manifest: increment version, clear lock
-        manifest = manifest.copyWith(
+        // 2. ATOMIC UPDATE: Increment version AND clear lock in ONE manifest upload
+        final finalManifest = SyncManifest(
           version: nextVersion,
           lockedBy: null,
           lockedAt: null,
         );
 
-        // Get new etag after lock update
-        print('SyncEngine: Finalizing manifest update...');
-        final latestManifest = await _getManifest(cashbookFolderId);
+        print('SyncEngine: Releasing lock and updating version to $nextVersion at the same time...');
+        print('SyncEngine: Final manifest content to upload: ${finalManifest.toJson()}');
+        
+        // We MUST fetch the very latest manifest metadata here to get the correct ETag 
+        // after our own lock acquisition in Step 3.
+        final latestManifestResult = await _getManifest(cashbookFolderId);
         
         await _driveService.uploadFile(
           name: 'manifest.json',
-          content: manifest.toJson(),
+          content: finalManifest.toJson(),
           parentId: cashbookFolderId,
-          etag: latestManifest.etag,
-          fileId: manifestFileId,
+          etag: latestManifestResult.etag,
+          fileId: latestManifestResult.fileId,
         );
-        print('SyncEngine: Sync committed successfully. New version: $nextVersion');
+        print('SyncEngine: Manifest updated (Version: $nextVersion, Lock: Released).');
+
+        // Update status to Success in SharedPreferences
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('sync_status_${_cashbook.id}', 'Success');
+        
+        // Force a small delay to ensure SharedPreferences is flushed
+        await Future.delayed(const Duration(milliseconds: 500));
 
         // Local Cleanup
         await _markLocalChangesSynced(localChanges);
@@ -182,8 +208,10 @@ class SyncEngine {
         try {
           print('SyncEngine: Attempting emergency lock release...');
           final emergencyManifestResult = await _getManifest(cashbookFolderId);
+          // Only release if WE are the ones holding the lock
           if (emergencyManifestResult.manifest.lockedBy == deviceId) {
-            final unlockedManifest = emergencyManifestResult.manifest.copyWith(
+            final unlockedManifest = SyncManifest(
+              version: emergencyManifestResult.manifest.version,
               lockedBy: null,
               lockedAt: null,
             );
@@ -238,6 +266,15 @@ class SyncEngine {
     // Verify the write
     final verify = await _getLocalMetadata(deviceId);
     print('SyncEngine: Verified local version is now ${verify.version}');
+    
+    // CRITICAL: Also update the global sync_status to Success if we just finished
+    // a catch-up or a push to ensure the UI refreshes
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('sync_status_${_cashbook.id}', 'Success');
+    } catch (e) {
+      print('SyncEngine: Failed to update status in SharedPreferences: $e');
+    }
   }
 
   Future<void> _catchUp(int remoteVersion, int localVersion, String folderId, String deviceId) async {
@@ -254,6 +291,7 @@ class SyncEngine {
       final versionFile = SyncVersionFile.fromJson(result.content);
       
       // Apply the changes for this specific version
+      print('SyncEngine: Applying changes from $fileName (Changes keys: ${versionFile.changes.keys.join(', ')})');
       await _applyChanges(versionFile.changes);
       
       // CRITICAL: Update local version number after EACH successful delta application
@@ -279,12 +317,17 @@ class SyncEngine {
         'transaction_schedules'
       ];
 
-      final sortedEntries = changes.entries.toList()
+      // CRITICAL: Filter out metadata keys like '_summary' BEFORE processing
+      final sortedEntries = changes.entries
+          .where((e) => !e.key.startsWith('_'))
+          .toList()
         ..sort((a, b) {
           final indexA = tableOrder.indexOf(a.key);
           final indexB = tableOrder.indexOf(b.key);
           return indexA.compareTo(indexB);
         });
+
+      print('SyncEngine: Applying changes for ${sortedEntries.length} tables');
 
       for (final entry in sortedEntries) {
         final tableName = entry.key;
@@ -292,6 +335,24 @@ class SyncEngine {
         print('SyncEngine: Applying ${rows.length} rows to $tableName');
 
         for (final row in rows) {
+          // Special handling for categories and currencies to avoid duplicates
+          if (tableName == 'categories' || tableName == 'app_currencies') {
+            final isDefault = row['is_default'] == 1 || row['isDefault'] == true;
+            if (isDefault) {
+              // Skip default categories/currencies from cloud if they already exist locally
+              // This prevents duplicates since local defaults have fixed UUIDs now
+              final uuid = row['uuid'];
+              final existing = await _db.customSelect(
+                'SELECT COUNT(*) as count FROM $tableName WHERE uuid = ?',
+                variables: [Variable.withString(uuid)],
+              ).getSingle();
+              
+              if ((existing.data['count'] as num).toInt() > 0) {
+                print('SyncEngine: Skipping default $tableName entry with UUID $uuid (already exists)');
+                continue;
+              }
+            }
+          }
           await _upsertRow(tableName, row);
         }
       }
@@ -309,6 +370,16 @@ class SyncEngine {
     print('SyncEngine: Scanning ${tables.length} tables for unsynced changes...');
     for (final tableName in tables) {
       try {
+        // Check if table exists first to avoid SQL errors
+        final tableCheck = await _db.customSelect(
+          "SELECT COUNT(*) as count FROM sqlite_master WHERE type='table' AND name='$tableName'"
+        ).getSingle();
+        
+        if ((tableCheck.data['count'] as num).toInt() == 0) {
+          print('SyncEngine: Table $tableName does not exist yet, skipping...');
+          continue;
+        }
+
         final rows = await _db.customSelect(
           'SELECT * FROM $tableName WHERE is_not_synced = 1',
         ).get();
@@ -337,6 +408,8 @@ class SyncEngine {
     await _db.transaction(() async {
       for (final entry in changes.entries) {
         final tableName = entry.key;
+        if (tableName.startsWith('_')) continue; // Skip metadata like _summary
+        
         final rows = entry.value;
         for (final row in rows) {
           final uuid = row['uuid'];
@@ -353,6 +426,9 @@ class SyncEngine {
     // Reset isNotSynced flag for incoming changes
     final rowData = Map<String, dynamic>.from(data);
     rowData['is_not_synced'] = 0;
+
+    // Remove any keys that start with an underscore (like _summary)
+    rowData.removeWhere((key, value) => key.startsWith('_'));
 
     // Convert boolean values to integers for SQLite if necessary
     rowData.forEach((key, value) {
@@ -388,12 +464,6 @@ class SyncEngine {
       'ON CONFLICT(uuid) DO UPDATE SET $updates',
       sqlData.values.toList(),
     );
-  }
-
-  TableInfo? _getTableByName(String name) {
-    // This is a helper to map table names to Drift table objects if needed
-    // For raw SQL upsert, we don't strictly need it.
-    return null;
   }
 
   Future<String> _getDeviceId() async {

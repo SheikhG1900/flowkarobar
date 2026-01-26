@@ -9,6 +9,9 @@ import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/features/settings/data/user_preferences_repository.dart';
+import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
+import 'package:flowpaisa/features/payables/presentation/providers/payables_provider.dart';
+import 'package:flowpaisa/features/receivables/presentation/providers/receivables_provider.dart';
 
 class CashbookNotifier extends Notifier<List<Cashbook>> {
   static const String _storageKey = 'cashbooks_list';
@@ -165,21 +168,41 @@ class CashbookNotifier extends Notifier<List<Cashbook>> {
 
   Future<void> clearCashbookData(String id) async {
     final cashbook = state.firstWhere((c) => c.id == id);
+    
+    // Check if this is the active cashbook
+    final isActive = ref.read(activeCashbookIdProvider) == id;
+    
+    // ALWAYS create a temporary, independent database instance for the clear operation.
+    // This is the ONLY way to completely avoid CircularDependencyError in Riverpod
+    // because CashbookNotifier is a dependency of databaseProvider.
     final db = AppDatabase(fileName: cashbook.dbPath);
+    
     try {
       await db.clearAllData();
       
-      // If this is the active cashbook, we need to refresh the backup provider's state
-      if (ref.read(activeCashbookIdProvider) == id) {
-        // We use a microtask to ensure the DB operation is fully finished
+      if (isActive) {
         Future.microtask(() {
-          // This will trigger a refresh of the versions and pending counts
-          // Since we can't easily import BackupNotifier here without circular deps,
-          // we rely on the fact that BackupNotifier listens to database changes
-          // or will be refreshed next time the screen is opened.
+          // Invalidate listing providers to clear UI state
+          ref.invalidate(transactionsPaginatedProvider);
+          ref.invalidate(payablesPaginatedProvider);
+          ref.invalidate(receivablesPaginatedProvider);
+          
+          // Invalidate summary providers
+          ref.invalidate(allPayablesProvider);
+          ref.invalidate(allReceivablesProvider);
+          ref.invalidate(pendingPayablesCountProvider);
+          ref.invalidate(pendingReceivablesCountProvider);
+          ref.invalidate(overduePayablesCountProvider);
+          ref.invalidate(overdueReceivablesCountProvider);
+          ref.invalidate(totalPendingPayablesProvider);
+          ref.invalidate(totalPendingReceivablesProvider);
         });
       }
+    } catch (e) {
+      print('Error clearing cashbook data: $e');
+      rethrow;
     } finally {
+      // Always close the temporary instance
       await db.close();
     }
   }

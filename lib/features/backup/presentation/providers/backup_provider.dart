@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/features/backup/data/google_drive_service.dart';
 import 'package:flowpaisa/features/backup/data/backup_repository.dart';
@@ -10,6 +11,9 @@ import 'package:flowpaisa/features/backup/data/sync/sync_scheduler.dart';
 import 'package:flowpaisa/features/notifications/presentation/providers/notification_provider.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:googleapis/drive/v3.dart' as drive;
+import 'package:flowpaisa/features/payables/presentation/providers/payables_provider.dart';
+import 'package:flowpaisa/features/receivables/presentation/providers/receivables_provider.dart';
+import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -190,7 +194,17 @@ class BackupNotifier extends Notifier<BackupState> {
       // Auto-sync on startup if enabled
       if (syncInterval != 'manual') {
         print('BackupNotifier: Auto-sync on startup triggered (interval: $syncInterval)');
-        triggerSync(null); 
+        
+        // Process all cashbooks on startup instead of just the active one
+        final prefs = await SharedPreferences.getInstance();
+        final cashbooksJson = prefs.getStringList('cashbooks_list');
+        if (cashbooksJson != null && cashbooksJson.isNotEmpty) {
+          // We trigger the background task which already handles all cashbooks
+          await SyncScheduler.triggerOnDemandSync();
+        } else {
+          // Fallback to active cashbook if list is empty
+          triggerSync(null); 
+        }
       }
     }
   }
@@ -214,12 +228,15 @@ class BackupNotifier extends Notifier<BackupState> {
         final parts = name.split('|');
         final id = parts[0];
         
+        // Skip if we already processed this ID (prevents duplicates)
+        if (ids.contains(id)) continue;
+        
         // Default values
         String cashbookName = id == 'default' ? 'Main' : 'Cloud DB';
         String color = '#757575';
         String icon = Symbols.account_balance_wallet.codePoint.toString();
 
-        if (parts.length >= 2) cashbookName = parts[1];
+        if (parts.length >= 2 && parts[1].isNotEmpty) cashbookName = parts[1];
         if (parts.length >= 4) {
           color = parts[2];
           icon = parts[3];
@@ -294,7 +311,31 @@ class BackupNotifier extends Notifier<BackupState> {
 
   Future<void> refreshVersions() async {
     state = state.copyWith(isLoading: true);
-    await _refreshVersions();
+    
+    // 1. Refresh local version and sync time from DB
+    final db = ref.read(databaseProvider);
+    try {
+      final metadata = await (db.select(db.syncMetadata)).get();
+      if (metadata.isNotEmpty) {
+        final localVersion = metadata.map((m) => m.version).fold(0, (prev, v) => v > prev ? v : prev);
+        final lastSyncTime = metadata.map((m) => m.lastSyncAt).fold<DateTime?>(null, (prev, v) => (v != null && (prev == null || v.isAfter(prev))) ? v : prev);
+        state = state.copyWith(
+          localVersion: localVersion,
+          lastSyncTime: lastSyncTime,
+        );
+      } else {
+        state = state.copyWith(localVersion: 0, lastSyncTime: null);
+      }
+    } catch (e) {
+      print('BackupNotifier: Failed to refresh local version: $e');
+    }
+
+    // 2. Fetch fresh cloud state (cloud version, lock status, delta files)
+    await _fetchCloudState();
+    
+    // 3. Refresh unsynced counts
+    await _updateTotalUnsyncedCount();
+    
     state = state.copyWith(isLoading: false);
   }
 
@@ -326,6 +367,9 @@ class BackupNotifier extends Notifier<BackupState> {
           localVersion: localVersion,
           lastSyncTime: lastSyncTime,
         );
+      } else {
+        // Explicitly set to 0 if metadata is empty (e.g. after clear data)
+        state = state.copyWith(localVersion: 0, lastSyncTime: null);
       }
     } catch (e) {
       print('Failed to load local version: $e');
@@ -357,6 +401,9 @@ class BackupNotifier extends Notifier<BackupState> {
     } catch (e) {
       print('Failed to load unsynced count: $e');
     }
+
+    // 5. Initial unsynced count update
+    _updateTotalUnsyncedCount();
   }
 
   Future<void> _fetchCloudState() async {
@@ -364,7 +411,12 @@ class BackupNotifier extends Notifier<BackupState> {
     
     final activeCashbook = ref.read(activeCashbookProvider);
     try {
-      final folderId = await _driveService.getOrCreateCashbookFolder(activeCashbook.id);
+      final folderId = await _driveService.getOrCreateCashbookFolder(
+        activeCashbook.id,
+        cashbookName: activeCashbook.name,
+        color: activeCashbook.colorCode,
+        icon: activeCashbook.iconCodePoint,
+      );
       
       // Load manifest
       int cloudVersion = 0;
@@ -381,18 +433,43 @@ class BackupNotifier extends Notifier<BackupState> {
 
       // Load delta files
       final allDeltas = await _driveService.listSyncFiles(folderId);
-      allDeltas.sort((a, b) {
+      
+      // Filter deltas that are above the current local version
+      final localVersion = state.localVersion;
+      final upcomingDeltas = allDeltas.where((file) {
+        final ver = int.tryParse(file.name?.replaceAll('v', '').replaceAll('.json', '') ?? '0') ?? 0;
+        return ver > localVersion;
+      }).toList();
+
+      // Sort ascending to show the next ones to sync first
+      upcomingDeltas.sort((a, b) {
         final aVer = int.tryParse(a.name?.replaceAll('v', '').replaceAll('.json', '') ?? '0') ?? 0;
         final bVer = int.tryParse(b.name?.replaceAll('v', '').replaceAll('.json', '') ?? '0') ?? 0;
-        return bVer.compareTo(aVer);
+        return aVer.compareTo(bVer);
       });
-      final deltaFiles = allDeltas.take(5).toList();
+
+      // If no upcoming deltas, show the last 5 synced deltas (descending)
+      List<drive.File> displayDeltas;
+      if (upcomingDeltas.isNotEmpty) {
+        displayDeltas = upcomingDeltas.take(5).toList();
+      } else {
+        final syncedDeltas = allDeltas.where((file) {
+          final ver = int.tryParse(file.name?.replaceAll('v', '').replaceAll('.json', '') ?? '0') ?? 0;
+          return ver <= localVersion && ver > 0;
+        }).toList();
+        syncedDeltas.sort((a, b) {
+          final aVer = int.tryParse(a.name?.replaceAll('v', '').replaceAll('.json', '') ?? '0') ?? 0;
+          final bVer = int.tryParse(b.name?.replaceAll('v', '').replaceAll('.json', '') ?? '0') ?? 0;
+          return bVer.compareTo(aVer);
+        });
+        displayDeltas = syncedDeltas.take(5).toList();
+      }
 
       state = state.copyWith(
         cloudVersion: cloudVersion,
         lockedBy: lockedBy,
         lockedAt: lockedAt,
-        deltaFiles: deltaFiles,
+        deltaFiles: displayDeltas,
       );
     } catch (e) {
       print('Failed to fetch cloud state: $e');
@@ -408,12 +485,20 @@ class BackupNotifier extends Notifier<BackupState> {
     ];
     for (final table in tables) {
       try {
+        // Use a more robust check for table existence
         final countResult = await db.customSelect(
+          "SELECT COUNT(*) as count FROM sqlite_master WHERE type='table' AND name='$table'"
+        ).getSingle();
+        
+        final tableExists = (countResult.data['count'] as num).toInt() > 0;
+        if (!tableExists) continue;
+
+        final rowsResult = await db.customSelect(
           'SELECT COUNT(*) as count FROM $table WHERE is_not_synced = 1'
         ).getSingle();
-        total += (countResult.data['count'] as num).toInt();
+        total += (rowsResult.data['count'] as num).toInt();
       } catch (e) {
-        // Table might not exist yet or other error
+        print('BackupNotifier: Error counting unsynced rows in $table: $e');
       }
     }
     state = state.copyWith(unsyncedCount: total);
@@ -421,11 +506,17 @@ class BackupNotifier extends Notifier<BackupState> {
 
   void _startStatusPolling() {
     // Poll SharedPreferences for sync status every 1 second for faster feedback
-    Stream.periodic(const Duration(seconds: 1)).listen((_) async {
+    final subscription = Stream.periodic(const Duration(seconds: 1)).listen((_) async {
+      if (!ref.mounted) return;
+      
       final activeCashbook = ref.read(activeCashbookProvider);
       final prefs = await SharedPreferences.getInstance();
       final status = prefs.getString('sync_status_${activeCashbook.id}') ?? 'Idle';
       
+      if (status.contains('Error')) {
+        print('BackupNotifier: Sync Error detected: $status');
+      }
+
       // Also update cloud state periodically to catch lock releases or version changes
       if (DateTime.now().second % 10 == 0) {
         _fetchCloudState();
@@ -444,12 +535,36 @@ class BackupNotifier extends Notifier<BackupState> {
           state = state.copyWith(isLoading: false);
         }
 
-        // If status just changed to Success, refresh versions
+        // If status just changed to Success, refresh versions and UI
         if (status == 'Success') {
           _refreshVersions();
+          
+          // CRITICAL: Invalidate the database provider first.
+          // This ensures all repositories get a fresh reference to the database
+          // and triggers all stream-based watchers (like watchAllTransactions) to restart.
+          ref.invalidate(databaseProvider);
+          
+          // Then invalidate the specific list providers
+          ref.invalidate(transactionsPaginatedProvider);
+          ref.invalidate(payablesPaginatedProvider);
+          ref.invalidate(receivablesPaginatedProvider);
+          
+          // Refresh summary providers
+          ref.invalidate(allPayablesProvider);
+          ref.invalidate(allReceivablesProvider);
+          ref.invalidate(pendingPayablesCountProvider);
+          ref.invalidate(pendingReceivablesCountProvider);
+          ref.invalidate(overduePayablesCountProvider);
+          ref.invalidate(overdueReceivablesCountProvider);
+          ref.invalidate(totalPendingPayablesProvider);
+          ref.invalidate(totalPendingReceivablesProvider);
+
           // Reset status to Idle after a delay
-          Future.delayed(const Duration(seconds: 5), () {
+          Future.delayed(const Duration(seconds: 3), () {
+            if (!ref.mounted) return;
             prefs.setString('sync_status_${activeCashbook.id}', 'Idle');
+            // Also update the local state immediately so UI doesn't wait for next poll
+            state = state.copyWith(syncStatus: 'Idle');
           });
         }
       } else if (status.contains('Locked')) {
@@ -457,6 +572,10 @@ class BackupNotifier extends Notifier<BackupState> {
         // to show any countdown updates if the SyncEngine is still running
         state = state.copyWith(syncStatus: status);
       }
+    });
+
+    ref.onDispose(() {
+      subscription.cancel();
     });
   }
 
@@ -472,6 +591,67 @@ class BackupNotifier extends Notifier<BackupState> {
     await prefs.setString('backup_interval', interval);
     state = state.copyWith(backupInterval: interval);
     // TODO: Implement auto backup scheduling if needed
+  }
+
+  Future<String> getDeltaFileContent(String fileId) async {
+    // Ensure Drive API is initialized
+    if (!_driveService.isSignedIn) return 'Not signed in';
+    if (!_driveService.isDriveApiInitialized) {
+      await _driveService.signIn();
+    }
+
+    try {
+      final result = await _driveService.downloadFileWithETag(fileId);
+      final dynamic jsonObject = json.decode(result.content);
+      const JsonEncoder encoder = JsonEncoder.withIndent('  ');
+      return encoder.convert(jsonObject);
+    } catch (e) {
+      if (e.toString().contains('Access was denied') || e.toString().contains('401')) {
+        try {
+          await _driveService.reauthenticate();
+          return getDeltaFileContent(fileId); // Retry once
+        } catch (reauthError) {
+          return 'Access denied. Please sign out and sign in again.';
+        }
+      }
+      return 'Error loading content: $e';
+    }
+  }
+
+  Future<String> getManifestContent() async {
+    // Ensure Drive API is initialized
+    if (!_driveService.isSignedIn) return 'Not signed in';
+    if (!_driveService.isDriveApiInitialized) {
+      await _driveService.signIn();
+    }
+    
+    final activeCashbook = ref.read(activeCashbookProvider);
+    try {
+      final folderId = await _driveService.getOrCreateCashbookFolder(
+        activeCashbook.id,
+        cashbookName: activeCashbook.name,
+        color: activeCashbook.colorCode,
+        icon: activeCashbook.iconCodePoint,
+      );
+      final manifestFileId = await _driveService.getFileIdByName('manifest.json', folderId);
+      if (manifestFileId != null) {
+        final result = await _driveService.downloadFileWithETag(manifestFileId);
+        final dynamic jsonObject = json.decode(result.content);
+        const JsonEncoder encoder = JsonEncoder.withIndent('  ');
+        return encoder.convert(jsonObject);
+      }
+      return 'Manifest not found';
+    } catch (e) {
+      if (e.toString().contains('Access was denied') || e.toString().contains('401')) {
+        try {
+          await _driveService.reauthenticate();
+          return getManifestContent(); // Retry once
+        } catch (reauthError) {
+          return 'Access denied. Please sign out and sign in again.';
+        }
+      }
+      return 'Error loading manifest: $e';
+    }
   }
 
   Future<void> signIn() async {
@@ -642,6 +822,62 @@ class BackupNotifier extends Notifier<BackupState> {
       await loadBackups(); // Refresh list
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
+    }
+  }
+
+  Future<void> deleteCloudCashbook(String cashbookId) async {
+    try {
+      state = state.copyWith(isLoading: true, error: null);
+      
+      // 1. Query for folders in both 'Sync Data' and 'Backups'
+      final query = "mimeType = 'application/vnd.google-apps.folder' and name contains '$cashbookId' and trashed = false";
+      final folders = await _driveService.listFoldersWithQuery(query);
+      
+      print('BackupNotifier: Found ${folders.length} potential folders to delete for ID: $cashbookId');
+      
+      bool deleted = false;
+      if (folders.isNotEmpty) {
+        for (final folder in folders) {
+          if (folder.id != null) {
+            final folderName = folder.name ?? '';
+            // Double check that the folder name actually starts with this ID
+            if (folderName == cashbookId || folderName.startsWith('$cashbookId|')) {
+              
+              // CRITICAL: Check for parent folder to ensure we are only deleting from our app's structure
+              // (Safety check: we don't want to delete random folders that happen to have the same ID)
+              
+              try {
+                final children = await _driveService.listAllFilesInFolder(folder.id!);
+                print('BackupNotifier: Folder ${folder.id} has ${children.length} children. Deleting them first...');
+                for (final child in children) {
+                  if (child.id != null) {
+                    await _driveService.deleteFile(child.id!);
+                  }
+                }
+              } catch (e) {
+                print('BackupNotifier: Warning - Failed to list/delete children for folder ${folder.id}: $e');
+              }
+
+              await _driveService.deleteFile(folder.id!);
+              print('BackupNotifier: Deleted cloud cashbook folder: ${folder.name} (${folder.id})');
+              deleted = true;
+            }
+          }
+        }
+      }
+
+      if (!deleted) {
+        print('BackupNotifier: No matching folder found to delete for ID: $cashbookId');
+      }
+
+      // 2. Refresh available cashbooks
+      await _loadAvailableCashbooks();
+      
+      state = state.copyWith(isLoading: false);
+    } catch (e) {
+      print('BackupNotifier: Error deleting cloud cashbook: $e');
+      state = state.copyWith(isLoading: false, error: e.toString());
+      rethrow;
     }
   }
 

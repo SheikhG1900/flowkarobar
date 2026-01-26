@@ -63,7 +63,12 @@ class CategoriesRepository {
   /// Create category
   Future<String> createCategory(CategoriesCompanion category) async {
     final uuid = category.uuid.present ? category.uuid.value : Uuid().v4();
-    await _database.into(_database.categories).insert(category.copyWith(uuid: Value(uuid)));
+    await _database.into(_database.categories).insert(
+          category.copyWith(
+            uuid: Value(uuid),
+            isNotSynced: const Value(true),
+          ),
+        );
     return uuid;
   }
 
@@ -104,12 +109,19 @@ class CategoriesRepository {
       // Soft delete: mark as deleted
       await (_database.update(_database.categories)
             ..where((c) => c.uuid.equals(uuid)))
-          .write(CategoriesCompanion(isDeleted: Value(true)));
+          .write(const CategoriesCompanion(
+            isDeleted: Value(true),
+            isNotSynced: Value(true),
+          ));
     } else {
-      // Hard delete: remove from database
-      await (_database.delete(_database.categories)
+      // Even for hard delete, we should mark as deleted and sync first
+      // so other devices know to remove it.
+      await (_database.update(_database.categories)
             ..where((c) => c.uuid.equals(uuid)))
-          .go();
+          .write(const CategoriesCompanion(
+            isDeleted: Value(true),
+            isNotSynced: Value(true),
+          ));
     }
   }
 

@@ -2314,4 +2314,77 @@ class AppLocalizationsUr extends AppLocalizations {
 
   @override
   String get clearNow => 'ابھی صاف کریں';
+
+  @override
+  String get upcomingSyncDeltas => 'آنے والے سنک ڈیلٹا';
+
+  @override
+  String get recentSyncDeltas => 'حالیہ سنک ڈیلٹا';
+
+  @override
+  String get manifestContentLocked => 'مینی فیسٹ مواد (مقفل)';
+
+  @override
+  String get deltaContent => 'ڈیلٹا مواد';
+
+  @override
+  String get refreshStatus => 'اسٹیٹس ری فریش کریں';
+
+  @override
+  String get refreshBackups => 'بیک اپ ری فریش کریں';
+
+  @override
+  String get locked => 'مقفل';
+
+  @override
+  String lockedWithTime(int minutes) {
+    return 'مقفل ($minutes منٹ)';
+  }
+
+  @override
+  String get payableOverdue => 'واجب الادا رقم کی میعاد ختم';
+
+  @override
+  String payableOverdueMessage(String description, String date) {
+    return '$description کی ادائیگی $date کو واجب الادا تھی';
+  }
+
+  @override
+  String get receivableOverdue => 'وصولی کی میعاد ختم';
+
+  @override
+  String receivableOverdueMessage(String description, String date) {
+    return '$description کی ادائیگی $date को واجب الادا تھی';
+  }
+
+  @override
+  String get upcomingPayable => 'آنے والی ادائیگی';
+
+  @override
+  String upcomingPayableMessage(String description, String date) {
+    return '$description کی ادائیگی کل ($date) واجب الادا ہے';
+  }
+
+  @override
+  String get upcomingReceivable => 'آنے والی وصولی';
+
+  @override
+  String upcomingReceivableMessage(String description, String date) {
+    return '$description کی ادائیگی کل ($date) واجب الادا ہے';
+  }
+
+  @override
+  String get urgent => 'فوری';
+
+  @override
+  String get deleteCloudCashbook => 'کلاؤڈ کیش بک حذف کریں؟';
+
+  @override
+  String deleteCloudCashbookMessage(String name) {
+    return 'کیا آپ واقعی گوگل ڈرائیو سے \"$name\" کو حذف کرنا چاہتے ہیں؟ یہ اس کے تمام بیک اپ اور سنک ڈیٹا کو حذف کر دے گا۔ اس عمل کو واپس نہیں لیا جا سکتا۔';
+  }
+
+  @override
+  String get cloudCashbookDeletedSuccess =>
+      'کلاؤڈ کیش بک کامیابی سے حذف کر دی گئی';
 }
