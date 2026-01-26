@@ -578,29 +578,7 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
                         ),
                       ] else if (widget.initialContactName != null) ...[
                         const Spacer(),
-                        TextButton.icon(
-                          onPressed: () async {
-                            final contactsRepo =
-                                ref.read(contactsRepositoryProvider);
-                            final uuid = await contactsRepo.createContact(
-                              ContactsCompanion(
-                                name: drift.Value(widget.initialContactName!),
-                                phone: drift.Value(widget.initialContactPhone),
-                                createdAt: drift.Value(DateTime.now()),
-                                updatedAt: drift.Value(DateTime.now()),
-                              ),
-                            );
-                            final newContact =
-                                (await contactsRepo.watchAllContacts().first)
-                                    .firstWhere((c) => c.uuid == uuid);
-                            setState(() {
-                              _selectedContact = newContact;
-                              _selectedContactUuid = uuid;
-                            });
-                          },
-                          icon: const Icon(Icons.add, size: 16),
-                          label: Text(l10n.addContactWithName(widget.initialContactName!)),
-                        ),
+                        const Icon(Icons.arrow_forward_ios, size: 16),
                       ] else ...[
                         const Spacer(),
                         const Icon(Icons.arrow_forward_ios, size: 16),
@@ -609,7 +587,45 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
                   ),
                 ),
               ),
-
+              if (widget.initialContactName != null && _selectedContact == null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () async {
+                        final contactsRepo =
+                            ref.read(contactsRepositoryProvider);
+                        final uuid = await contactsRepo.createContact(
+                          ContactsCompanion(
+                            name: drift.Value(widget.initialContactName!),
+                            phone: drift.Value(widget.initialContactPhone),
+                            createdAt: drift.Value(DateTime.now()),
+                            updatedAt: drift.Value(DateTime.now()),
+                          ),
+                        );
+                        final newContact =
+                            (await contactsRepo.watchAllContacts().first)
+                                .firstWhere((c) => c.uuid == uuid);
+                        setState(() {
+                          _selectedContact = newContact;
+                          _selectedContactUuid = uuid;
+                        });
+                      },
+                      icon: const Icon(Icons.add, size: 18),
+                      label: Text(
+                        l10n.addContactWithName(widget.initialContactName!),
+                        textAlign: TextAlign.center,
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
               const SizedBox(height: 24),
 
               // Description
