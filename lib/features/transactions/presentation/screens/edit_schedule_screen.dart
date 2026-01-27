@@ -12,6 +12,7 @@ import 'package:flowpaisa/shared/widgets/gradient_button.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
 import 'package:flowpaisa/core/utils/icon_helper.dart';
+import 'package:flowpaisa/core/utils/category_helper.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'dart:convert';
 
@@ -37,6 +38,7 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
 
   Category? _selectedCategory;
   Contact? _selectedContact;
+  String? _selectedCategoryUuid;
   String? _selectedContactUuid;
   String? _paidRelationship;
   DateTime? _dueDate;
@@ -54,9 +56,10 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
     _amountController.text = widget.schedule.amount.toStringAsFixed(2);
     _descriptionController.text = widget.schedule.description ?? '';
     _selectedType = widget.schedule.type;
-    _selectedCategory = null; // Will be loaded
-    _selectedContact = null; // Will be loaded
-    _selectedContactUuid = widget.schedule.contactUuid;
+    _selectedCategory = null; 
+    _selectedContact = null; 
+    _selectedCategoryUuid = widget.schedule.categoryUuid; // Initialize UUID immediately
+    _selectedContactUuid = widget.schedule.contactUuid;   // Initialize UUID immediately
     _paidRelationship = widget.schedule.paidRelationship;
     _dueDate = widget.schedule.dueDate;
     _startDate = widget.schedule.startDate;
@@ -85,41 +88,40 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
     }
 
     // Load category and contact
-    _loadCategoryAndContact();
+    Future.delayed(Duration.zero, () => _loadCategoryAndContact());
   }
 
   Future<void> _loadCategoryAndContact() async {
     if (widget.schedule.categoryUuid != null) {
-      // Load category
-      final categories =
-          await ref.read(categoriesByTypeProvider(widget.schedule.type).future);
       try {
-        final category =
-            categories.firstWhere((c) => c.uuid == widget.schedule.categoryUuid);
-        if (mounted) {
-          setState(() {
-            _selectedCategory = category;
-          });
+        final categoriesRepo = ref.read(categoriesRepositoryProvider);
+        final category = await categoriesRepo.getCategoryByUuid(widget.schedule.categoryUuid!);
+        
+        if (category != null) {
+          if (mounted) {
+            setState(() {
+              _selectedCategory = category;
+              _selectedCategoryUuid = category.uuid;
+            });
+          }
         }
-      } catch (e) {
-        // Category not found
-      }
+      } catch (_) {}
     }
 
     if (widget.schedule.contactUuid != null) {
-      // Load contact
-      final contacts = await ref.read(contactsListProvider.future);
       try {
-        final contact =
-            contacts.firstWhere((c) => c.uuid == widget.schedule.contactUuid);
-        if (mounted) {
-          setState(() {
-            _selectedContact = contact;
-          });
+        final contactsRepo = ref.read(contactsRepositoryProvider);
+        final contact = await contactsRepo.getContactByUuid(widget.schedule.contactUuid!);
+        
+        if (contact != null) {
+          if (mounted) {
+            setState(() {
+              _selectedContact = contact;
+              _selectedContactUuid = contact.uuid;
+            });
+          }
         }
-      } catch (e) {
-        // Contact not found
-      }
+      } catch (_) {}
     }
   }
 
@@ -147,13 +149,16 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
           ? null
           : _descriptionController.text;
 
+      final catUuid = _selectedCategory?.uuid ?? _selectedCategoryUuid;
+      final conUuid = _selectedContact?.uuid ?? _selectedContactUuid;
+
       await scheduleService.updateSchedule(
         widget.schedule.uuid,
         amount: amount,
         type: _selectedType,
         description: description,
-        categoryUuid: _selectedCategory?.uuid,
-        contactUuid: _selectedContactUuid,
+        categoryUuid: catUuid,
+        contactUuid: conUuid,
         paidRelationship: _paidRelationship,
         dueDate: _dueDate,
         scheduleType: _scheduleType,
@@ -241,8 +246,8 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
       // Check if contact is selected when setting relationship
       if (_selectedContact == null) {
         // Show contact picker
-        final contact = await _showContactPicker();
-        if (contact == null) {
+        await _showContactPicker();
+        if (_selectedContact == null) {
           if (mounted) {
             ToastUtils.showErrorToast(
               context,
@@ -252,10 +257,6 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
           }
           return;
         }
-        setState(() {
-          _selectedContact = contact;
-          _selectedContactUuid = contact.uuid;
-        });
       }
 
       setState(() {
@@ -273,7 +274,7 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       isScrollControlled: true,
-      builder: (context) => DraggableScrollableSheet(
+      builder: (modalContext) => DraggableScrollableSheet(
         initialChildSize: 0.7,
         minChildSize: 0.5,
         maxChildSize: 0.9,
@@ -334,15 +335,17 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
                                 size: 24,
                               ),
                             ),
-                            title: Text(category.name),
+                            title: Text(
+                                CategoryHelper.getCategoryName(category, l10n)),
                             trailing: _selectedCategory?.uuid == category.uuid
                                 ? Icon(Icons.check_circle, color: color)
                                 : null,
                             onTap: () {
                               setState(() {
                                 _selectedCategory = category;
+                                _selectedCategoryUuid = category.uuid;
                               });
-                              Navigator.pop(context);
+                              Navigator.pop(modalContext);
                             },
                             selected: _selectedCategory?.uuid == category.uuid,
                           );
@@ -372,7 +375,7 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       isScrollControlled: true,
-      builder: (context) => DraggableScrollableSheet(
+      builder: (modalContext) => DraggableScrollableSheet(
         initialChildSize: 0.7,
         minChildSize: 0.5,
         maxChildSize: 0.9,
@@ -431,7 +434,11 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
                                     color: theme.colorScheme.primary)
                                 : null,
                             onTap: () {
-                              Navigator.pop(context, contact);
+                              setState(() {
+                                _selectedContact = contact;
+                                _selectedContactUuid = contact.uuid;
+                              });
+                              Navigator.pop(modalContext);
                             },
                             selected: _selectedContactUuid == contact.uuid,
                           );
@@ -479,6 +486,7 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
     final theme = Theme.of(context);
     final isExpense = _selectedType == 'EXPENSE';
     final currencySymbol = ref.watch(currencySymbolProvider);
+    final isRtl = Directionality.of(context) == TextDirection.rtl;
 
     return Scaffold(
       appBar: AppBar(
@@ -545,8 +553,12 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
                             : AppColors.incomeColor,
                       ),
                       decoration: InputDecoration(
-                        prefixText: '$currencySymbol ',
+                        prefixText: isRtl ? null : '$currencySymbol ',
+                        suffixText: isRtl ? ' $currencySymbol' : null,
                         prefixStyle: theme.textTheme.displayMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                        suffixStyle: theme.textTheme.displayMedium?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
                         border: InputBorder.none,
@@ -663,7 +675,12 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              _selectedCategory?.name ?? l10n.selectCategory,
+                              _selectedCategory != null
+                                  ? CategoryHelper.getCategoryName(
+                                      _selectedCategory!, l10n)
+                                  : (_selectedCategoryUuid != null
+                                      ? 'Loading...'
+                                      : l10n.selectCategory),
                               style: theme.textTheme.titleMedium?.copyWith(
                                 fontWeight: _selectedCategory != null
                                     ? FontWeight.bold
@@ -682,15 +699,7 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
 
               // Contact Selector
               InkWell(
-                onTap: () async {
-                  final contact = await _showContactPicker();
-                  if (contact != null) {
-                    setState(() {
-                      _selectedContact = contact;
-                      _selectedContactUuid = contact.uuid;
-                    });
-                  }
-                },
+                onTap: _showContactPicker,
                 borderRadius: BorderRadius.circular(12),
                 child: Container(
                   padding: const EdgeInsets.all(16),
@@ -746,7 +755,10 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              _selectedContact?.name ?? l10n.selectContact,
+                              _selectedContact?.name ??
+                                  (_selectedContactUuid != null
+                                      ? 'Loading...'
+                                      : l10n.selectContact),
                               style: theme.textTheme.titleMedium?.copyWith(
                                 fontWeight: _selectedContact != null
                                     ? FontWeight.bold

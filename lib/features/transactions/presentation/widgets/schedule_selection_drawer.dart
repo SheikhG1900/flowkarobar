@@ -1,6 +1,5 @@
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
-import 'package:flowpaisa/core/theme/app_colors.dart';
 
 class ScheduleSelectionResult {
   final String scheduleType; // 'DAILY', 'WEEKLY', 'MONTHLY'
@@ -73,87 +72,88 @@ class _ScheduleSelectionDrawerState extends State<ScheduleSelectionDrawer> {
         color: theme.scaffoldBackgroundColor,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Handle bar
-          Center(
-            child: Container(
-              width: 40,
-              height: 4,
-              margin: const EdgeInsets.only(bottom: 20),
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(2),
+      child: SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Handle bar
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 20),
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
             ),
-          ),
-          // Title
-          Text(
-            l10n.selectSchedulePattern,
-            style: theme.textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
+            // Title
+            Text(
+              l10n.selectSchedulePattern,
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
-          ),
-          const SizedBox(height: 20),
-          // Scrollable content
-          ConstrainedBox(
-            constraints: BoxConstraints(
-              maxHeight: MediaQuery.of(context).size.height * 0.6,
+            const SizedBox(height: 20),
+            // Scrollable content
+            Flexible(
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Daily option
+                    _buildDailyChip(theme, l10n),
+                    const SizedBox(height: 16),
+                    // Days of week section
+                    Text(
+                      l10n.daysOfWeek,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    _buildDaysOfWeekChips(theme, l10n),
+                    const SizedBox(height: 20),
+                    // Days of month section
+                    Text(
+                      l10n.daysOfMonth,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    _buildDaysOfMonthChips(theme),
+                    const SizedBox(height: 24),
+                  ],
+                ),
+              ),
             ),
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
+            // Action buttons (sticky at bottom)
+            Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: Row(
                 children: [
-                  // Daily option
-                  _buildDailyChip(theme, l10n),
-                  const SizedBox(height: 16),
-                  // Days of week section
-                  Text(
-                    l10n.daysOfWeek,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text(l10n.cancel),
                     ),
                   ),
-                  const SizedBox(height: 12),
-                  _buildDaysOfWeekChips(theme, l10n),
-                  const SizedBox(height: 20),
-                  // Days of month section
-                  Text(
-                    l10n.daysOfMonth,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: FilledButton(
+                      onPressed: _canConfirm() ? _onConfirm : null,
+                      child: Text(l10n.confirm),
                     ),
                   ),
-                  const SizedBox(height: 12),
-                  _buildDaysOfMonthChips(theme),
-                  const SizedBox(height: 24),
                 ],
               ),
             ),
-          ),
-          // Action buttons (sticky at bottom)
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text(l10n.cancel),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: FilledButton(
-                  onPressed: _canConfirm() ? _onConfirm : null,
-                  child: Text(l10n.confirm),
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: MediaQuery.of(context).viewInsets.bottom),
-        ],
+          ],
+        ),
       ),
     );
   }

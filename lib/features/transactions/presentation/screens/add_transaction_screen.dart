@@ -78,6 +78,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
   // Selected entities
   Category? _selectedCategory;
   Contact? _selectedContact;
+  String? _selectedCategoryUuid;
 
   // Linked transaction fields
   String? _selectedContactUuid;
@@ -112,6 +113,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     if (widget.initialRelationship != null) {
       _paidRelationship = widget.initialRelationship;
       _createLinkedEntry = true;
+      _dueDate = widget.initialDate ?? DateTime.now();
     }
 
     // Handle initial contact and category in post-frame
@@ -190,6 +192,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
         if (mounted) {
           setState(() {
             _selectedCategory = category;
+            _selectedCategoryUuid = category!.uuid;
           });
         }
       }
@@ -247,8 +250,8 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
         amount: amount,
         type: _selectedType,
         description: description,
-        categoryUuid: _selectedCategory?.uuid,
-        contactUuid: _selectedContactUuid,
+        categoryUuid: _selectedCategory?.uuid ?? _selectedCategoryUuid,
+        contactUuid: _selectedContact?.uuid ?? _selectedContactUuid,
         paidRelationship: _paidRelationship,
         dueDate: _dueDate,
         scheduleType: result.scheduleType,
@@ -267,7 +270,9 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
           l10n.scheduleCreated,
         );
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      debugPrint('Error creating schedule: $e');
+      debugPrint('Stack trace: $stackTrace');
       if (mounted) {
         ToastUtils.showErrorToast(
             context, ref, l10n.errorOccurred(e.toString()));
@@ -1894,10 +1899,21 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                             ],
                           ),
                         ),
-                        Icon(
-                          Icons.chevron_right,
-                          color: theme.hintColor,
-                        ),
+                        if (_isGroupSplit)
+                          IconButton(
+                            icon: Icon(Icons.close, color: theme.hintColor),
+                            onPressed: () {
+                              setState(() {
+                                _isGroupSplit = false;
+                                _groupShares = [];
+                              });
+                            },
+                          )
+                        else
+                          Icon(
+                            Icons.chevron_right,
+                            color: theme.hintColor,
+                          ),
                       ],
                     ),
                   ),
@@ -2074,43 +2090,44 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
               ),
               const SizedBox(height: 12),
               // Schedule Button with Lock Icon (only when limit reached)
-              Stack(
-                alignment: Alignment.topRight,
-                children: [
-                  SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton.icon(
-                      onPressed: (_isLoading ||
-                              (scheduleLimitsAsync.asData?.value != null &&
-                                  !scheduleLimitsAsync.asData!.value.canAdd))
-                          ? null
-                          : _scheduleTransaction,
-                      icon: const Icon(Icons.schedule),
-                      label: Text(l10n.schedule),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        side: BorderSide(
+              if (!_isGroupSplit)
+                Stack(
+                  alignment: Alignment.topRight,
+                  children: [
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: (_isLoading ||
+                                (scheduleLimitsAsync.asData?.value != null &&
+                                    !scheduleLimitsAsync.asData!.value.canAdd))
+                            ? null
+                            : _scheduleTransaction,
+                        icon: const Icon(Icons.schedule),
+                        label: Text(l10n.schedule),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          side: BorderSide(
+                            color: isExpense
+                                ? AppColors.expenseColor
+                                : AppColors.incomeColor,
+                          ),
+                        ),
+                      ),
+                    ),
+                    if (scheduleLimitsAsync.asData?.value != null &&
+                        !scheduleLimitsAsync.asData!.value.canAdd)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8, right: 8),
+                        child: Icon(
+                          Icons.lock,
+                          size: 16,
                           color: isExpense
                               ? AppColors.expenseColor
                               : AppColors.incomeColor,
                         ),
                       ),
-                    ),
-                  ),
-                  if (scheduleLimitsAsync.asData?.value != null &&
-                      !scheduleLimitsAsync.asData!.value.canAdd)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8, right: 8),
-                      child: Icon(
-                        Icons.lock,
-                        size: 16,
-                        color: isExpense
-                            ? AppColors.expenseColor
-                            : AppColors.incomeColor,
-                      ),
-                    ),
-                ],
-              ),
+                  ],
+                ),
             ],
           ),
         ),

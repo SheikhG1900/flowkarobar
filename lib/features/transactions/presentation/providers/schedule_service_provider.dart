@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+import 'package:uuid/uuid.dart';
 import 'dart:convert';
 import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -56,27 +58,34 @@ class ScheduleService {
       daysOfMonthJson = jsonEncode(selectedDaysOfMonth);
     }
 
-    final String scheduleUuid = await schedulesRepository.createSchedule(
-      TransactionSchedulesCompanion(
-        amount: Value(amount),
-        type: Value(type),
-        description: Value(description),
-        categoryUuid: Value(categoryUuid),
-        contactUuid: Value(contactUuid),
-        paidRelationship: Value(paidRelationship),
-        dueDate: Value(dueDate),
-        scheduleType: Value(scheduleType),
-        selectedDaysOfWeek: Value(daysOfWeekJson),
-        selectedDaysOfMonth: Value(daysOfMonthJson),
-        isPaused: const Value(false),
-        startDate: Value(startDate),
-        endDate: Value(endDate),
-        createdAt: Value(DateTime.now()),
-        updatedAt: Value(DateTime.now()),
-      ),
-    );
+    try {
+      final String scheduleUuid = await schedulesRepository.createSchedule(
+        TransactionSchedulesCompanion(
+          uuid: Value(const Uuid().v4()),
+          amount: Value(amount),
+          type: Value(type),
+          description: Value(description),
+          categoryUuid: Value(categoryUuid),
+          contactUuid: Value(contactUuid),
+          paidRelationship: Value(paidRelationship),
+          dueDate: Value(dueDate),
+          scheduleType: Value(scheduleType),
+          selectedDaysOfWeek: Value(daysOfWeekJson),
+          selectedDaysOfMonth: Value(daysOfMonthJson),
+          isPaused: const Value(false),
+          startDate: Value(startDate),
+          endDate: Value(endDate),
+          createdAt: Value(DateTime.now()),
+          updatedAt: Value(DateTime.now()),
+        ),
+      );
 
-    return scheduleUuid;
+      return scheduleUuid;
+    } catch (e, stackTrace) {
+      debugPrint('Error creating schedule in service: $e');
+      debugPrint('Stack trace: $stackTrace');
+      rethrow;
+    }
   }
 
   /// Generate transactions from a schedule for missed dates
@@ -278,6 +287,10 @@ class ScheduleService {
     DateTime? startDate,
     DateTime? endDate,
   }) async {
+    debugPrint('DEBUG: Service updating schedule $scheduleUuid');
+    debugPrint('DEBUG: Service categoryUuid: $categoryUuid');
+    debugPrint('DEBUG: Service contactUuid: $contactUuid');
+
     String? daysOfWeekJson;
     if (selectedDaysOfWeek != null) {
       if (selectedDaysOfWeek.isEmpty) {
