@@ -4444,6 +4444,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **' (Others Share)'**
   String get othersShareSuffix;
+
+  /// No description provided for @splitBill.
+  ///
+  /// In en, this message translates to:
+  /// **'Split Bill'**
+  String get splitBill;
+
+  /// No description provided for @includeMe.
+  ///
+  /// In en, this message translates to:
+  /// **'Include Me'**
+  String get includeMe;
+
+  /// No description provided for @distributeEqually.
+  ///
+  /// In en, this message translates to:
+  /// **'Distribute Equally'**
+  String get distributeEqually;
+
+  /// No description provided for @totalPercentage.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Percentage'**
+  String get totalPercentage;
+
+  /// No description provided for @lockShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Lock Share'**
+  String get lockShare;
+
+  /// No description provided for @unlockShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock Share'**
+  String get unlockShare;
+
+  /// No description provided for @customAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom Amount'**
+  String get customAmount;
+
+  /// No description provided for @percentage.
+  ///
+  /// In en, this message translates to:
+  /// **'Percentage'**
+  String get percentage;
+
+  /// No description provided for @remainingAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Remaining Amount'**
+  String get remainingAmount;
+
+  /// No description provided for @totalMustBe100.
+  ///
+  /// In en, this message translates to:
+  /// **'Total must be 100%'**
+  String get totalMustBe100;
+
+  /// No description provided for @totalMustMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Total must match transaction amount'**
+  String get totalMustMatch;
 }
 
 class _AppLocalizationsDelegate

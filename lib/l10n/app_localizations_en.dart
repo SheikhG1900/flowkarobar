@@ -2388,4 +2388,37 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get othersShareSuffix => ' (Others Share)';
+
+  @override
+  String get splitBill => 'Split Bill';
+
+  @override
+  String get includeMe => 'Include Me';
+
+  @override
+  String get distributeEqually => 'Distribute Equally';
+
+  @override
+  String get totalPercentage => 'Total Percentage';
+
+  @override
+  String get lockShare => 'Lock Share';
+
+  @override
+  String get unlockShare => 'Unlock Share';
+
+  @override
+  String get customAmount => 'Custom Amount';
+
+  @override
+  String get percentage => 'Percentage';
+
+  @override
+  String get remainingAmount => 'Remaining Amount';
+
+  @override
+  String get totalMustBe100 => 'Total must be 100%';
+
+  @override
+  String get totalMustMatch => 'Total must match transaction amount';
 }

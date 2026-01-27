@@ -10,9 +10,10 @@ import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/whatsapp/presentation/providers/whatsapp_provider.dart';
 import 'package:flowpaisa/core/utils/share_helper.dart';
 import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
+import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transaction_service_provider.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
-import 'package:flowpaisa/features/transactions/presentation/widgets/transaction_details_dialog.dart';
+// import 'package:flowpaisa/features/transactions/presentation/widgets/transaction_details_dialog.dart';
 import 'package:flowpaisa/features/categories/presentation/providers/categories_provider.dart';
 import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
 import 'package:flowpaisa/features/categories/presentation/screens/add_category_screen.dart';
@@ -85,6 +86,10 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
   // My Share fields
   double? _myShareAmount;
   bool _isSplitMode = true; // true = Split, false = Add
+
+  // Group Split fields
+  List<SplitShare> _groupShares = [];
+  bool _isGroupSplit = false;
 
   @override
   void initState() {
@@ -291,7 +296,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
       return;
     }
 
-    if (_createLinkedEntry && _selectedContact == null) {
+    if (!_isGroupSplit && _createLinkedEntry && _selectedContact == null) {
       ToastUtils.showErrorToast(
         context,
         ref,
@@ -312,22 +317,74 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
           ? null
           : _descriptionController.text;
 
-      // Create transaction and get the ID
-      final transactionUuid = await transactionService.createTransaction(
-        amount: amount,
-        type: _selectedType,
-        date: _selectedDate,
-        description: description,
-        contactUuid: _selectedContactUuid,
-        categoryUuid: _selectedCategory?.uuid,
-        paidRelationship: _paidRelationship,
-        createLinkedEntry: _createLinkedEntry,
-        dueDate: _dueDate,
-        externalLinkId: widget.initialExternalLinkId,
-        myShareAmount: _myShareAmount,
-        isSplitMode: _isSplitMode,
-        l10n: l10n,
-      );
+      if (_isGroupSplit) {
+        await transactionService.createGroupSplit(
+          totalAmount: amount,
+          type: _selectedType,
+          date: _selectedDate,
+          shares: _groupShares,
+          description: description,
+          categoryUuid: _selectedCategory?.uuid,
+          paidRelationship: _paidRelationship,
+          dueDate: _dueDate,
+        );
+      } else {
+        // Create transaction and get the ID
+        final transactionUuid = await transactionService.createTransaction(
+          amount: amount,
+          type: _selectedType,
+          date: _selectedDate,
+          description: description,
+          contactUuid: _selectedContactUuid,
+          categoryUuid: _selectedCategory?.uuid,
+          paidRelationship: _paidRelationship,
+          createLinkedEntry: _createLinkedEntry,
+          dueDate: _dueDate,
+          externalLinkId: widget.initialExternalLinkId,
+          myShareAmount: _myShareAmount,
+          isSplitMode: _isSplitMode,
+          l10n: l10n,
+        );
+
+        // Fetch full transaction with details for toast action
+        final repository = ref.read(transactionsRepositoryProvider);
+        final transactionWithDetails =
+            await repository.getTransactionWithDetailsByUuid(transactionUuid);
+
+        if (mounted && transactionWithDetails != null) {
+          final activeColor = ref.read(activeCashbookProvider).color;
+          final currency = ref.read(currentCurrencyProvider).value!;
+          final userProfile = ref.read(userProfileProvider);
+          final whatsAppService = ref.read(whatsAppServiceProvider);
+
+          ToastUtils.showSuccessToast(
+            context,
+            ref,
+            _createLinkedEntry
+                ? l10n.transactionLinkedAdded
+                : l10n.transactionAdded,
+            actionLabel: l10n.share,
+            onActionPressed: (snackContext) {
+              ShareHelper.shareTransaction(
+                snackContext,
+                ref,
+                transactionWithDetails.transaction,
+                transactionWithDetails.contact,
+                transactionWithDetails.category,
+                false, // isMarked
+                currencyOverride: currency,
+                userProfileOverride: userProfile,
+                transactionServiceOverride: transactionService,
+                whatsAppServiceOverride: whatsAppService,
+                templateServiceOverride:
+                    ref.read(messageTemplateServiceProvider),
+                languageOverride: getCurrentLanguageCode(ref),
+              );
+            },
+            color: activeColor,
+          );
+        }
+      }
 
       // Increment usage count for free users
       if (!PremiumGate.isPremium(ref)) {
@@ -340,72 +397,14 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
       ref.invalidate(transactionLimitsProvider);
 
       if (mounted) {
-        // Fetch full transaction with details
-        final repository = ref.read(transactionsRepositoryProvider);
-        final transactionWithDetails =
-            await repository.getTransactionWithDetailsByUuid(transactionUuid);
-
-        if (transactionWithDetails != null) {
-          final activeColor = ref.read(activeCashbookProvider).color;
-          final currency = ref.read(currentCurrencyProvider).value!;
-          final userProfile = ref.read(userProfileProvider);
-          final transactionService = ref.read(transactionServiceProvider);
-          final whatsAppService = ref.read(whatsAppServiceProvider);
-
-          final capturedCurrency = currency;
-          final capturedUserProfile = userProfile;
-          final capturedTransactionService = transactionService;
-          final capturedWhatsAppService = whatsAppService;
-          final capturedTemplateService = ref.read(messageTemplateServiceProvider);
-          final capturedLanguage = getCurrentLanguageCode(ref);
-
-          ToastUtils.showSuccessToast(
-            context,
-            ref,
-            _createLinkedEntry
-                ? l10n.transactionLinkedAdded
-                : l10n.transactionAdded,
-            actionLabel: l10n.share,
-            onActionPressed: (snackContext) {
-              ShareHelper.shareTransaction(
-                snackContext,
-                ref, 
-                transactionWithDetails.transaction,
-                transactionWithDetails.contact,
-                transactionWithDetails.category,
-                false, // isMarked
-                currencyOverride: capturedCurrency,
-                userProfileOverride: capturedUserProfile,
-                transactionServiceOverride: capturedTransactionService,
-                whatsAppServiceOverride: capturedWhatsAppService,
-                templateServiceOverride: capturedTemplateService,
-                languageOverride: capturedLanguage,
-              );
-            },
-            color: activeColor,
-          );
-
-          final navigator = Navigator.of(context);
-          // Pop create page and navigate to details
-          navigator.pop();
-          navigator.push(
-            MaterialPageRoute(
-              builder: (context) =>
-                  TransactionDetailsDialog(item: transactionWithDetails),
-            ),
-          );
-        } else {
-          ToastUtils.showSuccessToast(
-            context,
-            ref,
-            _createLinkedEntry
-                ? l10n.transactionLinkedAdded
-                : l10n.transactionAdded,
-          );
-          Navigator.pop(context);
+        if (!_isGroupSplit) {
+          // Navigator.pop(context); // Already handled in detail dialog logic if needed
         }
+        Navigator.pop(context);
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      debugPrint('Error saving transaction: $e');
+      debugPrint('Stack trace: $stackTrace');
       if (mounted) {
         ToastUtils.showErrorToast(
             context, ref, l10n.errorOccurred(e.toString()));
@@ -554,7 +553,8 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                                     }
                                   },
                                   icon: const Icon(Icons.add),
-                                  label: Text(l10n.createCategoryNamed(widget.initialCategoryName!)),
+                                  label: Text(l10n.createCategoryNamed(
+                                      widget.initialCategoryName!)),
                                 ),
                             ],
                           ),
@@ -588,7 +588,8 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                                 child: Icon(Icons.add,
                                     color: theme.colorScheme.primary),
                               ),
-                              title: Text(l10n.createCategoryNamed(widget.initialCategoryName!)),
+                              title: Text(l10n.createCategoryNamed(
+                                  widget.initialCategoryName!)),
                               subtitle: Text(l10n.tapToAddCategory),
                               onTap: () async {
                                 final newCategory = await Navigator.push(
@@ -685,8 +686,8 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                     },
                     loading: () =>
                         const Center(child: CircularProgressIndicator()),
-                    error: (e, s) => Center(
-                        child: Text(l10n.errorOccurred(e.toString()))),
+                    error: (e, s) =>
+                        Center(child: Text(l10n.errorOccurred(e.toString()))),
                   ),
                 ),
               ],
@@ -819,8 +820,8 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                     },
                     loading: () =>
                         const Center(child: CircularProgressIndicator()),
-                    error: (e, s) => Center(
-                        child: Text(l10n.errorOccurred(e.toString()))),
+                    error: (e, s) =>
+                        Center(child: Text(l10n.errorOccurred(e.toString()))),
                   ),
                 ),
               ],
@@ -861,138 +862,480 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     }
   }
 
-  void _showMyShareDialog() {
+  void _showGroupSplitDialog() {
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final amount = double.tryParse(_amountController.text) ?? 0.0;
-    final myShareController = TextEditingController(
-        text: _myShareAmount?.toStringAsFixed(2) ?? '');
+    final totalAmount = double.tryParse(_amountController.text) ?? 0.0;
+
+    // Initialize shares if empty
+    if (_groupShares.isEmpty) {
+      _groupShares = [
+        SplitShare(isUser: true, percentage: 100.0, amount: totalAmount),
+      ];
+      if (_selectedContact != null) {
+        _groupShares[0].percentage = 50.0;
+        _groupShares[0].amount = totalAmount / 2;
+        _groupShares.add(SplitShare(
+          contact: _selectedContact,
+          percentage: 50.0,
+          amount: totalAmount / 2,
+        ));
+      }
+    }
 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (context) => StatefulBuilder(
         builder: (context, setModalState) {
-          final myShare = double.tryParse(myShareController.text) ?? 0.0;
-          double contactShare = _isSplitMode ? (amount - myShare) : amount;
-          double totalAmount = _isSplitMode ? amount : (amount + myShare);
+          double currentTotalPercent =
+              _groupShares.fold(0, (sum, item) => sum + item.percentage);
+          double currentTotalAmount =
+              _groupShares.fold(0, (sum, item) => sum + item.amount);
+
+          // Trigger recalculation of others
+          void recalculateOthers(int changedIndex) {
+            final lockedShares = _groupShares
+                .asMap()
+                .entries
+                .where((e) => e.value.isLocked || e.key == changedIndex)
+                .toList();
+            final unlockedShares = _groupShares
+                .asMap()
+                .entries
+                .where((e) => !e.value.isLocked && e.key != changedIndex)
+                .toList();
+
+            if (unlockedShares.isNotEmpty) {
+              double usedPercent =
+                  lockedShares.fold(0.0, (sum, e) => sum + e.value.percentage);
+              double remainingPercent = 100.0 - usedPercent;
+              if (remainingPercent < 0) remainingPercent = 0;
+
+              double perSharePercent = remainingPercent / unlockedShares.length;
+              for (final entry in unlockedShares) {
+                entry.value.percentage = perSharePercent;
+                entry.value.amount = (perSharePercent / 100) * totalAmount;
+              }
+            }
+          }
+
+          void recalculateShares(int changedIndex, {bool isPercent = true}) {
+            final changedShare = _groupShares[changedIndex];
+            if (isPercent) {
+              changedShare.amount =
+                  (changedShare.percentage / 100) * totalAmount;
+            } else {
+              changedShare.percentage =
+                  (changedShare.amount / totalAmount) * 100;
+            }
+            recalculateOthers(changedIndex);
+            setModalState(() {});
+          }
 
           return Container(
-            padding: EdgeInsets.only(
-              bottom: MediaQuery.of(context).viewInsets.bottom,
-            ),
+            height: MediaQuery.of(context).size.height,
             decoration: BoxDecoration(
               color: theme.scaffoldBackgroundColor,
               borderRadius:
                   const BorderRadius.vertical(top: Radius.circular(20)),
             ),
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Center(
-                    child: Container(
-                      width: 40,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: theme.dividerColor,
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
+            child: Column(
+              children: [
+                const SizedBox(height: 12),
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: theme.dividerColor,
+                    borderRadius: BorderRadius.circular(2),
                   ),
-                  const SizedBox(height: 24),
-                  Text(
-                    l10n.myShare,
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Mode Toggle
-                  Row(
+                ),
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Expanded(
-                        child: _TypeButton(
-                          label: l10n.split,
-                          icon: Icons.call_split,
-                          isSelected: _isSplitMode,
-                          gradient: AppColors.primaryGradient,
-                          onTap: () {
-                            setModalState(() => _isSplitMode = true);
-                          },
+                      Text(
+                        l10n.splitBill,
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _TypeButton(
-                          label: l10n.add,
-                          icon: Icons.add,
-                          isSelected: !_isSplitMode,
-                          gradient: AppColors.primaryGradient,
-                          onTap: () {
-                            setModalState(() => _isSplitMode = false);
-                          },
-                        ),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Distribute Equally Action
+                          IconButton(
+                            onPressed: () {
+                              setModalState(() {
+                                final unlockedShares = _groupShares
+                                    .where((s) => !s.isLocked)
+                                    .toList();
+                                final lockedShares = _groupShares
+                                    .where((s) => s.isLocked)
+                                    .toList();
+
+                                if (unlockedShares.isNotEmpty) {
+                                  double lockedPercent = lockedShares.fold(
+                                      0.0, (sum, s) => sum + s.percentage);
+                                  double remainingPercent =
+                                      100.0 - lockedPercent;
+                                  if (remainingPercent < 0)
+                                    remainingPercent = 0;
+
+                                  double perSharePercent =
+                                      remainingPercent / unlockedShares.length;
+                                  for (var s in unlockedShares) {
+                                    s.percentage = perSharePercent;
+                                    s.amount =
+                                        (perSharePercent / 100) * totalAmount;
+                                  }
+                                }
+                              });
+                            },
+                            icon: const Icon(Icons.balance),
+                            tooltip: l10n.distributeEqually,
+                          ),
+                          // Include Me Action
+                          IconButton(
+                            onPressed: () {
+                              setModalState(() {
+                                if (!_groupShares.any((s) => s.isUser)) {
+                                  _groupShares.insert(
+                                      0, SplitShare(isUser: true));
+                                  recalculateShares(0);
+                                } else {
+                                  _groupShares.removeWhere((s) => s.isUser);
+                                  if (_groupShares.isNotEmpty) {
+                                    recalculateShares(0);
+                                  }
+                                }
+                              });
+                            },
+                            icon: Icon(
+                              _groupShares.any((s) => s.isUser)
+                                  ? Icons.person
+                                  : Icons.person_outline,
+                              color: _groupShares.any((s) => s.isUser)
+                                  ? theme.colorScheme.primary
+                                  : theme.hintColor,
+                            ),
+                            tooltip: l10n.includeMe,
+                          ),
+                          // Add Contact Action
+                          IconButton(
+                            onPressed: () async {
+                              final contact = await _showContactPicker();
+                              if (contact != null) {
+                                setModalState(() {
+                                  if (!_groupShares.any(
+                                      (s) => s.contact?.uuid == contact.uuid)) {
+                                    _groupShares
+                                        .add(SplitShare(contact: contact));
+                                    recalculateShares(_groupShares.length - 1);
+                                  }
+                                });
+                              }
+                            },
+                            icon: const Icon(Icons.person_add_outlined),
+                            tooltip: l10n.addContact,
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                  const SizedBox(height: 24),
+                ),
+                Expanded(
+                  child: ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    itemCount: _groupShares.length,
+                    itemBuilder: (context, index) {
+                      final share = _groupShares[index];
+                      final contactColor = share.isUser
+                          ? theme.colorScheme.secondary
+                          : theme.colorScheme.primary;
 
-                  // Total Amount (Read-only)
-                  _ReadOnlyAmountField(
-                    label: l10n.totalAmount,
-                    amount: totalAmount,
-                    color: theme.colorScheme.onSurface,
+                      return _SplitShareCard(
+                        share: share,
+                        index: index,
+                        totalAmount: totalAmount,
+                        contactColor: contactColor,
+                        l10n: l10n,
+                        currencySymbol: ref.read(currencySymbolProvider),
+                        onChanged: () {
+                          // Recalculate other shares
+                          final lockedShares = _groupShares
+                              .asMap()
+                              .entries
+                              .where((e) => e.value.isLocked || e.key == index)
+                              .toList();
+                          final unlockedShares = _groupShares
+                              .asMap()
+                              .entries
+                              .where((e) => !e.value.isLocked && e.key != index)
+                              .toList();
+
+                          if (unlockedShares.isNotEmpty) {
+                            double usedPercent = lockedShares.fold(
+                                0.0, (sum, e) => sum + e.value.percentage);
+                            double remainingPercent = 100.0 - usedPercent;
+                            if (remainingPercent < 0) remainingPercent = 0;
+
+                            double perSharePercent =
+                                remainingPercent / unlockedShares.length;
+                            for (final entry in unlockedShares) {
+                              entry.value.percentage = perSharePercent;
+                              entry.value.amount =
+                                  (perSharePercent / 100) * totalAmount;
+                            }
+                          }
+                          setModalState(() {});
+                        },
+                        onDelete: share.isUser
+                            ? null
+                            : () {
+                                setModalState(() {
+                                  _groupShares.removeAt(index);
+                                  if (_groupShares.isNotEmpty) {
+                                    // Recalculate first share to balance
+                                    final lockedShares = _groupShares
+                                        .where((s) => s.isLocked)
+                                        .toList();
+                                    final unlockedShares = _groupShares
+                                        .where((s) => !s.isLocked)
+                                        .toList();
+
+                                    if (unlockedShares.isNotEmpty) {
+                                      double usedPercent = lockedShares.fold(
+                                          0.0, (sum, s) => sum + s.percentage);
+                                      double remainingPercent =
+                                          100.0 - usedPercent;
+                                      if (remainingPercent < 0)
+                                        remainingPercent = 0;
+
+                                      double perSharePercent =
+                                          remainingPercent /
+                                              unlockedShares.length;
+                                      for (final s in unlockedShares) {
+                                        s.percentage = perSharePercent;
+                                        s.amount = (perSharePercent / 100) *
+                                            totalAmount;
+                                      }
+                                    }
+                                  }
+                                });
+                              },
+                        onLockToggle: () {
+                          setModalState(() {
+                            share.isLocked = !share.isLocked;
+                          });
+                        },
+                        onSliderTap: () {
+                          showModalBottomSheet(
+                            context: context,
+                            backgroundColor: Colors.transparent,
+                            isScrollControlled: true,
+                            builder: (ctx) => Container(
+                              decoration: BoxDecoration(
+                                color: theme.cardColor,
+                                borderRadius: const BorderRadius.vertical(
+                                    top: Radius.circular(24)),
+                              ),
+                              padding: const EdgeInsets.all(24),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        '${l10n.percentage} - ${share.isUser ? l10n.includeMe : (share.contact?.name ?? '')}',
+                                        style: theme.textTheme.titleMedium
+                                            ?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      IconButton(
+                                        icon: const Icon(Icons.close),
+                                        onPressed: () => Navigator.pop(ctx),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 16),
+                                  StatefulBuilder(
+                                    builder: (context, setDialogState) =>
+                                        Column(
+                                      children: [
+                                        Text(
+                                          '${share.percentage.toStringAsFixed(1)}%',
+                                          style: theme.textTheme.headlineSmall
+                                              ?.copyWith(
+                                            color: theme.colorScheme.primary,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        Slider(
+                                          value: share.percentage,
+                                          divisions: 1000,
+                                          min: 0,
+                                          max: 100,
+                                          onChanged: (val) {
+                                            setDialogState(() {
+                                              share.percentage = val;
+                                            });
+                                            share.amount =
+                                                (val / 100) * totalAmount;
+
+                                            // Trigger recalculation of others
+                                            final lockedShares = _groupShares
+                                                .asMap()
+                                                .entries
+                                                .where((e) =>
+                                                    e.value.isLocked ||
+                                                    e.key == index)
+                                                .toList();
+                                            final unlockedShares = _groupShares
+                                                .asMap()
+                                                .entries
+                                                .where((e) =>
+                                                    !e.value.isLocked &&
+                                                    e.key != index)
+                                                .toList();
+
+                                            if (unlockedShares.isNotEmpty) {
+                                              double usedPercent =
+                                                  lockedShares.fold(
+                                                      0.0,
+                                                      (sum, e) =>
+                                                          sum +
+                                                          e.value.percentage);
+                                              double remainingPercent =
+                                                  100.0 - usedPercent;
+                                              if (remainingPercent < 0)
+                                                remainingPercent = 0;
+
+                                              double perSharePercent =
+                                                  remainingPercent /
+                                                      unlockedShares.length;
+                                              for (final entry
+                                                  in unlockedShares) {
+                                                entry.value.percentage =
+                                                    perSharePercent;
+                                                entry.value.amount =
+                                                    (perSharePercent / 100) *
+                                                        totalAmount;
+                                              }
+                                            }
+                                            setModalState(() {});
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  SizedBox(
+                                    width: double.infinity,
+                                    child: ElevatedButton(
+                                      onPressed: () => Navigator.pop(ctx),
+                                      style: ElevatedButton.styleFrom(
+                                        padding: const EdgeInsets.symmetric(
+                                            vertical: 16),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                        ),
+                                      ),
+                                      child: Text(l10n.confirm),
+                                    ),
+                                  ),
+                                  SizedBox(
+                                      height: MediaQuery.of(context)
+                                          .padding
+                                          .bottom),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      );
+                    },
                   ),
-                  const SizedBox(height: 16),
-
-                  // Contact's Share (Read-only)
-                  _ReadOnlyAmountField(
-                    label: l10n.contactShare,
-                    amount: contactShare,
-                    color: theme.colorScheme.primary,
-                  ),
-                  const SizedBox(height: 24),
-
-                  // My Share Input
-                  TextFormField(
-                    controller: myShareController,
-                    autofocus: true,
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
-                    style: theme.textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.expenseColor,
-                    ),
-                    decoration: InputDecoration(
-                      labelText: l10n.myShare,
-                      prefixText: '${ref.read(currencySymbolProvider)} ',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+                ),
+                Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: theme.cardColor,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, -5),
                       ),
-                    ),
-                    onChanged: (value) {
-                      setModalState(() {});
-                    },
+                    ],
                   ),
-                  const SizedBox(height: 24),
-
-                  GradientButton(
-                    label: l10n.confirm,
-                    onPressed: () {
-                      setState(() {
-                        _myShareAmount = double.tryParse(myShareController.text);
-                      });
-                      Navigator.pop(context);
-                    },
-                    gradient: AppColors.primaryGradient,
-                    width: double.infinity,
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(l10n.totalAmount,
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.bold)),
+                          Text(
+                            '${ref.read(currencySymbolProvider)} ${currentTotalAmount.toStringAsFixed(2)} / ${totalAmount.toStringAsFixed(2)}',
+                            style: TextStyle(
+                              color: (currentTotalAmount - totalAmount).abs() <
+                                      0.01
+                                  ? Colors.green
+                                  : Colors.red,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(l10n.totalPercentage),
+                          Text(
+                            '${currentTotalPercent.toStringAsFixed(1)}%',
+                            style: TextStyle(
+                              color: (currentTotalPercent - 100).abs() < 0.1
+                                  ? Colors.green
+                                  : Colors.red,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: GradientButton(
+                              label: l10n.confirm,
+                              onPressed: (currentTotalPercent - 100).abs() < 0.1
+                                  ? () {
+                                      setState(() {
+                                        _isGroupSplit = true;
+                                      });
+                                      Navigator.pop(context);
+                                    }
+                                  : null,
+                              gradient: AppColors.primaryGradient,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           );
         },
@@ -1479,6 +1822,67 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                 const SizedBox(height: 16),
               ],
 
+              // Split Bill Button
+              if (_paidRelationship != null) ...[
+                InkWell(
+                  onTap: _showGroupSplitDialog,
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: _isGroupSplit
+                          ? theme.colorScheme.primary.withOpacity(0.1)
+                          : theme.cardColor,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: _isGroupSplit
+                            ? theme.colorScheme.primary
+                            : theme.dividerColor,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          _isGroupSplit ? Icons.groups : Icons.call_split,
+                          color: _isGroupSplit
+                              ? theme.colorScheme.primary
+                              : theme.hintColor,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                l10n.splitBill,
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              if (_isGroupSplit)
+                                Text(
+                                  '${_groupShares.length} ${l10n.contacts}',
+                                  style: theme.textTheme.bodySmall,
+                                )
+                              else if (_myShareAmount != null)
+                                Text(
+                                  '${_isSplitMode ? l10n.split : l10n.add}: ${AmountFormatter.formatAmount(_myShareAmount!, 2)}',
+                                  style: theme.textTheme.bodySmall,
+                                ),
+                            ],
+                          ),
+                        ),
+                        Icon(
+                          Icons.chevron_right,
+                          color: theme.hintColor,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+
               // Due Date Selector (only shown when relationship is active)
               if (_paidRelationship != null) ...[
                 InkWell(
@@ -1536,81 +1940,6 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                             onPressed: () {
                               setState(() {
                                 _dueDate = null;
-                              });
-                            },
-                          ),
-                        const Icon(Icons.arrow_forward_ios, size: 16),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-              ],
-
-              // My Share Button
-              if (_paidRelationship != null) ...[
-                InkWell(
-                  onTap: _showMyShareDialog,
-                  borderRadius: BorderRadius.circular(12),
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surface,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: _myShareAmount != null && _myShareAmount! > 0
-                            ? theme.colorScheme.primary
-                            : theme.dividerColor,
-                        width: _myShareAmount != null && _myShareAmount! > 0
-                            ? 1.5
-                            : 1,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.primaryContainer,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Icon(
-                            Icons.pie_chart_outline,
-                            color: theme.colorScheme.primary,
-                            size: 20,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              l10n.myShare,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              _myShareAmount != null && _myShareAmount! > 0
-                                  ? '${l10n.myShare} (${_isSplitMode ? "-" : "+"} ${ref.read(currencySymbolProvider)}${_myShareAmount!.toStringAsFixed(2)})'
-                                  : l10n.notSet,
-                              style: theme.textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.w600,
-                                color: _myShareAmount != null && _myShareAmount! > 0
-                                    ? theme.colorScheme.primary
-                                    : null,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const Spacer(),
-                        if (_myShareAmount != null && _myShareAmount! > 0)
-                          IconButton(
-                            icon: const Icon(Icons.clear, size: 20),
-                            onPressed: () {
-                              setState(() {
-                                _myShareAmount = null;
                               });
                             },
                           ),
@@ -1768,51 +2097,6 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
   }
 }
 
-/// Read-only Amount Field for My Share Dialog
-class _ReadOnlyAmountField extends ConsumerWidget {
-  final String label;
-  final double amount;
-  final Color color;
-
-  const _ReadOnlyAmountField({
-    required this.label,
-    required this.amount,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    final currencySymbol = ref.watch(currencySymbolProvider);
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-          Text(
-            '$currencySymbol ${amount.toStringAsFixed(2)}',
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 /// Type Selection Button
 class _TypeButton extends StatelessWidget {
   final String label;
@@ -1882,6 +2166,224 @@ class _TypeButton extends StatelessWidget {
 }
 
 // Relationship Button Widget for Paid FOR/BY selection
+class _SplitShareCard extends StatefulWidget {
+  final SplitShare share;
+  final int index;
+  final double totalAmount;
+  final Color contactColor;
+  final AppLocalizations l10n;
+  final String currencySymbol;
+  final VoidCallback onChanged;
+  final VoidCallback? onDelete;
+  final VoidCallback onLockToggle;
+  final VoidCallback onSliderTap;
+
+  const _SplitShareCard({
+    required this.share,
+    required this.index,
+    required this.totalAmount,
+    required this.contactColor,
+    required this.l10n,
+    required this.currencySymbol,
+    required this.onChanged,
+    this.onDelete,
+    required this.onLockToggle,
+    required this.onSliderTap,
+  });
+
+  @override
+  State<_SplitShareCard> createState() => _SplitShareCardState();
+}
+
+class _SplitShareCardState extends State<_SplitShareCard> {
+  late TextEditingController _pctController;
+  late TextEditingController _amtController;
+  late FocusNode _pctFocus;
+  late FocusNode _amtFocus;
+
+  @override
+  void initState() {
+    super.initState();
+    _pctController =
+        TextEditingController(text: widget.share.percentage.toStringAsFixed(1));
+    _amtController =
+        TextEditingController(text: widget.share.amount.toStringAsFixed(2));
+    _pctFocus = FocusNode();
+    _amtFocus = FocusNode();
+  }
+
+  @override
+  void didUpdateWidget(_SplitShareCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Update controllers only if the value changed externally (e.g. slider or other share adjusted)
+    // and we are not currently focused on this field.
+    if (!_pctFocus.hasFocus) {
+      final newText = widget.share.percentage.toStringAsFixed(1);
+      if (_pctController.text != newText) {
+        _pctController.text = newText;
+      }
+    }
+    if (!_amtFocus.hasFocus) {
+      final newText = widget.share.amount.toStringAsFixed(2);
+      if (_amtController.text != newText) {
+        _amtController.text = newText;
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _pctController.dispose();
+    _amtController.dispose();
+    _pctFocus.dispose();
+    _amtFocus.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    Widget card = Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: widget.share.isUser
+            ? theme.colorScheme.primary.withValues(alpha: 0.05)
+            : theme.cardColor,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: widget.share.isLocked
+              ? theme.colorScheme.primary
+              : (widget.share.isUser
+                  ? theme.colorScheme.primary.withValues(alpha: 0.3)
+                  : theme.dividerColor),
+          width: widget.share.isUser ? 1.5 : 1,
+        ),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 16,
+                backgroundColor: widget.contactColor,
+                child: Text(
+                  widget.share.isUser
+                      ? 'M'
+                      : (widget.share.contact?.name[0] ?? '?'),
+                  style: const TextStyle(color: Colors.white, fontSize: 12),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  widget.share.isUser
+                      ? widget.l10n.includeMe
+                      : (widget.share.contact?.name ?? ''),
+                  style: TextStyle(
+                    fontWeight: widget.share.isUser
+                        ? FontWeight.bold
+                        : FontWeight.normal,
+                    color:
+                        widget.share.isUser ? theme.colorScheme.primary : null,
+                  ),
+                ),
+              ),
+              IconButton(
+                icon: Icon(
+                  widget.share.isLocked ? Icons.lock : Icons.lock_open,
+                  size: 20,
+                  color: widget.share.isLocked
+                      ? theme.colorScheme.primary
+                      : theme.disabledColor,
+                ),
+                onPressed: widget.onLockToggle,
+              ),
+              IconButton(
+                icon: const Icon(Icons.linear_scale, size: 20),
+                onPressed: widget.onSliderTap,
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              SizedBox(
+                width: 80,
+                child: TextFormField(
+                  controller: _pctController,
+                  focusNode: _pctFocus,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    labelText: '%',
+                    suffixText: '%',
+                    isDense: true,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  onChanged: (val) {
+                    final pct = double.tryParse(val) ?? 0.0;
+                    widget.share.percentage = pct;
+                    widget.share.amount = (pct / 100) * widget.totalAmount;
+                    _amtController.text =
+                        widget.share.amount.toStringAsFixed(2);
+                    widget.onChanged();
+                  },
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: TextFormField(
+                  controller: _amtController,
+                  focusNode: _amtFocus,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    labelText: widget.l10n.amount,
+                    prefixText: '${widget.currencySymbol} ',
+                    isDense: true,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  onChanged: (val) {
+                    final amt = double.tryParse(val) ?? 0.0;
+                    widget.share.amount = amt;
+                    widget.share.percentage = (amt / widget.totalAmount) * 100;
+                    _pctController.text =
+                        widget.share.percentage.toStringAsFixed(1);
+                    widget.onChanged();
+                  },
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+
+    if (widget.share.isUser) return card;
+
+    return Dismissible(
+      key: ValueKey('dismiss_${widget.share.contact?.uuid ?? widget.index}'),
+      direction: DismissDirection.endToStart,
+      background: Container(
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 20),
+        margin: const EdgeInsets.only(bottom: 16),
+        decoration: BoxDecoration(
+          color: Colors.red.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: const Icon(Icons.delete_outline, color: Colors.red),
+      ),
+      onDismissed: (_) => widget.onDelete?.call(),
+      child: card,
+    );
+  }
+}
+
 class _RelationshipButton extends StatelessWidget {
   final String label;
   final String subtitle;

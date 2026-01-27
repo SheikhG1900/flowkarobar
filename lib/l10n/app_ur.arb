@@ -910,5 +910,16 @@
   "contactShare": "رابطے کا حصہ",
   "othersShare": "دوسروں کا حصہ",
   "myShareSuffix": " (میرا حصہ)",
-  "othersShareSuffix": " (دوسروں کا حصہ)"
+  "othersShareSuffix": " (دوسروں کا حصہ)",
+  "splitBill": "بل تقسیم کریں",
+  "includeMe": "مجھے شامل کریں",
+  "distributeEqually": "برابر تقسیم کریں",
+  "totalPercentage": "کل فیصد",
+  "lockShare": "حصہ لاک کریں",
+  "unlockShare": "حصہ ان لاک کریں",
+  "customAmount": "کسٹم رقم",
+  "percentage": "فیصد",
+  "remainingAmount": "باقی رقم",
+  "totalMustBe100": "کل 100% ہونا چاہیے",
+  "totalMustMatch": "کل رقم ٹرانزیکشن کی رقم کے برابر ہونی چاہیے"
 }

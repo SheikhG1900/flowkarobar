@@ -2405,4 +2405,37 @@ class AppLocalizationsUr extends AppLocalizations {
 
   @override
   String get othersShareSuffix => ' (دوسروں کا حصہ)';
+
+  @override
+  String get splitBill => 'بل تقسیم کریں';
+
+  @override
+  String get includeMe => 'مجھے شامل کریں';
+
+  @override
+  String get distributeEqually => 'برابر تقسیم کریں';
+
+  @override
+  String get totalPercentage => 'کل فیصد';
+
+  @override
+  String get lockShare => 'حصہ لاک کریں';
+
+  @override
+  String get unlockShare => 'حصہ ان لاک کریں';
+
+  @override
+  String get customAmount => 'کسٹم رقم';
+
+  @override
+  String get percentage => 'فیصد';
+
+  @override
+  String get remainingAmount => 'باقی رقم';
+
+  @override
+  String get totalMustBe100 => 'کل 100% ہونا چاہیے';
+
+  @override
+  String get totalMustMatch => 'کل رقم ٹرانزیکشن کی رقم کے برابر ہونی چاہیے';
 }

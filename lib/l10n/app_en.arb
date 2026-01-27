@@ -1394,5 +1394,16 @@
   "contactShare": "Contact's Share",
   "othersShare": "Others Share",
   "myShareSuffix": " (My Share)",
-  "othersShareSuffix": " (Others Share)"
+  "othersShareSuffix": " (Others Share)",
+  "splitBill": "Split Bill",
+  "includeMe": "Include Me",
+  "distributeEqually": "Distribute Equally",
+  "totalPercentage": "Total Percentage",
+  "lockShare": "Lock Share",
+  "unlockShare": "Unlock Share",
+  "customAmount": "Custom Amount",
+  "percentage": "Percentage",
+  "remainingAmount": "Remaining Amount",
+  "totalMustBe100": "Total must be 100%",
+  "totalMustMatch": "Total must match transaction amount"
 }

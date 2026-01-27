@@ -2397,4 +2397,37 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get othersShareSuffix => ' (दूसरों का हिस्सा)';
+
+  @override
+  String get splitBill => 'बिल विभाजित करें';
+
+  @override
+  String get includeMe => 'मुझे शामिल करें';
+
+  @override
+  String get distributeEqually => 'समान रूप से वितरित करें';
+
+  @override
+  String get totalPercentage => 'कुल प्रतिशत';
+
+  @override
+  String get lockShare => 'हिस्सा लॉक करें';
+
+  @override
+  String get unlockShare => 'हिस्सा अनलॉक करें';
+
+  @override
+  String get customAmount => 'कस्टम राशि';
+
+  @override
+  String get percentage => 'प्रतिशत';
+
+  @override
+  String get remainingAmount => 'शेष राशि';
+
+  @override
+  String get totalMustBe100 => 'कुल 100% होना चाहिए';
+
+  @override
+  String get totalMustMatch => 'कुल लेनदेन राशि से मेल खाना चाहिए';
 }
