@@ -1405,5 +1405,35 @@
   "percentage": "Percentage",
   "remainingAmount": "Remaining Amount",
   "totalMustBe100": "Total must be 100%",
-  "totalMustMatch": "Total must match transaction amount"
+  "totalMustMatch": "Total must match transaction amount",
+  "sameDay": "Same day",
+  "inDays": "In {days} days",
+  "@inDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "daysAgoRelative": "{days} days ago",
+  "@daysAgoRelative": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "pickActualDate": "Pick actual date",
+  "relativeDateAfterXDays": "Relative date (After {days} days)",
+  "@relativeDateAfterXDays": {
+    "placeholders": {
+      "days": {
+        "type": "String"
+      }
+    }
+  },
+  "enterDaysFromTransaction": "Enter number of days from transaction date:",
+  "enterDaysFromStart": "Enter number of days from start date:",
+  "daysHint": "e.g. 15",
+  "daysSuffix": "days"
 }

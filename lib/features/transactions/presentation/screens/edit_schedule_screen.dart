@@ -152,6 +152,17 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
       final catUuid = _selectedCategory?.uuid ?? _selectedCategoryUuid;
       final conUuid = _selectedContact?.uuid ?? _selectedContactUuid;
 
+      // Calculate dueDateOffset if both dates are available
+      int? dueDateOffset;
+      if (_dueDate != null) {
+        // Use startDate if available as the reference, otherwise use current date as a fallback
+        // since schedules are template-based.
+        final referenceDate = _startDate ?? DateTime.now();
+        final refDate = DateTime(referenceDate.year, referenceDate.month, referenceDate.day);
+        final dDate = DateTime(_dueDate!.year, _dueDate!.month, _dueDate!.day);
+        dueDateOffset = dDate.difference(refDate).inDays;
+      }
+
       await scheduleService.updateSchedule(
         widget.schedule.uuid,
         amount: amount,
@@ -161,6 +172,7 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
         contactUuid: conUuid,
         paidRelationship: _paidRelationship,
         dueDate: _dueDate,
+        dueDateOffset: dueDateOffset,
         scheduleType: _scheduleType,
         selectedDaysOfWeek: _selectedDaysOfWeek,
         selectedDaysOfMonth: _selectedDaysOfMonth,
@@ -218,6 +230,54 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
         _endDate = picked;
       });
     }
+  }
+
+  void _showRelativeDateDialog() {
+    final l10n = AppLocalizations.of(context)!;
+    final controller = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.customRange),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(l10n.enterDaysFromStart),
+            const SizedBox(height: 16),
+            TextField(
+              controller: controller,
+              keyboardType: TextInputType.number,
+              autofocus: true,
+              decoration: InputDecoration(
+                hintText: l10n.daysHint,
+                suffixText: l10n.daysSuffix,
+                border: const OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(l10n.cancel),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final days = int.tryParse(controller.text);
+              if (days != null) {
+                final referenceDate = _startDate ?? DateTime.now();
+                setState(() {
+                  _dueDate = referenceDate.add(Duration(days: days));
+                });
+                Navigator.pop(context);
+              }
+            },
+            child: Text(l10n.confirm),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _selectDueDate() async {
@@ -867,7 +927,46 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
               // Due Date Selector (only shown when relationship is active)
               if (_paidRelationship != null) ...[
                 InkWell(
-                  onTap: _selectDueDate,
+                          onTap: () {
+                            showModalBottomSheet(
+                              context: context,
+                              builder: (context) => SafeArea(
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    ListTile(
+                                      leading: const Icon(Icons.calendar_today),
+                                      title: Text(l10n.pickActualDate),
+                                      onTap: () {
+                                        Navigator.pop(context);
+                                        _selectDueDate();
+                                      },
+                                    ),
+                                    ListTile(
+                                      leading: const Icon(Icons.timer),
+                                      title: Text(l10n.relativeDateAfterXDays("X")),
+                                      onTap: () {
+                                        Navigator.pop(context);
+                                        _showRelativeDateDialog();
+                                      },
+                                    ),
+                                    if (_dueDate != null)
+                                      ListTile(
+                                        leading: const Icon(Icons.clear,
+                                            color: Colors.red),
+                                        title: Text(l10n.clearData,
+                                            style: const TextStyle(
+                                                color: Colors.red)),
+                                        onTap: () {
+                                          setState(() => _dueDate = null);
+                                          Navigator.pop(context);
+                                        },
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
                   borderRadius: BorderRadius.circular(12),
                   child: Container(
                     padding: const EdgeInsets.all(16),
@@ -905,13 +1004,62 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
                                 ),
                               ),
                               const SizedBox(height: 4),
-                              Text(
-                                _dueDate != null
-                                    ? '${_dueDate!.day}/${_dueDate!.month}/${_dueDate!.year}'
-                                    : l10n.notSet,
-                                style: theme.textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                ),
+                              Builder(
+                                builder: (context) {
+                                  if (_dueDate == null) {
+                                    return Text(
+                                      l10n.notSet,
+                                      style:
+                                          theme.textTheme.titleMedium?.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    );
+                                  }
+
+                                  final referenceDate =
+                                      _startDate ?? DateTime.now();
+                                  final refDate = DateTime(referenceDate.year,
+                                      referenceDate.month, referenceDate.day);
+                                  final dDate = DateTime(_dueDate!.year,
+                                      _dueDate!.month, _dueDate!.day);
+                                  final offset =
+                                      dDate.difference(refDate).inDays;
+
+                                  String dateStr =
+                                      '${_dueDate!.day}/${_dueDate!.month}/${_dueDate!.year}';
+                                  String relativeStr = '';
+
+                                  if (offset == 0) {
+                                    relativeStr = l10n.sameDay;
+                                  } else if (offset > 0) {
+                                    relativeStr = l10n.inDays(offset);
+                                  } else {
+                                    relativeStr =
+                                        l10n.daysAgoRelative(offset.abs());
+                                  }
+
+                                  return Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        dateStr,
+                                        style: theme.textTheme.titleMedium
+                                            ?.copyWith(
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      Text(
+                                        relativeStr,
+                                        style:
+                                            theme.textTheme.bodySmall?.copyWith(
+                                          color: theme.colorScheme.primary,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                },
                               ),
                             ],
                           ),

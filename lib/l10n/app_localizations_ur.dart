@@ -2438,4 +2438,38 @@ class AppLocalizationsUr extends AppLocalizations {
 
   @override
   String get totalMustMatch => 'کل رقم ٹرانزیکشن کی رقم کے برابر ہونی چاہیے';
+
+  @override
+  String get sameDay => 'اسی دن';
+
+  @override
+  String inDays(int days) {
+    return '$days دنوں میں';
+  }
+
+  @override
+  String daysAgoRelative(int days) {
+    return '$days دن پہلے';
+  }
+
+  @override
+  String get pickActualDate => 'اصل تاریخ منتخب کریں';
+
+  @override
+  String relativeDateAfterXDays(String days) {
+    return 'نسبتی تاریخ ($days دنوں کے بعد)';
+  }
+
+  @override
+  String get enterDaysFromTransaction =>
+      'لین دین کی تاریخ سے دنوں کی تعداد درج کریں:';
+
+  @override
+  String get enterDaysFromStart => 'شروع کی تاریخ سے دنوں کی تعداد درج کریں:';
+
+  @override
+  String get daysHint => 'مثلاً 15';
+
+  @override
+  String get daysSuffix => 'دن';
 }

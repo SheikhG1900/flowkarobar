@@ -41,6 +41,7 @@ class ScheduleService {
     String? contactUuid,
     String? paidRelationship,
     DateTime? dueDate,
+    int? dueDateOffset,
     required String scheduleType, // 'DAILY', 'WEEKLY', 'MONTHLY'
     List<int>? selectedDaysOfWeek, // 0=Sunday, 6=Saturday
     List<int>? selectedDaysOfMonth, // 1-31
@@ -69,6 +70,7 @@ class ScheduleService {
           contactUuid: Value(contactUuid),
           paidRelationship: Value(paidRelationship),
           dueDate: Value(dueDate),
+          dueDateOffset: Value(dueDateOffset),
           scheduleType: Value(scheduleType),
           selectedDaysOfWeek: Value(daysOfWeekJson),
           selectedDaysOfMonth: Value(daysOfMonthJson),
@@ -148,6 +150,14 @@ class ScheduleService {
         final dateStr = "${date.year}-${date.month}-${date.day}";
         final deterministicUuid = "${scheduleUuid}_$dateStr";
 
+        // Calculate dynamic due date based on offset if available
+        DateTime? calculatedDueDate;
+        if (schedule.dueDateOffset != null) {
+          calculatedDueDate = date.add(Duration(days: schedule.dueDateOffset!));
+        } else {
+          calculatedDueDate = schedule.dueDate;
+        }
+
         final transactionUuid = await transactionService.createTransaction(
           amount: schedule.amount,
           type: schedule.type,
@@ -156,7 +166,7 @@ class ScheduleService {
           categoryUuid: schedule.categoryUuid,
           contactUuid: schedule.contactUuid,
           paidRelationship: schedule.paidRelationship,
-          dueDate: schedule.dueDate,
+          dueDate: calculatedDueDate,
           externalLinkId: deterministicUuid, // Use as external link ID as well
         );
 
@@ -281,6 +291,7 @@ class ScheduleService {
     String? contactUuid,
     String? paidRelationship,
     DateTime? dueDate,
+    int? dueDateOffset,
     String? scheduleType,
     List<int>? selectedDaysOfWeek,
     List<int>? selectedDaysOfMonth,
@@ -323,6 +334,9 @@ class ScheduleService {
             ? Value(paidRelationship)
             : const Value.absent(),
         dueDate: dueDate != null ? Value(dueDate) : const Value.absent(),
+        dueDateOffset: dueDateOffset != null
+            ? Value(dueDateOffset)
+            : const Value.absent(),
         scheduleType:
             scheduleType != null ? Value(scheduleType) : const Value.absent(),
         selectedDaysOfWeek: daysOfWeekJson != null

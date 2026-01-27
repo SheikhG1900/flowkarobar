@@ -2430,4 +2430,39 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get totalMustMatch => 'कुल लेनदेन राशि से मेल खाना चाहिए';
+
+  @override
+  String get sameDay => 'उसी दिन';
+
+  @override
+  String inDays(int days) {
+    return '$days दिनों में';
+  }
+
+  @override
+  String daysAgoRelative(int days) {
+    return '$days दिन पहले';
+  }
+
+  @override
+  String get pickActualDate => 'वास्तविक तारीख चुनें';
+
+  @override
+  String relativeDateAfterXDays(String days) {
+    return 'सापेक्ष तारीख ($days दिनों के बाद)';
+  }
+
+  @override
+  String get enterDaysFromTransaction =>
+      'लेन-देन की तारीख से दिनों की संख्या दर्ज करें:';
+
+  @override
+  String get enterDaysFromStart =>
+      'शुरू होने की तारीख से दिनों की संख्या दर्ज करें:';
+
+  @override
+  String get daysHint => 'जैसे: 15';
+
+  @override
+  String get daysSuffix => 'दिन';
 }

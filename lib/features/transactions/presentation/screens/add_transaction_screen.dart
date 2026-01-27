@@ -246,6 +246,16 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
           ? null
           : _descriptionController.text;
 
+      // Calculate dueDateOffset if both dates are available
+      int? dueDateOffset;
+      if (_dueDate != null) {
+        // Normalize dates to midnight for accurate day difference
+        final txDate = DateTime(
+            _selectedDate.year, _selectedDate.month, _selectedDate.day);
+        final dDate = DateTime(_dueDate!.year, _dueDate!.month, _dueDate!.day);
+        dueDateOffset = dDate.difference(txDate).inDays;
+      }
+
       await scheduleService.createSchedule(
         amount: amount,
         type: _selectedType,
@@ -254,6 +264,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
         contactUuid: _selectedContact?.uuid ?? _selectedContactUuid,
         paidRelationship: _paidRelationship,
         dueDate: _dueDate,
+        dueDateOffset: dueDateOffset,
         scheduleType: result.scheduleType,
         selectedDaysOfWeek: result.selectedDaysOfWeek,
         selectedDaysOfMonth: result.selectedDaysOfMonth,
@@ -438,6 +449,53 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
         _selectedDate = picked;
       });
     }
+  }
+
+  void _showRelativeDateDialog() {
+    final l10n = AppLocalizations.of(context)!;
+    final controller = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.customRange),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(l10n.enterDaysFromTransaction),
+            const SizedBox(height: 16),
+            TextField(
+              controller: controller,
+              keyboardType: TextInputType.number,
+              autofocus: true,
+              decoration: InputDecoration(
+                hintText: l10n.daysHint,
+                suffixText: l10n.daysSuffix,
+                border: const OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(l10n.cancel),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final days = int.tryParse(controller.text);
+              if (days != null) {
+                setState(() {
+                  _dueDate = _selectedDate.add(Duration(days: days));
+                });
+                Navigator.pop(context);
+              }
+            },
+            child: Text(l10n.confirm),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _selectDueDate() async {
@@ -1924,7 +1982,45 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
               // Due Date Selector (only shown when relationship is active)
               if (_paidRelationship != null) ...[
                 InkWell(
-                  onTap: _selectDueDate,
+                  onTap: () {
+                    showModalBottomSheet(
+                      context: context,
+                      builder: (context) => SafeArea(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            ListTile(
+                              leading: const Icon(Icons.calendar_today),
+                              title: Text(l10n.pickActualDate),
+                              onTap: () {
+                                Navigator.pop(context);
+                                _selectDueDate();
+                              },
+                            ),
+                            ListTile(
+                              leading: const Icon(Icons.timer),
+                              title: Text(l10n.relativeDateAfterXDays("X")),
+                              onTap: () {
+                                Navigator.pop(context);
+                                _showRelativeDateDialog();
+                              },
+                            ),
+                            if (_dueDate != null)
+                              ListTile(
+                                leading:
+                                    const Icon(Icons.clear, color: Colors.red),
+                                title: Text(l10n.clearData,
+                                    style: const TextStyle(color: Colors.red)),
+                                onTap: () {
+                                  setState(() => _dueDate = null);
+                                  Navigator.pop(context);
+                                },
+                              ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
                   borderRadius: BorderRadius.circular(12),
                   child: Container(
                     padding: const EdgeInsets.all(16),
@@ -1961,13 +2057,58 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                               ),
                             ),
                             const SizedBox(height: 4),
-                            Text(
-                              _dueDate != null
-                                  ? '${_dueDate!.day}/${_dueDate!.month}/${_dueDate!.year}'
-                                  : l10n.notSet,
-                              style: theme.textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
+                            Builder(
+                              builder: (context) {
+                                if (_dueDate == null) {
+                                  return Text(
+                                    l10n.notSet,
+                                    style:
+                                        theme.textTheme.titleMedium?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  );
+                                }
+
+                                final txDate = DateTime(_selectedDate.year,
+                                    _selectedDate.month, _selectedDate.day);
+                                final dDate = DateTime(_dueDate!.year,
+                                    _dueDate!.month, _dueDate!.day);
+                                final offset = dDate.difference(txDate).inDays;
+
+                                String dateStr =
+                                    '${_dueDate!.day}/${_dueDate!.month}/${_dueDate!.year}';
+                                String relativeStr = '';
+
+                                if (offset == 0) {
+                                  relativeStr = l10n.sameDay;
+                                } else if (offset > 0) {
+                                  relativeStr = l10n.inDays(offset);
+                                } else {
+                                  relativeStr =
+                                      l10n.daysAgoRelative(offset.abs());
+                                }
+
+                                return Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      dateStr,
+                                      style:
+                                          theme.textTheme.titleMedium?.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    Text(
+                                      relativeStr,
+                                      style:
+                                          theme.textTheme.bodySmall?.copyWith(
+                                        color: theme.colorScheme.primary,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              },
                             ),
                           ],
                         ),

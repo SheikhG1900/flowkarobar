@@ -6,7 +6,6 @@ import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqlite3/sqlite3.dart' as sqlite3_lib;
 import 'package:sqlite3_flutter_libs/sqlite3_flutter_libs.dart';
-import 'package:uuid/uuid.dart';
 
 part 'database.g.dart';
 
@@ -232,6 +231,8 @@ class TransactionSchedules extends Table {
   TextColumn get selectedDaysOfMonth =>
       text().nullable()(); // JSON array of day numbers (1-31)
 
+  IntColumn get dueDateOffset => integer().nullable()();
+
   // Schedule state
   BoolColumn get isPaused => boolean().withDefault(const Constant(false))();
   DateTimeColumn get lastGeneratedDate =>
@@ -279,7 +280,7 @@ class AppDatabase extends _$AppDatabase {
       : super(_openConnection(fileName));
 
   @override
-  int get schemaVersion => 10;
+  int get schemaVersion => 11;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -332,6 +333,10 @@ class AppDatabase extends _$AppDatabase {
             // For other tables, since we changed PK from Int to Text, 
             // we should ideally migrate data. For this implementation,
             // we'll assume fresh start or handle via recreation if needed.
+          }
+          // Migration from version 10 to 11: Add dueDateOffset to TransactionSchedules
+          if (from <= 10) {
+            await m.addColumn(transactionSchedules, transactionSchedules.dueDateOffset);
           }
         },
       );

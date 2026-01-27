@@ -921,5 +921,35 @@
   "percentage": "فیصد",
   "remainingAmount": "باقی رقم",
   "totalMustBe100": "کل 100% ہونا چاہیے",
-  "totalMustMatch": "کل رقم ٹرانزیکشن کی رقم کے برابر ہونی چاہیے"
+  "totalMustMatch": "کل رقم ٹرانزیکشن کی رقم کے برابر ہونی چاہیے",
+  "sameDay": "اسی دن",
+  "inDays": "{days} دنوں میں",
+  "@inDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "daysAgoRelative": "{days} دن پہلے",
+  "@daysAgoRelative": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "pickActualDate": "اصل تاریخ منتخب کریں",
+  "relativeDateAfterXDays": "نسبتی تاریخ ({days} دنوں کے بعد)",
+  "@relativeDateAfterXDays": {
+    "placeholders": {
+      "days": {
+        "type": "String"
+      }
+    }
+  },
+  "enterDaysFromTransaction": "لین دین کی تاریخ سے دنوں کی تعداد درج کریں:",
+  "enterDaysFromStart": "شروع کی تاریخ سے دنوں کی تعداد درج کریں:",
+  "daysHint": "مثلاً 15",
+  "daysSuffix": "دن"
 }

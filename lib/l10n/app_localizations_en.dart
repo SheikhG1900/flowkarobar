@@ -2421,4 +2421,38 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get totalMustMatch => 'Total must match transaction amount';
+
+  @override
+  String get sameDay => 'Same day';
+
+  @override
+  String inDays(int days) {
+    return 'In $days days';
+  }
+
+  @override
+  String daysAgoRelative(int days) {
+    return '$days days ago';
+  }
+
+  @override
+  String get pickActualDate => 'Pick actual date';
+
+  @override
+  String relativeDateAfterXDays(String days) {
+    return 'Relative date (After $days days)';
+  }
+
+  @override
+  String get enterDaysFromTransaction =>
+      'Enter number of days from transaction date:';
+
+  @override
+  String get enterDaysFromStart => 'Enter number of days from start date:';
+
+  @override
+  String get daysHint => 'e.g. 15';
+
+  @override
+  String get daysSuffix => 'days';
 }

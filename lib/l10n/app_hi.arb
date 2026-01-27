@@ -921,5 +921,35 @@
   "percentage": "प्रतिशत",
   "remainingAmount": "शेष राशि",
   "totalMustBe100": "कुल 100% होना चाहिए",
-  "totalMustMatch": "कुल लेनदेन राशि से मेल खाना चाहिए"
+  "totalMustMatch": "कुल लेनदेन राशि से मेल खाना चाहिए",
+  "sameDay": "उसी दिन",
+  "inDays": "{days} दिनों में",
+  "@inDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "daysAgoRelative": "{days} दिन पहले",
+  "@daysAgoRelative": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "pickActualDate": "वास्तविक तारीख चुनें",
+  "relativeDateAfterXDays": "सापेक्ष तारीख ({days} दिनों के बाद)",
+  "@relativeDateAfterXDays": {
+    "placeholders": {
+      "days": {
+        "type": "String"
+      }
+    }
+  },
+  "enterDaysFromTransaction": "लेन-देन की तारीख से दिनों की संख्या दर्ज करें:",
+  "enterDaysFromStart": "शुरू होने की तारीख से दिनों की संख्या दर्ज करें:",
+  "daysHint": "जैसे: 15",
+  "daysSuffix": "दिन"
 }

@@ -6028,6 +6028,12 @@ class $TransactionSchedulesTable extends TransactionSchedules
   late final GeneratedColumn<String> selectedDaysOfMonth =
       GeneratedColumn<String>('selected_days_of_month', aliasedName, true,
           type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _dueDateOffsetMeta =
+      const VerificationMeta('dueDateOffset');
+  @override
+  late final GeneratedColumn<int> dueDateOffset = GeneratedColumn<int>(
+      'due_date_offset', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
   static const VerificationMeta _isPausedMeta =
       const VerificationMeta('isPaused');
   @override
@@ -6105,6 +6111,7 @@ class $TransactionSchedulesTable extends TransactionSchedules
         scheduleType,
         selectedDaysOfWeek,
         selectedDaysOfMonth,
+        dueDateOffset,
         isPaused,
         lastGeneratedDate,
         startDate,
@@ -6191,6 +6198,12 @@ class $TransactionSchedulesTable extends TransactionSchedules
           selectedDaysOfMonth.isAcceptableOrUnknown(
               data['selected_days_of_month']!, _selectedDaysOfMonthMeta));
     }
+    if (data.containsKey('due_date_offset')) {
+      context.handle(
+          _dueDateOffsetMeta,
+          dueDateOffset.isAcceptableOrUnknown(
+              data['due_date_offset']!, _dueDateOffsetMeta));
+    }
     if (data.containsKey('is_paused')) {
       context.handle(_isPausedMeta,
           isPaused.isAcceptableOrUnknown(data['is_paused']!, _isPausedMeta));
@@ -6259,6 +6272,8 @@ class $TransactionSchedulesTable extends TransactionSchedules
       selectedDaysOfMonth: attachedDatabase.typeMapping.read(
           DriftSqlType.string,
           data['${effectivePrefix}selected_days_of_month']),
+      dueDateOffset: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}due_date_offset']),
       isPaused: attachedDatabase.typeMapping
           .read(DriftSqlType.bool, data['${effectivePrefix}is_paused'])!,
       lastGeneratedDate: attachedDatabase.typeMapping.read(
@@ -6297,6 +6312,7 @@ class TransactionSchedule extends DataClass
   final String scheduleType;
   final String? selectedDaysOfWeek;
   final String? selectedDaysOfMonth;
+  final int? dueDateOffset;
   final bool isPaused;
   final DateTime? lastGeneratedDate;
   final DateTime? startDate;
@@ -6317,6 +6333,7 @@ class TransactionSchedule extends DataClass
       required this.scheduleType,
       this.selectedDaysOfWeek,
       this.selectedDaysOfMonth,
+      this.dueDateOffset,
       required this.isPaused,
       this.lastGeneratedDate,
       this.startDate,
@@ -6352,6 +6369,9 @@ class TransactionSchedule extends DataClass
     }
     if (!nullToAbsent || selectedDaysOfMonth != null) {
       map['selected_days_of_month'] = Variable<String>(selectedDaysOfMonth);
+    }
+    if (!nullToAbsent || dueDateOffset != null) {
+      map['due_date_offset'] = Variable<int>(dueDateOffset);
     }
     map['is_paused'] = Variable<bool>(isPaused);
     if (!nullToAbsent || lastGeneratedDate != null) {
@@ -6397,6 +6417,9 @@ class TransactionSchedule extends DataClass
       selectedDaysOfMonth: selectedDaysOfMonth == null && nullToAbsent
           ? const Value.absent()
           : Value(selectedDaysOfMonth),
+      dueDateOffset: dueDateOffset == null && nullToAbsent
+          ? const Value.absent()
+          : Value(dueDateOffset),
       isPaused: Value(isPaused),
       lastGeneratedDate: lastGeneratedDate == null && nullToAbsent
           ? const Value.absent()
@@ -6431,6 +6454,7 @@ class TransactionSchedule extends DataClass
           serializer.fromJson<String?>(json['selectedDaysOfWeek']),
       selectedDaysOfMonth:
           serializer.fromJson<String?>(json['selectedDaysOfMonth']),
+      dueDateOffset: serializer.fromJson<int?>(json['dueDateOffset']),
       isPaused: serializer.fromJson<bool>(json['isPaused']),
       lastGeneratedDate:
           serializer.fromJson<DateTime?>(json['lastGeneratedDate']),
@@ -6457,6 +6481,7 @@ class TransactionSchedule extends DataClass
       'scheduleType': serializer.toJson<String>(scheduleType),
       'selectedDaysOfWeek': serializer.toJson<String?>(selectedDaysOfWeek),
       'selectedDaysOfMonth': serializer.toJson<String?>(selectedDaysOfMonth),
+      'dueDateOffset': serializer.toJson<int?>(dueDateOffset),
       'isPaused': serializer.toJson<bool>(isPaused),
       'lastGeneratedDate': serializer.toJson<DateTime?>(lastGeneratedDate),
       'startDate': serializer.toJson<DateTime?>(startDate),
@@ -6480,6 +6505,7 @@ class TransactionSchedule extends DataClass
           String? scheduleType,
           Value<String?> selectedDaysOfWeek = const Value.absent(),
           Value<String?> selectedDaysOfMonth = const Value.absent(),
+          Value<int?> dueDateOffset = const Value.absent(),
           bool? isPaused,
           Value<DateTime?> lastGeneratedDate = const Value.absent(),
           Value<DateTime?> startDate = const Value.absent(),
@@ -6507,6 +6533,8 @@ class TransactionSchedule extends DataClass
         selectedDaysOfMonth: selectedDaysOfMonth.present
             ? selectedDaysOfMonth.value
             : this.selectedDaysOfMonth,
+        dueDateOffset:
+            dueDateOffset.present ? dueDateOffset.value : this.dueDateOffset,
         isPaused: isPaused ?? this.isPaused,
         lastGeneratedDate: lastGeneratedDate.present
             ? lastGeneratedDate.value
@@ -6543,6 +6571,9 @@ class TransactionSchedule extends DataClass
       selectedDaysOfMonth: data.selectedDaysOfMonth.present
           ? data.selectedDaysOfMonth.value
           : this.selectedDaysOfMonth,
+      dueDateOffset: data.dueDateOffset.present
+          ? data.dueDateOffset.value
+          : this.dueDateOffset,
       isPaused: data.isPaused.present ? data.isPaused.value : this.isPaused,
       lastGeneratedDate: data.lastGeneratedDate.present
           ? data.lastGeneratedDate.value
@@ -6571,6 +6602,7 @@ class TransactionSchedule extends DataClass
           ..write('scheduleType: $scheduleType, ')
           ..write('selectedDaysOfWeek: $selectedDaysOfWeek, ')
           ..write('selectedDaysOfMonth: $selectedDaysOfMonth, ')
+          ..write('dueDateOffset: $dueDateOffset, ')
           ..write('isPaused: $isPaused, ')
           ..write('lastGeneratedDate: $lastGeneratedDate, ')
           ..write('startDate: $startDate, ')
@@ -6596,6 +6628,7 @@ class TransactionSchedule extends DataClass
       scheduleType,
       selectedDaysOfWeek,
       selectedDaysOfMonth,
+      dueDateOffset,
       isPaused,
       lastGeneratedDate,
       startDate,
@@ -6619,6 +6652,7 @@ class TransactionSchedule extends DataClass
           other.scheduleType == this.scheduleType &&
           other.selectedDaysOfWeek == this.selectedDaysOfWeek &&
           other.selectedDaysOfMonth == this.selectedDaysOfMonth &&
+          other.dueDateOffset == this.dueDateOffset &&
           other.isPaused == this.isPaused &&
           other.lastGeneratedDate == this.lastGeneratedDate &&
           other.startDate == this.startDate &&
@@ -6642,6 +6676,7 @@ class TransactionSchedulesCompanion
   final Value<String> scheduleType;
   final Value<String?> selectedDaysOfWeek;
   final Value<String?> selectedDaysOfMonth;
+  final Value<int?> dueDateOffset;
   final Value<bool> isPaused;
   final Value<DateTime?> lastGeneratedDate;
   final Value<DateTime?> startDate;
@@ -6663,6 +6698,7 @@ class TransactionSchedulesCompanion
     this.scheduleType = const Value.absent(),
     this.selectedDaysOfWeek = const Value.absent(),
     this.selectedDaysOfMonth = const Value.absent(),
+    this.dueDateOffset = const Value.absent(),
     this.isPaused = const Value.absent(),
     this.lastGeneratedDate = const Value.absent(),
     this.startDate = const Value.absent(),
@@ -6685,6 +6721,7 @@ class TransactionSchedulesCompanion
     required String scheduleType,
     this.selectedDaysOfWeek = const Value.absent(),
     this.selectedDaysOfMonth = const Value.absent(),
+    this.dueDateOffset = const Value.absent(),
     this.isPaused = const Value.absent(),
     this.lastGeneratedDate = const Value.absent(),
     this.startDate = const Value.absent(),
@@ -6710,6 +6747,7 @@ class TransactionSchedulesCompanion
     Expression<String>? scheduleType,
     Expression<String>? selectedDaysOfWeek,
     Expression<String>? selectedDaysOfMonth,
+    Expression<int>? dueDateOffset,
     Expression<bool>? isPaused,
     Expression<DateTime>? lastGeneratedDate,
     Expression<DateTime>? startDate,
@@ -6734,6 +6772,7 @@ class TransactionSchedulesCompanion
         'selected_days_of_week': selectedDaysOfWeek,
       if (selectedDaysOfMonth != null)
         'selected_days_of_month': selectedDaysOfMonth,
+      if (dueDateOffset != null) 'due_date_offset': dueDateOffset,
       if (isPaused != null) 'is_paused': isPaused,
       if (lastGeneratedDate != null) 'last_generated_date': lastGeneratedDate,
       if (startDate != null) 'start_date': startDate,
@@ -6758,6 +6797,7 @@ class TransactionSchedulesCompanion
       Value<String>? scheduleType,
       Value<String?>? selectedDaysOfWeek,
       Value<String?>? selectedDaysOfMonth,
+      Value<int?>? dueDateOffset,
       Value<bool>? isPaused,
       Value<DateTime?>? lastGeneratedDate,
       Value<DateTime?>? startDate,
@@ -6779,6 +6819,7 @@ class TransactionSchedulesCompanion
       scheduleType: scheduleType ?? this.scheduleType,
       selectedDaysOfWeek: selectedDaysOfWeek ?? this.selectedDaysOfWeek,
       selectedDaysOfMonth: selectedDaysOfMonth ?? this.selectedDaysOfMonth,
+      dueDateOffset: dueDateOffset ?? this.dueDateOffset,
       isPaused: isPaused ?? this.isPaused,
       lastGeneratedDate: lastGeneratedDate ?? this.lastGeneratedDate,
       startDate: startDate ?? this.startDate,
@@ -6828,6 +6869,9 @@ class TransactionSchedulesCompanion
       map['selected_days_of_month'] =
           Variable<String>(selectedDaysOfMonth.value);
     }
+    if (dueDateOffset.present) {
+      map['due_date_offset'] = Variable<int>(dueDateOffset.value);
+    }
     if (isPaused.present) {
       map['is_paused'] = Variable<bool>(isPaused.value);
     }
@@ -6872,6 +6916,7 @@ class TransactionSchedulesCompanion
           ..write('scheduleType: $scheduleType, ')
           ..write('selectedDaysOfWeek: $selectedDaysOfWeek, ')
           ..write('selectedDaysOfMonth: $selectedDaysOfMonth, ')
+          ..write('dueDateOffset: $dueDateOffset, ')
           ..write('isPaused: $isPaused, ')
           ..write('lastGeneratedDate: $lastGeneratedDate, ')
           ..write('startDate: $startDate, ')
@@ -11740,6 +11785,7 @@ typedef $$TransactionSchedulesTableCreateCompanionBuilder
   required String scheduleType,
   Value<String?> selectedDaysOfWeek,
   Value<String?> selectedDaysOfMonth,
+  Value<int?> dueDateOffset,
   Value<bool> isPaused,
   Value<DateTime?> lastGeneratedDate,
   Value<DateTime?> startDate,
@@ -11763,6 +11809,7 @@ typedef $$TransactionSchedulesTableUpdateCompanionBuilder
   Value<String> scheduleType,
   Value<String?> selectedDaysOfWeek,
   Value<String?> selectedDaysOfMonth,
+  Value<int?> dueDateOffset,
   Value<bool> isPaused,
   Value<DateTime?> lastGeneratedDate,
   Value<DateTime?> startDate,
@@ -11848,6 +11895,9 @@ class $$TransactionSchedulesTableFilterComposer
   ColumnFilters<String> get selectedDaysOfMonth => $composableBuilder(
       column: $table.selectedDaysOfMonth,
       builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get dueDateOffset => $composableBuilder(
+      column: $table.dueDateOffset, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<bool> get isPaused => $composableBuilder(
       column: $table.isPaused, builder: (column) => ColumnFilters(column));
@@ -11955,6 +12005,10 @@ class $$TransactionSchedulesTableOrderingComposer
       column: $table.selectedDaysOfMonth,
       builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<int> get dueDateOffset => $composableBuilder(
+      column: $table.dueDateOffset,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<bool> get isPaused => $composableBuilder(
       column: $table.isPaused, builder: (column) => ColumnOrderings(column));
 
@@ -12056,6 +12110,9 @@ class $$TransactionSchedulesTableAnnotationComposer
 
   GeneratedColumn<String> get selectedDaysOfMonth => $composableBuilder(
       column: $table.selectedDaysOfMonth, builder: (column) => column);
+
+  GeneratedColumn<int> get dueDateOffset => $composableBuilder(
+      column: $table.dueDateOffset, builder: (column) => column);
 
   GeneratedColumn<bool> get isPaused =>
       $composableBuilder(column: $table.isPaused, builder: (column) => column);
@@ -12159,6 +12216,7 @@ class $$TransactionSchedulesTableTableManager extends RootTableManager<
             Value<String> scheduleType = const Value.absent(),
             Value<String?> selectedDaysOfWeek = const Value.absent(),
             Value<String?> selectedDaysOfMonth = const Value.absent(),
+            Value<int?> dueDateOffset = const Value.absent(),
             Value<bool> isPaused = const Value.absent(),
             Value<DateTime?> lastGeneratedDate = const Value.absent(),
             Value<DateTime?> startDate = const Value.absent(),
@@ -12181,6 +12239,7 @@ class $$TransactionSchedulesTableTableManager extends RootTableManager<
             scheduleType: scheduleType,
             selectedDaysOfWeek: selectedDaysOfWeek,
             selectedDaysOfMonth: selectedDaysOfMonth,
+            dueDateOffset: dueDateOffset,
             isPaused: isPaused,
             lastGeneratedDate: lastGeneratedDate,
             startDate: startDate,
@@ -12203,6 +12262,7 @@ class $$TransactionSchedulesTableTableManager extends RootTableManager<
             required String scheduleType,
             Value<String?> selectedDaysOfWeek = const Value.absent(),
             Value<String?> selectedDaysOfMonth = const Value.absent(),
+            Value<int?> dueDateOffset = const Value.absent(),
             Value<bool> isPaused = const Value.absent(),
             Value<DateTime?> lastGeneratedDate = const Value.absent(),
             Value<DateTime?> startDate = const Value.absent(),
@@ -12225,6 +12285,7 @@ class $$TransactionSchedulesTableTableManager extends RootTableManager<
             scheduleType: scheduleType,
             selectedDaysOfWeek: selectedDaysOfWeek,
             selectedDaysOfMonth: selectedDaysOfMonth,
+            dueDateOffset: dueDateOffset,
             isPaused: isPaused,
             lastGeneratedDate: lastGeneratedDate,
             startDate: startDate,

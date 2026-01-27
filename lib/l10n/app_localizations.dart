@@ -4510,6 +4510,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Total must match transaction amount'**
   String get totalMustMatch;
+
+  /// No description provided for @sameDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Same day'**
+  String get sameDay;
+
+  /// No description provided for @inDays.
+  ///
+  /// In en, this message translates to:
+  /// **'In {days} days'**
+  String inDays(int days);
+
+  /// No description provided for @daysAgoRelative.
+  ///
+  /// In en, this message translates to:
+  /// **'{days} days ago'**
+  String daysAgoRelative(int days);
+
+  /// No description provided for @pickActualDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick actual date'**
+  String get pickActualDate;
+
+  /// No description provided for @relativeDateAfterXDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Relative date (After {days} days)'**
+  String relativeDateAfterXDays(String days);
+
+  /// No description provided for @enterDaysFromTransaction.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter number of days from transaction date:'**
+  String get enterDaysFromTransaction;
+
+  /// No description provided for @enterDaysFromStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter number of days from start date:'**
+  String get enterDaysFromStart;
+
+  /// No description provided for @daysHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. 15'**
+  String get daysHint;
+
+  /// No description provided for @daysSuffix.
+  ///
+  /// In en, this message translates to:
+  /// **'days'**
+  String get daysSuffix;
 }
 
 class _AppLocalizationsDelegate
