@@ -179,7 +179,8 @@ class _ScheduleSelectionDrawerState extends State<ScheduleSelectionDrawer> {
             : theme.colorScheme.onSurface,
       ),
       side: BorderSide(
-        color: _isDailySelected ? theme.colorScheme.primary : theme.dividerColor,
+        color:
+            _isDailySelected ? theme.colorScheme.primary : theme.dividerColor,
         width: _isDailySelected ? 2 : 1,
       ),
     );
@@ -218,8 +219,9 @@ class _ScheduleSelectionDrawerState extends State<ScheduleSelectionDrawer> {
           selectedColor: theme.colorScheme.primary.withValues(alpha: 0.2),
           checkmarkColor: theme.colorScheme.primary,
           labelStyle: TextStyle(
-            color:
-                isSelected ? theme.colorScheme.primary : theme.colorScheme.onSurface,
+            color: isSelected
+                ? theme.colorScheme.primary
+                : theme.colorScheme.onSurface,
           ),
           side: BorderSide(
             color: isSelected ? theme.colorScheme.primary : theme.dividerColor,
@@ -254,8 +256,9 @@ class _ScheduleSelectionDrawerState extends State<ScheduleSelectionDrawer> {
           selectedColor: theme.colorScheme.primary.withValues(alpha: 0.2),
           checkmarkColor: theme.colorScheme.primary,
           labelStyle: TextStyle(
-            color:
-                isSelected ? theme.colorScheme.primary : theme.colorScheme.onSurface,
+            color: isSelected
+                ? theme.colorScheme.primary
+                : theme.colorScheme.onSurface,
           ),
           side: BorderSide(
             color: isSelected ? theme.colorScheme.primary : theme.dividerColor,
