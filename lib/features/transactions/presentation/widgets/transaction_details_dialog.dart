@@ -18,6 +18,7 @@ import 'package:flowpaisa/features/payables/presentation/providers/payables_prov
 import 'package:flowpaisa/features/receivables/presentation/providers/receivables_provider.dart';
 import 'package:flowpaisa/features/whatsapp/presentation/providers/whatsapp_provider.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
+import 'package:flutter/foundation.dart';
 
 class TransactionDetailsDialog extends ConsumerWidget {
   final TransactionWithDetails item;
@@ -481,8 +482,71 @@ class TransactionDetailsDialog extends ConsumerWidget {
               if (linkedReceivable != null)
                 _buildLinkedReceivableCard(context, ref, linkedReceivable),
             ],
+
+            if (kDebugMode) ...[
+              const SizedBox(height: 24),
+              const Divider(),
+              const SizedBox(height: 8),
+              Theme(
+                data: theme.copyWith(dividerColor: Colors.transparent),
+                child: ExpansionTile(
+                  title: const Text(
+                    "DEBUG INFO",
+                    style: TextStyle(
+                      color: Colors.red,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                  leading: const Icon(Icons.bug_report, color: Colors.red),
+                  childrenPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  expandedAlignment: Alignment.topLeft,
+                  children: [
+                    _buildDebugInfo(context, "Transaction UUID", transaction.uuid),
+                    _buildDebugInfo(context, "External Link ID", transaction.externalLinkId ?? "None"),
+                    _buildDebugInfo(context, "Is Scheduled", transaction.isScheduled.toString()),
+                    _buildDebugInfo(context, "Is Not Synced", transaction.isNotSynced.toString()),
+                    if (linkedPayable != null) ...[
+                      const SizedBox(height: 12),
+                      const Text("Linked Payable:", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                      _buildDebugInfo(context, "UUID", linkedPayable.uuid),
+                      _buildDebugInfo(context, "External Link ID", linkedPayable.externalLinkId ?? "None"),
+                      _buildDebugInfo(context, "Is Scheduled", linkedPayable.isScheduled.toString()),
+                      _buildDebugInfo(context, "Is Not Synced", linkedPayable.isNotSynced.toString()),
+                    ],
+                    if (linkedReceivable != null) ...[
+                      const SizedBox(height: 12),
+                      const Text("Linked Receivable:", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                      _buildDebugInfo(context, "UUID", linkedReceivable.uuid),
+                      _buildDebugInfo(context, "External Link ID", linkedReceivable.externalLinkId ?? "None"),
+                      _buildDebugInfo(context, "Is Scheduled", linkedReceivable.isScheduled.toString()),
+                      _buildDebugInfo(context, "Is Not Synced", linkedReceivable.isNotSynced.toString()),
+                    ],
+                  ],
+                ),
+              ),
+            ],
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildDebugInfo(BuildContext context, String label, String value) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text("$label: ", style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold)),
+          Expanded(
+            child: Text(
+              value,
+              style: theme.textTheme.bodySmall?.copyWith(fontFamily: 'monospace'),
+            ),
+          ),
+        ],
       ),
     );
   }

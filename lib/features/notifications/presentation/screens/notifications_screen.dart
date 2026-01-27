@@ -194,14 +194,14 @@ class _NotificationCard extends ConsumerWidget {
         color: (notification.isUrgent == true) && (notification.isRead == false)
             ? color.withValues(alpha: 0.15)
             : (notification.isRead == true
-                ? theme.cardColor
+            ? theme.cardColor
                 : color.withValues(alpha: 0.05)),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: (notification.isUrgent == true) && (notification.isRead == false)
               ? color
               : (notification.isRead == true
-                  ? theme.dividerColor.withValues(alpha: 0.1)
+              ? theme.dividerColor.withValues(alpha: 0.1)
                   : color.withValues(alpha: 0.2)),
           width: (notification.isUrgent == true) && (notification.isRead == false)
               ? 2.5
@@ -252,92 +252,92 @@ class _NotificationCard extends ConsumerWidget {
                   ),
                 ),
               Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Icon
-                    Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: color.withValues(alpha: 0.1),
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: color.withValues(alpha: 0.3),
-                          width: 2,
-                        ),
-                      ),
-                      child: Icon(
-                        _getIcon(),
-                        color: color,
-                        size: 24,
-                      ),
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Icon
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: color.withValues(alpha: 0.3),
+                      width: 2,
                     ),
-                    const SizedBox(width: 16),
+                  ),
+                  child: Icon(
+                    _getIcon(),
+                    color: color,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 16),
 
-                    // Content
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                // Content
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
                         children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  notification.title,
-                                  style: theme.textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: theme.colorScheme.onSurface,
-                                  ),
-                                ),
+                          Expanded(
+                            child: Text(
+                              notification.title,
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: theme.colorScheme.onSurface,
                               ),
-                              if ((notification.isRead == false) && (notification.isUrgent == false))
-                                Container(
-                                  width: 8,
-                                  height: 8,
-                                  decoration: BoxDecoration(
-                                    color: color,
-                                    shape: BoxShape.circle,
-                                  ),
-                                ),
-                            ],
+                            ),
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            notification.message,
-                            style: theme.textTheme.bodyMedium?.copyWith(
+                              if ((notification.isRead == false) && (notification.isUrgent == false))
+                            Container(
+                              width: 8,
+                              height: 8,
+                              decoration: BoxDecoration(
+                                color: color,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        notification.message,
+                        style: theme.textTheme.bodyMedium?.copyWith(
                               color: theme.colorScheme.onSurface,
                               fontWeight: (notification.isUrgent == true) && (notification.isRead == false) 
                                   ? FontWeight.w600 
                                   : FontWeight.normal,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.access_time,
+                            size: 14,
+                            color: theme.colorScheme.onSurfaceVariant,
                           ),
-                          const SizedBox(height: 8),
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.access_time,
-                                size: 14,
-                                color: theme.colorScheme.onSurfaceVariant,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
+                          const SizedBox(width: 4),
+                          Text(
                                 _formatDateTime(
                                     notification.dateTime, ref, l10n, context),
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: theme.colorScheme.onSurfaceVariant,
-                                ),
-                              ),
-                            ],
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
                           ),
                         ],
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
+              ],
+            ),
               ),
             ],
           ),

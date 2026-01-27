@@ -5,9 +5,10 @@ import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/core/utils/date_formatter.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
-import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
+import 'package:flowpaisa/features/transactions/presentation/providers/schedule_service_provider.dart';
+import 'package:flowpaisa/core/utils/toast_utils.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 import 'dart:convert';
 
 class ScheduleListItem extends ConsumerWidget {
@@ -162,9 +163,85 @@ class ScheduleListItem extends ConsumerWidget {
                     width: 1,
                   ),
                 ),
+                if (kDebugMode) ...[
+                  const SizedBox(height: 4),
+                  IconButton(
+                    icon: const Icon(Icons.bug_report, size: 18, color: Colors.red),
+                    onPressed: () => _showTestExecuteDialog(context, ref),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    visualDensity: VisualDensity.compact,
+                    tooltip: "Test Execute",
+                  ),
+                ],
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  void _showTestExecuteDialog(BuildContext context, WidgetRef ref) async {
+    DateTime selectedDate = DateTime.now();
+    final l10n = AppLocalizations.of(context)!;
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text("Debug: Execute Schedule"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text("Select a date to simulate transaction generation:"),
+              const SizedBox(height: 16),
+              ListTile(
+                leading: const Icon(Icons.calendar_today),
+                title: Text(AppDateFormatter.formatDate(selectedDate)),
+                onTap: () async {
+                  final picked = await showDatePicker(
+                    context: context,
+                    initialDate: selectedDate,
+                    firstDate: DateTime(2000),
+                    lastDate: DateTime(2101),
+                  );
+                  if (picked != null) {
+                    setDialogState(() => selectedDate = picked);
+                  }
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(l10n.cancel),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                Navigator.pop(context);
+                try {
+                  final scheduleService = ref.read(scheduleServiceProvider);
+                  
+                  // Use the official service method to ensure identical logic
+                  await scheduleService.generateTransactionsFromSchedule(
+                    schedule.uuid,
+                    customDate: selectedDate,
+                  );
+
+                  if (context.mounted) {
+                    ToastUtils.showSuccessToast(context, ref, "Debug: Official generation process executed for ${AppDateFormatter.formatDate(selectedDate)}");
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    ToastUtils.showErrorToast(context, ref, "Debug Error: $e");
+                  }
+                }
+              },
+              child: const Text("Execute"),
+            ),
+          ],
         ),
       ),
     );

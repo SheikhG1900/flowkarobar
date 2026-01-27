@@ -91,18 +91,26 @@ class ScheduleService {
   }
 
   /// Generate transactions from a schedule for missed dates
-  Future<int> generateTransactionsFromSchedule(String scheduleUuid) async {
+  Future<int> generateTransactionsFromSchedule(String scheduleUuid,
+      {DateTime? customDate}) async {
     final schedule = await schedulesRepository.getScheduleByUuid(scheduleUuid);
     if (schedule == null) {
       throw Exception('Schedule not found');
     }
 
-    if (schedule.isPaused) {
-      return 0; // Don't generate if paused
+    if (schedule.isPaused && customDate == null) {
+      return 0; // Don't generate if paused (unless manual debug execute)
     }
 
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
+
+    // If customDate is provided, we only generate for that specific date
+    if (customDate != null) {
+      final date = DateTime(customDate.year, customDate.month, customDate.day);
+      await _generateForDate(schedule, date);
+      return 1;
+    }
 
     // Check if schedule is within date range
     if (schedule.startDate != null && schedule.startDate!.isAfter(today)) {
@@ -146,45 +154,12 @@ class ScheduleService {
 
     for (final date in datesToGenerate) {
       try {
-        // Use a deterministic UUID based on schedule and date to prevent duplicates during sync
-        final dateStr = "${date.year}-${date.month}-${date.day}";
-        final deterministicUuid = "${scheduleUuid}_$dateStr";
-
-        // Calculate dynamic due date based on offset if available
-        DateTime? calculatedDueDate;
-        if (schedule.dueDateOffset != null) {
-          calculatedDueDate = date.add(Duration(days: schedule.dueDateOffset!));
-        } else {
-          calculatedDueDate = schedule.dueDate;
-        }
-
-        final transactionUuid = await transactionService.createTransaction(
-          amount: schedule.amount,
-          type: schedule.type,
-          date: date,
-          description: schedule.description,
-          categoryUuid: schedule.categoryUuid,
-          contactUuid: schedule.contactUuid,
-          paidRelationship: schedule.paidRelationship,
-          dueDate: calculatedDueDate,
-          externalLinkId: deterministicUuid, // Use as external link ID as well
-        );
-
-        // Mark transaction as scheduled and ensure the UUID is deterministic
-        await transactionsRepository.updateTransactionWithCompanion(
-          transactionUuid,
-          TransactionsCompanion(
-            uuid: Value(deterministicUuid),
-            isScheduled: const Value(true),
-            updatedAt: Value(DateTime.now()),
-          ),
-        );
-
+        await _generateForDate(schedule, date);
         generatedCount++;
         latestGeneratedDate = date;
       } catch (e) {
         // Log error but continue with other dates
-        print('Error generating transaction for date $date: $e');
+        debugPrint('Error generating transaction for date $date: $e');
       }
     }
 
@@ -197,6 +172,35 @@ class ScheduleService {
     }
 
     return generatedCount;
+  }
+
+  /// Internal helper to generate a single transaction for a date
+  Future<void> _generateForDate(
+      TransactionSchedule schedule, DateTime date) async {
+    // Use a deterministic UUID based on schedule and date to prevent duplicates during sync
+    final dateStr = "${date.year}-${date.month}-${date.day}";
+    final deterministicUuid = "${schedule.uuid}_$dateStr";
+
+    // Calculate dynamic due date based on offset if available
+    DateTime? calculatedDueDate;
+    if (schedule.dueDateOffset != null) {
+      calculatedDueDate = date.add(Duration(days: schedule.dueDateOffset!));
+    } else {
+      calculatedDueDate = schedule.dueDate;
+    }
+
+    await transactionService.createTransaction(
+      amount: schedule.amount,
+      type: schedule.type,
+      date: date,
+      description: schedule.description,
+      categoryUuid: schedule.categoryUuid,
+      contactUuid: schedule.contactUuid,
+      paidRelationship: schedule.paidRelationship,
+      dueDate: calculatedDueDate,
+      isScheduled: true,
+      externalLinkId: deterministicUuid, // Use as external link ID as well
+    );
   }
 
   /// Calculate which dates should have transactions generated based on schedule pattern

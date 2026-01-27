@@ -13,7 +13,7 @@ import 'package:flowpaisa/shared/providers/database_provider.dart';
 import 'package:flowpaisa/features/categories/presentation/screens/add_category_screen.dart';
 import 'package:flowpaisa/features/contacts/presentation/screens/add_contact_screen.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
-import 'package:flowpaisa/core/utils/localization_helper.dart';
+import 'package:flowpaisa/core/utils/category_helper.dart';
 import 'package:flowpaisa/core/utils/date_formatter.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
@@ -257,18 +257,127 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
   }
 
   Future<void> _selectDueDate() async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _dueDate ?? DateTime.now().add(const Duration(days: 30)),
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
-    );
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
 
-    if (picked != null) {
-      setState(() {
-        _dueDate = picked;
-      });
+    // Calculate relative days if _dueDate is set
+    String? relativeText;
+    if (_dueDate != null) {
+      final txDate = DateTime(
+          _selectedDate.year, _selectedDate.month, _selectedDate.day);
+      final dDate = DateTime(_dueDate!.year, _dueDate!.month, _dueDate!.day);
+      final diff = dDate.difference(txDate).inDays;
+
+      if (diff == 0) {
+        relativeText = l10n.sameDay;
+      } else if (diff > 0) {
+        relativeText = l10n.inDays(diff);
+      } else {
+        relativeText = l10n.daysAgoRelative(diff.abs());
+      }
     }
+
+    await showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(
+                l10n.dueDate,
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.calendar_today),
+              title: Text(l10n.pickActualDate),
+              subtitle: _dueDate != null
+                  ? Text(AppDateFormatter.formatDate(_dueDate!))
+                  : null,
+              onTap: () async {
+                Navigator.pop(context);
+                final picked = await showDatePicker(
+                  context: context,
+                  initialDate:
+                      _dueDate ?? DateTime.now().add(const Duration(days: 30)),
+                  firstDate: DateTime(2000),
+                  lastDate: DateTime.now().add(const Duration(days: 3650)),
+                );
+                if (picked != null) {
+                  setState(() {
+                    _dueDate = picked;
+                  });
+                }
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.more_time),
+              title: Text(l10n.relativeDateAfterXDays('')),
+              subtitle: relativeText != null ? Text(relativeText) : null,
+              onTap: () {
+                Navigator.pop(context);
+                _showRelativeDateDialog();
+              },
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showRelativeDateDialog() {
+    final l10n = AppLocalizations.of(context)!;
+    final controller = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.customRange),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(l10n.enterDaysFromTransaction),
+            const SizedBox(height: 16),
+            TextField(
+              controller: controller,
+              keyboardType: TextInputType.number,
+              autofocus: true,
+              decoration: InputDecoration(
+                hintText: l10n.daysHint,
+                suffixText: l10n.daysSuffix,
+                border: const OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(l10n.cancel),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final days = int.tryParse(controller.text);
+              if (days != null) {
+                setState(() {
+                  _dueDate = _selectedDate.add(Duration(days: days));
+                });
+                Navigator.pop(context);
+              }
+            },
+            child: Text(l10n.confirm),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _handleRelationshipChange(String? value) async {
@@ -321,8 +430,11 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
               children: [
                 Padding(
                   padding: const EdgeInsets.all(16),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  child: Wrap(
+                    alignment: WrapAlignment.spaceBetween,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: 8,
+                    runSpacing: 8,
                     children: [
                       Text(
                         l10n.selectCategory,
@@ -396,7 +508,7 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                                 size: 24,
                               ),
                             ),
-                            title: Text(category.name),
+                            title: Text(CategoryHelper.getCategoryName(category, l10n)),
                             trailing: _selectedCategory?.uuid == category.uuid
                                 ? Icon(Icons.check_circle, color: color)
                                 : null,
@@ -446,8 +558,11 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
               children: [
                 Padding(
                   padding: const EdgeInsets.all(16),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  child: Wrap(
+                    alignment: WrapAlignment.spaceBetween,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: 8,
+                    runSpacing: 8,
                     children: [
                       Text(
                         l10n.selectContact,
@@ -754,8 +869,8 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                           const SizedBox(height: 4),
                           Text(
                             _selectedCategory != null
-                                ? LocalizationHelper.getLocalizedCategoryName(
-                                    context, _selectedCategory!.name)
+                                ? CategoryHelper.getCategoryName(
+                                    _selectedCategory!, l10n)
                                 : l10n.selectCategory,
                             style: theme.textTheme.titleMedium?.copyWith(
                               fontWeight: _selectedCategory != null
@@ -994,14 +1109,44 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                               ),
                             ),
                             const SizedBox(height: 4),
-                            Text(
-                              _dueDate != null
-                                  ? AppDateFormatter.formatDate(_dueDate!)
-                                  : l10n.notSet,
-                              style: theme.textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.w600,
+                            if (_dueDate != null) ...[
+                              Text(
+                                AppDateFormatter.formatDate(_dueDate!),
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
-                            ),
+                              Builder(
+                                builder: (context) {
+                                  final txDate = DateTime(_selectedDate.year,
+                                      _selectedDate.month, _selectedDate.day);
+                                  final dDate = DateTime(_dueDate!.year,
+                                      _dueDate!.month, _dueDate!.day);
+                                  final diff = dDate.difference(txDate).inDays;
+                                  String relativeText;
+                                  if (diff == 0) {
+                                    relativeText = l10n.sameDay;
+                                  } else if (diff > 0) {
+                                    relativeText = l10n.inDays(diff);
+                                  } else {
+                                    relativeText = l10n.daysAgoRelative(diff.abs());
+                                  }
+                                  return Text(
+                                    relativeText,
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: theme.colorScheme.primary,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  );
+                                },
+                              ),
+                            ] else
+                              Text(
+                                l10n.notSet,
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
                           ],
                         ),
                         const Spacer(),

@@ -1914,6 +1914,16 @@ class $ReceivablesTable extends Receivables
       defaultConstraints: GeneratedColumn.constraintIsAlways(
           'CHECK ("auto_create_income" IN (0, 1))'),
       defaultValue: const Constant(true));
+  static const VerificationMeta _isScheduledMeta =
+      const VerificationMeta('isScheduled');
+  @override
+  late final GeneratedColumn<bool> isScheduled = GeneratedColumn<bool>(
+      'is_scheduled', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("is_scheduled" IN (0, 1))'),
+      defaultValue: const Constant(false));
   static const VerificationMeta _externalLinkIdMeta =
       const VerificationMeta('externalLinkId');
   @override
@@ -1971,6 +1981,7 @@ class $ReceivablesTable extends Receivables
         linkedExpenseUuid,
         linkedIncomeUuid,
         autoCreateIncome,
+        isScheduled,
         externalLinkId,
         createdAt,
         updatedAt,
@@ -2051,6 +2062,12 @@ class $ReceivablesTable extends Receivables
           autoCreateIncome.isAcceptableOrUnknown(
               data['auto_create_income']!, _autoCreateIncomeMeta));
     }
+    if (data.containsKey('is_scheduled')) {
+      context.handle(
+          _isScheduledMeta,
+          isScheduled.isAcceptableOrUnknown(
+              data['is_scheduled']!, _isScheduledMeta));
+    }
     if (data.containsKey('external_link_id')) {
       context.handle(
           _externalLinkIdMeta,
@@ -2106,6 +2123,8 @@ class $ReceivablesTable extends Receivables
           DriftSqlType.string, data['${effectivePrefix}linked_income_uuid']),
       autoCreateIncome: attachedDatabase.typeMapping.read(
           DriftSqlType.bool, data['${effectivePrefix}auto_create_income'])!,
+      isScheduled: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_scheduled'])!,
       externalLinkId: attachedDatabase.typeMapping.read(
           DriftSqlType.string, data['${effectivePrefix}external_link_id']),
       createdAt: attachedDatabase.typeMapping
@@ -2137,6 +2156,7 @@ class Receivable extends DataClass implements Insertable<Receivable> {
   final String? linkedExpenseUuid;
   final String? linkedIncomeUuid;
   final bool autoCreateIncome;
+  final bool isScheduled;
   final String? externalLinkId;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -2154,6 +2174,7 @@ class Receivable extends DataClass implements Insertable<Receivable> {
       this.linkedExpenseUuid,
       this.linkedIncomeUuid,
       required this.autoCreateIncome,
+      required this.isScheduled,
       this.externalLinkId,
       required this.createdAt,
       required this.updatedAt,
@@ -2183,6 +2204,7 @@ class Receivable extends DataClass implements Insertable<Receivable> {
       map['linked_income_uuid'] = Variable<String>(linkedIncomeUuid);
     }
     map['auto_create_income'] = Variable<bool>(autoCreateIncome);
+    map['is_scheduled'] = Variable<bool>(isScheduled);
     if (!nullToAbsent || externalLinkId != null) {
       map['external_link_id'] = Variable<String>(externalLinkId);
     }
@@ -2216,6 +2238,7 @@ class Receivable extends DataClass implements Insertable<Receivable> {
           ? const Value.absent()
           : Value(linkedIncomeUuid),
       autoCreateIncome: Value(autoCreateIncome),
+      isScheduled: Value(isScheduled),
       externalLinkId: externalLinkId == null && nullToAbsent
           ? const Value.absent()
           : Value(externalLinkId),
@@ -2242,6 +2265,7 @@ class Receivable extends DataClass implements Insertable<Receivable> {
           serializer.fromJson<String?>(json['linkedExpenseUuid']),
       linkedIncomeUuid: serializer.fromJson<String?>(json['linkedIncomeUuid']),
       autoCreateIncome: serializer.fromJson<bool>(json['autoCreateIncome']),
+      isScheduled: serializer.fromJson<bool>(json['isScheduled']),
       externalLinkId: serializer.fromJson<String?>(json['externalLinkId']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
@@ -2264,6 +2288,7 @@ class Receivable extends DataClass implements Insertable<Receivable> {
       'linkedExpenseUuid': serializer.toJson<String?>(linkedExpenseUuid),
       'linkedIncomeUuid': serializer.toJson<String?>(linkedIncomeUuid),
       'autoCreateIncome': serializer.toJson<bool>(autoCreateIncome),
+      'isScheduled': serializer.toJson<bool>(isScheduled),
       'externalLinkId': serializer.toJson<String?>(externalLinkId),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
@@ -2284,6 +2309,7 @@ class Receivable extends DataClass implements Insertable<Receivable> {
           Value<String?> linkedExpenseUuid = const Value.absent(),
           Value<String?> linkedIncomeUuid = const Value.absent(),
           bool? autoCreateIncome,
+          bool? isScheduled,
           Value<String?> externalLinkId = const Value.absent(),
           DateTime? createdAt,
           DateTime? updatedAt,
@@ -2306,6 +2332,7 @@ class Receivable extends DataClass implements Insertable<Receivable> {
             ? linkedIncomeUuid.value
             : this.linkedIncomeUuid,
         autoCreateIncome: autoCreateIncome ?? this.autoCreateIncome,
+        isScheduled: isScheduled ?? this.isScheduled,
         externalLinkId:
             externalLinkId.present ? externalLinkId.value : this.externalLinkId,
         createdAt: createdAt ?? this.createdAt,
@@ -2336,6 +2363,8 @@ class Receivable extends DataClass implements Insertable<Receivable> {
       autoCreateIncome: data.autoCreateIncome.present
           ? data.autoCreateIncome.value
           : this.autoCreateIncome,
+      isScheduled:
+          data.isScheduled.present ? data.isScheduled.value : this.isScheduled,
       externalLinkId: data.externalLinkId.present
           ? data.externalLinkId.value
           : this.externalLinkId,
@@ -2361,6 +2390,7 @@ class Receivable extends DataClass implements Insertable<Receivable> {
           ..write('linkedExpenseUuid: $linkedExpenseUuid, ')
           ..write('linkedIncomeUuid: $linkedIncomeUuid, ')
           ..write('autoCreateIncome: $autoCreateIncome, ')
+          ..write('isScheduled: $isScheduled, ')
           ..write('externalLinkId: $externalLinkId, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
@@ -2383,6 +2413,7 @@ class Receivable extends DataClass implements Insertable<Receivable> {
       linkedExpenseUuid,
       linkedIncomeUuid,
       autoCreateIncome,
+      isScheduled,
       externalLinkId,
       createdAt,
       updatedAt,
@@ -2403,6 +2434,7 @@ class Receivable extends DataClass implements Insertable<Receivable> {
           other.linkedExpenseUuid == this.linkedExpenseUuid &&
           other.linkedIncomeUuid == this.linkedIncomeUuid &&
           other.autoCreateIncome == this.autoCreateIncome &&
+          other.isScheduled == this.isScheduled &&
           other.externalLinkId == this.externalLinkId &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
@@ -2422,6 +2454,7 @@ class ReceivablesCompanion extends UpdateCompanion<Receivable> {
   final Value<String?> linkedExpenseUuid;
   final Value<String?> linkedIncomeUuid;
   final Value<bool> autoCreateIncome;
+  final Value<bool> isScheduled;
   final Value<String?> externalLinkId;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
@@ -2440,6 +2473,7 @@ class ReceivablesCompanion extends UpdateCompanion<Receivable> {
     this.linkedExpenseUuid = const Value.absent(),
     this.linkedIncomeUuid = const Value.absent(),
     this.autoCreateIncome = const Value.absent(),
+    this.isScheduled = const Value.absent(),
     this.externalLinkId = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -2459,6 +2493,7 @@ class ReceivablesCompanion extends UpdateCompanion<Receivable> {
     this.linkedExpenseUuid = const Value.absent(),
     this.linkedIncomeUuid = const Value.absent(),
     this.autoCreateIncome = const Value.absent(),
+    this.isScheduled = const Value.absent(),
     this.externalLinkId = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -2481,6 +2516,7 @@ class ReceivablesCompanion extends UpdateCompanion<Receivable> {
     Expression<String>? linkedExpenseUuid,
     Expression<String>? linkedIncomeUuid,
     Expression<bool>? autoCreateIncome,
+    Expression<bool>? isScheduled,
     Expression<String>? externalLinkId,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
@@ -2500,6 +2536,7 @@ class ReceivablesCompanion extends UpdateCompanion<Receivable> {
       if (linkedExpenseUuid != null) 'linked_expense_uuid': linkedExpenseUuid,
       if (linkedIncomeUuid != null) 'linked_income_uuid': linkedIncomeUuid,
       if (autoCreateIncome != null) 'auto_create_income': autoCreateIncome,
+      if (isScheduled != null) 'is_scheduled': isScheduled,
       if (externalLinkId != null) 'external_link_id': externalLinkId,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
@@ -2521,6 +2558,7 @@ class ReceivablesCompanion extends UpdateCompanion<Receivable> {
       Value<String?>? linkedExpenseUuid,
       Value<String?>? linkedIncomeUuid,
       Value<bool>? autoCreateIncome,
+      Value<bool>? isScheduled,
       Value<String?>? externalLinkId,
       Value<DateTime>? createdAt,
       Value<DateTime>? updatedAt,
@@ -2539,6 +2577,7 @@ class ReceivablesCompanion extends UpdateCompanion<Receivable> {
       linkedExpenseUuid: linkedExpenseUuid ?? this.linkedExpenseUuid,
       linkedIncomeUuid: linkedIncomeUuid ?? this.linkedIncomeUuid,
       autoCreateIncome: autoCreateIncome ?? this.autoCreateIncome,
+      isScheduled: isScheduled ?? this.isScheduled,
       externalLinkId: externalLinkId ?? this.externalLinkId,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -2584,6 +2623,9 @@ class ReceivablesCompanion extends UpdateCompanion<Receivable> {
     if (autoCreateIncome.present) {
       map['auto_create_income'] = Variable<bool>(autoCreateIncome.value);
     }
+    if (isScheduled.present) {
+      map['is_scheduled'] = Variable<bool>(isScheduled.value);
+    }
     if (externalLinkId.present) {
       map['external_link_id'] = Variable<String>(externalLinkId.value);
     }
@@ -2619,6 +2661,7 @@ class ReceivablesCompanion extends UpdateCompanion<Receivable> {
           ..write('linkedExpenseUuid: $linkedExpenseUuid, ')
           ..write('linkedIncomeUuid: $linkedIncomeUuid, ')
           ..write('autoCreateIncome: $autoCreateIncome, ')
+          ..write('isScheduled: $isScheduled, ')
           ..write('externalLinkId: $externalLinkId, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
@@ -2712,6 +2755,16 @@ class $PayablesTable extends Payables with TableInfo<$PayablesTable, Payable> {
       defaultConstraints: GeneratedColumn.constraintIsAlways(
           'CHECK ("auto_create_expense" IN (0, 1))'),
       defaultValue: const Constant(false));
+  static const VerificationMeta _isScheduledMeta =
+      const VerificationMeta('isScheduled');
+  @override
+  late final GeneratedColumn<bool> isScheduled = GeneratedColumn<bool>(
+      'is_scheduled', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("is_scheduled" IN (0, 1))'),
+      defaultValue: const Constant(false));
   static const VerificationMeta _externalLinkIdMeta =
       const VerificationMeta('externalLinkId');
   @override
@@ -2769,6 +2822,7 @@ class $PayablesTable extends Payables with TableInfo<$PayablesTable, Payable> {
         linkedExpenseUuid,
         linkedIncomeUuid,
         autoCreateExpense,
+        isScheduled,
         externalLinkId,
         createdAt,
         updatedAt,
@@ -2847,6 +2901,12 @@ class $PayablesTable extends Payables with TableInfo<$PayablesTable, Payable> {
           autoCreateExpense.isAcceptableOrUnknown(
               data['auto_create_expense']!, _autoCreateExpenseMeta));
     }
+    if (data.containsKey('is_scheduled')) {
+      context.handle(
+          _isScheduledMeta,
+          isScheduled.isAcceptableOrUnknown(
+              data['is_scheduled']!, _isScheduledMeta));
+    }
     if (data.containsKey('external_link_id')) {
       context.handle(
           _externalLinkIdMeta,
@@ -2902,6 +2962,8 @@ class $PayablesTable extends Payables with TableInfo<$PayablesTable, Payable> {
           DriftSqlType.string, data['${effectivePrefix}linked_income_uuid']),
       autoCreateExpense: attachedDatabase.typeMapping.read(
           DriftSqlType.bool, data['${effectivePrefix}auto_create_expense'])!,
+      isScheduled: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_scheduled'])!,
       externalLinkId: attachedDatabase.typeMapping.read(
           DriftSqlType.string, data['${effectivePrefix}external_link_id']),
       createdAt: attachedDatabase.typeMapping
@@ -2933,6 +2995,7 @@ class Payable extends DataClass implements Insertable<Payable> {
   final String? linkedExpenseUuid;
   final String? linkedIncomeUuid;
   final bool autoCreateExpense;
+  final bool isScheduled;
   final String? externalLinkId;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -2950,6 +3013,7 @@ class Payable extends DataClass implements Insertable<Payable> {
       this.linkedExpenseUuid,
       this.linkedIncomeUuid,
       required this.autoCreateExpense,
+      required this.isScheduled,
       this.externalLinkId,
       required this.createdAt,
       required this.updatedAt,
@@ -2979,6 +3043,7 @@ class Payable extends DataClass implements Insertable<Payable> {
       map['linked_income_uuid'] = Variable<String>(linkedIncomeUuid);
     }
     map['auto_create_expense'] = Variable<bool>(autoCreateExpense);
+    map['is_scheduled'] = Variable<bool>(isScheduled);
     if (!nullToAbsent || externalLinkId != null) {
       map['external_link_id'] = Variable<String>(externalLinkId);
     }
@@ -3012,6 +3077,7 @@ class Payable extends DataClass implements Insertable<Payable> {
           ? const Value.absent()
           : Value(linkedIncomeUuid),
       autoCreateExpense: Value(autoCreateExpense),
+      isScheduled: Value(isScheduled),
       externalLinkId: externalLinkId == null && nullToAbsent
           ? const Value.absent()
           : Value(externalLinkId),
@@ -3038,6 +3104,7 @@ class Payable extends DataClass implements Insertable<Payable> {
           serializer.fromJson<String?>(json['linkedExpenseUuid']),
       linkedIncomeUuid: serializer.fromJson<String?>(json['linkedIncomeUuid']),
       autoCreateExpense: serializer.fromJson<bool>(json['autoCreateExpense']),
+      isScheduled: serializer.fromJson<bool>(json['isScheduled']),
       externalLinkId: serializer.fromJson<String?>(json['externalLinkId']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
@@ -3060,6 +3127,7 @@ class Payable extends DataClass implements Insertable<Payable> {
       'linkedExpenseUuid': serializer.toJson<String?>(linkedExpenseUuid),
       'linkedIncomeUuid': serializer.toJson<String?>(linkedIncomeUuid),
       'autoCreateExpense': serializer.toJson<bool>(autoCreateExpense),
+      'isScheduled': serializer.toJson<bool>(isScheduled),
       'externalLinkId': serializer.toJson<String?>(externalLinkId),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
@@ -3080,6 +3148,7 @@ class Payable extends DataClass implements Insertable<Payable> {
           Value<String?> linkedExpenseUuid = const Value.absent(),
           Value<String?> linkedIncomeUuid = const Value.absent(),
           bool? autoCreateExpense,
+          bool? isScheduled,
           Value<String?> externalLinkId = const Value.absent(),
           DateTime? createdAt,
           DateTime? updatedAt,
@@ -3101,6 +3170,7 @@ class Payable extends DataClass implements Insertable<Payable> {
             ? linkedIncomeUuid.value
             : this.linkedIncomeUuid,
         autoCreateExpense: autoCreateExpense ?? this.autoCreateExpense,
+        isScheduled: isScheduled ?? this.isScheduled,
         externalLinkId:
             externalLinkId.present ? externalLinkId.value : this.externalLinkId,
         createdAt: createdAt ?? this.createdAt,
@@ -3129,6 +3199,8 @@ class Payable extends DataClass implements Insertable<Payable> {
       autoCreateExpense: data.autoCreateExpense.present
           ? data.autoCreateExpense.value
           : this.autoCreateExpense,
+      isScheduled:
+          data.isScheduled.present ? data.isScheduled.value : this.isScheduled,
       externalLinkId: data.externalLinkId.present
           ? data.externalLinkId.value
           : this.externalLinkId,
@@ -3154,6 +3226,7 @@ class Payable extends DataClass implements Insertable<Payable> {
           ..write('linkedExpenseUuid: $linkedExpenseUuid, ')
           ..write('linkedIncomeUuid: $linkedIncomeUuid, ')
           ..write('autoCreateExpense: $autoCreateExpense, ')
+          ..write('isScheduled: $isScheduled, ')
           ..write('externalLinkId: $externalLinkId, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
@@ -3176,6 +3249,7 @@ class Payable extends DataClass implements Insertable<Payable> {
       linkedExpenseUuid,
       linkedIncomeUuid,
       autoCreateExpense,
+      isScheduled,
       externalLinkId,
       createdAt,
       updatedAt,
@@ -3196,6 +3270,7 @@ class Payable extends DataClass implements Insertable<Payable> {
           other.linkedExpenseUuid == this.linkedExpenseUuid &&
           other.linkedIncomeUuid == this.linkedIncomeUuid &&
           other.autoCreateExpense == this.autoCreateExpense &&
+          other.isScheduled == this.isScheduled &&
           other.externalLinkId == this.externalLinkId &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
@@ -3215,6 +3290,7 @@ class PayablesCompanion extends UpdateCompanion<Payable> {
   final Value<String?> linkedExpenseUuid;
   final Value<String?> linkedIncomeUuid;
   final Value<bool> autoCreateExpense;
+  final Value<bool> isScheduled;
   final Value<String?> externalLinkId;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
@@ -3233,6 +3309,7 @@ class PayablesCompanion extends UpdateCompanion<Payable> {
     this.linkedExpenseUuid = const Value.absent(),
     this.linkedIncomeUuid = const Value.absent(),
     this.autoCreateExpense = const Value.absent(),
+    this.isScheduled = const Value.absent(),
     this.externalLinkId = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -3252,6 +3329,7 @@ class PayablesCompanion extends UpdateCompanion<Payable> {
     this.linkedExpenseUuid = const Value.absent(),
     this.linkedIncomeUuid = const Value.absent(),
     this.autoCreateExpense = const Value.absent(),
+    this.isScheduled = const Value.absent(),
     this.externalLinkId = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -3274,6 +3352,7 @@ class PayablesCompanion extends UpdateCompanion<Payable> {
     Expression<String>? linkedExpenseUuid,
     Expression<String>? linkedIncomeUuid,
     Expression<bool>? autoCreateExpense,
+    Expression<bool>? isScheduled,
     Expression<String>? externalLinkId,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
@@ -3293,6 +3372,7 @@ class PayablesCompanion extends UpdateCompanion<Payable> {
       if (linkedExpenseUuid != null) 'linked_expense_uuid': linkedExpenseUuid,
       if (linkedIncomeUuid != null) 'linked_income_uuid': linkedIncomeUuid,
       if (autoCreateExpense != null) 'auto_create_expense': autoCreateExpense,
+      if (isScheduled != null) 'is_scheduled': isScheduled,
       if (externalLinkId != null) 'external_link_id': externalLinkId,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
@@ -3314,6 +3394,7 @@ class PayablesCompanion extends UpdateCompanion<Payable> {
       Value<String?>? linkedExpenseUuid,
       Value<String?>? linkedIncomeUuid,
       Value<bool>? autoCreateExpense,
+      Value<bool>? isScheduled,
       Value<String?>? externalLinkId,
       Value<DateTime>? createdAt,
       Value<DateTime>? updatedAt,
@@ -3332,6 +3413,7 @@ class PayablesCompanion extends UpdateCompanion<Payable> {
       linkedExpenseUuid: linkedExpenseUuid ?? this.linkedExpenseUuid,
       linkedIncomeUuid: linkedIncomeUuid ?? this.linkedIncomeUuid,
       autoCreateExpense: autoCreateExpense ?? this.autoCreateExpense,
+      isScheduled: isScheduled ?? this.isScheduled,
       externalLinkId: externalLinkId ?? this.externalLinkId,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -3377,6 +3459,9 @@ class PayablesCompanion extends UpdateCompanion<Payable> {
     if (autoCreateExpense.present) {
       map['auto_create_expense'] = Variable<bool>(autoCreateExpense.value);
     }
+    if (isScheduled.present) {
+      map['is_scheduled'] = Variable<bool>(isScheduled.value);
+    }
     if (externalLinkId.present) {
       map['external_link_id'] = Variable<String>(externalLinkId.value);
     }
@@ -3412,6 +3497,7 @@ class PayablesCompanion extends UpdateCompanion<Payable> {
           ..write('linkedExpenseUuid: $linkedExpenseUuid, ')
           ..write('linkedIncomeUuid: $linkedIncomeUuid, ')
           ..write('autoCreateExpense: $autoCreateExpense, ')
+          ..write('isScheduled: $isScheduled, ')
           ..write('externalLinkId: $externalLinkId, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
@@ -8962,6 +9048,7 @@ typedef $$ReceivablesTableCreateCompanionBuilder = ReceivablesCompanion
   Value<String?> linkedExpenseUuid,
   Value<String?> linkedIncomeUuid,
   Value<bool> autoCreateIncome,
+  Value<bool> isScheduled,
   Value<String?> externalLinkId,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
@@ -8982,6 +9069,7 @@ typedef $$ReceivablesTableUpdateCompanionBuilder = ReceivablesCompanion
   Value<String?> linkedExpenseUuid,
   Value<String?> linkedIncomeUuid,
   Value<bool> autoCreateIncome,
+  Value<bool> isScheduled,
   Value<String?> externalLinkId,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
@@ -9073,6 +9161,9 @@ class $$ReceivablesTableFilterComposer
   ColumnFilters<bool> get autoCreateIncome => $composableBuilder(
       column: $table.autoCreateIncome,
       builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isScheduled => $composableBuilder(
+      column: $table.isScheduled, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get externalLinkId => $composableBuilder(
       column: $table.externalLinkId,
@@ -9186,6 +9277,9 @@ class $$ReceivablesTableOrderingComposer
       column: $table.autoCreateIncome,
       builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<bool> get isScheduled => $composableBuilder(
+      column: $table.isScheduled, builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<String> get externalLinkId => $composableBuilder(
       column: $table.externalLinkId,
       builder: (column) => ColumnOrderings(column));
@@ -9295,6 +9389,9 @@ class $$ReceivablesTableAnnotationComposer
 
   GeneratedColumn<bool> get autoCreateIncome => $composableBuilder(
       column: $table.autoCreateIncome, builder: (column) => column);
+
+  GeneratedColumn<bool> get isScheduled => $composableBuilder(
+      column: $table.isScheduled, builder: (column) => column);
 
   GeneratedColumn<String> get externalLinkId => $composableBuilder(
       column: $table.externalLinkId, builder: (column) => column);
@@ -9407,6 +9504,7 @@ class $$ReceivablesTableTableManager extends RootTableManager<
             Value<String?> linkedExpenseUuid = const Value.absent(),
             Value<String?> linkedIncomeUuid = const Value.absent(),
             Value<bool> autoCreateIncome = const Value.absent(),
+            Value<bool> isScheduled = const Value.absent(),
             Value<String?> externalLinkId = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
@@ -9426,6 +9524,7 @@ class $$ReceivablesTableTableManager extends RootTableManager<
             linkedExpenseUuid: linkedExpenseUuid,
             linkedIncomeUuid: linkedIncomeUuid,
             autoCreateIncome: autoCreateIncome,
+            isScheduled: isScheduled,
             externalLinkId: externalLinkId,
             createdAt: createdAt,
             updatedAt: updatedAt,
@@ -9445,6 +9544,7 @@ class $$ReceivablesTableTableManager extends RootTableManager<
             Value<String?> linkedExpenseUuid = const Value.absent(),
             Value<String?> linkedIncomeUuid = const Value.absent(),
             Value<bool> autoCreateIncome = const Value.absent(),
+            Value<bool> isScheduled = const Value.absent(),
             Value<String?> externalLinkId = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
@@ -9464,6 +9564,7 @@ class $$ReceivablesTableTableManager extends RootTableManager<
             linkedExpenseUuid: linkedExpenseUuid,
             linkedIncomeUuid: linkedIncomeUuid,
             autoCreateIncome: autoCreateIncome,
+            isScheduled: isScheduled,
             externalLinkId: externalLinkId,
             createdAt: createdAt,
             updatedAt: updatedAt,
@@ -9565,6 +9666,7 @@ typedef $$PayablesTableCreateCompanionBuilder = PayablesCompanion Function({
   Value<String?> linkedExpenseUuid,
   Value<String?> linkedIncomeUuid,
   Value<bool> autoCreateExpense,
+  Value<bool> isScheduled,
   Value<String?> externalLinkId,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
@@ -9584,6 +9686,7 @@ typedef $$PayablesTableUpdateCompanionBuilder = PayablesCompanion Function({
   Value<String?> linkedExpenseUuid,
   Value<String?> linkedIncomeUuid,
   Value<bool> autoCreateExpense,
+  Value<bool> isScheduled,
   Value<String?> externalLinkId,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
@@ -9675,6 +9778,9 @@ class $$PayablesTableFilterComposer
   ColumnFilters<bool> get autoCreateExpense => $composableBuilder(
       column: $table.autoCreateExpense,
       builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isScheduled => $composableBuilder(
+      column: $table.isScheduled, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get externalLinkId => $composableBuilder(
       column: $table.externalLinkId,
@@ -9787,6 +9893,9 @@ class $$PayablesTableOrderingComposer
       column: $table.autoCreateExpense,
       builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<bool> get isScheduled => $composableBuilder(
+      column: $table.isScheduled, builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<String> get externalLinkId => $composableBuilder(
       column: $table.externalLinkId,
       builder: (column) => ColumnOrderings(column));
@@ -9896,6 +10005,9 @@ class $$PayablesTableAnnotationComposer
 
   GeneratedColumn<bool> get autoCreateExpense => $composableBuilder(
       column: $table.autoCreateExpense, builder: (column) => column);
+
+  GeneratedColumn<bool> get isScheduled => $composableBuilder(
+      column: $table.isScheduled, builder: (column) => column);
 
   GeneratedColumn<String> get externalLinkId => $composableBuilder(
       column: $table.externalLinkId, builder: (column) => column);
@@ -10008,6 +10120,7 @@ class $$PayablesTableTableManager extends RootTableManager<
             Value<String?> linkedExpenseUuid = const Value.absent(),
             Value<String?> linkedIncomeUuid = const Value.absent(),
             Value<bool> autoCreateExpense = const Value.absent(),
+            Value<bool> isScheduled = const Value.absent(),
             Value<String?> externalLinkId = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
@@ -10027,6 +10140,7 @@ class $$PayablesTableTableManager extends RootTableManager<
             linkedExpenseUuid: linkedExpenseUuid,
             linkedIncomeUuid: linkedIncomeUuid,
             autoCreateExpense: autoCreateExpense,
+            isScheduled: isScheduled,
             externalLinkId: externalLinkId,
             createdAt: createdAt,
             updatedAt: updatedAt,
@@ -10046,6 +10160,7 @@ class $$PayablesTableTableManager extends RootTableManager<
             Value<String?> linkedExpenseUuid = const Value.absent(),
             Value<String?> linkedIncomeUuid = const Value.absent(),
             Value<bool> autoCreateExpense = const Value.absent(),
+            Value<bool> isScheduled = const Value.absent(),
             Value<String?> externalLinkId = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
@@ -10065,6 +10180,7 @@ class $$PayablesTableTableManager extends RootTableManager<
             linkedExpenseUuid: linkedExpenseUuid,
             linkedIncomeUuid: linkedIncomeUuid,
             autoCreateExpense: autoCreateExpense,
+            isScheduled: isScheduled,
             externalLinkId: externalLinkId,
             createdAt: createdAt,
             updatedAt: updatedAt,
