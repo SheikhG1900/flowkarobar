@@ -41,13 +41,15 @@ class CategoryHelper {
       return category.name;
     }
 
-    // Default Categories Localization
+    // Default Categories Localization using standard keys
     final name = category.name.toLowerCase();
     if (name.contains('food') || name.contains('dining')) return l10n.categoryFood;
     if (name.contains('transport') || name.contains('travel')) return l10n.categoryTransport;
     if (name.contains('shopping')) return l10n.categoryShopping;
     if (name.contains('entertainment') || name.contains('movie')) return l10n.categoryEntertainment;
     if (name.contains('medical') || name.contains('health')) return l10n.categoryHealth;
+    if (name.contains('education')) return l10n.categoryEducation;
+    if (name.contains('business')) return l10n.categoryBusiness;
     if (name.contains('rent') || name.contains('home')) return l10n.categoryRent;
     if (name.contains('bills') || name.contains('utility')) return l10n.categoryBills;
     if (name.contains('salary') || name.contains('income')) return l10n.categorySalary;

@@ -1,3 +1,5 @@
+import 'package:flowpaisa/core/utils/category_helper.dart';
+import 'package:flowpaisa/core/utils/localization_helper.dart';
 import 'package:flowpaisa/features/messages/presentation/providers/message_template_provider.dart';
 import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 import 'package:flutter/material.dart';
@@ -554,7 +556,9 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                                   },
                                   icon: const Icon(Icons.add),
                                   label: Text(l10n.createCategoryNamed(
-                                      widget.initialCategoryName!)),
+                                      LocalizationHelper.localizeCategory(
+                                          context,
+                                          widget.initialCategoryName!))),
                                 ),
                             ],
                           ),
@@ -589,7 +593,8 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                                     color: theme.colorScheme.primary),
                               ),
                               title: Text(l10n.createCategoryNamed(
-                                  widget.initialCategoryName!)),
+                                  LocalizationHelper.localizeCategory(
+                                      context, widget.initialCategoryName!))),
                               subtitle: Text(l10n.tapToAddCategory),
                               onTap: () async {
                                 final newCategory = await Navigator.push(
@@ -646,7 +651,8 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                                 size: 24,
                               ),
                             ),
-                            title: Text(category.name),
+                            title: Text(
+                                CategoryHelper.getCategoryName(category, l10n)),
                             trailing: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
@@ -890,6 +896,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
       backgroundColor: Colors.transparent,
       builder: (context) => StatefulBuilder(
         builder: (context, setModalState) {
+          final isRtl = Directionality.of(context) == TextDirection.rtl;
           double currentTotalPercent =
               _groupShares.fold(0, (sum, item) => sum + item.percentage);
           double currentTotalAmount =
@@ -1057,7 +1064,9 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                       final share = _groupShares[index];
                       final contactColor = share.isUser
                           ? theme.colorScheme.secondary
-                          : theme.colorScheme.primary;
+                          : (share.contact?.name != null
+                              ? AppColors.getContactColor(share.contact!.name)
+                              : theme.colorScheme.primary);
 
                       return _SplitShareCard(
                         share: share,
@@ -1287,7 +1296,9 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                               style:
                                   const TextStyle(fontWeight: FontWeight.bold)),
                           Text(
-                            '${ref.read(currencySymbolProvider)} ${currentTotalAmount.toStringAsFixed(2)} / ${totalAmount.toStringAsFixed(2)}',
+                            isRtl
+                                ? '${currentTotalAmount.toStringAsFixed(2)} / ${totalAmount.toStringAsFixed(2)} ${ref.read(currencySymbolProvider)}'
+                                : '${ref.read(currencySymbolProvider)} ${currentTotalAmount.toStringAsFixed(2)} / ${totalAmount.toStringAsFixed(2)}',
                             style: TextStyle(
                               color: (currentTotalAmount - totalAmount).abs() <
                                       0.01
@@ -1349,6 +1360,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     final theme = Theme.of(context);
     final isExpense = _selectedType == 'EXPENSE';
     final currencySymbol = ref.watch(currencySymbolProvider);
+    final isRtl = Directionality.of(context) == TextDirection.rtl;
 
     // Watch limits
     final limitsAsync = ref.watch(transactionLimitsProvider);
@@ -1421,8 +1433,12 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                             : AppColors.incomeColor,
                       ),
                       decoration: InputDecoration(
-                        prefixText: '$currencySymbol ',
+                        prefixText: isRtl ? null : '$currencySymbol ',
+                        suffixText: isRtl ? ' $currencySymbol' : null,
                         prefixStyle: theme.textTheme.displayMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                        suffixStyle: theme.textTheme.displayMedium?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
                         border: InputBorder.none,
@@ -1559,7 +1575,10 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            _selectedCategory?.name ?? l10n.selectCategory,
+                            _selectedCategory != null
+                                ? CategoryHelper.getCategoryName(
+                                    _selectedCategory!, l10n)
+                                : l10n.selectCategory,
                             style: theme.textTheme.titleMedium?.copyWith(
                               fontWeight: _selectedCategory != null
                                   ? FontWeight.bold
@@ -1582,7 +1601,8 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                 Padding(
                   padding: const EdgeInsets.only(left: 16, top: 4),
                   child: Text(
-                    l10n.suggestedLabel(widget.initialCategoryName!),
+                    l10n.suggestedLabel(LocalizationHelper.localizeCategory(
+                        context, widget.initialCategoryName!)),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.primary,
                       fontStyle: FontStyle.italic,
@@ -1866,7 +1886,9 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                                 )
                               else if (_myShareAmount != null)
                                 Text(
-                                  '${_isSplitMode ? l10n.split : l10n.add}: ${AmountFormatter.formatAmount(_myShareAmount!, 2)}',
+                                  isRtl
+                                      ? '${AmountFormatter.formatAmount(_myShareAmount!, 2)} :${_isSplitMode ? l10n.split : l10n.add}'
+                                      : '${_isSplitMode ? l10n.split : l10n.add}: ${AmountFormatter.formatAmount(_myShareAmount!, 2)}',
                                   style: theme.textTheme.bodySmall,
                                 ),
                             ],
@@ -2243,6 +2265,7 @@ class _SplitShareCardState extends State<_SplitShareCard> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isRtl = Directionality.of(context) == TextDirection.rtl;
 
     Widget card = Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -2250,7 +2273,7 @@ class _SplitShareCardState extends State<_SplitShareCard> {
       decoration: BoxDecoration(
         color: widget.share.isUser
             ? theme.colorScheme.primary.withValues(alpha: 0.05)
-            : theme.cardColor,
+            : widget.contactColor.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: widget.share.isLocked
@@ -2267,13 +2290,16 @@ class _SplitShareCardState extends State<_SplitShareCard> {
             children: [
               CircleAvatar(
                 radius: 16,
-                backgroundColor: widget.contactColor,
-                child: Text(
-                  widget.share.isUser
-                      ? 'M'
-                      : (widget.share.contact?.name[0] ?? '?'),
-                  style: const TextStyle(color: Colors.white, fontSize: 12),
-                ),
+                backgroundColor: widget.contactColor.withValues(alpha: 0.3),
+                child: widget.share.isUser
+                    ? Icon(Icons.person, size: 18, color: widget.contactColor)
+                    : Text(
+                        (widget.share.contact?.name[0] ?? '?').toUpperCase(),
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -2317,7 +2343,8 @@ class _SplitShareCardState extends State<_SplitShareCard> {
                   keyboardType: TextInputType.number,
                   decoration: InputDecoration(
                     labelText: '%',
-                    suffixText: '%',
+                    prefixText: isRtl ? '%' : null,
+                    suffixText: isRtl ? null : '%',
                     isDense: true,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
@@ -2341,7 +2368,8 @@ class _SplitShareCardState extends State<_SplitShareCard> {
                   keyboardType: TextInputType.number,
                   decoration: InputDecoration(
                     labelText: widget.l10n.amount,
-                    prefixText: '${widget.currencySymbol} ',
+                    prefixText: isRtl ? null : '${widget.currencySymbol} ',
+                    suffixText: isRtl ? ' ${widget.currencySymbol}' : null,
                     isDense: true,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
@@ -2369,8 +2397,10 @@ class _SplitShareCardState extends State<_SplitShareCard> {
       key: ValueKey('dismiss_${widget.share.contact?.uuid ?? widget.index}'),
       direction: DismissDirection.endToStart,
       background: Container(
-        alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: 20),
+        alignment: isRtl ? Alignment.centerLeft : Alignment.centerRight,
+        padding: isRtl
+            ? const EdgeInsets.only(left: 20)
+            : const EdgeInsets.only(right: 20),
         margin: const EdgeInsets.only(bottom: 16),
         decoration: BoxDecoration(
           color: Colors.red.withValues(alpha: 0.1),
