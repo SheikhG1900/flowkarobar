@@ -108,6 +108,7 @@ class DeepLinkService {
         transactionType: recipientTransactionType,
         description: description,
         date: date,
+        dueDate: dueDate,
         categoryName: categoryName,
         categoryColor: categoryColor,
         categoryIcon: categoryIcon,

@@ -42,6 +42,7 @@ class AddTransactionScreen extends ConsumerStatefulWidget {
   final String? initialContactName;
   final String? initialContactPhone;
   final String? initialExternalLinkId;
+  final DateTime? initialDueDate;
 
   const AddTransactionScreen({
     super.key,
@@ -56,6 +57,7 @@ class AddTransactionScreen extends ConsumerStatefulWidget {
     this.initialContactName,
     this.initialContactPhone,
     this.initialExternalLinkId,
+    this.initialDueDate,
   });
 
   @override
@@ -113,7 +115,9 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     if (widget.initialRelationship != null) {
       _paidRelationship = widget.initialRelationship;
       _createLinkedEntry = true;
-      _dueDate = widget.initialDate ?? DateTime.now();
+      _dueDate = widget.initialDueDate ?? widget.initialDate ?? DateTime.now();
+    } else if (widget.initialDueDate != null) {
+      _dueDate = widget.initialDueDate;
     }
 
     // Handle initial contact and category in post-frame
@@ -365,6 +369,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
           externalLinkId: widget.initialExternalLinkId,
           myShareAmount: _myShareAmount,
           isSplitMode: _isSplitMode,
+          isImport: widget.initialExternalLinkId != null,
           l10n: l10n,
         );
 
@@ -1920,7 +1925,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
               ],
 
               // Split Bill Button
-              if (_paidRelationship != null) ...[
+              if (_paidRelationship != null && widget.initialExternalLinkId == null) ...[
                 InkWell(
                   onTap: _showGroupSplitDialog,
                   borderRadius: BorderRadius.circular(12),

@@ -38,6 +38,7 @@ class TransactionShareData extends SharedData {
   final String transactionType; // 'EXPENSE' or 'INCOME'
   final String? description;
   final DateTime date;
+  final DateTime? dueDate;
   final String? categoryName;
   final String? categoryColor;
   final String? categoryIcon;
@@ -50,6 +51,7 @@ class TransactionShareData extends SharedData {
     required this.transactionType,
     this.description,
     required this.date,
+    this.dueDate,
     this.categoryName,
     this.categoryColor,
     this.categoryIcon,
@@ -76,6 +78,7 @@ class TransactionShareData extends SharedData {
         'tt': transactionType,
         'd': description,
         'dt': date.toIso8601String(),
+        'dd': dueDate?.toIso8601String(),
         'cn': categoryName,
         'cc': categoryColor,
         'ci': categoryIcon,
@@ -93,6 +96,9 @@ class TransactionShareData extends SharedData {
       transactionType: (json['tt'] ?? json['transactionType']) as String,
       description: (json['d'] ?? json['description']) as String?,
       date: DateTime.parse((json['dt'] ?? json['date']) as String),
+      dueDate: (json['dd'] ?? json['dueDate']) != null
+          ? DateTime.parse((json['dd'] ?? json['dueDate']) as String)
+          : null,
       categoryName: (json['cn'] ?? json['categoryName']) as String?,
       categoryColor: (json['cc'] ?? json['categoryColor']) as String?,
       categoryIcon: (json['ci'] ?? json['categoryIcon']) as String?,

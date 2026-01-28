@@ -29,6 +29,7 @@ class AddReceivableScreen extends ConsumerStatefulWidget {
   final String? initialContactName;
   final String? initialContactPhone;
   final String? initialExternalLinkId;
+  final DateTime? initialDueDate;
 
   const AddReceivableScreen({
     super.key,
@@ -38,6 +39,7 @@ class AddReceivableScreen extends ConsumerStatefulWidget {
     this.initialContactName,
     this.initialContactPhone,
     this.initialExternalLinkId,
+    this.initialDueDate,
   });
 
   @override
@@ -70,6 +72,9 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
     }
     if (widget.initialDescription != null) {
       _descriptionController.text = widget.initialDescription!;
+    }
+    if (widget.initialDueDate != null) {
+      _dueDate = widget.initialDueDate;
     }
 
     WidgetsBinding.instance.addPostFrameCallback((_) {

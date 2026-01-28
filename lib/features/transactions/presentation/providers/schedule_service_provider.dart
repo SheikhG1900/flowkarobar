@@ -181,8 +181,15 @@ class ScheduleService {
     // Use a deterministic UUID based on schedule and date to prevent duplicates during sync
     // Shorten the schedule UUID for external link consistency
     final shortScheduleUuid = DeepLinkService.shortenUuid(schedule.uuid);
-    final dateStr = "${date.year}${date.month}${date.day}";
+    // Use 0-padding for month and day to avoid ambiguity (e.g., 20250111 vs 20251101)
+    final monthStr = date.month.toString().padLeft(2, '0');
+    final dayStr = date.day.toString().padLeft(2, '0');
+    final dateStr = "${date.year}$monthStr$dayStr";
     final deterministicUuid = "${shortScheduleUuid}_$dateStr";
+
+    debugPrint('DEBUG: Generating transaction for schedule: ${schedule.uuid}');
+    debugPrint('DEBUG: Target date: $date');
+    debugPrint('DEBUG: Generated deterministic ID: $deterministicUuid');
 
     // Calculate dynamic due date based on offset if available
     DateTime? calculatedDueDate;
@@ -203,7 +210,19 @@ class ScheduleService {
       dueDate: calculatedDueDate,
       isScheduled: true,
       externalLinkId: deterministicUuid, // Use as external link ID as well
-    );
+    ).catchError((e) {
+      final errorStr = e.toString();
+      if (errorStr.contains('1555') || errorStr.contains('UNIQUE constraint failed')) {
+        // Ignore unique constraint violations (already generated)
+        final msg = 'Transaction for $date already exists (deterministic ID: $deterministicUuid), skipping.';
+        debugPrint('DEBUG: $msg');
+        // Also show in toast if possible via a callback or just log it
+        return ''; // Return empty string to satisfy Future<String> return type
+      } else {
+        debugPrint('DEBUG: Error in createTransaction: $e');
+        throw e;
+      }
+    });
   }
 
   /// Calculate which dates should have transactions generated based on schedule pattern

@@ -61,17 +61,36 @@ class TransactionService {
     String? externalLinkId,
     double? myShareAmount,
     bool isSplitMode = true,
+    bool isImport = false,
     AppLocalizations? l10n,
   }) async {
     return await database.transaction(() async {
-      // 0. Generate base UUID first if not provided
-      final baseUuid = externalLinkId ?? const Uuid().v4();
-      
-      // Derive the externalLinkId directly from the baseUuid using the common method
-      final effectiveExternalId = DeepLinkService.shortenUuid(baseUuid);
+      // 0. Determine the final UUID for the transaction
+      String baseTransactionUuid;
+      String effectiveExternalId;
 
-      // Use the effectiveExternalId as the base UUID for the transaction to ensure consistency across devices
-      final baseTransactionUuid = '${effectiveExternalId}_0';
+      if (isImport && externalLinkId != null) {
+        // If it's an import from a deep link, use the provided externalLinkId exactly as is.
+        // It already contains the necessary suffixes and formatting.
+        baseTransactionUuid = externalLinkId;
+        effectiveExternalId = externalLinkId;
+      } else {
+        // Standard creation (manual or scheduler)
+        final baseUuid = externalLinkId ?? const Uuid().v4();
+
+        // If externalLinkId was provided (e.g. from scheduler), use it as is to preserve the date suffix.
+        // Otherwise, shorten the newly generated random UUID.
+        effectiveExternalId =
+            externalLinkId ?? DeepLinkService.shortenUuid(baseUuid);
+
+        // Use the effectiveExternalId as the base UUID for the transaction to ensure consistency across devices
+        baseTransactionUuid = '${effectiveExternalId}_0';
+      }
+
+      debugPrint('DEBUG: Transaction Service creating transaction');
+      debugPrint('DEBUG: Is Import: $isImport');
+      debugPrint('DEBUG: Effective External ID: $effectiveExternalId');
+      debugPrint('DEBUG: Final Transaction UUID: $baseTransactionUuid');
 
       // Determine actual amounts for contact and user
       double contactAmount = amount;
@@ -516,41 +535,77 @@ class TransactionService {
       // 3. Update all related records with this ID
       // Update transaction
       if (transactionUuid != null) {
-        await transactionsRepository.updateTransactionWithCompanion(
-          transactionUuid,
-          TransactionsCompanion(externalLinkId: drift.Value(finalId)),
-        );
+        try {
+          await transactionsRepository.updateTransactionWithCompanion(
+            transactionUuid,
+            TransactionsCompanion(externalLinkId: drift.Value(finalId)),
+          );
+        } catch (e) {
+          if (!e.toString().contains('1555') && !e.toString().contains('UNIQUE constraint failed')) {
+            rethrow;
+          }
+        }
       } else if (transaction != null) {
-        await transactionsRepository.updateTransactionWithCompanion(
-          transaction.uuid,
-          TransactionsCompanion(externalLinkId: drift.Value(finalId)),
-        );
+        try {
+          await transactionsRepository.updateTransactionWithCompanion(
+            transaction.uuid,
+            TransactionsCompanion(externalLinkId: drift.Value(finalId)),
+          );
+        } catch (e) {
+          if (!e.toString().contains('1555') && !e.toString().contains('UNIQUE constraint failed')) {
+            rethrow;
+          }
+        }
       }
 
       // Update payable
       if (payableUuid != null) {
-        await payablesRepository.updatePayableWithCompanion(
-          payableUuid,
-          PayablesCompanion(externalLinkId: drift.Value(finalId)),
-        );
+        try {
+          await payablesRepository.updatePayableWithCompanion(
+            payableUuid,
+            PayablesCompanion(externalLinkId: drift.Value(finalId)),
+          );
+        } catch (e) {
+          if (!e.toString().contains('1555') && !e.toString().contains('UNIQUE constraint failed')) {
+            rethrow;
+          }
+        }
       } else if (payable != null) {
-        await payablesRepository.updatePayableWithCompanion(
-          payable.uuid,
-          PayablesCompanion(externalLinkId: drift.Value(finalId)),
-        );
+        try {
+          await payablesRepository.updatePayableWithCompanion(
+            payable.uuid,
+            PayablesCompanion(externalLinkId: drift.Value(finalId)),
+          );
+        } catch (e) {
+          if (!e.toString().contains('1555') && !e.toString().contains('UNIQUE constraint failed')) {
+            rethrow;
+          }
+        }
       }
 
       // Update receivable
       if (receivableUuid != null) {
-        await receivablesRepository.updateReceivableWithCompanion(
-          receivableUuid,
-          ReceivablesCompanion(externalLinkId: drift.Value(finalId)),
-        );
+        try {
+          await receivablesRepository.updateReceivableWithCompanion(
+            receivableUuid,
+            ReceivablesCompanion(externalLinkId: drift.Value(finalId)),
+          );
+        } catch (e) {
+          if (!e.toString().contains('1555') && !e.toString().contains('UNIQUE constraint failed')) {
+            rethrow;
+          }
+        }
       } else if (receivable != null) {
-        await receivablesRepository.updateReceivableWithCompanion(
-          receivable.uuid,
-          ReceivablesCompanion(externalLinkId: drift.Value(finalId)),
-        );
+        try {
+          await receivablesRepository.updateReceivableWithCompanion(
+            receivable.uuid,
+            ReceivablesCompanion(externalLinkId: drift.Value(finalId)),
+          );
+        } catch (e) {
+          if (!e.toString().contains('1555') && !e.toString().contains('UNIQUE constraint failed')) {
+            rethrow;
+          }
+        }
       }
 
       return finalId;

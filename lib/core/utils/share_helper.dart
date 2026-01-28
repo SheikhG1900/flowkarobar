@@ -440,6 +440,24 @@ class ShareHelper {
     final effectiveExternalId = await transactionService.ensureExternalLinkId(
         transactionUuid: transaction.uuid);
 
+    // Fetch linked payable/receivable to get the dueDate
+    DateTime? dueDate;
+    if (transaction.linkedPayableUuid != null) {
+      final database = (ref?.read(databaseProvider));
+      if (database != null) {
+        final payable = await PayablesRepository(database)
+            .getPayableByUuid(transaction.linkedPayableUuid!);
+        dueDate = payable?.dueDate;
+      }
+    } else if (transaction.linkedReceivableUuid != null) {
+      final database = (ref?.read(databaseProvider));
+      if (database != null) {
+        final receivable = await ReceivablesRepository(database)
+            .getReceivableByUuid(transaction.linkedReceivableUuid!);
+        dueDate = receivable?.dueDate;
+      }
+    }
+
     if (context.mounted) {
       String? status;
       if (isMarked) {
@@ -464,6 +482,7 @@ class ShareHelper {
         categoryName: category?.name,
         categoryColor: category?.color,
         categoryIcon: category?.icon,
+        dueDate: dueDate,
         externalLinkId: effectiveExternalId,
         status: status,
       );
@@ -624,6 +643,24 @@ class ShareHelper {
     final effectiveExternalId = await transactionService.ensureExternalLinkId(
         transactionUuid: transaction.uuid);
 
+    // Fetch linked payable/receivable to get the dueDate
+    DateTime? dueDate;
+    if (transaction.linkedPayableUuid != null) {
+      final database = (ref?.read(databaseProvider));
+      if (database != null) {
+        final payable = await PayablesRepository(database)
+            .getPayableByUuid(transaction.linkedPayableUuid!);
+        dueDate = payable?.dueDate;
+      }
+    } else if (transaction.linkedReceivableUuid != null) {
+      final database = (ref?.read(databaseProvider));
+      if (database != null) {
+        final receivable = await ReceivablesRepository(database)
+            .getReceivableByUuid(transaction.linkedReceivableUuid!);
+        dueDate = receivable?.dueDate;
+      }
+    }
+
     if (context.mounted) {
       String? status;
       if (isMarked) {
@@ -648,6 +685,7 @@ class ShareHelper {
         categoryName: category?.name,
         categoryColor: category?.color,
         categoryIcon: category?.icon,
+        dueDate: dueDate,
         externalLinkId: effectiveExternalId,
         status: status,
       );

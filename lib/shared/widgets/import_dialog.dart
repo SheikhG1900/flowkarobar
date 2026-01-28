@@ -3,7 +3,6 @@ import "package:flutter/material.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
 import "package:flowpaisa/core/utils/date_formatter.dart";
 import "package:flowpaisa/core/utils/amount_formatter.dart";
-import "package:flowpaisa/features/settings/presentation/providers/settings_provider.dart";
 import "package:flowpaisa/features/whatsapp/domain/models/shared_data_models.dart";
 import "package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart";
 import "package:flowpaisa/features/receivables/domain/models.dart";
@@ -33,7 +32,6 @@ class _ImportDialogState extends ConsumerState<ImportDialog> {
   bool _isImporting = false;
   bool _alreadyImported = false;
   bool _isSettledUpdate = false;
-  String? _errorMessage;
   dynamic _existingItemWithLinkedData;
 
   @override
@@ -129,6 +127,9 @@ class _ImportDialogState extends ConsumerState<ImportDialog> {
             initialContactName: data.senderName,
             initialContactPhone: data.senderPhone,
             initialExternalLinkId: data.externalLinkId,
+            initialDueDate: (widget.sharedData is TransactionShareData)
+                ? (widget.sharedData as TransactionShareData).date
+                : null,
           ),
         ),
       );
@@ -144,6 +145,7 @@ class _ImportDialogState extends ConsumerState<ImportDialog> {
             initialContactName: data.senderName,
             initialContactPhone: data.senderPhone,
             initialExternalLinkId: data.externalLinkId,
+            initialDueDate: data.dueDate,
           ),
         ),
       );
@@ -159,6 +161,7 @@ class _ImportDialogState extends ConsumerState<ImportDialog> {
             initialContactName: data.senderName,
             initialContactPhone: data.senderPhone,
             initialExternalLinkId: data.externalLinkId,
+            initialDueDate: data.dueDate,
           ),
         ),
       );

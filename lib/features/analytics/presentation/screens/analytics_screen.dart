@@ -147,7 +147,8 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
     } catch (e) {
       if (mounted) {
         Navigator.pop(context); // Close loading if still open
-        ToastUtils.showErrorToast(context, ref, l10n.errorExporting(e.toString()));
+        ToastUtils.showErrorToast(
+            context, ref, l10n.errorExporting(e.toString()));
       }
     }
   }
@@ -394,7 +395,8 @@ class _DateRangeSelector extends StatelessWidget {
   String _getDisplayText(BuildContext context) {
     switch (selectedDateRange.type) {
       case DateRangeType.month:
-        return AppDateFormatter.formatMonthYear(selectedDateRange.startDate, context: context);
+        return AppDateFormatter.formatMonthYear(selectedDateRange.startDate,
+            context: context);
       case DateRangeType.quarter:
         final quarter = ((selectedDateRange.startDate.month - 1) ~/ 3) + 1;
         return 'Q$quarter ${AppDateFormatter.getFormatter('y').format(selectedDateRange.startDate)}';
@@ -566,204 +568,211 @@ class _FinancialSummaryCard extends ConsumerWidget {
       data: (selectedSummary) {
         return allTimeAsync.when(
           data: (allTimeSummary) {
-            return Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: theme.cardColor,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                    color: theme.dividerColor.withValues(alpha: 0.5)),
-              ),
-              child: Column(
-                children: [
-                  // Payable vs Receivable
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _SummaryItem(
-                          title: l10n.payableTag,
-                          selectedAmount: selectedSummary.totalPayable,
-                          allTimeAmount: allTimeSummary.totalPayable,
-                          color: AppColors.payableColor,
-                          icon: Icons.arrow_upward,
-                          onTap: () {
-                            final dateRange = ref.read(selectedDateRangeProvider);
-                            ref.read(payablesPaginatedProvider('PENDING').notifier).applyFilters(
-                              PayableFilters(
-                                startDate: dateRange.startDate,
-                                endDate: dateRange.endDate,
-                              ),
-                            );
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const PayablesListScreen(),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: _SummaryItem(
-                          title: l10n.receivableTag,
-                          selectedAmount: selectedSummary.totalReceivable,
-                          allTimeAmount: allTimeSummary.totalReceivable,
-                          color: AppColors.receivableColor,
-                          icon: Icons.arrow_downward,
-                          onTap: () {
-                            final dateRange = ref.read(selectedDateRangeProvider);
-                            ref.read(receivablesPaginatedProvider('PENDING').notifier).applyFilters(
-                              ReceivableFilters(
-                                startDate: dateRange.startDate,
-                                endDate: dateRange.endDate,
-                              ),
-                            );
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const ReceivablesListScreen(),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  // Expense vs Income
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _SummaryItem(
-                          title: l10n.expenses,
-                          selectedAmount: selectedSummary.totalExpense,
-                          allTimeAmount: allTimeSummary.totalExpense,
-                          color: AppColors.expenseColor,
-                          icon: Icons.shopping_cart,
-                          onTap: () {
-                            final dateRange = ref.read(selectedDateRangeProvider);
-                            ref.read(transactionsPaginatedProvider.notifier).applyFilters(
-                              TransactionFilters(
-                                type: 'EXPENSE',
-                                startDate: dateRange.startDate,
-                                endDate: dateRange.endDate,
-                              ),
-                            );
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const TransactionsListScreen(),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: _SummaryItem(
-                          title: l10n.income,
-                          selectedAmount: selectedSummary.totalIncome,
-                          allTimeAmount: allTimeSummary.totalIncome,
-                          color: AppColors.incomeColor,
-                          icon: Icons.account_balance_wallet,
-                          onTap: () {
-                            final dateRange = ref.read(selectedDateRangeProvider);
-                            ref.read(transactionsPaginatedProvider.notifier).applyFilters(
-                              TransactionFilters(
-                                type: 'INCOME',
-                                startDate: dateRange.startDate,
-                                endDate: dateRange.endDate,
-                              ),
-                            );
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const TransactionsListScreen(),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                      // Net Balance
-                      InkWell(
+            return Column(
+              children: [
+                // Payable vs Receivable
+                Row(
+                  children: [
+                    Expanded(
+                      child: _SummaryItem(
+                        title: l10n.payableTag,
+                        selectedAmount: selectedSummary.totalPayable,
+                        allTimeAmount: allTimeSummary.totalPayable,
+                        color: AppColors.payableColor,
+                        icon: Icons.arrow_upward,
                         onTap: () {
                           final dateRange = ref.read(selectedDateRangeProvider);
-                          ref.read(transactionsPaginatedProvider.notifier).applyFilters(
-                            TransactionFilters(
-                              startDate: dateRange.startDate,
-                              endDate: dateRange.endDate,
-                            ),
-                          );
+                          ref
+                              .read(
+                                  payablesPaginatedProvider('PENDING').notifier)
+                              .applyFilters(
+                                PayableFilters(
+                                  startDate: dateRange.startDate,
+                                  endDate: dateRange.endDate,
+                                ),
+                              );
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const TransactionsListScreen(),
+                              builder: (context) => const PayablesListScreen(),
                             ),
                           );
                         },
-                        borderRadius: BorderRadius.circular(16),
-                        child: Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            gradient: selectedSummary.netBalance >= 0
-                                ? AppColors.receivableGradient
-                                : AppColors.payableGradient,
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Column(
-                            children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    l10n.netBalance,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                  Text(
-                                    AmountFormatter.formatWithCurrency(
-                                        selectedSummary.netBalance.abs(),
-                                        currencySymbol,
-                                        2),
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 24,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 4),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.end,
-                                children: [
-                                  Text(
-                                    '${l10n.allTime} ${AmountFormatter.formatWithCurrency(allTimeSummary.netBalance.abs(), currencySymbol, 2)}',
-                                    style: TextStyle(
-                                      color: Colors.white.withValues(alpha: 0.7),
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
                       ),
-                ],
-              ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _SummaryItem(
+                        title: l10n.receivableTag,
+                        selectedAmount: selectedSummary.totalReceivable,
+                        allTimeAmount: allTimeSummary.totalReceivable,
+                        color: AppColors.receivableColor,
+                        icon: Icons.arrow_downward,
+                        onTap: () {
+                          final dateRange = ref.read(selectedDateRangeProvider);
+                          ref
+                              .read(receivablesPaginatedProvider('PENDING')
+                                  .notifier)
+                              .applyFilters(
+                                ReceivableFilters(
+                                  startDate: dateRange.startDate,
+                                  endDate: dateRange.endDate,
+                                ),
+                              );
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  const ReceivablesListScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                // Expense vs Income
+                Row(
+                  children: [
+                    Expanded(
+                      child: _SummaryItem(
+                        title: l10n.expenses,
+                        selectedAmount: selectedSummary.totalExpense,
+                        allTimeAmount: allTimeSummary.totalExpense,
+                        color: AppColors.expenseColor,
+                        icon: Icons.shopping_cart,
+                        onTap: () {
+                          final dateRange = ref.read(selectedDateRangeProvider);
+                          ref
+                              .read(transactionsPaginatedProvider.notifier)
+                              .applyFilters(
+                                TransactionFilters(
+                                  type: 'EXPENSE',
+                                  startDate: dateRange.startDate,
+                                  endDate: dateRange.endDate,
+                                ),
+                              );
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  const TransactionsListScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _SummaryItem(
+                        title: l10n.income,
+                        selectedAmount: selectedSummary.totalIncome,
+                        allTimeAmount: allTimeSummary.totalIncome,
+                        color: AppColors.incomeColor,
+                        icon: Icons.account_balance_wallet,
+                        onTap: () {
+                          final dateRange = ref.read(selectedDateRangeProvider);
+                          ref
+                              .read(transactionsPaginatedProvider.notifier)
+                              .applyFilters(
+                                TransactionFilters(
+                                  type: 'INCOME',
+                                  startDate: dateRange.startDate,
+                                  endDate: dateRange.endDate,
+                                ),
+                              );
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  const TransactionsListScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                // Net Balance
+                InkWell(
+                  onTap: () {
+                    final dateRange = ref.read(selectedDateRangeProvider);
+                    ref
+                        .read(transactionsPaginatedProvider.notifier)
+                        .applyFilters(
+                          TransactionFilters(
+                            startDate: dateRange.startDate,
+                            endDate: dateRange.endDate,
+                          ),
+                        );
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const TransactionsListScreen(),
+                      ),
+                    );
+                  },
+                  borderRadius: BorderRadius.circular(16),
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      gradient: selectedSummary.netBalance >= 0
+                          ? AppColors.receivableGradient
+                          : AppColors.payableGradient,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              l10n.netBalance,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            Text(
+                              AmountFormatter.formatWithCurrency(
+                                  selectedSummary.netBalance.abs(),
+                                  currencySymbol,
+                                  2),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            Text(
+                              '${l10n.allTime} ${AmountFormatter.formatWithCurrency(allTimeSummary.netBalance.abs(), currencySymbol, 2)}',
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.7),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             );
           },
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, s) => Center(child: Text(l10n.errorOccurred(e.toString()))),
+          error: (e, s) =>
+              Center(child: Text(l10n.errorOccurred(e.toString()))),
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
@@ -845,7 +854,8 @@ class _SummaryItem extends ConsumerWidget {
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w500,
-                color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                color:
+                    theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
               ),
             ),
           ],
@@ -902,8 +912,8 @@ class _ContactSummariesSection extends ConsumerWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) =>
-                          ContactDetailsScreen(contactUuid: summary.contact.uuid),
+                      builder: (context) => ContactDetailsScreen(
+                          contactUuid: summary.contact.uuid),
                     ),
                   );
                 },
@@ -953,11 +963,14 @@ class _ContactSummariesSection extends ConsumerWidget {
                                     final dateRange =
                                         ref.read(selectedDateRangeProvider);
                                     ref
-                                        .read(payablesPaginatedProvider('PENDING')
-                                            .notifier)
+                                        .read(
+                                            payablesPaginatedProvider('PENDING')
+                                                .notifier)
                                         .applyFilters(
                                           PayableFilters(
-                                            contactUuids: [summary.contact.uuid],
+                                            contactUuids: [
+                                              summary.contact.uuid
+                                            ],
                                             startDate: dateRange.startDate,
                                             endDate: dateRange.endDate,
                                           ),
@@ -999,12 +1012,14 @@ class _ContactSummariesSection extends ConsumerWidget {
                                     final dateRange =
                                         ref.read(selectedDateRangeProvider);
                                     ref
-                                        .read(
-                                            receivablesPaginatedProvider('PENDING')
-                                                .notifier)
+                                        .read(receivablesPaginatedProvider(
+                                                'PENDING')
+                                            .notifier)
                                         .applyFilters(
                                           ReceivableFilters(
-                                            contactUuids: [summary.contact.uuid],
+                                            contactUuids: [
+                                              summary.contact.uuid
+                                            ],
                                             startDate: dateRange.startDate,
                                             endDate: dateRange.endDate,
                                           ),
@@ -1224,7 +1239,8 @@ class _ExpensesPieChart extends ConsumerWidget {
                       child: Row(
                         children: [
                           Text(
-                            LocalizationHelper.getLocalizedCategoryName(context, e.category.name),
+                            LocalizationHelper.getLocalizedCategoryName(
+                                context, e.category.name),
                           ),
                           const SizedBox(width: 8),
                           Container(
@@ -1349,7 +1365,8 @@ class _TrendsBarChart extends ConsumerWidget {
                       return Padding(
                         padding: const EdgeInsets.only(top: 8.0),
                         child: Text(
-                          AppDateFormatter.formatMonth(trends[index].month, context: context),
+                          AppDateFormatter.formatMonth(trends[index].month,
+                              context: context),
                           style: const TextStyle(fontSize: 10),
                         ),
                       );
@@ -1446,7 +1463,8 @@ class _PayableReceivableTrendsChart extends ConsumerWidget {
                 touchTooltipData: BarTouchTooltipData(
                   getTooltipColor: (_) => theme.cardColor,
                   getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                    final type = rodIndex == 0 ? l10n.payableTag : l10n.receivableTag;
+                    final type =
+                        rodIndex == 0 ? l10n.payableTag : l10n.receivableTag;
                     return BarTooltipItem(
                       '$type\n',
                       TextStyle(
@@ -1480,7 +1498,8 @@ class _PayableReceivableTrendsChart extends ConsumerWidget {
                       return Padding(
                         padding: const EdgeInsets.only(top: 8.0),
                         child: Text(
-                            AppDateFormatter.formatMonth(trends[index].month, context: context),
+                            AppDateFormatter.formatMonth(trends[index].month,
+                                context: context),
                             style: const TextStyle(fontSize: 10)),
                       );
                     },
@@ -1710,8 +1729,8 @@ class _PaymentStatusDistributionChart extends ConsumerWidget {
                         Colors.orange, currencySymbol),
                     _buildStatusLegend(l10n.paid, status.paidPayables,
                         Colors.green, currencySymbol),
-                    _buildStatusLegend(l10n.statusCancelled, status.cancelledPayables,
-                        Colors.grey, currencySymbol),
+                    _buildStatusLegend(l10n.statusCancelled,
+                        status.cancelledPayables, Colors.grey, currencySymbol),
                   ],
                 ),
               ),
@@ -1775,10 +1794,16 @@ class _PaymentStatusDistributionChart extends ConsumerWidget {
                     const SizedBox(height: 8),
                     _buildStatusLegend(l10n.pending, status.pendingReceivables,
                         Colors.orange, currencySymbol),
-                    _buildStatusLegend(l10n.receivedLabel, status.receivedReceivables,
-                        Colors.green, currencySymbol),
-                    _buildStatusLegend(l10n.statusCancelled, status.cancelledReceivables,
-                        Colors.grey, currencySymbol),
+                    _buildStatusLegend(
+                        l10n.receivedLabel,
+                        status.receivedReceivables,
+                        Colors.green,
+                        currencySymbol),
+                    _buildStatusLegend(
+                        l10n.statusCancelled,
+                        status.cancelledReceivables,
+                        Colors.grey,
+                        currencySymbol),
                   ],
                 ),
               ),
@@ -1894,7 +1919,8 @@ class _IncomePieChart extends ConsumerWidget {
                       child: Row(
                         children: [
                           Text(
-                            LocalizationHelper.getLocalizedCategoryName(context, e.category.name),
+                            LocalizationHelper.getLocalizedCategoryName(
+                                context, e.category.name),
                           ),
                           const SizedBox(width: 8),
                           Container(
