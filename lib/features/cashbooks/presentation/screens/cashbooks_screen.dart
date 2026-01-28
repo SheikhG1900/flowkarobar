@@ -79,7 +79,8 @@ class CashbooksScreen extends ConsumerWidget {
                       ),
                     ),
                     subtitle: Text(
-                      l10n.createdLabel(AppDateFormatter.formatDate(cashbook.createdAt)),
+                      l10n.createdLabel(
+                          AppDateFormatter.formatDate(cashbook.createdAt)),
                       style: theme.textTheme.bodySmall,
                     ),
                     trailing: Row(
@@ -121,7 +122,8 @@ class CashbooksScreen extends ConsumerWidget {
                               value: 'backup_local',
                               child: Row(
                                 children: [
-                                  const Icon(Icons.file_upload_outlined, size: 20),
+                                  const Icon(Icons.file_upload_outlined,
+                                      size: 20),
                                   const SizedBox(width: 8),
                                   Text(l10n.backupToFile),
                                   const SizedBox(width: 8),
@@ -133,7 +135,8 @@ class CashbooksScreen extends ConsumerWidget {
                               value: 'restore_local',
                               child: Row(
                                 children: [
-                                  const Icon(Icons.file_download_outlined, size: 20),
+                                  const Icon(Icons.file_download_outlined,
+                                      size: 20),
                                   const SizedBox(width: 8),
                                   Text(l10n.restoreFromFile),
                                   const SizedBox(width: 8),
@@ -161,7 +164,8 @@ class CashbooksScreen extends ConsumerWidget {
                                       size: 20, color: Colors.orange),
                                   const SizedBox(width: 8),
                                   Text(l10n.clearData,
-                                      style: const TextStyle(color: Colors.orange)),
+                                      style: const TextStyle(
+                                          color: Colors.orange)),
                                 ],
                               ),
                             ),
@@ -174,7 +178,8 @@ class CashbooksScreen extends ConsumerWidget {
                                         size: 20, color: Colors.red),
                                     const SizedBox(width: 8),
                                     Text(l10n.delete,
-                                        style: const TextStyle(color: Colors.red)),
+                                        style:
+                                            const TextStyle(color: Colors.red)),
                                   ],
                                 ),
                               ),
@@ -192,7 +197,7 @@ class CashbooksScreen extends ConsumerWidget {
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddSheet(context),
         tooltip: l10n.addCashbook,
-        child: const Icon(Icons.add),
+        child: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }
@@ -336,7 +341,8 @@ class CashbooksScreen extends ConsumerWidget {
       if (context.mounted) {
         final l10n = AppLocalizations.of(context)!;
         Navigator.pop(context); // Close loading if still open
-        ToastUtils.showErrorToast(context, ref, l10n.errorOccurred(e.toString()));
+        ToastUtils.showErrorToast(
+            context, ref, l10n.errorOccurred(e.toString()));
       }
     }
   }
@@ -372,22 +378,21 @@ class CashbooksScreen extends ConsumerWidget {
           ),
         );
 
-          if (confirmed == true && context.mounted) {
-            await ref
-                .read(cashbooksProvider.notifier)
-                .restoreCashbookFromFile(cashbook.id, file);
+        if (confirmed == true && context.mounted) {
+          await ref
+              .read(cashbooksProvider.notifier)
+              .restoreCashbookFromFile(cashbook.id, file);
 
-            // Invalidate database if it was active
-            final activeId = ref.read(activeCashbookIdProvider);
-            if (activeId == cashbook.id) {
-              ref.invalidate(databaseProvider);
-            }
-
-            if (context.mounted) {
-              ToastUtils.showSuccessToast(
-                  context, ref, l10n.restoreSuccessful);
-            }
+          // Invalidate database if it was active
+          final activeId = ref.read(activeCashbookIdProvider);
+          if (activeId == cashbook.id) {
+            ref.invalidate(databaseProvider);
           }
+
+          if (context.mounted) {
+            ToastUtils.showSuccessToast(context, ref, l10n.restoreSuccessful);
+          }
+        }
       }
     } catch (e) {
       if (context.mounted) {
@@ -424,8 +429,7 @@ class CashbooksScreen extends ConsumerWidget {
                   .read(cashbooksProvider.notifier)
                   .clearCashbookData(cashbook.id);
               if (context.mounted) {
-                ToastUtils.showSuccessToast(
-                    context, ref, l10n.cashbookDeleted);
+                ToastUtils.showSuccessToast(context, ref, l10n.cashbookDeleted);
               }
             },
             style: FilledButton.styleFrom(
@@ -461,8 +465,7 @@ class CashbooksScreen extends ConsumerWidget {
             onPressed: () {
               ref.read(cashbooksProvider.notifier).deleteCashbook(cashbook.id);
               Navigator.pop(context);
-              ToastUtils.showSuccessToast(
-                  context, ref, l10n.cashbookDeleted);
+              ToastUtils.showSuccessToast(context, ref, l10n.cashbookDeleted);
             },
             style: FilledButton.styleFrom(
               backgroundColor: Colors.red,

@@ -127,9 +127,7 @@ class _ImportDialogState extends ConsumerState<ImportDialog> {
             initialContactName: data.senderName,
             initialContactPhone: data.senderPhone,
             initialExternalLinkId: data.externalLinkId,
-            initialDueDate: (widget.sharedData is TransactionShareData)
-                ? (widget.sharedData as TransactionShareData).date
-                : null,
+            initialDueDate: data.dueDate,
           ),
         ),
       );
@@ -325,6 +323,10 @@ class _ImportDialogState extends ConsumerState<ImportDialog> {
         _buildDetailRow(
             l10n.date,
             AppDateFormatter.formatDate(data.date)),
+        if (data.dueDate != null)
+          _buildDetailRow(
+              l10n.dueDate,
+              AppDateFormatter.formatDate(data.dueDate!)),
       ],
     );
   }

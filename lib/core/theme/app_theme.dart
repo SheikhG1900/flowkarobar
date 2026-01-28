@@ -104,32 +104,45 @@ class AppTheme {
       // Color Scheme (GermGuard-inspired Cyan/Blue)
       colorScheme: ColorScheme.light(
         primary: primary, // Dynamic Primary
-        onPrimary: Colors.white,
+        onPrimary: Color.lerp(Colors.white, primary, .1) ?? Colors.white,
         primaryContainer: primary.withValues(alpha: 0.1),
-        onPrimaryContainer: const Color(0xFF003D57),
+        onPrimaryContainer: Color.lerp(const Color(0xFF003D57), primary, .1) ??
+            const Color(0xFF003D57),
 
-        secondary: AppColors.electricBlue, // Electric Blue
-        onSecondary: Colors.white,
-        secondaryContainer: const Color(0xFFD1E9FF),
-        onSecondaryContainer: const Color(0xFF002C5A),
+        secondary: Color.lerp(AppColors.electricBlue, primary, .1) ??
+            AppColors.electricBlue, // Electric Blue
+        onSecondary: Color.lerp(Colors.white, primary, .1) ?? Colors.white,
+        secondaryContainer: Color.lerp(const Color(0xFFD1E9FF), primary, .1) ??
+            const Color(0xFFD1E9FF),
+        onSecondaryContainer:
+            Color.lerp(const Color(0xFF002C5A), primary, .1) ??
+                const Color(0xFF002C5A),
 
-        tertiary: AppColors.teal, // Teal
-        onTertiary: Colors.white,
-        tertiaryContainer: const Color(0xFFD0FFF5),
-        onTertiaryContainer: const Color(0xFF003D3D),
+        tertiary:
+            Color.lerp(AppColors.teal, primary, .1) ?? AppColors.teal, // Teal
+        onTertiary: Color.lerp(Colors.white, primary, .1) ?? Colors.white,
+        tertiaryContainer: Color.lerp(const Color(0xFFD0FFF5), primary, .1) ??
+            const Color(0xFFD0FFF5),
+        onTertiaryContainer: Color.lerp(const Color(0xFF003D3D), primary, .1) ??
+            const Color(0xFF003D3D),
 
         error: AppColors.error,
-        onError: Colors.white,
+        onError: Color.lerp(Colors.white, primary, .1) ?? Colors.white,
         errorContainer: const Color(0xFFFFDAD6),
         onErrorContainer: const Color(0xFF93000A),
 
-        surface: AppColors.lightCard,
-        onSurface: AppColors.lightText,
-        surfaceContainerHighest: AppColors.lightSurface,
-        onSurfaceVariant: AppColors.lightTextSecondary,
+        surface: Color.lerp(AppColors.lightCard, primary, .05) ??
+            AppColors.lightCard,
+        onSurface:
+            Color.lerp(AppColors.lightText, primary, .1) ?? AppColors.lightText,
+        surfaceContainerHighest:
+            Color.lerp(AppColors.lightSurface, primary, .05),
+        onSurfaceVariant:
+            Color.lerp(AppColors.lightTextSecondary, primary, .1) ??
+                AppColors.lightTextSecondary,
 
-        outline: AppColors.lightBorder,
-        outlineVariant: AppColors.lightDivider,
+        outline: Color.lerp(AppColors.lightBorder, primary, .1),
+        outlineVariant: Color.lerp(AppColors.lightDivider, primary, .1),
 
         shadow: const Color(0x1A000000), // black with 10% opacity
         scrim: const Color(0x80000000), // black with 50% opacity
@@ -140,7 +153,9 @@ class AppTheme {
       ),
 
       // Scaffold
-      scaffoldBackgroundColor: AppColors.lightBackground,
+      scaffoldBackgroundColor:
+          Color.lerp(AppColors.lightBackground, primary, .07) ??
+              AppColors.lightBackground,
 
       // AppBar (transparent for gradient backgrounds)
       appBarTheme: AppBarTheme(
@@ -148,13 +163,16 @@ class AppTheme {
         scrolledUnderElevation: 0,
         centerTitle: false,
         backgroundColor: Colors.transparent,
-        foregroundColor: AppColors.lightText,
+        foregroundColor:
+            Color.lerp(AppColors.lightText, primary, .1) ?? AppColors.lightText,
         titleTextStyle: textTheme.headlineSmall?.copyWith(
-          color: AppColors.lightText,
+          color: Color.lerp(AppColors.lightText, primary, .1) ??
+              AppColors.lightText,
           fontWeight: FontWeight.bold,
         ),
-        iconTheme: const IconThemeData(
-          color: AppColors.lightText,
+        iconTheme: IconThemeData(
+          color: Color.lerp(AppColors.lightText, primary, .1) ??
+              AppColors.lightText,
           size: 24,
         ),
       ),
@@ -162,8 +180,10 @@ class AppTheme {
       // Cards with diagonal beveled border (top-left + bottom-right)
       cardTheme: CardThemeData(
         elevation: 2,
-        color: AppColors.lightCard,
-        shadowColor: AppColors.lightBorder,
+        color: Color.lerp(AppColors.lightCard, primary, .05) ??
+            AppColors.lightCard,
+        shadowColor: Color.lerp(AppColors.lightBorder, primary, .1) ??
+            AppColors.lightBorder,
         surfaceTintColor: Colors.transparent,
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.only(
@@ -177,7 +197,7 @@ class AppTheme {
       // FAB with gradient colors
       floatingActionButtonTheme: FloatingActionButtonThemeData(
         backgroundColor: primary,
-        foregroundColor: Colors.white,
+        foregroundColor: Color.lerp(Colors.white, primary, .1) ?? Colors.white,
         elevation: 4,
         highlightElevation: 8,
         shape: const CircleBorder(),
@@ -186,39 +206,52 @@ class AppTheme {
       // Bottom Navigation Bar
       navigationBarTheme: NavigationBarThemeData(
         elevation: 0,
-        backgroundColor: AppColors.lightCard,
+        backgroundColor: Color.lerp(AppColors.lightCard, primary, .05) ??
+            AppColors.lightCard,
         indicatorColor: primary.withValues(alpha: 0.1 / 1.0),
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
             return textTheme.labelMedium?.copyWith(
-              color: AppColors.deepBlue,
+              color: Color.lerp(AppColors.deepBlue, primary, .1) ??
+                  AppColors.deepBlue,
               fontWeight: FontWeight.w600,
             );
           }
           return textTheme.labelMedium?.copyWith(
-            color: AppColors.lightTextSecondary,
+            color: Color.lerp(AppColors.lightTextSecondary, primary, .1) ??
+                AppColors.lightTextSecondary,
           );
         }),
         iconTheme: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
-            return const IconThemeData(color: AppColors.deepBlue, size: 24);
+            return IconThemeData(
+                color: (Color.lerp(AppColors.deepBlue, primary, .1) ??
+                    AppColors.deepBlue),
+                size: 24);
           }
-          return const IconThemeData(
-              color: AppColors.lightTextSecondary, size: 24);
+          return IconThemeData(
+              color: Color.lerp(AppColors.lightTextSecondary, primary, .1) ??
+                  AppColors.lightTextSecondary,
+              size: 24);
         }),
       ),
 
       // Input Decoration
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: AppColors.lightSurface,
+        fillColor: Color.lerp(AppColors.lightSurface, primary, .05) ??
+            AppColors.lightSurface,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.lightBorder),
+          borderSide: BorderSide(
+              color: Color.lerp(AppColors.lightBorder, primary, .1) ??
+                  AppColors.lightBorder),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.lightBorder),
+          borderSide: BorderSide(
+              color: Color.lerp(AppColors.lightBorder, primary, .1) ??
+                  AppColors.lightBorder),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -233,15 +266,16 @@ class AppTheme {
       ),
 
       // Divider
-      dividerTheme: const DividerThemeData(
-        color: AppColors.lightDivider,
+      dividerTheme: DividerThemeData(
+        color: Color.lerp(AppColors.lightDivider, primary, .1),
         thickness: 1,
         space: 1,
       ),
 
       // Chip
       chipTheme: ChipThemeData(
-        backgroundColor: AppColors.lightSurface,
+        backgroundColor: Color.lerp(AppColors.lightSurface, primary, .05) ??
+            AppColors.lightSurface,
         selectedColor: primary.withValues(alpha: 0.15 / 1.0),
         labelStyle: textTheme.labelMedium,
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -250,8 +284,10 @@ class AppTheme {
 
       // Text Theme
       textTheme: textTheme.apply(
-        bodyColor: AppColors.lightText,
-        displayColor: AppColors.lightText,
+        bodyColor:
+            Color.lerp(AppColors.lightText, primary, .1) ?? AppColors.lightText,
+        displayColor:
+            Color.lerp(AppColors.lightText, primary, .1) ?? AppColors.lightText,
       ),
     );
   }
@@ -288,25 +324,25 @@ class AppTheme {
         onErrorContainer: const Color(0xFFFFDAD6),
 
         surface:
-            Color.lerp(AppColors.darkCard, primary, .2) ?? AppColors.darkCard,
+            Color.lerp(AppColors.darkCard, primary, .1) ?? AppColors.darkCard,
         onSurface: AppColors.darkText,
-        surfaceContainerHighest: Color.lerp(AppColors.darkSurface, primary, .2),
+        surfaceContainerHighest: Color.lerp(AppColors.darkSurface, primary, .1),
         onSurfaceVariant: AppColors.darkTextSecondary,
 
-        outline: Color.lerp(AppColors.darkBorder, primary, .2),
-        outlineVariant: Color.lerp(AppColors.darkDivider, primary, .2),
+        outline: Color.lerp(AppColors.darkBorder, primary, .1),
+        outlineVariant: Color.lerp(AppColors.darkDivider, primary, .1),
 
         shadow: const Color(0x4D000000), // black with 30% opacity
         scrim: const Color(0xB3000000), // black with 70% opacity
 
         inverseSurface: AppColors.lightCard,
-        onInverseSurface: Color.lerp(AppColors.lightText, primary, .2),
+        onInverseSurface: Color.lerp(AppColors.lightText, primary, .1),
         inversePrimary: primary,
       ),
 
       // Scaffold
       scaffoldBackgroundColor:
-          Color.lerp(AppColors.darkBackground, primary, .2),
+          Color.lerp(AppColors.darkBackground, primary, .15),
 
       // AppBar
       appBarTheme: AppBarTheme(
@@ -329,7 +365,7 @@ class AppTheme {
       cardTheme: CardThemeData(
         elevation: 4,
         color:
-            Color.lerp(AppColors.darkCard, primary, .2) ?? AppColors.darkCard,
+            Color.lerp(AppColors.darkCard, primary, .1) ?? AppColors.darkCard,
         shadowColor: Colors.black.withValues(alpha: 0.3 / 1.0),
         surfaceTintColor: Colors.transparent,
         shape: const RoundedRectangleBorder(
@@ -344,7 +380,7 @@ class AppTheme {
       // FAB
       floatingActionButtonTheme: FloatingActionButtonThemeData(
         backgroundColor: primary,
-        foregroundColor: Color.lerp(const Color(0xFF003D57), primary, .2),
+        foregroundColor: Color.lerp(const Color(0xFF003D57), primary, .1),
         elevation: 4,
         highlightElevation: 8,
         shape: const CircleBorder(),
@@ -354,7 +390,7 @@ class AppTheme {
       navigationBarTheme: NavigationBarThemeData(
         elevation: 0,
         backgroundColor:
-            Color.lerp(AppColors.darkCard, primary, .2) ?? AppColors.darkCard,
+            Color.lerp(AppColors.darkCard, primary, .1) ?? AppColors.darkCard,
         indicatorColor: primary.withValues(alpha: 0.15 / 1.0),
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
@@ -379,7 +415,7 @@ class AppTheme {
       // Input Decoration
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: Color.lerp(AppColors.darkSurface, primary, .2) ??
+        fillColor: Color.lerp(AppColors.darkSurface, primary, .1) ??
             AppColors.darkSurface,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -388,7 +424,7 @@ class AppTheme {
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(
-              color: (Color.lerp(AppColors.darkBorder, primary, .2) ??
+              color: (Color.lerp(AppColors.darkBorder, primary, .1) ??
                   AppColors.darkBorder)),
         ),
         focusedBorder: OutlineInputBorder(
@@ -405,14 +441,14 @@ class AppTheme {
 
       // Divider
       dividerTheme: DividerThemeData(
-        color: Color.lerp(AppColors.darkDivider, primary, .2),
+        color: Color.lerp(AppColors.darkDivider, primary, .1),
         thickness: 1,
         space: 1,
       ),
 
       // Chip
       chipTheme: ChipThemeData(
-        backgroundColor: Color.lerp(AppColors.darkSurface, primary, .2) ??
+        backgroundColor: Color.lerp(AppColors.darkSurface, primary, .1) ??
             AppColors.darkSurface,
         selectedColor: primary.withValues(alpha: 0.2 / 1.0),
         labelStyle: textTheme.labelMedium,

@@ -885,7 +885,8 @@ class _DashboardTab extends ConsumerWidget {
                   return FadeTransition(
                     opacity: AlwaysStoppedAnimation(t),
                     child: Padding(
-                      padding: const EdgeInsets.only(left: 16, bottom: 16),
+                      padding: const EdgeInsets.only(
+                          left: 16, bottom: 16, right: 16),
                       child: Row(
                         children: [
                           Container(
@@ -923,8 +924,8 @@ class _DashboardTab extends ConsumerWidget {
                   final notifications = ref.watch(notificationProvider);
                   final unreadCount =
                       notifications.where((n) => (n.isRead == false)).length;
-                  final hasUrgent =
-                      notifications.any((n) => (n.isRead == false) && (n.isUrgent == true));
+                  final hasUrgent = notifications
+                      .any((n) => (n.isRead == false) && (n.isUrgent == true));
 
                   return Stack(
                     alignment: Alignment.center,
@@ -963,8 +964,8 @@ class _DashboardTab extends ConsumerWidget {
                               boxShadow: [
                                 if (hasUrgent)
                                   BoxShadow(
-                                    color: AppColors.error
-                                        .withValues(alpha: 0.5),
+                                    color:
+                                        AppColors.error.withValues(alpha: 0.5),
                                     blurRadius: 4,
                                     spreadRadius: 1,
                                   ),
@@ -1061,6 +1062,7 @@ class _DashboardTab extends ConsumerWidget {
   Widget _buildFilterChip(BuildContext context, WidgetRef ref,
       DashboardFilter currentFilter, bool isDark) {
     final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
     final activeCashbook = ref.watch(activeCashbookProvider);
     final isMonthly = currentFilter == DashboardFilter.monthly;
     final label = isMonthly
@@ -1072,12 +1074,12 @@ class _DashboardTab extends ConsumerWidget {
       color: WidgetStateProperty.all(activeCashbook.color.withAlpha(50)),
       label: Row(
         children: [
-          Icon(icon, size: 16, color: activeCashbook.color),
+          Icon(icon, size: 16, color: theme.colorScheme.onSurface),
           const SizedBox(width: 4),
           Text(
             label,
             style: TextStyle(
-              color: activeCashbook.color,
+              color: theme.colorScheme.onSurface,
               fontSize: 12,
               fontWeight: FontWeight.bold,
             ),

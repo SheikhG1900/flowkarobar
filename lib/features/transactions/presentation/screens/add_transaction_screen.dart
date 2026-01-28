@@ -115,7 +115,10 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     if (widget.initialRelationship != null) {
       _paidRelationship = widget.initialRelationship;
       _createLinkedEntry = true;
-      _dueDate = widget.initialDueDate ?? widget.initialDate ?? DateTime.now();
+      // For Paid For and Paid By, we should only populate dueDate if it's explicitly provided
+      // and NOT fallback to transaction date or current date, as those relationships
+      // don't always imply a future due date like "Will Receive" does.
+      _dueDate = widget.initialDueDate;
     } else if (widget.initialDueDate != null) {
       _dueDate = widget.initialDueDate;
     }
@@ -281,7 +284,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
         final capturedActiveColor = ref.read(activeCashbookProvider).color;
 
         Navigator.pop(context);
-        
+
         ToastUtils.showSuccessToast(
           context,
           ref,
@@ -384,7 +387,8 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
           final userProfile = ref.read(userProfileProvider);
           final whatsAppService = ref.read(whatsAppServiceProvider);
 
-          final capturedTemplateService = ref.read(messageTemplateServiceProvider);
+          final capturedTemplateService =
+              ref.read(messageTemplateServiceProvider);
           final capturedLanguage = getCurrentLanguageCode(ref);
           final capturedContainer = ProviderScope.containerOf(context);
 
@@ -862,6 +866,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                                     : '?',
                                 style: const TextStyle(
                                   color: Colors.white,
+                                  fontSize: 16,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -1925,7 +1930,8 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
               ],
 
               // Split Bill Button
-              if (_paidRelationship != null && widget.initialExternalLinkId == null) ...[
+              if (_paidRelationship != null &&
+                  widget.initialExternalLinkId == null) ...[
                 InkWell(
                   onTap: _showGroupSplitDialog,
                   borderRadius: BorderRadius.circular(12),
@@ -2473,7 +2479,7 @@ class _SplitShareCardState extends State<_SplitShareCard> {
                     : Text(
                         (widget.share.contact?.name[0] ?? '?').toUpperCase(),
                         style: TextStyle(
-                          fontSize: 12,
+                          fontSize: 14,
                           fontWeight: FontWeight.bold,
                         ),
                       ),

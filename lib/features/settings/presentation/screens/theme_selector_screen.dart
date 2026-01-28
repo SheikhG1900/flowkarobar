@@ -227,19 +227,16 @@ class ThemeSelectorScreen extends ConsumerWidget {
                                   decoration: BoxDecoration(
                                     color: (option['previewColors'] as List)[i],
                                     borderRadius: i == 0
-                                        ? const BorderRadius.only(
-                                            topLeft: Radius.circular(11),
-                                            bottomLeft: Radius.circular(11),
+                                        ? const BorderRadiusDirectional.horizontal(
+                                            start: Radius.circular(11),
                                           )
                                         : i ==
                                                 (option['previewColors']
                                                             as List)
                                                         .length -
                                                     1
-                                            ? const BorderRadius.only(
-                                                topRight: Radius.circular(11),
-                                                bottomRight:
-                                                    Radius.circular(11),
+                                            ? const BorderRadiusDirectional.horizontal(
+                                                end: Radius.circular(11),
                                               )
                                             : null,
                                   ),

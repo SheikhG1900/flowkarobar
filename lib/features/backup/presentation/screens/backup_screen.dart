@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'package:flowpaisa/core/utils/icon_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/features/backup/presentation/providers/backup_provider.dart';
@@ -11,7 +12,7 @@ import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:intl/intl.dart';
 import 'package:googleapis/drive/v3.dart' as drive;
-
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:flowpaisa/features/premium/presentation/screens/premium_screen.dart';
 import 'package:flowpaisa/features/premium/domain/premium_provider.dart';
 
@@ -309,9 +310,8 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
               shape: BoxShape.circle,
             ),
             child: Icon(
-              IconData(int.parse(activeCashbook.iconCodePoint ?? '0xe0b2'),
-                  fontFamily: 'MaterialSymbolsOutlined',
-                  fontPackage: 'material_symbols_icons'),
+              IconHelper.getIconData(activeCashbook.iconCodePoint) ??
+                  Symbols.water_drop,
               color: Colors.white,
               size: 28,
             ),
@@ -994,11 +994,8 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                               shape: BoxShape.circle,
                             ),
                             child: Icon(
-                              IconData(
-                                int.parse(metadata?.icon ?? '0xe0b2'),
-                                fontFamily: 'MaterialSymbolsOutlined',
-                                fontPackage: 'material_symbols_icons',
-                              ),
+                              IconHelper.getIconData(metadata?.icon) ??
+                                  Symbols.water_drop,
                               size: 20,
                               color: metadata != null
                                   ? Color(int.parse(
