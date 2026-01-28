@@ -26,25 +26,49 @@ class _AddCashbookSheetState extends ConsumerState<AddCashbookSheet> {
   late String _selectedIcon;
   bool _isLoading = false;
 
-  final List<String> _availableColors = [
-    '#2196F3', // Blue
-    '#00BCD4', // Cyan
-    '#009688', // Teal
-    '#4CAF50', // Green
-    '#8BC34A', // Light Green
-    '#CDDC39', // Lime
-    '#FFEB3B', // Yellow
-    '#FFC107', // Amber
-    '#FF9800', // Orange
-    '#FF5722', // Deep Orange
-    '#F44336', // Red
-    '#E91E63', // Pink
-    '#9C27B0', // Purple
-    '#673AB7', // Deep Purple
-    '#3F51B5', // Indigo
-    '#795548', // Brown
-    '#607D8B', // Blue Grey
-    '#9E9E9E', // Grey
+  final List<List<String>> _colorVariants = [
+    ['#E3F2FD', '#90CAF9', '#2196F3', '#1976D2', '#0D47A1'], // Blue variants
+    ['#E0F7FA', '#80DEEA', '#00BCD4', '#0097A7', '#006064'], // Cyan variants
+    ['#E0F2F1', '#80CBC4', '#009688', '#00796B', '#004D40'], // Teal variants
+    ['#E8F5E9', '#A5D6A7', '#4CAF50', '#388E3C', '#1B5E20'], // Green variants
+    [
+      '#F1F8E9',
+      '#C5E1A5',
+      '#8BC34A',
+      '#689F38',
+      '#33691E'
+    ], // Light Green variants
+    ['#F9FBE7', '#E6EE9C', '#CDDC39', '#AFB42B', '#827717'], // Lime variants
+    ['#FFFDE7', '#FFF59D', '#FFEB3B', '#FBC02D', '#F57F17'], // Yellow variants
+    ['#FFF8E1', '#FFE082', '#FFC107', '#FFA000', '#FF6F00'], // Amber variants
+    ['#FFF3E0', '#FFCC80', '#FF9800', '#F57C00', '#E65100'], // Orange variants
+    [
+      '#FBE9E7',
+      '#FFAB91',
+      '#FF5722',
+      '#E64A19',
+      '#BF360C'
+    ], // Deep Orange variants
+    ['#FFEBEE', '#EF9A9A', '#F44336', '#D32F2F', '#B71C1C'], // Red variants
+    ['#FCE4EC', '#F48FB1', '#E91E63', '#C2185B', '#880E4F'], // Pink variants
+    ['#F3E5F5', '#CE93D8', '#9C27B0', '#7B1FA2', '#4A148C'], // Purple variants
+    [
+      '#EDE7F6',
+      '#B39DDB',
+      '#673AB7',
+      '#512DA8',
+      '#311B92'
+    ], // Deep Purple variants
+    ['#E8EAF6', '#9FA8DA', '#3F51B5', '#303F9F', '#1A237E'], // Indigo variants
+    ['#EFEBE9', '#BCAAA4', '#795548', '#5D4037', '#3E2723'], // Brown variants
+    [
+      '#ECEFF1',
+      '#B0BEC5',
+      '#607D8B',
+      '#455A64',
+      '#263238'
+    ], // Blue Grey variants
+    ['#FAFAFA', '#EEEEEE', '#9E9E9E', '#616161', '#212121'], // Grey variants
   ];
 
   final List<IconData> _cashbookIcons = [
@@ -74,7 +98,7 @@ class _AddCashbookSheetState extends ConsumerState<AddCashbookSheet> {
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.cashbook?.name ?? '');
-    _selectedColor = widget.cashbook?.colorCode ?? _availableColors.first;
+    _selectedColor = widget.cashbook?.colorCode ?? _colorVariants[0][0];
 
     String initialIcon = widget.cashbook?.iconCodePoint ??
         Symbols.water_drop.codePoint.toString();
@@ -138,7 +162,8 @@ class _AddCashbookSheetState extends ConsumerState<AddCashbookSheet> {
                 decoration: BoxDecoration(
                   color: AppColors.warning.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.warning.withValues(alpha: 0.3)),
+                  border: Border.all(
+                      color: AppColors.warning.withValues(alpha: 0.3)),
                 ),
                 child: Row(
                   children: [
@@ -193,8 +218,8 @@ class _AddCashbookSheetState extends ConsumerState<AddCashbookSheet> {
                   final iconData = _cashbookIcons[index];
                   final iconCode = iconData.codePoint.toString();
                   final isSelected = _selectedIcon == iconCode;
-                  final color = Color(
-                      int.parse(_selectedColor.replaceAll('#', '0xFF')));
+                  final color =
+                      Color(int.parse(_selectedColor.replaceAll('#', '0xFF')));
                   return InkWell(
                     onTap: (isEdit || limits.canAdd)
                         ? () => setState(() => _selectedIcon = iconCode)
@@ -204,7 +229,8 @@ class _AddCashbookSheetState extends ConsumerState<AddCashbookSheet> {
                       decoration: BoxDecoration(
                         color: isSelected
                             ? color.withValues(alpha: 0.15)
-                            : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                            : theme.colorScheme.surfaceContainerHighest
+                                .withValues(alpha: 0.3),
                         border: Border.all(
                           color: isSelected ? color : Colors.transparent,
                           width: 2,
@@ -213,7 +239,9 @@ class _AddCashbookSheetState extends ConsumerState<AddCashbookSheet> {
                       ),
                       child: Icon(
                         iconData,
-                        color: isSelected ? color : theme.iconTheme.color?.withValues(alpha: 0.5),
+                        color: isSelected
+                            ? color
+                            : theme.iconTheme.color?.withValues(alpha: 0.5),
                         size: 24,
                       ),
                     ),
@@ -225,48 +253,60 @@ class _AddCashbookSheetState extends ConsumerState<AddCashbookSheet> {
             Text(l10n.selectColor, style: theme.textTheme.titleMedium),
             const SizedBox(height: 12),
             SizedBox(
-              height: 50,
+              height: 260,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
-                itemCount: _availableColors.length,
-                separatorBuilder: (context, index) => const SizedBox(width: 12),
+                itemCount: _colorVariants.length,
+                separatorBuilder: (context, index) => const SizedBox(width: 16),
                 itemBuilder: (context, index) {
-                  final colorHex = _availableColors[index];
-                  final color = Color(int.parse(colorHex.replaceAll('#', '0xFF')));
-                  final isSelected = _selectedColor == colorHex;
-                  return InkWell(
-                    onTap: (isEdit || limits.canAdd)
-                        ? () => setState(() => _selectedColor = colorHex)
-                        : null,
-                    borderRadius: BorderRadius.circular(25),
-                    child: Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: color,
-                        shape: BoxShape.circle,
-                        border: isSelected
-                            ? Border.all(
-                                color: isDark ? Colors.white : Colors.black,
-                                width: 3,
-                              )
-                            : null,
-                        boxShadow: isSelected ? [
-                          BoxShadow(
-                            color: color.withValues(alpha: 0.4),
-                            blurRadius: 8,
-                            spreadRadius: 2,
-                          )
-                        ] : null,
-                      ),
-                      child: isSelected
-                          ? Icon(Icons.check,
-                              size: 24,
-                              color: color.computeLuminance() > 0.5
-                                  ? Colors.black
-                                  : Colors.white)
-                          : null,
-                    ),
+                  final variants = _colorVariants[index];
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: variants.map((colorHex) {
+                      final color =
+                          Color(int.parse(colorHex.replaceAll('#', '0xFF')));
+                      final isSelected = _selectedColor == colorHex;
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: InkWell(
+                          onTap: (isEdit || limits.canAdd)
+                              ? () => setState(() => _selectedColor = colorHex)
+                              : null,
+                          borderRadius: BorderRadius.circular(25),
+                          child: Container(
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              color: color,
+                              shape: BoxShape.circle,
+                              border: isSelected
+                                  ? Border.all(
+                                      color:
+                                          isDark ? Colors.white : Colors.black,
+                                      width: 3,
+                                    )
+                                  : null,
+                              boxShadow: isSelected
+                                  ? [
+                                      BoxShadow(
+                                        color: color.withValues(alpha: 0.4),
+                                        blurRadius: 8,
+                                        spreadRadius: 2,
+                                      )
+                                    ]
+                                  : null,
+                            ),
+                            child: isSelected
+                                ? Icon(Icons.check,
+                                    size: 24,
+                                    color: color.computeLuminance() > 0.5
+                                        ? Colors.black
+                                        : Colors.white)
+                                : null,
+                          ),
+                        ),
+                      );
+                    }).toList(),
                   );
                 },
               ),
