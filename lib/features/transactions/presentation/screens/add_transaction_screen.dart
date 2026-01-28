@@ -274,11 +274,15 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
       ref.invalidate(scheduleLimitsProvider);
 
       if (mounted) {
+        final capturedActiveColor = ref.read(activeCashbookProvider).color;
+
         Navigator.pop(context);
+        
         ToastUtils.showSuccessToast(
           context,
           ref,
           l10n.scheduleCreated,
+          color: capturedActiveColor,
         );
       }
     } catch (e, stackTrace) {
@@ -375,6 +379,10 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
           final userProfile = ref.read(userProfileProvider);
           final whatsAppService = ref.read(whatsAppServiceProvider);
 
+          final capturedTemplateService = ref.read(messageTemplateServiceProvider);
+          final capturedLanguage = getCurrentLanguageCode(ref);
+          final capturedContainer = ProviderScope.containerOf(context);
+
           ToastUtils.showSuccessToast(
             context,
             ref,
@@ -385,7 +393,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
             onActionPressed: (snackContext) {
               ShareHelper.shareTransaction(
                 snackContext,
-                ref,
+                null, // Pass null for ref to avoid unmounted check
                 transactionWithDetails.transaction,
                 transactionWithDetails.contact,
                 transactionWithDetails.category,
@@ -394,9 +402,9 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                 userProfileOverride: userProfile,
                 transactionServiceOverride: transactionService,
                 whatsAppServiceOverride: whatsAppService,
-                templateServiceOverride:
-                    ref.read(messageTemplateServiceProvider),
-                languageOverride: getCurrentLanguageCode(ref),
+                templateServiceOverride: capturedTemplateService,
+                languageOverride: capturedLanguage,
+                container: capturedContainer,
               );
             },
             color: activeColor,

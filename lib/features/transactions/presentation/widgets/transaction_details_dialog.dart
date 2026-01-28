@@ -876,6 +876,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
         final capturedWhatsAppService = whatsAppService;
         final capturedTemplateService = ref.read(messageTemplateServiceProvider);
         final capturedLanguage = getCurrentLanguageCode(ref);
+        final capturedContainer = ProviderScope.containerOf(context);
 
         ToastUtils.showSuccessToast(
           context,
@@ -885,7 +886,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
           onActionPressed: (snackContext) {
             ShareHelper.shareTransaction(
               snackContext,
-              ref,
+              null, // Pass null for ref to avoid unmounted check
               transaction,
               contact,
               category,
@@ -896,6 +897,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
               whatsAppServiceOverride: capturedWhatsAppService,
               templateServiceOverride: capturedTemplateService,
               languageOverride: capturedLanguage,
+              container: capturedContainer,
             );
           },
           color: activeColor,
@@ -938,6 +940,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
         final capturedWhatsAppService = whatsAppService;
         final capturedTemplateService = ref.read(messageTemplateServiceProvider);
         final capturedLanguage = getCurrentLanguageCode(ref);
+        final capturedContainer = ProviderScope.containerOf(context);
 
         ToastUtils.showSuccessToast(
           context,
@@ -947,7 +950,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
           onActionPressed: (snackContext) {
             ShareHelper.shareTransaction(
               snackContext,
-              ref,
+              null, // Pass null for ref to avoid unmounted check
               transaction,
               contact,
               category,
@@ -958,6 +961,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
               whatsAppServiceOverride: capturedWhatsAppService,
               templateServiceOverride: capturedTemplateService,
               languageOverride: capturedLanguage,
+              container: capturedContainer,
             );
           },
           color: activeColor,

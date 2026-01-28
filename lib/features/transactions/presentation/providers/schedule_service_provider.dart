@@ -8,6 +8,7 @@ import 'package:flowpaisa/features/transactions/data/schedules_repository.dart';
 import 'package:flowpaisa/features/transactions/data/transactions_repository.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transaction_service_provider.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
+import 'package:flowpaisa/features/whatsapp/domain/deep_link_service.dart';
 import 'package:flowpaisa/shared/providers/database_provider.dart';
 
 final scheduleServiceProvider = Provider<ScheduleService>((ref) {
@@ -178,8 +179,10 @@ class ScheduleService {
   Future<void> _generateForDate(
       TransactionSchedule schedule, DateTime date) async {
     // Use a deterministic UUID based on schedule and date to prevent duplicates during sync
-    final dateStr = "${date.year}-${date.month}-${date.day}";
-    final deterministicUuid = "${schedule.uuid}_$dateStr";
+    // Shorten the schedule UUID for external link consistency
+    final shortScheduleUuid = DeepLinkService.shortenUuid(schedule.uuid);
+    final dateStr = "${date.year}${date.month}${date.day}";
+    final deterministicUuid = "${shortScheduleUuid}_$dateStr";
 
     // Calculate dynamic due date based on offset if available
     DateTime? calculatedDueDate;

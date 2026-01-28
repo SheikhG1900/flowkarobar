@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:math';
 import 'package:flowpaisa/core/constants/app_constants.dart';
 import 'package:flowpaisa/features/whatsapp/domain/models/shared_data_models.dart';
 
@@ -9,15 +8,10 @@ class DeepLinkService {
   static const String _webBaseUrl =
       'https://tamatasoft.github.io/flowpaisa/share';
 
-  /// Generate a unique external link ID
-  /// Format: "tx_8f7a3b" (tx_ prefix + 6 random hex chars)
-  String generateExternalLinkId() {
-    final random = Random();
-    final chars = List.generate(
-      6,
-      (_) => random.nextInt(16).toRadixString(16),
-    ).join();
-    return 'tx_$chars';
+  /// Shorten a UUID by removing dashes and taking a stable prefix
+  static String shortenUuid(String uuid) {
+    // Remove dashes and take the first 12 characters for a stable, unique prefix
+    return uuid.replaceAll('-', '').substring(0, 12);
   }
 
   /// Helper to create the link with both scheme and https fallback
@@ -151,11 +145,16 @@ class DeepLinkService {
       }
 
       // Decode base64
-      final jsonString = utf8.decode(base64Url.decode(base64Data));
+      String jsonString;
+      try {
+        jsonString = utf8.decode(base64Url.decode(base64Data));
+      } catch (_) {
+        jsonString = utf8.decode(base64.decode(base64Data));
+      }
       final jsonData = json.decode(jsonString) as Map<String, dynamic>;
 
       // Ensure the type matches
-      if (jsonData['type'] != type) {
+      if (jsonData['t'] != type && jsonData['type'] != type) {
         return null;
       }
 

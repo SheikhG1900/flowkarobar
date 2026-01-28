@@ -1,3 +1,9 @@
+import 'package:flowpaisa/features/messages/presentation/providers/message_template_provider.dart';
+import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
+import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
+import 'package:flowpaisa/features/whatsapp/presentation/providers/whatsapp_provider.dart';
+import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
+import 'package:flowpaisa/core/utils/share_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -162,11 +168,13 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
       ref.invalidate(scheduleLimitsProvider);
 
       if (mounted) {
+        final capturedActiveColor = ref.read(activeCashbookProvider).color;
         Navigator.pop(context);
         ToastUtils.showSuccessToast(
           context,
           ref,
           l10n.scheduleCreated,
+          color: capturedActiveColor,
         );
       }
     } catch (e) {
@@ -224,9 +232,49 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
       );
 
       if (mounted) {
+        final capturedTemplateService = ref.read(messageTemplateServiceProvider);
+        final capturedLanguage = getCurrentLanguageCode(ref);
+        final capturedContainer = ProviderScope.containerOf(context);
+        final capturedCurrency = ref.read(currentCurrencyProvider).value!;
+        final capturedUserProfile = ref.read(userProfileProvider);
+        final capturedWhatsAppService = ref.read(whatsAppServiceProvider);
+        final capturedTransactionService = ref.read(transactionServiceProvider);
+        final capturedActiveColor = ref.read(activeCashbookProvider).color;
+
         Navigator.pop(context, true); // Return true to indicate success
-        ToastUtils.showSuccessToast(
-            context, ref, l10n.transactionUpdated);
+        
+        // Fetch updated transaction details for the toast action
+        final repository = ref.read(transactionsRepositoryProvider);
+        final transactionWithDetails = await repository.getTransactionWithDetailsByUuid(widget.transaction.uuid);
+
+        if (transactionWithDetails != null) {
+          ToastUtils.showSuccessToast(
+            context,
+            ref,
+            l10n.transactionUpdated,
+            actionLabel: l10n.share,
+            onActionPressed: (snackContext) {
+              ShareHelper.shareTransaction(
+                snackContext,
+                null,
+                transactionWithDetails.transaction,
+                transactionWithDetails.contact,
+                transactionWithDetails.category,
+                false,
+                currencyOverride: capturedCurrency,
+                userProfileOverride: capturedUserProfile,
+                transactionServiceOverride: capturedTransactionService,
+                whatsAppServiceOverride: capturedWhatsAppService,
+                templateServiceOverride: capturedTemplateService,
+                languageOverride: capturedLanguage,
+                container: capturedContainer,
+              );
+            },
+            color: capturedActiveColor,
+          );
+        } else {
+          ToastUtils.showSuccessToast(context, ref, l10n.transactionUpdated);
+        }
       }
     } catch (e) {
       if (mounted) {

@@ -17,7 +17,8 @@ abstract class SharedData {
   Map<String, dynamic> toJson();
 
   static SharedData fromJson(Map<String, dynamic> json) {
-    final type = json['type'] as String;
+    // Check for both long and short keys for backward compatibility
+    final type = (json['t'] ?? json['type']) as String;
     switch (type) {
       case 'transaction':
         return TransactionShareData.fromJson(json);
@@ -69,39 +70,39 @@ class TransactionShareData extends SharedData {
 
   @override
   Map<String, dynamic> toJson() => {
-        'type': type,
-        'externalLinkId': externalLinkId,
-        'amount': amount,
-        'transactionType': transactionType,
-        'description': description,
-        'date': date.toIso8601String(),
-        'categoryName': categoryName,
-        'categoryColor': categoryColor,
-        'categoryIcon': categoryIcon,
-        'contactName': contactName,
-        'contactPhone': contactPhone,
-        'relationship': relationship,
-        'senderName': senderName,
-        'senderPhone': senderPhone,
-        'status': status,
+        't': type,
+        'eid': externalLinkId,
+        'a': amount,
+        'tt': transactionType,
+        'd': description,
+        'dt': date.toIso8601String(),
+        'cn': categoryName,
+        'cc': categoryColor,
+        'ci': categoryIcon,
+        'ctn': contactName,
+        'ctp': contactPhone,
+        'r': relationship,
+        'sn': senderName,
+        'sp': senderPhone,
+        's': status,
       };
 
   factory TransactionShareData.fromJson(Map<String, dynamic> json) {
     return TransactionShareData(
-      amount: (json['amount'] as num).toDouble(),
-      transactionType: json['transactionType'] as String,
-      description: json['description'] as String?,
-      date: DateTime.parse(json['date'] as String),
-      categoryName: json['categoryName'] as String?,
-      categoryColor: json['categoryColor'] as String?,
-      categoryIcon: json['categoryIcon'] as String?,
-      contactName: json['contactName'] as String?,
-      contactPhone: json['contactPhone'] as String?,
-      relationship: json['relationship'] as String?,
-      senderName: json['senderName'] as String?,
-      senderPhone: json['senderPhone'] as String?,
-      status: json['status'] as String?,
-      externalLinkId: json['externalLinkId'] as String,
+      amount: ((json['a'] ?? json['amount']) as num).toDouble(),
+      transactionType: (json['tt'] ?? json['transactionType']) as String,
+      description: (json['d'] ?? json['description']) as String?,
+      date: DateTime.parse((json['dt'] ?? json['date']) as String),
+      categoryName: (json['cn'] ?? json['categoryName']) as String?,
+      categoryColor: (json['cc'] ?? json['categoryColor']) as String?,
+      categoryIcon: (json['ci'] ?? json['categoryIcon']) as String?,
+      contactName: (json['ctn'] ?? json['contactName']) as String?,
+      contactPhone: (json['ctp'] ?? json['contactPhone']) as String?,
+      relationship: (json['r'] ?? json['relationship']) as String?,
+      senderName: (json['sn'] ?? json['senderName']) as String?,
+      senderPhone: (json['sp'] ?? json['senderPhone']) as String?,
+      status: (json['s'] ?? json['status']) as String?,
+      externalLinkId: (json['eid'] ?? json['externalLinkId']) as String,
     );
   }
 }
@@ -136,33 +137,33 @@ class ReceivableShareData extends SharedData {
 
   @override
   Map<String, dynamic> toJson() => {
-        'type': type,
-        'externalLinkId': externalLinkId,
-        'amount': amount,
-        'description': description,
-        'date': date.toIso8601String(),
-        'dueDate': dueDate?.toIso8601String(),
-        'contactName': contactName,
-        'contactPhone': contactPhone,
-        'senderName': senderName,
-        'senderPhone': senderPhone,
-        'status': status,
+        't': type,
+        'eid': externalLinkId,
+        'a': amount,
+        'd': description,
+        'dt': date.toIso8601String(),
+        'dd': dueDate?.toIso8601String(),
+        'ctn': contactName,
+        'ctp': contactPhone,
+        'sn': senderName,
+        'sp': senderPhone,
+        's': status,
       };
 
   factory ReceivableShareData.fromJson(Map<String, dynamic> json) {
     return ReceivableShareData(
-      amount: (json['amount'] as num).toDouble(),
-      description: json['description'] as String?,
-      date: DateTime.parse(json['date'] as String),
-      dueDate: json['dueDate'] != null
-          ? DateTime.parse(json['dueDate'] as String)
+      amount: ((json['a'] ?? json['amount']) as num).toDouble(),
+      description: (json['d'] ?? json['description']) as String?,
+      date: DateTime.parse((json['dt'] ?? json['date']) as String),
+      dueDate: (json['dd'] ?? json['dueDate']) != null
+          ? DateTime.parse((json['dd'] ?? json['dueDate']) as String)
           : null,
-      contactName: json['contactName'] as String?,
-      contactPhone: json['contactPhone'] as String?,
-      senderName: json['senderName'] as String?,
-      senderPhone: json['senderPhone'] as String?,
-      status: json['status'] as String?,
-      externalLinkId: json['externalLinkId'] as String,
+      contactName: (json['ctn'] ?? json['contactName']) as String?,
+      contactPhone: (json['ctp'] ?? json['contactPhone']) as String?,
+      senderName: (json['sn'] ?? json['senderName']) as String?,
+      senderPhone: (json['sp'] ?? json['senderPhone']) as String?,
+      status: (json['s'] ?? json['status']) as String?,
+      externalLinkId: (json['eid'] ?? json['externalLinkId']) as String,
     );
   }
 }
@@ -197,33 +198,33 @@ class PayableShareData extends SharedData {
 
   @override
   Map<String, dynamic> toJson() => {
-        'type': type,
-        'externalLinkId': externalLinkId,
-        'amount': amount,
-        'description': description,
-        'date': date.toIso8601String(),
-        'dueDate': dueDate?.toIso8601String(),
-        'contactName': contactName,
-        'contactPhone': contactPhone,
-        'senderName': senderName,
-        'senderPhone': senderPhone,
-        'status': status,
+        't': type,
+        'eid': externalLinkId,
+        'a': amount,
+        'd': description,
+        'dt': date.toIso8601String(),
+        'dd': dueDate?.toIso8601String(),
+        'ctn': contactName,
+        'ctp': contactPhone,
+        'sn': senderName,
+        'sp': senderPhone,
+        's': status,
       };
 
   factory PayableShareData.fromJson(Map<String, dynamic> json) {
     return PayableShareData(
-      amount: (json['amount'] as num).toDouble(),
-      description: json['description'] as String?,
-      date: DateTime.parse(json['date'] as String),
-      dueDate: json['dueDate'] != null
-          ? DateTime.parse(json['dueDate'] as String)
+      amount: ((json['a'] ?? json['amount']) as num).toDouble(),
+      description: (json['d'] ?? json['description']) as String?,
+      date: DateTime.parse((json['dt'] ?? json['date']) as String),
+      dueDate: (json['dd'] ?? json['dueDate']) != null
+          ? DateTime.parse((json['dd'] ?? json['dueDate']) as String)
           : null,
-      contactName: json['contactName'] as String?,
-      contactPhone: json['contactPhone'] as String?,
-      senderName: json['senderName'] as String?,
-      senderPhone: json['senderPhone'] as String?,
-      status: json['status'] as String?,
-      externalLinkId: json['externalLinkId'] as String,
+      contactName: (json['ctn'] ?? json['contactName']) as String?,
+      contactPhone: (json['ctp'] ?? json['contactPhone']) as String?,
+      senderName: (json['sn'] ?? json['senderName']) as String?,
+      senderPhone: (json['sp'] ?? json['senderPhone']) as String?,
+      status: (json['s'] ?? json['status']) as String?,
+      externalLinkId: (json['eid'] ?? json['externalLinkId']) as String,
     );
   }
 }
