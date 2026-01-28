@@ -261,7 +261,6 @@ class AppTheme {
       {Color? primaryColor}) {
     final textTheme = getTextTheme(languageCode, fontName);
     final primary = primaryColor ?? AppColors.brightCyan;
-
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
@@ -288,24 +287,26 @@ class AppTheme {
         errorContainer: const Color(0xFF93000A),
         onErrorContainer: const Color(0xFFFFDAD6),
 
-        surface: AppColors.darkCard,
+        surface:
+            Color.lerp(AppColors.darkCard, primary, .2) ?? AppColors.darkCard,
         onSurface: AppColors.darkText,
-        surfaceContainerHighest: AppColors.darkSurface,
+        surfaceContainerHighest: Color.lerp(AppColors.darkSurface, primary, .2),
         onSurfaceVariant: AppColors.darkTextSecondary,
 
-        outline: AppColors.darkBorder,
-        outlineVariant: AppColors.darkDivider,
+        outline: Color.lerp(AppColors.darkBorder, primary, .2),
+        outlineVariant: Color.lerp(AppColors.darkDivider, primary, .2),
 
         shadow: const Color(0x4D000000), // black with 30% opacity
         scrim: const Color(0xB3000000), // black with 70% opacity
 
         inverseSurface: AppColors.lightCard,
-        onInverseSurface: AppColors.lightText,
+        onInverseSurface: Color.lerp(AppColors.lightText, primary, .2),
         inversePrimary: primary,
       ),
 
       // Scaffold
-      scaffoldBackgroundColor: AppColors.darkBackground,
+      scaffoldBackgroundColor:
+          Color.lerp(AppColors.darkBackground, primary, .2),
 
       // AppBar
       appBarTheme: AppBarTheme(
@@ -327,7 +328,8 @@ class AppTheme {
       // Cards with diagonal beveled border (top-left + bottom-right)
       cardTheme: CardThemeData(
         elevation: 4,
-        color: AppColors.darkCard,
+        color:
+            Color.lerp(AppColors.darkCard, primary, .2) ?? AppColors.darkCard,
         shadowColor: Colors.black.withValues(alpha: 0.3 / 1.0),
         surfaceTintColor: Colors.transparent,
         shape: const RoundedRectangleBorder(
@@ -342,7 +344,7 @@ class AppTheme {
       // FAB
       floatingActionButtonTheme: FloatingActionButtonThemeData(
         backgroundColor: primary,
-        foregroundColor: const Color(0xFF003D57),
+        foregroundColor: Color.lerp(const Color(0xFF003D57), primary, .2),
         elevation: 4,
         highlightElevation: 8,
         shape: const CircleBorder(),
@@ -351,7 +353,8 @@ class AppTheme {
       // Bottom Navigation Bar
       navigationBarTheme: NavigationBarThemeData(
         elevation: 0,
-        backgroundColor: AppColors.darkCard,
+        backgroundColor:
+            Color.lerp(AppColors.darkCard, primary, .2) ?? AppColors.darkCard,
         indicatorColor: primary.withValues(alpha: 0.15 / 1.0),
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
@@ -376,14 +379,17 @@ class AppTheme {
       // Input Decoration
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: AppColors.darkSurface,
+        fillColor: Color.lerp(AppColors.darkSurface, primary, .2) ??
+            AppColors.darkSurface,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: AppColors.darkBorder),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.darkBorder),
+          borderSide: BorderSide(
+              color: (Color.lerp(AppColors.darkBorder, primary, .2) ??
+                  AppColors.darkBorder)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -398,15 +404,16 @@ class AppTheme {
       ),
 
       // Divider
-      dividerTheme: const DividerThemeData(
-        color: AppColors.darkDivider,
+      dividerTheme: DividerThemeData(
+        color: Color.lerp(AppColors.darkDivider, primary, .2),
         thickness: 1,
         space: 1,
       ),
 
       // Chip
       chipTheme: ChipThemeData(
-        backgroundColor: AppColors.darkSurface,
+        backgroundColor: Color.lerp(AppColors.darkSurface, primary, .2) ??
+            AppColors.darkSurface,
         selectedColor: primary.withValues(alpha: 0.2 / 1.0),
         labelStyle: textTheme.labelMedium,
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
