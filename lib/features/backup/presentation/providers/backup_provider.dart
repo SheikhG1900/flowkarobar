@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/features/backup/data/google_drive_service.dart';
 import 'package:flowpaisa/features/backup/data/backup_repository.dart';
@@ -193,7 +194,9 @@ class BackupNotifier extends Notifier<BackupState> {
       
       // Auto-sync on startup if enabled
       if (syncInterval != 'manual') {
-        print('BackupNotifier: Auto-sync on startup triggered (interval: $syncInterval)');
+        if (kDebugMode) {
+          print('BackupNotifier: Auto-sync on startup triggered (interval: $syncInterval)');
+        }
         
         // Process all cashbooks on startup instead of just the active one
         final prefs = await SharedPreferences.getInstance();
@@ -268,7 +271,9 @@ class BackupNotifier extends Notifier<BackupState> {
         cashbookMetadata: metadataMap,
       );
     } catch (e) {
-      print('Failed to load available cashbooks from cloud: $e');
+      if (kDebugMode) {
+        print('Failed to load available cashbooks from cloud: $e');
+      }
     }
   }
 
@@ -327,7 +332,9 @@ class BackupNotifier extends Notifier<BackupState> {
         state = state.copyWith(localVersion: 0, lastSyncTime: null);
       }
     } catch (e) {
-      print('BackupNotifier: Failed to refresh local version: $e');
+      if (kDebugMode) {
+        print('BackupNotifier: Failed to refresh local version: $e');
+      }
     }
 
     // 2. Fetch fresh cloud state (cloud version, lock status, delta files)
@@ -372,7 +379,9 @@ class BackupNotifier extends Notifier<BackupState> {
         state = state.copyWith(localVersion: 0, lastSyncTime: null);
       }
     } catch (e) {
-      print('Failed to load local version: $e');
+      if (kDebugMode) {
+        print('Failed to load local version: $e');
+      }
     }
 
     // 3. Get initial cloud state
@@ -399,7 +408,9 @@ class BackupNotifier extends Notifier<BackupState> {
         });
       }
     } catch (e) {
-      print('Failed to load unsynced count: $e');
+      if (kDebugMode) {
+        print('Failed to load unsynced count: $e');
+      }
     }
 
     // 5. Initial unsynced count update
@@ -472,7 +483,9 @@ class BackupNotifier extends Notifier<BackupState> {
         deltaFiles: displayDeltas,
       );
     } catch (e) {
-      print('Failed to fetch cloud state: $e');
+      if (kDebugMode) {
+        print('Failed to fetch cloud state: $e');
+      }
     }
   }
 
@@ -498,7 +511,9 @@ class BackupNotifier extends Notifier<BackupState> {
         ).getSingle();
         total += (rowsResult.data['count'] as num).toInt();
       } catch (e) {
-        print('BackupNotifier: Error counting unsynced rows in $table: $e');
+        if (kDebugMode) {
+          print('BackupNotifier: Error counting unsynced rows in $table: $e');
+        }
       }
     }
     state = state.copyWith(unsyncedCount: total);
@@ -514,7 +529,9 @@ class BackupNotifier extends Notifier<BackupState> {
       final status = prefs.getString('sync_status_${activeCashbook.id}') ?? 'Idle';
       
       if (status.contains('Error')) {
-        print('BackupNotifier: Sync Error detected: $status');
+        if (kDebugMode) {
+          print('BackupNotifier: Sync Error detected: $status');
+        }
       }
 
       // Also update cloud state periodically to catch lock releases or version changes
@@ -729,7 +746,9 @@ class BackupNotifier extends Notifier<BackupState> {
         );
         // Add to local list
         await ref.read(cashbooksProvider.notifier).addCashbookFromCloud(newCashbook);
-        print('Created new local cashbook entry for cloud ID: $cashbookId with name: $cloudName, color: $cloudColor, icon: $cloudIcon');
+        if (kDebugMode) {
+          print('Created new local cashbook entry for cloud ID: $cashbookId with name: $cloudName, color: $cloudColor, icon: $cloudIcon');
+        }
       }
 
       // 3. Restore the data to the correct file path
@@ -756,12 +775,16 @@ class BackupNotifier extends Notifier<BackupState> {
       
       // Ensure Drive API is initialized before proceeding
       if (!_driveService.isDriveApiInitialized) {
-        print('Drive API not initialized, attempting initialization...');
+        if (kDebugMode) {
+          print('Drive API not initialized, attempting initialization...');
+        }
         await _driveService.signIn(); // This triggers initialization
       }
 
       final activeCashbook = ref.read(activeCashbookProvider);
-      print('Starting backup for cashbook: ${activeCashbook.name}, path: ${activeCashbook.dbPath}');
+      if (kDebugMode) {
+        print('Starting backup for cashbook: ${activeCashbook.name}, path: ${activeCashbook.dbPath}');
+      }
       
       try {
         await _repository.backup(
@@ -774,7 +797,9 @@ class BackupNotifier extends Notifier<BackupState> {
       } catch (e) {
         // If access denied, try re-authenticating once
         if (e.toString().contains('Access was denied') || e.toString().contains('invalid_token')) {
-          print('Access denied, attempting re-authentication...');
+          if (kDebugMode) {
+            print('Access denied, attempting re-authentication...');
+          }
           await _driveService.reauthenticate();
           // Retry backup after re-auth
           await _repository.backup(
@@ -789,7 +814,9 @@ class BackupNotifier extends Notifier<BackupState> {
         }
       }
       
-      print('Backup upload successful');
+      if (kDebugMode) {
+        print('Backup upload successful');
+      }
       
       // Refresh list and time
       final backups = await _driveService.listBackups(cashbookId: activeCashbook.id);
@@ -800,7 +827,9 @@ class BackupNotifier extends Notifier<BackupState> {
         backups: backups,
         lastBackupTime: time,
       );
-      print('Backup state updated. Backups found: ${backups.length}');
+      if (kDebugMode) {
+        print('Backup state updated. Backups found: ${backups.length}');
+      }
 
       // Add local notification
       ref.read(notificationProvider.notifier).addNotification(
@@ -809,8 +838,10 @@ class BackupNotifier extends Notifier<BackupState> {
             type: NotificationType.backup,
           );
     } catch (e, stack) {
-      print('Backup failed with error: $e');
-      print('Stack trace: $stack');
+      if (kDebugMode) {
+        print('Backup failed with error: $e');
+        print('Stack trace: $stack');
+      }
       state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
@@ -833,7 +864,9 @@ class BackupNotifier extends Notifier<BackupState> {
       final query = "mimeType = 'application/vnd.google-apps.folder' and name contains '$cashbookId' and trashed = false";
       final folders = await _driveService.listFoldersWithQuery(query);
       
-      print('BackupNotifier: Found ${folders.length} potential folders to delete for ID: $cashbookId');
+      if (kDebugMode) {
+        print('BackupNotifier: Found ${folders.length} potential folders to delete for ID: $cashbookId');
+      }
       
       bool deleted = false;
       if (folders.isNotEmpty) {
@@ -848,18 +881,24 @@ class BackupNotifier extends Notifier<BackupState> {
               
               try {
                 final children = await _driveService.listAllFilesInFolder(folder.id!);
-                print('BackupNotifier: Folder ${folder.id} has ${children.length} children. Deleting them first...');
+                if (kDebugMode) {
+                  print('BackupNotifier: Folder ${folder.id} has ${children.length} children. Deleting them first...');
+                }
                 for (final child in children) {
                   if (child.id != null) {
                     await _driveService.deleteFile(child.id!);
                   }
                 }
               } catch (e) {
-                print('BackupNotifier: Warning - Failed to list/delete children for folder ${folder.id}: $e');
+                if (kDebugMode) {
+                  print('BackupNotifier: Warning - Failed to list/delete children for folder ${folder.id}: $e');
+                }
               }
 
               await _driveService.deleteFile(folder.id!);
-              print('BackupNotifier: Deleted cloud cashbook folder: ${folder.name} (${folder.id})');
+              if (kDebugMode) {
+                print('BackupNotifier: Deleted cloud cashbook folder: ${folder.name} (${folder.id})');
+              }
               deleted = true;
             }
           }
@@ -867,7 +906,9 @@ class BackupNotifier extends Notifier<BackupState> {
       }
 
       if (!deleted) {
-        print('BackupNotifier: No matching folder found to delete for ID: $cashbookId');
+        if (kDebugMode) {
+          print('BackupNotifier: No matching folder found to delete for ID: $cashbookId');
+        }
       }
 
       // 2. Refresh available cashbooks
@@ -875,7 +916,9 @@ class BackupNotifier extends Notifier<BackupState> {
       
       state = state.copyWith(isLoading: false);
     } catch (e) {
-      print('BackupNotifier: Error deleting cloud cashbook: $e');
+      if (kDebugMode) {
+        print('BackupNotifier: Error deleting cloud cashbook: $e');
+      }
       state = state.copyWith(isLoading: false, error: e.toString());
       rethrow;
     }
@@ -894,7 +937,9 @@ class BackupNotifier extends Notifier<BackupState> {
         for (final folder in list) {
           if (folder.id != null) {
             await _driveService.deleteFile(folder.id!);
-            print('BackupNotifier: Successfully deleted root FlowPaisa Backups folder (${folder.id})');
+            if (kDebugMode) {
+              print('BackupNotifier: Successfully deleted root FlowPaisa Backups folder (${folder.id})');
+            }
           }
         }
       }
@@ -906,7 +951,9 @@ class BackupNotifier extends Notifier<BackupState> {
       for (final file in orphanedFiles) {
         if (file.id != null) {
           await _driveService.deleteFile(file.id!);
-          print('BackupNotifier: Deleted orphaned file: ${file.name} (${file.id})');
+          if (kDebugMode) {
+            print('BackupNotifier: Deleted orphaned file: ${file.name} (${file.id})');
+          }
         }
       }
 
@@ -924,7 +971,9 @@ class BackupNotifier extends Notifier<BackupState> {
       
       state = state.copyWith(isLoading: false);
     } catch (e) {
-      print('BackupNotifier: Error clearing all cloud data: $e');
+      if (kDebugMode) {
+        print('BackupNotifier: Error clearing all cloud data: $e');
+      }
       state = state.copyWith(isLoading: false, error: e.toString());
       rethrow;
     }
@@ -958,7 +1007,9 @@ class BackupNotifier extends Notifier<BackupState> {
           localVersion = metadata.map((m) => m.version).fold(0, (prev, v) => v > prev ? v : prev);
         }
       } catch (e) {
-        print('BackupNotifier: Error reading local version for reset: $e');
+        if (kDebugMode) {
+          print('BackupNotifier: Error reading local version for reset: $e');
+        }
       }
 
       // 2. Reset cloud manifest to this version

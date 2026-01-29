@@ -1,4 +1,5 @@
 import 'package:flowpaisa/l10n/app_localizations.dart';
+import 'package:flutter/foundation.dart';
 import 'dart:io';
 import 'dart:convert';
 import 'package:flutter/services.dart';
@@ -136,7 +137,9 @@ class ExportService {
       _unicodeFont = await PdfGoogleFonts.amiriRegular();
       return _unicodeFont;
     } catch (e) {
-      debugPrint('Error loading Arabic font: $e');
+      if (kDebugMode) {
+        debugPrint('Error loading Arabic font: $e');
+      }
       return null;
     }
   }
@@ -149,7 +152,9 @@ class ExportService {
       _hindiFont = await PdfGoogleFonts.notoSansDevanagariRegular();
       return _hindiFont;
     } catch (e) {
-      debugPrint('Error loading Hindi font: $e');
+      if (kDebugMode) {
+        debugPrint('Error loading Hindi font: $e');
+      }
       return null;
     }
   }
@@ -162,7 +167,9 @@ class ExportService {
       _englishFont = await PdfGoogleFonts.montserratRegular();
       return _englishFont;
     } catch (e) {
-      debugPrint('Error loading English font: $e');
+      if (kDebugMode) {
+        debugPrint('Error loading English font: $e');
+      }
       return null;
     }
   }

@@ -87,10 +87,12 @@ class TransactionService {
         baseTransactionUuid = '${effectiveExternalId}_0';
       }
 
-      debugPrint('DEBUG: Transaction Service creating transaction');
-      debugPrint('DEBUG: Is Import: $isImport');
-      debugPrint('DEBUG: Effective External ID: $effectiveExternalId');
-      debugPrint('DEBUG: Final Transaction UUID: $baseTransactionUuid');
+      if (kDebugMode) {
+        debugPrint('DEBUG: Transaction Service creating transaction');
+        debugPrint('DEBUG: Is Import: $isImport');
+        debugPrint('DEBUG: Effective External ID: $effectiveExternalId');
+        debugPrint('DEBUG: Final Transaction UUID: $baseTransactionUuid');
+      }
 
       // Determine actual amounts for contact and user
       double contactAmount = amount;
@@ -445,8 +447,10 @@ class TransactionService {
       });
     } catch (e, stackTrace) {
       // Log the error for debugging
-      debugPrint('Group Split Error: $e');
-      debugPrint('Stack Trace: $stackTrace');
+      if (kDebugMode) {
+        debugPrint('Group Split Error: $e');
+        debugPrint('Stack Trace: $stackTrace');
+      }
       rethrow;
     }
   }

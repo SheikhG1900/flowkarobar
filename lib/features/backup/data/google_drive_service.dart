@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:googleapis/drive/v3.dart' as drive;
 import 'package:extension_google_sign_in_as_googleapis_auth/extension_google_sign_in_as_googleapis_auth.dart';
@@ -33,7 +34,9 @@ class GoogleDriveService {
         await _initializeDriveApi();
       }
     } catch (e) {
-      print('Silent sign-in failed: $e');
+      if (kDebugMode) {
+        print('Silent sign-in failed: $e');
+      }
     }
   }
 
@@ -47,7 +50,9 @@ class GoogleDriveService {
       }
       return account;
     } catch (e) {
-      print('Sign in failed: $e');
+      if (kDebugMode) {
+        print('Sign in failed: $e');
+      }
       rethrow;
     }
   }
@@ -62,13 +67,17 @@ class GoogleDriveService {
   /// Initialize Drive API client
   Future<void> _initializeDriveApi({bool forceRefresh = false}) async {
     if (_currentUser == null) {
-      print(
-          'GoogleDriveService: Cannot initialize Drive API: No user signed in');
+      if (kDebugMode) {
+        print(
+            'GoogleDriveService: Cannot initialize Drive API: No user signed in');
+      }
       return;
     }
 
-    print(
-        'GoogleDriveService: Initializing Drive API for user: ${_currentUser!.email} (forceRefresh: $forceRefresh)');
+    if (kDebugMode) {
+      print(
+          'GoogleDriveService: Initializing Drive API for user: ${_currentUser!.email} (forceRefresh: $forceRefresh)');
+    }
     try {
       if (forceRefresh) {
         // Clear tokens to force a fresh authentication
@@ -79,17 +88,25 @@ class GoogleDriveService {
       }
 
       // Use the extension method
-      print('GoogleDriveService: Getting authenticated client...');
+      if (kDebugMode) {
+        print('GoogleDriveService: Getting authenticated client...');
+      }
       final client = await _googleSignIn.authenticatedClient();
 
       if (client != null) {
         _driveApi = drive.DriveApi(client);
-        print('GoogleDriveService: Drive API successfully initialized');
+        if (kDebugMode) {
+          print('GoogleDriveService: Drive API successfully initialized');
+        }
       } else {
-        print('GoogleDriveService: Failed to get authenticated client');
+        if (kDebugMode) {
+          print('GoogleDriveService: Failed to get authenticated client');
+        }
       }
     } catch (e) {
-      print('GoogleDriveService: Error initializing Drive API: $e');
+      if (kDebugMode) {
+        print('GoogleDriveService: Error initializing Drive API: $e');
+      }
     }
   }
 
@@ -218,7 +235,9 @@ class GoogleDriveService {
       String? color,
       String? icon}) async {
     if (_driveApi == null) {
-      print('Drive API not initialized during upload attempt');
+      if (kDebugMode) {
+        print('Drive API not initialized during upload attempt');
+      }
       throw Exception('Drive API not initialized');
     }
 
@@ -230,7 +249,9 @@ class GoogleDriveService {
         color: color,
         icon: icon,
       );
-      print('Backup folder ID: $folderId');
+      if (kDebugMode) {
+        print('Backup folder ID: $folderId');
+      }
 
       // If file path is empty, we only wanted to update/create the folder metadata
       if (file.path.isEmpty) {
@@ -247,7 +268,9 @@ class GoogleDriveService {
 
       // 3. Upload
       final fileSize = await file.length();
-      print('Uploading file: $fileName, size: $fileSize bytes');
+      if (kDebugMode) {
+        print('Uploading file: $fileName, size: $fileSize bytes');
+      }
 
       final media = drive.Media(file.openRead(), fileSize);
       final result = await _driveApi!.files.create(
@@ -255,10 +278,14 @@ class GoogleDriveService {
         uploadMedia: media,
       );
 
-      print('Upload complete. File ID: ${result.id}');
+      if (kDebugMode) {
+        print('Upload complete. File ID: ${result.id}');
+      }
       return result.id;
     } catch (e) {
-      print('Upload failed in GoogleDriveService: $e');
+      if (kDebugMode) {
+        print('Upload failed in GoogleDriveService: $e');
+      }
       rethrow;
     }
   }
@@ -282,7 +309,9 @@ class GoogleDriveService {
 
       return fileList.files ?? [];
     } catch (e) {
-      print('List backups failed: $e');
+      if (kDebugMode) {
+        print('List backups failed: $e');
+      }
       return [];
     }
   }
@@ -301,7 +330,9 @@ class GoogleDriveService {
       await media.stream.pipe(sink);
       await sink.close();
     } catch (e) {
-      print('Download failed: $e');
+      if (kDebugMode) {
+        print('Download failed: $e');
+      }
       rethrow;
     }
   }
@@ -331,7 +362,9 @@ class GoogleDriveService {
         final Map<String, dynamic> decoded = json.decode(encoded);
         etagValue = decoded['etag']?.toString() ?? '';
       } catch (e2) {
-        print('GoogleDriveService: All ETag extraction methods failed: $e2');
+        if (kDebugMode) {
+          print('GoogleDriveService: All ETag extraction methods failed: $e2');
+        }
       }
     }
 

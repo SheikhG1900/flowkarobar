@@ -1,4 +1,5 @@
 import 'package:workmanager/workmanager.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/features/backup/data/google_drive_service.dart';
 import 'package:flowpaisa/features/backup/data/sync/sync_engine.dart';
@@ -20,7 +21,9 @@ const String syncTaskName = 'com.flowpaisa.app.sync_task';
 
 @pragma('vm:entry-point')
 Future<bool> handleSyncTask(String task, Map<String, dynamic>? inputData) async {
-  print('SyncScheduler: handleSyncTask started for task: $task');
+  if (kDebugMode) {
+    print('SyncScheduler: handleSyncTask started for task: $task');
+  }
   try {
     final prefs = await SharedPreferences.getInstance();
     
@@ -30,26 +33,36 @@ Future<bool> handleSyncTask(String task, Map<String, dynamic>? inputData) async 
       final localeCode = prefs.getString('language_code') ?? 'en';
       l10n = await AppLocalizations.delegate.load(Locale(localeCode));
     } catch (e) {
-      print('SyncScheduler: Could not load l10n for background task: $e');
+      if (kDebugMode) {
+        print('SyncScheduler: Could not load l10n for background task: $e');
+      }
     }
 
     final cashbooksJson = prefs.getStringList('cashbooks_list');
     if (cashbooksJson == null || cashbooksJson.isEmpty) {
-      print('SyncScheduler: No cashbooks found in SharedPreferences');
+      if (kDebugMode) {
+        print('SyncScheduler: No cashbooks found in SharedPreferences');
+      }
       return true;
     }
 
     final driveService = GoogleDriveService();
-    print('SyncScheduler: Initializing Drive service...');
+    if (kDebugMode) {
+      print('SyncScheduler: Initializing Drive service...');
+    }
     await driveService.init();
     
     // In background, init() might not be enough if silent sign-in fails
     if (!driveService.isSignedIn) {
-      print('SyncScheduler: Drive service not signed in, attempting silent sign-in again...');
+      if (kDebugMode) {
+        print('SyncScheduler: Drive service not signed in, attempting silent sign-in again...');
+      }
       // Note: In background, we cannot show UI for sign-in.
       // If this fails, sync cannot proceed.
       if (!driveService.isSignedIn) {
-        print('SyncScheduler: Error - Drive service still not signed in. Aborting.');
+        if (kDebugMode) {
+          print('SyncScheduler: Error - Drive service still not signed in. Aborting.');
+        }
         return true;
       }
     }
@@ -66,7 +79,9 @@ Future<bool> handleSyncTask(String task, Map<String, dynamic>? inputData) async 
         }
         throw 'Unknown type: ${item.runtimeType}';
       } catch (e) {
-        print('SyncScheduler: Error decoding cashbook: $e');
+        if (kDebugMode) {
+          print('SyncScheduler: Error decoding cashbook: $e');
+        }
         rethrow;
       }
     }).toList();
@@ -74,7 +89,9 @@ Future<bool> handleSyncTask(String task, Map<String, dynamic>? inputData) async 
     int syncedCount = 0;
     
     for (final cashbook in cashbooks) {
-      print('SyncScheduler: Background sync starting for: ${cashbook.name} (DB: ${cashbook.dbPath})');
+      if (kDebugMode) {
+        print('SyncScheduler: Background sync starting for: ${cashbook.name} (DB: ${cashbook.dbPath})');
+      }
       
       // Update progress in SharedPreferences
       await prefs.setString('sync_status_${cashbook.id}', 'Syncing...');
@@ -102,7 +119,9 @@ Future<bool> handleSyncTask(String task, Map<String, dynamic>? inputData) async 
           await scheduleService.generateTransactionsFromSchedule(schedule.uuid);
         }
       } catch (e) {
-        print('SyncScheduler: Error processing schedules for ${cashbook.name}: $e');
+        if (kDebugMode) {
+          print('SyncScheduler: Error processing schedules for ${cashbook.name}: $e');
+        }
       }
 
       // 2. Check for overdue payables and receivables
@@ -154,7 +173,9 @@ Future<bool> handleSyncTask(String task, Map<String, dynamic>? inputData) async 
           );
         }
       } catch (e) {
-        print('SyncScheduler: Error checking overdue items for ${cashbook.name}: $e');
+        if (kDebugMode) {
+          print('SyncScheduler: Error checking overdue items for ${cashbook.name}: $e');
+        }
       }
 
       // 3. Run sync engine
@@ -168,10 +189,14 @@ Future<bool> handleSyncTask(String task, Map<String, dynamic>? inputData) async 
         syncedCount++;
         // The SyncEngine now handles setting 'Success' status internally
         // to ensure it happens even if push is blocked but pull succeeded.
-        print('SyncScheduler: Background sync finished for: ${cashbook.name}');
+        if (kDebugMode) {
+          print('SyncScheduler: Background sync finished for: ${cashbook.name}');
+        }
       } catch (e) {
         await prefs.setString('sync_status_${cashbook.id}', 'Error: $e');
-        print('SyncScheduler: Sync failed for ${cashbook.name}: $e');
+        if (kDebugMode) {
+          print('SyncScheduler: Sync failed for ${cashbook.name}: $e');
+        }
       } finally {
         await db.close();
       }
@@ -179,7 +204,9 @@ Future<bool> handleSyncTask(String task, Map<String, dynamic>? inputData) async 
 
     // Add local notification for background completion
     if (syncedCount > 0) {
-      print('SyncScheduler: Adding notification for $syncedCount synced cashbooks');
+      if (kDebugMode) {
+        print('SyncScheduler: Adding notification for $syncedCount synced cashbooks');
+      }
       await NotificationNotifier.addNotificationStatic(
         title: 'Background Sync Complete',
         message: 'Successfully synced $syncedCount cashbook(s) in the background.',
@@ -189,8 +216,10 @@ Future<bool> handleSyncTask(String task, Map<String, dynamic>? inputData) async 
 
     return true;
   } catch (e, stack) {
-    print('SyncScheduler: Background sync fatal error: $e');
-    print('SyncScheduler: Stack trace: $stack');
+    if (kDebugMode) {
+      print('SyncScheduler: Background sync fatal error: $e');
+      print('SyncScheduler: Stack trace: $stack');
+    }
     return false;
   }
 }
@@ -249,7 +278,9 @@ class SyncScheduler {
   }
 
   static Future<void> triggerOnDemandSync() async {
-    print('Triggering on-demand sync task...');
+    if (kDebugMode) {
+      print('Triggering on-demand sync task...');
+    }
     await Workmanager().registerOneOffTask(
       'on-demand-sync-${DateTime.now().millisecondsSinceEpoch}',
       syncTaskName,

@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/features/backup/data/google_drive_service.dart';
 import 'package:flowpaisa/features/backup/domain/models/sync_manifest.dart';
@@ -22,15 +23,21 @@ class SyncEngine {
         _cashbook = cashbook;
 
   Future<void> sync() async {
-    print('SyncEngine: Starting sync for cashbook: ${_cashbook.name} (ID: ${_cashbook.id})');
+    if (kDebugMode) {
+      print('SyncEngine: Starting sync for cashbook: ${_cashbook.name} (ID: ${_cashbook.id})');
+    }
     if (!_driveService.isSignedIn) {
-      print('SyncEngine: Error - User not signed in');
+      if (kDebugMode) {
+        print('SyncEngine: Error - User not signed in');
+      }
       throw Exception('User not signed in');
     }
 
     try {
       final deviceId = await _getDeviceId();
-      print('SyncEngine: Device ID: $deviceId');
+      if (kDebugMode) {
+        print('SyncEngine: Device ID: $deviceId');
+      }
       
       final cashbookFolderId = await _driveService.getOrCreateCashbookFolder(
         _cashbook.id,
@@ -38,21 +45,31 @@ class SyncEngine {
         color: _cashbook.colorCode,
         icon: _cashbook.iconCodePoint,
       );
-      print('SyncEngine: Cashbook folder ID: $cashbookFolderId');
+      if (kDebugMode) {
+        print('SyncEngine: Cashbook folder ID: $cashbookFolderId');
+      }
       
       // Step 1: Catch-up
-      print('SyncEngine: Fetching manifest...');
+      if (kDebugMode) {
+        print('SyncEngine: Fetching manifest...');
+      }
       final manifestResult = await _getManifest(cashbookFolderId);
       SyncManifest manifest = manifestResult.manifest;
       String manifestEtag = manifestResult.etag;
       String? manifestFileId = manifestResult.fileId;
-      print('SyncEngine: Cloud manifest version: ${manifest.version}');
+      if (kDebugMode) {
+        print('SyncEngine: Cloud manifest version: ${manifest.version}');
+      }
 
       var localMetadata = await _getLocalMetadata(deviceId);
-      print('SyncEngine: Local metadata version: ${localMetadata.version}');
+      if (kDebugMode) {
+        print('SyncEngine: Local metadata version: ${localMetadata.version}');
+      }
       
       if (manifest.version > localMetadata.version) {
-        print('SyncEngine: Catching up from ${localMetadata.version} to ${manifest.version}');
+        if (kDebugMode) {
+          print('SyncEngine: Catching up from ${localMetadata.version} to ${manifest.version}');
+        }
         await _catchUp(manifest.version, localMetadata.version, cashbookFolderId, deviceId);
         
         // Refresh localMetadata variable for subsequent logic
@@ -64,11 +81,15 @@ class SyncEngine {
       if (manifest.lockedBy != null && manifest.lockedBy != deviceId) {
         final lockTime = manifest.lockedAt;
         if (lockTime != null && DateTime.now().toUtc().difference(lockTime).inMinutes < 60) {
-          print('SyncEngine: Database is locked by another device: ${manifest.lockedBy}');
+          if (kDebugMode) {
+            print('SyncEngine: Database is locked by another device: ${manifest.lockedBy}');
+          }
           
           // Even if locked, we already caught up in Step 1, so update local version
           if (localMetadata.version < manifest.version) {
-            print('SyncEngine: Updating local version to ${manifest.version} despite lock (pull complete)');
+            if (kDebugMode) {
+              print('SyncEngine: Updating local version to ${manifest.version} despite lock (pull complete)');
+            }
             await _updateLocalMetadata(deviceId, manifest.version);
           }
 
@@ -90,20 +111,28 @@ class SyncEngine {
           await prefs.setString('sync_status_${_cashbook.id}', 'Success');
           return; // Abort push
         }
-        print('SyncEngine: Lock expired or belongs to this device, proceeding...');
+        if (kDebugMode) {
+          print('SyncEngine: Lock expired or belongs to this device, proceeding...');
+        }
       }
 
       // Check for local changes
-      print('SyncEngine: Checking for local changes...');
+      if (kDebugMode) {
+        print('SyncEngine: Checking for local changes...');
+      }
       final localChanges = await _getLocalChanges();
       
       // CRITICAL: If no local changes, we still need to check if we caught up from cloud
       if (localChanges.isEmpty) {
-        print('SyncEngine: No local changes to sync for ${_cashbook.name}');
+        if (kDebugMode) {
+          print('SyncEngine: No local changes to sync for ${_cashbook.name}');
+        }
         
         // If our local version was behind and we caught up in Step 1, update local metadata now
         if (localMetadata.version < manifest.version) {
-          print('SyncEngine: Updating local version from ${localMetadata.version} to ${manifest.version} (caught up from cloud)');
+          if (kDebugMode) {
+            print('SyncEngine: Updating local version from ${localMetadata.version} to ${manifest.version} (caught up from cloud)');
+          }
           await _updateLocalMetadata(deviceId, manifest.version);
         }
         
@@ -113,10 +142,14 @@ class SyncEngine {
         return;
       }
 
-      print('SyncEngine: Found local changes in ${localChanges.length} tables. Tables: ${localChanges.keys.join(', ')}');
+      if (kDebugMode) {
+        print('SyncEngine: Found local changes in ${localChanges.length} tables. Tables: ${localChanges.keys.join(', ')}');
+      }
 
       // Step 3: Acquire Lock
-      print('SyncEngine: Acquiring lock...');
+      if (kDebugMode) {
+        print('SyncEngine: Acquiring lock...');
+      }
       final lockedManifest = manifest.copyWith(
         lockedBy: deviceId,
         lockedAt: DateTime.now().toUtc(),
@@ -131,19 +164,27 @@ class SyncEngine {
           etag: manifestEtag,
           fileId: manifestFileId,
         );
-        print('SyncEngine: Lock acquired, manifest updated.');
+        if (kDebugMode) {
+          print('SyncEngine: Lock acquired, manifest updated.');
+        }
       } catch (e) {
         if (e.toString().contains('412')) {
-          print('SyncEngine: Conflict detected (412) while acquiring lock, restarting sync');
+          if (kDebugMode) {
+            print('SyncEngine: Conflict detected (412) while acquiring lock, restarting sync');
+          }
           return sync(); // Restart
         }
-        print('SyncEngine: Error uploading manifest to acquire lock: $e');
+        if (kDebugMode) {
+          print('SyncEngine: Error uploading manifest to acquire lock: $e');
+        }
         rethrow;
       }
 
       // Step 4: Execute & Commit
       final nextVersion = lockedManifest.version + 1;
-      print('SyncEngine: Committing version $nextVersion...');
+      if (kDebugMode) {
+        print('SyncEngine: Committing version $nextVersion...');
+      }
       
       // Add summary to changes for local display
       final changesWithSummary = Map<String, List<Map<String, dynamic>>>.from(localChanges);
@@ -167,7 +208,9 @@ class SyncEngine {
           content: versionFile.toJson(),
           parentId: cashbookFolderId,
         );
-        print('SyncEngine: Version file v$nextVersion.json uploaded.');
+        if (kDebugMode) {
+          print('SyncEngine: Version file v$nextVersion.json uploaded.');
+        }
 
         // 2. ATOMIC UPDATE: Increment version AND clear lock in ONE manifest upload
         final finalManifest = SyncManifest(
@@ -176,8 +219,10 @@ class SyncEngine {
           lockedAt: null,
         );
 
-        print('SyncEngine: Releasing lock and updating version to $nextVersion at the same time...');
-        print('SyncEngine: Final manifest content to upload: ${finalManifest.toJson()}');
+        if (kDebugMode) {
+          print('SyncEngine: Releasing lock and updating version to $nextVersion at the same time...');
+          print('SyncEngine: Final manifest content to upload: ${finalManifest.toJson()}');
+        }
         
         // We MUST fetch the very latest manifest metadata here to get the correct ETag 
         // after our own lock acquisition in Step 3.
@@ -190,7 +235,9 @@ class SyncEngine {
           etag: latestManifestResult.etag,
           fileId: latestManifestResult.fileId,
         );
-        print('SyncEngine: Manifest updated (Version: $nextVersion, Lock: Released).');
+        if (kDebugMode) {
+          print('SyncEngine: Manifest updated (Version: $nextVersion, Lock: Released).');
+        }
 
         // Update status to Success in SharedPreferences
         final prefs = await SharedPreferences.getInstance();
@@ -203,10 +250,14 @@ class SyncEngine {
         await _markLocalChangesSynced(localChanges);
         await _updateLocalMetadata(deviceId, nextVersion);
       } catch (e) {
-        print('SyncEngine: Error during commit phase: $e');
+        if (kDebugMode) {
+          print('SyncEngine: Error during commit phase: $e');
+        }
         // CRITICAL: Try to release the lock even if the version upload failed
         try {
-          print('SyncEngine: Attempting emergency lock release...');
+          if (kDebugMode) {
+            print('SyncEngine: Attempting emergency lock release...');
+          }
           final emergencyManifestResult = await _getManifest(cashbookFolderId);
           // Only release if WE are the ones holding the lock
           if (emergencyManifestResult.manifest.lockedBy == deviceId) {
@@ -222,16 +273,22 @@ class SyncEngine {
               etag: emergencyManifestResult.etag,
               fileId: emergencyManifestResult.fileId,
             );
-            print('SyncEngine: Emergency lock release successful.');
+            if (kDebugMode) {
+              print('SyncEngine: Emergency lock release successful.');
+            }
           }
         } catch (releaseError) {
-          print('SyncEngine: Emergency lock release failed: $releaseError');
+          if (kDebugMode) {
+            print('SyncEngine: Emergency lock release failed: $releaseError');
+          }
         }
         rethrow;
       }
     } catch (e, stack) {
-      print('SyncEngine: Sync failed with error: $e');
-      print('SyncEngine: Stack trace: $stack');
+      if (kDebugMode) {
+        print('SyncEngine: Sync failed with error: $e');
+        print('SyncEngine: Stack trace: $stack');
+      }
       rethrow;
     }
   }
@@ -256,7 +313,9 @@ class SyncEngine {
   }
 
   Future<void> _updateLocalMetadata(String deviceId, int version) async {
-    print('SyncEngine: Writing version $version to local sync_metadata for device $deviceId');
+    if (kDebugMode) {
+      print('SyncEngine: Writing version $version to local sync_metadata for device $deviceId');
+    }
     await (_db.update(_db.syncMetadata)..where((t) => t.deviceId.equals(deviceId)))
         .write(SyncMetadataCompanion(
       version: Value(version),
@@ -265,7 +324,9 @@ class SyncEngine {
     
     // Verify the write
     final verify = await _getLocalMetadata(deviceId);
-    print('SyncEngine: Verified local version is now ${verify.version}');
+    if (kDebugMode) {
+      print('SyncEngine: Verified local version is now ${verify.version}');
+    }
     
     // CRITICAL: Also update the global sync_status to Success if we just finished
     // a catch-up or a push to ensure the UI refreshes
@@ -273,17 +334,23 @@ class SyncEngine {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('sync_status_${_cashbook.id}', 'Success');
     } catch (e) {
-      print('SyncEngine: Failed to update status in SharedPreferences: $e');
+      if (kDebugMode) {
+        print('SyncEngine: Failed to update status in SharedPreferences: $e');
+      }
     }
   }
 
   Future<void> _catchUp(int remoteVersion, int localVersion, String folderId, String deviceId) async {
     for (int v = localVersion + 1; v <= remoteVersion; v++) {
       final fileName = 'v$v.json';
-      print('SyncEngine: Pulling version $fileName...');
+      if (kDebugMode) {
+        print('SyncEngine: Pulling version $fileName...');
+      }
       final fileId = await _driveService.getFileIdByName(fileName, folderId);
       if (fileId == null) {
-        print('SyncEngine: Warning - Version file $fileName not found in cloud.');
+        if (kDebugMode) {
+          print('SyncEngine: Warning - Version file $fileName not found in cloud.');
+        }
         continue;
       }
 
@@ -291,13 +358,17 @@ class SyncEngine {
       final versionFile = SyncVersionFile.fromJson(result.content);
       
       // Apply the changes for this specific version
-      print('SyncEngine: Applying changes from $fileName (Changes keys: ${versionFile.changes.keys.join(', ')})');
+      if (kDebugMode) {
+        print('SyncEngine: Applying changes from $fileName (Changes keys: ${versionFile.changes.keys.join(', ')})');
+      }
       await _applyChanges(versionFile.changes);
       
       // CRITICAL: Update local version number after EACH successful delta application
       // This ensures that if the process crashes at v8 (out of 10), 
       // the next run starts from v9.
-      print('SyncEngine: Successfully applied $fileName. Updating local version to $v');
+      if (kDebugMode) {
+        print('SyncEngine: Successfully applied $fileName. Updating local version to $v');
+      }
       await _updateLocalMetadata(deviceId, v);
     }
   }
@@ -327,12 +398,16 @@ class SyncEngine {
           return indexA.compareTo(indexB);
         });
 
-      print('SyncEngine: Applying changes for ${sortedEntries.length} tables');
+      if (kDebugMode) {
+        print('SyncEngine: Applying changes for ${sortedEntries.length} tables');
+      }
 
       for (final entry in sortedEntries) {
         final tableName = entry.key;
         final rows = entry.value;
-        print('SyncEngine: Applying ${rows.length} rows to $tableName');
+        if (kDebugMode) {
+          print('SyncEngine: Applying ${rows.length} rows to $tableName');
+        }
 
         for (final row in rows) {
           // Special handling for categories and currencies to avoid duplicates
@@ -348,7 +423,9 @@ class SyncEngine {
               ).getSingle();
               
               if ((existing.data['count'] as num).toInt() > 0) {
-                print('SyncEngine: Skipping default $tableName entry with UUID $uuid (already exists)');
+                if (kDebugMode) {
+                  print('SyncEngine: Skipping default $tableName entry with UUID $uuid (already exists)');
+                }
                 continue;
               }
             }
@@ -367,7 +444,9 @@ class SyncEngine {
       'payables', 'reminders', 'app_currencies', 'transaction_schedules'
     ];
 
-    print('SyncEngine: Scanning ${tables.length} tables for unsynced changes...');
+    if (kDebugMode) {
+      print('SyncEngine: Scanning ${tables.length} tables for unsynced changes...');
+    }
     for (final tableName in tables) {
       try {
         // Check if table exists first to avoid SQL errors
@@ -376,7 +455,9 @@ class SyncEngine {
         ).getSingle();
         
         if ((tableCheck.data['count'] as num).toInt() == 0) {
-          print('SyncEngine: Table $tableName does not exist yet, skipping...');
+          if (kDebugMode) {
+            print('SyncEngine: Table $tableName does not exist yet, skipping...');
+          }
           continue;
         }
 
@@ -385,7 +466,9 @@ class SyncEngine {
         ).get();
 
         if (rows.isNotEmpty) {
-          print('SyncEngine: Table $tableName has ${rows.length} unsynced rows');
+          if (kDebugMode) {
+            print('SyncEngine: Table $tableName has ${rows.length} unsynced rows');
+          }
           // Create a deep copy and ensure types are JSON-compatible
           changes[tableName] = rows.map((r) {
             final data = Map<String, dynamic>.from(r.data);
@@ -394,12 +477,16 @@ class SyncEngine {
           }).toList();
         }
       } catch (e) {
-        print('SyncEngine: Error checking table $tableName for sync: $e');
+        if (kDebugMode) {
+          print('SyncEngine: Error checking table $tableName for sync: $e');
+        }
       }
     }
 
     if (changes.isEmpty) {
-      print('SyncEngine: No unsynced rows found in any table.');
+      if (kDebugMode) {
+        print('SyncEngine: No unsynced rows found in any table.');
+      }
     }
     return changes;
   }
@@ -459,11 +546,19 @@ class SyncEngine {
     final placeholders = List.filled(sqlData.length, '?').join(', ');
     final updates = sqlData.keys.map((k) => '$k = EXCLUDED.$k').join(', ');
 
-    await _db.customStatement(
-      'INSERT INTO $tableName ($columns) VALUES ($placeholders) '
-      'ON CONFLICT(uuid) DO UPDATE SET $updates',
-      sqlData.values.toList(),
-    );
+    try {
+      await _db.customStatement(
+        'INSERT INTO $tableName ($columns) VALUES ($placeholders) '
+        'ON CONFLICT(uuid) DO UPDATE SET $updates',
+        sqlData.values.toList(),
+      );
+    } catch (e) {
+      if (kDebugMode) {
+        print('SyncEngine: Error upserting row into $tableName: $e');
+        print('SyncEngine: Row data: $sqlData');
+      }
+      rethrow;
+    }
   }
 
   Future<String> _getDeviceId() async {

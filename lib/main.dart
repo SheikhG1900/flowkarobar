@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -79,7 +80,9 @@ void main() async {
     await Firebase.initializeApp();
   } catch (e) {
     // Firebase initialization may fail if not configured yet
-    debugPrint('Firebase initialization skipped: $e');
+    if (kDebugMode) {
+      debugPrint('Firebase initialization skipped: $e');
+    }
   }
 
   // Pre-cache fonts for all languages
@@ -132,7 +135,7 @@ void callbackDispatcher() {
 
 Future<void> _initializeFonts() async {
   await GoogleFonts.pendingFonts([
-    GoogleFonts.inter(),
+    GoogleFonts.montserrat(),
     GoogleFonts.notoSansDevanagari(),
     GoogleFonts.marhey(),
     GoogleFonts.lalezar(),

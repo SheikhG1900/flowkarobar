@@ -85,8 +85,10 @@ class ScheduleService {
 
       return scheduleUuid;
     } catch (e, stackTrace) {
-      debugPrint('Error creating schedule in service: $e');
-      debugPrint('Stack trace: $stackTrace');
+      if (kDebugMode) {
+        debugPrint('Error creating schedule in service: $e');
+        debugPrint('Stack trace: $stackTrace');
+      }
       rethrow;
     }
   }
@@ -160,7 +162,9 @@ class ScheduleService {
         latestGeneratedDate = date;
       } catch (e) {
         // Log error but continue with other dates
-        debugPrint('Error generating transaction for date $date: $e');
+        if (kDebugMode) {
+          debugPrint('Error generating transaction for date $date: $e');
+        }
       }
     }
 
@@ -187,9 +191,11 @@ class ScheduleService {
     final dateStr = "${date.year}$monthStr$dayStr";
     final deterministicUuid = "${shortScheduleUuid}_$dateStr";
 
-    debugPrint('DEBUG: Generating transaction for schedule: ${schedule.uuid}');
-    debugPrint('DEBUG: Target date: $date');
-    debugPrint('DEBUG: Generated deterministic ID: $deterministicUuid');
+    if (kDebugMode) {
+      debugPrint('DEBUG: Generating transaction for schedule: ${schedule.uuid}');
+      debugPrint('DEBUG: Target date: $date');
+      debugPrint('DEBUG: Generated deterministic ID: $deterministicUuid');
+    }
 
     // Calculate dynamic due date based on offset if available
     DateTime? calculatedDueDate;
@@ -214,12 +220,16 @@ class ScheduleService {
       final errorStr = e.toString();
       if (errorStr.contains('1555') || errorStr.contains('UNIQUE constraint failed')) {
         // Ignore unique constraint violations (already generated)
-        final msg = 'Transaction for $date already exists (deterministic ID: $deterministicUuid), skipping.';
-        debugPrint('DEBUG: $msg');
+        if (kDebugMode) {
+          final msg = 'Transaction for $date already exists (deterministic ID: $deterministicUuid), skipping.';
+          debugPrint('DEBUG: $msg');
+        }
         // Also show in toast if possible via a callback or just log it
         return ''; // Return empty string to satisfy Future<String> return type
       } else {
-        debugPrint('DEBUG: Error in createTransaction: $e');
+        if (kDebugMode) {
+          debugPrint('DEBUG: Error in createTransaction: $e');
+        }
         throw e;
       }
     });
@@ -324,9 +334,11 @@ class ScheduleService {
     DateTime? startDate,
     DateTime? endDate,
   }) async {
-    debugPrint('DEBUG: Service updating schedule $scheduleUuid');
-    debugPrint('DEBUG: Service categoryUuid: $categoryUuid');
-    debugPrint('DEBUG: Service contactUuid: $contactUuid');
+    if (kDebugMode) {
+      debugPrint('DEBUG: Service updating schedule $scheduleUuid');
+      debugPrint('DEBUG: Service categoryUuid: $categoryUuid');
+      debugPrint('DEBUG: Service contactUuid: $contactUuid');
+    }
 
     String? daysOfWeekJson;
     if (selectedDaysOfWeek != null) {
