@@ -309,6 +309,7 @@ class PremiumGate {
             child: const Text('Cancel'),
           ),
           FilledButton(
+            style: FilledButton.styleFrom(foregroundColor: Colors.white),
             onPressed: () {
               Navigator.pop(context);
               showPremiumDialog(context);

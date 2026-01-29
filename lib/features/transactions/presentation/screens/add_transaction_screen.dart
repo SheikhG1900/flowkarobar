@@ -618,6 +618,8 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                               const SizedBox(height: 16),
                               if (widget.initialCategoryName != null)
                                 FilledButton.icon(
+                                  style: FilledButton.styleFrom(
+                                      foregroundColor: Colors.white),
                                   onPressed: () async {
                                     final newCategory = await Navigator.push(
                                       context,

@@ -16,7 +16,8 @@ class TemplateEditorScreen extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<TemplateEditorScreen> createState() => _TemplateEditorScreenState();
+  ConsumerState<TemplateEditorScreen> createState() =>
+      _TemplateEditorScreenState();
 }
 
 class _TemplateEditorScreenState extends ConsumerState<TemplateEditorScreen> {
@@ -70,7 +71,8 @@ class _TemplateEditorScreenState extends ConsumerState<TemplateEditorScreen> {
         _isLoading = false;
       });
       if (mounted) {
-        ToastUtils.showErrorToast(context, ref, '${l10n.errorOccurred(e.toString())}');
+        ToastUtils.showErrorToast(
+            context, ref, '${l10n.errorOccurred(e.toString())}');
       }
     }
   }
@@ -102,7 +104,8 @@ class _TemplateEditorScreenState extends ConsumerState<TemplateEditorScreen> {
         _isLoading = false;
       });
       if (mounted) {
-        ToastUtils.showErrorToast(context, ref, l10n.errorOccurred(e.toString()));
+        ToastUtils.showErrorToast(
+            context, ref, l10n.errorOccurred(e.toString()));
       }
     }
   }
@@ -150,7 +153,8 @@ class _TemplateEditorScreenState extends ConsumerState<TemplateEditorScreen> {
           _isLoading = false;
         });
         if (mounted) {
-          ToastUtils.showErrorToast(context, ref, l10n.errorOccurred(e.toString()));
+          ToastUtils.showErrorToast(
+              context, ref, l10n.errorOccurred(e.toString()));
         }
       }
     }
@@ -249,6 +253,8 @@ class _TemplateEditorScreenState extends ConsumerState<TemplateEditorScreen> {
                   child: SizedBox(
                     width: double.infinity,
                     child: FilledButton(
+                      style:
+                          FilledButton.styleFrom(foregroundColor: Colors.white),
                       onPressed: _isLoading ? null : _saveTemplate,
                       child: Text(l10n.saveTemplate),
                     ),
@@ -260,7 +266,8 @@ class _TemplateEditorScreenState extends ConsumerState<TemplateEditorScreen> {
   }
 
   String _getTemplateName() {
-    final type = LocalizationHelper.localizeCategoryName(context, widget.templateType);
+    final type =
+        LocalizationHelper.localizeCategoryName(context, widget.templateType);
     final statusText = widget.templateStatus.isEmpty
         ? ''
         : ' - ${LocalizationHelper.localizeStatus(context, widget.templateStatus)}';

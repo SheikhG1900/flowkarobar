@@ -17,7 +17,8 @@ class CopyPreferencesSheet extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<CopyPreferencesSheet> createState() => _CopyPreferencesSheetState();
+  ConsumerState<CopyPreferencesSheet> createState() =>
+      _CopyPreferencesSheetState();
 }
 
 class _CopyPreferencesSheetState extends ConsumerState<CopyPreferencesSheet> {
@@ -33,7 +34,8 @@ class _CopyPreferencesSheetState extends ConsumerState<CopyPreferencesSheet> {
     // Initialize with the first available source
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final cashbooks = ref.read(cashbooksProvider);
-      final availableSources = cashbooks.where((c) => c.id != widget.targetCashbookId).toList();
+      final availableSources =
+          cashbooks.where((c) => c.id != widget.targetCashbookId).toList();
       if (availableSources.isNotEmpty) {
         setState(() {
           _selectedSourceCashbookId = availableSources.first.id;
@@ -47,7 +49,8 @@ class _CopyPreferencesSheetState extends ConsumerState<CopyPreferencesSheet> {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
     final cashbooks = ref.watch(cashbooksProvider);
-    final availableSources = cashbooks.where((c) => c.id != widget.targetCashbookId).toList();
+    final availableSources =
+        cashbooks.where((c) => c.id != widget.targetCashbookId).toList();
 
     if (availableSources.isEmpty) {
       return Container(
@@ -78,6 +81,7 @@ class _CopyPreferencesSheetState extends ConsumerState<CopyPreferencesSheet> {
             Text(l10n.noOtherCashbooks),
             const SizedBox(height: 24),
             FilledButton(
+              style: FilledButton.styleFrom(foregroundColor: Colors.white),
               onPressed: () => Navigator.pop(context),
               child: Text(l10n.ok),
             ),
@@ -137,10 +141,12 @@ class _CopyPreferencesSheetState extends ConsumerState<CopyPreferencesSheet> {
                       prefixIcon: _selectedSourceCashbookId != null
                           ? Icon(
                               availableSources
-                                  .firstWhere((c) => c.id == _selectedSourceCashbookId)
+                                  .firstWhere(
+                                      (c) => c.id == _selectedSourceCashbookId)
                                   .icon,
                               color: availableSources
-                                  .firstWhere((c) => c.id == _selectedSourceCashbookId)
+                                  .firstWhere(
+                                      (c) => c.id == _selectedSourceCashbookId)
                                   .color,
                             )
                           : null,
@@ -207,7 +213,8 @@ class _CopyPreferencesSheetState extends ConsumerState<CopyPreferencesSheet> {
                         const Divider(height: 1),
                         CheckboxListTile(
                           title: Text(l10n.preferencesDescription),
-                          subtitle: Text('${l10n.preferencesDescription} (Currency, Date, Fonts)'),
+                          subtitle: Text(
+                              '${l10n.preferencesDescription} (Currency, Date, Fonts)'),
                           value: _copyPreferences,
                           onChanged: (value) {
                             setState(() {
@@ -246,6 +253,7 @@ class _CopyPreferencesSheetState extends ConsumerState<CopyPreferencesSheet> {
               Expanded(
                 flex: 2,
                 child: FilledButton(
+                  style: FilledButton.styleFrom(foregroundColor: Colors.white),
                   onPressed: _isLoading ? null : _performCopyPreferences,
                   child: _isLoading
                       ? const SizedBox(
@@ -299,8 +307,10 @@ class _CopyPreferencesSheetState extends ConsumerState<CopyPreferencesSheet> {
           );
         }
         if (_copyPreferences) {
-          final sourceCashbook = cashbooks.firstWhere((c) => c.id == _selectedSourceCashbookId);
-          final targetCashbook = cashbooks.firstWhere((c) => c.id == widget.targetCashbookId);
+          final sourceCashbook =
+              cashbooks.firstWhere((c) => c.id == _selectedSourceCashbookId);
+          final targetCashbook =
+              cashbooks.firstWhere((c) => c.id == widget.targetCashbookId);
           final sourceDb = AppDatabase(fileName: sourceCashbook.dbPath);
           final targetDb = AppDatabase(fileName: targetCashbook.dbPath);
           try {
@@ -336,13 +346,13 @@ class _CopyPreferencesSheetState extends ConsumerState<CopyPreferencesSheet> {
         ToastUtils.showSuccessToast(context, ref, l10n.preferencesCopied);
       }
     } catch (e) {
-        if (mounted) {
-          setState(() {
-            _isLoading = false;
-          });
-          ToastUtils.showErrorToast(
-              context, ref, l10n.errorOccurred(e.toString()));
-        }
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        ToastUtils.showErrorToast(
+            context, ref, l10n.errorOccurred(e.toString()));
+      }
     }
   }
 }

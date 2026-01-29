@@ -133,6 +133,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                 child: Text(l10n.share),
               ),
               FilledButton(
+                style: FilledButton.styleFrom(foregroundColor: Colors.white),
                 onPressed: () async {
                   Navigator.pop(context);
                   await Printing.layoutPdf(
@@ -362,6 +363,8 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                             ),
                             const SizedBox(height: 24),
                             FilledButton(
+                              style: FilledButton.styleFrom(
+                                  foregroundColor: Colors.white),
                               onPressed: () =>
                                   PremiumGate.showPremiumDialog(context),
                               child: Text(l10n.unlockPremium),

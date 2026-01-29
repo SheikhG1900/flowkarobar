@@ -326,6 +326,7 @@ class CashbooksScreen extends ConsumerWidget {
                   child: Text(l10n.saveCopy),
                 ),
                 FilledButton(
+                  style: FilledButton.styleFrom(foregroundColor: Colors.white),
                   onPressed: () async {
                     Navigator.pop(context);
                     await LocalBackupService.shareBackupFile(filePath);
@@ -371,6 +372,7 @@ class CashbooksScreen extends ConsumerWidget {
                 child: Text(l10n.cancel),
               ),
               FilledButton(
+                style: FilledButton.styleFrom(foregroundColor: Colors.white),
                 onPressed: () => Navigator.pop(context, true),
                 child: Text(l10n.restore),
               ),
@@ -433,8 +435,7 @@ class CashbooksScreen extends ConsumerWidget {
               }
             },
             style: FilledButton.styleFrom(
-              backgroundColor: Colors.orange,
-            ),
+                backgroundColor: Colors.orange, foregroundColor: Colors.white),
             child: Text(l10n.deletePermanently),
           ),
         ],
@@ -469,6 +470,7 @@ class CashbooksScreen extends ConsumerWidget {
             },
             style: FilledButton.styleFrom(
               backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
             ),
             child: Text(l10n.deletePermanently),
           ),

@@ -61,9 +61,11 @@ class ReceivableDetailsDialog extends ConsumerWidget {
             onPressed: () {
               final capturedCurrency = currency;
               final capturedUserProfile = ref.read(userProfileProvider);
-              final capturedTransactionService = ref.read(transactionServiceProvider);
+              final capturedTransactionService =
+                  ref.read(transactionServiceProvider);
               final capturedWhatsAppService = ref.read(whatsAppServiceProvider);
-              final capturedTemplateService = ref.read(messageTemplateServiceProvider);
+              final capturedTemplateService =
+                  ref.read(messageTemplateServiceProvider);
               final capturedLanguage = getCurrentLanguageCode(ref);
 
               ShareHelper.shareReceivable(
@@ -143,8 +145,7 @@ class ReceivableDetailsDialog extends ConsumerWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    '\u200E${AmountFormatter.formatWithCurrency(receivable.amount,
-                        currency.symbol, currency.decimalPlaces)}',
+                    '\u200E${AmountFormatter.formatWithCurrency(receivable.amount, currency.symbol, currency.decimalPlaces)}',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: AmountFormatter.getFontSize(receivable.amount,
@@ -258,10 +259,14 @@ class ReceivableDetailsDialog extends ConsumerWidget {
                       icon: const Icon(Icons.chat, color: Color(0xFF25D366)),
                       onPressed: () {
                         final capturedCurrency = currency;
-                        final capturedUserProfile = ref.read(userProfileProvider);
-                        final capturedTransactionService = ref.read(transactionServiceProvider);
-                        final capturedWhatsAppService = ref.read(whatsAppServiceProvider);
-                        final capturedTemplateService = ref.read(messageTemplateServiceProvider);
+                        final capturedUserProfile =
+                            ref.read(userProfileProvider);
+                        final capturedTransactionService =
+                            ref.read(transactionServiceProvider);
+                        final capturedWhatsAppService =
+                            ref.read(whatsAppServiceProvider);
+                        final capturedTemplateService =
+                            ref.read(messageTemplateServiceProvider);
                         final capturedLanguage = getCurrentLanguageCode(ref);
 
                         ShareHelper.shareReceivable(
@@ -271,7 +276,8 @@ class ReceivableDetailsDialog extends ConsumerWidget {
                           contact,
                           currencyOverride: capturedCurrency,
                           userProfileOverride: capturedUserProfile,
-                          transactionServiceOverride: capturedTransactionService,
+                          transactionServiceOverride:
+                              capturedTransactionService,
                           whatsAppServiceOverride: capturedWhatsAppService,
                           templateServiceOverride: capturedTemplateService,
                           languageOverride: capturedLanguage,
@@ -337,7 +343,8 @@ class ReceivableDetailsDialog extends ConsumerWidget {
               SizedBox(
                 width: double.infinity,
                 child: FilledButton.icon(
-                  onPressed: () => _markAsReceived(context, ref, receivable.uuid),
+                  onPressed: () =>
+                      _markAsReceived(context, ref, receivable.uuid),
                   icon: const Icon(Icons.check_circle),
                   label: Text(l10n.markAsReceived),
                   style: FilledButton.styleFrom(
@@ -457,7 +464,8 @@ class ReceivableDetailsDialog extends ConsumerWidget {
                   children: [
                     Text(
                       category != null
-                          ? LocalizationHelper.localizeCategory(context, category.name)
+                          ? LocalizationHelper.localizeCategory(
+                              context, category.name)
                           : (isExpense ? l10n.expense : l10n.income),
                       style: TextStyle(
                         fontSize: 16,
@@ -519,7 +527,8 @@ class ReceivableDetailsDialog extends ConsumerWidget {
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            style: FilledButton.styleFrom(
+                backgroundColor: Colors.red, foregroundColor: Colors.white),
             child: Text(l10n.delete),
           ),
         ],
@@ -533,8 +542,7 @@ class ReceivableDetailsDialog extends ConsumerWidget {
 
         if (context.mounted) {
           Navigator.pop(context);
-          ToastUtils.showSuccessToast(
-              context, ref, l10n.receivableDeleted);
+          ToastUtils.showSuccessToast(context, ref, l10n.receivableDeleted);
         }
       } catch (e) {
         if (context.mounted) {
@@ -590,7 +598,8 @@ class ReceivableDetailsDialog extends ConsumerWidget {
       }
     } catch (e) {
       if (context.mounted) {
-        ToastUtils.showErrorToast(context, ref, l10n.errorOccurred(e.toString()));
+        ToastUtils.showErrorToast(
+            context, ref, l10n.errorOccurred(e.toString()));
       }
     }
   }

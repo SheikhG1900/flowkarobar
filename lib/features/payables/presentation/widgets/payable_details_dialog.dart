@@ -60,9 +60,11 @@ class PayableDetailsDialog extends ConsumerWidget {
             onPressed: () {
               final capturedCurrency = currency;
               final capturedUserProfile = ref.read(userProfileProvider);
-              final capturedTransactionService = ref.read(transactionServiceProvider);
+              final capturedTransactionService =
+                  ref.read(transactionServiceProvider);
               final capturedWhatsAppService = ref.read(whatsAppServiceProvider);
-              final capturedTemplateService = ref.read(messageTemplateServiceProvider);
+              final capturedTemplateService =
+                  ref.read(messageTemplateServiceProvider);
               final capturedLanguage = getCurrentLanguageCode(ref);
 
               ShareHelper.sharePayable(
@@ -140,8 +142,7 @@ class PayableDetailsDialog extends ConsumerWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    '\u200E${AmountFormatter.formatWithCurrency(payable.amount,
-                        currency.symbol, currency.decimalPlaces)}',
+                    '\u200E${AmountFormatter.formatWithCurrency(payable.amount, currency.symbol, currency.decimalPlaces)}',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: AmountFormatter.getFontSize(payable.amount,
@@ -255,10 +256,14 @@ class PayableDetailsDialog extends ConsumerWidget {
                       icon: const Icon(Icons.chat, color: Color(0xFF25D366)),
                       onPressed: () {
                         final capturedCurrency = currency;
-                        final capturedUserProfile = ref.read(userProfileProvider);
-                        final capturedTransactionService = ref.read(transactionServiceProvider);
-                        final capturedWhatsAppService = ref.read(whatsAppServiceProvider);
-                        final capturedTemplateService = ref.read(messageTemplateServiceProvider);
+                        final capturedUserProfile =
+                            ref.read(userProfileProvider);
+                        final capturedTransactionService =
+                            ref.read(transactionServiceProvider);
+                        final capturedWhatsAppService =
+                            ref.read(whatsAppServiceProvider);
+                        final capturedTemplateService =
+                            ref.read(messageTemplateServiceProvider);
                         final capturedLanguage = getCurrentLanguageCode(ref);
 
                         ShareHelper.sharePayable(
@@ -268,7 +273,8 @@ class PayableDetailsDialog extends ConsumerWidget {
                           contact,
                           currencyOverride: capturedCurrency,
                           userProfileOverride: capturedUserProfile,
-                          transactionServiceOverride: capturedTransactionService,
+                          transactionServiceOverride:
+                              capturedTransactionService,
                           whatsAppServiceOverride: capturedWhatsAppService,
                           templateServiceOverride: capturedTemplateService,
                           languageOverride: capturedLanguage,
@@ -518,7 +524,8 @@ class PayableDetailsDialog extends ConsumerWidget {
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            style: FilledButton.styleFrom(
+                backgroundColor: Colors.red, foregroundColor: Colors.white),
             child: Text(l10n.delete),
           ),
         ],

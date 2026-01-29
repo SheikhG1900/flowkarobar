@@ -322,6 +322,7 @@ class _AddCashbookSheetState extends ConsumerState<AddCashbookSheet> {
                 label: Text(l10n.upgradeToPremium),
                 style: FilledButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
+                  foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -332,6 +333,7 @@ class _AddCashbookSheetState extends ConsumerState<AddCashbookSheet> {
                 onPressed: _isLoading ? null : _save,
                 style: FilledButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
+                  foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),

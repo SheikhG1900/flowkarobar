@@ -234,8 +234,9 @@ class ContactDetailsScreen extends ConsumerWidget {
                               currencySymbol: currencySymbol,
                               onTap: () {
                                 ref
-                                    .read(receivablesPaginatedProvider('PENDING')
-                                        .notifier)
+                                    .read(
+                                        receivablesPaginatedProvider('PENDING')
+                                            .notifier)
                                     .applyFilters(
                                       ReceivableFilters(
                                         contactUuids: [contactUuid],
@@ -445,6 +446,7 @@ class ContactDetailsScreen extends ConsumerWidget {
           FilledButton(
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.error,
+              foregroundColor: Colors.white,
             ),
             onPressed: () async {
               try {

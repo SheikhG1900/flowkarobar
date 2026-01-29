@@ -71,7 +71,8 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
     } catch (e) {
       setState(() => _isLoading = false);
       if (mounted) {
-        ToastUtils.showErrorToast(context, ref, l10n.errorOccurred(e.toString()));
+        ToastUtils.showErrorToast(
+            context, ref, l10n.errorOccurred(e.toString()));
       }
     }
   }
@@ -150,8 +151,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
             context: context,
             builder: (context) => AlertDialog(
               title: Text(l10n.exportSuccessful),
-              content:
-                  Text(l10n.transactionHistoryReady),
+              content: Text(l10n.transactionHistoryReady),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
@@ -176,6 +176,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
                   child: Text(l10n.saveCopy),
                 ),
                 FilledButton(
+                  style: FilledButton.styleFrom(foregroundColor: Colors.white),
                   onPressed: () async {
                     Navigator.pop(context);
                     await exportService.shareCSVFile(filePath);
@@ -192,7 +193,8 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
         if (isLoadingDialogOpen) {
           Navigator.pop(context);
         }
-        ToastUtils.showErrorToast(context, ref, l10n.errorExporting(e.toString()));
+        ToastUtils.showErrorToast(
+            context, ref, l10n.errorExporting(e.toString()));
       }
     }
   }
@@ -283,6 +285,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
                 child: Text(l10n.share),
               ),
               FilledButton(
+                style: FilledButton.styleFrom(foregroundColor: Colors.white),
                 onPressed: () async {
                   Navigator.pop(context);
                   await Printing.layoutPdf(
@@ -298,7 +301,8 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
     } catch (e) {
       if (mounted) {
         Navigator.pop(context); // Close loading if still open
-        ToastUtils.showErrorToast(context, ref, l10n.errorExporting(e.toString()));
+        ToastUtils.showErrorToast(
+            context, ref, l10n.errorExporting(e.toString()));
       }
     }
   }
@@ -387,6 +391,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
                 child: Text(l10n.share),
               ),
               FilledButton(
+                style: FilledButton.styleFrom(foregroundColor: Colors.white),
                 onPressed: () async {
                   Navigator.pop(context);
                   await Printing.layoutPdf(
