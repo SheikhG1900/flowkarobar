@@ -951,5 +951,9 @@
   "enterDaysFromTransaction": "لین دین کی تاریخ سے دنوں کی تعداد درج کریں:",
   "enterDaysFromStart": "شروع کی تاریخ سے دنوں کی تعداد درج کریں:",
   "daysHint": "مثلاً 15",
-  "daysSuffix": "دن"
+  "daysSuffix": "دن",
+  "status": "حالت",
+  "paymentStatusDistribution": "ادائیگی کی صورتحال کی تقسیم",
+  "percentage": "فیصد",
+  "payableVsReceivableTrend": "قابل ادائیگی بمقابلہ قابل وصول رجحان"
 }

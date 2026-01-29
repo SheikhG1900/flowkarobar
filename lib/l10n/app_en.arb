@@ -1435,5 +1435,9 @@
   "enterDaysFromTransaction": "Enter number of days from transaction date:",
   "enterDaysFromStart": "Enter number of days from start date:",
   "daysHint": "e.g. 15",
-  "daysSuffix": "days"
+  "daysSuffix": "days",
+  "status": "Status",
+  "paymentStatusDistribution": "Payment Status Distribution",
+  "percentage": "Percentage",
+  "payableVsReceivableTrend": "Payable vs Receivable Trend"
 }

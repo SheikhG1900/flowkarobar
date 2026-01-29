@@ -2455,4 +2455,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get daysSuffix => 'days';
+
+  @override
+  String get status => 'Status';
+
+  @override
+  String get payableVsReceivableTrend => 'Payable vs Receivable Trend';
 }

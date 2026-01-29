@@ -20,9 +20,9 @@ class FontSelectorScreen extends ConsumerWidget {
 
     final availableFonts = [
       {
-        'name': 'Inter',
+        'name': 'Montserrat',
         'isPremium': false,
-        'preview': 'The quick brown fox jumps over the lazy dog',
+        'preview': 'The quick brown fox jumps over the lazy dog.',
       },
       {
         'name': 'Noto Sans Devanagari',
@@ -32,17 +32,20 @@ class FontSelectorScreen extends ConsumerWidget {
       {
         'name': 'Marhey',
         'isPremium': false,
-        'preview': 'تیز رفتار بھوری لومڑی سست کتے کے اوپر سے چھلانگ لگاتی ہے',
+        'preview':
+            'تیز رفتار بھوری لومڑی سست کتے کے اوپر سے چھلانگ لگاتی ہے. The quick brown fox jumps over the lazy dog',
       },
       {
         'name': 'Lalezar',
         'isPremium': true,
-        'preview': 'تیز رفتار بھوری لومڑی سست کتے کے اوپر سے چھلانگ لگاتی ہے',
+        'preview':
+            'تیز رفتار بھوری لومڑی سست کتے کے اوپر سے چھلانگ لگاتی ہے. The quick brown fox jumps over the lazy dog',
       },
       {
         'name': 'Kufam',
         'isPremium': true,
-        'preview': 'تیز رفتار بھوری لومڑی سست کتے کے اوپر سے چھلانگ لگاتی ہے',
+        'preview':
+            'تیز رفتار بھوری لومڑی سست کتے کے اوپر سے چھلانگ لگاتی ہے. The quick brown fox jumps over the lazy dog',
       },
     ];
 
@@ -72,7 +75,7 @@ class FontSelectorScreen extends ConsumerWidget {
               case 'Noto Sans Devanagari':
                 return GoogleFonts.notoSansDevanagari(fontSize: 18);
               default:
-                return GoogleFonts.inter(fontSize: 18);
+                return GoogleFonts.montserrat(fontSize: 18);
             }
           }
 
@@ -147,9 +150,12 @@ class FontSelectorScreen extends ConsumerWidget {
                                 if (isFontPremium) ...[
                                   const SizedBox(width: 8),
                                   Icon(
-                                    isLocked ? Icons.lock : Icons.workspace_premium,
+                                    isLocked
+                                        ? Icons.lock
+                                        : Icons.workspace_premium,
                                     size: 16,
-                                    color: isLocked ? Colors.grey : Colors.amber,
+                                    color:
+                                        isLocked ? Colors.grey : Colors.amber,
                                   ),
                                 ],
                               ],

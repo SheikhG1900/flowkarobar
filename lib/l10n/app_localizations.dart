@@ -4564,6 +4564,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'days'**
   String get daysSuffix;
+
+  /// No description provided for @status.
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get status;
+
+  /// No description provided for @payableVsReceivableTrend.
+  ///
+  /// In en, this message translates to:
+  /// **'Payable vs Receivable Trend'**
+  String get payableVsReceivableTrend;
 }
 
 class _AppLocalizationsDelegate

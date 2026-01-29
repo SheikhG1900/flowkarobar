@@ -124,7 +124,7 @@ class PremiumScreen extends ConsumerWidget {
               ),
             ),
           ),
-          
+
           // Content
           SliverToBoxAdapter(
             child: Padding(
@@ -500,7 +500,8 @@ class PremiumScreen extends ConsumerWidget {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.check, size: 14, color: Colors.green),
+                            const Icon(Icons.check,
+                                size: 14, color: Colors.green),
                             const SizedBox(width: 4),
                             Text(
                               l10n.active,

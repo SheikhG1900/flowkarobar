@@ -710,7 +710,7 @@ class AppLocalizationsUr extends AppLocalizations {
   String get topContactsByBalance => 'بیلنس کے لحاظ سے ٹاپ رابطے';
 
   @override
-  String get paymentStatusDistribution => 'ادائیگی کی حیثیت کی تقسیم';
+  String get paymentStatusDistribution => 'ادائیگی کی صورتحال کی تقسیم';
 
   @override
   String get incomeByCategory => 'زمرہ کے لحاظ سے آمدنی';
@@ -2472,4 +2472,10 @@ class AppLocalizationsUr extends AppLocalizations {
 
   @override
   String get daysSuffix => 'دن';
+
+  @override
+  String get status => 'حالت';
+
+  @override
+  String get payableVsReceivableTrend => 'قابل ادائیگی بمقابلہ قابل وصول رجحان';
 }

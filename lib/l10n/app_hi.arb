@@ -951,5 +951,9 @@
   "enterDaysFromTransaction": "लेन-देन की तारीख से दिनों की संख्या दर्ज करें:",
   "enterDaysFromStart": "शुरू होने की तारीख से दिनों की संख्या दर्ज करें:",
   "daysHint": "जैसे: 15",
-  "daysSuffix": "दिन"
+  "daysSuffix": "दिन",
+  "status": "स्थिति",
+  "paymentStatusDistribution": "भुगतान स्थिति वितरण",
+  "percentage": "प्रतिशत",
+  "payableVsReceivableTrend": "देय बनाम प्राप्य रुझान"
 }

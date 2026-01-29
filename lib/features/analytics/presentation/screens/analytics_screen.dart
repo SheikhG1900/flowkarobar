@@ -75,6 +75,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
         startDate: selectedDateRange.startDate,
         endDate: selectedDateRange.endDate,
         currencySymbol: currencySymbol,
+        l10n: l10n,
       );
 
       // Save PDF to temporary file for save/share actions

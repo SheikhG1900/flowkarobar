@@ -23,22 +23,17 @@ class GoogleDriveService {
   /// Initialize and try to sign in silently
   Future<void> init() async {
     _googleSignIn.onCurrentUserChanged.listen((account) {
-      print('GoogleDriveService: User changed to ${account?.email}');
       _currentUser = account;
     });
-    
+
     try {
-      print('GoogleDriveService: Attempting silent sign-in...');
       final account = await _googleSignIn.signInSilently();
       if (account != null) {
         _currentUser = account;
-        print('GoogleDriveService: Silent sign-in successful for ${_currentUser!.email}');
         await _initializeDriveApi();
-      } else {
-        print('GoogleDriveService: Silent sign-in returned null');
       }
     } catch (e) {
-      print('GoogleDriveService: Silent sign-in failed: $e');
+      print('Silent sign-in failed: $e');
     }
   }
 
@@ -67,11 +62,13 @@ class GoogleDriveService {
   /// Initialize Drive API client
   Future<void> _initializeDriveApi({bool forceRefresh = false}) async {
     if (_currentUser == null) {
-      print('GoogleDriveService: Cannot initialize Drive API: No user signed in');
+      print(
+          'GoogleDriveService: Cannot initialize Drive API: No user signed in');
       return;
     }
-    
-    print('GoogleDriveService: Initializing Drive API for user: ${_currentUser!.email} (forceRefresh: $forceRefresh)');
+
+    print(
+        'GoogleDriveService: Initializing Drive API for user: ${_currentUser!.email} (forceRefresh: $forceRefresh)');
     try {
       if (forceRefresh) {
         // Clear tokens to force a fresh authentication
@@ -80,11 +77,11 @@ class GoogleDriveService {
         if (account == null) return;
         _currentUser = account;
       }
-    
+
       // Use the extension method
       print('GoogleDriveService: Getting authenticated client...');
       final client = await _googleSignIn.authenticatedClient();
-      
+
       if (client != null) {
         _driveApi = drive.DriveApi(client);
         print('GoogleDriveService: Drive API successfully initialized');
@@ -102,17 +99,21 @@ class GoogleDriveService {
   }
 
   /// Get or Create a folder in appDataFolder
-  Future<String> _getOrCreateFolder(String folderName, {String? parentId}) async {
+  Future<String> _getOrCreateFolder(String folderName,
+      {String? parentId}) async {
     if (_driveApi == null) throw Exception('Drive API not initialized');
-    
-    final parentQuery = parentId != null ? "'$parentId' in parents" : "'appDataFolder' in parents";
-    final query = "mimeType = 'application/vnd.google-apps.folder' and name = '$folderName' and $parentQuery and trashed = false";
-    
+
+    final parentQuery = parentId != null
+        ? "'$parentId' in parents"
+        : "'appDataFolder' in parents";
+    final query =
+        "mimeType = 'application/vnd.google-apps.folder' and name = '$folderName' and $parentQuery and trashed = false";
+
     final list = await _driveApi!.files.list(
       q: query,
       spaces: 'appDataFolder',
     );
-    
+
     if (list.files?.isNotEmpty == true) {
       return list.files!.first.id!;
     } else {
@@ -121,7 +122,7 @@ class GoogleDriveService {
         ..name = folderName
         ..mimeType = 'application/vnd.google-apps.folder'
         ..parents = [parentId ?? 'appDataFolder'];
-      
+
       final result = await _driveApi!.files.create(
         folder,
         uploadMedia: null,
@@ -131,12 +132,14 @@ class GoogleDriveService {
   }
 
   /// Get or Create cashbook folder in appDataFolder for Sync
-  Future<String> getOrCreateCashbookFolder(String cashbookId, {String? cashbookName, String? color, String? icon}) async {
+  Future<String> getOrCreateCashbookFolder(String cashbookId,
+      {String? cashbookName, String? color, String? icon}) async {
     final rootFolderId = await _getOrCreateFolder('FlowPaisa Backups');
-    
+
     // We search for the sync folder specifically
-    final syncFolderId = await _getOrCreateFolder('Sync Data', parentId: rootFolderId);
-    
+    final syncFolderId =
+        await _getOrCreateFolder('Sync Data', parentId: rootFolderId);
+
     if (cashbookId.isEmpty) return syncFolderId;
 
     // Format: id|name|color|icon
@@ -147,11 +150,12 @@ class GoogleDriveService {
         folderName += '|$color|$icon';
       }
     }
-    
+
     // Check if folder with this ID exists in Sync Data
-    final query = "mimeType = 'application/vnd.google-apps.folder' and '$syncFolderId' in parents and name contains '$cashbookId' and trashed = false";
+    final query =
+        "mimeType = 'application/vnd.google-apps.folder' and '$syncFolderId' in parents and name contains '$cashbookId' and trashed = false";
     final list = await _driveApi!.files.list(q: query, spaces: 'appDataFolder');
-    
+
     if (list.files?.isNotEmpty == true) {
       final existingFolder = list.files!.first;
       // Update folder name if metadata changed
@@ -163,17 +167,19 @@ class GoogleDriveService {
       }
       return existingFolder.id!;
     }
-    
+
     return _getOrCreateFolder(folderName, parentId: syncFolderId);
   }
 
   /// Get or Create a separate backup folder for full DB snapshots
-  Future<String> getOrCreateBackupFolder(String cashbookId, {String? cashbookName, String? color, String? icon}) async {
+  Future<String> getOrCreateBackupFolder(String cashbookId,
+      {String? cashbookName, String? color, String? icon}) async {
     final rootFolderId = await _getOrCreateFolder('FlowPaisa Backups');
-    
+
     // We search for the backups folder specifically
-    final backupRootId = await _getOrCreateFolder('Backups', parentId: rootFolderId);
-    
+    final backupRootId =
+        await _getOrCreateFolder('Backups', parentId: rootFolderId);
+
     if (cashbookId.isEmpty) return backupRootId;
 
     // Format: id|name|color|icon
@@ -184,11 +190,12 @@ class GoogleDriveService {
         folderName += '|$color|$icon';
       }
     }
-    
+
     // Check if folder with this ID exists in Backups
-    final query = "mimeType = 'application/vnd.google-apps.folder' and '$backupRootId' in parents and name contains '$cashbookId' and trashed = false";
+    final query =
+        "mimeType = 'application/vnd.google-apps.folder' and '$backupRootId' in parents and name contains '$cashbookId' and trashed = false";
     final list = await _driveApi!.files.list(q: query, spaces: 'appDataFolder');
-    
+
     if (list.files?.isNotEmpty == true) {
       final existingFolder = list.files!.first;
       // Update folder name if metadata changed
@@ -200,12 +207,16 @@ class GoogleDriveService {
       }
       return existingFolder.id!;
     }
-    
+
     return _getOrCreateFolder(folderName, parentId: backupRootId);
   }
 
   /// Upload database file
-  Future<String?> uploadDatabase(File file, {String? cashbookId, String? cashbookName, String? color, String? icon}) async {
+  Future<String?> uploadDatabase(File file,
+      {String? cashbookId,
+      String? cashbookName,
+      String? color,
+      String? icon}) async {
     if (_driveApi == null) {
       print('Drive API not initialized during upload attempt');
       throw Exception('Drive API not initialized');
@@ -214,7 +225,7 @@ class GoogleDriveService {
     try {
       // 1. Check if backup folder exists (in the new 'Backups' subfolder)
       final folderId = await getOrCreateBackupFolder(
-        cashbookId ?? '', 
+        cashbookId ?? '',
         cashbookName: cashbookName,
         color: color,
         icon: icon,
@@ -229,7 +240,7 @@ class GoogleDriveService {
       // 2. Create file metadata
       final timestamp = DateTime.now().toIso8601String().replaceAll(':', '-');
       final fileName = 'flowpaisa_backup_$timestamp.db';
-      
+
       final driveFile = drive.File()
         ..name = fileName
         ..parents = [folderId];
@@ -237,7 +248,7 @@ class GoogleDriveService {
       // 3. Upload
       final fileSize = await file.length();
       print('Uploading file: $fileName, size: $fileSize bytes');
-      
+
       final media = drive.Media(file.openRead(), fileSize);
       final result = await _driveApi!.files.create(
         driveFile,
@@ -259,15 +270,16 @@ class GoogleDriveService {
     try {
       final folderId = await getOrCreateBackupFolder(cashbookId ?? '');
       // Filter out manifest.json and delta files (v*.json) from the backup list
-      final query = "'$folderId' in parents and trashed = false and name contains '.db'";
-      
+      final query =
+          "'$folderId' in parents and trashed = false and name contains '.db'";
+
       final fileList = await _driveApi!.files.list(
         q: query,
         orderBy: 'createdTime desc',
         spaces: 'appDataFolder',
         $fields: 'files(id, name, createdTime, size)',
       );
-      
+
       return fileList.files ?? [];
     } catch (e) {
       print('List backups failed: $e');
@@ -295,7 +307,8 @@ class GoogleDriveService {
   }
 
   /// Download a file with its ETag
-  Future<({String content, String etag})> downloadFileWithETag(String fileId) async {
+  Future<({String content, String etag})> downloadFileWithETag(
+      String fileId) async {
     if (_driveApi == null) throw Exception('Drive API not initialized');
 
     // 1. Get the file content
@@ -307,7 +320,7 @@ class GoogleDriveService {
 
     // 2. Get the file metadata (ETag)
     final dynamic metadata = await _driveApi!.files.get(fileId, $fields: '*');
-    
+
     String etagValue = '';
     try {
       final Map<String, dynamic> jsonMap = metadata.toJson();
@@ -321,7 +334,7 @@ class GoogleDriveService {
         print('GoogleDriveService: All ETag extraction methods failed: $e2');
       }
     }
-    
+
     return (content: content, etag: etagValue);
   }
 
@@ -360,13 +373,16 @@ class GoogleDriveService {
         return result.id!;
       }
     } catch (e) {
-      if (e.toString().contains('Access was denied') || e.toString().contains('invalid_token')) {
+      if (e.toString().contains('Access was denied') ||
+          e.toString().contains('invalid_token')) {
         await reauthenticate();
         if (fileId != null) {
-          final result = await _driveApi!.files.update(driveFile, fileId, uploadMedia: media);
+          final result = await _driveApi!.files
+              .update(driveFile, fileId, uploadMedia: media);
           return result.id!;
         } else {
-          final result = await _driveApi!.files.create(driveFile, uploadMedia: media);
+          final result =
+              await _driveApi!.files.create(driveFile, uploadMedia: media);
           return result.id!;
         }
       }
@@ -378,7 +394,8 @@ class GoogleDriveService {
   Future<String?> getFileIdByName(String name, String folderId) async {
     if (_driveApi == null) throw Exception('Drive API not initialized');
 
-    final query = "name = '$name' and '$folderId' in parents and trashed = false";
+    final query =
+        "name = '$name' and '$folderId' in parents and trashed = false";
     final list = await _driveApi!.files.list(
       q: query,
       spaces: 'appDataFolder',
@@ -401,7 +418,8 @@ class GoogleDriveService {
   Future<List<drive.File>> listSyncFiles(String folderId) async {
     if (_driveApi == null) throw Exception('Drive API not initialized');
 
-    final query = "'$folderId' in parents and name contains 'v' and name contains '.json' and trashed = false";
+    final query =
+        "'$folderId' in parents and name contains 'v' and name contains '.json' and trashed = false";
     final list = await _driveApi!.files.list(
       q: query,
       spaces: 'appDataFolder',
@@ -416,13 +434,16 @@ class GoogleDriveService {
     if (_driveApi == null) throw Exception('Drive API not initialized');
 
     final rootFolderId = await _getOrCreateFolder('FlowPaisa Backups');
-    final syncFolderId = await _getOrCreateFolder('Sync Data', parentId: rootFolderId);
-    final backupFolderId = await _getOrCreateFolder('Backups', parentId: rootFolderId);
-    
+    final syncFolderId =
+        await _getOrCreateFolder('Sync Data', parentId: rootFolderId);
+    final backupFolderId =
+        await _getOrCreateFolder('Backups', parentId: rootFolderId);
+
     final List<String> allNames = [];
-    
+
     for (final parentId in [syncFolderId, backupFolderId]) {
-      final query = "mimeType = 'application/vnd.google-apps.folder' and '$parentId' in parents and trashed = false";
+      final query =
+          "mimeType = 'application/vnd.google-apps.folder' and '$parentId' in parents and trashed = false";
       final list = await _driveApi!.files.list(
         q: query,
         spaces: 'appDataFolder',

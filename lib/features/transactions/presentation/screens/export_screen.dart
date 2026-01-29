@@ -225,6 +225,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
         startDate: _startDate!,
         endDate: _endDate!,
         currencySymbol: currencySymbol,
+        l10n: l10n,
       );
 
       // Save PDF to temporary file for save/share actions

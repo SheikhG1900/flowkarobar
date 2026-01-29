@@ -18,9 +18,9 @@ class AppTheme {
           return GoogleFonts.marhey(textStyle: baseStyle);
         case 'Noto Sans Devanagari':
           return GoogleFonts.notoSansDevanagari(textStyle: baseStyle);
-        case 'Inter':
+        case 'Montserrat':
         default:
-          return GoogleFonts.inter(textStyle: baseStyle);
+          return GoogleFonts.montserrat(textStyle: baseStyle);
       }
     }
 

@@ -2465,4 +2465,10 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get daysSuffix => 'दिन';
+
+  @override
+  String get status => 'स्थिति';
+
+  @override
+  String get payableVsReceivableTrend => 'देय बनाम प्राप्य रुझान';
 }
