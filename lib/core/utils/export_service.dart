@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'dart:typed_data';
+import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:flowpaisa/core/utils/native_share.dart';
@@ -16,12 +16,17 @@ import 'package:csv/csv.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
+import 'package:intl/intl.dart';
+import 'package:arabic_reshaper/arabic_reshaper.dart';
 
 class ExportService {
   final TransactionsRepository _transactionsRepository;
   final AppDatabase _database;
   final String _dateFormat;
   static pw.Font? _cachedFont;
+  static pw.Font? _unicodeFont;
+  final _reshaper = ArabicReshaper();
 
   ExportService(this._transactionsRepository, this._database,
       {String? dateFormat})
@@ -44,7 +49,43 @@ class ExportService {
     } catch (e) {
       // Return null if font file is not found
       // This allows graceful fallback to colored circles
-      print('Warning: Could not load Material Icons font: $e');
+      return null;
+    }
+  }
+
+  // Load Unicode font for Hindi and Urdu support
+  Future<pw.Font?> loadUnicodeFont() async {
+    try {
+      _unicodeFont = await PdfGoogleFonts.notoSansArabicRegular();
+      return _unicodeFont;
+    } catch (e) {
+      debugPrint('Error loading Arabic font: $e');
+      return null;
+    }
+  }
+
+  // Load Hindi font for PDF generation
+  static pw.Font? _hindiFont;
+  Future<pw.Font?> loadHindiFont() async {
+    if (_hindiFont != null) return _hindiFont;
+    try {
+      _hindiFont = await PdfGoogleFonts.notoSansDevanagariRegular();
+      return _hindiFont;
+    } catch (e) {
+      debugPrint('Error loading Hindi font: $e');
+      return null;
+    }
+  }
+
+  // Load English font for PDF generation
+  static pw.Font? _englishFont;
+  Future<pw.Font?> loadEnglishFont() async {
+    if (_englishFont != null) return _englishFont;
+    try {
+      _englishFont = await PdfGoogleFonts.interRegular();
+      return _englishFont;
+    } catch (e) {
+      debugPrint('Error loading English font: $e');
       return null;
     }
   }
@@ -125,7 +166,10 @@ class ExportService {
       final fileName =
           'flowpaisa_export_${AppDateFormatter.formatForFileName(DateTime.now())}.csv';
       final file = File('${directory.path}/$fileName');
-      await file.writeAsString(csvString);
+
+      // Use UTF-8 with BOM for Excel compatibility with Unicode characters
+      final List<int> bytes = [0xEF, 0xBB, 0xBF] + utf8.encode(csvString);
+      await file.writeAsBytes(bytes);
 
       return file.path;
     } catch (e) {
@@ -209,10 +253,13 @@ class ExportService {
             mimeType: 'text/csv',
             name: filePath.split(Platform.pathSeparator).last);
 
-        final result = await Share.shareXFiles([xFile]);
+        final result = await SharePlus.instance.share(ShareParams(
+          files: [xFile],
+        ));
 
-        if (result.status == ShareResultStatus.unavailable) {
-          throw Exception('Sharing is not available on this device');
+        if (result.status == ShareResultStatus.dismissed ||
+            result.status == ShareResultStatus.unavailable) {
+          // Handle or ignore
         }
       }
     } catch (e) {
@@ -278,6 +325,9 @@ class ExportService {
     required DateTime endDate,
     String? currencySymbol,
     pw.Font? materialIconsFont,
+    pw.Font? unicodeFont,
+    pw.Font? hindiFont,
+    pw.Font? englishFont,
   }) async {
     final payablesRepository = PayablesRepository(_database);
     final receivablesRepository = ReceivablesRepository(_database);
@@ -345,6 +395,17 @@ class ExportService {
     // Create PDF document
     final pdf = pw.Document();
 
+    // Set default theme with Unicode font and fallbacks
+    final theme = pw.ThemeData.withFont(
+      base: englishFont ?? unicodeFont,
+      bold: englishFont ?? unicodeFont,
+      fontFallback: [
+        if (unicodeFont != null) unicodeFont,
+        if (hindiFont != null) hindiFont,
+        if (englishFont != null) englishFont,
+      ],
+    );
+
     // Helper function to convert hex color to PdfColor
     PdfColor hexToPdfColor(String hex) {
       hex = hex.replaceAll('#', '');
@@ -360,8 +421,7 @@ class ExportService {
     // Helper function to get contact color as PdfColor
     PdfColor getContactPdfColor(String name) {
       final color = AppColors.getContactColor(name);
-      return PdfColor(
-          color.red / 255.0, color.green / 255.0, color.blue / 255.0);
+      return PdfColor(color.r, color.g, color.b);
     }
 
     // Helper function to get initials
@@ -379,6 +439,7 @@ class ExportService {
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
         margin: const pw.EdgeInsets.all(40),
+        theme: theme,
         build: (pw.Context context) {
           // Capture this reference for use in closure
           final self = this;
@@ -390,7 +451,7 @@ class ExportService {
               child: pw.Column(
                 crossAxisAlignment: pw.CrossAxisAlignment.start,
                 children: [
-                  pw.Text(
+                  _buildText(
                     'FlowPaisa Export Report',
                     style: pw.TextStyle(
                       fontSize: 24,
@@ -400,11 +461,11 @@ class ExportService {
                     ),
                   ),
                   pw.SizedBox(height: 8),
-                  pw.Text(
+                  _buildText(
                     'Generated on: ${dateTimeFormat.format(DateTime.now())}',
                     style: pw.TextStyle(fontSize: 10, color: PdfColors.grey700),
                   ),
-                  pw.Text(
+                  _buildText(
                     'Date Range: ${dateFormat.format(startDate)} - ${dateFormat.format(endDate)}',
                     style: pw.TextStyle(fontSize: 10, color: PdfColors.grey700),
                   ),
@@ -416,7 +477,7 @@ class ExportService {
             // Overall Summary
             pw.Header(
               level: 1,
-              child: pw.Text('Summary',
+              child: _buildText('Summary',
                   style: pw.TextStyle(
                       fontSize: 18, fontWeight: pw.FontWeight.bold)),
             ),
@@ -498,13 +559,13 @@ class ExportService {
             // Transactions Section
             pw.Header(
               level: 1,
-              child: pw.Text('Transactions',
+              child: _buildText('Transactions',
                   style: pw.TextStyle(
                       fontSize: 18, fontWeight: pw.FontWeight.bold)),
             ),
             pw.SizedBox(height: 10),
             if (filteredTransactions.isEmpty)
-              pw.Text('No transactions in this date range.',
+              _buildText('No transactions in this date range.',
                   style: pw.TextStyle(color: PdfColors.grey700))
             else
               pw.Table(
@@ -547,7 +608,7 @@ class ExportService {
                           padding: const pw.EdgeInsets.all(4),
                           child: pw.Container(
                             alignment: pw.Alignment.centerLeft,
-                            child: pw.Text(dateFormat.format(t.date),
+                            child: _buildText(dateFormat.format(t.date),
                                 style: const pw.TextStyle(fontSize: 9)),
                           ),
                         ),
@@ -555,7 +616,7 @@ class ExportService {
                           padding: const pw.EdgeInsets.all(4),
                           child: pw.Container(
                             alignment: pw.Alignment.centerLeft,
-                            child: pw.Text(t.type,
+                            child: _buildText(t.type,
                                 style: const pw.TextStyle(fontSize: 9)),
                           ),
                         ),
@@ -563,7 +624,7 @@ class ExportService {
                           padding: const pw.EdgeInsets.all(4),
                           child: pw.Container(
                             alignment: pw.Alignment.centerLeft,
-                            child: pw.Text(
+                            child: _buildText(
                                 '$currency ${t.amount.toStringAsFixed(2)}',
                                 style: pw.TextStyle(
                                     fontSize: 9, color: amountColor)),
@@ -586,10 +647,9 @@ class ExportService {
                                 ),
                                 pw.SizedBox(width: 4),
                                 pw.Expanded(
-                                  child: pw.Text(
+                                  child: _buildText(
                                     item.category?.name ?? '-',
                                     style: const pw.TextStyle(fontSize: 9),
-                                    maxLines: 1,
                                   ),
                                 ),
                               ],
@@ -621,16 +681,15 @@ class ExportService {
                                       ),
                                       pw.SizedBox(width: 4),
                                       pw.Expanded(
-                                        child: pw.Text(
+                                        child: _buildText(
                                           item.contact!.name,
                                           style:
                                               const pw.TextStyle(fontSize: 9),
-                                          maxLines: 1,
                                         ),
                                       ),
                                     ],
                                   )
-                                : pw.Text('-',
+                                : _buildText('-',
                                     style: const pw.TextStyle(fontSize: 9)),
                           ),
                         ),
@@ -638,10 +697,9 @@ class ExportService {
                           padding: const pw.EdgeInsets.all(4),
                           child: pw.Container(
                             alignment: pw.Alignment.centerLeft,
-                            child: pw.Text(
+                            child: _buildText(
                               t.description ?? '-',
                               style: const pw.TextStyle(fontSize: 9),
-                              maxLines: 2,
                             ),
                           ),
                         ),
@@ -655,13 +713,13 @@ class ExportService {
             // Payables Section
             pw.Header(
               level: 1,
-              child: pw.Text('Payables',
+              child: _buildText('Payables',
                   style: pw.TextStyle(
                       fontSize: 18, fontWeight: pw.FontWeight.bold)),
             ),
             pw.SizedBox(height: 10),
             if (payablesWithContacts.isEmpty)
-              pw.Text('No payables in this date range.',
+              _buildText('No payables in this date range.',
                   style: pw.TextStyle(color: PdfColors.grey700))
             else
               pw.Table(
@@ -717,16 +775,15 @@ class ExportService {
                                       ),
                                       pw.SizedBox(width: 4),
                                       pw.Expanded(
-                                        child: pw.Text(
+                                        child: _buildText(
                                           item.contact!.name,
                                           style:
                                               const pw.TextStyle(fontSize: 9),
-                                          maxLines: 1,
                                         ),
                                       ),
                                     ],
                                   )
-                                : pw.Text('-',
+                                : _buildText('-',
                                     style: const pw.TextStyle(fontSize: 9)),
                           ),
                         ),
@@ -734,7 +791,7 @@ class ExportService {
                           padding: const pw.EdgeInsets.all(4),
                           child: pw.Container(
                             alignment: pw.Alignment.centerLeft,
-                            child: pw.Text(
+                            child: _buildText(
                                 '$currency ${p.amount.toStringAsFixed(2)}',
                                 style: pw.TextStyle(
                                     fontSize: 9,
@@ -745,7 +802,7 @@ class ExportService {
                           padding: const pw.EdgeInsets.all(4),
                           child: pw.Container(
                             alignment: pw.Alignment.centerLeft,
-                            child: pw.Text(dateFormat.format(p.date),
+                            child: _buildText(dateFormat.format(p.date),
                                 style: const pw.TextStyle(fontSize: 9)),
                           ),
                         ),
@@ -753,7 +810,7 @@ class ExportService {
                           padding: const pw.EdgeInsets.all(4),
                           child: pw.Container(
                             alignment: pw.Alignment.centerLeft,
-                            child: pw.Text(p.status,
+                            child: _buildText(p.status,
                                 style: const pw.TextStyle(fontSize: 9)),
                           ),
                         ),
@@ -761,10 +818,9 @@ class ExportService {
                           padding: const pw.EdgeInsets.all(4),
                           child: pw.Container(
                             alignment: pw.Alignment.centerLeft,
-                            child: pw.Text(
+                            child: _buildText(
                               p.description ?? '-',
                               style: const pw.TextStyle(fontSize: 9),
-                              maxLines: 2,
                             ),
                           ),
                         ),
@@ -778,13 +834,13 @@ class ExportService {
             // Receivables Section
             pw.Header(
               level: 1,
-              child: pw.Text('Receivables',
+              child: _buildText('Receivables',
                   style: pw.TextStyle(
                       fontSize: 18, fontWeight: pw.FontWeight.bold)),
             ),
             pw.SizedBox(height: 10),
             if (receivablesWithContacts.isEmpty)
-              pw.Text('No receivables in this date range.',
+              _buildText('No receivables in this date range.',
                   style: pw.TextStyle(color: PdfColors.grey700))
             else
               pw.Table(
@@ -840,16 +896,15 @@ class ExportService {
                                       ),
                                       pw.SizedBox(width: 4),
                                       pw.Expanded(
-                                        child: pw.Text(
+                                        child: _buildText(
                                           item.contact!.name,
                                           style:
                                               const pw.TextStyle(fontSize: 9),
-                                          maxLines: 1,
                                         ),
                                       ),
                                     ],
                                   )
-                                : pw.Text('-',
+                                : _buildText('-',
                                     style: const pw.TextStyle(fontSize: 9)),
                           ),
                         ),
@@ -857,7 +912,7 @@ class ExportService {
                           padding: const pw.EdgeInsets.all(4),
                           child: pw.Container(
                             alignment: pw.Alignment.centerLeft,
-                            child: pw.Text(
+                            child: _buildText(
                                 '$currency ${r.amount.toStringAsFixed(2)}',
                                 style: pw.TextStyle(
                                     fontSize: 9,
@@ -869,7 +924,7 @@ class ExportService {
                           padding: const pw.EdgeInsets.all(4),
                           child: pw.Container(
                             alignment: pw.Alignment.centerLeft,
-                            child: pw.Text(dateFormat.format(r.date),
+                            child: _buildText(dateFormat.format(r.date),
                                 style: const pw.TextStyle(fontSize: 9)),
                           ),
                         ),
@@ -877,7 +932,7 @@ class ExportService {
                           padding: const pw.EdgeInsets.all(4),
                           child: pw.Container(
                             alignment: pw.Alignment.centerLeft,
-                            child: pw.Text(r.status,
+                            child: _buildText(r.status,
                                 style: const pw.TextStyle(fontSize: 9)),
                           ),
                         ),
@@ -885,10 +940,9 @@ class ExportService {
                           padding: const pw.EdgeInsets.all(4),
                           child: pw.Container(
                             alignment: pw.Alignment.centerLeft,
-                            child: pw.Text(
+                            child: _buildText(
                               r.description ?? '-',
                               style: const pw.TextStyle(fontSize: 9),
-                              maxLines: 2,
                             ),
                           ),
                         ),
@@ -962,9 +1016,9 @@ class ExportService {
       child: pw.Row(
         mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
         children: [
-          pw.Text(text, style: const pw.TextStyle(fontSize: 10)),
+          _buildText(text, style: const pw.TextStyle(fontSize: 10)),
           if (value != null)
-            pw.Text(value,
+            _buildText(value,
                 style: pw.TextStyle(
                     fontSize: 10,
                     fontWeight: pw.FontWeight.bold,
@@ -977,9 +1031,67 @@ class ExportService {
   pw.Widget _buildTableHeaderCell(String text) {
     return pw.Padding(
       padding: const pw.EdgeInsets.all(4),
-      child: pw.Text(text,
+      child: _buildText(text,
           style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold)),
     );
+  }
+
+  // Helper method to build text with RTL and character shaping support
+  pw.Widget _buildText(String text,
+      {pw.TextStyle? style, pw.TextAlign? align}) {
+    if (Bidi.hasAnyRtl(text)) {
+      // 1. Reshape to get the connected glyphs
+      final reshaped = _reshaper.reshape(text);
+
+      // 2. Wrap in Directionality.
+      // IMPORTANT: Do NOT use .split('').reversed here.
+      // The 'pdf' package's RTL engine will handle the visual order.      final visualText = Bidi.writeReverse(reshaped, false);
+      print('font found: ${_unicodeFont != null}');
+      return pw.Directionality(
+        textDirection: pw.TextDirection.rtl,
+        child: pw.Text(
+          reshaped,
+          style: style?.copyWith(font: _unicodeFont),
+          textAlign: align,
+        ),
+      );
+    }
+
+    return pw.Text(
+      text,
+      style: style,
+      textAlign: align ?? pw.TextAlign.left,
+    );
+  }
+
+  // A helper to reverse the string while keeping numbers/English intact
+  String _logicalToVisual(String input) {
+    // This is a simplified version of what Bidi.writeReverse does.
+    // It reverses the overall string but then re-reverses any LTR chunks (numbers/English).
+    final characters = input.split('');
+    final reversed = characters.reversed.toList();
+
+    // Find and re-reverse LTR chunks (0-9, a-z, A-Z, and common symbols)
+    final ltrRegex = RegExp(r'[0-9a-zA-Z\.\,\+\-\/\*\=\%\$\#\@\!]');
+
+    int i = 0;
+    while (i < reversed.length) {
+      if (ltrRegex.hasMatch(reversed[i])) {
+        int start = i;
+        while (i < reversed.length && ltrRegex.hasMatch(reversed[i])) {
+          i++;
+        }
+        // Re-reverse this chunk
+        final chunk = reversed.sublist(start, i).reversed.toList();
+        for (int j = 0; j < chunk.length; j++) {
+          reversed[start + j] = chunk[j];
+        }
+      } else {
+        i++;
+      }
+    }
+
+    return reversed.join('');
   }
 
   // Export transactions to PDF
@@ -989,14 +1101,20 @@ class ExportService {
     String? currencySymbol,
   }) async {
     try {
-      // Load Material Icons font
+      // Load Material Icons and Unicode fonts
       final materialIconsFont = await loadMaterialIconsFont();
+      final unicodeFont = await loadUnicodeFont();
+      final hindiFont = await loadHindiFont();
+      final englishFont = await loadEnglishFont();
 
       final pdf = await generatePDFDocument(
         startDate: startDate,
         endDate: endDate,
         currencySymbol: currencySymbol,
         materialIconsFont: materialIconsFont,
+        unicodeFont: unicodeFont,
+        hindiFont: hindiFont,
+        englishFont: englishFont,
       );
       return pdf.save();
     } catch (e) {
@@ -1198,10 +1316,13 @@ class ExportService {
           name: filePath.split(Platform.pathSeparator).last,
         );
 
-        final result = await Share.shareXFiles([xFile]);
+        final result = await SharePlus.instance.share(ShareParams(
+          files: [xFile],
+        ));
 
-        if (result.status == ShareResultStatus.unavailable) {
-          throw Exception('Sharing is not available on this device');
+        if (result.status == ShareResultStatus.dismissed ||
+            result.status == ShareResultStatus.unavailable) {
+          // Handle or ignore
         }
       }
     } catch (e) {
@@ -1216,14 +1337,20 @@ class ExportService {
     String? currencySymbol,
   }) async {
     try {
-      // Load Material Icons font
+      // Load Material Icons and Unicode fonts
       final materialIconsFont = await loadMaterialIconsFont();
+      final unicodeFont = await loadUnicodeFont();
+      final hindiFont = await loadHindiFont();
+      final englishFont = await loadEnglishFont();
 
       final pdf = await generateAnalyticsPDFDocument(
         startDate: startDate,
         endDate: endDate,
         currencySymbol: currencySymbol,
         materialIconsFont: materialIconsFont,
+        unicodeFont: unicodeFont,
+        hindiFont: hindiFont,
+        englishFont: englishFont,
       );
       return pdf.save();
     } catch (e) {
@@ -1237,6 +1364,9 @@ class ExportService {
     required DateTime endDate,
     String? currencySymbol,
     pw.Font? materialIconsFont,
+    pw.Font? unicodeFont,
+    pw.Font? hindiFont,
+    pw.Font? englishFont,
   }) async {
     // Fetch all analytics data
     final financialSummary =
@@ -1277,8 +1407,7 @@ class ExportService {
     // Helper function to get contact color as PdfColor
     PdfColor getContactPdfColor(String name) {
       final color = AppColors.getContactColor(name);
-      return PdfColor(
-          color.red / 255.0, color.green / 255.0, color.blue / 255.0);
+      return PdfColor(color.r, color.g, color.b);
     }
 
     // Helper function to get initials
@@ -1294,6 +1423,17 @@ class ExportService {
     // Create PDF document
     final pdf = pw.Document();
 
+    // Set default theme with Unicode font and fallbacks
+    final theme = pw.ThemeData.withFont(
+      base: englishFont ?? unicodeFont,
+      bold: englishFont ?? unicodeFont,
+      fontFallback: [
+        if (unicodeFont != null) unicodeFont,
+        if (hindiFont != null) hindiFont,
+        if (englishFont != null) englishFont,
+      ],
+    );
+
     // Capture this for use in closure
     final self = this;
 
@@ -1301,6 +1441,7 @@ class ExportService {
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
         margin: const pw.EdgeInsets.all(40),
+        theme: theme,
         build: (pw.Context context) {
           return [
             // Header
@@ -1476,10 +1617,9 @@ class ExportService {
                                 ),
                                 pw.SizedBox(width: 4),
                                 pw.Expanded(
-                                  child: pw.Text(
+                                  child: _buildText(
                                     summary.contact.name,
                                     style: const pw.TextStyle(fontSize: 9),
-                                    maxLines: 1,
                                   ),
                                 ),
                               ],
@@ -1490,7 +1630,7 @@ class ExportService {
                           padding: const pw.EdgeInsets.all(4),
                           child: pw.Container(
                             alignment: pw.Alignment.centerLeft,
-                            child: pw.Text(
+                            child: _buildText(
                                 '$currency ${summary.totalPayable.toStringAsFixed(2)}',
                                 style: pw.TextStyle(
                                     fontSize: 9,
@@ -1501,7 +1641,7 @@ class ExportService {
                           padding: const pw.EdgeInsets.all(4),
                           child: pw.Container(
                             alignment: pw.Alignment.centerLeft,
-                            child: pw.Text(
+                            child: _buildText(
                                 '$currency ${summary.totalReceivable.toStringAsFixed(2)}',
                                 style: pw.TextStyle(
                                     fontSize: 9,
@@ -1513,7 +1653,7 @@ class ExportService {
                           padding: const pw.EdgeInsets.all(4),
                           child: pw.Container(
                             alignment: pw.Alignment.centerLeft,
-                            child: pw.Text(
+                            child: _buildText(
                                 '$currency ${summary.balance.abs().toStringAsFixed(2)}',
                                 style: pw.TextStyle(
                                     fontSize: 9, color: balanceColor)),
@@ -1932,10 +2072,9 @@ class ExportService {
                       ),
                       pw.SizedBox(width: 4),
                       pw.Expanded(
-                        child: pw.Text(
+                        child: _buildText(
                           category.name,
                           style: const pw.TextStyle(fontSize: 9),
-                          maxLines: 1,
                         ),
                       ),
                     ],
@@ -1972,22 +2111,21 @@ class ExportService {
   // Helper method to build status row
   pw.TableRow _buildStatusRow(
       String label, double amount, Color color, String currency) {
-    final pdfColor =
-        PdfColor(color.red / 255.0, color.green / 255.0, color.blue / 255.0);
+    final pdfColor = PdfColor(color.r, color.g, color.b);
     return pw.TableRow(
       children: [
         pw.Padding(
           padding: const pw.EdgeInsets.all(4),
           child: pw.Container(
             alignment: pw.Alignment.centerLeft,
-            child: pw.Text(label, style: const pw.TextStyle(fontSize: 9)),
+            child: _buildText(label, style: const pw.TextStyle(fontSize: 9)),
           ),
         ),
         pw.Padding(
           padding: const pw.EdgeInsets.all(4),
           child: pw.Container(
             alignment: pw.Alignment.centerLeft,
-            child: pw.Text('$currency ${amount.toStringAsFixed(2)}',
+            child: _buildText('$currency ${amount.toStringAsFixed(2)}',
                 style: pw.TextStyle(fontSize: 9, color: pdfColor)),
           ),
         ),
@@ -2029,7 +2167,7 @@ class ExportService {
       child: pw.Column(
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
-          pw.Text('Top Categories (Visual)',
+          _buildText('Top Categories (Visual)',
               style:
                   pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold)),
           pw.SizedBox(height: 8),
@@ -2055,14 +2193,13 @@ class ExportService {
                     mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                     children: [
                       pw.Expanded(
-                        child: pw.Text(
+                        child: _buildText(
                           category.name,
                           style: const pw.TextStyle(fontSize: 8),
-                          maxLines: 1,
                         ),
                       ),
-                      pw.Text(
-                        '${percentage.toStringAsFixed(1)}%',
+                      _buildText(
+                        '${(percentage * 100).toStringAsFixed(1)}%',
                         style: pw.TextStyle(fontSize: 8, color: categoryColor),
                       ),
                     ],
@@ -2125,7 +2262,7 @@ class ExportService {
       child: pw.Column(
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
-          pw.Text('Income vs Expense Trend (Visual)',
+          _buildText('Income vs Expense Trend (Visual)',
               style:
                   pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold)),
           pw.SizedBox(height: 8),
@@ -2140,7 +2277,7 @@ class ExportService {
               child: pw.Column(
                 crossAxisAlignment: pw.CrossAxisAlignment.start,
                 children: [
-                  pw.Text(
+                  _buildText(
                     monthLabel,
                     style: pw.TextStyle(
                         fontSize: 8, fontWeight: pw.FontWeight.bold),
@@ -2149,7 +2286,7 @@ class ExportService {
                   // Income bar
                   pw.Row(
                     children: [
-                      pw.Text('I:', style: const pw.TextStyle(fontSize: 7)),
+                      _buildText('I:', style: const pw.TextStyle(fontSize: 7)),
                       pw.SizedBox(width: 4),
                       pw.Container(
                         width: 150.0 * incomeBar,
@@ -2160,7 +2297,7 @@ class ExportService {
                         ),
                       ),
                       pw.SizedBox(width: 4),
-                      pw.Text(
+                      _buildText(
                         '$currency ${trend.income.toStringAsFixed(0)}',
                         style: pw.TextStyle(
                           fontSize: 7,
@@ -2173,7 +2310,7 @@ class ExportService {
                   // Expense bar
                   pw.Row(
                     children: [
-                      pw.Text('E:', style: const pw.TextStyle(fontSize: 7)),
+                      _buildText('E:', style: const pw.TextStyle(fontSize: 7)),
                       pw.SizedBox(width: 4),
                       pw.Container(
                         width: 150.0 * expenseBar,
@@ -2184,7 +2321,7 @@ class ExportService {
                         ),
                       ),
                       pw.SizedBox(width: 4),
-                      pw.Text(
+                      _buildText(
                         '$currency ${trend.expense.toStringAsFixed(0)}',
                         style: pw.TextStyle(
                           fontSize: 7,
@@ -2229,7 +2366,7 @@ class ExportService {
       child: pw.Column(
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
-          pw.Text('Payable vs Receivable Trend (Visual)',
+          _buildText('Payable vs Receivable Trend (Visual)',
               style:
                   pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold)),
           pw.SizedBox(height: 8),
@@ -2246,7 +2383,7 @@ class ExportService {
               child: pw.Column(
                 crossAxisAlignment: pw.CrossAxisAlignment.start,
                 children: [
-                  pw.Text(
+                  _buildText(
                     monthLabel,
                     style: pw.TextStyle(
                         fontSize: 8, fontWeight: pw.FontWeight.bold),
@@ -2255,7 +2392,7 @@ class ExportService {
                   // Payable bar
                   pw.Row(
                     children: [
-                      pw.Text('P:', style: const pw.TextStyle(fontSize: 7)),
+                      _buildText('P:', style: const pw.TextStyle(fontSize: 7)),
                       pw.SizedBox(width: 4),
                       pw.Container(
                         width: 150.0 * payableBar,
@@ -2266,7 +2403,7 @@ class ExportService {
                         ),
                       ),
                       pw.SizedBox(width: 4),
-                      pw.Text(
+                      _buildText(
                         '$currency ${trend.totalPayable.toStringAsFixed(0)}',
                         style: pw.TextStyle(
                           fontSize: 7,
@@ -2279,7 +2416,7 @@ class ExportService {
                   // Receivable bar
                   pw.Row(
                     children: [
-                      pw.Text('R:', style: const pw.TextStyle(fontSize: 7)),
+                      _buildText('R:', style: const pw.TextStyle(fontSize: 7)),
                       pw.SizedBox(width: 4),
                       pw.Container(
                         width: 150.0 * receivableBar,
@@ -2290,7 +2427,7 @@ class ExportService {
                         ),
                       ),
                       pw.SizedBox(width: 4),
-                      pw.Text(
+                      _buildText(
                         '$currency ${trend.totalReceivable.toStringAsFixed(0)}',
                         style: pw.TextStyle(
                           fontSize: 7,

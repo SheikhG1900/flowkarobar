@@ -1,5 +1,4 @@
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
-import 'package:flowpaisa/core/database/database.dart';
 
 class ReceiptData {
   final String? merchantName;
@@ -47,7 +46,6 @@ class ReceiptParser {
 
   /// Extract Merchant Name (Heuristic: Largest text in top 20%)
   String? _extractMerchant(RecognizedText text) {
-    final height = text.text.length; // Approximate check, real check needs image dimensions which we don't have easily here
     // Instead, we assume the receipt is vertical. We look at blocks with low Y coordinates.
     
     // Filter blocks that are likely headers

@@ -100,9 +100,11 @@ class LocalBackupService {
           name: filePath.split(Platform.pathSeparator).last,
         );
 
-        final result = await Share.shareXFiles([xFile]);
-        if (result.status == ShareResultStatus.unavailable) {
-          throw Exception('Sharing is not available on this device');
+        final result = await SharePlus.instance.share(ShareParams(
+          files: [xFile],
+        ));
+        if (result.status == ShareResultStatus.dismissed || result.status == ShareResultStatus.unavailable) {
+          // Handle or ignore
         }
       }
     } catch (e) {

@@ -10,9 +10,6 @@ class CurrencyDetector {
     final locale = PlatformDispatcher.instance.locale;
     final countryCode = locale.countryCode;
 
-    print('🌍 CurrencyDetector: Detected locale: ${locale.toString()}');
-    print('🌍 CurrencyDetector: Country code: $countryCode');
-
     // Map country codes to currency codes
     String currencyCode;
     switch (countryCode) {
@@ -30,8 +27,6 @@ class CurrencyDetector {
         // Fallback to US Dollar for unmapped countries
         currencyCode = 'USD';
     }
-
-    print('💰 CurrencyDetector: Selected currency code: $currencyCode');
     return currencyCode;
   }
 

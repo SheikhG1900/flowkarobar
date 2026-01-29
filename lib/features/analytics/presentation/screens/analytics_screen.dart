@@ -560,7 +560,6 @@ class _FinancialSummaryCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final selectedAsync = ref.watch(financialSummaryProvider);
     final allTimeAsync = ref.watch(allTimeFinancialSummaryProvider);
-    final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
     final currencySymbol = ref.watch(currencySymbolProvider);
 
@@ -1966,13 +1965,11 @@ class _CollapsibleSection extends StatefulWidget {
   final String title;
   final Widget child;
   final int sectionIndex;
-  final bool initiallyExpanded;
 
   const _CollapsibleSection({
     required this.title,
     required this.child,
     required this.sectionIndex,
-    this.initiallyExpanded = true,
   });
 
   @override
@@ -1988,7 +1985,7 @@ class _CollapsibleSectionState extends State<_CollapsibleSection>
   @override
   void initState() {
     super.initState();
-    _isExpanded = widget.initiallyExpanded;
+    _isExpanded = true;
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 300),
       vsync: this,

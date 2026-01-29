@@ -1,3 +1,4 @@
+import 'package:flowpaisa/core/constants/app_constants.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -575,7 +576,10 @@ class ShareHelper {
         );
       }
 
-      await Share.share(message);
+      await SharePlus.instance.share(ShareParams(
+        text: message,
+        subject: AppConstants.appName,
+      ));
     }
   }
 
@@ -623,7 +627,10 @@ class ShareHelper {
         );
       }
 
-      await Share.share(message);
+      await SharePlus.instance.share(ShareParams(
+        text: message,
+        subject: AppConstants.appName,
+      ));
     }
   }
 
@@ -697,7 +704,10 @@ class ShareHelper {
         link,
       );
 
-      await Share.share(message);
+      await SharePlus.instance.share(ShareParams(
+        text: message,
+        subject: AppConstants.appName,
+      ));
     }
   }
 }
