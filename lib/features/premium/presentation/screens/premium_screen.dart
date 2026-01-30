@@ -248,6 +248,33 @@ class PremiumScreen extends ConsumerWidget {
                     color: Colors.teal,
                     isPremium: premiumState.isPremium,
                   ),
+                  const SizedBox(height: 12),
+                  _buildFeatureCard(
+                    context,
+                    icon: Icons.sync,
+                    title: l10n.featureMultiDeviceSyncTitle,
+                    description: l10n.featureMultiDeviceSyncDesc,
+                    color: Colors.blue,
+                    isPremium: premiumState.isPremium,
+                  ),
+                  const SizedBox(height: 12),
+                  _buildFeatureCard(
+                    context,
+                    icon: Icons.library_books,
+                    title: l10n.featureMultipleCashbooksTitle,
+                    description: l10n.featureMultipleCashbooksDesc,
+                    color: Colors.indigo,
+                    isPremium: premiumState.isPremium,
+                  ),
+                  const SizedBox(height: 12),
+                  _buildFeatureCard(
+                    context,
+                    icon: Icons.event_repeat,
+                    title: l10n.featureUnlimitedSchedulesTitle,
+                    description: l10n.featureUnlimitedSchedulesDesc,
+                    color: Colors.cyan,
+                    isPremium: premiumState.isPremium,
+                  ),
                   const SizedBox(height: 32),
 
                   if (!premiumState.isPremium) ...[

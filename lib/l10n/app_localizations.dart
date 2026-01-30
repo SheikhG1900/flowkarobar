@@ -1702,6 +1702,42 @@ abstract class AppLocalizations {
   /// **'Customize WhatsApp message templates for reminders, receipts, and sharing in multiple languages.'**
   String get featureTemplatesDesc;
 
+  /// No description provided for @featureMultiDeviceSyncTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Multi-Device Sync'**
+  String get featureMultiDeviceSyncTitle;
+
+  /// No description provided for @featureMultiDeviceSyncDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync your data across all your devices using Google Drive. Your records are always up to date.'**
+  String get featureMultiDeviceSyncDesc;
+
+  /// No description provided for @featureMultipleCashbooksTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlimited Cashbooks'**
+  String get featureMultipleCashbooksTitle;
+
+  /// No description provided for @featureMultipleCashbooksDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Create and manage as many additional cashbooks as you need for different businesses or personal use.'**
+  String get featureMultipleCashbooksDesc;
+
+  /// No description provided for @featureUnlimitedSchedulesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlimited Schedules'**
+  String get featureUnlimitedSchedulesTitle;
+
+  /// No description provided for @featureUnlimitedSchedulesDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up unlimited recurring transaction schedules for your regular incomes and expenses.'**
+  String get featureUnlimitedSchedulesDesc;
+
   /// No description provided for @premiumPlan.
   ///
   /// In en, this message translates to:

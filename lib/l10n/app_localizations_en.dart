@@ -885,6 +885,27 @@ class AppLocalizationsEn extends AppLocalizations {
       'Customize WhatsApp message templates for reminders, receipts, and sharing in multiple languages.';
 
   @override
+  String get featureMultiDeviceSyncTitle => 'Multi-Device Sync';
+
+  @override
+  String get featureMultiDeviceSyncDesc =>
+      'Sync your data across all your devices using Google Drive. Your records are always up to date.';
+
+  @override
+  String get featureMultipleCashbooksTitle => 'Unlimited Cashbooks';
+
+  @override
+  String get featureMultipleCashbooksDesc =>
+      'Create and manage as many additional cashbooks as you need for different businesses or personal use.';
+
+  @override
+  String get featureUnlimitedSchedulesTitle => 'Unlimited Schedules';
+
+  @override
+  String get featureUnlimitedSchedulesDesc =>
+      'Set up unlimited recurring transaction schedules for your regular incomes and expenses.';
+
+  @override
   String get premiumPlan => 'Premium Plan';
 
   @override

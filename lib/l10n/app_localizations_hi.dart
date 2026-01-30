@@ -885,7 +885,28 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get featureTemplatesDesc =>
-      'कई भाषाओं में रिमाइंडर, रसीद और साझा करने के लिए व्हाट्सएप संदेश टेम्पलेट्स को कस्टमाइज़ करें।';
+      'कई भाषाओं में रिमाइंडर, रसीद और साझा करने के लिए व्हाट्सएप संदेश टेम्पलेट्स को कستमाइज़ करें।';
+
+  @override
+  String get featureMultiDeviceSyncTitle => 'मल्टी-डिवाइस सिंक';
+
+  @override
+  String get featureMultiDeviceSyncDesc =>
+      'Google ड्राइव का उपयोग करके अपने सभी डिवाइस पर अपना डेटा सिंक करें। आपके रिकॉर्ड हमेशा अप-टू-डेट रहते हैं।';
+
+  @override
+  String get featureMultipleCashbooksTitle => 'असीमित कैशबुक';
+
+  @override
+  String get featureMultipleCashbooksDesc =>
+      'विभिन्न व्यवसायों या व्यक्तिगत उपयोग के लिए जितनी आवश्यकता हो उतनी अतिरिक्त कैशबुक बनाएं और प्रबंधित करें।';
+
+  @override
+  String get featureUnlimitedSchedulesTitle => 'असीमित शेड्यूल';
+
+  @override
+  String get featureUnlimitedSchedulesDesc =>
+      'अपनी नियमित आय और खर्चों के लिए असीमित आवर्ती लेन-देन शेड्यूल सेट करें।';
 
   @override
   String get premiumPlan => 'प्रीमियम प्लान';

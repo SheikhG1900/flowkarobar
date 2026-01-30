@@ -890,6 +890,27 @@ class AppLocalizationsUr extends AppLocalizations {
       'کئی زبانوں میں یاد دہانیوں، رسیدوں اور شیئرنگ کے لیے واٹس ایپ میسج ٹیمپلیٹس کو حسب ضرورت بنائیں۔';
 
   @override
+  String get featureMultiDeviceSyncTitle => 'ملٹی ڈیوائس سنک';
+
+  @override
+  String get featureMultiDeviceSyncDesc =>
+      'گوگل ڈرائیو کا استعمال کرتے ہوئے اپنے تمام آلات پر اپنا ڈیٹا سنک کریں۔ آپ کے ریکارڈ ہمیشہ اپ ٹو ڈیٹ رہتے ہیں۔';
+
+  @override
+  String get featureMultipleCashbooksTitle => 'لامحدود کیش بکس';
+
+  @override
+  String get featureMultipleCashbooksDesc =>
+      'مختلف کاروباروں یا ذاتی استعمال کے لیے جتنی ضرورت ہو اضافی کیش بکس بنائیں اور ان کا انتظام کریں۔';
+
+  @override
+  String get featureUnlimitedSchedulesTitle => 'لامحدود شیڈولز';
+
+  @override
+  String get featureUnlimitedSchedulesDesc =>
+      'اپنی باقاعدہ آمدنی اور اخراجات کے لیے لامحدود بار بار ہونے والے لین دین کے شیڈولز ترتیب دیں۔';
+
+  @override
   String get premiumPlan => 'پریمیم پلان';
 
   @override
