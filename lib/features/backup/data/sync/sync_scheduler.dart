@@ -133,7 +133,7 @@ Future<bool> handleSyncTask(String task, Map<String, dynamic>? inputData) async 
         for (final p in overduePayables) {
           await NotificationNotifier.addNotificationStatic(
             title: l10n?.payableOverdue ?? 'Payable Overdue',
-            message: l10n?.payableOverdueMessage(p.description ?? 'Payable', p.dueDate?.toString() ?? '') ?? 
+            message: l10n != null ? l10n.payableOverdueMessage(p.description ?? (l10n.payable), p.dueDate?.toString() ?? '') : 
                      'Payment for ${p.description ?? 'Payable'} was due on ${p.dueDate}',
             type: NotificationType.payable,
             isUrgent: true,
@@ -144,7 +144,7 @@ Future<bool> handleSyncTask(String task, Map<String, dynamic>? inputData) async 
         for (final r in overdueReceivables) {
           await NotificationNotifier.addNotificationStatic(
             title: l10n?.receivableOverdue ?? 'Receivable Overdue',
-            message: l10n?.receivableOverdueMessage(r.description ?? 'Receivable', r.dueDate?.toString() ?? '') ??
+            message: l10n != null ? l10n.receivableOverdueMessage(r.description ?? (l10n.receivable), r.dueDate?.toString() ?? '') :
                      'Payment for ${r.description ?? 'Receivable'} was due on ${r.dueDate}',
             type: NotificationType.receivable,
             isUrgent: true,
@@ -156,7 +156,7 @@ Future<bool> handleSyncTask(String task, Map<String, dynamic>? inputData) async 
         for (final p in upcomingPayables) {
           await NotificationNotifier.addNotificationStatic(
             title: l10n?.upcomingPayable ?? 'Upcoming Payable',
-            message: l10n?.upcomingPayableMessage(p.description ?? 'Payable', p.dueDate?.toString() ?? '') ??
+            message: l10n != null ? l10n.upcomingPayableMessage(p.description ?? (l10n.payable), p.dueDate?.toString() ?? '') :
                      'Payment for ${p.description ?? 'Payable'} is due tomorrow (${p.dueDate})',
             type: NotificationType.payable,
           );
@@ -167,7 +167,7 @@ Future<bool> handleSyncTask(String task, Map<String, dynamic>? inputData) async 
         for (final r in upcomingReceivables) {
           await NotificationNotifier.addNotificationStatic(
             title: l10n?.upcomingReceivable ?? 'Upcoming Receivable',
-            message: l10n?.upcomingReceivableMessage(r.description ?? 'Receivable', r.dueDate?.toString() ?? '') ??
+            message: l10n != null ? l10n.upcomingReceivableMessage(r.description ?? (l10n.receivable), r.dueDate?.toString() ?? '') :
                      'Payment for ${r.description ?? 'Receivable'} is due tomorrow (${r.dueDate})',
             type: NotificationType.receivable,
           );
@@ -208,8 +208,9 @@ Future<bool> handleSyncTask(String task, Map<String, dynamic>? inputData) async 
         print('SyncScheduler: Adding notification for $syncedCount synced cashbooks');
       }
       await NotificationNotifier.addNotificationStatic(
-        title: 'Background Sync Complete',
-        message: 'Successfully synced $syncedCount cashbook(s) in the background.',
+        title: l10n?.notificationSyncCompleteTitle ?? 'Background Sync Complete',
+        message: l10n?.notificationSyncCompleteMessage(syncedCount) ?? 
+                 'Successfully synced $syncedCount cashbook(s) in the background.',
         type: NotificationType.sync,
       );
     }
