@@ -135,225 +135,227 @@ class _AddCashbookSheetState extends ConsumerState<AddCashbookSheet> {
       ),
       child: Form(
         key: _formKey,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  isEdit ? l10n.editCashbook : l10n.newCashbook,
-                  style: theme.textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    isEdit ? l10n.editCashbook : l10n.newCashbook,
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-                IconButton(
-                  onPressed: () => Navigator.pop(context),
-                  icon: const Icon(Icons.close),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            if (!isEdit && !limits.canAdd)
-              Container(
-                padding: const EdgeInsets.all(12),
-                margin: const EdgeInsets.only(bottom: 20),
-                decoration: BoxDecoration(
-                  color: AppColors.warning.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                      color: AppColors.warning.withValues(alpha: 0.3)),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.lock, size: 20, color: AppColors.warning),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        l10n.freeLimitReached,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: AppColors.warning,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close),
+                  ),
+                ],
               ),
-            TextFormField(
-              controller: _nameController,
-              decoration: InputDecoration(
-                labelText: l10n.cashbookName,
-                hintText: l10n.cashbookNameHint,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                prefixIcon: const Icon(Icons.book_outlined),
-              ),
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return l10n.pleaseEnterName;
-                }
-                return null;
-              },
-              autofocus: !isEdit,
-              textCapitalization: TextCapitalization.words,
-              enabled: isEdit || limits.canAdd,
-            ),
-            const SizedBox(height: 24),
-            Text(l10n.selectIcon, style: theme.textTheme.titleMedium),
-            const SizedBox(height: 12),
-            SizedBox(
-              height: 100,
-              child: GridView.builder(
-                scrollDirection: Axis.horizontal,
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  mainAxisSpacing: 8,
-                  crossAxisSpacing: 8,
-                ),
-                itemCount: _cashbookIcons.length,
-                itemBuilder: (context, index) {
-                  final iconData = _cashbookIcons[index];
-                  final iconCode = iconData.codePoint.toString();
-                  final isSelected = _selectedIcon == iconCode;
-                  final color =
-                      Color(int.parse(_selectedColor.replaceAll('#', '0xFF')));
-                  return InkWell(
-                    onTap: (isEdit || limits.canAdd)
-                        ? () => setState(() => _selectedIcon = iconCode)
-                        : null,
+              const SizedBox(height: 20),
+              if (!isEdit && !limits.canAdd)
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  margin: const EdgeInsets.only(bottom: 20),
+                  decoration: BoxDecoration(
+                    color: AppColors.warning.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? color.withValues(alpha: 0.15)
-                            : theme.colorScheme.surfaceContainerHighest
-                                .withValues(alpha: 0.3),
-                        border: Border.all(
-                          color: isSelected ? color : Colors.transparent,
-                          width: 2,
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(
-                        iconData,
-                        color: isSelected
-                            ? color
-                            : theme.iconTheme.color?.withValues(alpha: 0.5),
-                        size: 24,
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-            const SizedBox(height: 24),
-            Text(l10n.selectColor, style: theme.textTheme.titleMedium),
-            const SizedBox(height: 12),
-            SizedBox(
-              height: 260,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: _colorVariants.length,
-                separatorBuilder: (context, index) => const SizedBox(width: 16),
-                itemBuilder: (context, index) {
-                  final variants = _colorVariants[index];
-                  return Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: variants.map((colorHex) {
-                      final color =
-                          Color(int.parse(colorHex.replaceAll('#', '0xFF')));
-                      final isSelected = _selectedColor == colorHex;
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
-                        child: InkWell(
-                          onTap: (isEdit || limits.canAdd)
-                              ? () => setState(() => _selectedColor = colorHex)
-                              : null,
-                          borderRadius: BorderRadius.circular(25),
-                          child: Container(
-                            width: 44,
-                            height: 44,
-                            decoration: BoxDecoration(
-                              color: color,
-                              shape: BoxShape.circle,
-                              border: isSelected
-                                  ? Border.all(
-                                      color:
-                                          isDark ? Colors.white : Colors.black,
-                                      width: 3,
-                                    )
-                                  : null,
-                              boxShadow: isSelected
-                                  ? [
-                                      BoxShadow(
-                                        color: color.withValues(alpha: 0.4),
-                                        blurRadius: 8,
-                                        spreadRadius: 2,
-                                      )
-                                    ]
-                                  : null,
-                            ),
-                            child: isSelected
-                                ? Icon(Icons.check,
-                                    size: 24,
-                                    color: color.computeLuminance() > 0.5
-                                        ? Colors.black
-                                        : Colors.white)
-                                : null,
+                    border: Border.all(
+                        color: AppColors.warning.withValues(alpha: 0.3)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.lock, size: 20, color: AppColors.warning),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          l10n.freeLimitReached,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: AppColors.warning,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
-                      );
-                    }).toList(),
-                  );
+                      ),
+                    ],
+                  ),
+                ),
+              TextFormField(
+                controller: _nameController,
+                decoration: InputDecoration(
+                  labelText: l10n.cashbookName,
+                  hintText: l10n.cashbookNameHint,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  prefixIcon: const Icon(Icons.book_outlined),
+                ),
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return l10n.pleaseEnterName;
+                  }
+                  return null;
                 },
+                autofocus: !isEdit,
+                textCapitalization: TextCapitalization.words,
+                enabled: isEdit || limits.canAdd,
               ),
-            ),
-            const SizedBox(height: 32),
-            if (!isEdit && !limits.canAdd)
-              FilledButton.icon(
-                onPressed: () {
-                  Navigator.pop(context);
-                  PremiumGate.showPremiumDialog(context);
-                },
-                icon: const Icon(Icons.star),
-                label: Text(l10n.upgradeToPremium),
-                style: FilledButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+              const SizedBox(height: 24),
+              Text(l10n.selectIcon, style: theme.textTheme.titleMedium),
+              const SizedBox(height: 12),
+              SizedBox(
+                height: 100,
+                child: GridView.builder(
+                  scrollDirection: Axis.horizontal,
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    mainAxisSpacing: 8,
+                    crossAxisSpacing: 8,
                   ),
-                ),
-              )
-            else
-              FilledButton(
-                onPressed: _isLoading ? null : _save,
-                style: FilledButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: _isLoading
-                    ? const SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: CircularProgressIndicator(
-                            strokeWidth: 2, color: Colors.white))
-                    : Text(
-                        isEdit ? l10n.updateCashbook : l10n.createCashbook,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                  itemCount: _cashbookIcons.length,
+                  itemBuilder: (context, index) {
+                    final iconData = _cashbookIcons[index];
+                    final iconCode = iconData.codePoint.toString();
+                    final isSelected = _selectedIcon == iconCode;
+                    final color =
+                        Color(int.parse(_selectedColor.replaceAll('#', '0xFF')));
+                    return InkWell(
+                      onTap: (isEdit || limits.canAdd)
+                          ? () => setState(() => _selectedIcon = iconCode)
+                          : null,
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? color.withValues(alpha: 0.15)
+                              : theme.colorScheme.surfaceContainerHighest
+                                  .withValues(alpha: 0.3),
+                          border: Border.all(
+                            color: isSelected ? color : Colors.transparent,
+                            width: 2,
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(
+                          iconData,
+                          color: isSelected
+                              ? color
+                              : theme.iconTheme.color?.withValues(alpha: 0.5),
+                          size: 24,
                         ),
                       ),
+                    );
+                  },
+                ),
               ),
-          ],
+              const SizedBox(height: 24),
+              Text(l10n.selectColor, style: theme.textTheme.titleMedium),
+              const SizedBox(height: 12),
+              SizedBox(
+                height: 260,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: _colorVariants.length,
+                  separatorBuilder: (context, index) => const SizedBox(width: 16),
+                  itemBuilder: (context, index) {
+                    final variants = _colorVariants[index];
+                    return Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: variants.map((colorHex) {
+                        final color =
+                            Color(int.parse(colorHex.replaceAll('#', '0xFF')));
+                        final isSelected = _selectedColor == colorHex;
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: InkWell(
+                            onTap: (isEdit || limits.canAdd)
+                                ? () => setState(() => _selectedColor = colorHex)
+                                : null,
+                            borderRadius: BorderRadius.circular(25),
+                            child: Container(
+                              width: 44,
+                              height: 44,
+                              decoration: BoxDecoration(
+                                color: color,
+                                shape: BoxShape.circle,
+                                border: isSelected
+                                    ? Border.all(
+                                        color:
+                                            isDark ? Colors.white : Colors.black,
+                                        width: 3,
+                                      )
+                                    : null,
+                                boxShadow: isSelected
+                                    ? [
+                                        BoxShadow(
+                                          color: color.withValues(alpha: 0.4),
+                                          blurRadius: 8,
+                                          spreadRadius: 2,
+                                        )
+                                      ]
+                                    : null,
+                              ),
+                              child: isSelected
+                                  ? Icon(Icons.check,
+                                      size: 24,
+                                      color: color.computeLuminance() > 0.5
+                                          ? Colors.black
+                                          : Colors.white)
+                                  : null,
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 32),
+              if (!isEdit && !limits.canAdd)
+                FilledButton.icon(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    PremiumGate.showPremiumDialog(context);
+                  },
+                  icon: const Icon(Icons.star),
+                  label: Text(l10n.upgradeToPremium),
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                )
+              else
+                FilledButton(
+                  onPressed: _isLoading ? null : _save,
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: _isLoading
+                      ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2, color: Colors.white))
+                      : Text(
+                          isEdit ? l10n.updateCashbook : l10n.createCashbook,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                ),
+            ],
+          ),
         ),
       ),
     );
