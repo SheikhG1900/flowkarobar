@@ -2,20 +2,42 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
+import 'package:flowpaisa/features/premium/data/premium_repository.dart';
 import 'package:flowpaisa/features/premium/domain/premium_provider.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:flowpaisa/shared/widgets/premium_badge.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 
-class PremiumScreen extends ConsumerWidget {
+class PremiumScreen extends ConsumerStatefulWidget {
   const PremiumScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<PremiumScreen> createState() => _PremiumScreenState();
+}
+
+class _PremiumScreenState extends ConsumerState<PremiumScreen> {
+  String? _selectedProductId;
+
+  @override
+  void initState() {
+    super.initState();
+    // Default to yearly as it's the recommended one
+    _selectedProductId = PremiumRepository.premiumYearlyId;
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
     final premiumState = ref.watch(premiumProvider);
+
+    // Update selected product if list was empty and now has items
+    if (_selectedProductId == PremiumRepository.premiumYearlyId &&
+        premiumState.products.isNotEmpty &&
+        !premiumState.products.any((p) => p.id == _selectedProductId)) {
+      _selectedProductId = premiumState.products.first.id;
+    }
 
     // Listen for errors
     ref.listen(premiumProvider, (previous, next) {
@@ -278,82 +300,56 @@ class PremiumScreen extends ConsumerWidget {
                   const SizedBox(height: 32),
 
                   if (!premiumState.isPremium) ...[
-                    // Pricing Card
-                    Container(
-                      padding: const EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
-                        ),
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                            color:
-                                const Color(0xFFFFD700).withValues(alpha: 0.3),
-                            blurRadius: 20,
-                            offset: const Offset(0, 8),
-                          ),
-                        ],
+                    const SizedBox(height: 8),
+                    Text(
+                      l10n.chooseYourPlan,
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
                       ),
-                      child: Column(
-                        children: [
-                          Text(
-                            l10n.premiumPlan,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                _getProductPrice(premiumState.products)
-                                        ?.currencySymbol ??
-                                    '\$',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              Text(
-                                _getProductPrice(premiumState.products)
-                                        ?.amount ??
-                                    l10n.defaultPremiumPrice,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 48,
-                                  fontWeight: FontWeight.bold,
-                                  height: 1,
-                                ),
-                              ),
-                              const SizedBox(width: 4),
-                              Padding(
-                                padding: const EdgeInsets.only(top: 8),
-                                child: Text(
-                                  l10n.lifetime,
-                                  style: TextStyle(
-                                    color: Colors.white.withValues(alpha: 0.9),
-                                    fontSize: 16,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            l10n.oneTimePaymentLifetime,
-                            style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.9),
-                              fontSize: 14,
-                            ),
-                          ),
-                        ],
-                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Monthly Plan
+                    _buildPlanOption(
+                      context,
+                      id: PremiumRepository.premiumMonthlyId,
+                      title: l10n.monthly,
+                      subtitle: l10n.cancelAnytime,
+                      price: _getPriceForId(premiumState.products,
+                              PremiumRepository.premiumMonthlyId) ??
+                          "₹29",
+                      isSelected: _selectedProductId ==
+                          PremiumRepository.premiumMonthlyId,
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Yearly Plan (Recommended)
+                    _buildPlanOption(
+                      context,
+                      id: PremiumRepository.premiumYearlyId,
+                      title: l10n.yearly,
+                      subtitle: l10n.savePercentage("50"),
+                      price: _getPriceForId(premiumState.products,
+                              PremiumRepository.premiumYearlyId) ??
+                          "₹199",
+                      isSelected: _selectedProductId ==
+                          PremiumRepository.premiumYearlyId,
+                      isRecommended: true,
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Lifetime Plan
+                    _buildPlanOption(
+                      context,
+                      id: PremiumRepository.premiumLifetimeId,
+                      title: l10n.lifetime,
+                      subtitle: l10n.oneTimePayment,
+                      price: _getPriceForId(premiumState.products,
+                              PremiumRepository.premiumLifetimeId) ??
+                          "₹399",
+                      isSelected: _selectedProductId ==
+                          PremiumRepository.premiumLifetimeId,
                     ),
                     const SizedBox(height: 24),
 
@@ -372,12 +368,11 @@ class PremiumScreen extends ConsumerWidget {
                       onPressed: premiumState.isLoading
                           ? () {}
                           : () {
-                              // For testing, we use the toggle
-                              ref
-                                  .read(premiumProvider.notifier)
-                                  .togglePremium();
-                              // In production, use buyPremium()
-                              // ref.read(premiumProvider.notifier).buyPremium();
+                              if (_selectedProductId != null) {
+                                ref
+                                    .read(premiumProvider.notifier)
+                                    .buyPremium(_selectedProductId!);
+                              }
                             },
                     ),
                     const SizedBox(height: 12),
@@ -435,30 +430,141 @@ class PremiumScreen extends ConsumerWidget {
     );
   }
 
-  ({String currencySymbol, String amount})? _getProductPrice(
-      List<ProductDetails> products) {
-    if (products.isEmpty) return null;
-    // Assuming first product is the one we want or filtering logic should be in provider
-    // In provider we filter by ID, here we just take the first one or default
-    // Ideally we should match ID
+  String? _getPriceForId(List<ProductDetails> products, String id) {
     try {
-      final product = products.first; // Should filter by ID if multiple
-      // Price string is usually like "₹99.00"
-      // We want to split symbol and amount if possible, or just return as is
-      // But for this UI design, it expects split.
-      // This is a naive split, real world should use proper formatting
-      final price = product.price; // e.g. "₹99.00"
-      final currencySymbol = product.currencySymbol;
-
-      // Remove symbol from price string if present to get amount
-      String amount = price;
-      if (price.startsWith(currencySymbol)) {
-        amount = price.substring(currencySymbol.length).trim();
-      }
-      return (currencySymbol: currencySymbol, amount: amount);
+      return products.firstWhere((p) => p.id == id).price;
     } catch (_) {
       return null;
     }
+  }
+
+  Widget _buildPlanOption(
+    BuildContext context, {
+    required String id,
+    required String title,
+    required String subtitle,
+    required String price,
+    required bool isSelected,
+    bool isRecommended = false,
+  }) {
+    final theme = Theme.of(context);
+
+    return GestureDetector(
+      onTap: () => setState(() => _selectedProductId = id),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? theme.colorScheme.primary.withValues(alpha: 0.05)
+              : theme.cardColor,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected
+                ? theme.colorScheme.primary
+                : theme.dividerColor.withValues(alpha: 0.1),
+            width: isSelected ? 2 : 1,
+          ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  )
+                ]
+              : null,
+        ),
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 24,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: isSelected
+                          ? theme.colorScheme.primary
+                          : theme.dividerColor,
+                      width: 2,
+                    ),
+                  ),
+                  child: isSelected
+                      ? Center(
+                          child: Container(
+                            width: 12,
+                            height: 12,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: theme.colorScheme.primary,
+                            ),
+                          ),
+                        )
+                      : null,
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        subtitle,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Text(
+                  price,
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: isSelected ? theme.colorScheme.primary : null,
+                  ),
+                ),
+              ],
+            ),
+            if (isRecommended)
+              Positioned(
+                top: -24,
+                right: -8,
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFA500),
+                    borderRadius: BorderRadius.circular(8),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.1),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: const Text(
+                    'BEST VALUE',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _buildFeatureCard(

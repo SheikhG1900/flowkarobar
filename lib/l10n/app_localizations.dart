@@ -1750,6 +1750,60 @@ abstract class AppLocalizations {
   /// **'Lifetime'**
   String get lifetime;
 
+  /// No description provided for @monthly.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly'**
+  String get monthly;
+
+  /// No description provided for @yearly.
+  ///
+  /// In en, this message translates to:
+  /// **'Yearly'**
+  String get yearly;
+
+  /// No description provided for @bestValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Best Value'**
+  String get bestValue;
+
+  /// No description provided for @chooseYourPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose Your Plan'**
+  String get chooseYourPlan;
+
+  /// No description provided for @cancelAnytime.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel anytime'**
+  String get cancelAnytime;
+
+  /// No description provided for @savePercentage.
+  ///
+  /// In en, this message translates to:
+  /// **'Save {percentage}%'**
+  String savePercentage(Object percentage);
+
+  /// No description provided for @oneTimePayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay once, own forever'**
+  String get oneTimePayment;
+
+  /// No description provided for @recommended.
+  ///
+  /// In en, this message translates to:
+  /// **'Recommended'**
+  String get recommended;
+
+  /// No description provided for @subscribeNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscribe Now'**
+  String get subscribeNow;
+
   /// No description provided for @oneTimePaymentLifetime.
   ///
   /// In en, this message translates to:
@@ -1771,7 +1825,7 @@ abstract class AppLocalizations {
   /// No description provided for @premiumBenefitsNote.
   ///
   /// In en, this message translates to:
-  /// **'All premium features are yours forever with a one-time purchase. No subscriptions!'**
+  /// **'Unlock all premium features with your chosen plan. Choose Lifetime for permanent access!'**
   String get premiumBenefitsNote;
 
   /// No description provided for @active.
@@ -2949,12 +3003,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Daily'**
   String get daily;
-
-  /// No description provided for @monthly.
-  ///
-  /// In en, this message translates to:
-  /// **'Monthly'**
-  String get monthly;
 
   /// No description provided for @limitReached.
   ///

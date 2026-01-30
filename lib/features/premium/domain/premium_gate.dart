@@ -146,7 +146,19 @@ class PremiumGate {
 
   // Helper to check premium status (using read for callbacks)
   static bool isPremium(WidgetRef ref) {
-    return ref.read(premiumProvider).isPremium;
+    final state = ref.read(premiumProvider);
+    if (!state.isPremium) return false;
+
+    // If it's lifetime, it never expires
+    if (state.subscriptionType == 'lifetime') return true;
+
+    // If it's a subscription, check expiry date
+    if (state.expiryDate != null) {
+      return state.expiryDate!.isAfter(DateTime.now());
+    }
+
+    // Fallback for legacy premium status without type/expiry
+    return true;
   }
 
   // --- Public API for getting limits ---

@@ -16,12 +16,16 @@ class PremiumState {
   final bool isLoading;
   final String? error;
   final List<ProductDetails> products;
+  final DateTime? expiryDate;
+  final String? subscriptionType; // 'monthly', 'yearly', 'lifetime', null
 
   PremiumState({
     this.isPremium = false,
     this.isLoading = false,
     this.error,
     this.products = const [],
+    this.expiryDate,
+    this.subscriptionType,
   });
 
   PremiumState copyWith({
@@ -29,12 +33,16 @@ class PremiumState {
     bool? isLoading,
     String? error,
     List<ProductDetails>? products,
+    DateTime? expiryDate,
+    String? subscriptionType,
   }) {
     return PremiumState(
       isPremium: isPremium ?? this.isPremium,
       isLoading: isLoading ?? this.isLoading,
-      error: error, // Nullable, so if not passed, it remains null (or we can clear it)
+      error: error,
       products: products ?? this.products,
+      expiryDate: expiryDate ?? this.expiryDate,
+      subscriptionType: subscriptionType ?? this.subscriptionType,
     );
   }
 }
@@ -48,7 +56,11 @@ class PremiumNotifier extends Notifier<PremiumState> {
   PremiumState build() {
     _repository = ref.watch(premiumRepositoryProvider);
     _init();
-    return PremiumState(isPremium: _repository.getPremiumStatus());
+    return PremiumState(
+      isPremium: _repository.getPremiumStatus(),
+      expiryDate: _repository.getExpiryDate(),
+      subscriptionType: _repository.getSubscriptionType(),
+    );
   }
 
   Future<void> _init() async {
@@ -82,7 +94,7 @@ class PremiumNotifier extends Notifier<PremiumState> {
     }
   }
 
-  Future<void> buyPremium() async {
+  Future<void> buyPremium(String productId) async {
     if (state.products.isEmpty) {
       state = state.copyWith(error: 'No products available');
       return;
@@ -90,10 +102,10 @@ class PremiumNotifier extends Notifier<PremiumState> {
 
     state = state.copyWith(isLoading: true, error: null);
     try {
-      // Find the premium product
+      // Find the specific product
       final product = state.products.firstWhere(
-        (p) => p.id == PremiumRepository.premiumProductId,
-        orElse: () => state.products.first, // Fallback to first available
+        (p) => p.id == productId,
+        orElse: () => state.products.first,
       );
       
       await _repository.buyPremium(product);
@@ -124,8 +136,30 @@ class PremiumNotifier extends Notifier<PremiumState> {
           
           final bool valid = await _repository.verifyPurchase(purchaseDetails);
           if (valid) {
+            String? type;
+            DateTime? expiry;
+
+            if (purchaseDetails.productID == PremiumRepository.premiumMonthlyId) {
+              type = 'monthly';
+              expiry = DateTime.now().add(const Duration(days: 30));
+            } else if (purchaseDetails.productID == PremiumRepository.premiumYearlyId) {
+              type = 'yearly';
+              expiry = DateTime.now().add(const Duration(days: 365));
+            } else if (purchaseDetails.productID == PremiumRepository.premiumLifetimeId) {
+              type = 'lifetime';
+              expiry = null;
+            }
+
             await _repository.setPremiumStatus(true);
-            state = state.copyWith(isLoading: false, isPremium: true);
+            await _repository.setSubscriptionType(type);
+            await _repository.setExpiryDate(expiry);
+
+            state = state.copyWith(
+              isLoading: false, 
+              isPremium: true,
+              subscriptionType: type,
+              expiryDate: expiry,
+            );
           } else {
             state = state.copyWith(isLoading: false, error: 'Invalid purchase');
           }

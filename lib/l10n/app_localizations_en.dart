@@ -912,6 +912,35 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lifetime => 'Lifetime';
 
   @override
+  String get monthly => 'Monthly';
+
+  @override
+  String get yearly => 'Yearly';
+
+  @override
+  String get bestValue => 'Best Value';
+
+  @override
+  String get chooseYourPlan => 'Choose Your Plan';
+
+  @override
+  String get cancelAnytime => 'Cancel anytime';
+
+  @override
+  String savePercentage(Object percentage) {
+    return 'Save $percentage%';
+  }
+
+  @override
+  String get oneTimePayment => 'Pay once, own forever';
+
+  @override
+  String get recommended => 'Recommended';
+
+  @override
+  String get subscribeNow => 'Subscribe Now';
+
+  @override
   String get oneTimePaymentLifetime => 'One-time payment • Lifetime access';
 
   @override
@@ -922,7 +951,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get premiumBenefitsNote =>
-      'All premium features are yours forever with a one-time purchase. No subscriptions!';
+      'Unlock all premium features with your chosen plan. Choose Lifetime for permanent access!';
 
   @override
   String get active => 'Active';
@@ -1561,9 +1590,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get daily => 'Daily';
-
-  @override
-  String get monthly => 'Monthly';
 
   @override
   String get limitReached => 'Limit Reached';

@@ -59,6 +59,7 @@ import 'package:flowpaisa/features/transactions/data/schedule_scheduler.dart';
 import 'package:flowpaisa/features/backup/data/sync/sync_scheduler.dart';
 
 import 'package:flutter_phoenix/flutter_phoenix.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -475,399 +476,366 @@ class _DashboardTab extends ConsumerWidget {
                   ),
                   // Main Content
                   Positioned(
-                    left: 12,
-                    right: 12,
-                    top: MediaQuery.of(context).padding.top + 16,
-                    child: Padding(
-                      padding: const EdgeInsets.all(4.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          // App Title
-                          InkWell(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const CashbooksScreen(),
-                                ),
-                              );
-                            },
-                            borderRadius: BorderRadius.circular(12),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: 4, horizontal: 2),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(10),
-                                    decoration: BoxDecoration(
-                                      color: activeColor.withValues(
-                                          alpha: isDark ? 0.3 : 0.1),
-                                      borderRadius:
-                                          const BorderRadiusDirectional.only(
-                                        topStart: Radius.circular(14),
-                                        bottomEnd: Radius.circular(14),
-                                      ),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black
-                                              .withValues(alpha: 0.05 / 1.0),
-                                          blurRadius: 8,
-                                          offset: const Offset(0, 2),
-                                        ),
-                                      ],
-                                    ),
-                                    child: Icon(activeIcon,
-                                        color:
-                                            isDark ? Colors.white : activeColor,
-                                        size: 24),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        AppConstants.appName,
-                                        style: TextStyle(
-                                          color: isDark
-                                              ? Colors.white
-                                              : AppColors.lightText,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 20,
-                                          letterSpacing: 0.5,
-                                          shadows: isDark
-                                              ? AppTheme.textShadow(
-                                                  blurMultiplier: 2.0)
-                                              : null,
-                                        ),
-                                      ),
-                                      Row(
-                                        children: [
-                                          Icon(
-                                            activeIcon,
-                                            size: 14,
-                                            color: activeColor,
-                                          ),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            activeCashbook.name,
-                                            style: TextStyle(
-                                              color: activeColor,
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Icon(
-                                    Icons.keyboard_arrow_down,
-                                    size: 16,
-                                    color: isDark
-                                        ? Colors.white54
-                                        : Colors.black54,
-                                  ),
-                                  if (isPremium) ...[
-                                    const SizedBox(width: 8),
-                                    const PremiumBadge(isSmall: true),
-                                  ],
-                                ],
+                    left: 8,
+                    right: 8,
+                    top: MediaQuery.of(context).padding.top,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // App Title & Cashbook Selector
+                        InkWell(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const CashbooksScreen(),
                               ),
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-
-                          // Balance Section
-                          Text(
-                            l10n.availableCash,
-                            style: theme.textTheme.titleSmall?.copyWith(
-                              color: isDark
-                                  ? Colors.white.withValues(alpha: 0.9)
-                                  : AppColors.lightTextSecondary,
-                              fontWeight: FontWeight.w600,
-                              shadows: isDark
-                                  ? AppTheme.textShadow(blurMultiplier: 1.0)
-                                  : null,
-                            ),
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              dashboardStatsAsync.when(
-                                data: (stats) => AnimatedAmount(
-                                  amount: stats.totalBalance,
-                                  currencySymbol: currency.symbol,
-                                  decimalPlaces: currency.decimalPlaces,
-                                  style: theme.textTheme.displaySmall?.copyWith(
-                                    color: isDark
-                                        ? Colors.white
-                                        : AppColors.lightText,
-                                    fontWeight: FontWeight.bold,
-                                    height: 1.1,
-                                    fontSize: AmountFormatter.getFontSize(
-                                        stats.totalBalance,
-                                        baseSize: 32,
-                                        decimalPlaces: currency.decimalPlaces),
-                                    shadows: isDark
-                                        ? AppTheme.textShadow(
-                                            blurMultiplier: 4.0)
-                                        : null,
-                                  ),
-                                ),
-                                loading: () => SizedBox(
-                                    height: 32,
-                                    child: CircularProgressIndicator(
-                                        color: isDark
-                                            ? Colors.white
-                                            : theme.colorScheme.primary,
-                                        strokeWidth: 2)),
-                                error: (_, __) => Text(l10n.error,
-                                    style: TextStyle(
-                                        color: isDark
-                                            ? Colors.white
-                                            : AppColors.error)),
-                              ),
-                              _buildFilterChip(context, ref, filter, isDark),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-
-                          // Stats Grid
-                          dashboardStatsAsync.when(
-                            data: (stats) => Column(
+                            );
+                          },
+                          borderRadius: BorderRadius.circular(12),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 8, horizontal: 4),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                EntranceAnimation(
-                                  index: 1,
-                                  child: _buildSummaryRow(
-                                    context,
-                                    isDark: isDark,
-                                    title: l10n.cashFlow,
-                                    items: [
-                                      _SummaryItem(
-                                        label: l10n.income,
-                                        amount: stats.income(filter),
-                                        color: AppColors.incomeColor,
-                                        icon: Icons.south_west,
-                                        onTap: () {
-                                          final isMonthly =
-                                              filter == DashboardFilter.monthly;
-                                          final now = DateTime.now();
-                                          final startDate = isMonthly
-                                              ? DateTime(now.year, now.month, 1)
-                                              : null;
-                                          final endDate = isMonthly
-                                              ? DateTime(
-                                                  now.year, now.month + 1, 0)
-                                              : null;
-
-                                          ref
-                                              .read(
-                                                  transactionsPaginatedProvider
-                                                      .notifier)
-                                              .applyFilters(
-                                                TransactionFilters(
-                                                  type: 'INCOME',
-                                                  startDate: startDate,
-                                                  endDate: endDate,
-                                                ),
-                                              );
-
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  const TransactionsListScreen(),
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                      _SummaryItem(
-                                        label: l10n.expense,
-                                        amount: stats.expense(filter),
-                                        color: AppColors.expenseColor,
-                                        icon: Icons.north_east,
-                                        onTap: () {
-                                          final isMonthly =
-                                              filter == DashboardFilter.monthly;
-                                          final now = DateTime.now();
-                                          final startDate = isMonthly
-                                              ? DateTime(now.year, now.month, 1)
-                                              : null;
-                                          final endDate = isMonthly
-                                              ? DateTime(
-                                                  now.year, now.month + 1, 0)
-                                              : null;
-
-                                          ref
-                                              .read(
-                                                  transactionsPaginatedProvider
-                                                      .notifier)
-                                              .applyFilters(
-                                                TransactionFilters(
-                                                  type: 'EXPENSE',
-                                                  startDate: startDate,
-                                                  endDate: endDate,
-                                                ),
-                                              );
-
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  const TransactionsListScreen(),
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                      _SummaryItem(
-                                        label: l10n.netCash,
-                                        amount: stats.netCash(filter),
-                                        color: Colors.white,
-                                        icon: Icons.account_balance_wallet,
-                                        onTap: () {
-                                          final isMonthly =
-                                              filter == DashboardFilter.monthly;
-                                          final now = DateTime.now();
-                                          final startDate = isMonthly
-                                              ? DateTime(now.year, now.month, 1)
-                                              : null;
-                                          final endDate = isMonthly
-                                              ? DateTime(
-                                                  now.year, now.month + 1, 0)
-                                              : null;
-
-                                          ref
-                                              .read(
-                                                  transactionsPaginatedProvider
-                                                      .notifier)
-                                              .applyFilters(
-                                                TransactionFilters(
-                                                  startDate: startDate,
-                                                  endDate: endDate,
-                                                ),
-                                              );
-
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  const TransactionsListScreen(),
-                                            ),
-                                          );
-                                        },
-                                      ),
+                                Row(
+                                  children: [
+                                    SizedBox(
+                                      width: 200,
+                                      height: 48,
+                                      child: SvgPicture.asset(
+                                          'assets/images/logo_horizontal.svg',
+                                          fit: BoxFit.fill,
+                                          colorFilter: ColorFilter.mode(
+                                              Color.lerp(
+                                                      theme.colorScheme
+                                                          .onSurface,
+                                                      theme.colorScheme.primary,
+                                                      .3) ??
+                                                  theme.colorScheme.onSurface,
+                                              BlendMode.srcIn)),
+                                    ),
+                                    if (isPremium) ...[
+                                      const SizedBox(width: 8),
+                                      const PremiumBadge(isSmall: true),
                                     ],
-                                    currency: currency,
-                                  ),
+                                  ],
                                 ),
-                                const SizedBox(height: 12),
-                                EntranceAnimation(
-                                  index: 2,
-                                  child: _buildSummaryRow(
-                                    context,
-                                    isDark: isDark,
-                                    title: l10n.lendingCredit,
-                                    items: [
-                                      _SummaryItem(
-                                        label: l10n.receivableTag,
-                                        amount: stats.receivable(filter),
-                                        color: AppColors.receivableColor,
-                                        icon: Icons.call_received,
-                                        overdue: stats.overdueReceivable,
-                                        onTap: () {
-                                          final isMonthly =
-                                              filter == DashboardFilter.monthly;
-                                          final now = DateTime.now();
-                                          final startDate = isMonthly
-                                              ? DateTime(now.year, now.month, 1)
-                                              : null;
-                                          final endDate = isMonthly
-                                              ? DateTime(
-                                                  now.year, now.month + 1, 0)
-                                              : null;
-
-                                          ref
-                                              .read(
-                                                  receivablesPaginatedProvider(
-                                                          'PENDING')
-                                                      .notifier)
-                                              .applyFilters(
-                                                ReceivableFilters(
-                                                  startDate: startDate,
-                                                  endDate: endDate,
-                                                ),
-                                              );
-
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  const ReceivablesListScreen(),
-                                            ),
-                                          );
-                                        },
+                                const SizedBox(height: 4),
+                                Row(
+                                  children: [
+                                    Icon(
+                                      activeIcon,
+                                      size: 14,
+                                      color: activeColor,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      activeCashbook.name,
+                                      style: TextStyle(
+                                        color: activeColor,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
                                       ),
-                                      _SummaryItem(
-                                        label: l10n.payableTag,
-                                        amount: stats.payable(filter),
-                                        color: AppColors.payableColor,
-                                        icon: Icons.call_made,
-                                        overdue: stats.overduePayable,
-                                        onTap: () {
-                                          final isMonthly =
-                                              filter == DashboardFilter.monthly;
-                                          final now = DateTime.now();
-                                          final startDate = isMonthly
-                                              ? DateTime(now.year, now.month, 1)
-                                              : null;
-                                          final endDate = isMonthly
-                                              ? DateTime(
-                                                  now.year, now.month + 1, 0)
-                                              : null;
-
-                                          ref
-                                              .read(payablesPaginatedProvider(
-                                                      'PENDING')
-                                                  .notifier)
-                                              .applyFilters(
-                                                PayableFilters(
-                                                  startDate: startDate,
-                                                  endDate: endDate,
-                                                ),
-                                              );
-
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  const PayablesListScreen(),
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                      _SummaryItem(
-                                        label: l10n.netCredit,
-                                        amount: stats.netCredit(filter),
-                                        color: Colors.white,
-                                        icon: Icons.swap_horiz,
-                                      ),
-                                    ],
-                                    currency: currency,
-                                  ),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Icon(
+                                      Icons.keyboard_arrow_down,
+                                      size: 14,
+                                      color: isDark
+                                          ? Colors.white54
+                                          : Colors.black54,
+                                    ),
+                                  ],
                                 ),
-                                const SizedBox(height: 12),
                               ],
                             ),
-                            loading: () => const SizedBox(height: 100),
-                            error: (_, __) => const SizedBox.shrink(),
                           ),
-                        ],
-                      ),
+                        ),
+                        const SizedBox(height: 12),
+
+                        // Balance Section
+                        Text(
+                          l10n.availableCash,
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            color: isDark
+                                ? Colors.white.withValues(alpha: 0.9)
+                                : AppColors.lightTextSecondary,
+                            fontWeight: FontWeight.w600,
+                            shadows: isDark
+                                ? AppTheme.textShadow(blurMultiplier: 1.0)
+                                : null,
+                          ),
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            dashboardStatsAsync.when(
+                              data: (stats) => AnimatedAmount(
+                                amount: stats.totalBalance,
+                                currencySymbol: currency.symbol,
+                                decimalPlaces: currency.decimalPlaces,
+                                style: theme.textTheme.displaySmall?.copyWith(
+                                  color: isDark
+                                      ? Colors.white
+                                      : AppColors.lightText,
+                                  fontWeight: FontWeight.bold,
+                                  height: 1.1,
+                                  fontSize: AmountFormatter.getFontSize(
+                                      stats.totalBalance,
+                                      baseSize: 32,
+                                      decimalPlaces: currency.decimalPlaces),
+                                  shadows: isDark
+                                      ? AppTheme.textShadow(blurMultiplier: 4.0)
+                                      : null,
+                                ),
+                              ),
+                              loading: () => SizedBox(
+                                  height: 32,
+                                  child: CircularProgressIndicator(
+                                      color: isDark
+                                          ? Colors.white
+                                          : theme.colorScheme.primary,
+                                      strokeWidth: 2)),
+                              error: (_, __) => Text(l10n.error,
+                                  style: TextStyle(
+                                      color: isDark
+                                          ? Colors.white
+                                          : AppColors.error)),
+                            ),
+                            _buildFilterChip(context, ref, filter, isDark),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Stats Grid
+                        dashboardStatsAsync.when(
+                          data: (stats) => Column(
+                            children: [
+                              EntranceAnimation(
+                                index: 1,
+                                child: _buildSummaryRow(
+                                  context,
+                                  isDark: isDark,
+                                  title: l10n.cashFlow,
+                                  items: [
+                                    _SummaryItem(
+                                      label: l10n.income,
+                                      amount: stats.income(filter),
+                                      color: AppColors.incomeColor,
+                                      icon: Icons.south_west,
+                                      onTap: () {
+                                        final isMonthly =
+                                            filter == DashboardFilter.monthly;
+                                        final now = DateTime.now();
+                                        final startDate = isMonthly
+                                            ? DateTime(now.year, now.month, 1)
+                                            : null;
+                                        final endDate = isMonthly
+                                            ? DateTime(
+                                                now.year, now.month + 1, 0)
+                                            : null;
+
+                                        ref
+                                            .read(transactionsPaginatedProvider
+                                                .notifier)
+                                            .applyFilters(
+                                              TransactionFilters(
+                                                type: 'INCOME',
+                                                startDate: startDate,
+                                                endDate: endDate,
+                                              ),
+                                            );
+
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                const TransactionsListScreen(),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                    _SummaryItem(
+                                      label: l10n.expense,
+                                      amount: stats.expense(filter),
+                                      color: AppColors.expenseColor,
+                                      icon: Icons.north_east,
+                                      onTap: () {
+                                        final isMonthly =
+                                            filter == DashboardFilter.monthly;
+                                        final now = DateTime.now();
+                                        final startDate = isMonthly
+                                            ? DateTime(now.year, now.month, 1)
+                                            : null;
+                                        final endDate = isMonthly
+                                            ? DateTime(
+                                                now.year, now.month + 1, 0)
+                                            : null;
+
+                                        ref
+                                            .read(transactionsPaginatedProvider
+                                                .notifier)
+                                            .applyFilters(
+                                              TransactionFilters(
+                                                type: 'EXPENSE',
+                                                startDate: startDate,
+                                                endDate: endDate,
+                                              ),
+                                            );
+
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                const TransactionsListScreen(),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                    _SummaryItem(
+                                      label: l10n.netCash,
+                                      amount: stats.netCash(filter),
+                                      color: Colors.white,
+                                      icon: Icons.account_balance_wallet,
+                                      onTap: () {
+                                        final isMonthly =
+                                            filter == DashboardFilter.monthly;
+                                        final now = DateTime.now();
+                                        final startDate = isMonthly
+                                            ? DateTime(now.year, now.month, 1)
+                                            : null;
+                                        final endDate = isMonthly
+                                            ? DateTime(
+                                                now.year, now.month + 1, 0)
+                                            : null;
+
+                                        ref
+                                            .read(transactionsPaginatedProvider
+                                                .notifier)
+                                            .applyFilters(
+                                              TransactionFilters(
+                                                startDate: startDate,
+                                                endDate: endDate,
+                                              ),
+                                            );
+
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                const TransactionsListScreen(),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ],
+                                  currency: currency,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              EntranceAnimation(
+                                index: 2,
+                                child: _buildSummaryRow(
+                                  context,
+                                  isDark: isDark,
+                                  title: l10n.lendingCredit,
+                                  items: [
+                                    _SummaryItem(
+                                      label: l10n.receivableTag,
+                                      amount: stats.receivable(filter),
+                                      color: AppColors.receivableColor,
+                                      icon: Icons.call_received,
+                                      overdue: stats.overdueReceivable,
+                                      onTap: () {
+                                        final isMonthly =
+                                            filter == DashboardFilter.monthly;
+                                        final now = DateTime.now();
+                                        final startDate = isMonthly
+                                            ? DateTime(now.year, now.month, 1)
+                                            : null;
+                                        final endDate = isMonthly
+                                            ? DateTime(
+                                                now.year, now.month + 1, 0)
+                                            : null;
+
+                                        ref
+                                            .read(receivablesPaginatedProvider(
+                                                    'PENDING')
+                                                .notifier)
+                                            .applyFilters(
+                                              ReceivableFilters(
+                                                startDate: startDate,
+                                                endDate: endDate,
+                                              ),
+                                            );
+
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                const ReceivablesListScreen(),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                    _SummaryItem(
+                                      label: l10n.payableTag,
+                                      amount: stats.payable(filter),
+                                      color: AppColors.payableColor,
+                                      icon: Icons.call_made,
+                                      overdue: stats.overduePayable,
+                                      onTap: () {
+                                        final isMonthly =
+                                            filter == DashboardFilter.monthly;
+                                        final now = DateTime.now();
+                                        final startDate = isMonthly
+                                            ? DateTime(now.year, now.month, 1)
+                                            : null;
+                                        final endDate = isMonthly
+                                            ? DateTime(
+                                                now.year, now.month + 1, 0)
+                                            : null;
+
+                                        ref
+                                            .read(payablesPaginatedProvider(
+                                                    'PENDING')
+                                                .notifier)
+                                            .applyFilters(
+                                              PayableFilters(
+                                                startDate: startDate,
+                                                endDate: endDate,
+                                              ),
+                                            );
+
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                const PayablesListScreen(),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                    _SummaryItem(
+                                      label: l10n.netCredit,
+                                      amount: stats.netCredit(filter),
+                                      color: Colors.white,
+                                      icon: Icons.swap_horiz,
+                                    ),
+                                  ],
+                                  currency: currency,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                            ],
+                          ),
+                          loading: () => const SizedBox(height: 100),
+                          error: (_, __) => const SizedBox.shrink(),
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -892,28 +860,14 @@ class _DashboardTab extends ConsumerWidget {
                           left: 16, bottom: 16, right: 16),
                       child: Row(
                         children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              gradient: AppColors.getPrimaryGradient(
-                                  theme.colorScheme.primary),
-                              borderRadius: const BorderRadiusDirectional.only(
-                                topStart: Radius.circular(12),
-                                bottomEnd: Radius.circular(12),
-                              ),
-                            ),
-                            child: const Icon(Icons.water_drop,
-                                color: Colors.white, size: 20),
-                          ),
-                          const SizedBox(width: 12),
-                          Text(
-                            'FlowPaisa',
-                            style: TextStyle(
-                              color: theme.colorScheme.onSurface,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 18,
-                            ),
-                          ),
+                          SvgPicture.asset('assets/images/logo_horizontal.svg',
+                              height: 30,
+                              fit: BoxFit.contain,
+                              colorFilter: ColorFilter.mode(
+                                  Color.lerp(theme.colorScheme.onSurface,
+                                          theme.colorScheme.primary, .3) ??
+                                      theme.colorScheme.onSurface,
+                                  BlendMode.srcIn)),
                         ],
                       ),
                     ),

@@ -917,6 +917,35 @@ class AppLocalizationsUr extends AppLocalizations {
   String get lifetime => 'تاحیات';
 
   @override
+  String get monthly => 'ماہانہ';
+
+  @override
+  String get yearly => 'سالانہ';
+
+  @override
+  String get bestValue => 'بہترین قیمت';
+
+  @override
+  String get chooseYourPlan => 'اپنا پلان منتخب کریں';
+
+  @override
+  String get cancelAnytime => 'کسی بھی وقت منسوخ کریں';
+
+  @override
+  String savePercentage(Object percentage) {
+    return '$percentage% بچائیں';
+  }
+
+  @override
+  String get oneTimePayment => 'ایک بار ادائیگی کریں، ہمیشہ کے لیے اپنائیں';
+
+  @override
+  String get recommended => 'تجویز کردہ';
+
+  @override
+  String get subscribeNow => 'ابھی سبسکرائب کریں';
+
+  @override
   String get oneTimePaymentLifetime => 'ایک بار ادائیگی • تاحیات رسائی';
 
   @override
@@ -927,7 +956,7 @@ class AppLocalizationsUr extends AppLocalizations {
 
   @override
   String get premiumBenefitsNote =>
-      'ایک بار کی خریداری کے ساتھ تمام پریمیم فیچرز ہمیشہ کے لیے آپ کے ہیں۔ کوئی سبسکرپشن نہیں!';
+      'اپنے منتخب کردہ پلان کے ساتھ تمام پریمیم فیچرز ان لاک کریں۔ مستقل رسائی کے لیے لائف ٹائم منتخب کریں!';
 
   @override
   String get active => 'فعال';
@@ -1572,9 +1601,6 @@ class AppLocalizationsUr extends AppLocalizations {
 
   @override
   String get daily => 'روزانہ';
-
-  @override
-  String get monthly => 'ماہانہ';
 
   @override
   String get limitReached => 'حد ختم ہو گئی';
