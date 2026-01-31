@@ -64,21 +64,26 @@ class TransactionFilters {
 
   TransactionFilters copyWith({
     DateTime? startDate,
+    bool clearStartDate = false,
     DateTime? endDate,
+    bool clearEndDate = false,
     String? type,
+    bool clearType = false,
     List<String>? categoryUuids,
     List<String>? contactUuids,
     double? minAmount,
+    bool clearMinAmount = false,
     double? maxAmount,
+    bool clearMaxAmount = false,
   }) {
     return TransactionFilters(
-      startDate: startDate ?? this.startDate,
-      endDate: endDate ?? this.endDate,
-      type: type ?? this.type,
+      startDate: clearStartDate ? null : (startDate ?? this.startDate),
+      endDate: clearEndDate ? null : (endDate ?? this.endDate),
+      type: clearType ? null : (type ?? this.type),
       categoryUuids: categoryUuids ?? this.categoryUuids,
       contactUuids: contactUuids ?? this.contactUuids,
-      minAmount: minAmount ?? this.minAmount,
-      maxAmount: maxAmount ?? this.maxAmount,
+      minAmount: clearMinAmount ? null : (minAmount ?? this.minAmount),
+      maxAmount: clearMaxAmount ? null : (maxAmount ?? this.maxAmount),
     );
   }
 }

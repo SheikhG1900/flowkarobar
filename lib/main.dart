@@ -525,7 +525,8 @@ class _DashboardTab extends ConsumerWidget {
                                           offset: const Offset(-6, 0),
                                           child: Text(
                                             'lowpaisa',
-                                            style: GoogleFonts.montserrat(
+                                            style: theme.textTheme.displaySmall
+                                                ?.copyWith(
                                               fontSize: 24,
                                               fontWeight: FontWeight.w800,
                                               letterSpacing: -0.5,
@@ -913,7 +914,7 @@ class _DashboardTab extends ConsumerWidget {
                               offset: const Offset(-4, 0),
                               child: Text(
                                 'lowpaisa',
-                                style: GoogleFonts.montserrat(
+                                style: theme.textTheme.titleMedium?.copyWith(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w800,
                                   letterSpacing: -0.5,

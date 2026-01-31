@@ -176,20 +176,29 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
       // if they were in domain, it's fine.
       return widget.initialFilters.copyWith(
         startDate: _startDate,
+        clearStartDate: _startDate == null,
         endDate: _endDate,
+        clearEndDate: _endDate == null,
         type: _transactionType,
+        clearType: _transactionType == null,
         categoryUuids: _selectedCategoryUuids,
         contactUuids: _selectedContactUuids,
         minAmount: _minAmount,
+        clearMinAmount: _minAmount == null,
         maxAmount: _maxAmount,
+        clearMaxAmount: _maxAmount == null,
       );
     } else {
       return widget.initialFilters.copyWith(
         startDate: _startDate,
+        clearStartDate: _startDate == null,
         endDate: _endDate,
+        clearEndDate: _endDate == null,
         contactUuids: _selectedContactUuids,
         minAmount: _minAmount,
+        clearMinAmount: _minAmount == null,
         maxAmount: _maxAmount,
+        clearMaxAmount: _maxAmount == null,
         filterByDueDate: _filterByDueDate,
       );
     }

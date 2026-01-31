@@ -50,20 +50,25 @@ class ReceivableFilters {
 
   ReceivableFilters copyWith({
     String? searchQuery,
+    bool clearSearchQuery = false,
     DateTime? startDate,
+    bool clearStartDate = false,
     DateTime? endDate,
+    bool clearEndDate = false,
     List<String>? contactUuids,
     double? minAmount,
+    bool clearMinAmount = false,
     double? maxAmount,
+    bool clearMaxAmount = false,
     bool? filterByDueDate,
   }) {
     return ReceivableFilters(
-      searchQuery: searchQuery ?? this.searchQuery,
-      startDate: startDate ?? this.startDate,
-      endDate: endDate ?? this.endDate,
+      searchQuery: clearSearchQuery ? null : (searchQuery ?? this.searchQuery),
+      startDate: clearStartDate ? null : (startDate ?? this.startDate),
+      endDate: clearEndDate ? null : (endDate ?? this.endDate),
       contactUuids: contactUuids ?? this.contactUuids,
-      minAmount: minAmount ?? this.minAmount,
-      maxAmount: maxAmount ?? this.maxAmount,
+      minAmount: clearMinAmount ? null : (minAmount ?? this.minAmount),
+      maxAmount: clearMaxAmount ? null : (maxAmount ?? this.maxAmount),
       filterByDueDate: filterByDueDate ?? this.filterByDueDate,
     );
   }
