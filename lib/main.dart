@@ -502,21 +502,17 @@ class _DashboardTab extends ConsumerWidget {
                               children: [
                                 Row(
                                   children: [
-                                    SizedBox(
-                                      width: 200,
-                                      height: 48,
-                                      child: SvgPicture.asset(
-                                          'assets/images/logo_horizontal.svg',
-                                          fit: BoxFit.fill,
-                                          colorFilter: ColorFilter.mode(
-                                              Color.lerp(
-                                                      theme.colorScheme
-                                                          .onSurface,
-                                                      theme.colorScheme.primary,
-                                                      .3) ??
-                                                  theme.colorScheme.onSurface,
-                                              BlendMode.srcIn)),
-                                    ),
+                                    SvgPicture.asset(
+                                        'assets/images/logo_horizontal.svg',
+                                        fit: BoxFit.contain,
+                                        height: 45,
+                                        colorFilter: ColorFilter.mode(
+                                            Color.lerp(
+                                                    theme.colorScheme.onSurface,
+                                                    theme.colorScheme.primary,
+                                                    .5) ??
+                                                theme.colorScheme.onSurface,
+                                            BlendMode.srcIn)),
                                     if (isPremium) ...[
                                       const SizedBox(width: 8),
                                       const PremiumBadge(isSmall: true),
