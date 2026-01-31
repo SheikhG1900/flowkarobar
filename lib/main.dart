@@ -522,14 +522,13 @@ class _DashboardTab extends ConsumerWidget {
                                                     theme.colorScheme.onSurface,
                                                 BlendMode.srcIn)),
                                         Transform.translate(
-                                          offset: const Offset(-6, 0),
+                                          offset: const Offset(-4, 0),
                                           child: Text(
                                             'lowpaisa',
                                             style: theme.textTheme.displaySmall
                                                 ?.copyWith(
                                               fontSize: 24,
                                               fontWeight: FontWeight.w800,
-                                              letterSpacing: -0.5,
                                               color: Color.lerp(
                                                       theme.colorScheme
                                                           .onSurface,
@@ -541,9 +540,6 @@ class _DashboardTab extends ConsumerWidget {
                                         ),
                                       ],
                                     ),
-                                    if (isPremium) ...[
-                                      const PremiumBadge(isSmall: true),
-                                    ],
                                   ],
                                 ),
                                 const SizedBox(height: 4),
@@ -571,6 +567,10 @@ class _DashboardTab extends ConsumerWidget {
                                           ? Colors.white54
                                           : Colors.black54,
                                     ),
+                                    if (isPremium) ...[
+                                      const SizedBox(width: 4),
+                                      const PremiumBadge(isSmall: true),
+                                    ],
                                   ],
                                 ),
                               ],
@@ -911,13 +911,12 @@ class _DashboardTab extends ConsumerWidget {
                                         theme.colorScheme.onSurface,
                                     BlendMode.srcIn)),
                             Transform.translate(
-                              offset: const Offset(-4, 0),
+                              offset: const Offset(-2, 0),
                               child: Text(
                                 'lowpaisa',
                                 style: theme.textTheme.titleMedium?.copyWith(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w800,
-                                  letterSpacing: -0.5,
                                   color: Color.lerp(theme.colorScheme.onSurface,
                                           theme.colorScheme.primary, .3) ??
                                       theme.colorScheme.onSurface,
