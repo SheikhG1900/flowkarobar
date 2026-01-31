@@ -213,7 +213,7 @@ class WhatsAppService {
     }
 
     buffer.writeln();
-    buffer.writeln('Generated with FlowPaisa 💰');
+    buffer.writeln('Generated with Flowpaisa 💰');
     return buffer.toString();
   }
 
@@ -306,10 +306,10 @@ class WhatsAppService {
         }
 
         buffer.writeln();
-        buffer.writeln('View this transaction in FlowPaisa:');
+        buffer.writeln('View this transaction in Flowpaisa:');
         buffer.writeln(deepLink);
         buffer.writeln();
-        buffer.writeln('Manage your finances better with FlowPaisa! 💰');
+        buffer.writeln('Manage your finances better with Flowpaisa! 💰');
         message = buffer.toString();
       }
 
@@ -390,10 +390,10 @@ class WhatsAppService {
 
         buffer.writeln();
         buffer
-            .writeln('You can view the details and record this in FlowPaisa:');
+            .writeln('You can view the details and record this in Flowpaisa:');
         buffer.writeln(deepLink);
         buffer.writeln();
-        buffer.writeln('Track your finances with FlowPaisa! 💰');
+        buffer.writeln('Track your finances with Flowpaisa! 💰');
         message = buffer.toString();
       }
 
@@ -471,11 +471,11 @@ class WhatsAppService {
         }
 
         buffer.writeln();
-        buffer.writeln('View details in FlowPaisa:');
+        buffer.writeln('View details in Flowpaisa:');
         buffer.writeln(deepLink);
         buffer.writeln();
         buffer.writeln('I will settle this soon. Thanks for your patience!');
-        buffer.writeln('Manage your finances with FlowPaisa! 💰');
+        buffer.writeln('Manage your finances with Flowpaisa! 💰');
         message = buffer.toString();
       }
 

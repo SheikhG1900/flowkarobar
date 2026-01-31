@@ -54,7 +54,8 @@ class BackupState {
   final String? error;
 
   // New settings and versioning fields
-  final String syncInterval; // 'manual', '12', '24', '36', '48', '60', '72', '84', '96'
+  final String
+      syncInterval; // 'manual', '12', '24', '36', '48', '60', '72', '84', '96'
   final String backupInterval; // 'manual', 'weekly', 'monthly'
   final int localVersion;
   final int cloudVersion;
@@ -128,7 +129,8 @@ class BackupState {
       lastSyncTime: lastSyncTime ?? this.lastSyncTime,
       availableCashbookIds: availableCashbookIds ?? this.availableCashbookIds,
       cashbookMetadata: cashbookMetadata ?? this.cashbookMetadata,
-      selectedCloudCashbookId: selectedCloudCashbookId ?? this.selectedCloudCashbookId,
+      selectedCloudCashbookId:
+          selectedCloudCashbookId ?? this.selectedCloudCashbookId,
       unsyncedCount: unsyncedCount ?? this.unsyncedCount,
       deltaFiles: deltaFiles ?? this.deltaFiles,
       syncStatus: syncStatus ?? this.syncStatus,
@@ -144,17 +146,17 @@ class BackupNotifier extends Notifier<BackupState> {
   BackupState build() {
     _driveService = ref.watch(googleDriveServiceProvider);
     _repository = ref.watch(backupRepositoryProvider);
-    
+
     // Watch for cashbook changes to refresh state
     ref.listen(activeCashbookProvider, (previous, next) {
       if (previous?.id != next.id) {
         _init();
       }
     });
-    
+
     // Trigger init post-build
     Future.microtask(() => _init());
-    
+
     return BackupState.initial();
   }
 
@@ -168,13 +170,14 @@ class BackupNotifier extends Notifier<BackupState> {
     );
 
     // Wait for silent sign in
-    await Future.delayed(const Duration(seconds: 1)); 
-    
+    await Future.delayed(const Duration(seconds: 1));
+
     if (_driveService.currentUser != state.currentUser) {
       state = state.copyWith(currentUser: _driveService.currentUser);
     }
-    
-    final lastTime = await _repository.getLastBackupTime(cashbookId: activeCashbook.id);
+
+    final lastTime =
+        await _repository.getLastBackupTime(cashbookId: activeCashbook.id);
     state = state.copyWith(lastBackupTime: lastTime);
 
     // Load settings from SharedPreferences
@@ -191,13 +194,14 @@ class BackupNotifier extends Notifier<BackupState> {
     if (_driveService.isSignedIn) {
       await loadBackups();
       await _loadAvailableCashbooks();
-      
+
       // Auto-sync on startup if enabled
       if (syncInterval != 'manual') {
         if (kDebugMode) {
-          print('BackupNotifier: Auto-sync on startup triggered (interval: $syncInterval)');
+          print(
+              'BackupNotifier: Auto-sync on startup triggered (interval: $syncInterval)');
         }
-        
+
         // Process all cashbooks on startup instead of just the active one
         final prefs = await SharedPreferences.getInstance();
         final cashbooksJson = prefs.getStringList('cashbooks_list');
@@ -206,7 +210,7 @@ class BackupNotifier extends Notifier<BackupState> {
           await SyncScheduler.triggerOnDemandSync();
         } else {
           // Fallback to active cashbook if list is empty
-          triggerSync(null); 
+          triggerSync(null);
         }
       }
     }
@@ -219,21 +223,22 @@ class BackupNotifier extends Notifier<BackupState> {
   }
 
   Future<void> _loadAvailableCashbooks() async {
-    if (!_driveService.isSignedIn || !_driveService.isDriveApiInitialized) return;
+    if (!_driveService.isSignedIn || !_driveService.isDriveApiInitialized)
+      return;
     try {
       final folderNames = await _driveService.listCashbookIds();
       final Map<String, CloudCashbookMetadata> metadataMap = {};
       final List<String> ids = [];
 
       for (final name in folderNames) {
-        if (name == 'FlowPaisa Backups') continue;
-        
+        if (name == 'Flowpaisa Backups') continue;
+
         final parts = name.split('|');
         final id = parts[0];
-        
+
         // Skip if we already processed this ID (prevents duplicates)
         if (ids.contains(id)) continue;
-        
+
         // Default values
         String cashbookName = id == 'default' ? 'Main' : 'Cloud DB';
         String color = '#757575';
@@ -265,7 +270,7 @@ class BackupNotifier extends Notifier<BackupState> {
         color: activeCashbook.colorCode,
         icon: activeCashbook.iconCodePoint ?? '',
       );
-      
+
       state = state.copyWith(
         availableCashbookIds: ids,
         cashbookMetadata: metadataMap,
@@ -281,12 +286,13 @@ class BackupNotifier extends Notifier<BackupState> {
     try {
       // Set isLoading to true ONLY if we are not already syncing
       if (state.syncStatus != 'Syncing...') {
-        state = state.copyWith(isLoading: true, error: null, syncStatus: 'Syncing...');
+        state = state.copyWith(
+            isLoading: true, error: null, syncStatus: 'Syncing...');
       }
-      
+
       // 1. Trigger the background task
       await SyncScheduler.triggerOnDemandSync();
-      
+
       // 2. Safety timeout: If background task doesn't report back, clear loading state
       Future.delayed(const Duration(seconds: 15), () {
         if (state.isLoading && state.syncStatus == 'Syncing...') {
@@ -294,17 +300,18 @@ class BackupNotifier extends Notifier<BackupState> {
           _checkFinalStatus();
         }
       });
-      
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString(), syncStatus: 'Idle');
+      state = state.copyWith(
+          isLoading: false, error: e.toString(), syncStatus: 'Idle');
     }
   }
 
   Future<void> _checkFinalStatus() async {
     final activeCashbook = ref.read(activeCashbookProvider);
     final prefs = await SharedPreferences.getInstance();
-    final status = prefs.getString('sync_status_${activeCashbook.id}') ?? 'Idle';
-    
+    final status =
+        prefs.getString('sync_status_${activeCashbook.id}') ?? 'Idle';
+
     if (status != 'Syncing...') {
       state = state.copyWith(isLoading: false, syncStatus: status);
     } else {
@@ -316,14 +323,19 @@ class BackupNotifier extends Notifier<BackupState> {
 
   Future<void> refreshVersions() async {
     state = state.copyWith(isLoading: true);
-    
+
     // 1. Refresh local version and sync time from DB
     final db = ref.read(databaseProvider);
     try {
       final metadata = await (db.select(db.syncMetadata)).get();
       if (metadata.isNotEmpty) {
-        final localVersion = metadata.map((m) => m.version).fold(0, (prev, v) => v > prev ? v : prev);
-        final lastSyncTime = metadata.map((m) => m.lastSyncAt).fold<DateTime?>(null, (prev, v) => (v != null && (prev == null || v.isAfter(prev))) ? v : prev);
+        final localVersion = metadata
+            .map((m) => m.version)
+            .fold(0, (prev, v) => v > prev ? v : prev);
+        final lastSyncTime = metadata.map((m) => m.lastSyncAt).fold<DateTime?>(
+            null,
+            (prev, v) =>
+                (v != null && (prev == null || v.isAfter(prev))) ? v : prev);
         state = state.copyWith(
           localVersion: localVersion,
           lastSyncTime: lastSyncTime,
@@ -339,22 +351,27 @@ class BackupNotifier extends Notifier<BackupState> {
 
     // 2. Fetch fresh cloud state (cloud version, lock status, delta files)
     await _fetchCloudState();
-    
+
     // 3. Refresh unsynced counts
     await _updateTotalUnsyncedCount();
-    
+
     state = state.copyWith(isLoading: false);
   }
 
   Future<void> _refreshVersions() async {
     final db = ref.read(databaseProvider);
-    
+
     // 1. Listen to local version changes
     final versionStream = db.select(db.syncMetadata).watch();
     versionStream.listen((metadata) {
       if (metadata.isNotEmpty) {
-        final localVersion = metadata.map((m) => m.version).fold(0, (prev, v) => v > prev ? v : prev);
-        final lastSyncTime = metadata.map((m) => m.lastSyncAt).fold<DateTime?>(null, (prev, v) => (v != null && (prev == null || v.isAfter(prev))) ? v : prev);
+        final localVersion = metadata
+            .map((m) => m.version)
+            .fold(0, (prev, v) => v > prev ? v : prev);
+        final lastSyncTime = metadata.map((m) => m.lastSyncAt).fold<DateTime?>(
+            null,
+            (prev, v) =>
+                (v != null && (prev == null || v.isAfter(prev))) ? v : prev);
         state = state.copyWith(
           localVersion: localVersion,
           lastSyncTime: lastSyncTime,
@@ -368,8 +385,13 @@ class BackupNotifier extends Notifier<BackupState> {
     try {
       final metadata = await (db.select(db.syncMetadata)).get();
       if (metadata.isNotEmpty) {
-        final localVersion = metadata.map((m) => m.version).fold(0, (prev, v) => v > prev ? v : prev);
-        final lastSyncTime = metadata.map((m) => m.lastSyncAt).fold<DateTime?>(null, (prev, v) => (v != null && (prev == null || v.isAfter(prev))) ? v : prev);
+        final localVersion = metadata
+            .map((m) => m.version)
+            .fold(0, (prev, v) => v > prev ? v : prev);
+        final lastSyncTime = metadata.map((m) => m.lastSyncAt).fold<DateTime?>(
+            null,
+            (prev, v) =>
+                (v != null && (prev == null || v.isAfter(prev))) ? v : prev);
         state = state.copyWith(
           localVersion: localVersion,
           lastSyncTime: lastSyncTime,
@@ -386,18 +408,25 @@ class BackupNotifier extends Notifier<BackupState> {
 
     // 3. Get initial cloud state
     await _fetchCloudState();
-    
+
     // 4. Listen to unsynced counts
     try {
       final tables = [
-        'categories', 'contacts', 'transactions', 'receivables', 
-        'payables', 'reminders', 'app_currencies', 'transaction_schedules'
+        'categories',
+        'contacts',
+        'transactions',
+        'receivables',
+        'payables',
+        'reminders',
+        'app_currencies',
+        'transaction_schedules'
       ];
       for (final table in tables) {
-        final countStream = db.customSelect(
-          'SELECT COUNT(*) as count FROM $table WHERE is_not_synced = 1'
-        ).watchSingle();
-        
+        final countStream = db
+            .customSelect(
+                'SELECT COUNT(*) as count FROM $table WHERE is_not_synced = 1')
+            .watchSingle();
+
         countStream.listen((countResult) {
           _updateTotalUnsyncedCount();
           // Also fetch cloud state when a sync might have happened (unsynced count drops to 0)
@@ -418,8 +447,9 @@ class BackupNotifier extends Notifier<BackupState> {
   }
 
   Future<void> _fetchCloudState() async {
-    if (!_driveService.isSignedIn || !_driveService.isDriveApiInitialized) return;
-    
+    if (!_driveService.isSignedIn || !_driveService.isDriveApiInitialized)
+      return;
+
     final activeCashbook = ref.read(activeCashbookProvider);
     try {
       final folderId = await _driveService.getOrCreateCashbookFolder(
@@ -428,12 +458,13 @@ class BackupNotifier extends Notifier<BackupState> {
         color: activeCashbook.colorCode,
         icon: activeCashbook.iconCodePoint,
       );
-      
+
       // Load manifest
       int cloudVersion = 0;
       String? lockedBy;
       DateTime? lockedAt;
-      final manifestFileId = await _driveService.getFileIdByName('manifest.json', folderId);
+      final manifestFileId =
+          await _driveService.getFileIdByName('manifest.json', folderId);
       if (manifestFileId != null) {
         final result = await _driveService.downloadFileWithETag(manifestFileId);
         final manifest = SyncManifest.fromJson(result.content);
@@ -444,18 +475,25 @@ class BackupNotifier extends Notifier<BackupState> {
 
       // Load delta files
       final allDeltas = await _driveService.listSyncFiles(folderId);
-      
+
       // Filter deltas that are above the current local version
       final localVersion = state.localVersion;
       final upcomingDeltas = allDeltas.where((file) {
-        final ver = int.tryParse(file.name?.replaceAll('v', '').replaceAll('.json', '') ?? '0') ?? 0;
+        final ver = int.tryParse(
+                file.name?.replaceAll('v', '').replaceAll('.json', '') ??
+                    '0') ??
+            0;
         return ver > localVersion;
       }).toList();
 
       // Sort ascending to show the next ones to sync first
       upcomingDeltas.sort((a, b) {
-        final aVer = int.tryParse(a.name?.replaceAll('v', '').replaceAll('.json', '') ?? '0') ?? 0;
-        final bVer = int.tryParse(b.name?.replaceAll('v', '').replaceAll('.json', '') ?? '0') ?? 0;
+        final aVer = int.tryParse(
+                a.name?.replaceAll('v', '').replaceAll('.json', '') ?? '0') ??
+            0;
+        final bVer = int.tryParse(
+                b.name?.replaceAll('v', '').replaceAll('.json', '') ?? '0') ??
+            0;
         return aVer.compareTo(bVer);
       });
 
@@ -465,12 +503,19 @@ class BackupNotifier extends Notifier<BackupState> {
         displayDeltas = upcomingDeltas.take(5).toList();
       } else {
         final syncedDeltas = allDeltas.where((file) {
-          final ver = int.tryParse(file.name?.replaceAll('v', '').replaceAll('.json', '') ?? '0') ?? 0;
+          final ver = int.tryParse(
+                  file.name?.replaceAll('v', '').replaceAll('.json', '') ??
+                      '0') ??
+              0;
           return ver <= localVersion && ver > 0;
         }).toList();
         syncedDeltas.sort((a, b) {
-          final aVer = int.tryParse(a.name?.replaceAll('v', '').replaceAll('.json', '') ?? '0') ?? 0;
-          final bVer = int.tryParse(b.name?.replaceAll('v', '').replaceAll('.json', '') ?? '0') ?? 0;
+          final aVer = int.tryParse(
+                  a.name?.replaceAll('v', '').replaceAll('.json', '') ?? '0') ??
+              0;
+          final bVer = int.tryParse(
+                  b.name?.replaceAll('v', '').replaceAll('.json', '') ?? '0') ??
+              0;
           return bVer.compareTo(aVer);
         });
         displayDeltas = syncedDeltas.take(5).toList();
@@ -493,22 +538,30 @@ class BackupNotifier extends Notifier<BackupState> {
     final db = ref.read(databaseProvider);
     int total = 0;
     final tables = [
-      'categories', 'contacts', 'transactions', 'receivables', 
-      'payables', 'reminders', 'app_currencies', 'transaction_schedules'
+      'categories',
+      'contacts',
+      'transactions',
+      'receivables',
+      'payables',
+      'reminders',
+      'app_currencies',
+      'transaction_schedules'
     ];
     for (final table in tables) {
       try {
         // Use a more robust check for table existence
-        final countResult = await db.customSelect(
-          "SELECT COUNT(*) as count FROM sqlite_master WHERE type='table' AND name='$table'"
-        ).getSingle();
-        
+        final countResult = await db
+            .customSelect(
+                "SELECT COUNT(*) as count FROM sqlite_master WHERE type='table' AND name='$table'")
+            .getSingle();
+
         final tableExists = (countResult.data['count'] as num).toInt() > 0;
         if (!tableExists) continue;
 
-        final rowsResult = await db.customSelect(
-          'SELECT COUNT(*) as count FROM $table WHERE is_not_synced = 1'
-        ).getSingle();
+        final rowsResult = await db
+            .customSelect(
+                'SELECT COUNT(*) as count FROM $table WHERE is_not_synced = 1')
+            .getSingle();
         total += (rowsResult.data['count'] as num).toInt();
       } catch (e) {
         if (kDebugMode) {
@@ -521,13 +574,15 @@ class BackupNotifier extends Notifier<BackupState> {
 
   void _startStatusPolling() {
     // Poll SharedPreferences for sync status every 1 second for faster feedback
-    final subscription = Stream.periodic(const Duration(seconds: 1)).listen((_) async {
+    final subscription =
+        Stream.periodic(const Duration(seconds: 1)).listen((_) async {
       if (!ref.mounted) return;
-      
+
       final activeCashbook = ref.read(activeCashbookProvider);
       final prefs = await SharedPreferences.getInstance();
-      final status = prefs.getString('sync_status_${activeCashbook.id}') ?? 'Idle';
-      
+      final status =
+          prefs.getString('sync_status_${activeCashbook.id}') ?? 'Idle';
+
       if (status.contains('Error')) {
         if (kDebugMode) {
           print('BackupNotifier: Sync Error detected: $status');
@@ -546,7 +601,7 @@ class BackupNotifier extends Notifier<BackupState> {
           // and haven't timed out to allow interaction
           isLoading: status == 'Syncing...' ? state.isLoading : false,
         );
-        
+
         // If status just changed to Success or Error, ensure loading is cleared
         if (status != 'Syncing...' && !status.contains('Locked')) {
           state = state.copyWith(isLoading: false);
@@ -555,17 +610,17 @@ class BackupNotifier extends Notifier<BackupState> {
         // If status just changed to Success, refresh versions and UI
         if (status == 'Success') {
           _refreshVersions();
-          
+
           // CRITICAL: Invalidate the database provider first.
           // This ensures all repositories get a fresh reference to the database
           // and triggers all stream-based watchers (like watchAllTransactions) to restart.
           ref.invalidate(databaseProvider);
-          
+
           // Then invalidate the specific list providers
           ref.invalidate(transactionsPaginatedProvider);
           ref.invalidate(payablesPaginatedProvider);
           ref.invalidate(receivablesPaginatedProvider);
-          
+
           // Refresh summary providers
           ref.invalidate(allPayablesProvider);
           ref.invalidate(allReceivablesProvider);
@@ -585,7 +640,7 @@ class BackupNotifier extends Notifier<BackupState> {
           });
         }
       } else if (status.contains('Locked')) {
-        // If it's already Locked and hasn't changed, we still want to refresh the state 
+        // If it's already Locked and hasn't changed, we still want to refresh the state
         // to show any countdown updates if the SyncEngine is still running
         state = state.copyWith(syncStatus: status);
       }
@@ -623,7 +678,8 @@ class BackupNotifier extends Notifier<BackupState> {
       const JsonEncoder encoder = JsonEncoder.withIndent('  ');
       return encoder.convert(jsonObject);
     } catch (e) {
-      if (e.toString().contains('Access was denied') || e.toString().contains('401')) {
+      if (e.toString().contains('Access was denied') ||
+          e.toString().contains('401')) {
         try {
           await _driveService.reauthenticate();
           return getDeltaFileContent(fileId); // Retry once
@@ -641,7 +697,7 @@ class BackupNotifier extends Notifier<BackupState> {
     if (!_driveService.isDriveApiInitialized) {
       await _driveService.signIn();
     }
-    
+
     final activeCashbook = ref.read(activeCashbookProvider);
     try {
       final folderId = await _driveService.getOrCreateCashbookFolder(
@@ -650,7 +706,8 @@ class BackupNotifier extends Notifier<BackupState> {
         color: activeCashbook.colorCode,
         icon: activeCashbook.iconCodePoint,
       );
-      final manifestFileId = await _driveService.getFileIdByName('manifest.json', folderId);
+      final manifestFileId =
+          await _driveService.getFileIdByName('manifest.json', folderId);
       if (manifestFileId != null) {
         final result = await _driveService.downloadFileWithETag(manifestFileId);
         final dynamic jsonObject = json.decode(result.content);
@@ -659,7 +716,8 @@ class BackupNotifier extends Notifier<BackupState> {
       }
       return 'Manifest not found';
     } catch (e) {
-      if (e.toString().contains('Access was denied') || e.toString().contains('401')) {
+      if (e.toString().contains('Access was denied') ||
+          e.toString().contains('401')) {
         try {
           await _driveService.reauthenticate();
           return getManifestContent(); // Retry once
@@ -697,14 +755,15 @@ class BackupNotifier extends Notifier<BackupState> {
 
   Future<void> loadBackupsForCashbook(String cashbookId) async {
     if (!_driveService.isSignedIn) return;
-    
+
     // Ensure Drive API is initialized
     if (!_driveService.isDriveApiInitialized) {
       await _driveService.signIn();
     }
 
     try {
-      state = state.copyWith(isLoading: true, selectedCloudCashbookId: cashbookId);
+      state =
+          state.copyWith(isLoading: true, selectedCloudCashbookId: cashbookId);
       final backups = await _driveService.listBackups(cashbookId: cashbookId);
       state = state.copyWith(
         isLoading: false,
@@ -718,17 +777,19 @@ class BackupNotifier extends Notifier<BackupState> {
   Future<void> restoreToCashbook(String fileId, String cashbookId) async {
     try {
       state = state.copyWith(isLoading: true, error: null);
-      
+
       // 1. Get the metadata from our cloud metadata map
       final metadata = state.cashbookMetadata[cashbookId];
-      final cloudName = metadata?.name ?? (cashbookId == 'default' ? 'Main Cashbook' : 'Restored Cashbook');
+      final cloudName = metadata?.name ??
+          (cashbookId == 'default' ? 'Main Cashbook' : 'Restored Cashbook');
       final cloudColor = metadata?.color ?? '#757575';
-      final cloudIcon = metadata?.icon ?? Symbols.account_balance_wallet.codePoint.toString();
-      
+      final cloudIcon =
+          metadata?.icon ?? Symbols.account_balance_wallet.codePoint.toString();
+
       // 2. Find if we already have this cashbook locally
       final cashbooks = ref.read(cashbooksProvider);
       final existing = cashbooks.where((c) => c.id == cashbookId).toList();
-      
+
       String dbPath;
       if (existing.isNotEmpty) {
         dbPath = existing.first.dbPath;
@@ -745,15 +806,19 @@ class BackupNotifier extends Notifier<BackupState> {
           createdAt: DateTime.now(),
         );
         // Add to local list
-        await ref.read(cashbooksProvider.notifier).addCashbookFromCloud(newCashbook);
+        await ref
+            .read(cashbooksProvider.notifier)
+            .addCashbookFromCloud(newCashbook);
         if (kDebugMode) {
-          print('Created new local cashbook entry for cloud ID: $cashbookId with name: $cloudName, color: $cloudColor, icon: $cloudIcon');
+          print(
+              'Created new local cashbook entry for cloud ID: $cashbookId with name: $cloudName, color: $cloudColor, icon: $cloudIcon');
         }
       }
 
       // 3. Restore the data to the correct file path
-      await _repository.restore(fileId, fileName: dbPath, cashbookId: cashbookId);
-      
+      await _repository.restore(fileId,
+          fileName: dbPath, cashbookId: cashbookId);
+
       // 4. Invalidate providers to refresh UI
       // If we restored to a different cashbook, the user will need to switch to it
       // if it was the active one, refresh it
@@ -761,7 +826,7 @@ class BackupNotifier extends Notifier<BackupState> {
         ref.invalidate(databaseProvider);
         ref.invalidate(activeCashbookProvider);
       }
-      
+
       state = state.copyWith(isLoading: false);
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
@@ -772,7 +837,7 @@ class BackupNotifier extends Notifier<BackupState> {
   Future<void> backup(AppLocalizations l10n) async {
     try {
       state = state.copyWith(isLoading: true, error: null);
-      
+
       // Ensure Drive API is initialized before proceeding
       if (!_driveService.isDriveApiInitialized) {
         if (kDebugMode) {
@@ -783,9 +848,10 @@ class BackupNotifier extends Notifier<BackupState> {
 
       final activeCashbook = ref.read(activeCashbookProvider);
       if (kDebugMode) {
-        print('Starting backup for cashbook: ${activeCashbook.name}, path: ${activeCashbook.dbPath}');
+        print(
+            'Starting backup for cashbook: ${activeCashbook.name}, path: ${activeCashbook.dbPath}');
       }
-      
+
       try {
         await _repository.backup(
           fileName: activeCashbook.dbPath,
@@ -796,7 +862,8 @@ class BackupNotifier extends Notifier<BackupState> {
         );
       } catch (e) {
         // If access denied, try re-authenticating once
-        if (e.toString().contains('Access was denied') || e.toString().contains('invalid_token')) {
+        if (e.toString().contains('Access was denied') ||
+            e.toString().contains('invalid_token')) {
           if (kDebugMode) {
             print('Access denied, attempting re-authentication...');
           }
@@ -813,15 +880,17 @@ class BackupNotifier extends Notifier<BackupState> {
           rethrow;
         }
       }
-      
+
       if (kDebugMode) {
         print('Backup upload successful');
       }
-      
+
       // Refresh list and time
-      final backups = await _driveService.listBackups(cashbookId: activeCashbook.id);
-      final time = await _repository.getLastBackupTime(cashbookId: activeCashbook.id);
-      
+      final backups =
+          await _driveService.listBackups(cashbookId: activeCashbook.id);
+      final time =
+          await _repository.getLastBackupTime(cashbookId: activeCashbook.id);
+
       state = state.copyWith(
         isLoading: false,
         backups: backups,
@@ -859,30 +928,34 @@ class BackupNotifier extends Notifier<BackupState> {
   Future<void> deleteCloudCashbook(String cashbookId) async {
     try {
       state = state.copyWith(isLoading: true, error: null);
-      
+
       // 1. Query for folders in both 'Sync Data' and 'Backups'
-      final query = "mimeType = 'application/vnd.google-apps.folder' and name contains '$cashbookId' and trashed = false";
+      final query =
+          "mimeType = 'application/vnd.google-apps.folder' and name contains '$cashbookId' and trashed = false";
       final folders = await _driveService.listFoldersWithQuery(query);
-      
+
       if (kDebugMode) {
-        print('BackupNotifier: Found ${folders.length} potential folders to delete for ID: $cashbookId');
+        print(
+            'BackupNotifier: Found ${folders.length} potential folders to delete for ID: $cashbookId');
       }
-      
+
       bool deleted = false;
       if (folders.isNotEmpty) {
         for (final folder in folders) {
           if (folder.id != null) {
             final folderName = folder.name ?? '';
             // Double check that the folder name actually starts with this ID
-            if (folderName == cashbookId || folderName.startsWith('$cashbookId|')) {
-              
+            if (folderName == cashbookId ||
+                folderName.startsWith('$cashbookId|')) {
               // CRITICAL: Check for parent folder to ensure we are only deleting from our app's structure
               // (Safety check: we don't want to delete random folders that happen to have the same ID)
-              
+
               try {
-                final children = await _driveService.listAllFilesInFolder(folder.id!);
+                final children =
+                    await _driveService.listAllFilesInFolder(folder.id!);
                 if (kDebugMode) {
-                  print('BackupNotifier: Folder ${folder.id} has ${children.length} children. Deleting them first...');
+                  print(
+                      'BackupNotifier: Folder ${folder.id} has ${children.length} children. Deleting them first...');
                 }
                 for (final child in children) {
                   if (child.id != null) {
@@ -891,13 +964,15 @@ class BackupNotifier extends Notifier<BackupState> {
                 }
               } catch (e) {
                 if (kDebugMode) {
-                  print('BackupNotifier: Warning - Failed to list/delete children for folder ${folder.id}: $e');
+                  print(
+                      'BackupNotifier: Warning - Failed to list/delete children for folder ${folder.id}: $e');
                 }
               }
 
               await _driveService.deleteFile(folder.id!);
               if (kDebugMode) {
-                print('BackupNotifier: Deleted cloud cashbook folder: ${folder.name} (${folder.id})');
+                print(
+                    'BackupNotifier: Deleted cloud cashbook folder: ${folder.name} (${folder.id})');
               }
               deleted = true;
             }
@@ -907,13 +982,14 @@ class BackupNotifier extends Notifier<BackupState> {
 
       if (!deleted) {
         if (kDebugMode) {
-          print('BackupNotifier: No matching folder found to delete for ID: $cashbookId');
+          print(
+              'BackupNotifier: No matching folder found to delete for ID: $cashbookId');
         }
       }
 
       // 2. Refresh available cashbooks
       await _loadAvailableCashbooks();
-      
+
       state = state.copyWith(isLoading: false);
     } catch (e) {
       if (kDebugMode) {
@@ -927,18 +1003,20 @@ class BackupNotifier extends Notifier<BackupState> {
   Future<void> clearAllCloudData() async {
     try {
       state = state.copyWith(isLoading: true, error: null);
-      
+
       // 1. Find the root folder ID in appDataFolder
-      final query = "name = 'FlowPaisa Backups' and 'appDataFolder' in parents and trashed = false";
+      final query =
+          "name = 'Flowpaisa Backups' and 'appDataFolder' in parents and trashed = false";
       final list = await _driveService.listFoldersWithQuery(query);
-      
+
       // 2. Delete the entire root folder if it exists
       if (list.isNotEmpty) {
         for (final folder in list) {
           if (folder.id != null) {
             await _driveService.deleteFile(folder.id!);
             if (kDebugMode) {
-              print('BackupNotifier: Successfully deleted root FlowPaisa Backups folder (${folder.id})');
+              print(
+                  'BackupNotifier: Successfully deleted root Flowpaisa Backups folder (${folder.id})');
             }
           }
         }
@@ -946,13 +1024,16 @@ class BackupNotifier extends Notifier<BackupState> {
 
       // 3. Also check for any orphaned manifest.json or v*.json in the root appDataFolder
       // (Just in case they were created there by previous buggy versions)
-      final orphanedQuery = "'appDataFolder' in parents and (name = 'manifest.json' or name contains 'v') and trashed = false";
-      final orphanedFiles = await _driveService.listFilesWithQuery(orphanedQuery);
+      final orphanedQuery =
+          "'appDataFolder' in parents and (name = 'manifest.json' or name contains 'v') and trashed = false";
+      final orphanedFiles =
+          await _driveService.listFilesWithQuery(orphanedQuery);
       for (final file in orphanedFiles) {
         if (file.id != null) {
           await _driveService.deleteFile(file.id!);
           if (kDebugMode) {
-            print('BackupNotifier: Deleted orphaned file: ${file.name} (${file.id})');
+            print(
+                'BackupNotifier: Deleted orphaned file: ${file.name} (${file.id})');
           }
         }
       }
@@ -968,7 +1049,7 @@ class BackupNotifier extends Notifier<BackupState> {
       // 5. Reload available cashbooks
       await _loadAvailableCashbooks();
       await _refreshVersions();
-      
+
       state = state.copyWith(isLoading: false);
     } catch (e) {
       if (kDebugMode) {
@@ -994,9 +1075,9 @@ class BackupNotifier extends Notifier<BackupState> {
   Future<void> resetSyncAfterRestore() async {
     try {
       state = state.copyWith(isLoading: true, error: null);
-      
+
       final activeCashbook = ref.read(activeCashbookProvider);
-      
+
       // 1. Get local version from restored DB
       final db = ref.read(databaseProvider);
       int localVersion = 0;
@@ -1004,7 +1085,9 @@ class BackupNotifier extends Notifier<BackupState> {
         final metadata = await (db.select(db.syncMetadata)).get();
         if (metadata.isNotEmpty) {
           // Find max version or version for this device
-          localVersion = metadata.map((m) => m.version).fold(0, (prev, v) => v > prev ? v : prev);
+          localVersion = metadata
+              .map((m) => m.version)
+              .fold(0, (prev, v) => v > prev ? v : prev);
         }
       } catch (e) {
         if (kDebugMode) {
@@ -1014,7 +1097,7 @@ class BackupNotifier extends Notifier<BackupState> {
 
       // 2. Reset cloud manifest to this version
       await _repository.resetSyncToVersion(activeCashbook.id, localVersion);
-      
+
       state = state.copyWith(isLoading: false);
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
@@ -1029,20 +1112,26 @@ class BackupNotifier extends Notifier<BackupState> {
 
       // 1. Mark all records in all tables as unsynced
       final tables = [
-        'categories', 'contacts', 'transactions', 'receivables', 
-        'payables', 'reminders', 'app_currencies', 'transaction_schedules'
+        'categories',
+        'contacts',
+        'transactions',
+        'receivables',
+        'payables',
+        'reminders',
+        'app_currencies',
+        'transaction_schedules'
       ];
-      
+
       for (final table in tables) {
         await db.customStatement('UPDATE $table SET is_not_synced = 1');
       }
 
       // 2. Reset local version to 0
       await db.customStatement('DELETE FROM sync_metadata');
-      
+
       // 3. Refresh state
       await _refreshVersions();
-      
+
       state = state.copyWith(isLoading: false);
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
@@ -1051,4 +1140,5 @@ class BackupNotifier extends Notifier<BackupState> {
   }
 }
 
-final backupProvider = NotifierProvider<BackupNotifier, BackupState>(BackupNotifier.new);
+final backupProvider =
+    NotifierProvider<BackupNotifier, BackupState>(BackupNotifier.new);

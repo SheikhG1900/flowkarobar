@@ -1172,7 +1172,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get appDescription =>
-      'FlowPaisa एक व्यापक व्यक्तिगत वित्त और कैशफ्लो मैनेजर है। अपने खर्चों, आय, प्राप्य और देय राशि को एक ही स्थान पर ट्रैक करें। सुविधाओं में रसीद स्कैनिंग, व्हाट्सएप एकीकरण, क्लाउड बैकअप और सुंदर एनालिटिक्स शामिल हैं।';
+      'Flowpaisa एक व्यापक व्यक्तिगत वित्त और कैशफ्लो मैनेजर है। अपने खर्चों, आय, प्राप्य और देय राशि को एक ही स्थान पर ट्रैक करें। सुविधाओं में रसीद स्कैनिंग, व्हाट्सएप एकीकरण, क्लाउड बैकअप और सुंदर एनालिटिक्स शामिल हैं।';
 
   @override
   String get openSourceLicenses => 'ओपन सोर्स लाइसेंस';
@@ -1194,6 +1194,20 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get multilingual => 'बहुभाषी';
+
+  @override
+  String get privacyHighlight => 'निजी और सुरक्षित';
+
+  @override
+  String get privacyHighlightDesc =>
+      'आपका वित्तीय डेटा आपके डिवाइस या आपके निजी क्लाउड में रहता है। कोई और इसे एक्सेस नहीं कर सकता।';
+
+  @override
+  String get privacyPolicy => 'गोपनीयता नीति';
+
+  @override
+  String get privacyPolicyDesc =>
+      'हम आपकी गोपनीयता का सम्मान करते हैं। आपका डेटा आपके डिवाइस पर स्थानीय रूप से संग्रहीत होता है और वैकल्पिक रूप से आपके निजी Google ड्राइव के साथ सिंक किया जा सकता है। हमारे पास आपके वित्तीय रिकॉर्ड तक पहुंच नहीं है।';
 
   @override
   String get availableCash => 'उपलब्ध नकद';
@@ -1611,27 +1625,27 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String sharePayableCompleted(String amount, String date, String link) {
-    return 'नमस्ते!\n\n$date को $amount का भुगतान पूरा हो गया है।\n\nFlowPaisa में सिंक करें:\n$link';
+    return 'नमस्ते!\n\n$date को $amount का भुगतान पूरा हो गया है।\n\nFlowpaisa में सिंक करें:\n$link';
   }
 
   @override
   String sharePayablePending(String amount, String date, String link) {
-    return 'मैंने आपके $amount देने हैं\nतारीख: $date\n\nFlowPaisa में देखें:\n$link';
+    return 'मैंने आपके $amount देने हैं\nतारीख: $date\n\nFlowpaisa में देखें:\n$link';
   }
 
   @override
   String shareReceivableReceived(String amount, String date, String link) {
-    return 'नमस्ते!\n\n$date को $amount का भुगतान प्राप्त हो गया है।\n\nFlowPaisa में सिंक करें:\n$link';
+    return 'नमस्ते!\n\n$date को $amount का भुगतान प्राप्त हो गया है।\n\nFlowpaisa में सिंक करें:\n$link';
   }
 
   @override
   String shareReceivablePending(String amount, String date, String link) {
-    return 'प्राप्त होने वाली राशि: $amount\nतारीख: $date\n\nFlowPaisa में देखें:\n$link';
+    return 'प्राप्त होने वाली राशि: $amount\nतारीख: $date\n\nFlowpaisa में देखें:\n$link';
   }
 
   @override
   String shareTransactionMessage(String amount, String date, String link) {
-    return '$date को $amount का लेन-देन रिकॉर्ड किया गया।\n\nFlowPaisa में देखें:\n$link';
+    return '$date को $amount का लेन-देन रिकॉर्ड किया गया।\n\nFlowpaisa में देखें:\n$link';
   }
 
   @override
@@ -2345,7 +2359,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get clearAllCloudDataMessage =>
-      'यह Google Drive से आपके सभी FlowPaisa बैकअप और सिंक्रनाइज़ेशन डेटा को स्थायी रूप से हटा देगा। इस क्रिया को पूर्ववत नहीं किया जा सकता है।\n\nक्या आप वाकई सभी क्लाउड डेटा साफ़ करना चाहते हैं?';
+      'यह Google Drive से आपके सभी Flowpaisa बैकअप और सिंक्रनाइज़ेशन डेटा को स्थायी रूप से हटा देगा। इस क्रिया को पूर्ववत नहीं किया जा सकता है।\n\nक्या आप वाकई सभी क्लाउड डेटा साफ़ करना चाहते हैं?';
 
   @override
   String get cloudDataClearedSuccess =>

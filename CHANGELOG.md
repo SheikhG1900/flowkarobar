@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to the FlowPaisa project will be documented in this file.
+All notable changes to the Flowpaisa project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
@@ -72,7 +72,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Fixed `DateTime` and `int` assignment errors
 - **Deprecated APIs**: Replaced `withOpacity` with `withValues` for color transparency
 - **Code Quality**: Applied flutter_lints 6.0 rules
-  - Made `_currentLocale` final in FlowPaisaApp
+  - Made `_currentLocale` final in FlowpaisaApp
   - Improved type safety across repositories
 
 ### Technical Notes

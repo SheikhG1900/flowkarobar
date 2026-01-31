@@ -78,7 +78,7 @@ Greetings!
 
 The payment of *{amount}* on *{date}* has been received and recorded.
 
-If you haven't updated this in your FlowPaisa records, please follow the link below to sync:
+If you haven't updated this in your Flowpaisa records, please follow the link below to sync:
 {link}
 
 Thank you!''',
@@ -90,7 +90,7 @@ Thank you!''',
 
 *{date}* को *{amount}* का भुगतान प्राप्त और दर्ज किया गया है।
 
-यदि आपने इसे अपने FlowPaisa रिकॉर्ड में अपडेट नहीं किया है, तो कृपया सिंक करने के लिए नीचे दिए गए लिंक का अनुसरण करें:
+यदि आपने इसे अपने Flowpaisa रिकॉर्ड में अपडेट नहीं किया है, तो कृपया सिंक करने के लिए नीचे दिए गए लिंक का अनुसरण करें:
 {link}
 
 धन्यवाद!''',
@@ -102,7 +102,7 @@ Thank you!''',
 
 *{date}* کو *{amount}* کی ادائیگی موصول اور ریکارڈ کی گئی ہے۔
 
-اگر آپ نے اسے اپنے FlowPaisa ریکارڈز میں اپڈیٹ نہیں کیا ہے، تو براہ کرم مطابقت پذیری کے لیے نیچے دیے گئے لنک پر عمل کریں:
+اگر آپ نے اسے اپنے Flowpaisa ریکارڈز میں اپڈیٹ نہیں کیا ہے، تو براہ کرم مطابقت پذیری کے لیے نیچے دیے گئے لنک پر عمل کریں:
 {link}
 
 شکریہ!''',
@@ -141,7 +141,7 @@ Greetings!
 
 The payment of *{amount}* on *{date}* has been completed and recorded.
 
-If you haven't updated this payment in FlowPaisa, please follow the link below to sync your records:
+If you haven't updated this payment in Flowpaisa, please follow the link below to sync your records:
 {link}
 
 Thank you!''',
@@ -153,7 +153,7 @@ Thank you!''',
 
 *{date}* को *{amount}* का भुगतान पूरा और दर्ज किया गया है।
 
-यदि आपने FlowPaisa में इस भुगतान को अपडेट नहीं किया है, तो कृपया अपने रिकॉर्ड को सिंक करने के लिए नीचे दिए गए लिंक का अनुसरण करें:
+यदि आपने Flowpaisa में इस भुगतान को अपडेट नहीं किया है, तो कृपया अपने रिकॉर्ड को सिंक करने के लिए नीचे दिए गए लिंक का अनुसरण करें:
 {link}
 
 धन्यवाद!''',
@@ -165,7 +165,7 @@ Thank you!''',
 
 *{date}* کو *{amount}* کی ادائیگی مکمل اور ریکارڈ کی گئی ہے۔
 
-اگر آپ نے FlowPaisa میں اس ادائیگی کو اپڈیٹ نہیں کیا ہے، تو براہ کرم اپنے ریکارڈز کو مطابقت پذیری کے لیے نیچے دیے گئے لنک پر عمل کریں:
+اگر آپ نے Flowpaisa میں اس ادائیگی کو اپڈیٹ نہیں کیا ہے، تو براہ کرم اپنے ریکارڈز کو مطابقت پذیری کے لیے نیچے دیے گئے لنک پر عمل کریں:
 {link}
 
 شکریہ!''',
@@ -179,7 +179,7 @@ I have recorded {type} of *{amount}* on *{date}*{description}.
 
 {contactName}
 
-Generated with FlowPaisa 💰''',
+Generated with Flowpaisa 💰''',
 
     // Transaction Receipt - Hindi
     'transaction_receipt_hi': '''_लेन-देन रसीद_
@@ -190,7 +190,7 @@ Generated with FlowPaisa 💰''',
 
 {contactName}
 
-FlowPaisa 💰 के साथ जेनरेट किया गया''',
+Flowpaisa 💰 के साथ जेनरेट किया गया''',
 
     // Transaction Receipt - Urdu
     'transaction_receipt_ur': '''_لین دین رسید_
@@ -201,7 +201,7 @@ FlowPaisa 💰 के साथ जेनरेट किया गया''',
 
 {contactName}
 
-FlowPaisa 💰 کے ساتھ تیار کیا گیا''',
+Flowpaisa 💰 کے ساتھ تیار کیا گیا''',
 
     // Transaction Share - PAID_FOR - English
     'transaction_share_paid_for_en': '''💰 {type} Recorded
@@ -210,10 +210,10 @@ I have recorded that I paid on your behalf *{amount}* on *{date}*{description}.
 
 {categoryName}
 
-View this transaction in FlowPaisa:
+View this transaction in Flowpaisa:
 {link}
 
-Manage your finances better with FlowPaisa! 💰''',
+Manage your finances better with Flowpaisa! 💰''',
 
     // Transaction Share - PAID_FOR - Hindi
     'transaction_share_paid_for_hi': '''💰 {type} दर्ज किया गया
@@ -222,10 +222,10 @@ Manage your finances better with FlowPaisa! 💰''',
 
 {categoryName}
 
-FlowPaisa में इस लेन-देन को देखें:
+Flowpaisa में इस लेन-देन को देखें:
 {link}
 
-FlowPaisa के साथ अपने वित्त को बेहतर तरीके से प्रबंधित करें! 💰''',
+Flowpaisa के साथ अपने वित्त को बेहतर तरीके से प्रबंधित करें! 💰''',
 
     // Transaction Share - PAID_FOR - Urdu
     'transaction_share_paid_for_ur': '''💰 {type} ریکارڈ کیا گیا
@@ -234,10 +234,10 @@ FlowPaisa के साथ अपने वित्त को बेहतर �
 
 {categoryName}
 
-FlowPaisa میں اس لین دین کو دیکھیں:
+Flowpaisa میں اس لین دین کو دیکھیں:
 {link}
 
-FlowPaisa کے ساتھ اپنے مالیات کو بہتر طریقے سے منظم کریں! 💰''',
+Flowpaisa کے ساتھ اپنے مالیات کو بہتر طریقے سے منظم کریں! 💰''',
 
     // Transaction Share - PAID_BY - English
     'transaction_share_paid_by_en': '''💰 {type} Recorded
@@ -246,10 +246,10 @@ I have recorded that you paid for me *{amount}* on *{date}*{description}.
 
 {categoryName}
 
-View this transaction in FlowPaisa:
+View this transaction in Flowpaisa:
 {link}
 
-Manage your finances better with FlowPaisa! 💰''',
+Manage your finances better with Flowpaisa! 💰''',
 
     // Transaction Share - PAID_BY - Hindi
     'transaction_share_paid_by_hi': '''💰 {type} दर्ज किया गया
@@ -258,10 +258,10 @@ Manage your finances better with FlowPaisa! 💰''',
 
 {categoryName}
 
-FlowPaisa में इस लेन-देन को देखें:
+Flowpaisa में इस लेन-देन को देखें:
 {link}
 
-FlowPaisa के साथ अपने वित्त को बेहतर तरीके से प्रबंधित करें! 💰''',
+Flowpaisa के साथ अपने वित्त को बेहतर तरीके से प्रबंधित करें! 💰''',
 
     // Transaction Share - PAID_BY - Urdu
     'transaction_share_paid_by_ur': '''💰 {type} ریکارڈ کیا گیا
@@ -270,10 +270,10 @@ FlowPaisa के साथ अपने वित्त को बेहतर �
 
 {categoryName}
 
-FlowPaisa میں اس لین دین کو دیکھیں:
+Flowpaisa میں اس لین دین کو دیکھیں:
 {link}
 
-FlowPaisa کے ساتھ اپنے مالیات کو بہتر طریقے سے منظم کریں! 💰''',
+Flowpaisa کے ساتھ اپنے مالیات کو بہتر طریقے سے منظم کریں! 💰''',
 
     // Transaction Share - WILL_RECEIVE - English
     'transaction_share_will_receive_en': '''💰 {type} Recorded
@@ -282,10 +282,10 @@ I have recorded that I am expecting a payment of *{amount}* on *{date}*{descript
 
 {categoryName}
 
-View this transaction in FlowPaisa:
+View this transaction in Flowpaisa:
 {link}
 
-Manage your finances better with FlowPaisa! 💰''',
+Manage your finances better with Flowpaisa! 💰''',
 
     // Transaction Share - WILL_RECEIVE - Hindi
     'transaction_share_will_receive_hi': '''💰 {type} दर्ज किया गया
@@ -294,10 +294,10 @@ Manage your finances better with FlowPaisa! 💰''',
 
 {categoryName}
 
-FlowPaisa में इस लेन-देन को देखें:
+Flowpaisa में इस लेन-देन को देखें:
 {link}
 
-FlowPaisa के साथ अपने वित्त को बेहतर तरीके से प्रबंधित करें! 💰''',
+Flowpaisa के साथ अपने वित्त को बेहतर तरीके से प्रबंधित करें! 💰''',
 
     // Transaction Share - WILL_RECEIVE - Urdu
     'transaction_share_will_receive_ur': '''💰 {type} ریکارڈ کیا گیا
@@ -306,10 +306,10 @@ FlowPaisa के साथ अपने वित्त को बेहतर �
 
 {categoryName}
 
-FlowPaisa میں اس لین دین کو دیکھیں:
+Flowpaisa میں اس لین دین کو دیکھیں:
 {link}
 
-FlowPaisa کے ساتھ اپنے مالیات کو بہتر طریقے سے منظم کریں! 💰''',
+Flowpaisa کے ساتھ اپنے مالیات کو بہتر طریقے سے منظم کریں! 💰''',
 
     // Transaction Share - RECEIVED_FROM - English
     'transaction_share_received_from_en': '''💰 {type} Recorded
@@ -318,10 +318,10 @@ I have recorded that I received *{amount}* from you on *{date}*{description}.
 
 {categoryName}
 
-View this transaction in FlowPaisa:
+View this transaction in Flowpaisa:
 {link}
 
-Manage your finances better with FlowPaisa! 💰''',
+Manage your finances better with Flowpaisa! 💰''',
 
     // Transaction Share - RECEIVED_FROM - Hindi
     'transaction_share_received_from_hi': '''💰 {type} दर्ज किया गया
@@ -330,10 +330,10 @@ Manage your finances better with FlowPaisa! 💰''',
 
 {categoryName}
 
-FlowPaisa में इस लेन-देन को देखें:
+Flowpaisa में इस लेन-देन को देखें:
 {link}
 
-FlowPaisa के साथ अपने वित्त को बेहतर तरीके से प्रबंधित करें! 💰''',
+Flowpaisa के साथ अपने वित्त को बेहतर तरीके से प्रबंधित करें! 💰''',
 
     // Transaction Share - RECEIVED_FROM - Urdu
     'transaction_share_received_from_ur': '''💰 {type} ریکارڈ کیا گیا
@@ -342,10 +342,10 @@ FlowPaisa के साथ अपने वित्त को बेहतर �
 
 {categoryName}
 
-FlowPaisa میں اس لین دین کو دیکھیں:
+Flowpaisa میں اس لین دین کو دیکھیں:
 {link}
 
-FlowPaisa کے ساتھ اپنے مالیات کو بہتر طریقے سے منظم کریں! 💰''',
+Flowpaisa کے ساتھ اپنے مالیات کو بہتر طریقے سے منظم کریں! 💰''',
 
     // Transaction Share - Generic - English
     'transaction_share_generic_en': '''💰 {type} Recorded
@@ -354,10 +354,10 @@ I have recorded a transaction of *{amount}* on *{date}*{description}.
 
 {categoryName}
 
-View this transaction in FlowPaisa:
+View this transaction in Flowpaisa:
 {link}
 
-Manage your finances better with FlowPaisa! 💰''',
+Manage your finances better with Flowpaisa! 💰''',
 
     // Transaction Share - Generic - Hindi
     'transaction_share_generic_hi': '''💰 {type} दर्ज किया गया
@@ -366,10 +366,10 @@ Manage your finances better with FlowPaisa! 💰''',
 
 {categoryName}
 
-FlowPaisa में इस लेन-देन को देखें:
+Flowpaisa में इस लेन-देन को देखें:
 {link}
 
-FlowPaisa के साथ अपने वित्त को बेहतर तरीके से प्रबंधित करें! 💰''',
+Flowpaisa के साथ अपने वित्त को बेहतर तरीके से प्रबंधित करें! 💰''',
 
     // Transaction Share - Generic - Urdu
     'transaction_share_generic_ur': '''💰 {type} ریکارڈ کیا گیا
@@ -378,10 +378,10 @@ FlowPaisa के साथ अपने वित्त को बेहतर �
 
 {categoryName}
 
-FlowPaisa میں اس لین دین کو دیکھیں:
+Flowpaisa میں اس لین دین کو دیکھیں:
 {link}
 
-FlowPaisa کے ساتھ اپنے مالیات کو بہتر طریقے سے منظم کریں! 💰''',
+Flowpaisa کے ساتھ اپنے مالیات کو بہتر طریقے سے منظم کریں! 💰''',
 
     // Receivable Share - Pending - English
     'receivable_share_pending_en': '''📝 Payment Request
@@ -390,10 +390,10 @@ Hi, I have sent a request for *{amount}*{description}.
 
 {dueDate}
 
-You can view the details and record this in FlowPaisa:
+You can view the details and record this in Flowpaisa:
 {link}
 
-Track your finances with FlowPaisa! 💰''',
+Track your finances with Flowpaisa! 💰''',
 
     // Receivable Share - Pending - Hindi
     'receivable_share_pending_hi': '''📝 भुगतान अनुरोध
@@ -402,10 +402,10 @@ Track your finances with FlowPaisa! 💰''',
 
 {dueDate}
 
-आप FlowPaisa में विवरण देख सकते हैं और इसे रिकॉर्ड कर सकते हैं:
+आप Flowpaisa में विवरण देख सकते हैं और इसे रिकॉर्ड कर सकते हैं:
 {link}
 
-FlowPaisa के साथ अपने वित्त को ट्रैक करें! 💰''',
+Flowpaisa के साथ अपने वित्त को ट्रैक करें! 💰''',
 
     // Receivable Share - Pending - Urdu
     'receivable_share_pending_ur': '''📝 ادائیگی کی درخواست
@@ -414,10 +414,10 @@ FlowPaisa के साथ अपने वित्त को ट्रैक �
 
 {dueDate}
 
-آپ FlowPaisa میں تفصیلات دیکھ سکتے ہیں اور اسے ریکارڈ کر سکتے ہیں:
+آپ Flowpaisa میں تفصیلات دیکھ سکتے ہیں اور اسے ریکارڈ کر سکتے ہیں:
 {link}
 
-FlowPaisa کے ساتھ اپنے مالیات کو ٹریک کریں! 💰''',
+Flowpaisa کے ساتھ اپنے مالیات کو ٹریک کریں! 💰''',
 
     // Receivable Share - Received - English
     'receivable_share_received_en': '''Hi {contactName},
@@ -426,7 +426,7 @@ Greetings!
 
 The payment of *{amount}* on *{date}* has been received and recorded.
 
-If you haven't updated this in your FlowPaisa records, please follow the link below to sync:
+If you haven't updated this in your Flowpaisa records, please follow the link below to sync:
 {link}
 
 Thank you!''',
@@ -438,7 +438,7 @@ Thank you!''',
 
 *{date}* को *{amount}* का भुगतान प्राप्त और दर्ज किया गया है।
 
-यदि आपने इसे अपने FlowPaisa रिकॉर्ड में अपडेट नहीं किया है, तो कृपया सिंक करने के लिए नीचे दिए गए लिंक का अनुसरण करें:
+यदि आपने इसे अपने Flowpaisa रिकॉर्ड में अपडेट नहीं किया है, तो कृपया सिंक करने के लिए नीचे दिए गए लिंक का अनुसरण करें:
 {link}
 
 धन्यवाद!''',
@@ -450,7 +450,7 @@ Thank you!''',
 
 *{date}* کو *{amount}* کی ادائیگی موصول اور ریکارڈ کی گئی ہے۔
 
-اگر آپ نے اسے اپنے FlowPaisa ریکارڈز میں اپڈیٹ نہیں کیا ہے، تو براہ کرم مطابقت پذیری کے لیے نیچے دیے گئے لنک پر عمل کریں:
+اگر آپ نے اسے اپنے Flowpaisa ریکارڈز میں اپڈیٹ نہیں کیا ہے، تو براہ کرم مطابقت پذیری کے لیے نیچے دیے گئے لنک پر عمل کریں:
 {link}
 
 شکریہ!''',
@@ -462,7 +462,7 @@ This is a friendly reminder that I have recorded that I owe you *{amount}* from 
 
 {dueDate}
 
-You can view and import this in FlowPaisa:
+You can view and import this in Flowpaisa:
 {link}
 
 Thank you!''',
@@ -474,7 +474,7 @@ Thank you!''',
 
 {dueDate}
 
-आप FlowPaisa में इसे देख और आयात कर सकते हैं:
+आप Flowpaisa में इसे देख और आयात कर सकते हैं:
 {link}
 
 धन्यवाद!''',
@@ -486,7 +486,7 @@ Thank you!''',
 
 {dueDate}
 
-آپ FlowPaisa میں اسے دیکھ اور درآمد کر سکتے ہیں:
+آپ Flowpaisa میں اسے دیکھ اور درآمد کر سکتے ہیں:
 {link}
 
 شکریہ!''',
@@ -498,11 +498,11 @@ I wanted to let you know that I owe you *{amount}*{description}.
 
 {dueDate}
 
-View details in FlowPaisa:
+View details in Flowpaisa:
 {link}
 
 I will settle this soon. Thanks for your patience!
-Manage your finances with FlowPaisa! 💰''',
+Manage your finances with Flowpaisa! 💰''',
 
     // Payable Share - Paid - Hindi
     'payable_share_paid_hi': '''📋 भुगतान स्वीकृति
@@ -511,11 +511,11 @@ Manage your finances with FlowPaisa! 💰''',
 
 {dueDate}
 
-FlowPaisa में विवरण देखें:
+Flowpaisa में विवरण देखें:
 {link}
 
 मैं इसे जल्द ही निपटा दूंगा। आपके धैर्य के लिए धन्यवाद!
-FlowPaisa के साथ अपने वित्त को प्रबंधित करें! 💰''',
+Flowpaisa के साथ अपने वित्त को प्रबंधित करें! 💰''',
 
     // Payable Share - Paid - Urdu
     'payable_share_paid_ur': '''📋 ادائیگی کی تصدیق
@@ -524,10 +524,10 @@ FlowPaisa के साथ अपने वित्त को प्रबं�
 
 {dueDate}
 
-FlowPaisa میں تفصیلات دیکھیں:
+Flowpaisa میں تفصیلات دیکھیں:
 {link}
 
 میں اسے جلد حل کر دوں گا۔ آپ کے صبر کا شکریہ!
-FlowPaisa کے ساتھ اپنے مالیات کو منظم کریں! 💰''',
+Flowpaisa کے ساتھ اپنے مالیات کو منظم کریں! 💰''',
   };
 }

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 
-/// FlowPaisa Theme System
+/// Flowpaisa Theme System
 /// Modern Material Design 3 with Wortek-inspired gradients
 class AppTheme {
   // Get text theme based on locale and selected font

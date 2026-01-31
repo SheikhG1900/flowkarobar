@@ -1,5 +1,5 @@
 name: flowpaisa
-description: FlowPaisa - Complete personal finance & cash flow manager. Track expenses, incomes, receivables, payables with linked transactions, receipt scanning, and WhatsApp integration.
+description: Flowpaisa - Complete personal finance & cash flow manager. Track expenses, incomes, receivables, payables with linked transactions, receipt scanning, and WhatsApp integration.
 publish_to: 'none'
 
 version: 1.0.0+1
@@ -95,6 +95,13 @@ dev_dependencies:
   drift_dev: ^2.13.0
   riverpod_lint: ^3.1.0
   flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.13.1
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/images/logo_square.png"
+  min_sdk_android: 21
 
 dependency_overrides:
   win32: ^5.15.0  # Fix compatibility with Dart 3.10.4

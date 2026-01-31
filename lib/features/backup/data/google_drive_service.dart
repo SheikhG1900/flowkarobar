@@ -151,7 +151,7 @@ class GoogleDriveService {
   /// Get or Create cashbook folder in appDataFolder for Sync
   Future<String> getOrCreateCashbookFolder(String cashbookId,
       {String? cashbookName, String? color, String? icon}) async {
-    final rootFolderId = await _getOrCreateFolder('FlowPaisa Backups');
+    final rootFolderId = await _getOrCreateFolder('Flowpaisa Backups');
 
     // We search for the sync folder specifically
     final syncFolderId =
@@ -191,7 +191,7 @@ class GoogleDriveService {
   /// Get or Create a separate backup folder for full DB snapshots
   Future<String> getOrCreateBackupFolder(String cashbookId,
       {String? cashbookName, String? color, String? icon}) async {
-    final rootFolderId = await _getOrCreateFolder('FlowPaisa Backups');
+    final rootFolderId = await _getOrCreateFolder('Flowpaisa Backups');
 
     // We search for the backups folder specifically
     final backupRootId =
@@ -466,7 +466,7 @@ class GoogleDriveService {
   Future<List<String>> listCashbookIds() async {
     if (_driveApi == null) throw Exception('Drive API not initialized');
 
-    final rootFolderId = await _getOrCreateFolder('FlowPaisa Backups');
+    final rootFolderId = await _getOrCreateFolder('Flowpaisa Backups');
     final syncFolderId =
         await _getOrCreateFolder('Sync Data', parentId: rootFolderId);
     final backupFolderId =

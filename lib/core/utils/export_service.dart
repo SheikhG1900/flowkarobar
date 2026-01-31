@@ -552,7 +552,7 @@ class ExportService {
                     child: _buildText(
                       l10n?.appTitle != null
                           ? '${l10n!.appTitle} ${l10n.exportSummary}'
-                          : 'FlowPaisa Export Report',
+                          : 'Flowpaisa Export Report',
                       style: pw.TextStyle(
                         fontSize: 24,
                         fontWeight: pw.FontWeight.bold,
@@ -1728,7 +1728,7 @@ class ExportService {
                         ? pw.Alignment.centerRight
                         : pw.Alignment.centerLeft,
                     child: _buildText(
-                      l10n?.exportAnalyticsPDF ?? 'FlowPaisa Analytics Report',
+                      l10n?.exportAnalyticsPDF ?? 'Flowpaisa Analytics Report',
                       style: pw.TextStyle(
                         fontSize: 24,
                         fontWeight: pw.FontWeight.bold,

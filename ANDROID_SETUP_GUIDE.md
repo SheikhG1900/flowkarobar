@@ -1,4 +1,4 @@
-# Android Setup Guide for FlowPaisa
+# Android Setup Guide for Flowpaisa
 
 ## Quick Setup Steps
 
@@ -122,6 +122,6 @@ flutter run -d <device-id>
 1. Install Android Studio (Option 1 above)
 2. Run `flutter doctor --android-licenses`
 3. Create an Android emulator
-4. Run `flutter run` to test FlowPaisa!
+4. Run `flutter run` to test Flowpaisa!
 
 

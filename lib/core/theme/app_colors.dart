@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// FlowPaisa Color System
+/// Flowpaisa Color System
 /// Inspired by Wortek Agency branding - Vibrant gradients for modern finance
 class AppColors {
   // Primary Brand Gradients (GermGuard-inspired - Professional Cyan/Blue)

@@ -1,4 +1,4 @@
-# Android SDK Command Line Tools Installer for FlowPaisa
+# Android SDK Command Line Tools Installer for Flowpaisa
 # This script downloads and installs Android SDK command line tools
 
 $sdkPath = "E:\Users\Abdul.Wahid\AppData\Local\Android\Sdk"

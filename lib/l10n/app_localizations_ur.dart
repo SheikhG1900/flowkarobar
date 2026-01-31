@@ -1175,7 +1175,7 @@ class AppLocalizationsUr extends AppLocalizations {
 
   @override
   String get appDescription =>
-      'FlowPaisa ایک جامع ذاتی مالیات اور کیش فلو مینیجر ہے۔ اپنے اخراجات، آمدنی، وصولی اور واجب الادا رقوم کو ایک ہی جگہ پر ٹریک کریں۔ خصوصیات میں رسید اسکیننگ، واٹس ایپ انٹیگریشن، کلاؤڈ بیک اپ، اور خوبصورت تجزیات شامل ہیں۔';
+      'Flowpaisa ایک جامع ذاتی مالیات اور کیش فلو مینیجر ہے۔ اپنے اخراجات، آمدنی، وصولی اور واجب الادا رقوم کو ایک ہی جگہ پر ٹریک کریں۔ خصوصیات میں رسید اسکیننگ، واٹس ایپ انٹیگریشن، کلاؤڈ بیک اپ، اور خوبصورت تجزیات شامل ہیں۔';
 
   @override
   String get openSourceLicenses => 'اوپن سورس لائسنس';
@@ -1197,6 +1197,20 @@ class AppLocalizationsUr extends AppLocalizations {
 
   @override
   String get multilingual => 'کثیر لسانی';
+
+  @override
+  String get privacyHighlight => 'نجی اور محفوظ';
+
+  @override
+  String get privacyHighlightDesc =>
+      'آپ کا مالیاتی ڈیٹا آپ کے آلے یا آپ کے نجی کلاؤڈ میں رہتا ہے۔ کوئی اور اس تک رسائی حاصل نہیں کر سکتا۔';
+
+  @override
+  String get privacyPolicy => 'رازداری کی پالیسی';
+
+  @override
+  String get privacyPolicyDesc =>
+      'ہم آپ کی رازداری کی قدر کرتے ہیں۔ آپ کا ڈیٹا مقامی طور پر آپ کے آلے پر محفوظ کیا جاتا ہے اور اسے اختیاری طور پر آپ کے نجی گوگل ڈرائیو کے ساتھ سنک کیا جا سکتا ہے۔ ہمیں آپ کے مالی ریکارڈ تک رسائی حاصل نہیں ہے۔';
 
   @override
   String get availableCash => 'دستیاب رقم';
@@ -1616,27 +1630,27 @@ class AppLocalizationsUr extends AppLocalizations {
 
   @override
   String sharePayableCompleted(String amount, String date, String link) {
-    return 'اسلام علیکم!\n\n$date کو $amount کی ادائیگی مکمل ہو گئی ہے۔\n\nFlowPaisa میں سنک کریں:\n$link';
+    return 'اسلام علیکم!\n\n$date کو $amount کی ادائیگی مکمل ہو گئی ہے۔\n\nFlowpaisa میں سنک کریں:\n$link';
   }
 
   @override
   String sharePayablePending(String amount, String date, String link) {
-    return 'میں نے آپ کے $amount دینے ہیں\nتاریخ: $date\n\nFlowPaisa میں دیکھیں:\n$link';
+    return 'میں نے آپ کے $amount دینے ہیں\nتاریخ: $date\n\nFlowpaisa میں دیکھیں:\n$link';
   }
 
   @override
   String shareReceivableReceived(String amount, String date, String link) {
-    return 'اسلام علیکم!\n\n$date کو $amount کی ادائیگی موصول ہو گئی ہے۔\n\nFlowPaisa میں سنک کریں:\n$link';
+    return 'اسلام علیکم!\n\n$date کو $amount کی ادائیگی موصول ہو گئی ہے۔\n\nFlowpaisa میں سنک کریں:\n$link';
   }
 
   @override
   String shareReceivablePending(String amount, String date, String link) {
-    return 'وصول کرنے والی رقم: $amount\nتاریخ: $date\n\nFlowPaisa میں دیکھیں:\n$link';
+    return 'وصول کرنے والی رقم: $amount\nتاریخ: $date\n\nFlowpaisa میں دیکھیں:\n$link';
   }
 
   @override
   String shareTransactionMessage(String amount, String date, String link) {
-    return '$date کو $amount کا لین دین ریکارڈ کیا گیا۔\n\nFlowPaisa میں دیکھیں:\n$link';
+    return '$date کو $amount کا لین دین ریکارڈ کیا گیا۔\n\nFlowpaisa میں دیکھیں:\n$link';
   }
 
   @override

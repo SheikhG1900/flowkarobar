@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/constants/app_constants.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
@@ -25,55 +26,24 @@ class AboutScreen extends StatelessWidget {
           children: [
             const SizedBox(height: 20),
 
-            // App Icon
-            Container(
-              width: 100,
-              height: 100,
-              decoration: BoxDecoration(
-                gradient: AppColors.getPrimaryGradient(theme.colorScheme.primary),
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(24),
-                  bottomRight: Radius.circular(24),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: theme.colorScheme.primary.withValues(alpha: 0.3),
-                    blurRadius: 20,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
-              ),
-              child: const Icon(
-                Icons.water_drop,
-                color: Colors.white,
-                size: 50,
+            // Horizontal Logo
+            SvgPicture.asset(
+              'assets/images/logo_horizontal.svg',
+              height: 60,
+              fit: BoxFit.contain,
+              colorFilter: ColorFilter.mode(
+                theme.colorScheme.primary,
+                BlendMode.srcIn,
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 32),
 
-            // App Name
-            Text(
-              AppConstants.appName,
-              style: theme.textTheme.headlineMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
-
-            // Tagline
-            Text(
-              l10n.tagline,
-              style: theme.textTheme.titleMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 8),
-
-            // Version
+            // Version Info (Compact)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                color: theme.colorScheme.surfaceContainerHighest
+                    .withValues(alpha: 0.5),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
@@ -128,13 +98,23 @@ class AboutScreen extends StatelessWidget {
                     width: 80,
                     height: 80,
                     decoration: BoxDecoration(
-                      gradient: AppColors.getPrimaryGradient(theme.colorScheme.primary),
+                      gradient: AppColors.getPrimaryGradient(
+                          theme.colorScheme.primary),
                       borderRadius: const BorderRadius.only(
                         topLeft: Radius.circular(20),
                         bottomRight: Radius.circular(20),
                       ),
                     ),
-                    child: const Icon(Icons.water_drop, color: Colors.white, size: 40),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: SvgPicture.asset(
+                        'assets/images/logo_square.svg',
+                        colorFilter: const ColorFilter.mode(
+                          Colors.white,
+                          BlendMode.srcIn,
+                        ),
+                      ),
+                    ),
                   ),
                 );
               },
@@ -147,6 +127,15 @@ class AboutScreen extends StatelessWidget {
               icon: Icons.code,
               title: l10n.developedBy,
               subtitle: l10n.developerName,
+            ),
+            const SizedBox(height: 12),
+
+            // Privacy Policy
+            _buildInfoCard(
+              context,
+              icon: Icons.security,
+              title: l10n.privacyPolicy,
+              subtitle: l10n.privacyPolicyDesc,
             ),
             const SizedBox(height: 12),
 
@@ -198,7 +187,8 @@ class AboutScreen extends StatelessWidget {
               width: 48,
               height: 48,
               decoration: BoxDecoration(
-                gradient: AppColors.getPrimaryGradient(theme.colorScheme.primary),
+                gradient:
+                    AppColors.getPrimaryGradient(theme.colorScheme.primary),
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -257,7 +247,8 @@ class AboutScreen extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    gradient: AppColors.getSecondaryGradient(theme.colorScheme.primary),
+                    gradient: AppColors.getSecondaryGradient(
+                        theme.colorScheme.primary),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(icon, color: Colors.white, size: 20),
@@ -312,7 +303,8 @@ class AboutScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+              color: theme.colorScheme.surfaceContainerHighest
+                  .withValues(alpha: 0.5),
               shape: BoxShape.circle,
             ),
             child: Icon(

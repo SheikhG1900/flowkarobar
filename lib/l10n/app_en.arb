@@ -519,7 +519,7 @@
   },
   "toggledDebugMode": "Toggled Debug Mode",
   "debugToggleMode": "DEBUG: Toggle Mode",
-  "premiumTitle": "FlowPaisa Premium",
+  "premiumTitle": "Flowpaisa Premium",
   "unlockAllFeatures": "Unlock all features",
   "premiumMemberStatus": "You are a Premium Member",
   "premiumFeaturesActive": "All premium features are active",
@@ -666,7 +666,7 @@
       }
     }
   },
-  "appDescription": "FlowPaisa is a comprehensive personal finance and cash flow manager. Track your expenses, incomes, receivables, and payables all in one place. Features include receipt scanning, WhatsApp integration, cloud backup, and beautiful analytics.",
+  "appDescription": "Flowpaisa is a comprehensive personal finance and cash flow manager. Track your expenses, incomes, receivables, and payables all in one place. Features include receipt scanning, WhatsApp integration, cloud backup, and beautiful analytics.",
   "openSourceLicenses": "Open Source Licenses",
   "developedBy": "Developed by",
   "developerName": "TamataSoft",
@@ -674,6 +674,10 @@
   "receiptScan": "Receipt Scan",
   "cloudBackup": "Cloud Backup",
   "multilingual": "Multilingual",
+  "privacyHighlight": "Private & Secure",
+  "privacyHighlightDesc": "Your financial data stays on your device or in your private cloud. No one else can access it.",
+  "privacyPolicy": "Privacy Policy",
+  "privacyPolicyDesc": "We value your privacy. Your data is stored locally on your device and can be optionally synced with your private Google Drive. We do not have access to your financial records.",
   "availableCash": "Available Cash",
   "quickActions": "Quick Actions",
   "add": "Add",
@@ -863,7 +867,7 @@
   "proLabel": "PRO",
   "deleteItem": "Delete Item",
   "confirmDeleteItem": "Are you sure you want to delete this item?",
-  "sharePayableCompleted": "Greetings!\n\nThe payment of {amount} on {date} has been completed.\n\nSync in FlowPaisa:\n{link}",
+  "sharePayableCompleted": "Greetings!\n\nThe payment of {amount} on {date} has been completed.\n\nSync in Flowpaisa:\n{link}",
   "@sharePayableCompleted": {
     "placeholders": {
       "amount": {
@@ -877,7 +881,7 @@
       }
     }
   },
-  "sharePayablePending": "I owe you {amount}\nDate: {date}\n\nView in FlowPaisa:\n{link}",
+  "sharePayablePending": "I owe you {amount}\nDate: {date}\n\nView in Flowpaisa:\n{link}",
   "@sharePayablePending": {
     "placeholders": {
       "amount": {
@@ -891,7 +895,7 @@
       }
     }
   },
-  "shareReceivableReceived": "Greetings!\n\nThe payment of {amount} on {date} has been received.\n\nSync in FlowPaisa:\n{link}",
+  "shareReceivableReceived": "Greetings!\n\nThe payment of {amount} on {date} has been received.\n\nSync in Flowpaisa:\n{link}",
   "@shareReceivableReceived": {
     "placeholders": {
       "amount": {
@@ -905,7 +909,7 @@
       }
     }
   },
-  "shareReceivablePending": "Amount to receive: {amount}\nDate: {date}\n\nView in FlowPaisa:\n{link}",
+  "shareReceivablePending": "Amount to receive: {amount}\nDate: {date}\n\nView in Flowpaisa:\n{link}",
   "@shareReceivablePending": {
     "placeholders": {
       "amount": {
@@ -919,7 +923,7 @@
       }
     }
   },
-  "shareTransactionMessage": "Recorded a transaction of {amount} on {date}.\n\nView in FlowPaisa:\n{link}",
+  "shareTransactionMessage": "Recorded a transaction of {amount} on {date}.\n\nView in Flowpaisa:\n{link}",
   "@shareTransactionMessage": {
     "placeholders": {
       "amount": {
@@ -1325,7 +1329,7 @@
   "resetLocalSyncMessage": "This will mark all your local records as \"unsynced\" and reset your local version to 0. Tapping \"Sync Now\" after this will re-upload all your data to the cloud.\n\nUse this if you want to force a full re-sync of your local data.",
   "localSyncResetSuccess": "Local sync state reset successfully",
   "clearAllCloudData": "Clear All Cloud Data",
-  "clearAllCloudDataMessage": "This will permanently delete ALL your FlowPaisa backups and synchronization data from Google Drive. This action cannot be undone.\n\nAre you sure you want to clear all cloud data?",
+  "clearAllCloudDataMessage": "This will permanently delete ALL your Flowpaisa backups and synchronization data from Google Drive. This action cannot be undone.\n\nAre you sure you want to clear all cloud data?",
   "cloudDataClearedSuccess": "All cloud data cleared successfully",
   "clearNow": "Clear Now",
   "upcomingSyncDeltas": "Upcoming Sync Deltas",

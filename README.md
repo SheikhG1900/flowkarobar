@@ -1,4 +1,4 @@
-# FlowPaisa - Personal Finance & Cash Flow Manager
+# Flowpaisa - Personal Finance & Cash Flow Manager
 
 **Track every paisa** - A comprehensive Flutter mobile application for managing expenses, incomes, receivables, and payables.
 
@@ -318,7 +318,7 @@ For questions or issues, please contact the project maintainer.
 
 ---
 
-**FlowPaisa** - Track every paisa 💰
+**Flowpaisa** - Track every paisa 💰
 
 1. **Enhanced Transaction Features**
    - Amount-first progressive disclosure UI
@@ -524,4 +524,4 @@ For questions or issues, please contact the project maintainer.
 
 ---
 
-**FlowPaisa** - Track every paisa 💰
+**Flowpaisa** - Track every paisa 💰

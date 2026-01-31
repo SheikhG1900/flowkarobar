@@ -1597,7 +1597,7 @@ abstract class AppLocalizations {
   /// No description provided for @premiumTitle.
   ///
   /// In en, this message translates to:
-  /// **'FlowPaisa Premium'**
+  /// **'Flowpaisa Premium'**
   String get premiumTitle;
 
   /// No description provided for @unlockAllFeatures.
@@ -2233,7 +2233,7 @@ abstract class AppLocalizations {
   /// No description provided for @appDescription.
   ///
   /// In en, this message translates to:
-  /// **'FlowPaisa is a comprehensive personal finance and cash flow manager. Track your expenses, incomes, receivables, and payables all in one place. Features include receipt scanning, WhatsApp integration, cloud backup, and beautiful analytics.'**
+  /// **'Flowpaisa is a comprehensive personal finance and cash flow manager. Track your expenses, incomes, receivables, and payables all in one place. Features include receipt scanning, WhatsApp integration, cloud backup, and beautiful analytics.'**
   String get appDescription;
 
   /// No description provided for @openSourceLicenses.
@@ -2277,6 +2277,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Multilingual'**
   String get multilingual;
+
+  /// No description provided for @privacyHighlight.
+  ///
+  /// In en, this message translates to:
+  /// **'Private & Secure'**
+  String get privacyHighlight;
+
+  /// No description provided for @privacyHighlightDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Your financial data stays on your device or in your private cloud. No one else can access it.'**
+  String get privacyHighlightDesc;
+
+  /// No description provided for @privacyPolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Policy'**
+  String get privacyPolicy;
+
+  /// No description provided for @privacyPolicyDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'We value your privacy. Your data is stored locally on your device and can be optionally synced with your private Google Drive. We do not have access to your financial records.'**
+  String get privacyPolicyDesc;
 
   /// No description provided for @availableCash.
   ///
@@ -3031,31 +3055,31 @@ abstract class AppLocalizations {
   /// No description provided for @sharePayableCompleted.
   ///
   /// In en, this message translates to:
-  /// **'Greetings!\n\nThe payment of {amount} on {date} has been completed.\n\nSync in FlowPaisa:\n{link}'**
+  /// **'Greetings!\n\nThe payment of {amount} on {date} has been completed.\n\nSync in Flowpaisa:\n{link}'**
   String sharePayableCompleted(String amount, String date, String link);
 
   /// No description provided for @sharePayablePending.
   ///
   /// In en, this message translates to:
-  /// **'I owe you {amount}\nDate: {date}\n\nView in FlowPaisa:\n{link}'**
+  /// **'I owe you {amount}\nDate: {date}\n\nView in Flowpaisa:\n{link}'**
   String sharePayablePending(String amount, String date, String link);
 
   /// No description provided for @shareReceivableReceived.
   ///
   /// In en, this message translates to:
-  /// **'Greetings!\n\nThe payment of {amount} on {date} has been received.\n\nSync in FlowPaisa:\n{link}'**
+  /// **'Greetings!\n\nThe payment of {amount} on {date} has been received.\n\nSync in Flowpaisa:\n{link}'**
   String shareReceivableReceived(String amount, String date, String link);
 
   /// No description provided for @shareReceivablePending.
   ///
   /// In en, this message translates to:
-  /// **'Amount to receive: {amount}\nDate: {date}\n\nView in FlowPaisa:\n{link}'**
+  /// **'Amount to receive: {amount}\nDate: {date}\n\nView in Flowpaisa:\n{link}'**
   String shareReceivablePending(String amount, String date, String link);
 
   /// No description provided for @shareTransactionMessage.
   ///
   /// In en, this message translates to:
-  /// **'Recorded a transaction of {amount} on {date}.\n\nView in FlowPaisa:\n{link}'**
+  /// **'Recorded a transaction of {amount} on {date}.\n\nView in Flowpaisa:\n{link}'**
   String shareTransactionMessage(String amount, String date, String link);
 
   /// No description provided for @shareViaWhatsApp.
@@ -4358,7 +4382,7 @@ abstract class AppLocalizations {
   /// No description provided for @clearAllCloudDataMessage.
   ///
   /// In en, this message translates to:
-  /// **'This will permanently delete ALL your FlowPaisa backups and synchronization data from Google Drive. This action cannot be undone.\n\nAre you sure you want to clear all cloud data?'**
+  /// **'This will permanently delete ALL your Flowpaisa backups and synchronization data from Google Drive. This action cannot be undone.\n\nAre you sure you want to clear all cloud data?'**
   String get clearAllCloudDataMessage;
 
   /// No description provided for @cloudDataClearedSuccess.

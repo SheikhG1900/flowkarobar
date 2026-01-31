@@ -109,7 +109,7 @@ void main() async {
         overrides: [
           sharedPreferencesProvider.overrideWithValue(prefs),
         ],
-        child: const FlowPaisaApp(),
+        child: const FlowpaisaApp(),
       ),
     ),
   );
@@ -144,14 +144,14 @@ Future<void> _initializeFonts() async {
   ]);
 }
 
-class FlowPaisaApp extends ConsumerStatefulWidget {
-  const FlowPaisaApp({super.key});
+class FlowpaisaApp extends ConsumerStatefulWidget {
+  const FlowpaisaApp({super.key});
 
   @override
-  ConsumerState<FlowPaisaApp> createState() => _FlowPaisaAppState();
+  ConsumerState<FlowpaisaApp> createState() => _FlowpaisaAppState();
 }
 
-class _FlowPaisaAppState extends ConsumerState<FlowPaisaApp> {
+class _FlowpaisaAppState extends ConsumerState<FlowpaisaApp> {
   @override
   Widget build(BuildContext context) {
     // Watch language and theme mode from providers
@@ -979,7 +979,13 @@ class _DashboardTab extends ConsumerWidget {
               index: 3,
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 24, 16, 0),
-                child: _buildQuickActions(context, l10n, isPremium),
+                child: Column(
+                  children: [
+                    _buildPrivacyHighlight(context, ref, l10n, isDark),
+                    const SizedBox(height: 16),
+                    _buildQuickActions(context, l10n, isPremium),
+                  ],
+                ),
               ),
             ),
           ),
@@ -1192,6 +1198,69 @@ class _DashboardTab extends ConsumerWidget {
           }).toList(),
         ),
       ],
+    );
+  }
+
+  Widget _buildPrivacyHighlight(
+      BuildContext context, WidgetRef ref, AppLocalizations l10n, bool isDark) {
+    final theme = Theme.of(context);
+    final activeCashbook = ref.watch(activeCashbookProvider);
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            activeCashbook.color.withValues(alpha: 0.15),
+            activeCashbook.color.withValues(alpha: 0.05),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: activeCashbook.color.withValues(alpha: 0.3),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: activeCashbook.color.withValues(alpha: 0.2),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.security_rounded,
+              color: activeCashbook.color,
+              size: 24,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.privacyHighlight,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: activeCashbook.color,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  l10n.privacyHighlightDesc,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 

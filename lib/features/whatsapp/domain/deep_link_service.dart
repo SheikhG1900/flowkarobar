@@ -167,7 +167,7 @@ class DeepLinkService {
     }
   }
 
-  /// Validate if a URI string is a valid FlowPaisa deep link
+  /// Validate if a URI string is a valid Flowpaisa deep link
   bool isValidDeepLink(String uriString) {
     try {
       final uri = Uri.parse(uriString);

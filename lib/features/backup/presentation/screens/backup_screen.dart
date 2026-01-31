@@ -857,21 +857,37 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              const Icon(Icons.info_outline, size: 20, color: Colors.grey),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  l10n.backupDescription,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
+              Row(
+                children: [
+                  const Icon(Icons.info_outline, size: 20, color: Colors.grey),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      l10n.backupDescription,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
-            ],
-          ),
-          const SizedBox(height: 16),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  const Icon(Icons.security, size: 20, color: Colors.green),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      l10n.privacyHighlightDesc,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: Colors.green.withValues(alpha: 0.8),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
           if (state.lastBackupTime != null)
             Padding(
               padding: const EdgeInsets.only(bottom: 16),

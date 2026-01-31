@@ -824,7 +824,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get debugToggleMode => 'DEBUG: Toggle Mode';
 
   @override
-  String get premiumTitle => 'FlowPaisa Premium';
+  String get premiumTitle => 'Flowpaisa Premium';
 
   @override
   String get unlockAllFeatures => 'Unlock all features';
@@ -1166,7 +1166,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get appDescription =>
-      'FlowPaisa is a comprehensive personal finance and cash flow manager. Track your expenses, incomes, receivables, and payables all in one place. Features include receipt scanning, WhatsApp integration, cloud backup, and beautiful analytics.';
+      'Flowpaisa is a comprehensive personal finance and cash flow manager. Track your expenses, incomes, receivables, and payables all in one place. Features include receipt scanning, WhatsApp integration, cloud backup, and beautiful analytics.';
 
   @override
   String get openSourceLicenses => 'Open Source Licenses';
@@ -1188,6 +1188,20 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get multilingual => 'Multilingual';
+
+  @override
+  String get privacyHighlight => 'Private & Secure';
+
+  @override
+  String get privacyHighlightDesc =>
+      'Your financial data stays on your device or in your private cloud. No one else can access it.';
+
+  @override
+  String get privacyPolicy => 'Privacy Policy';
+
+  @override
+  String get privacyPolicyDesc =>
+      'We value your privacy. Your data is stored locally on your device and can be optionally synced with your private Google Drive. We do not have access to your financial records.';
 
   @override
   String get availableCash => 'Available Cash';
@@ -1605,27 +1619,27 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String sharePayableCompleted(String amount, String date, String link) {
-    return 'Greetings!\n\nThe payment of $amount on $date has been completed.\n\nSync in FlowPaisa:\n$link';
+    return 'Greetings!\n\nThe payment of $amount on $date has been completed.\n\nSync in Flowpaisa:\n$link';
   }
 
   @override
   String sharePayablePending(String amount, String date, String link) {
-    return 'I owe you $amount\nDate: $date\n\nView in FlowPaisa:\n$link';
+    return 'I owe you $amount\nDate: $date\n\nView in Flowpaisa:\n$link';
   }
 
   @override
   String shareReceivableReceived(String amount, String date, String link) {
-    return 'Greetings!\n\nThe payment of $amount on $date has been received.\n\nSync in FlowPaisa:\n$link';
+    return 'Greetings!\n\nThe payment of $amount on $date has been received.\n\nSync in Flowpaisa:\n$link';
   }
 
   @override
   String shareReceivablePending(String amount, String date, String link) {
-    return 'Amount to receive: $amount\nDate: $date\n\nView in FlowPaisa:\n$link';
+    return 'Amount to receive: $amount\nDate: $date\n\nView in Flowpaisa:\n$link';
   }
 
   @override
   String shareTransactionMessage(String amount, String date, String link) {
-    return 'Recorded a transaction of $amount on $date.\n\nView in FlowPaisa:\n$link';
+    return 'Recorded a transaction of $amount on $date.\n\nView in Flowpaisa:\n$link';
   }
 
   @override
@@ -2337,7 +2351,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get clearAllCloudDataMessage =>
-      'This will permanently delete ALL your FlowPaisa backups and synchronization data from Google Drive. This action cannot be undone.\n\nAre you sure you want to clear all cloud data?';
+      'This will permanently delete ALL your Flowpaisa backups and synchronization data from Google Drive. This action cannot be undone.\n\nAre you sure you want to clear all cloud data?';
 
   @override
   String get cloudDataClearedSuccess => 'All cloud data cleared successfully';
