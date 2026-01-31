@@ -1184,6 +1184,121 @@ class AppLocalizationsHi extends AppLocalizations {
   String get developerName => 'TamataSoft';
 
   @override
+  String get userGuide => 'यूज़र गाइड';
+
+  @override
+  String get guideGettingStarted => 'शुरुआत करना';
+
+  @override
+  String get guideGettingStartedDesc =>
+      'लेन-देन जोड़ना और अपनी कैशबुक प्रबंधित करना सीखें।';
+
+  @override
+  String get guideManagingMoney => 'पैसे का प्रबंधन';
+
+  @override
+  String get guideManagingMoneyDesc =>
+      'अपनी आय, खर्च, प्राप्य और देय राशि को ट्रैक करें।';
+
+  @override
+  String get guideRelationships => 'संबंध और लिंक्ड लेन-देन';
+
+  @override
+  String get guideRelationshipsDesc =>
+      'संपर्कों के साथ लेन-देन जोड़ने और ऋण को ट्रैक करने का तरीका समझें।';
+
+  @override
+  String get guideSharing => 'शेयरिंग और डीप लिंक्स';
+
+  @override
+  String get guideSharingDesc =>
+      'डीप लिंक का उपयोग करके लेन-देन साझा करें और उपकरणों के बीच डेटा सिंक करें।';
+
+  @override
+  String get guideAdvancedFeatures => 'उन्नत सुविधाएँ';
+
+  @override
+  String get guideAdvancedFeaturesDesc =>
+      'रसीद स्कैनिंग, बिल विभाजन और क्लाउड बैकअप का उपयोग करें।';
+
+  @override
+  String get guideCustomization => 'कस्टमाइजेशन';
+
+  @override
+  String get guideCustomizationDesc =>
+      'श्रेणियों, मुद्राओं, थीम और भाषाओं को वैयक्तिकृत करें।';
+
+  @override
+  String get guideAddTransaction => 'लेन-देन कैसे जोड़ें?';
+
+  @override
+  String get guideAddTransactionStep =>
+      'डैशबोर्ड या लेन-देन स्क्रीन पर \'+\' बटन पर टैप करें, राशि दर्ज करें, श्रेणी चुनें और सहेजें।';
+
+  @override
+  String get guideSwitchCashbook => 'कैशबुक कैसे बदलें?';
+
+  @override
+  String get guideSwitchCashbookStep =>
+      'कैशबुक मैनेजर खोलने के लिए डैशबोर्ड हेडर पर कैशबुक के नाम पर टैप करें और दूसरा चुनें।';
+
+  @override
+  String get guideTrackReceivables => 'प्राप्य को ट्रैक करना';
+
+  @override
+  String get guideTrackReceivablesStep =>
+      'लोगों द्वारा आपको दिए जाने वाले पैसे को ट्रैक करने के लिए \'प्राप्य\' अनुभाग का उपयोग करें। स्वचालित रूप से आय बनाने के लिए आप उन्हें प्राप्त के रूप में चिह्नित कर सकते हैं।';
+
+  @override
+  String get guideLinkedTransactions => 'लिंक्ड लेन-देन क्या हैं?';
+
+  @override
+  String get guideLinkedTransactionsStep =>
+      'लिंक्ड लेन-देन एक खर्च को प्राप्य से या आय को देय से जोड़ते हैं।\n\nउदाहरण: आपने किसी मित्र के दोपहर के भोजन के लिए \$50 का भुगतान किया। आप \$50 का खर्च रिकॉर्ड करते हैं और उसे उस मित्र के लिए \'Paid FOR\' के रूप में लिंक करते हैं। यह स्वचालित रूप से उस संपर्क के लिए \$50 का प्राप्य (Receivable) बना देता है।';
+
+  @override
+  String get guideSplitBill => 'बिल विभाजन (Split Bill) का उपयोग कैसे करें?';
+
+  @override
+  String get guideSplitBillStep =>
+      'खर्च जोड़ते समय, \'Split Bill\' पर टैप करें। आप कुल राशि को कई संपर्कों के बीच समान रूप से या प्रतिशत के आधार पर विभाजित कर सकते हैं। ऐप प्रत्येक व्यक्ति के हिस्से के लिए अलग-अलग प्राप्य (Receivables) बनाएगा।';
+
+  @override
+  String get guideDeepLinks => 'डीप लिंक के माध्यम से साझा करना';
+
+  @override
+  String get guideDeepLinksStep =>
+      'किसी भी लेन-देन या प्राप्य पर \'Share\' आइकन पर टैप करें। यह एक अनूठा लिंक उत्पन्न करता है। जब प्राप्तकर्ता अपने डिवाइस पर लिंक पर क्लिक करता है, तो Flowpaisa खुल जाएगा और उन्हें उस लेन-देन को अपनी कैशबुक में आयात (Import) करने की अनुमति देगा।';
+
+  @override
+  String get guideImportDeepLink => 'साझा किए गए लेन-देन को कैसे आयात करें?';
+
+  @override
+  String get guideImportDeepLinkStep =>
+      'जब आपको व्हाट्सएप या संदेश के माध्यम से Flowpaisa लिंक प्राप्त होता है, तो बस उस पर टैप करें। ऐप विवरण दिखाते हुए एक पूर्वावलोकन स्क्रीन खोलेगा। इसे अपने रिकॉर्ड में जोड़ने के लिए \'Import\' पर टैप करें। यदि यह एक निपटान (Settlement) है, तो यह आपके मौजूदा लंबित रिकॉर्ड को अपडेट कर देगा।';
+
+  @override
+  String get guideSyncDevices => 'कैशबुक को दूसरे डिवाइस पर कैसे साझा करें?';
+
+  @override
+  String get guideSyncDevicesStep =>
+      '1. अपने पहले डिवाइस पर सेटिंग्स में \'Google Drive Backup\' सक्षम करें।\n2. दूसरे डिवाइस पर, उसी Google खाते से साइन इन करें।\n3. बैकअप सेटिंग्स पर जाएं और अपना कैशबुक डेटा डाउनलोड करने के लिए \'Restore\' पर टैप करें। निरंतर रीयल-टाइम अपडेट के लिए \'Sync Now\' का उपयोग करें।';
+
+  @override
+  String get guideCloudBackup => 'क्लाउड बैकअप और सिंक';
+
+  @override
+  String get guideCloudBackupStep =>
+      'अपने डेटा को सुरक्षित रखने और कई उपकरणों पर सिंक करने के लिए सेटिंग्स में Google ड्राइव बैकअप सक्षम करें।';
+
+  @override
+  String get guideScanReceipt => 'रसीद स्कैनिंग';
+
+  @override
+  String get guideScanReceiptStep =>
+      'अपनी कागजी रसीदों से राशि और व्यापारी को स्वचालित रूप से निकालने के लिए डैशबोर्ड पर \'स्कैन\' क्रिया का उपयोग करें।';
+
+  @override
   String get copyright => '© 2026 TamataSoft. सर्वाधिकार सुरक्षित।';
 
   @override

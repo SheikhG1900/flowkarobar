@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/constants/app_constants.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
+import 'package:flowpaisa/features/settings/presentation/screens/user_guide_screen.dart';
 
 class AboutScreen extends StatelessWidget {
   const AboutScreen({super.key});
@@ -26,15 +27,32 @@ class AboutScreen extends StatelessWidget {
           children: [
             const SizedBox(height: 20),
 
-            // Horizontal Logo
-            SvgPicture.asset(
-              'assets/images/logo_horizontal.svg',
-              height: 60,
-              fit: BoxFit.contain,
-              colorFilter: ColorFilter.mode(
-                theme.colorScheme.primary,
-                BlendMode.srcIn,
-              ),
+            // Branding (Logo + Text)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              textDirection: TextDirection.ltr,
+              children: [
+                SvgPicture.asset(
+                  'assets/images/logo_square.svg',
+                  height: 40,
+                  fit: BoxFit.contain,
+                  colorFilter: ColorFilter.mode(
+                    theme.colorScheme.primary,
+                    BlendMode.srcIn,
+                  ),
+                ),
+                Transform.translate(
+                  offset: const Offset(-6, 0),
+                  child: Text(
+                    'lowpaisa',
+                    style: theme.textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: theme.colorScheme.primary,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 32),
 
@@ -83,6 +101,22 @@ class AboutScreen extends StatelessWidget {
             // Features Grid
             _buildFeatureGrid(context),
             const SizedBox(height: 32),
+
+            // User Guide Button
+            _buildActionButton(
+              context,
+              icon: Icons.help_outline_rounded,
+              label: l10n.userGuide,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const UserGuideScreen(),
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 12),
 
             // Licenses Button
             _buildActionButton(

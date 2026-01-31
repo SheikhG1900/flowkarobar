@@ -2254,6 +2254,204 @@ abstract class AppLocalizations {
   /// **'TamataSoft'**
   String get developerName;
 
+  /// No description provided for @userGuide.
+  ///
+  /// In en, this message translates to:
+  /// **'User Guide'**
+  String get userGuide;
+
+  /// No description provided for @guideGettingStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Getting Started'**
+  String get guideGettingStarted;
+
+  /// No description provided for @guideGettingStartedDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Learn how to add transactions and manage your cashbooks.'**
+  String get guideGettingStartedDesc;
+
+  /// No description provided for @guideManagingMoney.
+  ///
+  /// In en, this message translates to:
+  /// **'Managing Money'**
+  String get guideManagingMoney;
+
+  /// No description provided for @guideManagingMoneyDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Track your income, expenses, receivables, and payables.'**
+  String get guideManagingMoneyDesc;
+
+  /// No description provided for @guideRelationships.
+  ///
+  /// In en, this message translates to:
+  /// **'Relationships & Linked Transactions'**
+  String get guideRelationships;
+
+  /// No description provided for @guideRelationshipsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Understand how to link transactions with contacts and track loans.'**
+  String get guideRelationshipsDesc;
+
+  /// No description provided for @guideSharing.
+  ///
+  /// In en, this message translates to:
+  /// **'Sharing & Deep Links'**
+  String get guideSharing;
+
+  /// No description provided for @guideSharingDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Share transactions and sync data across devices using deep links.'**
+  String get guideSharingDesc;
+
+  /// No description provided for @guideAdvancedFeatures.
+  ///
+  /// In en, this message translates to:
+  /// **'Advanced Features'**
+  String get guideAdvancedFeatures;
+
+  /// No description provided for @guideAdvancedFeaturesDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Use receipt scanning, split bills, and cloud backup.'**
+  String get guideAdvancedFeaturesDesc;
+
+  /// No description provided for @guideCustomization.
+  ///
+  /// In en, this message translates to:
+  /// **'Customization'**
+  String get guideCustomization;
+
+  /// No description provided for @guideCustomizationDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Personalize categories, currencies, themes, and languages.'**
+  String get guideCustomizationDesc;
+
+  /// No description provided for @guideAddTransaction.
+  ///
+  /// In en, this message translates to:
+  /// **'How to add a transaction?'**
+  String get guideAddTransaction;
+
+  /// No description provided for @guideAddTransactionStep.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the \'+\' button on the dashboard or transactions screen, enter the amount, select a category, and save.'**
+  String get guideAddTransactionStep;
+
+  /// No description provided for @guideSwitchCashbook.
+  ///
+  /// In en, this message translates to:
+  /// **'How to switch cashbooks?'**
+  String get guideSwitchCashbook;
+
+  /// No description provided for @guideSwitchCashbookStep.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the cashbook name on the dashboard header to open the cashbook manager and select another one.'**
+  String get guideSwitchCashbookStep;
+
+  /// No description provided for @guideTrackReceivables.
+  ///
+  /// In en, this message translates to:
+  /// **'Tracking Receivables'**
+  String get guideTrackReceivables;
+
+  /// No description provided for @guideTrackReceivablesStep.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the \'Receivables\' section to track money people owe you. You can mark them as received to automatically create income.'**
+  String get guideTrackReceivablesStep;
+
+  /// No description provided for @guideLinkedTransactions.
+  ///
+  /// In en, this message translates to:
+  /// **'What are Linked Transactions?'**
+  String get guideLinkedTransactions;
+
+  /// No description provided for @guideLinkedTransactionsStep.
+  ///
+  /// In en, this message translates to:
+  /// **'Linked transactions connect an expense to a receivable or an income to a payable.\n\nExample: You paid \$50 for a friend\'s lunch. You record an Expense of \$50 and link it as \'Paid FOR\' that friend. This automatically creates a \$50 Receivable for that contact.'**
+  String get guideLinkedTransactionsStep;
+
+  /// No description provided for @guideSplitBill.
+  ///
+  /// In en, this message translates to:
+  /// **'How to use Split Bill?'**
+  String get guideSplitBill;
+
+  /// No description provided for @guideSplitBillStep.
+  ///
+  /// In en, this message translates to:
+  /// **'When adding an expense, tap \'Split Bill\'. You can divide the total amount among multiple contacts equally or by percentage. The app will create individual receivables for each person\'s share.'**
+  String get guideSplitBillStep;
+
+  /// No description provided for @guideDeepLinks.
+  ///
+  /// In en, this message translates to:
+  /// **'Sharing via Deep Links'**
+  String get guideDeepLinks;
+
+  /// No description provided for @guideDeepLinksStep.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the \'Share\' icon on any transaction or receivable. This generates a unique link. When the recipient clicks the link on their device, Flowpaisa will open and allow them to import that transaction into their own cashbook.'**
+  String get guideDeepLinksStep;
+
+  /// No description provided for @guideImportDeepLink.
+  ///
+  /// In en, this message translates to:
+  /// **'How to import a shared transaction?'**
+  String get guideImportDeepLink;
+
+  /// No description provided for @guideImportDeepLinkStep.
+  ///
+  /// In en, this message translates to:
+  /// **'When you receive a Flowpaisa link via WhatsApp or message, simply tap it. The app will open a preview screen showing the details. Tap \'Import\' to add it to your records. If it\'s a settlement, it will update your existing pending record.'**
+  String get guideImportDeepLinkStep;
+
+  /// No description provided for @guideSyncDevices.
+  ///
+  /// In en, this message translates to:
+  /// **'How to share cashbook to another device?'**
+  String get guideSyncDevices;
+
+  /// No description provided for @guideSyncDevicesStep.
+  ///
+  /// In en, this message translates to:
+  /// **'1. Enable \'Google Drive Backup\' in Settings on your first device.\n2. On the second device, sign in with the SAME Google account.\n3. Go to Backup settings and tap \'Restore\' to download your cashbook data. Use \'Sync Now\' for ongoing real-time updates.'**
+  String get guideSyncDevicesStep;
+
+  /// No description provided for @guideCloudBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud Backup & Sync'**
+  String get guideCloudBackup;
+
+  /// No description provided for @guideCloudBackupStep.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable Google Drive backup in Settings to keep your data safe and sync across multiple devices.'**
+  String get guideCloudBackupStep;
+
+  /// No description provided for @guideScanReceipt.
+  ///
+  /// In en, this message translates to:
+  /// **'Receipt Scanning'**
+  String get guideScanReceipt;
+
+  /// No description provided for @guideScanReceiptStep.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the \'Scan\' action on the dashboard to automatically extract amount and merchant from your paper receipts.'**
+  String get guideScanReceiptStep;
+
   /// No description provided for @copyright.
   ///
   /// In en, this message translates to:

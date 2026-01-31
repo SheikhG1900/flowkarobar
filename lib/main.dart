@@ -37,6 +37,7 @@ import 'package:flowpaisa/features/premium/presentation/screens/premium_screen.d
 import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 import 'package:flowpaisa/features/messages/presentation/screens/message_templates_screen.dart';
 import 'package:flowpaisa/features/transactions/presentation/screens/export_screen.dart';
+import 'package:flowpaisa/features/settings/presentation/screens/user_guide_screen.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flowpaisa/core/utils/deep_link_handler.dart';
@@ -480,7 +481,7 @@ class _DashboardTab extends ConsumerWidget {
                     right: 8,
                     top: MediaQuery.of(context).padding.top,
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         // App Title & Cashbook Selector
@@ -501,20 +502,45 @@ class _DashboardTab extends ConsumerWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
-                                    SvgPicture.asset(
-                                        'assets/images/logo_horizontal.svg',
-                                        fit: BoxFit.contain,
-                                        height: 45,
-                                        colorFilter: ColorFilter.mode(
-                                            Color.lerp(
+                                    Row(
+                                      textDirection: TextDirection.ltr,
+                                      children: [
+                                        SvgPicture.asset(
+                                            'assets/images/logo_square.svg',
+                                            fit: BoxFit.contain,
+                                            height: 40,
+                                            colorFilter: ColorFilter.mode(
+                                                Color.lerp(
+                                                        theme.colorScheme
+                                                            .onSurface,
+                                                        theme.colorScheme
+                                                            .primary,
+                                                        .5) ??
                                                     theme.colorScheme.onSurface,
-                                                    theme.colorScheme.primary,
-                                                    .5) ??
-                                                theme.colorScheme.onSurface,
-                                            BlendMode.srcIn)),
+                                                BlendMode.srcIn)),
+                                        Transform.translate(
+                                          offset: const Offset(-6, 0),
+                                          child: Text(
+                                            'lowpaisa',
+                                            style: GoogleFonts.montserrat(
+                                              fontSize: 24,
+                                              fontWeight: FontWeight.w800,
+                                              letterSpacing: -0.5,
+                                              color: Color.lerp(
+                                                      theme.colorScheme
+                                                          .onSurface,
+                                                      theme.colorScheme.primary,
+                                                      .5) ??
+                                                  theme.colorScheme.onSurface,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                     if (isPremium) ...[
-                                      const SizedBox(width: 8),
                                       const PremiumBadge(isSmall: true),
                                     ],
                                   ],
@@ -553,56 +579,69 @@ class _DashboardTab extends ConsumerWidget {
                         const SizedBox(height: 12),
 
                         // Balance Section
-                        Text(
-                          l10n.availableCash,
-                          style: theme.textTheme.titleSmall?.copyWith(
-                            color: isDark
-                                ? Colors.white.withValues(alpha: 0.9)
-                                : AppColors.lightTextSecondary,
-                            fontWeight: FontWeight.w600,
-                            shadows: isDark
-                                ? AppTheme.textShadow(blurMultiplier: 1.0)
-                                : null,
-                          ),
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            dashboardStatsAsync.when(
-                              data: (stats) => AnimatedAmount(
-                                amount: stats.totalBalance,
-                                currencySymbol: currency.symbol,
-                                decimalPlaces: currency.decimalPlaces,
-                                style: theme.textTheme.displaySmall?.copyWith(
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                l10n.availableCash,
+                                style: theme.textTheme.titleSmall?.copyWith(
                                   color: isDark
-                                      ? Colors.white
-                                      : AppColors.lightText,
-                                  fontWeight: FontWeight.bold,
-                                  height: 1.1,
-                                  fontSize: AmountFormatter.getFontSize(
-                                      stats.totalBalance,
-                                      baseSize: 32,
-                                      decimalPlaces: currency.decimalPlaces),
+                                      ? Colors.white.withValues(alpha: 0.9)
+                                      : AppColors.lightTextSecondary,
+                                  fontWeight: FontWeight.w600,
                                   shadows: isDark
-                                      ? AppTheme.textShadow(blurMultiplier: 4.0)
+                                      ? AppTheme.textShadow(blurMultiplier: 1.0)
                                       : null,
                                 ),
                               ),
-                              loading: () => SizedBox(
-                                  height: 32,
-                                  child: CircularProgressIndicator(
-                                      color: isDark
-                                          ? Colors.white
-                                          : theme.colorScheme.primary,
-                                      strokeWidth: 2)),
-                              error: (_, __) => Text(l10n.error,
-                                  style: TextStyle(
-                                      color: isDark
-                                          ? Colors.white
-                                          : AppColors.error)),
-                            ),
-                            _buildFilterChip(context, ref, filter, isDark),
-                          ],
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  dashboardStatsAsync.when(
+                                    data: (stats) => AnimatedAmount(
+                                      amount: stats.totalBalance,
+                                      currencySymbol: currency.symbol,
+                                      decimalPlaces: currency.decimalPlaces,
+                                      style: theme.textTheme.displaySmall
+                                          ?.copyWith(
+                                        color: isDark
+                                            ? Colors.white
+                                            : AppColors.lightText,
+                                        fontWeight: FontWeight.bold,
+                                        height: 1.1,
+                                        fontSize: AmountFormatter.getFontSize(
+                                            stats.totalBalance,
+                                            baseSize: 32,
+                                            decimalPlaces:
+                                                currency.decimalPlaces),
+                                        shadows: isDark
+                                            ? AppTheme.textShadow(
+                                                blurMultiplier: 4.0)
+                                            : null,
+                                      ),
+                                    ),
+                                    loading: () => SizedBox(
+                                        height: 32,
+                                        child: CircularProgressIndicator(
+                                            color: isDark
+                                                ? Colors.white
+                                                : theme.colorScheme.primary,
+                                            strokeWidth: 2)),
+                                    error: (_, __) => Text(l10n.error,
+                                        style: TextStyle(
+                                            color: isDark
+                                                ? Colors.white
+                                                : AppColors.error)),
+                                  ),
+                                  _buildFilterChip(
+                                      context, ref, filter, isDark),
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
                         const SizedBox(height: 16),
 
@@ -853,18 +892,39 @@ class _DashboardTab extends ConsumerWidget {
                     opacity: AlwaysStoppedAnimation(t),
                     child: Padding(
                       padding: const EdgeInsets.only(
-                          left: 16, bottom: 16, right: 16),
-                      child: Row(
-                        children: [
-                          SvgPicture.asset('assets/images/logo_horizontal.svg',
-                              height: 30,
-                              fit: BoxFit.contain,
-                              colorFilter: ColorFilter.mode(
-                                  Color.lerp(theme.colorScheme.onSurface,
+                          top:
+                              40), // Added top padding to push it down to middle
+                      child: Container(
+                        alignment: AlignmentDirectional.centerStart,
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Row(
+                          textDirection: TextDirection.ltr,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            SvgPicture.asset('assets/images/logo_square.svg',
+                                height: 24,
+                                fit: BoxFit.contain,
+                                colorFilter: ColorFilter.mode(
+                                    Color.lerp(theme.colorScheme.onSurface,
+                                            theme.colorScheme.primary, .3) ??
+                                        theme.colorScheme.onSurface,
+                                    BlendMode.srcIn)),
+                            Transform.translate(
+                              offset: const Offset(-4, 0),
+                              child: Text(
+                                'lowpaisa',
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: -0.5,
+                                  color: Color.lerp(theme.colorScheme.onSurface,
                                           theme.colorScheme.primary, .3) ??
                                       theme.colorScheme.onSurface,
-                                  BlendMode.srcIn)),
-                        ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   );
@@ -995,7 +1055,7 @@ class _DashboardTab extends ConsumerWidget {
             child: EntranceAnimation(
               index: 4,
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 32, 16, 12),
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
                 child: _buildRecentTransactionsHeader(context, l10n),
               ),
             ),
@@ -1268,113 +1328,134 @@ class _DashboardTab extends ConsumerWidget {
       BuildContext context, AppLocalizations l10n, bool isPremium) {
     final theme = Theme.of(context);
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            l10n.quickActions,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Text(
+              l10n.quickActions,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+            ),
           ),
           const SizedBox(height: 12),
           // Grid layout for quick actions (responsive)
-          LayoutBuilder(
-            builder: (context, constraints) {
-              // Calculate optimal item width based on available space
-              const double minItemWidth = 100; // Minimum width per item
-              final double availableWidth = constraints.maxWidth;
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                // Calculate optimal item width based on available space
+                const double minItemWidth = 100; // Minimum width per item
+                final double availableWidth = constraints.maxWidth;
 
-              // Calculate how many items can fit
-              int crossAxisCount = (availableWidth / minItemWidth).floor();
-              crossAxisCount =
-                  crossAxisCount.clamp(2, 6); // Min 2, Max 6 columns
+                // Calculate how many items can fit
+                int crossAxisCount = (availableWidth / minItemWidth).floor();
+                crossAxisCount =
+                    crossAxisCount.clamp(2, 6); // Min 2, Max 6 columns
 
-              // Calculate actual item width
-              final double itemWidth = availableWidth / crossAxisCount;
-              final double childAspectRatio =
-                  itemWidth / 110; // Height is fixed at ~110px
+                // Calculate actual item width
+                final double itemWidth = availableWidth / crossAxisCount;
+                final double childAspectRatio =
+                    itemWidth / 110; // Height is fixed at ~110px
 
-              return GridView.count(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                crossAxisCount: crossAxisCount,
-                mainAxisSpacing: 10,
-                crossAxisSpacing: 10,
-                childAspectRatio: childAspectRatio,
-                children: [
-                  _QuickActionButton(
-                    icon: Icons.add,
-                    label: l10n.add,
-                    gradient:
-                        AppColors.getPrimaryGradient(theme.colorScheme.primary),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const AddTransactionScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                  _QuickActionButton(
-                    icon: Icons.document_scanner_outlined,
-                    label: l10n.scan,
-                    gradient: AppColors.getSecondaryGradient(
-                        theme.colorScheme.primary),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const ScanReceiptScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                  _QuickActionButton(
-                    icon: Symbols.account_balance_wallet,
-                    label: l10n.receivableTag,
-                    gradient: AppColors.receivablesSectionGradient,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const ReceivablesListScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                  _QuickActionButton(
-                    icon: Icons.payment_outlined,
-                    label: l10n.payables,
-                    gradient: AppColors.payablesSectionGradient,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const PayablesListScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                  _QuickActionButton(
-                    icon: Icons.bar_chart_rounded,
-                    label: l10n.analytics,
-                    gradient: AppColors.analyticsSectionGradient,
-                    showLock: !isPremium,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const AnalyticsScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              );
-            },
+                return GridView.count(
+                  shrinkWrap: true,
+                  padding: EdgeInsets.zero,
+                  physics: const NeverScrollableScrollPhysics(),
+                  crossAxisCount: crossAxisCount,
+                  mainAxisSpacing: 10,
+                  crossAxisSpacing: 10,
+                  childAspectRatio: childAspectRatio,
+                  children: [
+                    _QuickActionButton(
+                      icon: Icons.add,
+                      label: l10n.add,
+                      gradient: AppColors.getPrimaryGradient(
+                          theme.colorScheme.primary),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const AddTransactionScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                    _QuickActionButton(
+                      icon: Icons.document_scanner_outlined,
+                      label: l10n.scan,
+                      gradient: AppColors.getSecondaryGradient(
+                          theme.colorScheme.primary),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const ScanReceiptScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                    _QuickActionButton(
+                      icon: Symbols.account_balance_wallet,
+                      label: l10n.receivableTag,
+                      gradient: AppColors.receivablesSectionGradient,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const ReceivablesListScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                    _QuickActionButton(
+                      icon: Icons.payment_outlined,
+                      label: l10n.payables,
+                      gradient: AppColors.payablesSectionGradient,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const PayablesListScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                    _QuickActionButton(
+                      icon: Icons.bar_chart_rounded,
+                      label: l10n.analytics,
+                      gradient: AppColors.analyticsSectionGradient,
+                      showLock: !isPremium,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const AnalyticsScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                    _QuickActionButton(
+                      icon: Icons.help_outline_rounded,
+                      label: l10n.userGuide,
+                      gradient: AppColors.getSecondaryGradient(
+                          theme.colorScheme.secondary),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const UserGuideScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                );
+              },
+            ),
           ),
         ],
       ),
@@ -1383,30 +1464,27 @@ class _DashboardTab extends ConsumerWidget {
 
   Widget _buildRecentTransactionsHeader(
       BuildContext context, AppLocalizations l10n) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            l10n.recentTransactions,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const TransactionsListScreen(),
-                ),
-              );
-            },
-            child: Text(l10n.viewAll),
-          ),
-        ],
-      ),
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          l10n.recentTransactions,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+        ),
+        TextButton(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const TransactionsListScreen(),
+              ),
+            );
+          },
+          child: Text(l10n.viewAll),
+        ),
+      ],
     );
   }
 

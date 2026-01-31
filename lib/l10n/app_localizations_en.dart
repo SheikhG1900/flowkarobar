@@ -1178,6 +1178,121 @@ class AppLocalizationsEn extends AppLocalizations {
   String get developerName => 'TamataSoft';
 
   @override
+  String get userGuide => 'User Guide';
+
+  @override
+  String get guideGettingStarted => 'Getting Started';
+
+  @override
+  String get guideGettingStartedDesc =>
+      'Learn how to add transactions and manage your cashbooks.';
+
+  @override
+  String get guideManagingMoney => 'Managing Money';
+
+  @override
+  String get guideManagingMoneyDesc =>
+      'Track your income, expenses, receivables, and payables.';
+
+  @override
+  String get guideRelationships => 'Relationships & Linked Transactions';
+
+  @override
+  String get guideRelationshipsDesc =>
+      'Understand how to link transactions with contacts and track loans.';
+
+  @override
+  String get guideSharing => 'Sharing & Deep Links';
+
+  @override
+  String get guideSharingDesc =>
+      'Share transactions and sync data across devices using deep links.';
+
+  @override
+  String get guideAdvancedFeatures => 'Advanced Features';
+
+  @override
+  String get guideAdvancedFeaturesDesc =>
+      'Use receipt scanning, split bills, and cloud backup.';
+
+  @override
+  String get guideCustomization => 'Customization';
+
+  @override
+  String get guideCustomizationDesc =>
+      'Personalize categories, currencies, themes, and languages.';
+
+  @override
+  String get guideAddTransaction => 'How to add a transaction?';
+
+  @override
+  String get guideAddTransactionStep =>
+      'Tap the \'+\' button on the dashboard or transactions screen, enter the amount, select a category, and save.';
+
+  @override
+  String get guideSwitchCashbook => 'How to switch cashbooks?';
+
+  @override
+  String get guideSwitchCashbookStep =>
+      'Tap the cashbook name on the dashboard header to open the cashbook manager and select another one.';
+
+  @override
+  String get guideTrackReceivables => 'Tracking Receivables';
+
+  @override
+  String get guideTrackReceivablesStep =>
+      'Use the \'Receivables\' section to track money people owe you. You can mark them as received to automatically create income.';
+
+  @override
+  String get guideLinkedTransactions => 'What are Linked Transactions?';
+
+  @override
+  String get guideLinkedTransactionsStep =>
+      'Linked transactions connect an expense to a receivable or an income to a payable.\n\nExample: You paid \$50 for a friend\'s lunch. You record an Expense of \$50 and link it as \'Paid FOR\' that friend. This automatically creates a \$50 Receivable for that contact.';
+
+  @override
+  String get guideSplitBill => 'How to use Split Bill?';
+
+  @override
+  String get guideSplitBillStep =>
+      'When adding an expense, tap \'Split Bill\'. You can divide the total amount among multiple contacts equally or by percentage. The app will create individual receivables for each person\'s share.';
+
+  @override
+  String get guideDeepLinks => 'Sharing via Deep Links';
+
+  @override
+  String get guideDeepLinksStep =>
+      'Tap the \'Share\' icon on any transaction or receivable. This generates a unique link. When the recipient clicks the link on their device, Flowpaisa will open and allow them to import that transaction into their own cashbook.';
+
+  @override
+  String get guideImportDeepLink => 'How to import a shared transaction?';
+
+  @override
+  String get guideImportDeepLinkStep =>
+      'When you receive a Flowpaisa link via WhatsApp or message, simply tap it. The app will open a preview screen showing the details. Tap \'Import\' to add it to your records. If it\'s a settlement, it will update your existing pending record.';
+
+  @override
+  String get guideSyncDevices => 'How to share cashbook to another device?';
+
+  @override
+  String get guideSyncDevicesStep =>
+      '1. Enable \'Google Drive Backup\' in Settings on your first device.\n2. On the second device, sign in with the SAME Google account.\n3. Go to Backup settings and tap \'Restore\' to download your cashbook data. Use \'Sync Now\' for ongoing real-time updates.';
+
+  @override
+  String get guideCloudBackup => 'Cloud Backup & Sync';
+
+  @override
+  String get guideCloudBackupStep =>
+      'Enable Google Drive backup in Settings to keep your data safe and sync across multiple devices.';
+
+  @override
+  String get guideScanReceipt => 'Receipt Scanning';
+
+  @override
+  String get guideScanReceiptStep =>
+      'Use the \'Scan\' action on the dashboard to automatically extract amount and merchant from your paper receipts.';
+
+  @override
   String get copyright => '© 2026 TamataSoft. All rights reserved.';
 
   @override
