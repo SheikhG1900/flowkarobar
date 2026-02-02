@@ -72,13 +72,20 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => FilterBottomSheet(
-        type: FilterType.transactions,
-        initialFilters: notifier.currentFilters,
-        onApply: (filters) {
-          notifier.applyFilters(filters);
-          setState(() {}); // Force rebuild to update badge
-        },
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.8,
+        minChildSize: 0.5,
+        maxChildSize: 0.8,
+        expand: false,
+        builder: (context, scrollController) => FilterBottomSheet(
+          type: FilterType.transactions,
+          initialFilters: notifier.currentFilters,
+          scrollController: scrollController,
+          onApply: (filters) {
+            notifier.applyFilters(filters);
+            setState(() {}); // Force rebuild to update badge
+          },
+        ),
       ),
     );
   }

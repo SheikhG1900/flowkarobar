@@ -15,12 +15,14 @@ class FilterBottomSheet extends ConsumerStatefulWidget {
   final FilterType type;
   final dynamic initialFilters;
   final Function(dynamic) onApply;
+  final ScrollController? scrollController;
 
   const FilterBottomSheet({
     super.key,
     required this.type,
     required this.initialFilters,
     required this.onApply,
+    this.scrollController,
   });
 
   @override
@@ -111,6 +113,7 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
           const SizedBox(height: 20),
           Flexible(
             child: SingleChildScrollView(
+              controller: widget.scrollController,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
