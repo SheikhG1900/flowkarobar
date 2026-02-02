@@ -2655,4 +2655,13 @@ class AppLocalizationsUr extends AppLocalizations {
 
   @override
   String get payableVsReceivableTrend => 'قابل ادائیگی بمقابلہ قابل وصول رجحان';
+
+  @override
+  String get categoryDetails => 'زمرہ کی تفصیلات';
+
+  @override
+  String get netIncome => 'خالص آمدنی';
+
+  @override
+  String get netExpenses => 'خالص اخراجات';
 }

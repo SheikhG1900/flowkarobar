@@ -1007,5 +1007,8 @@
   "status": "स्थिति",
   "paymentStatusDistribution": "भुगतान स्थिति वितरण",
   "percentage": "प्रतिशत",
-  "payableVsReceivableTrend": "देय बनाम प्राप्य रुझान"
+  "payableVsReceivableTrend": "देय बनाम प्राप्य रुझान",
+  "categoryDetails": "श्रेणी का विवरण",
+  "netIncome": "शुद्ध आय",
+  "netExpenses": "शुद्ध खर्च"
 }

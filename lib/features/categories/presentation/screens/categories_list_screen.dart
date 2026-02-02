@@ -6,6 +6,7 @@ import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/categories/presentation/providers/categories_provider.dart';
 import 'package:flowpaisa/features/categories/presentation/screens/add_category_screen.dart';
 import 'package:flowpaisa/features/categories/presentation/screens/edit_category_screen.dart';
+import 'package:flowpaisa/features/categories/presentation/screens/category_details_screen.dart';
 import 'package:flowpaisa/shared/widgets/glass_card.dart';
 import 'package:flowpaisa/shared/widgets/swipeable_list_item.dart';
 import 'package:flowpaisa/core/utils/category_helper.dart';
@@ -199,51 +200,74 @@ class _CategoryCard extends ConsumerWidget {
             : () async {
                 await _deleteCategory(context, ref);
               },
-        child: GlassCard(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: color.withValues(
-                      alpha: theme.brightness == Brightness.dark ? 0.1 : 0.15),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: color.withValues(alpha: 0.3),
-                    width: 1,
+        child: InkWell(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) =>
+                    CategoryDetailsScreen(categoryUuid: category.uuid),
+              ),
+            );
+          },
+          borderRadius: BorderRadius.circular(16),
+          child: GlassCard(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Hero(
+                  tag: 'category_icon_${category.uuid}',
+                  child: Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: color.withValues(
+                          alpha:
+                              theme.brightness == Brightness.dark ? 0.1 : 0.15),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: color.withValues(alpha: 0.3),
+                        width: 1,
+                      ),
+                    ),
+                    alignment: Alignment.center,
+                    child: CategoryHelper.buildCategoryIcon(
+                        category.icon, color, isExpense),
                   ),
                 ),
-                alignment: Alignment.center,
-                child: CategoryHelper.buildCategoryIcon(
-                    category.icon, color, isExpense),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Text(
-                  LocalizationHelper.getLocalizedCategoryName(context, category.name),
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-              if (category.isDefault)
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.surfaceContainerHighest,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
+                const SizedBox(width: 16),
+                Expanded(
                   child: Text(
-                    l10n.defaultLabel,
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
+                    LocalizationHelper.getLocalizedCategoryName(
+                        context, category.name),
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
-            ],
+                if (category.isDefault)
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      l10n.defaultLabel,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                const SizedBox(width: 8),
+                Icon(
+                  Icons.arrow_forward_ios,
+                  size: 14,
+                  color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                ),
+              ],
+            ),
           ),
         ),
       ),

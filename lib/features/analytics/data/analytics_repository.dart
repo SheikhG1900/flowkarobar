@@ -169,6 +169,29 @@ class AnalyticsRepository {
     categoryIncomes.sort((a, b) => b.totalAmount.compareTo(a.totalAmount));
     return categoryIncomes;
   }
+
+  Future<CategoryStatistics> getCategoryStatistics(String categoryUuid, DateTime start, DateTime end) async {
+    final category = await (_database.select(_database.categories)..where((c) => c.uuid.equals(categoryUuid))).getSingleOrNull();
+    if (category == null) throw Exception('Category not found');
+
+    final totalAmount = await (_database.selectOnly(_database.transactions)
+          ..addColumns([_database.transactions.amount.sum()])
+          ..where(_database.transactions.categoryUuid.equals(categoryUuid))
+          ..where(_database.transactions.date.isBetweenValues(start, end)))
+        .getSingle().then((row) => row.read(_database.transactions.amount.sum()) ?? 0.0);
+
+    final transactionCount = await (_database.selectOnly(_database.transactions)
+          ..addColumns([_database.transactions.uuid.count()])
+          ..where(_database.transactions.categoryUuid.equals(categoryUuid))
+          ..where(_database.transactions.date.isBetweenValues(start, end)))
+        .getSingle().then((row) => row.read(_database.transactions.uuid.count()) ?? 0);
+
+    return CategoryStatistics(
+      category: category,
+      totalAmount: totalAmount,
+      transactionCount: transactionCount,
+    );
+  }
 }
 
 class CategoryExpense {
@@ -222,4 +245,15 @@ class CategoryIncome {
   final Category category;
   final double totalAmount;
   CategoryIncome({required this.category, required this.totalAmount});
+}
+
+class CategoryStatistics {
+  final Category category;
+  final double totalAmount;
+  final int transactionCount;
+  CategoryStatistics({
+    required this.category,
+    required this.totalAmount,
+    required this.transactionCount,
+  });
 }

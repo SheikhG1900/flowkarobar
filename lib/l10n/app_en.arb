@@ -1491,5 +1491,8 @@
   "status": "Status",
   "paymentStatusDistribution": "Payment Status Distribution",
   "percentage": "Percentage",
-  "payableVsReceivableTrend": "Payable vs Receivable Trend"
+  "payableVsReceivableTrend": "Payable vs Receivable Trend",
+  "categoryDetails": "Category Details",
+  "netIncome": "Net Income",
+  "netExpenses": "Net Expenses"
 }

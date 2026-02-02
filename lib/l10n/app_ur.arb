@@ -1007,5 +1007,8 @@
   "status": "حالت",
   "paymentStatusDistribution": "ادائیگی کی صورتحال کی تقسیم",
   "percentage": "فیصد",
-  "payableVsReceivableTrend": "قابل ادائیگی بمقابلہ قابل وصول رجحان"
+  "payableVsReceivableTrend": "قابل ادائیگی بمقابلہ قابل وصول رجحان",
+  "categoryDetails": "زمرہ کی تفصیلات",
+  "netIncome": "خالص آمدنی",
+  "netExpenses": "خالص اخراجات"
 }

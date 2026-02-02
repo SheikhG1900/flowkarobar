@@ -4882,6 +4882,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Payable vs Receivable Trend'**
   String get payableVsReceivableTrend;
+
+  /// No description provided for @categoryDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Category Details'**
+  String get categoryDetails;
+
+  /// No description provided for @netIncome.
+  ///
+  /// In en, this message translates to:
+  /// **'Net Income'**
+  String get netIncome;
+
+  /// No description provided for @netExpenses.
+  ///
+  /// In en, this message translates to:
+  /// **'Net Expenses'**
+  String get netExpenses;
 }
 
 class _AppLocalizationsDelegate

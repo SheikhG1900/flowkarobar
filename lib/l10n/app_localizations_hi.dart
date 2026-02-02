@@ -2647,4 +2647,13 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get payableVsReceivableTrend => 'देय बनाम प्राप्य रुझान';
+
+  @override
+  String get categoryDetails => 'श्रेणी का विवरण';
+
+  @override
+  String get netIncome => 'शुद्ध आय';
+
+  @override
+  String get netExpenses => 'शुद्ध खर्च';
 }

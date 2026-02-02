@@ -2637,4 +2637,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get payableVsReceivableTrend => 'Payable vs Receivable Trend';
+
+  @override
+  String get categoryDetails => 'Category Details';
+
+  @override
+  String get netIncome => 'Net Income';
+
+  @override
+  String get netExpenses => 'Net Expenses';
 }

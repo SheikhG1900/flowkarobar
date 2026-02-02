@@ -195,3 +195,10 @@ final incomeByCategoryProvider = FutureProvider.autoDispose<List<CategoryIncome>
   final dateRange = ref.watch(selectedDateRangeProvider);
   return repository.getIncomeByCategory(dateRange.startDate, dateRange.endDate);
 });
+
+// Category Statistics Provider
+final categoryStatisticsProvider = FutureProvider.autoDispose.family<CategoryStatistics, String>((ref, categoryUuid) async {
+  final repository = ref.watch(analyticsRepositoryProvider);
+  final dateRange = ref.watch(selectedDateRangeProvider);
+  return repository.getCategoryStatistics(categoryUuid, dateRange.startDate, dateRange.endDate);
+});
