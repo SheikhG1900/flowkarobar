@@ -202,7 +202,16 @@ class _PremiumScreenState extends ConsumerState<PremiumScreen> {
                     ),
                   ],
 
-                  // Features List
+                  _buildFeatureCard(
+                    context,
+                    icon: Icons.message_outlined,
+                    title: l10n.featureTemplatesTitle,
+                    description: l10n.featureTemplatesDesc,
+                    color: Colors.teal,
+                    isPremium: premiumState.isPremium,
+                  ),
+                  const SizedBox(height: 12),
+
                   _buildFeatureCard(
                     context,
                     icon: Icons.cloud_upload,
@@ -259,15 +268,6 @@ class _PremiumScreenState extends ConsumerState<PremiumScreen> {
                     title: l10n.featureEarlyAccessTitle,
                     description: l10n.featureEarlyAccessDesc,
                     color: theme.colorScheme.primary,
-                    isPremium: premiumState.isPremium,
-                  ),
-                  const SizedBox(height: 12),
-                  _buildFeatureCard(
-                    context,
-                    icon: Icons.message_outlined,
-                    title: l10n.featureTemplatesTitle,
-                    description: l10n.featureTemplatesDesc,
-                    color: Colors.teal,
                     isPremium: premiumState.isPremium,
                   ),
                   const SizedBox(height: 12),

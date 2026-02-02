@@ -750,7 +750,7 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
                                     ? Color(int.parse(linkedCategory.color!
                                         .replaceAll('#', '0xFF')))
                                     : AppColors.incomeColor,
-                                size: 10,
+                                size: 14,
                               ),
                               const SizedBox(width: 4),
                               Flexible(

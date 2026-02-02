@@ -105,7 +105,8 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
   void _showFilterBottomSheet() {
     final overdueCountAsync = ref.read(overduePayablesCountProvider);
     final hasOverdueTab = (overdueCountAsync.value ?? 0) > 0;
-    final status = _getStatusForTabIndex(_tabController?.index ?? 0, hasOverdueTab);
+    final status =
+        _getStatusForTabIndex(_tabController?.index ?? 0, hasOverdueTab);
     final notifier = ref.read(payablesPaginatedProvider(status).notifier);
 
     showModalBottomSheet(
@@ -186,8 +187,10 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
     }
 
     final l10n = AppLocalizations.of(context)!;
-    final status = _getStatusForTabIndex(_tabController?.index ?? 0, hasOverdueTab);
-    final currentFilters = ref.watch(payablesPaginatedProvider(status).notifier).currentFilters;
+    final status =
+        _getStatusForTabIndex(_tabController?.index ?? 0, hasOverdueTab);
+    final currentFilters =
+        ref.watch(payablesPaginatedProvider(status).notifier).currentFilters;
     final hasActiveFilters = !currentFilters.isEmpty;
 
     return Scaffold(
@@ -255,43 +258,43 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
                   final repository = ref.read(payablesRepositoryProvider);
                   final contactsRepo = ref.read(contactsRepositoryProvider);
                   try {
-                        final contacts =
-                            await contactsRepo.watchAllContacts().first;
-                        String defaultContactUuid;
-                        if (contacts.isNotEmpty) {
-                          defaultContactUuid = contacts[0].uuid;
-                        } else {
-                          // Create a default contact if none exists
-                          defaultContactUuid = await contactsRepo.createContact(
-                            ContactsCompanion(
-                              name: const Value('Default Contact'),
-                              createdAt: Value(DateTime.now()),
-                              updatedAt: Value(DateTime.now()),
-                            ),
-                          );
-                        }
+                    final contacts =
+                        await contactsRepo.watchAllContacts().first;
+                    String defaultContactUuid;
+                    if (contacts.isNotEmpty) {
+                      defaultContactUuid = contacts[0].uuid;
+                    } else {
+                      // Create a default contact if none exists
+                      defaultContactUuid = await contactsRepo.createContact(
+                        ContactsCompanion(
+                          name: const Value('Default Contact'),
+                          createdAt: Value(DateTime.now()),
+                          updatedAt: Value(DateTime.now()),
+                        ),
+                      );
+                    }
 
-                        for (int i = 0; i < 100; i++) {
-                          final daysAgo = i ~/ 2;
-                          final date =
-                              DateTime.now().subtract(Duration(days: daysAgo));
-                          final amount = (50.0 + (i * 15.3) % 2000).roundToDouble();
-                          final contactUuid = contacts.isNotEmpty
-                              ? contacts[i % contacts.length].uuid
-                              : defaultContactUuid;
+                    for (int i = 0; i < 100; i++) {
+                      final daysAgo = i ~/ 2;
+                      final date =
+                          DateTime.now().subtract(Duration(days: daysAgo));
+                      final amount = (50.0 + (i * 15.3) % 2000).roundToDouble();
+                      final contactUuid = contacts.isNotEmpty
+                          ? contacts[i % contacts.length].uuid
+                          : defaultContactUuid;
 
-                          await repository.createPayable(
-                            PayablesCompanion(
-                              contactUuid: Value(contactUuid),
-                              amount: Value(amount),
-                              description: Value('Dummy Payable #${i + 1}'),
-                              date: Value(date),
-                              status: Value(i % 3 == 0 ? 'PAID' : 'PENDING'),
-                              createdAt: Value(DateTime.now()),
-                              updatedAt: Value(DateTime.now()),
-                            ),
-                          );
-                        }
+                      await repository.createPayable(
+                        PayablesCompanion(
+                          contactUuid: Value(contactUuid),
+                          amount: Value(amount),
+                          description: Value('Dummy Payable #${i + 1}'),
+                          date: Value(date),
+                          status: Value(i % 3 == 0 ? 'PAID' : 'PENDING'),
+                          createdAt: Value(DateTime.now()),
+                          updatedAt: Value(DateTime.now()),
+                        ),
+                      );
+                    }
                     if (context.mounted) {
                       ToastUtils.showSuccessToast(
                           context, ref, l10n.dummyPayablesGenerated);
@@ -305,7 +308,8 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
                     }
                   } catch (e) {
                     if (context.mounted) {
-                      ToastUtils.showErrorToast(context, ref, l10n.errorOccurred(e.toString()));
+                      ToastUtils.showErrorToast(
+                          context, ref, l10n.errorOccurred(e.toString()));
                     }
                   }
                 }
@@ -460,13 +464,14 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
 
     for (final item in paginatedState.items) {
       if (item == null || item.payable == null) continue;
-      
+
       // Ensure date is not null before formatting
       final dateToFormat = item.payable.date;
       final pattern = userProfile.dateFormat ?? 'MMM dd, yyyy';
-      
+
       try {
-        final dateKey = AppDateFormatter.formatDate(dateToFormat, pattern: pattern);
+        final dateKey =
+            AppDateFormatter.formatDate(dateToFormat, pattern: pattern);
         groupedPayables.putIfAbsent(dateKey, () => []);
         groupedPayables[dateKey]!.add(item);
       } catch (e) {
@@ -705,6 +710,7 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               Icon(
                                 linkedCategory.icon != null
@@ -715,12 +721,13 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
                                     ? Color(int.parse(linkedCategory.color!
                                         .replaceAll('#', '0xFF')))
                                     : AppColors.expenseColor,
-                                size: 10,
+                                size: 14,
                               ),
                               const SizedBox(width: 4),
                               Flexible(
                                 child: Text(
-                                  LocalizationHelper.getLocalizedCategoryName(context, linkedCategory.name),
+                                  LocalizationHelper.getLocalizedCategoryName(
+                                      context, linkedCategory.name),
                                   style: TextStyle(
                                     fontSize: 10,
                                     color: linkedCategory.color != null
@@ -809,14 +816,21 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
                             const SizedBox(width: 4),
                             Expanded(
                               child: Text(
-                                l10n.dueAt(AppDateFormatter.formatDate(payable.dueDate!, pattern: ref.watch(userProfileProvider).dateFormat ?? 'MMM dd, yyyy')),
+                                l10n.dueAt(AppDateFormatter.formatDate(
+                                    payable.dueDate!,
+                                    pattern: ref
+                                            .watch(userProfileProvider)
+                                            .dateFormat ??
+                                        'MMM dd, yyyy')),
                                 style: theme.textTheme.labelSmall?.copyWith(
                                   color: isPending
-                                      ? (payable.dueDate!.isBefore(DateTime.now())
+                                      ? (payable.dueDate!
+                                              .isBefore(DateTime.now())
                                           ? Colors.red
                                           : Colors.orange)
                                       : theme.colorScheme.onSurfaceVariant,
-                                  fontWeight: isPending ? FontWeight.bold : null,
+                                  fontWeight:
+                                      isPending ? FontWeight.bold : null,
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
@@ -835,8 +849,7 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      '\u200E${AmountFormatter.formatWithCurrency(payable.amount,
-                          currency.symbol, currency.decimalPlaces)}',
+                      '\u200E${AmountFormatter.formatWithCurrency(payable.amount, currency.symbol, currency.decimalPlaces)}',
                       style: theme.textTheme.titleLarge?.copyWith(
                         color: AppColors.payableColor,
                         fontWeight: FontWeight.bold,
