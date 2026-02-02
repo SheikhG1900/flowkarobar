@@ -8,6 +8,7 @@ import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/date_formatter.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
 import 'package:flowpaisa/shared/widgets/swipeable_list_item.dart';
+import 'package:flowpaisa/shared/widgets/app_loading_indicator.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:intl/intl.dart';
@@ -88,9 +89,9 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            CircularProgressIndicator(
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                  activeCashbook.color),
+                            AppLoadingIndicator(
+                              size: 60,
+                              color: activeCashbook.color,
                             ),
                             const SizedBox(height: 16),
                             Text(
@@ -482,7 +483,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                         const SizedBox(
                           width: 12,
                           height: 12,
-                          child: CircularProgressIndicator(strokeWidth: 2),
+                          child: AppLoadingIndicator(size: 12),
                         )
                       else if (state.syncStatus.contains('Error'))
                         const Icon(Icons.error_outline,

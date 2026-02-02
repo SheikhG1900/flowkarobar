@@ -25,6 +25,7 @@ import 'package:flowpaisa/features/transactions/presentation/providers/schedule_
 import 'package:flowpaisa/features/transactions/presentation/screens/edit_schedule_screen.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/shared/widgets/filter_bottom_sheet.dart';
+import 'package:flowpaisa/shared/widgets/app_loading_indicator.dart';
 
 class TransactionsListScreen extends ConsumerStatefulWidget {
   const TransactionsListScreen({super.key});
@@ -240,7 +241,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
       PaginatedState<TransactionWithDetails> paginatedState, ThemeData theme) {
     final l10n = AppLocalizations.of(context)!;
     if (paginatedState.isLoading && paginatedState.items.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
+      return const AppLoadingIndicator(size: 60);
     }
 
     if (paginatedState.error != null && paginatedState.items.isEmpty) {
@@ -437,7 +438,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
           const SliverToBoxAdapter(
             child: Padding(
               padding: EdgeInsets.all(16.0),
-              child: Center(child: CircularProgressIndicator()),
+              child: AppLoadingIndicator(size: 30),
             ),
           )
         else if (!paginatedState.hasMore && paginatedState.items.isNotEmpty)

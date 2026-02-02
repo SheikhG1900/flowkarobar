@@ -53,6 +53,7 @@ import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/core/utils/category_helper.dart';
 import 'package:flowpaisa/shared/widgets/entrance_animation.dart';
 import 'package:flowpaisa/shared/widgets/animated_amount.dart';
+import 'package:flowpaisa/shared/widgets/app_loading_indicator.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workmanager/workmanager.dart';
@@ -288,7 +289,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   onDestinationSelected: (index) {
                     if (index == 1) {
                       // Clear transactions filters and search when navigating via navigation rail
-                      final notifier = ref.read(transactionsPaginatedProvider.notifier);
+                      final notifier =
+                          ref.read(transactionsPaginatedProvider.notifier);
                       notifier.search('');
                       notifier.applyFilters(TransactionFilters());
                     }
@@ -370,7 +372,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 onDestinationSelected: (index) {
                   if (index == 1) {
                     // Clear transactions filters and search when navigating via bottom bar
-                    final notifier = ref.read(transactionsPaginatedProvider.notifier);
+                    final notifier =
+                        ref.read(transactionsPaginatedProvider.notifier);
                     notifier.search('');
                     notifier.applyFilters(TransactionFilters());
                   }
@@ -423,9 +426,7 @@ class _DashboardTab extends ConsumerWidget {
 
     // Show loading if currency is not yet loaded
     if (currency == null) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const AppLoadingIndicator(isFullPage: true, size: 80);
     }
 
     return Scaffold(
@@ -636,13 +637,9 @@ class _DashboardTab extends ConsumerWidget {
                                             : null,
                                       ),
                                     ),
-                                    loading: () => SizedBox(
+                                    loading: () => const SizedBox(
                                         height: 32,
-                                        child: CircularProgressIndicator(
-                                            color: isDark
-                                                ? Colors.white
-                                                : theme.colorScheme.primary,
-                                            strokeWidth: 2)),
+                                        child: AppLoadingIndicator(size: 24)),
                                     error: (_, __) => Text(l10n.error,
                                         style: TextStyle(
                                             color: isDark
@@ -1336,8 +1333,8 @@ class _DashboardTab extends ConsumerWidget {
     );
   }
 
-  Widget _buildQuickActions(
-      BuildContext context, WidgetRef ref, AppLocalizations l10n, bool isPremium) {
+  Widget _buildQuickActions(BuildContext context, WidgetRef ref,
+      AppLocalizations l10n, bool isPremium) {
     final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 0),
@@ -1416,15 +1413,18 @@ class _DashboardTab extends ConsumerWidget {
                       gradient: AppColors.receivablesSectionGradient,
                       onTap: () {
                         // Clear filters and search before navigating
-                        final pendingNotifier = ref.read(receivablesPaginatedProvider('PENDING').notifier);
+                        final pendingNotifier = ref.read(
+                            receivablesPaginatedProvider('PENDING').notifier);
                         pendingNotifier.updateSearchQuery('');
                         pendingNotifier.applyFilters(ReceivableFilters());
 
-                        final overdueNotifier = ref.read(receivablesPaginatedProvider('OVERDUE').notifier);
+                        final overdueNotifier = ref.read(
+                            receivablesPaginatedProvider('OVERDUE').notifier);
                         overdueNotifier.updateSearchQuery('');
                         overdueNotifier.applyFilters(ReceivableFilters());
 
-                        final receivedNotifier = ref.read(receivablesPaginatedProvider('RECEIVED').notifier);
+                        final receivedNotifier = ref.read(
+                            receivablesPaginatedProvider('RECEIVED').notifier);
                         receivedNotifier.updateSearchQuery('');
                         receivedNotifier.applyFilters(ReceivableFilters());
 
@@ -1442,15 +1442,18 @@ class _DashboardTab extends ConsumerWidget {
                       gradient: AppColors.payablesSectionGradient,
                       onTap: () {
                         // Clear filters and search before navigating
-                        final pendingNotifier = ref.read(payablesPaginatedProvider('PENDING').notifier);
+                        final pendingNotifier = ref.read(
+                            payablesPaginatedProvider('PENDING').notifier);
                         pendingNotifier.updateSearchQuery('');
                         pendingNotifier.applyFilters(PayableFilters());
 
-                        final overdueNotifier = ref.read(payablesPaginatedProvider('OVERDUE').notifier);
+                        final overdueNotifier = ref.read(
+                            payablesPaginatedProvider('OVERDUE').notifier);
                         overdueNotifier.updateSearchQuery('');
                         overdueNotifier.applyFilters(PayableFilters());
 
-                        final paidNotifier = ref.read(payablesPaginatedProvider('PAID').notifier);
+                        final paidNotifier = ref
+                            .read(payablesPaginatedProvider('PAID').notifier);
                         paidNotifier.updateSearchQuery('');
                         paidNotifier.applyFilters(PayableFilters());
 
@@ -1664,12 +1667,7 @@ class _DashboardTab extends ConsumerWidget {
           },
         );
       },
-      loading: () => const Center(
-        child: Padding(
-          padding: EdgeInsets.all(32),
-          child: CircularProgressIndicator(),
-        ),
-      ),
+      loading: () => const AppLoadingIndicator(size: 60),
       error: (error, stack) => Padding(
         padding: const EdgeInsets.all(32),
         child: Text(l10n.errorOccurred(error.toString())),

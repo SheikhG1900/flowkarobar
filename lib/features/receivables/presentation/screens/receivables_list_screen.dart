@@ -21,6 +21,7 @@ import 'package:flowpaisa/shared/widgets/filter_bottom_sheet.dart';
 import 'package:flowpaisa/core/utils/localization_helper.dart';
 import 'package:flowpaisa/core/utils/icon_helper.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:flowpaisa/shared/widgets/app_loading_indicator.dart';
 
 class ReceivablesListScreen extends ConsumerStatefulWidget {
   const ReceivablesListScreen({super.key});
@@ -368,7 +369,7 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
       body: _tabController == null ||
               _tabController!.length != tabCount ||
               _tabController!.index >= tabCount
-          ? const Center(child: CircularProgressIndicator())
+          ? const AppLoadingIndicator(size: 60)
           : TabBarView(
               controller: _tabController,
               children: [
@@ -401,11 +402,11 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
     final currency = ref.watch(currentCurrencyProvider).value;
 
     if (currency == null) {
-      return const Center(child: CircularProgressIndicator());
+      return const AppLoadingIndicator(size: 60);
     }
 
     if (paginatedState.isLoading && paginatedState.items.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
+      return const AppLoadingIndicator(size: 60);
     }
 
     if (paginatedState.error != null && paginatedState.items.isEmpty) {
@@ -597,7 +598,7 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
           const SliverToBoxAdapter(
             child: Padding(
               padding: EdgeInsets.all(16.0),
-              child: Center(child: CircularProgressIndicator()),
+              child: AppLoadingIndicator(size: 30),
             ),
           )
         else if (!paginatedState.hasMore && paginatedState.items.isNotEmpty)
