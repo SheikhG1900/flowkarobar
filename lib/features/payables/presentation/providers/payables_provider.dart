@@ -42,7 +42,9 @@ final totalPendingPayablesProvider = FutureProvider<double>((ref) {
 // Watch overdue payables count
 final overduePayablesCountProvider = StreamProvider<int>((ref) {
   final repository = ref.watch(payablesRepositoryProvider);
-  return repository.watchPayablesWithLinkedDataOverdue().map((payables) => payables.length);
+  return repository
+      .watchPayablesWithLinkedDataOverdue()
+      .map((payables) => payables.length);
 });
 
 // Watch payables with contacts by status
@@ -61,7 +63,9 @@ final pendingPayablesProvider = StreamProvider<List<Payable>>((ref) {
 // Watch pending payables count
 final pendingPayablesCountProvider = StreamProvider<int>((ref) {
   final repository = ref.watch(payablesRepositoryProvider);
-  return repository.watchPayablesByStatus('PENDING').map((payables) => payables.length);
+  return repository
+      .watchPayablesByStatus('PENDING')
+      .map((payables) => payables.length);
 });
 
 // Watch paid payables
@@ -111,7 +115,8 @@ class PayablesPaginatedNotifier
     try {
       // Load first page
       final List<PayableWithLinkedData> initialItems;
-      initialItems = await _repository.getPayablesWithLinkedDataFilteredPaginated(
+      initialItems =
+          await _repository.getPayablesWithLinkedDataFilteredPaginated(
         filters: _filters,
         status: _status!,
         limit: state.pageSize,

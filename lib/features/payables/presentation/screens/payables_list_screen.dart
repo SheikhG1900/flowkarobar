@@ -30,7 +30,7 @@ class PayablesListScreen extends ConsumerStatefulWidget {
 }
 
 class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   TabController? _tabController;
   late ScrollController _scrollController;
   int _previousOverdueCount = -1;
@@ -47,7 +47,9 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
     if (_tabController != null) {
       if (_tabController!.length == tabCount) return;
       _tabController!.removeListener(_onTabChanged);
-      _tabController!.dispose();
+      final oldController = _tabController!;
+      // Use a microtask to dispose to avoid disposing during build
+      Future.microtask(() => oldController.dispose());
     }
     _tabController = TabController(length: tabCount, vsync: this);
     _tabController!.addListener(_onTabChanged);
@@ -125,7 +127,7 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(label),
+          Flexible(child: Text(label, overflow: TextOverflow.ellipsis)),
           if (count > 0) ...[
             const SizedBox(width: 4),
             Container(
@@ -447,11 +449,23 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
     // Group by Date
     final groupedPayables = <String, List>{};
     final userProfile = ref.watch(userProfileProvider);
+
     for (final item in paginatedState.items) {
-      final dateKey = AppDateFormatter.formatDate(item.payable.date,
-          pattern: userProfile.dateFormat);
-      groupedPayables.putIfAbsent(dateKey, () => []);
-      groupedPayables[dateKey]!.add(item);
+      if (item == null || item.payable == null) continue;
+      
+      // Ensure date is not null before formatting
+      final dateToFormat = item.payable.date;
+      final pattern = userProfile.dateFormat ?? 'MMM dd, yyyy';
+      
+      try {
+        final dateKey = AppDateFormatter.formatDate(dateToFormat, pattern: pattern);
+        groupedPayables.putIfAbsent(dateKey, () => []);
+        groupedPayables[dateKey]!.add(item);
+      } catch (e) {
+        const fallbackKey = 'Other';
+        groupedPayables.putIfAbsent(fallbackKey, () => []);
+        groupedPayables[fallbackKey]!.add(item);
+      }
     }
 
     final keys = groupedPayables.keys.toList();
@@ -569,6 +583,7 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
   }
 
   Widget _buildPayableCard(dynamic item, AppCurrency currency) {
+    if (item == null || item.payable == null) return const SizedBox.shrink();
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
@@ -642,7 +657,7 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
                     ),
                   ),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: 12),
 
                 // Details
                 Expanded(
@@ -654,6 +669,8 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                       // Linked category or transaction type tag
                       if (linkedCategory != null) ...[
@@ -782,15 +799,19 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
                                   : theme.colorScheme.onSurfaceVariant,
                             ),
                             const SizedBox(width: 4),
-                            Text(
-                              l10n.dueAt(AppDateFormatter.formatDate(payable.dueDate!, pattern: ref.watch(userProfileProvider).dateFormat)),
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                color: isPending
-                                    ? (payable.dueDate!.isBefore(DateTime.now())
-                                        ? Colors.red
-                                        : Colors.orange)
-                                    : theme.colorScheme.onSurfaceVariant,
-                                fontWeight: isPending ? FontWeight.bold : null,
+                            Expanded(
+                              child: Text(
+                                l10n.dueAt(AppDateFormatter.formatDate(payable.dueDate!, pattern: ref.watch(userProfileProvider).dateFormat ?? 'MMM dd, yyyy')),
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  color: isPending
+                                      ? (payable.dueDate!.isBefore(DateTime.now())
+                                          ? Colors.red
+                                          : Colors.orange)
+                                      : theme.colorScheme.onSurfaceVariant,
+                                  fontWeight: isPending ? FontWeight.bold : null,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
                           ],
@@ -799,6 +820,7 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
                     ],
                   ),
                 ),
+                const SizedBox(width: 8),
 
                 // Amount and Tags
                 Column(
