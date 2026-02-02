@@ -13,7 +13,9 @@ class AppTheme {
         case 'Lalezar':
           return GoogleFonts.lalezar(textStyle: baseStyle);
         case 'Kufam':
-          return GoogleFonts.kufam(textStyle: baseStyle);
+          return GoogleFonts.kufam(
+            textStyle: baseStyle,
+          );
         case 'Marhey':
           return GoogleFonts.marhey(textStyle: baseStyle);
         case 'Noto Sans Devanagari':

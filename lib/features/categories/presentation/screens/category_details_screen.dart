@@ -261,8 +261,10 @@ class CategoryDetailsScreen extends ConsumerWidget {
                                   children: [
                                     Text(
                                       l10n.transactions,
-                                      style: theme.textTheme.bodySmall?.copyWith(
-                                        color: theme.colorScheme.onSurfaceVariant,
+                                      style:
+                                          theme.textTheme.bodySmall?.copyWith(
+                                        color:
+                                            theme.colorScheme.onSurfaceVariant,
                                       ),
                                     ),
                                     Text(
@@ -355,8 +357,8 @@ class _DateRangeSelector extends StatelessWidget {
               _RangeTypeChip(
                 label: l10n.year,
                 isSelected: selectedDateRange.type == DateRangeType.year,
-                onTap: () =>
-                    onDateRangeChanged(DateRangeState.year(DateTime.now().year)),
+                onTap: () => onDateRangeChanged(
+                    DateRangeState.year(DateTime.now().year)),
               ),
               const SizedBox(width: 8),
               _RangeTypeChip(

@@ -39,32 +39,37 @@ class DateRangeState {
     final now = DateTime.now();
     final start = DateTime(now.year, now.month, 1);
     final end = DateTime(now.year, now.month + 1, 0, 23, 59, 59);
-    return DateRangeState(startDate: start, endDate: end, type: DateRangeType.month);
+    return DateRangeState(
+        startDate: start, endDate: end, type: DateRangeType.month);
   }
 
   factory DateRangeState.month(DateTime date) {
     final start = DateTime(date.year, date.month, 1);
     final end = DateTime(date.year, date.month + 1, 0, 23, 59, 59);
-    return DateRangeState(startDate: start, endDate: end, type: DateRangeType.month);
+    return DateRangeState(
+        startDate: start, endDate: end, type: DateRangeType.month);
   }
 
   factory DateRangeState.quarter(int year, int quarter) {
     final startMonth = (quarter - 1) * 3 + 1;
     final start = DateTime(year, startMonth, 1);
     final end = DateTime(year, startMonth + 3, 0, 23, 59, 59);
-    return DateRangeState(startDate: start, endDate: end, type: DateRangeType.quarter);
+    return DateRangeState(
+        startDate: start, endDate: end, type: DateRangeType.quarter);
   }
 
   factory DateRangeState.year(int year) {
     final start = DateTime(year, 1, 1);
     final end = DateTime(year, 12, 31, 23, 59, 59);
-    return DateRangeState(startDate: start, endDate: end, type: DateRangeType.year);
+    return DateRangeState(
+        startDate: start, endDate: end, type: DateRangeType.year);
   }
 
   factory DateRangeState.custom(DateTime start, DateTime end) {
     final startDate = DateTime(start.year, start.month, start.day, 0, 0, 0);
     final endDate = DateTime(end.year, end.month, end.day, 23, 59, 59);
-    return DateRangeState(startDate: startDate, endDate: endDate, type: DateRangeType.custom);
+    return DateRangeState(
+        startDate: startDate, endDate: endDate, type: DateRangeType.custom);
   }
 }
 
@@ -74,7 +79,8 @@ final analyticsRepositoryProvider = Provider<AnalyticsRepository>((ref) {
 });
 
 // State Provider for Selected Date Range
-final selectedDateRangeProvider = NotifierProvider<DateRangeNotifier, DateRangeState>(DateRangeNotifier.new);
+final selectedDateRangeProvider =
+    NotifierProvider<DateRangeNotifier, DateRangeState>(DateRangeNotifier.new);
 
 class DateRangeNotifier extends Notifier<DateRangeState> {
   @override
@@ -89,13 +95,16 @@ class DateRangeNotifier extends Notifier<DateRangeState> {
   void nextPeriod() {
     switch (state.type) {
       case DateRangeType.month:
-        final nextMonth = DateTime(state.startDate.year, state.startDate.month + 1, 1);
+        final nextMonth =
+            DateTime(state.startDate.year, state.startDate.month + 1, 1);
         state = DateRangeState.month(nextMonth);
         break;
       case DateRangeType.quarter:
         final currentQuarter = ((state.startDate.month - 1) ~/ 3) + 1;
         final nextQuarter = currentQuarter == 4 ? 1 : currentQuarter + 1;
-        final nextYear = currentQuarter == 4 ? state.startDate.year + 1 : state.startDate.year;
+        final nextYear = currentQuarter == 4
+            ? state.startDate.year + 1
+            : state.startDate.year;
         state = DateRangeState.quarter(nextYear, nextQuarter);
         break;
       case DateRangeType.year:
@@ -110,13 +119,16 @@ class DateRangeNotifier extends Notifier<DateRangeState> {
   void previousPeriod() {
     switch (state.type) {
       case DateRangeType.month:
-        final prevMonth = DateTime(state.startDate.year, state.startDate.month - 1, 1);
+        final prevMonth =
+            DateTime(state.startDate.year, state.startDate.month - 1, 1);
         state = DateRangeState.month(prevMonth);
         break;
       case DateRangeType.quarter:
         final currentQuarter = ((state.startDate.month - 1) ~/ 3) + 1;
         final prevQuarter = currentQuarter == 1 ? 4 : currentQuarter - 1;
-        final prevYear = currentQuarter == 1 ? state.startDate.year - 1 : state.startDate.year;
+        final prevYear = currentQuarter == 1
+            ? state.startDate.year - 1
+            : state.startDate.year;
         state = DateRangeState.quarter(prevYear, prevQuarter);
         break;
       case DateRangeType.year:
@@ -130,7 +142,8 @@ class DateRangeNotifier extends Notifier<DateRangeState> {
 }
 
 // Expenses by Category Provider (Updated to use date range)
-final expensesByCategoryProvider = FutureProvider.autoDispose<List<CategoryExpense>>((ref) async {
+final expensesByCategoryProvider =
+    FutureProvider.autoDispose<List<CategoryExpense>>((ref) async {
   final repository = ref.watch(analyticsRepositoryProvider);
   final dateRange = ref.watch(selectedDateRangeProvider);
   // For expenses by category, we use the month of the start date
@@ -138,67 +151,80 @@ final expensesByCategoryProvider = FutureProvider.autoDispose<List<CategoryExpen
 });
 
 // Monthly Trends Provider (Last 6 months)
-final monthlyTrendsProvider = FutureProvider.autoDispose<List<MonthlyFinancials>>((ref) async {
+final monthlyTrendsProvider =
+    FutureProvider.autoDispose<List<MonthlyFinancials>>((ref) async {
   final repository = ref.watch(analyticsRepositoryProvider);
   return repository.getMonthlyTrends(6);
 });
 
 // Contact Summaries Provider for selected range
-final contactSummariesProvider = FutureProvider.autoDispose<List<ContactSummary>>((ref) async {
+final contactSummariesProvider =
+    FutureProvider.autoDispose<List<ContactSummary>>((ref) async {
   final repository = ref.watch(analyticsRepositoryProvider);
   final dateRange = ref.watch(selectedDateRangeProvider);
   return repository.getContactSummaries(dateRange.startDate, dateRange.endDate);
 });
 
 // All-time Contact Summaries Provider
-final allTimeContactSummariesProvider = FutureProvider.autoDispose<List<ContactSummary>>((ref) async {
+final allTimeContactSummariesProvider =
+    FutureProvider.autoDispose<List<ContactSummary>>((ref) async {
   final repository = ref.watch(analyticsRepositoryProvider);
   return repository.getAllTimeContactSummaries();
 });
 
 // Financial Summary Provider for selected range
-final financialSummaryProvider = FutureProvider.autoDispose<FinancialSummary>((ref) async {
+final financialSummaryProvider =
+    FutureProvider.autoDispose<FinancialSummary>((ref) async {
   final repository = ref.watch(analyticsRepositoryProvider);
   final dateRange = ref.watch(selectedDateRangeProvider);
   return repository.getFinancialSummary(dateRange.startDate, dateRange.endDate);
 });
 
 // All-time Financial Summary Provider
-final allTimeFinancialSummaryProvider = FutureProvider.autoDispose<FinancialSummary>((ref) async {
+final allTimeFinancialSummaryProvider =
+    FutureProvider.autoDispose<FinancialSummary>((ref) async {
   final repository = ref.watch(analyticsRepositoryProvider);
   return repository.getAllTimeFinancialSummary();
 });
 
 // Payables vs Receivables Trend Provider (Last 6 months)
-final payableReceivableTrendsProvider = FutureProvider.autoDispose<List<PayableReceivableTrend>>((ref) async {
+final payableReceivableTrendsProvider =
+    FutureProvider.autoDispose<List<PayableReceivableTrend>>((ref) async {
   final repository = ref.watch(analyticsRepositoryProvider);
   return repository.getPayableReceivableTrends(6);
 });
 
 // Top Contacts by Balance Provider (Top 10)
-final topContactsByBalanceProvider = FutureProvider.autoDispose<List<ContactSummary>>((ref) async {
+final topContactsByBalanceProvider =
+    FutureProvider.autoDispose<List<ContactSummary>>((ref) async {
   final repository = ref.watch(analyticsRepositoryProvider);
   final dateRange = ref.watch(selectedDateRangeProvider);
-  return repository.getTopContactsByBalance(dateRange.startDate, dateRange.endDate, 10);
+  return repository.getTopContactsByBalance(
+      dateRange.startDate, dateRange.endDate, 10);
 });
 
 // Payment Status Distribution Provider
-final paymentStatusDistributionProvider = FutureProvider.autoDispose<StatusDistribution>((ref) async {
+final paymentStatusDistributionProvider =
+    FutureProvider.autoDispose<StatusDistribution>((ref) async {
   final repository = ref.watch(analyticsRepositoryProvider);
   final dateRange = ref.watch(selectedDateRangeProvider);
-  return repository.getPaymentStatusDistribution(dateRange.startDate, dateRange.endDate);
+  return repository.getPaymentStatusDistribution(
+      dateRange.startDate, dateRange.endDate);
 });
 
 // Income by Category Provider
-final incomeByCategoryProvider = FutureProvider.autoDispose<List<CategoryIncome>>((ref) async {
+final incomeByCategoryProvider =
+    FutureProvider.autoDispose<List<CategoryIncome>>((ref) async {
   final repository = ref.watch(analyticsRepositoryProvider);
   final dateRange = ref.watch(selectedDateRangeProvider);
   return repository.getIncomeByCategory(dateRange.startDate, dateRange.endDate);
 });
 
 // Category Statistics Provider
-final categoryStatisticsProvider = FutureProvider.autoDispose.family<CategoryStatistics, String>((ref, categoryUuid) async {
+final categoryStatisticsProvider = FutureProvider.autoDispose
+    .family<CategoryStatistics, String>((ref, categoryUuid) async {
   final repository = ref.watch(analyticsRepositoryProvider);
   final dateRange = ref.watch(selectedDateRangeProvider);
-  return repository.getCategoryStatistics(categoryUuid, dateRange.startDate, dateRange.endDate);
+  return repository.getCategoryStatistics(
+      categoryUuid, dateRange.startDate, dateRange.endDate);
 });

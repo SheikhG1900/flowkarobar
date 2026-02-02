@@ -131,7 +131,8 @@ class _CategoryList extends ConsumerWidget {
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, stack) => Center(child: Text(l10n.errorOccurred(error.toString()))),
+      error: (error, stack) =>
+          Center(child: Text(l10n.errorOccurred(error.toString()))),
     );
   }
 }
@@ -164,7 +165,8 @@ class _CategoryCard extends ConsumerWidget {
       }
     } catch (e) {
       if (context.mounted) {
-        ToastUtils.showErrorToast(context, ref, l10n.errorOccurred(e.toString()));
+        ToastUtils.showErrorToast(
+            context, ref, l10n.errorOccurred(e.toString()));
       }
     }
   }
@@ -264,7 +266,8 @@ class _CategoryCard extends ConsumerWidget {
                 Icon(
                   Icons.arrow_forward_ios,
                   size: 14,
-                  color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                  color:
+                      theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
                 ),
               ],
             ),
