@@ -91,7 +91,8 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
     final theme = Theme.of(context);
     final schedulesAsync = ref.watch(allSchedulesProvider);
     final hasSchedules = schedulesAsync.value?.isNotEmpty ?? false;
-    final currentFilters = ref.watch(transactionsPaginatedProvider.notifier).currentFilters;
+    final currentFilters =
+        ref.watch(transactionsPaginatedProvider.notifier).currentFilters;
     final hasActiveFilters = !currentFilters.isEmpty;
 
     return Scaffold(
@@ -182,7 +183,8 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                     }
                   } catch (e) {
                     if (context.mounted) {
-                      ToastUtils.showErrorToast(context, ref, l10n.errorOccurred(e.toString()));
+                      ToastUtils.showErrorToast(
+                          context, ref, l10n.errorOccurred(e.toString()));
                     }
                   }
                 }
@@ -283,7 +285,9 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
             ),
             const SizedBox(height: 12),
             Text(
-              _isSearching ? l10n.trySearchingDifferentName : l10n.tapToAddFirst,
+              _isSearching
+                  ? l10n.trySearchingDifferentName
+                  : l10n.tapToAddFirst,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: Colors.grey[500],
               ),
@@ -297,10 +301,20 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
     final groupedTransactions = <String, List>{};
     final userProfile = ref.watch(userProfileProvider);
     for (final item in paginatedState.items) {
-      final dateKey = AppDateFormatter.formatDate(item.transaction.date,
-          pattern: userProfile.dateFormat);
-      groupedTransactions.putIfAbsent(dateKey, () => []);
-      groupedTransactions[dateKey]!.add(item);
+      if (item == null ||
+          item.transaction == null ||
+          item.transaction.date == null) continue;
+
+      try {
+        final dateKey = AppDateFormatter.formatDate(item.transaction.date,
+            pattern: userProfile.dateFormat ?? 'MMM dd, yyyy');
+        groupedTransactions.putIfAbsent(dateKey, () => []);
+        groupedTransactions[dateKey]!.add(item);
+      } catch (e) {
+        const fallbackKey = 'Other';
+        groupedTransactions.putIfAbsent(fallbackKey, () => []);
+        groupedTransactions[fallbackKey]!.add(item);
+      }
     }
 
     final service = ref.read(transactionServiceProvider);
@@ -390,8 +404,11 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                                 }
                               } catch (e) {
                                 if (context.mounted) {
-                                  ToastUtils.showErrorToast(context, ref,
-                                      l10n.errorDeletingTransaction(e.toString()));
+                                  ToastUtils.showErrorToast(
+                                      context,
+                                      ref,
+                                      l10n.errorDeletingTransaction(
+                                          e.toString()));
                                 }
                               }
                             },
@@ -444,6 +461,8 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
     required dynamic item, // TransactionWithDetails
     required bool isExpense,
   }) {
+    if (item == null || item.transaction == null)
+      return const SizedBox.shrink();
     final theme = Theme.of(context);
     final currency = ref.watch(currentCurrencyProvider).value;
     final isDark = theme.brightness == Brightness.dark;
@@ -522,14 +541,14 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                   category?.icon, displayColor, isExpense),
             ),
             title: Text(
-              transaction.description ?? (isExpense ? l10n.expense : l10n.income),
+              transaction.description ??
+                  (isExpense ? l10n.expense : l10n.income),
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w600,
                 color: textColor,
-                decoration: isInactive
-                    ? null
-                    : null, // Could add strikethrough if cancelled
               ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
             subtitle: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -685,12 +704,15 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                           color: Colors.grey[600],
                         ),
                         const SizedBox(width: 3),
-                        Text(
-                          l10n.autoBadge,
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: Colors.grey[600],
-                            fontWeight: FontWeight.bold,
+                        Flexible(
+                          child: Text(
+                            l10n.autoBadge,
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: Colors.grey[600],
+                              fontWeight: FontWeight.bold,
+                            ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ],
@@ -752,8 +774,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
               final service = ref.read(scheduleServiceProvider);
               await service.deleteSchedule(schedule.uuid);
               if (context.mounted) {
-                ToastUtils.showSuccessToast(
-                    context, ref, l10n.scheduleDeleted);
+                ToastUtils.showSuccessToast(context, ref, l10n.scheduleDeleted);
               }
               ref.invalidate(allSchedulesProvider);
             },
@@ -790,7 +811,8 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
     }
   }
 
-  String _getStatusLabel(AppLocalizations l10n, String relationship, bool isMarked) {
+  String _getStatusLabel(
+      AppLocalizations l10n, String relationship, bool isMarked) {
     switch (relationship) {
       case 'PAID_FOR':
         return isMarked ? l10n.receivedTag : l10n.receivableTag;

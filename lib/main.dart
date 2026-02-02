@@ -286,6 +286,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 NavigationRail(
                   selectedIndex: _selectedIndex,
                   onDestinationSelected: (index) {
+                    if (index == 1) {
+                      // Clear transactions filters and search when navigating via navigation rail
+                      final notifier = ref.read(transactionsPaginatedProvider.notifier);
+                      notifier.search('');
+                      notifier.applyFilters(TransactionFilters());
+                    }
                     setState(() {
                       _selectedIndex = index;
                     });
@@ -362,6 +368,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               child: NavigationBar(
                 selectedIndex: _selectedIndex,
                 onDestinationSelected: (index) {
+                  if (index == 1) {
+                    // Clear transactions filters and search when navigating via bottom bar
+                    final notifier = ref.read(transactionsPaginatedProvider.notifier);
+                    notifier.search('');
+                    notifier.applyFilters(TransactionFilters());
+                  }
                   setState(() {
                     _selectedIndex = index;
                   });
@@ -1043,7 +1055,7 @@ class _DashboardTab extends ConsumerWidget {
                   children: [
                     _buildPrivacyHighlight(context, ref, l10n, isDark),
                     const SizedBox(height: 16),
-                    _buildQuickActions(context, l10n, isPremium),
+                    _buildQuickActions(context, ref, l10n, isPremium),
                   ],
                 ),
               ),
@@ -1325,7 +1337,7 @@ class _DashboardTab extends ConsumerWidget {
   }
 
   Widget _buildQuickActions(
-      BuildContext context, AppLocalizations l10n, bool isPremium) {
+      BuildContext context, WidgetRef ref, AppLocalizations l10n, bool isPremium) {
     final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 0),
@@ -1403,6 +1415,19 @@ class _DashboardTab extends ConsumerWidget {
                       label: l10n.receivableTag,
                       gradient: AppColors.receivablesSectionGradient,
                       onTap: () {
+                        // Clear filters and search before navigating
+                        final pendingNotifier = ref.read(receivablesPaginatedProvider('PENDING').notifier);
+                        pendingNotifier.updateSearchQuery('');
+                        pendingNotifier.applyFilters(ReceivableFilters());
+
+                        final overdueNotifier = ref.read(receivablesPaginatedProvider('OVERDUE').notifier);
+                        overdueNotifier.updateSearchQuery('');
+                        overdueNotifier.applyFilters(ReceivableFilters());
+
+                        final receivedNotifier = ref.read(receivablesPaginatedProvider('RECEIVED').notifier);
+                        receivedNotifier.updateSearchQuery('');
+                        receivedNotifier.applyFilters(ReceivableFilters());
+
                         Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -1416,6 +1441,19 @@ class _DashboardTab extends ConsumerWidget {
                       label: l10n.payables,
                       gradient: AppColors.payablesSectionGradient,
                       onTap: () {
+                        // Clear filters and search before navigating
+                        final pendingNotifier = ref.read(payablesPaginatedProvider('PENDING').notifier);
+                        pendingNotifier.updateSearchQuery('');
+                        pendingNotifier.applyFilters(PayableFilters());
+
+                        final overdueNotifier = ref.read(payablesPaginatedProvider('OVERDUE').notifier);
+                        overdueNotifier.updateSearchQuery('');
+                        overdueNotifier.applyFilters(PayableFilters());
+
+                        final paidNotifier = ref.read(payablesPaginatedProvider('PAID').notifier);
+                        paidNotifier.updateSearchQuery('');
+                        paidNotifier.applyFilters(PayableFilters());
+
                         Navigator.push(
                           context,
                           MaterialPageRoute(

@@ -190,6 +190,12 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
     final currentTabIndex = _tabController?.index ?? 0;
     // Ensure index is within bounds for the current tabCount
     final safeTabIndex = currentTabIndex < tabCount ? currentTabIndex : 0;
+
+    // Safety check for tab controller index mismatch
+    if (_tabController != null && _tabController!.index >= tabCount) {
+      _tabController!.index = 0;
+    }
+
     final status = _getStatusForTabIndex(safeTabIndex, hasOverdueTab);
 
     // Use ref.read for the notifier to avoid rebuild loops, but watch the state
@@ -474,12 +480,20 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
     final dateFormat = userProfile.dateFormat;
     for (final item in paginatedState.items) {
       // Safety check: ensure receivable and date are not null
-      if (item.receivable == null || item.receivable.date == null) continue;
+      if (item == null ||
+          item.receivable == null ||
+          item.receivable.date == null) continue;
 
-      final dateKey = AppDateFormatter.formatDate(item.receivable.date,
-          pattern: dateFormat);
-      groupedReceivables.putIfAbsent(dateKey, () => []);
-      groupedReceivables[dateKey]!.add(item);
+      try {
+        final dateKey = AppDateFormatter.formatDate(item.receivable.date,
+            pattern: dateFormat ?? 'MMM dd, yyyy');
+        groupedReceivables.putIfAbsent(dateKey, () => []);
+        groupedReceivables[dateKey]!.add(item);
+      } catch (e) {
+        const fallbackKey = 'Other';
+        groupedReceivables.putIfAbsent(fallbackKey, () => []);
+        groupedReceivables[fallbackKey]!.add(item);
+      }
     }
 
     final keys = groupedReceivables.keys.toList();
@@ -602,7 +616,9 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
   }
 
   Widget _buildReceivableCard(dynamic item, AppCurrency currency) {
+    if (item == null || item.receivable == null) return const SizedBox.shrink();
     final l10n = AppLocalizations.of(context)!;
+    final userProfile = ref.watch(userProfileProvider);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final receivable = item.receivable;
@@ -688,6 +704,8 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                       // Linked category or transaction type tag
                       if (linkedCategory != null) ...[
@@ -818,13 +836,12 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
                                   : theme.colorScheme.onSurfaceVariant,
                             ),
                             const SizedBox(width: 4),
-                            Flexible(
+                            Expanded(
                               child: Text(
                                 l10n.dueAt(AppDateFormatter.formatDate(
                                     receivable.dueDate!,
-                                    pattern: ref
-                                        .read(userProfileProvider)
-                                        .dateFormat)),
+                                    pattern: userProfile.dateFormat ??
+                                        'MMM dd, yyyy')),
                                 style: theme.textTheme.labelSmall?.copyWith(
                                   color: isPending
                                       ? (receivable.dueDate!
@@ -835,6 +852,7 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
                                   fontWeight:
                                       isPending ? FontWeight.bold : null,
                                 ),
+                                maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
