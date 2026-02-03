@@ -1460,6 +1460,62 @@ class AppLocalizationsEn extends AppLocalizations {
       'Tap here to record a new income or expense transaction.';
 
   @override
+  String get tourAnalyticsDateRangeTitle => 'Date Range Selector';
+
+  @override
+  String get tourAnalyticsDateRangeDesc =>
+      'Switch between monthly, quarterly, yearly, or custom date ranges to analyze your data.';
+
+  @override
+  String get tourAnalyticsExportPdfTitle => 'Export PDF Report';
+
+  @override
+  String get tourAnalyticsExportPdfDesc =>
+      'Generate and share professional PDF reports of your financial analytics.';
+
+  @override
+  String get tourAnalyticsFinancialSummaryTitle => 'Financial Summary';
+
+  @override
+  String get tourAnalyticsFinancialSummaryDesc =>
+      'Get a quick overview of your total payables, receivables, income, and expenses for the selected period.';
+
+  @override
+  String get tourAnalyticsChartsTitle => 'Visual Insights';
+
+  @override
+  String get tourAnalyticsChartsDesc =>
+      'Understand your spending habits and trends through interactive charts and category breakdowns.';
+
+  @override
+  String get tourSettingsProfileTitle => 'User Profile';
+
+  @override
+  String get tourSettingsProfileDesc =>
+      'Manage your personal information, profile picture, and account details.';
+
+  @override
+  String get tourSettingsAppPreferencesTitle => 'App Preferences';
+
+  @override
+  String get tourSettingsAppPreferencesDesc =>
+      'Customize the app experience by changing language, font, and theme (dark/light mode).';
+
+  @override
+  String get tourSettingsBackupTitle => 'Data Security';
+
+  @override
+  String get tourSettingsBackupDesc =>
+      'Keep your data safe by setting up Google Drive backup and restore.';
+
+  @override
+  String get tourSettingsPremiumTitle => 'Premium Features';
+
+  @override
+  String get tourSettingsPremiumDesc =>
+      'Unlock advanced analytics, custom message templates, and more with Flowpaisa Premium.';
+
+  @override
   String get messageTemplatesDesc =>
       'Customize message templates is available for Premium users.';
 

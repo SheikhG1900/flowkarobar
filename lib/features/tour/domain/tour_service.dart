@@ -18,6 +18,18 @@ class TourService {
   static final GlobalKey transactionsListKey = GlobalKey();
   static final GlobalKey transactionsFabKey = GlobalKey();
 
+  // Analytics Screen Keys
+  static final GlobalKey analyticsDateRangeKey = GlobalKey();
+  static final GlobalKey analyticsExportPdfKey = GlobalKey();
+  static final GlobalKey analyticsFinancialSummaryKey = GlobalKey();
+  static final GlobalKey analyticsChartsKey = GlobalKey();
+
+  // Settings Screen Keys
+  static final GlobalKey settingsProfileKey = GlobalKey();
+  static final GlobalKey settingsAppPreferencesKey = GlobalKey();
+  static final GlobalKey settingsBackupKey = GlobalKey();
+  static final GlobalKey settingsPremiumKey = GlobalKey();
+
   /// List of showcase keys in order for dashboard tour
   static List<GlobalKey> get dashboardTourKeys => [
         dashboardHeaderKey,
@@ -34,6 +46,20 @@ class TourService {
         transactionsFilterKey,
         transactionsListKey,
         transactionsFabKey,
+      ];
+
+  static List<GlobalKey> get analyticsTourKeys => [
+        analyticsDateRangeKey,
+        analyticsExportPdfKey,
+        analyticsFinancialSummaryKey,
+        analyticsChartsKey,
+      ];
+
+  static List<GlobalKey> get settingsTourKeys => [
+        settingsProfileKey,
+        settingsAppPreferencesKey,
+        settingsBackupKey,
+        settingsPremiumKey,
       ];
 
   /// Start the dashboard tour
@@ -54,6 +80,24 @@ class TourService {
       showcaseState.startShowCase(transactionsTourKeys);
     } catch (e) {
       debugPrint('Error starting transactions tour: $e');
+    }
+  }
+
+  static void startAnalyticsTour(BuildContext context) {
+    try {
+      final showcaseState = ShowCaseWidget.of(context);
+      showcaseState.startShowCase(analyticsTourKeys);
+    } catch (e) {
+      debugPrint('Error starting analytics tour: $e');
+    }
+  }
+
+  static void startSettingsTour(BuildContext context) {
+    try {
+      final showcaseState = ShowCaseWidget.of(context);
+      showcaseState.startShowCase(settingsTourKeys);
+    } catch (e) {
+      debugPrint('Error starting settings tour: $e');
     }
   }
 

@@ -1466,6 +1466,62 @@ class AppLocalizationsHi extends AppLocalizations {
       'नया आय या व्यय लेनदेन रिकॉर्ड करने के लिए यहां टैप करें।';
 
   @override
+  String get tourAnalyticsDateRangeTitle => 'तारीख सीमा चयनकर्ता';
+
+  @override
+  String get tourAnalyticsDateRangeDesc =>
+      'अपने डेटा का विश्लेषण करने के लिए मासिक, त्रैमासिक, वार्षिक या कस्टम तारीख सीमा के बीच स्विच करें।';
+
+  @override
+  String get tourAnalyticsExportPdfTitle => 'पीडीएफ रिपोर्ट एक्सपोर्ट करें';
+
+  @override
+  String get tourAnalyticsExportPdfDesc =>
+      'अपने वित्तीय विश्लेषण की पेशेवर पीडीएफ रिपोर्ट बनाएं और साझा करें।';
+
+  @override
+  String get tourAnalyticsFinancialSummaryTitle => 'वित्तीय सारांश';
+
+  @override
+  String get tourAnalyticsFinancialSummaryDesc =>
+      'चयनित अवधि के लिए अपने कुल देय, प्राप्य, आय और खर्चों का त्वरित अवलोकन प्राप्त करें।';
+
+  @override
+  String get tourAnalyticsChartsTitle => 'दृश्य अंतर्दृष्टि';
+
+  @override
+  String get tourAnalyticsChartsDesc =>
+      'इंटरैक्टिव चार्ट और श्रेणी विवरण के माध्यम से अपनी खर्च करने की आदतों और रुझानों को समझें।';
+
+  @override
+  String get tourSettingsProfileTitle => 'उपयोगकर्ता प्रोफ़ाइल';
+
+  @override
+  String get tourSettingsProfileDesc =>
+      'अपनी व्यक्तिगत जानकारी, प्रोफ़ाइल फ़ोटो और खाते के विवरण प्रबंधित करें।';
+
+  @override
+  String get tourSettingsAppPreferencesTitle => 'ऐप प्राथमिकताएं';
+
+  @override
+  String get tourSettingsAppPreferencesDesc =>
+      'भाषा, फ़ॉन्ट और थीम (डार्क/लाइट मोड) बदलकर ऐप अनुभव को कस्टमाइज़ करें।';
+
+  @override
+  String get tourSettingsBackupTitle => 'डेटा सुरक्षा';
+
+  @override
+  String get tourSettingsBackupDesc =>
+      'गूगल ड्राइव बैकअप और रिस्टोर सेटअप करके अपना डेटा सुरक्षित रखें।';
+
+  @override
+  String get tourSettingsPremiumTitle => 'प्रीमियम विशेषताएं';
+
+  @override
+  String get tourSettingsPremiumDesc =>
+      'फ्लोपैसा प्रीमियम के साथ उन्नत विश्लेषण, कस्टम संदेश टेम्पलेट और बहुत कुछ अनलॉक करें।';
+
+  @override
   String get messageTemplatesDesc =>
       'संदेश टेम्पलेट्स को कस्टमाइज़ करना प्रीमियम उपयोगकर्ताओं के लिए उपलब्ध है।';
 

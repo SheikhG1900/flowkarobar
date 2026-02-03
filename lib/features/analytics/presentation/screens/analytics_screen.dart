@@ -31,6 +31,8 @@ import 'package:printing/printing.dart';
 import 'package:pdf/pdf.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:showcaseview/showcaseview.dart';
+import 'package:flowpaisa/features/tour/domain/tour_service.dart';
 
 final exportServiceProvider = Provider<ExportService>((ref) {
   final db = ref.watch(databaseProvider);
@@ -189,10 +191,19 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                 ),
                 centerTitle: true,
                 actions: [
-                  IconButton(
-                    icon: const Icon(Symbols.picture_as_pdf),
-                    onPressed: _exportAnalyticsToPDF,
-                    tooltip: l10n.exportAnalyticsPDF,
+                  Showcase(
+                    key: TourService.analyticsExportPdfKey,
+                    title: l10n.tourAnalyticsExportPdfTitle,
+                    description: l10n.tourAnalyticsExportPdfDesc,
+                    targetShapeBorder: const CircleBorder(),
+                    tooltipBackgroundColor: theme.colorScheme.primary,
+                    textColor: Colors.white,
+                    tooltipPosition: TooltipPosition.bottom,
+                    child: IconButton(
+                      icon: const Icon(Symbols.picture_as_pdf),
+                      onPressed: _exportAnalyticsToPDF,
+                      tooltip: l10n.exportAnalyticsPDF,
+                    ),
                   ),
                   IconButton(
                     icon: const Icon(Symbols.refresh),
@@ -213,21 +224,32 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                 ],
                 bottom: PreferredSize(
                   preferredSize: const Size.fromHeight(107),
-                  child: _DateRangeSelector(
-                    selectedDateRange: selectedDateRange,
-                    onDateRangeChanged: (dateRange) {
-                      ref
-                          .read(selectedDateRangeProvider.notifier)
-                          .updateRange(dateRange);
-                    },
-                    onNextPeriod: () {
-                      ref.read(selectedDateRangeProvider.notifier).nextPeriod();
-                    },
-                    onPreviousPeriod: () {
-                      ref
-                          .read(selectedDateRangeProvider.notifier)
-                          .previousPeriod();
-                    },
+                  child: Showcase(
+                    key: TourService.analyticsDateRangeKey,
+                    title: l10n.tourAnalyticsDateRangeTitle,
+                    description: l10n.tourAnalyticsDateRangeDesc,
+                    targetShapeBorder: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(12)),
+                    ),
+                    tooltipBackgroundColor: theme.colorScheme.primary,
+                    textColor: Colors.white,
+                    tooltipPosition: TooltipPosition.bottom,
+                    child: _DateRangeSelector(
+                      selectedDateRange: selectedDateRange,
+                      onDateRangeChanged: (dateRange) {
+                        ref
+                            .read(selectedDateRangeProvider.notifier)
+                            .updateRange(dateRange);
+                      },
+                      onNextPeriod: () {
+                        ref.read(selectedDateRangeProvider.notifier).nextPeriod();
+                      },
+                      onPreviousPeriod: () {
+                        ref
+                            .read(selectedDateRangeProvider.notifier)
+                            .previousPeriod();
+                      },
+                    ),
                   ),
                 ),
               ),
@@ -240,10 +262,21 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Financial Summary (Combined)
-                      _CollapsibleSection(
-                        title: l10n.financialSummary,
-                        sectionIndex: 0,
-                        child: const _FinancialSummaryCard(),
+                      Showcase(
+                        key: TourService.analyticsFinancialSummaryKey,
+                        title: l10n.tourAnalyticsFinancialSummaryTitle,
+                        description: l10n.tourAnalyticsFinancialSummaryDesc,
+                        targetShapeBorder: const RoundedRectangleBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(12)),
+                        ),
+                        tooltipBackgroundColor: theme.colorScheme.primary,
+                        textColor: Colors.white,
+                        tooltipPosition: TooltipPosition.bottom,
+                        child: _CollapsibleSection(
+                          title: l10n.financialSummary,
+                          sectionIndex: 0,
+                          child: const _FinancialSummaryCard(),
+                        ),
                       ),
 
                       // Contact Summaries
@@ -254,10 +287,21 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                       ),
 
                       // Pie Chart Section
-                      _CollapsibleSection(
-                        title: l10n.expensesByCategory,
-                        sectionIndex: 2,
-                        child: const _ExpensesPieChart(),
+                      Showcase(
+                        key: TourService.analyticsChartsKey,
+                        title: l10n.tourAnalyticsChartsTitle,
+                        description: l10n.tourAnalyticsChartsDesc,
+                        targetShapeBorder: const RoundedRectangleBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(12)),
+                        ),
+                        tooltipBackgroundColor: theme.colorScheme.primary,
+                        textColor: Colors.white,
+                        tooltipPosition: TooltipPosition.bottom,
+                        child: _CollapsibleSection(
+                          title: l10n.expensesByCategory,
+                          sectionIndex: 2,
+                          child: const _ExpensesPieChart(),
+                        ),
                       ),
 
                       // Trend Chart Section

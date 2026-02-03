@@ -1471,6 +1471,62 @@ class AppLocalizationsUr extends AppLocalizations {
       'نئی آمدنی یا اخراجات کا اندراج کرنے کے لیے یہاں ٹیپ کریں۔';
 
   @override
+  String get tourAnalyticsDateRangeTitle => 'تاریخ کی حد کا انتخاب';
+
+  @override
+  String get tourAnalyticsDateRangeDesc =>
+      'اپنے ڈیٹا کا تجزیہ کرنے کے لیے ماہانہ، سہ ماہی، سالانہ یا حسب ضرورت تاریخ کی حدود کے درمیان سوئچ کریں۔';
+
+  @override
+  String get tourAnalyticsExportPdfTitle => 'پی ڈی ایف رپورٹ ایکسپورٹ کریں';
+
+  @override
+  String get tourAnalyticsExportPdfDesc =>
+      'اپنے مالیاتی تجزیات کی پیشہ ورانہ پی ڈی ایف رپورٹس تیار کریں اور شیئر کریں۔';
+
+  @override
+  String get tourAnalyticsFinancialSummaryTitle => 'مالی خلاصہ';
+
+  @override
+  String get tourAnalyticsFinancialSummaryDesc =>
+      'منتخب کردہ مدت کے لیے اپنے کل واجبات، وصولی، آمدنی اور اخراجات کا فوری جائزہ حاصل کریں۔';
+
+  @override
+  String get tourAnalyticsChartsTitle => 'بصری بصیرت';
+
+  @override
+  String get tourAnalyticsChartsDesc =>
+      'انٹرایکٹو چارٹس اور زمرہ جات کی تفصیل کے ذریعے اپنی خرچ کرنے کی عادات اور رجحانات کو سمجھیں۔';
+
+  @override
+  String get tourSettingsProfileTitle => 'صارف کا پروفائل';
+
+  @override
+  String get tourSettingsProfileDesc =>
+      'اپنی ذاتی معلومات، پروفائل تصویر، اور اکاؤنٹ کی تفصیلات کا انتظام کریں۔';
+
+  @override
+  String get tourSettingsAppPreferencesTitle => 'ایپ کی ترجیحات';
+
+  @override
+  String get tourSettingsAppPreferencesDesc =>
+      'زبان، فونٹ، اور تھیم (ڈارک/لائٹ موڈ) تبدیل کر کے ایپ کے تجربے کو اپنی مرضی کے مطابق بنائیں۔';
+
+  @override
+  String get tourSettingsBackupTitle => 'ڈیٹا کی حفاظت';
+
+  @override
+  String get tourSettingsBackupDesc =>
+      'گوگل ڈرائیو بیک اپ اور ریسٹور سیٹ اپ کر کے اپنے ڈیٹا کو محفوظ رکھیں۔';
+
+  @override
+  String get tourSettingsPremiumTitle => 'پریمیم خصوصیات';
+
+  @override
+  String get tourSettingsPremiumDesc =>
+      'فلو پیسہ پریمیم کے ساتھ جدید تجزیات، حسب ضرورت میسج ٹیمپلیٹس اور بہت کچھ ان لاک کریں۔';
+
+  @override
   String get messageTemplatesDesc =>
       'میسج ٹیمپلیٹس کو حسب ضرورت بنانا پریمیم صارفین کے لیے دستیاب ہے۔';
 

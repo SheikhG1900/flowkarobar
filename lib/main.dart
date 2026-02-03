@@ -439,6 +439,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 TourService.startTransactionsTour(context);
                               }
                             });
+                          } else if (index == 2) {
+                            // Start analytics tour if not shown before
+                            Future.delayed(const Duration(milliseconds: 800),
+                                () {
+                              if (context.mounted) {
+                                TourService.startAnalyticsTour(context);
+                              }
+                            });
+                          } else if (index == 3) {
+                            // Start settings tour if not shown before
+                            Future.delayed(const Duration(milliseconds: 800),
+                                () {
+                              if (context.mounted) {
+                                TourService.startSettingsTour(context);
+                              }
+                            });
                           }
                           setState(() {
                             _selectedIndex = index;
@@ -1972,14 +1988,176 @@ class _SettingsTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
     final isPremium = PremiumGate.isPremium(ref);
 
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.settings),
+        actions: [
+          Showcase(
+            key: TourService.settingsProfileKey,
+            title: l10n.tourSettingsProfileTitle,
+            description: l10n.tourSettingsProfileDesc,
+            targetShapeBorder: const CircleBorder(),
+            tooltipBackgroundColor: theme.colorScheme.primary,
+            textColor: Colors.white,
+            child: IconButton(
+              icon: const Icon(Icons.person_outline),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ProfileScreen(),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
       ),
       body: ListView(
         children: [
+          Showcase(
+            key: TourService.settingsAppPreferencesKey,
+            title: l10n.tourSettingsAppPreferencesTitle,
+            description: l10n.tourSettingsAppPreferencesDesc,
+            targetShapeBorder: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(12)),
+            ),
+            tooltipBackgroundColor: theme.colorScheme.primary,
+            textColor: Colors.white,
+            child: Column(
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.language),
+                  title: Text(l10n.language),
+                  subtitle: Text(l10n.english),
+                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const LanguageSelectorScreen(),
+                      ),
+                    );
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.font_download_outlined),
+                  title: const Text('Font Selection'),
+                  subtitle: Consumer(
+                    builder: (context, ref, child) {
+                      final font = ref.watch(currentFontProvider);
+                      return Text(font);
+                    },
+                  ),
+                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const FontSelectorScreen(),
+                      ),
+                    );
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.dark_mode),
+                  title: Text(l10n.theme),
+                  subtitle: Text(l10n.system),
+                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ThemeSelectorScreen(),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+          const Divider(),
+          Showcase(
+            key: TourService.settingsBackupKey,
+            title: l10n.tourSettingsBackupTitle,
+            description: l10n.tourSettingsBackupDesc,
+            targetShapeBorder: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(12)),
+            ),
+            tooltipBackgroundColor: theme.colorScheme.primary,
+            textColor: Colors.white,
+            child: ListTile(
+              leading: const Icon(Icons.backup),
+              title: Row(
+                children: [
+                  Text(l10n.backup),
+                  const SizedBox(width: 8),
+                  if (!isPremium)
+                    const PremiumBadge(isSmall: true, showLock: true),
+                ],
+              ),
+              subtitle: Text(l10n.googleDriveBackupRestore),
+              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const BackupScreen(),
+                  ),
+                );
+              },
+            ),
+          ),
+          const Divider(),
+          Showcase(
+            key: TourService.settingsPremiumKey,
+            title: l10n.tourSettingsPremiumTitle,
+            description: l10n.tourSettingsPremiumDesc,
+            targetShapeBorder: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(12)),
+            ),
+            tooltipBackgroundColor: theme.colorScheme.primary,
+            textColor: Colors.white,
+            child: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color(0xFFFFD700), // Gold
+                    Color(0xFFFFA500), // Orange
+                    Color(0xFFFF8C00), // Dark Orange
+                  ],
+                ),
+              ),
+              child: ListTile(
+                leading:
+                    const Icon(Icons.workspace_premium, color: Colors.white),
+                title: Text(
+                  l10n.premium,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                subtitle: Text(
+                  l10n.unlockAdvancedAnalytics,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.9),
+                  ),
+                ),
+                trailing:
+                    const Icon(Icons.arrow_forward_ios, color: Colors.white),
+                onTap: () {
+                  PremiumGate.showPremiumDialog(context);
+                },
+              ),
+            ),
+          ),
+          const Divider(),
           ListTile(
             leading: const Icon(Icons.account_balance_wallet_outlined),
             title: Text(l10n.myCashbooks),

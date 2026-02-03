@@ -2758,6 +2758,102 @@ abstract class AppLocalizations {
   /// **'Tap here to record a new income or expense transaction.'**
   String get tourTransactionsFabDesc;
 
+  /// No description provided for @tourAnalyticsDateRangeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Date Range Selector'**
+  String get tourAnalyticsDateRangeTitle;
+
+  /// No description provided for @tourAnalyticsDateRangeDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch between monthly, quarterly, yearly, or custom date ranges to analyze your data.'**
+  String get tourAnalyticsDateRangeDesc;
+
+  /// No description provided for @tourAnalyticsExportPdfTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Export PDF Report'**
+  String get tourAnalyticsExportPdfTitle;
+
+  /// No description provided for @tourAnalyticsExportPdfDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate and share professional PDF reports of your financial analytics.'**
+  String get tourAnalyticsExportPdfDesc;
+
+  /// No description provided for @tourAnalyticsFinancialSummaryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Financial Summary'**
+  String get tourAnalyticsFinancialSummaryTitle;
+
+  /// No description provided for @tourAnalyticsFinancialSummaryDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Get a quick overview of your total payables, receivables, income, and expenses for the selected period.'**
+  String get tourAnalyticsFinancialSummaryDesc;
+
+  /// No description provided for @tourAnalyticsChartsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Visual Insights'**
+  String get tourAnalyticsChartsTitle;
+
+  /// No description provided for @tourAnalyticsChartsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Understand your spending habits and trends through interactive charts and category breakdowns.'**
+  String get tourAnalyticsChartsDesc;
+
+  /// No description provided for @tourSettingsProfileTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'User Profile'**
+  String get tourSettingsProfileTitle;
+
+  /// No description provided for @tourSettingsProfileDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage your personal information, profile picture, and account details.'**
+  String get tourSettingsProfileDesc;
+
+  /// No description provided for @tourSettingsAppPreferencesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'App Preferences'**
+  String get tourSettingsAppPreferencesTitle;
+
+  /// No description provided for @tourSettingsAppPreferencesDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Customize the app experience by changing language, font, and theme (dark/light mode).'**
+  String get tourSettingsAppPreferencesDesc;
+
+  /// No description provided for @tourSettingsBackupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Data Security'**
+  String get tourSettingsBackupTitle;
+
+  /// No description provided for @tourSettingsBackupDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep your data safe by setting up Google Drive backup and restore.'**
+  String get tourSettingsBackupDesc;
+
+  /// No description provided for @tourSettingsPremiumTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Premium Features'**
+  String get tourSettingsPremiumTitle;
+
+  /// No description provided for @tourSettingsPremiumDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock advanced analytics, custom message templates, and more with Flowpaisa Premium.'**
+  String get tourSettingsPremiumDesc;
+
   /// No description provided for @messageTemplatesDesc.
   ///
   /// In en, this message translates to:
