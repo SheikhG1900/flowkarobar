@@ -1555,6 +1555,40 @@ class AppLocalizationsEn extends AppLocalizations {
       'Tap here to save your transaction. You can also share it via WhatsApp immediately.';
 
   @override
+  String get tourBackupAuthTitle => 'Google Sign-in';
+
+  @override
+  String get tourBackupAuthDesc =>
+      'Sign in with your Google account to enable cloud backup and sync across devices.';
+
+  @override
+  String get tourBackupSyncTitle => 'Synchronization';
+
+  @override
+  String get tourBackupSyncDesc =>
+      'Keep your data in sync automatically. You can see your local and cloud versions here.';
+
+  @override
+  String get tourBackupNowTitle => 'Manual Backup';
+
+  @override
+  String get tourBackupNowDesc =>
+      'Create a full backup of your data to Google Drive anytime.';
+
+  @override
+  String get tourReceivablesListTitle => 'Receivables List';
+
+  @override
+  String get tourReceivablesListDesc =>
+      'View all money people owe you. Tap to manage.';
+
+  @override
+  String get tourPayablesListTitle => 'Payables List';
+
+  @override
+  String get tourPayablesListDesc => 'View all money you owe. Tap to manage.';
+
+  @override
   String get tourShowMeHow => 'Show me how';
 
   @override

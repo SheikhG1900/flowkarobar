@@ -1,4 +1,7 @@
 import 'package:flowpaisa/l10n/app_localizations.dart';
+import 'package:flowpaisa/features/tour/domain/tour_service.dart';
+import 'package:flowpaisa/features/tour/presentation/providers/tour_provider.dart';
+import 'package:showcaseview/showcaseview.dart';
 import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -214,8 +217,13 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
     final currentFilters = paginatedNotifier.currentFilters;
     final hasActiveFilters = !currentFilters.isEmpty;
 
-    return Scaffold(
-      appBar: AppBar(
+    return ShowCaseWidget(
+      onFinish: () {
+        final tourNotifier = ref.read(tourNotifierProvider);
+        tourNotifier.markTourCompleted(tourNotifier.receivablesKey);
+      },
+      builder: (context) => Scaffold(
+        appBar: AppBar(
         title: _isSearching
             ? TextField(
                 autofocus: true,
@@ -366,18 +374,28 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
                 ],
               ),
       ),
-      body: _tabController == null ||
-              _tabController!.length != tabCount ||
-              _tabController!.index >= tabCount
-          ? const AppLoadingIndicator(size: 60)
-          : TabBarView(
-              controller: _tabController,
-              children: [
-                _buildReceivablesList('PENDING'),
-                if (hasOverdueTab) _buildReceivablesList('OVERDUE'),
-                _buildReceivablesList('RECEIVED'),
-              ],
-            ),
+      body: Showcase(
+        key: TourService.receivablesListKey,
+        title: l10n.tourReceivablesListTitle,
+        description: l10n.tourReceivablesListDesc,
+        targetShapeBorder: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        tooltipBackgroundColor: AppColors.receivableColor,
+        textColor: Colors.white,
+        child: _tabController == null ||
+                _tabController!.length != tabCount ||
+                _tabController!.index >= tabCount
+            ? const AppLoadingIndicator(size: 60)
+            : TabBarView(
+                controller: _tabController,
+                children: [
+                  _buildReceivablesList('PENDING'),
+                  if (hasOverdueTab) _buildReceivablesList('OVERDUE'),
+                  _buildReceivablesList('RECEIVED'),
+                ],
+              ),
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.push(
@@ -390,6 +408,7 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
         backgroundColor: AppColors.receivablesSectionColor,
         foregroundColor: Colors.white,
         child: const Icon(Icons.add),
+      ),
       ),
     );
   }

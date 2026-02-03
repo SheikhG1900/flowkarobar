@@ -1,4 +1,7 @@
 import 'package:drift/drift.dart' hide Column;
+import 'package:flowpaisa/features/tour/domain/tour_service.dart';
+import 'package:flowpaisa/features/tour/presentation/providers/tour_provider.dart';
+import 'package:showcaseview/showcaseview.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flowpaisa/core/utils/icon_helper.dart';
 import 'package:flutter/material.dart';
@@ -193,8 +196,13 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
         ref.watch(payablesPaginatedProvider(status).notifier).currentFilters;
     final hasActiveFilters = !currentFilters.isEmpty;
 
-    return Scaffold(
-      appBar: AppBar(
+    return ShowCaseWidget(
+      onFinish: () {
+        final tourNotifier = ref.read(tourNotifierProvider);
+        tourNotifier.markTourCompleted(tourNotifier.payablesKey);
+      },
+      builder: (context) => Scaffold(
+        appBar: AppBar(
         title: _isSearching
             ? TextField(
                 autofocus: true,
@@ -345,16 +353,26 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
                 ],
               ),
       ),
-      body: _tabController == null
-          ? const AppLoadingIndicator(size: 60)
-          : TabBarView(
-              controller: _tabController,
-              children: [
-                _buildPayablesList('PENDING'),
-                if (hasOverdueTab) _buildPayablesList('OVERDUE'),
-                _buildPayablesList('PAID'),
-              ],
-            ),
+      body: Showcase(
+        key: TourService.payablesListKey,
+        title: l10n.tourPayablesListTitle,
+        description: l10n.tourPayablesListDesc,
+        targetShapeBorder: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        tooltipBackgroundColor: AppColors.payableColor,
+        textColor: Colors.white,
+        child: _tabController == null
+            ? const AppLoadingIndicator(size: 60)
+            : TabBarView(
+                controller: _tabController,
+                children: [
+                  _buildPayablesList('PENDING'),
+                  if (hasOverdueTab) _buildPayablesList('OVERDUE'),
+                  _buildPayablesList('PAID'),
+                ],
+              ),
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.push(
@@ -367,6 +385,7 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
         backgroundColor: AppColors.payablesSectionColor,
         foregroundColor: Colors.white,
         child: const Icon(Icons.add),
+      ),
       ),
     );
   }

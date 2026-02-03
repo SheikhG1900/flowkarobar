@@ -2920,6 +2920,66 @@ abstract class AppLocalizations {
   /// **'Tap here to save your transaction. You can also share it via WhatsApp immediately.'**
   String get tourAddTxSaveDesc;
 
+  /// No description provided for @tourBackupAuthTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Google Sign-in'**
+  String get tourBackupAuthTitle;
+
+  /// No description provided for @tourBackupAuthDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with your Google account to enable cloud backup and sync across devices.'**
+  String get tourBackupAuthDesc;
+
+  /// No description provided for @tourBackupSyncTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Synchronization'**
+  String get tourBackupSyncTitle;
+
+  /// No description provided for @tourBackupSyncDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep your data in sync automatically. You can see your local and cloud versions here.'**
+  String get tourBackupSyncDesc;
+
+  /// No description provided for @tourBackupNowTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Manual Backup'**
+  String get tourBackupNowTitle;
+
+  /// No description provided for @tourBackupNowDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a full backup of your data to Google Drive anytime.'**
+  String get tourBackupNowDesc;
+
+  /// No description provided for @tourReceivablesListTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Receivables List'**
+  String get tourReceivablesListTitle;
+
+  /// No description provided for @tourReceivablesListDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'View all money people owe you. Tap to manage.'**
+  String get tourReceivablesListDesc;
+
+  /// No description provided for @tourPayablesListTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Payables List'**
+  String get tourPayablesListTitle;
+
+  /// No description provided for @tourPayablesListDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'View all money you owe. Tap to manage.'**
+  String get tourPayablesListDesc;
+
   /// No description provided for @tourShowMeHow.
   ///
   /// In en, this message translates to:

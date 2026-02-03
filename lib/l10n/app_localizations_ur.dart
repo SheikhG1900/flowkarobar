@@ -1566,6 +1566,41 @@ class AppLocalizationsUr extends AppLocalizations {
       'اپنا لین دین محفوظ کرنے کے لیے یہاں ٹیپ کریں۔ آپ اسے فوری طور پر واٹس ایپ کے ذریعے شیئر بھی کر سکتے ہیں۔';
 
   @override
+  String get tourBackupAuthTitle => 'گوگل سائن ان';
+
+  @override
+  String get tourBackupAuthDesc =>
+      'کلاؤڈ بیک اپ کو فعال کرنے اور آلات کے درمیان مطابقت پذیری کے لیے اپنے گوگل اکاؤنٹ سے سائن ان کریں۔';
+
+  @override
+  String get tourBackupSyncTitle => 'مطابقت پذیری';
+
+  @override
+  String get tourBackupSyncDesc =>
+      'اپنے ڈیٹا کو خودکار طور پر ہم آہنگ رکھیں۔ آپ یہاں اپنے مقامی اور کلاؤڈ ورژن دیکھ سکتے ہیں۔';
+
+  @override
+  String get tourBackupNowTitle => 'دستی بیک اپ';
+
+  @override
+  String get tourBackupNowDesc =>
+      'کسی بھی وقت گوگل ڈرائیو پر اپنے ڈیٹا کا مکمل بیک اپ بنائیں۔';
+
+  @override
+  String get tourReceivablesListTitle => 'وصولی کی فہرست';
+
+  @override
+  String get tourReceivablesListDesc =>
+      'لوگوں کے ذمے آپ کی تمام رقم دیکھیں۔ انتظام کرنے کے لیے ٹیپ کریں۔';
+
+  @override
+  String get tourPayablesListTitle => 'واجبات کی فہرست';
+
+  @override
+  String get tourPayablesListDesc =>
+      'آپ کے ذمے تمام رقم دیکھیں۔ انتظام کرنے کے لیے ٹیپ کریں۔';
+
+  @override
   String get tourShowMeHow => 'مجھے دکھائیں کیسے';
 
   @override

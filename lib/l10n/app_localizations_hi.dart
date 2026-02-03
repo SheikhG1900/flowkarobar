@@ -1561,6 +1561,41 @@ class AppLocalizationsHi extends AppLocalizations {
       'अपना लेनदेन सहेजने के लिए यहां टैप करें। आप इसे तुरंत व्हाट्सएप के माध्यम से साझा भी कर सकते हैं।';
 
   @override
+  String get tourBackupAuthTitle => 'गूगल साइन-इन';
+
+  @override
+  String get tourBackupAuthDesc =>
+      'क्लाउड बैकअप सक्षम करने और उपकरणों के बीच सिंक करने के लिए अपने गूगल खाते से साइन इन करें।';
+
+  @override
+  String get tourBackupSyncTitle => 'सिंक्रनाइज़ेशन';
+
+  @override
+  String get tourBackupSyncDesc =>
+      'अपने डेटा को स्वचालित रूप से सिंक में रखें। आप यहां अपने स्थानीय और क्लाउड संस्करण देख सकते हैं।';
+
+  @override
+  String get tourBackupNowTitle => 'मैनुअल बैकअप';
+
+  @override
+  String get tourBackupNowDesc =>
+      'किसी भी समय गूगल ड्राइव पर अपने डेटा का पूर्ण बैकअप बनाएं।';
+
+  @override
+  String get tourReceivablesListTitle => 'प्राप्य सूची';
+
+  @override
+  String get tourReceivablesListDesc =>
+      'लोगों द्वारा आपको दिए जाने वाले सभी पैसे देखें। प्रबंधित करने के लिए टैप करें।';
+
+  @override
+  String get tourPayablesListTitle => 'देय सूची';
+
+  @override
+  String get tourPayablesListDesc =>
+      'आपके द्वारा दूसरों को दिए जाने वाले सभी पैसे देखें। प्रबंधित करने के लिए टैप करें।';
+
+  @override
   String get tourShowMeHow => 'मुझे दिखाओ कैसे';
 
   @override

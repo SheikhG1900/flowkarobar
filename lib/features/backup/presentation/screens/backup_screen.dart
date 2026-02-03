@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 import 'package:flowpaisa/core/utils/icon_helper.dart';
 import 'package:flutter/material.dart';
@@ -11,6 +12,9 @@ import 'package:flowpaisa/shared/widgets/swipeable_list_item.dart';
 import 'package:flowpaisa/shared/widgets/app_loading_indicator.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
+import 'package:flowpaisa/features/tour/domain/tour_service.dart';
+import 'package:flowpaisa/features/tour/presentation/providers/tour_provider.dart';
+import 'package:showcaseview/showcaseview.dart';
 import 'package:intl/intl.dart';
 import 'package:googleapis/drive/v3.dart' as drive;
 import 'package:material_symbols_icons/symbols.dart';
@@ -18,13 +22,99 @@ import 'package:flowpaisa/features/premium/presentation/screens/premium_screen.d
 import 'package:flowpaisa/features/premium/domain/premium_provider.dart';
 
 class BackupScreen extends ConsumerStatefulWidget {
-  const BackupScreen({super.key});
+  final bool startTour;
+  
+  const BackupScreen({super.key, this.startTour = false});
 
   @override
   ConsumerState<BackupScreen> createState() => _BackupScreenState();
 }
 
 class _BackupScreenState extends ConsumerState<BackupScreen> {
+  bool _tourStarted = false;
+  final ScrollController _scrollController = ScrollController();
+  final GlobalKey _backupSectionKey = GlobalKey();
+  Timer? _scrollTimer;
+
+  @override
+  void dispose() {
+    _scrollTimer?.cancel();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _scrollToBackupSection() {
+    if (_backupSectionKey.currentContext != null) {
+      Scrollable.ensureVisible(
+        _backupSectionKey.currentContext!,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeInOut,
+        alignment: 0.25, // Position element at 25% from top for better visibility
+      );
+    }
+  }
+
+  void _setupTourScrollListener() {
+    // Cancel any existing timer
+    _scrollTimer?.cancel();
+    
+    // Don't check at all until we're sure steps 1 and 2 have been shown
+    // Wait a reasonable delay that ensures user has seen and interacted with steps 1 and 2
+    // Only then start checking if step 3 needs scrolling
+    Future.delayed(const Duration(seconds: 5), () {
+      if (!mounted) return;
+      
+      // Now check periodically if step 3 (backup step) is active and needs scrolling
+      bool hasScrolled = false;
+      int checkCount = 0;
+      _scrollTimer = Timer.periodic(const Duration(milliseconds: 500), (timer) {
+        if (!mounted || hasScrolled) {
+          timer.cancel();
+          return;
+        }
+        
+        checkCount++;
+        // Stop checking after 20 seconds (40 checks) to avoid infinite loop
+        if (checkCount > 40) {
+          timer.cancel();
+          return;
+        }
+        
+        // Check if backup section is visible in viewport
+        final backupSectionContext = _backupSectionKey.currentContext;
+        if (backupSectionContext != null) {
+          final backupRenderObject = backupSectionContext.findRenderObject();
+          if (backupRenderObject != null) {
+            final backupBox = backupRenderObject as RenderBox?;
+            if (backupBox != null && backupBox.hasSize) {
+              // Get screen height from the backup context
+              final mediaQuery = MediaQuery.maybeOf(backupSectionContext);
+              if (mediaQuery != null) {
+                // Check if backup section is outside viewport (needs scrolling)
+                final position = backupBox.localToGlobal(Offset.zero);
+                final size = backupBox.size;
+                final screenHeight = mediaQuery.size.height;
+                
+                // If backup section is below the visible area or only partially visible
+                if (position.dy + size.height > screenHeight * 0.8 || position.dy < 0) {
+                  // Check if backup showcase is active (step 3 is showing)
+                  final backupContext = TourService.backupNowKey.currentContext;
+                  if (backupContext != null) {
+                    // Step 3 is likely active and backup section needs scrolling
+                    _scrollToBackupSection();
+                    hasScrolled = true;
+                    timer.cancel();
+                    _scrollTimer?.cancel();
+                  }
+                }
+              }
+            }
+          }
+        }
+      });
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(backupProvider);
@@ -34,173 +124,200 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
     final activeCashbook = ref.watch(activeCashbookProvider);
     final isPremium = ref.watch(premiumProvider).isPremium;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.googleDriveBackupRestore),
-        actions: [
-          if (state.currentUser != null)
-            IconButton(
-              onPressed: () => _showClearAllCloudDataDialog(context),
-              icon: const Icon(Icons.delete_forever, color: Colors.red),
-              tooltip: l10n.clearAllCloudData,
+    return ShowCaseWidget(
+      onFinish: () {
+        final tourNotifier = ref.read(tourNotifierProvider);
+        tourNotifier.markTourCompleted(tourNotifier.backupKey);
+      },
+      builder: (context) {
+        // Start tour if requested and we haven't started it yet
+        if (widget.startTour && !_tourStarted) {
+          _tourStarted = true;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              try {
+                final showcaseState = ShowCaseWidget.of(context);
+                showcaseState.startShowCase(TourService.backupTourKeys);
+                // Set up scroll listener to scroll to backup section when tour reaches that step
+                _setupTourScrollListener();
+              } catch (e) {
+                debugPrint('Error starting backup tour: $e');
+              }
+            }
+          });
+        }
+        return Builder(
+          builder: (context) => Scaffold(
+            appBar: AppBar(
+              title: Text(l10n.googleDriveBackupRestore),
+              actions: [
+                if (state.currentUser != null)
+                  IconButton(
+                    onPressed: () => _showClearAllCloudDataDialog(context),
+                    icon: const Icon(Icons.delete_forever, color: Colors.red),
+                    tooltip: l10n.clearAllCloudData,
+                  ),
+                const SizedBox(width: 12),
+              ],
             ),
-          SizedBox(width: 12),
-        ],
-      ),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          return Stack(
-            children: [
-              SafeArea(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(16),
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                      minHeight: constraints.maxHeight - 32, // Subtract padding
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        // Auth Section
-                        _buildAuthSection(context, state, notifier, l10n),
+          body: LayoutBuilder(
+            builder: (context, constraints) {
+              return Stack(
+                children: [
+                  SafeArea(
+                    child: SingleChildScrollView(
+                      controller: _scrollController,
+                      padding: const EdgeInsets.all(16),
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            minHeight: constraints.maxHeight - 32, // Subtract padding
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              // Auth Section
+                              _buildAuthSection(context, state, notifier, l10n),
 
-                        if (state.currentUser != null) ...[
-                          const SizedBox(height: 24),
-                          _buildCashbookHeader(context, theme),
-                          const SizedBox(height: 24),
-                          _buildSyncSection(context, state, notifier, l10n),
-                          const SizedBox(height: 24),
-                          _buildBackupSection(context, state, notifier, l10n),
-                        ],
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-
-              // Loading Overlay
-              if (state.isLoading)
-                Positioned.fill(
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
-                    child: Container(
-                      color: Colors.black.withOpacity(0.1),
-                      child: Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            AppLoadingIndicator(
-                              size: 60,
-                              color: activeCashbook.color,
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              l10n.processing,
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                color: activeCashbook.color,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-
-              // Premium Lock Overlay
-              if (!isPremium)
-                Positioned.fill(
-                  child: ClipRect(
-                    child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-                      child: Container(
-                        color: Colors.black.withValues(alpha: 0.5),
-                        child: Center(
-                          child: Container(
-                            margin: const EdgeInsets.all(32),
-                            padding: const EdgeInsets.all(24),
-                            decoration: BoxDecoration(
-                              color: theme.cardColor,
-                              borderRadius: BorderRadius.circular(20),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.2),
-                                  blurRadius: 20,
-                                  offset: const Offset(0, 10),
-                                ),
-                              ],
-                            ),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(16),
-                                  decoration: const BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    gradient: LinearGradient(
-                                      colors: [
-                                        Color(0xFFFFD700),
-                                        Color(0xFFFFA500)
-                                      ],
-                                    ),
-                                  ),
-                                  child: const Icon(
-                                    Icons.cloud_upload_outlined,
-                                    size: 40,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                const SizedBox(height: 16),
-                                Text(
-                                  l10n.premiumFeature,
-                                  style:
-                                      theme.textTheme.headlineSmall?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  l10n.cloudBackupPremiumDesc,
-                                  textAlign: TextAlign.center,
-                                  style: theme.textTheme.bodyMedium?.copyWith(
-                                    color: theme.colorScheme.onSurfaceVariant,
-                                  ),
-                                ),
+                              if (state.currentUser != null) ...[
                                 const SizedBox(height: 24),
-                                SizedBox(
-                                  width: double.infinity,
-                                  child: GradientButton(
-                                    label: l10n.upgradeToPremium,
-                                    gradient: const LinearGradient(
-                                      colors: [
-                                        Color(0xFFFFD700),
-                                        Color(0xFFFFA500)
-                                      ],
-                                    ),
-                                    onPressed: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) =>
-                                              const PremiumScreen(),
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                ),
+                                _buildCashbookHeader(context, theme),
+                                const SizedBox(height: 24),
+                                _buildSyncSection(context, state, notifier, l10n),
+                                const SizedBox(height: 24),
+                                _buildBackupSection(context, state, notifier, l10n),
                               ],
-                            ),
+                            ],
                           ),
                         ),
                       ),
                     ),
-                  ),
-                ),
-            ],
-          );
-        },
-      ),
+
+                    // Loading Overlay
+                    if (state.isLoading)
+                      Positioned.fill(
+                        child: BackdropFilter(
+                          filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
+                          child: Container(
+                            color: Colors.black.withOpacity(0.1),
+                            child: Center(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  AppLoadingIndicator(
+                                    size: 60,
+                                    color: activeCashbook.color,
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    l10n.processing,
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      color: activeCashbook.color,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+
+                    // Premium Lock Overlay
+                    if (!isPremium)
+                      Positioned.fill(
+                        child: ClipRect(
+                          child: BackdropFilter(
+                            filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+                            child: Container(
+                              color: Colors.black.withValues(alpha: 0.5),
+                              child: Center(
+                                child: Container(
+                                  margin: const EdgeInsets.all(32),
+                                  padding: const EdgeInsets.all(24),
+                                  decoration: BoxDecoration(
+                                    color: theme.cardColor,
+                                    borderRadius: BorderRadius.circular(20),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withValues(alpha: 0.2),
+                                        blurRadius: 20,
+                                        offset: const Offset(0, 10),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(16),
+                                        decoration: const BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          gradient: LinearGradient(
+                                            colors: [
+                                              Color(0xFFFFD700),
+                                              Color(0xFFFFA500)
+                                            ],
+                                          ),
+                                        ),
+                                        child: const Icon(
+                                          Icons.cloud_upload_outlined,
+                                          size: 40,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 16),
+                                      Text(
+                                        l10n.premiumFeature,
+                                        style:
+                                            theme.textTheme.headlineSmall?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        l10n.cloudBackupPremiumDesc,
+                                        textAlign: TextAlign.center,
+                                        style: theme.textTheme.bodyMedium?.copyWith(
+                                          color: theme.colorScheme.onSurfaceVariant,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 24),
+                                      SizedBox(
+                                        width: double.infinity,
+                                        child: GradientButton(
+                                          label: l10n.upgradeToPremium,
+                                          gradient: const LinearGradient(
+                                            colors: [
+                                              Color(0xFFFFD700),
+                                              Color(0xFFFFA500)
+                                            ],
+                                          ),
+                                          onPressed: () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    const PremiumScreen(),
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                );
+              },
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -212,74 +329,84 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
   ) {
     final theme = Theme.of(context);
 
-    return Card(
-      elevation: 0,
-      margin: EdgeInsets.zero,
-      shape: RoundedRectangleBorder(
+    return Showcase(
+      key: TourService.backupAuthKey,
+      title: l10n.tourBackupAuthTitle,
+      description: l10n.tourBackupAuthDesc,
+      targetShapeBorder: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: theme.dividerColor),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            if (state.currentUser == null) ...[
-              const Icon(Icons.cloud_off, size: 48, color: Colors.grey),
-              const SizedBox(height: 16),
-              Text(
-                l10n.googleDriveBackup,
-                style: theme.textTheme.titleMedium,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                l10n.signInGoogleToBackup,
-                textAlign: TextAlign.center,
-                style: theme.textTheme.bodySmall,
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton.icon(
-                onPressed: state.isLoading ? null : () => notifier.signIn(),
-                icon: const Icon(Icons.login),
-                label: Text(l10n.signInGoogle),
-              ),
-            ] else ...[
-              Row(
-                children: [
-                  CircleAvatar(
-                    backgroundImage: (state.currentUser!.photoUrl != null &&
-                            state.currentUser!.photoUrl!.isNotEmpty)
-                        ? NetworkImage(state.currentUser!.photoUrl!)
-                        : null,
-                    radius: 20,
-                    child: (state.currentUser!.photoUrl == null ||
-                            state.currentUser!.photoUrl!.isEmpty)
-                        ? const Icon(Icons.person)
-                        : null,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          state.currentUser!.displayName ?? '',
-                          style: theme.textTheme.titleSmall,
-                        ),
-                        Text(
-                          state.currentUser!.email,
-                          style: theme.textTheme.bodySmall,
-                        ),
-                      ],
+      tooltipBackgroundColor: theme.colorScheme.primary,
+      textColor: Colors.white,
+      child: Card(
+        elevation: 0,
+        margin: EdgeInsets.zero,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: theme.dividerColor),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              if (state.currentUser == null) ...[
+                const Icon(Icons.cloud_off, size: 48, color: Colors.grey),
+                const SizedBox(height: 16),
+                Text(
+                  l10n.googleDriveBackup,
+                  style: theme.textTheme.titleMedium,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  l10n.signInGoogleToBackup,
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodySmall,
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton.icon(
+                  onPressed: state.isLoading ? null : () => notifier.signIn(),
+                  icon: const Icon(Icons.login),
+                  label: Text(l10n.signInGoogle),
+                ),
+              ] else ...[
+                Row(
+                  children: [
+                    CircleAvatar(
+                      backgroundImage: (state.currentUser!.photoUrl != null &&
+                              state.currentUser!.photoUrl!.isNotEmpty)
+                          ? NetworkImage(state.currentUser!.photoUrl!)
+                          : null,
+                      radius: 20,
+                      child: (state.currentUser!.photoUrl == null ||
+                              state.currentUser!.photoUrl!.isEmpty)
+                          ? const Icon(Icons.person)
+                          : null,
                     ),
-                  ),
-                  TextButton(
-                    onPressed: () => notifier.signOut(),
-                    child: Text(l10n.signOut),
-                  ),
-                ],
-              ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            state.currentUser!.displayName ?? '',
+                            style: theme.textTheme.titleSmall,
+                          ),
+                          Text(
+                            state.currentUser!.email,
+                            style: theme.textTheme.bodySmall,
+                          ),
+                        ],
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () => notifier.signOut(),
+                      child: Text(l10n.signOut),
+                    ),
+                  ],
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );
@@ -351,404 +478,414 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
   ) {
     final theme = Theme.of(context);
 
-    return Card(
-      elevation: 0,
-      margin: EdgeInsets.zero,
-      shape: RoundedRectangleBorder(
+    return Showcase(
+      key: TourService.backupSyncKey,
+      title: l10n.tourBackupSyncTitle,
+      description: l10n.tourBackupSyncDesc,
+      targetShapeBorder: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: theme.dividerColor),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Wrap(
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      Text(
-                        l10n.synchronization,
-                        style: theme.textTheme.titleLarge,
-                      ),
-                      if (state.lockedBy != null)
-                        GestureDetector(
-                          onTap: () async {
-                            final notifier = ref.read(backupProvider.notifier);
-                            final content = await notifier.getManifestContent();
-                            if (context.mounted) {
-                              showDialog(
-                                context: context,
-                                builder: (context) => AlertDialog(
-                                  title: Text(l10n.manifestContentLocked),
-                                  content: SingleChildScrollView(
-                                    child: Text(
-                                      content,
-                                      style: const TextStyle(
-                                        fontFamily: 'monospace',
-                                        fontSize: 10,
-                                      ),
-                                    ),
-                                  ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () => Navigator.pop(context),
-                                      child: Text(l10n.close),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            }
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: Colors.orange.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(
-                                  color: Colors.orange.withOpacity(0.5)),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(Icons.lock,
-                                    size: 14, color: Colors.orange),
-                                const SizedBox(width: 6),
-                                Builder(builder: (context) {
-                                  final lockTime = state.lockedAt;
-                                  if (lockTime == null)
-                                    return Text(l10n.locked,
-                                        style: const TextStyle(
-                                            color: Colors.orange,
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.bold));
-
-                                  final diff = DateTime.now()
-                                      .toUtc()
-                                      .difference(lockTime);
-                                  final remaining = 60 - diff.inMinutes;
-                                  return Text(
-                                    l10n.lockedWithTime(
-                                        remaining > 0 ? remaining : 0),
-                                    style: theme.textTheme.labelSmall?.copyWith(
-                                      color: Colors.orange,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  );
-                                }),
-                              ],
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-                Transform.translate(
-                  offset: const Offset(8, -8),
-                  child: IconButton(
-                    icon: const Icon(Icons.refresh, size: 20),
-                    onPressed: () => notifier.refreshVersions(),
-                    tooltip: l10n.refreshStatus,
-                  ),
-                ),
-              ],
-            ),
-            if (state.syncStatus != 'Idle')
-              Padding(
-                padding: const EdgeInsets.only(bottom: 12, top: 12),
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: state.syncStatus.contains('Error')
-                        ? Colors.red.withValues(alpha: 0.1)
-                        : Colors.blue.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: state.syncStatus.contains('Error')
-                          ? Colors.red.withValues(alpha: 0.3)
-                          : Colors.blue.withValues(alpha: 0.3),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      if (state.syncStatus == 'Syncing...')
-                        const SizedBox(
-                          width: 12,
-                          height: 12,
-                          child: AppLoadingIndicator(size: 12),
-                        )
-                      else if (state.syncStatus.contains('Error'))
-                        const Icon(Icons.error_outline,
-                            size: 16, color: Colors.red)
-                      else
-                        const Icon(Icons.check_circle_outline,
-                            size: 16, color: Colors.green),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          state.syncStatus,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: state.syncStatus.contains('Error')
-                                ? Colors.red
-                                : Colors.blue,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            const SizedBox(height: 16),
-            // Version and Count Boxes
-            IntrinsicHeight(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+      tooltipBackgroundColor: theme.colorScheme.primary,
+      textColor: Colors.white,
+      child: Card(
+        elevation: 0,
+        margin: EdgeInsets.zero,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: theme.dividerColor),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
-                    child: _buildInfoBox(
-                      context,
-                      title: l10n.versions,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildVersionRow(
-                              l10n.local, state.localVersion, theme),
-                          const SizedBox(height: 4),
-                          _buildVersionRow(
-                              l10n.cloud, state.cloudVersion, theme,
-                              isOrange:
-                                  state.cloudVersion > state.localVersion),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _buildInfoBox(
-                      context,
-                      title: l10n.pending,
-                      child: Center(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.sync_problem,
-                                size: 20,
-                                color: state.unsyncedCount > 0
-                                    ? Colors.orange
-                                    : Colors.grey),
-                            const SizedBox(width: 8),
-                            Text(
-                              l10n.rows(state.unsyncedCount),
-                              style: theme.textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: state.unsyncedCount > 0
-                                    ? Colors.orange
-                                    : null,
+                    child: Wrap(
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        Text(
+                          l10n.synchronization,
+                          style: theme.textTheme.titleLarge,
+                        ),
+                        if (state.lockedBy != null)
+                          GestureDetector(
+                            onTap: () async {
+                              final notifier = ref.read(backupProvider.notifier);
+                              final content = await notifier.getManifestContent();
+                              if (context.mounted) {
+                                showDialog(
+                                  context: context,
+                                  builder: (context) => AlertDialog(
+                                    title: Text(l10n.manifestContentLocked),
+                                    content: SingleChildScrollView(
+                                      child: Text(
+                                        content,
+                                        style: const TextStyle(
+                                          fontFamily: 'monospace',
+                                          fontSize: 10,
+                                        ),
+                                      ),
+                                    ),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () => Navigator.pop(context),
+                                        child: Text(l10n.close),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: Colors.orange.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                    color: Colors.orange.withOpacity(0.5)),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(Icons.lock,
+                                      size: 14, color: Colors.orange),
+                                  const SizedBox(width: 6),
+                                  Builder(builder: (context) {
+                                    final lockTime = state.lockedAt;
+                                    if (lockTime == null)
+                                      return Text(l10n.locked,
+                                          style: const TextStyle(
+                                              color: Colors.orange,
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.bold));
+
+                                    final diff = DateTime.now()
+                                        .toUtc()
+                                        .difference(lockTime);
+                                    final remaining = 60 - diff.inMinutes;
+                                    return Text(
+                                      l10n.lockedWithTime(
+                                          remaining > 0 ? remaining : 0),
+                                      style: theme.textTheme.labelSmall?.copyWith(
+                                        color: Colors.orange,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    );
+                                  }),
+                                ],
                               ),
                             ),
-                          ],
-                        ),
-                      ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  Transform.translate(
+                    offset: const Offset(8, -8),
+                    child: IconButton(
+                      icon: const Icon(Icons.refresh, size: 20),
+                      onPressed: () => notifier.refreshVersions(),
+                      tooltip: l10n.refreshStatus,
                     ),
                   ),
                 ],
               ),
-            ),
-            const SizedBox(height: 16),
-            if (state.lastSyncTime != null)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 16),
+              if (state.syncStatus != 'Idle')
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12, top: 12),
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: state.syncStatus.contains('Error')
+                          ? Colors.red.withValues(alpha: 0.1)
+                          : Colors.blue.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: state.syncStatus.contains('Error')
+                            ? Colors.red.withValues(alpha: 0.3)
+                            : Colors.blue.withValues(alpha: 0.3),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        if (state.syncStatus == 'Syncing...')
+                          const SizedBox(
+                            width: 12,
+                            height: 12,
+                            child: AppLoadingIndicator(size: 12),
+                          )
+                        else if (state.syncStatus.contains('Error'))
+                          const Icon(Icons.error_outline,
+                              size: 16, color: Colors.red)
+                        else
+                          const Icon(Icons.check_circle_outline,
+                              size: 16, color: Colors.green),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            state.syncStatus,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: state.syncStatus.contains('Error')
+                                  ? Colors.red
+                                  : Colors.blue,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              const SizedBox(height: 16),
+              // Version and Count Boxes
+              IntrinsicHeight(
                 child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Icon(Icons.history, size: 16, color: Colors.grey),
-                    const SizedBox(width: 8),
-                    Text(
-                      l10n.lastSync(AppDateFormatter.formatRelativeTime(
-                          state.lastSyncTime!, context)),
-                      style: theme.textTheme.bodySmall,
+                    Expanded(
+                      child: _buildInfoBox(
+                        context,
+                        title: l10n.versions,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildVersionRow(
+                                l10n.local, state.localVersion, theme),
+                            const SizedBox(height: 4),
+                            _buildVersionRow(
+                                l10n.cloud, state.cloudVersion, theme,
+                                isOrange:
+                                    state.cloudVersion > state.localVersion),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _buildInfoBox(
+                        context,
+                        title: l10n.pending,
+                        child: Center(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.sync_problem,
+                                  size: 20,
+                                  color: state.unsyncedCount > 0
+                                      ? Colors.orange
+                                      : Colors.grey),
+                              const SizedBox(width: 8),
+                              Text(
+                                l10n.rows(state.unsyncedCount),
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: state.unsyncedCount > 0
+                                      ? Colors.orange
+                                      : null,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     ),
                   ],
                 ),
               ),
-            const SizedBox(height: 12),
-            if (state.deltaFiles.isNotEmpty) ...[
-              Text(
-                state.deltaFiles.any((f) {
-                  final ver = int.tryParse(
-                          f.name?.replaceAll('v', '').replaceAll('.json', '') ??
-                              '0') ??
-                      0;
-                  return ver > state.localVersion;
-                })
-                    ? l10n.upcomingSyncDeltas
-                    : l10n.recentSyncDeltas,
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                  fontWeight: FontWeight.bold,
+              const SizedBox(height: 16),
+              if (state.lastSyncTime != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.history, size: 16, color: Colors.grey),
+                      const SizedBox(width: 8),
+                      Text(
+                        l10n.lastSync(AppDateFormatter.formatRelativeTime(
+                            state.lastSyncTime!, context)),
+                        style: theme.textTheme.bodySmall,
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(height: 8),
-              Container(
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceContainerHighest
-                      .withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(12),
-                  border:
-                      Border.all(color: theme.dividerColor.withOpacity(0.5)),
-                ),
-                child: Column(
-                  children: state.deltaFiles.map((file) {
-                    final sizeKb = (int.tryParse(file.size ?? '0') ?? 0) / 1024;
-                    final ver = int.tryParse(file.name
-                                ?.replaceAll('v', '')
-                                .replaceAll('.json', '') ??
-                            '0') ??
+              const SizedBox(height: 12),
+              if (state.deltaFiles.isNotEmpty) ...[
+                Text(
+                  state.deltaFiles.any((f) {
+                    final ver = int.tryParse(
+                            f.name?.replaceAll('v', '').replaceAll('.json', '') ??
+                                '0') ??
                         0;
-                    final isUpcoming = ver > state.localVersion;
+                    return ver > state.localVersion;
+                  })
+                      ? l10n.upcomingSyncDeltas
+                      : l10n.recentSyncDeltas,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surfaceContainerHighest
+                        .withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(12),
+                    border:
+                        Border.all(color: theme.dividerColor.withOpacity(0.5)),
+                  ),
+                  child: Column(
+                    children: state.deltaFiles.map((file) {
+                      final sizeKb = (int.tryParse(file.size ?? '0') ?? 0) / 1024;
+                      final ver = int.tryParse(file.name
+                                  ?.replaceAll('v', '')
+                                  .replaceAll('.json', '') ??
+                              '0') ??
+                          0;
+                      final isUpcoming = ver > state.localVersion;
 
-                    return ListTile(
-                      dense: true,
-                      visualDensity: VisualDensity.compact,
-                      onTap: () async {
-                        final notifier = ref.read(backupProvider.notifier);
-                        final content =
-                            await notifier.getDeltaFileContent(file.id!);
-                        if (context.mounted) {
-                          showDialog(
-                            context: context,
-                            builder: (context) => AlertDialog(
-                              title: Text(file.name ?? l10n.deltaContent),
-                              content: SingleChildScrollView(
-                                child: Text(
-                                  content,
-                                  style: const TextStyle(
-                                    fontFamily: 'monospace',
-                                    fontSize: 10,
+                      return ListTile(
+                        dense: true,
+                        visualDensity: VisualDensity.compact,
+                        onTap: () async {
+                          final notifier = ref.read(backupProvider.notifier);
+                          final content =
+                              await notifier.getDeltaFileContent(file.id!);
+                          if (context.mounted) {
+                            showDialog(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: Text(file.name ?? l10n.deltaContent),
+                                content: SingleChildScrollView(
+                                  child: Text(
+                                    content,
+                                    style: const TextStyle(
+                                      fontFamily: 'monospace',
+                                      fontSize: 10,
+                                    ),
                                   ),
                                 ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context),
+                                    child: Text(l10n.close),
+                                  ),
+                                ],
                               ),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.pop(context),
-                                  child: Text(l10n.close),
-                                ),
-                              ],
+                            );
+                          }
+                        },
+                        leading: Icon(
+                          isUpcoming ? Icons.upcoming : Icons.history_edu,
+                          size: 16,
+                          color: isUpcoming ? Colors.orange : null,
+                        ),
+                        title: Row(
+                          children: [
+                            Text(
+                              file.name ?? 'Unknown',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: isUpcoming ? Colors.orange : null,
+                              ),
                             ),
-                          );
-                        }
-                      },
-                      leading: Icon(
-                        isUpcoming ? Icons.upcoming : Icons.history_edu,
-                        size: 16,
-                        color: isUpcoming ? Colors.orange : null,
-                      ),
-                      title: Row(
-                        children: [
-                          Text(
-                            file.name ?? 'Unknown',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: isUpcoming ? Colors.orange : null,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          // We don't have the summary here yet as it's inside the file,
-                          // but we could fetch it or just show the size for now.
-                          // In a future update, we can cache the summary locally.
-                        ],
-                      ),
-                      trailing: Text(
-                        '${sizeKb.toStringAsFixed(1)} KB',
-                        style: theme.textTheme.labelSmall,
-                      ),
-                    );
-                  }).toList(),
+                            const SizedBox(width: 8),
+                            // We don't have the summary here yet as it's inside the file,
+                            // but we could fetch it or just show the size for now.
+                            // In a future update, we can cache the summary locally.
+                          ],
+                        ),
+                        trailing: Text(
+                          '${sizeKb.toStringAsFixed(1)} KB',
+                          style: theme.textTheme.labelSmall,
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+              // Full width buttons
+              SizedBox(
+                height: 56,
+                child: GradientButton(
+                  label: l10n.syncNow,
+                  gradient:
+                      AppColors.getPrimaryGradient(theme.colorScheme.primary)
+                          .withOpacity(0.8),
+                  icon: Icons.sync,
+                  onPressed: () async {
+                    // We don't show a toast here anymore because the UI
+                    // will now show a persistent "Syncing..." status bar
+                    await notifier.triggerSync(l10n);
+                  },
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
+              SizedBox(
+                height: 56,
+                child: OutlinedButton.icon(
+                  onPressed: () => _showResetCloudVersionDialog(context),
+                  icon: const Icon(Icons.upload_file, size: 20),
+                  label: Text(l10n.primeCloudWithLocal),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.orange,
+                    side: const BorderSide(color: Colors.orange),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                height: 56,
+                child: OutlinedButton.icon(
+                  onPressed: () => _showResetLocalSyncDialog(context),
+                  icon: const Icon(Icons.restart_alt, size: 20),
+                  label: Text(l10n.resetLocalSyncState),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.red,
+                    side: const BorderSide(color: Colors.red),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              // Expanded Dropdown
+              Container(
+                height: 56,
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: theme.dividerColor),
+                ),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    isExpanded: true,
+                    value: state.syncInterval,
+                    items: [
+                      DropdownMenuItem(value: 'manual', child: Text(l10n.manual)),
+                      ...['12', '24', '36', '48', '60', '72', '84', '96']
+                          .map((h) => DropdownMenuItem(
+                                value: h,
+                                child: Text('$h ${l10n.hours}'),
+                              )),
+                    ],
+                    onChanged: (v) =>
+                        v != null ? notifier.setSyncInterval(v) : null,
+                  ),
+                ),
+              ),
             ],
-            // Full width buttons
-            SizedBox(
-              height: 56,
-              child: GradientButton(
-                label: l10n.syncNow,
-                gradient:
-                    AppColors.getPrimaryGradient(theme.colorScheme.primary)
-                        .withOpacity(0.8),
-                icon: Icons.sync,
-                onPressed: () async {
-                  // We don't show a toast here anymore because the UI
-                  // will now show a persistent "Syncing..." status bar
-                  await notifier.triggerSync(l10n);
-                },
-              ),
-            ),
-            const SizedBox(height: 12),
-            SizedBox(
-              height: 56,
-              child: OutlinedButton.icon(
-                onPressed: () => _showResetCloudVersionDialog(context),
-                icon: const Icon(Icons.upload_file, size: 20),
-                label: Text(l10n.primeCloudWithLocal),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.orange,
-                  side: const BorderSide(color: Colors.orange),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            SizedBox(
-              height: 56,
-              child: OutlinedButton.icon(
-                onPressed: () => _showResetLocalSyncDialog(context),
-                icon: const Icon(Icons.restart_alt, size: 20),
-                label: Text(l10n.resetLocalSyncState),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.red,
-                  side: const BorderSide(color: Colors.red),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            // Expanded Dropdown
-            Container(
-              height: 56,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: theme.dividerColor),
-              ),
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton<String>(
-                  isExpanded: true,
-                  value: state.syncInterval,
-                  items: [
-                    DropdownMenuItem(value: 'manual', child: Text(l10n.manual)),
-                    ...['12', '24', '36', '48', '60', '72', '84', '96']
-                        .map((h) => DropdownMenuItem(
-                              value: h,
-                              child: Text('$h ${l10n.hours}'),
-                            )),
-                  ],
-                  onChanged: (v) =>
-                      v != null ? notifier.setSyncInterval(v) : null,
-                ),
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -800,7 +937,9 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
   ) {
     final theme = Theme.of(context);
 
-    return Card(
+    return Container(
+      key: _backupSectionKey,
+      child: Card(
       elevation: 0,
       margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(
@@ -837,6 +976,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
             _buildBackupsList(context, state, notifier, l10n),
           ],
         ),
+      ),
       ),
     );
   }
@@ -908,15 +1048,25 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
             ),
           SizedBox(
             height: 56,
-            child: GradientButton(
-              label: l10n.backupNow,
-              gradient:
-                  AppColors.getSecondaryGradient(theme.colorScheme.primary)
-                      .withOpacity(0.8),
-              icon: Icons.backup,
-              onPressed: () async {
-                await notifier.backup(l10n);
-              },
+            child: Showcase(
+              key: TourService.backupNowKey,
+              title: l10n.tourBackupNowTitle,
+              description: l10n.tourBackupNowDesc,
+              targetShapeBorder: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              tooltipBackgroundColor: theme.colorScheme.primary,
+              textColor: Colors.white,
+              child: GradientButton(
+                label: l10n.backupNow,
+                gradient:
+                    AppColors.getSecondaryGradient(theme.colorScheme.primary)
+                        .withOpacity(0.8),
+                icon: Icons.backup,
+                onPressed: () async {
+                  await notifier.backup(l10n);
+                },
+              ),
             ),
           ),
           const SizedBox(height: 12),

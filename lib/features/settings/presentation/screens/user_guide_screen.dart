@@ -4,6 +4,7 @@ import 'package:flowpaisa/features/tour/domain/tour_service.dart';
 import 'package:flowpaisa/features/transactions/presentation/screens/add_transaction_screen.dart';
 import 'package:flowpaisa/features/receivables/presentation/screens/receivables_list_screen.dart';
 import 'package:flowpaisa/features/payables/presentation/screens/payables_list_screen.dart';
+import 'package:flowpaisa/features/backup/presentation/screens/backup_screen.dart';
 
 class UserGuideScreen extends StatefulWidget {
   const UserGuideScreen({super.key});
@@ -125,6 +126,12 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
                             builder: (context) => const ReceivablesListScreen(),
                           ),
                         );
+                        // Start tour after navigation
+                        Future.delayed(const Duration(milliseconds: 500), () {
+                          if (context.mounted) {
+                            TourService.startReceivablesTour(context);
+                          }
+                        });
                       },
                     ),
                     _GuideItem(
@@ -137,6 +144,12 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
                             builder: (context) => const PayablesListScreen(),
                           ),
                         );
+                        // Start tour after navigation
+                        Future.delayed(const Duration(milliseconds: 500), () {
+                          if (context.mounted) {
+                            TourService.startPayablesTour(context);
+                          }
+                        });
                       },
                     ),
                   ],
@@ -190,6 +203,14 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
                     _GuideItem(
                       question: l10n.cloudBackup,
                       answer: l10n.guideCloudBackupStep,
+                      tourAction: (context) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const BackupScreen(startTour: true),
+                          ),
+                        );
+                      },
                     ),
                   ],
                 ),

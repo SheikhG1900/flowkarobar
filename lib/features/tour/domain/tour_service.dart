@@ -30,12 +30,23 @@ class TourService {
   static final GlobalKey settingsBackupKey = GlobalKey();
   static final GlobalKey settingsPremiumKey = GlobalKey();
 
+  // Backup Screen Keys
+  static final GlobalKey backupAuthKey = GlobalKey();
+  static final GlobalKey backupSyncKey = GlobalKey();
+  static final GlobalKey backupNowKey = GlobalKey();
+
   // Add Transaction Screen Keys
   static final GlobalKey addTxAmountKey = GlobalKey();
   static final GlobalKey addTxCategoryKey = GlobalKey();
   static final GlobalKey addTxContactKey = GlobalKey();
   static final GlobalKey addTxDateKey = GlobalKey();
   static final GlobalKey addTxSaveKey = GlobalKey();
+
+  // Receivables List Screen Keys
+  static final GlobalKey receivablesListKey = GlobalKey();
+
+  // Payables List Screen Keys
+  static final GlobalKey payablesListKey = GlobalKey();
 
   /// List of showcase keys in order for dashboard tour
   static List<GlobalKey> get dashboardTourKeys => [
@@ -67,6 +78,20 @@ class TourService {
         settingsAppPreferencesKey,
         settingsBackupKey,
         settingsPremiumKey,
+      ];
+
+  static List<GlobalKey> get backupTourKeys => [
+        backupAuthKey,
+        backupSyncKey,
+        backupNowKey,
+      ];
+
+  static List<GlobalKey> get receivablesTourKeys => [
+        receivablesListKey,
+      ];
+
+  static List<GlobalKey> get payablesTourKeys => [
+        payablesListKey,
       ];
 
   static List<GlobalKey> get addTransactionTourKeys => [
@@ -122,6 +147,33 @@ class TourService {
       showcaseState.startShowCase(addTransactionTourKeys);
     } catch (e) {
       debugPrint('Error starting add transaction tour: $e');
+    }
+  }
+
+  static void startBackupTour(BuildContext context) {
+    try {
+      final showcaseState = ShowCaseWidget.of(context);
+      showcaseState.startShowCase(backupTourKeys);
+    } catch (e) {
+      debugPrint('Error starting backup tour: $e');
+    }
+  }
+
+  static void startReceivablesTour(BuildContext context) {
+    try {
+      final showcaseState = ShowCaseWidget.of(context);
+      showcaseState.startShowCase(receivablesTourKeys);
+    } catch (e) {
+      debugPrint('Error starting receivables tour: $e');
+    }
+  }
+
+  static void startPayablesTour(BuildContext context) {
+    try {
+      final showcaseState = ShowCaseWidget.of(context);
+      showcaseState.startShowCase(payablesTourKeys);
+    } catch (e) {
+      debugPrint('Error starting payables tour: $e');
     }
   }
 

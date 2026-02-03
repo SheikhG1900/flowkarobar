@@ -8,6 +8,9 @@ const String _tourTransactionsKey = 'tour_completed_transactions';
 const String _tourAnalyticsKey = 'tour_completed_analytics';
 const String _tourSettingsKey = 'tour_completed_settings';
 const String _tourAddTransactionKey = 'tour_completed_add_transaction';
+const String _tourBackupKey = 'tour_completed_backup';
+const String _tourReceivablesKey = 'tour_completed_receivables';
+const String _tourPayablesKey = 'tour_completed_payables';
 
 /// Provider for marking tours as completed
 final tourNotifierProvider = Provider((ref) {
@@ -36,6 +39,9 @@ class TourNotifier {
     await _prefs.remove(_tourAnalyticsKey);
     await _prefs.remove(_tourSettingsKey);
     await _prefs.remove(_tourAddTransactionKey);
+    await _prefs.remove(_tourBackupKey);
+    await _prefs.remove(_tourReceivablesKey);
+    await _prefs.remove(_tourPayablesKey);
     await _prefs.remove('app_tour_completed'); // Cleanup old key
   }
 
@@ -45,4 +51,7 @@ class TourNotifier {
   String get analyticsKey => _tourAnalyticsKey;
   String get settingsKey => _tourSettingsKey;
   String get addTransactionKey => _tourAddTransactionKey;
+  String get backupKey => _tourBackupKey;
+  String get receivablesKey => _tourReceivablesKey;
+  String get payablesKey => _tourPayablesKey;
 }
