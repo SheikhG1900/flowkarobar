@@ -12,6 +12,12 @@ class TourService {
   static final GlobalKey recentTransactionsKey = GlobalKey();
   static final GlobalKey bottomNavKey = GlobalKey();
 
+  // Transactions Screen Keys
+  static final GlobalKey transactionsSearchKey = GlobalKey();
+  static final GlobalKey transactionsFilterKey = GlobalKey();
+  static final GlobalKey transactionsListKey = GlobalKey();
+  static final GlobalKey transactionsFabKey = GlobalKey();
+
   /// List of showcase keys in order for dashboard tour
   static List<GlobalKey> get dashboardTourKeys => [
         dashboardHeaderKey,
@@ -23,6 +29,13 @@ class TourService {
         bottomNavKey,
       ];
 
+  static List<GlobalKey> get transactionsTourKeys => [
+        transactionsSearchKey,
+        transactionsFilterKey,
+        transactionsListKey,
+        transactionsFabKey,
+      ];
+
   /// Start the dashboard tour
   /// This will be called when user taps "Start Tour" or on first launch
   static void startDashboardTour(BuildContext context) {
@@ -31,7 +44,16 @@ class TourService {
       final showcaseState = ShowCaseWidget.of(context);
       showcaseState.startShowCase(dashboardTourKeys);
     } catch (e) {
-      debugPrint('Error starting tour: $e');
+      debugPrint('Error starting dashboard tour: $e');
+    }
+  }
+
+  static void startTransactionsTour(BuildContext context) {
+    try {
+      final showcaseState = ShowCaseWidget.of(context);
+      showcaseState.startShowCase(transactionsTourKeys);
+    } catch (e) {
+      debugPrint('Error starting transactions tour: $e');
     }
   }
 

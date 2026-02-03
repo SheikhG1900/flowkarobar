@@ -1438,6 +1438,34 @@ class AppLocalizationsHi extends AppLocalizations {
   String get tourGotIt => 'समझ गया!';
 
   @override
+  String get tourTransactionsSearchTitle => 'लेनदेन खोजें';
+
+  @override
+  String get tourTransactionsSearchDesc =>
+      'विवरण या राशि के आधार पर किसी भी लेनदेन को जल्दी से खोजें।';
+
+  @override
+  String get tourTransactionsFilterTitle => 'उन्नत फ़िल्टर';
+
+  @override
+  String get tourTransactionsFilterDesc =>
+      'विशिष्ट जानकारी प्राप्त करने के लिए तिथि सीमा, श्रेणी या संपर्क के आधार पर फ़िल्टर करें।';
+
+  @override
+  String get tourTransactionsListTitle => 'लेनदेन का इतिहास';
+
+  @override
+  String get tourTransactionsListDesc =>
+      'आपके लेनदेन तिथि के अनुसार समूहित हैं। किसी भी आइटम को संपादित करने या हटाने के लिए बाएं या दाएं स्वाइप करें।';
+
+  @override
+  String get tourTransactionsFabTitle => 'नया जोड़ें';
+
+  @override
+  String get tourTransactionsFabDesc =>
+      'नया आय या व्यय लेनदेन रिकॉर्ड करने के लिए यहां टैप करें।';
+
+  @override
   String get messageTemplatesDesc =>
       'संदेश टेम्पलेट्स को कस्टमाइज़ करना प्रीमियम उपयोगकर्ताओं के लिए उपलब्ध है।';
 

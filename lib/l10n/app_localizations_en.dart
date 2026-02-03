@@ -1432,6 +1432,34 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tourGotIt => 'Got it!';
 
   @override
+  String get tourTransactionsSearchTitle => 'Search Transactions';
+
+  @override
+  String get tourTransactionsSearchDesc =>
+      'Quickly find any transaction by description or amount.';
+
+  @override
+  String get tourTransactionsFilterTitle => 'Advanced Filters';
+
+  @override
+  String get tourTransactionsFilterDesc =>
+      'Filter by date range, category, or contact to get specific insights.';
+
+  @override
+  String get tourTransactionsListTitle => 'Transaction History';
+
+  @override
+  String get tourTransactionsListDesc =>
+      'Your transactions are grouped by date. Swipe left or right on any item to edit or delete it.';
+
+  @override
+  String get tourTransactionsFabTitle => 'Add New';
+
+  @override
+  String get tourTransactionsFabDesc =>
+      'Tap here to record a new income or expense transaction.';
+
+  @override
   String get messageTemplatesDesc =>
       'Customize message templates is available for Premium users.';
 

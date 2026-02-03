@@ -27,6 +27,9 @@ import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/shared/widgets/filter_bottom_sheet.dart';
 import 'package:flowpaisa/shared/widgets/app_loading_indicator.dart';
 
+import 'package:flowpaisa/features/tour/domain/tour_service.dart';
+import 'package:showcaseview/showcaseview.dart';
+
 class TransactionsListScreen extends ConsumerStatefulWidget {
   const TransactionsListScreen({super.key});
 
@@ -49,6 +52,21 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
     _scrollController.addListener(_onScroll);
     _tabController = TabController(length: 2, vsync: this);
     _searchController = TextEditingController();
+    
+    // Auto-start tour on first visit to this screen
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkAndStartTour();
+    });
+  }
+
+  Future<void> _checkAndStartTour() async {
+    // We can add a delay to ensure the screen is fully rendered
+    await Future.delayed(const Duration(milliseconds: 500));
+    if (mounted) {
+      // For now, we'll just provide a way to start it manually or auto-start once
+      // In a real app, you might want to track if THIS specific tour was shown
+      // TourService.startTransactionsTour(context);
+    }
   }
 
   @override
@@ -134,43 +152,61 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
               )
             : null,
         actions: [
-          IconButton(
-            icon: Stack(
-              children: [
-                const Icon(Icons.filter_list),
-                if (hasActiveFilters)
-                  Positioned(
-                    right: 0,
-                    top: 0,
-                    child: Container(
-                      padding: const EdgeInsets.all(2),
-                      decoration: const BoxDecoration(
-                        color: Colors.red,
-                        shape: BoxShape.circle,
-                      ),
-                      constraints: const BoxConstraints(
-                        minWidth: 8,
-                        minHeight: 8,
+          Showcase(
+            key: TourService.transactionsFilterKey,
+            title: l10n.tourTransactionsFilterTitle,
+            description: l10n.tourTransactionsFilterDesc,
+            targetShapeBorder: const CircleBorder(),
+            tooltipBackgroundColor: AppColors.transactionsSectionColor,
+            textColor: Colors.white,
+            tooltipPosition: TooltipPosition.bottom,
+            child: IconButton(
+              icon: Stack(
+                children: [
+                  const Icon(Icons.filter_list),
+                  if (hasActiveFilters)
+                    Positioned(
+                      right: 0,
+                      top: 0,
+                      child: Container(
+                        padding: const EdgeInsets.all(2),
+                        decoration: const BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
+                        ),
+                        constraints: const BoxConstraints(
+                          minWidth: 8,
+                          minHeight: 8,
+                        ),
                       ),
                     ),
-                  ),
-              ],
+                ],
+              ),
+              onPressed: _showFilterBottomSheet,
             ),
-            onPressed: _showFilterBottomSheet,
           ),
-          IconButton(
-            icon: Icon(_isSearching ? Icons.close : Icons.search),
-            onPressed: () {
-              setState(() {
-                if (_isSearching) {
-                  _isSearching = false;
-                  _searchController.clear();
-                  ref.read(transactionsPaginatedProvider.notifier).search('');
-                } else {
-                  _isSearching = true;
-                }
-              });
-            },
+          Showcase(
+            key: TourService.transactionsSearchKey,
+            title: l10n.tourTransactionsSearchTitle,
+            description: l10n.tourTransactionsSearchDesc,
+            targetShapeBorder: const CircleBorder(),
+            tooltipBackgroundColor: AppColors.transactionsSectionColor,
+            textColor: Colors.white,
+            tooltipPosition: TooltipPosition.bottom,
+            child: IconButton(
+              icon: Icon(_isSearching ? Icons.close : Icons.search),
+              onPressed: () {
+                setState(() {
+                  if (_isSearching) {
+                    _isSearching = false;
+                    _searchController.clear();
+                    ref.read(transactionsPaginatedProvider.notifier).search('');
+                  } else {
+                    _isSearching = true;
+                  }
+                });
+              },
+            ),
           ),
           // Debug button to generate dummy transactions (only in debug mode)
           if (kDebugMode && !_isSearching)
@@ -221,18 +257,27 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
               ],
             )
           : _buildBody(paginatedState, theme),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const AddTransactionScreen(),
-            ),
-          );
-        },
-        backgroundColor: AppColors.transactionsSectionColor,
-        foregroundColor: Colors.white,
-        child: const Icon(Icons.add),
+      floatingActionButton: Showcase(
+        key: TourService.transactionsFabKey,
+        title: l10n.tourTransactionsFabTitle,
+        description: l10n.tourTransactionsFabDesc,
+        targetShapeBorder: const CircleBorder(),
+        tooltipBackgroundColor: AppColors.transactionsSectionColor,
+        textColor: Colors.white,
+        tooltipPosition: TooltipPosition.top,
+        child: FloatingActionButton(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const AddTransactionScreen(),
+              ),
+            );
+          },
+          backgroundColor: AppColors.transactionsSectionColor,
+          foregroundColor: Colors.white,
+          child: const Icon(Icons.add),
+        ),
       ),
     );
   }
@@ -332,41 +377,26 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
       controller: _scrollController,
       slivers: [
         // Date sections with sticky headers
-        for (final dateKey in keys)
+        for (int i = 0; i < keys.length; i++)
           SliverStickyHeader(
-            header: Container(
-              height: 50,
-              color: Colors.transparent,
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              alignment: Alignment.center,
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                decoration: BoxDecoration(
-                  color:
-                      AppColors.transactionsSectionColor.withValues(alpha: 0.7),
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.transactionsSectionColor
-                          .withValues(alpha: 0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Text(
-                  dateKey,
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
+            header: i == 0 
+              ? Showcase(
+                  key: TourService.transactionsListKey,
+                  title: l10n.tourTransactionsListTitle,
+                  description: l10n.tourTransactionsListDesc,
+                  targetShapeBorder: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(20)),
                   ),
-                ),
-              ),
-            ),
+                  tooltipBackgroundColor: AppColors.transactionsSectionColor,
+                  textColor: Colors.white,
+                  tooltipPosition: TooltipPosition.bottom,
+                  child: _buildDateHeader(theme, keys[i]),
+                )
+              : _buildDateHeader(theme, keys[i]),
             sliver: SliverList(
               delegate: SliverChildBuilderDelegate(
                 (context, itemIndex) {
+                  final dateKey = keys[i];
                   final dateTransactions = groupedTransactions[dateKey]!;
                   if (itemIndex >= dateTransactions.length) return null;
 
@@ -429,7 +459,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                     ),
                   );
                 },
-                childCount: groupedTransactions[dateKey]!.length,
+                childCount: groupedTransactions[keys[i]]!.length,
               ),
             ),
           ),
@@ -460,6 +490,36 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
           child: SizedBox(height: 80),
         ),
       ],
+    );
+  }
+
+  Widget _buildDateHeader(ThemeData theme, String dateKey) {
+    return Container(
+      height: 50,
+      color: Colors.transparent,
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      alignment: Alignment.center,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        decoration: BoxDecoration(
+          color: AppColors.transactionsSectionColor.withValues(alpha: 0.7),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.transactionsSectionColor.withValues(alpha: 0.3),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Text(
+          dateKey,
+          style: theme.textTheme.titleSmall?.copyWith(
+            color: Colors.white,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
     );
   }
 

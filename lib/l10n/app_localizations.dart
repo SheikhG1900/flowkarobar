@@ -2710,6 +2710,54 @@ abstract class AppLocalizations {
   /// **'Got it!'**
   String get tourGotIt;
 
+  /// No description provided for @tourTransactionsSearchTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Search Transactions'**
+  String get tourTransactionsSearchTitle;
+
+  /// No description provided for @tourTransactionsSearchDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Quickly find any transaction by description or amount.'**
+  String get tourTransactionsSearchDesc;
+
+  /// No description provided for @tourTransactionsFilterTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Advanced Filters'**
+  String get tourTransactionsFilterTitle;
+
+  /// No description provided for @tourTransactionsFilterDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter by date range, category, or contact to get specific insights.'**
+  String get tourTransactionsFilterDesc;
+
+  /// No description provided for @tourTransactionsListTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Transaction History'**
+  String get tourTransactionsListTitle;
+
+  /// No description provided for @tourTransactionsListDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Your transactions are grouped by date. Swipe left or right on any item to edit or delete it.'**
+  String get tourTransactionsListDesc;
+
+  /// No description provided for @tourTransactionsFabTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add New'**
+  String get tourTransactionsFabTitle;
+
+  /// No description provided for @tourTransactionsFabDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap here to record a new income or expense transaction.'**
+  String get tourTransactionsFabDesc;
+
   /// No description provided for @messageTemplatesDesc.
   ///
   /// In en, this message translates to:

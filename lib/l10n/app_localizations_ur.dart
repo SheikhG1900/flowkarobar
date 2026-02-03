@@ -1443,6 +1443,34 @@ class AppLocalizationsUr extends AppLocalizations {
   String get tourGotIt => 'سمجھ گئے!';
 
   @override
+  String get tourTransactionsSearchTitle => 'لین دین تلاش کریں';
+
+  @override
+  String get tourTransactionsSearchDesc =>
+      'تفصیل یا رقم کے ذریعے کسی بھی لین دین کو جلدی سے تلاش کریں۔';
+
+  @override
+  String get tourTransactionsFilterTitle => 'اعلی درجے کے فلٹرز';
+
+  @override
+  String get tourTransactionsFilterDesc =>
+      'مخصوص معلومات حاصل کرنے کے لیے تاریخ، زمرہ یا رابطے کے لحاظ سے فلٹر کریں۔';
+
+  @override
+  String get tourTransactionsListTitle => 'لین دین کی تاریخ';
+
+  @override
+  String get tourTransactionsListDesc =>
+      'آپ کے لین دین تاریخ کے لحاظ سے گروپ کیے گئے ہیں۔ کسی بھی آئٹم کو ایڈٹ یا ڈیلیٹ کرنے کے لیے بائیں یا دائیں سوائپ کریں۔';
+
+  @override
+  String get tourTransactionsFabTitle => 'نیا شامل کریں';
+
+  @override
+  String get tourTransactionsFabDesc =>
+      'نئی آمدنی یا اخراجات کا اندراج کرنے کے لیے یہاں ٹیپ کریں۔';
+
+  @override
   String get messageTemplatesDesc =>
       'میسج ٹیمپلیٹس کو حسب ضرورت بنانا پریمیم صارفین کے لیے دستیاب ہے۔';
 
