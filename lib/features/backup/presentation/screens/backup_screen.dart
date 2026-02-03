@@ -32,88 +32,6 @@ class BackupScreen extends ConsumerStatefulWidget {
 
 class _BackupScreenState extends ConsumerState<BackupScreen> {
   bool _tourStarted = false;
-  final ScrollController _scrollController = ScrollController();
-  final GlobalKey _backupSectionKey = GlobalKey();
-  Timer? _scrollTimer;
-
-  @override
-  void dispose() {
-    _scrollTimer?.cancel();
-    _scrollController.dispose();
-    super.dispose();
-  }
-
-  void _scrollToBackupSection() {
-    if (_backupSectionKey.currentContext != null) {
-      Scrollable.ensureVisible(
-        _backupSectionKey.currentContext!,
-        duration: const Duration(milliseconds: 500),
-        curve: Curves.easeInOut,
-        alignment: 0.25, // Position element at 25% from top for better visibility
-      );
-    }
-  }
-
-  void _setupTourScrollListener() {
-    // Cancel any existing timer
-    _scrollTimer?.cancel();
-    
-    // Don't check at all until we're sure steps 1 and 2 have been shown
-    // Wait a reasonable delay that ensures user has seen and interacted with steps 1 and 2
-    // Only then start checking if step 3 needs scrolling
-    Future.delayed(const Duration(seconds: 5), () {
-      if (!mounted) return;
-      
-      // Now check periodically if step 3 (backup step) is active and needs scrolling
-      bool hasScrolled = false;
-      int checkCount = 0;
-      _scrollTimer = Timer.periodic(const Duration(milliseconds: 500), (timer) {
-        if (!mounted || hasScrolled) {
-          timer.cancel();
-          return;
-        }
-        
-        checkCount++;
-        // Stop checking after 20 seconds (40 checks) to avoid infinite loop
-        if (checkCount > 40) {
-          timer.cancel();
-          return;
-        }
-        
-        // Check if backup section is visible in viewport
-        final backupSectionContext = _backupSectionKey.currentContext;
-        if (backupSectionContext != null) {
-          final backupRenderObject = backupSectionContext.findRenderObject();
-          if (backupRenderObject != null) {
-            final backupBox = backupRenderObject as RenderBox?;
-            if (backupBox != null && backupBox.hasSize) {
-              // Get screen height from the backup context
-              final mediaQuery = MediaQuery.maybeOf(backupSectionContext);
-              if (mediaQuery != null) {
-                // Check if backup section is outside viewport (needs scrolling)
-                final position = backupBox.localToGlobal(Offset.zero);
-                final size = backupBox.size;
-                final screenHeight = mediaQuery.size.height;
-                
-                // If backup section is below the visible area or only partially visible
-                if (position.dy + size.height > screenHeight * 0.8 || position.dy < 0) {
-                  // Check if backup showcase is active (step 3 is showing)
-                  final backupContext = TourService.backupNowKey.currentContext;
-                  if (backupContext != null) {
-                    // Step 3 is likely active and backup section needs scrolling
-                    _scrollToBackupSection();
-                    hasScrolled = true;
-                    timer.cancel();
-                    _scrollTimer?.cancel();
-                  }
-                }
-              }
-            }
-          }
-        }
-      });
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -125,6 +43,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
     final isPremium = ref.watch(premiumProvider).isPremium;
 
     return ShowCaseWidget(
+      enableAutoScroll: true,
       onFinish: () {
         final tourNotifier = ref.read(tourNotifierProvider);
         tourNotifier.markTourCompleted(tourNotifier.backupKey);
@@ -138,8 +57,6 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
               try {
                 final showcaseState = ShowCaseWidget.of(context);
                 showcaseState.startShowCase(TourService.backupTourKeys);
-                // Set up scroll listener to scroll to backup section when tour reaches that step
-                _setupTourScrollListener();
               } catch (e) {
                 debugPrint('Error starting backup tour: $e');
               }
@@ -166,7 +83,6 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                 children: [
                   SafeArea(
                     child: SingleChildScrollView(
-                      controller: _scrollController,
                       padding: const EdgeInsets.all(16),
                         child: ConstrainedBox(
                           constraints: BoxConstraints(
@@ -937,9 +853,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
   ) {
     final theme = Theme.of(context);
 
-    return Container(
-      key: _backupSectionKey,
-      child: Card(
+    return Card(
       elevation: 0,
       margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(
@@ -976,7 +890,6 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
             _buildBackupsList(context, state, notifier, l10n),
           ],
         ),
-      ),
       ),
     );
   }

@@ -28,10 +28,12 @@ import 'package:flowpaisa/shared/widgets/filter_bottom_sheet.dart';
 import 'package:flowpaisa/shared/widgets/app_loading_indicator.dart';
 
 import 'package:flowpaisa/features/tour/domain/tour_service.dart';
+import 'package:flowpaisa/features/tour/presentation/providers/tour_provider.dart';
 import 'package:showcaseview/showcaseview.dart';
 
 class TransactionsListScreen extends ConsumerStatefulWidget {
-  const TransactionsListScreen({super.key});
+  final bool startTour;
+  const TransactionsListScreen({super.key, this.startTour = false});
 
   @override
   ConsumerState<TransactionsListScreen> createState() =>
@@ -44,6 +46,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
   late TabController _tabController;
   late TextEditingController _searchController;
   bool _isSearching = false;
+  bool _tourStarted = false;
 
   @override
   void initState() {
@@ -121,7 +124,27 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
         ref.watch(transactionsPaginatedProvider.notifier).currentFilters;
     final hasActiveFilters = !currentFilters.isEmpty;
 
-    return Scaffold(
+    return ShowCaseWidget(
+      onFinish: () {
+        final tourNotifier = ref.read(tourNotifierProvider);
+        tourNotifier.markTourCompleted(tourNotifier.transactionsKey);
+      },
+      builder: (context) {
+        // Start tour if requested and we haven't started it yet
+        if (widget.startTour && !_tourStarted) {
+          _tourStarted = true;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              try {
+                final showcaseState = ShowCaseWidget.of(context);
+                showcaseState.startShowCase(TourService.transactionsTourKeys);
+              } catch (e) {
+                debugPrint('Error starting transactions tour: $e');
+              }
+            }
+          });
+        }
+        return Scaffold(
       appBar: AppBar(
         title: _isSearching
             ? TextField(
@@ -279,6 +302,8 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
           child: const Icon(Icons.add),
         ),
       ),
+        );
+      },
     );
   }
 

@@ -84,15 +84,9 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const AddTransactionScreen(),
+                            builder: (context) => const AddTransactionScreen(startTour: true),
                           ),
                         );
-                        // Start tour after navigation
-                        Future.delayed(const Duration(milliseconds: 500), () {
-                          if (context.mounted) {
-                            TourService.startAddTransactionTour(context);
-                          }
-                        });
                       },
                     ),
                     _GuideItem(

@@ -46,6 +46,7 @@ class AddTransactionScreen extends ConsumerStatefulWidget {
   final String? initialContactPhone;
   final String? initialExternalLinkId;
   final DateTime? initialDueDate;
+  final bool startTour;
 
   const AddTransactionScreen({
     super.key,
@@ -61,6 +62,7 @@ class AddTransactionScreen extends ConsumerStatefulWidget {
     this.initialContactPhone,
     this.initialExternalLinkId,
     this.initialDueDate,
+    this.startTour = false,
   });
 
   @override
@@ -73,6 +75,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
   final _formKey = GlobalKey<FormState>();
   final _amountController = TextEditingController();
   final _descriptionController = TextEditingController();
+  bool _tourStarted = false;
 
   String _selectedType = 'EXPENSE';
   DateTime _selectedDate = DateTime.now();
@@ -1459,12 +1462,28 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     final scheduleLimitsAsync = ref.watch(scheduleLimitsProvider);
 
     return ShowCaseWidget(
+      enableAutoScroll: true,
       onFinish: () {
         // Mark add transaction tour as completed
         final tourNotifier = ref.read(tourNotifierProvider);
         tourNotifier.markTourCompleted(tourNotifier.addTransactionKey);
       },
-      builder: (context) => Scaffold(
+      builder: (context) {
+        // Start tour if requested and we haven't started it yet
+        if (widget.startTour && !_tourStarted) {
+          _tourStarted = true;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              try {
+                final showcaseState = ShowCaseWidget.of(context);
+                showcaseState.startShowCase(TourService.addTransactionTourKeys);
+              } catch (e) {
+                debugPrint('Error starting add transaction tour: $e');
+              }
+            }
+          });
+        }
+        return Scaffold(
       appBar: AppBar(
         title: Text(l10n.addTransaction),
         leading: IconButton(
@@ -1491,6 +1510,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
         child: Form(
           key: _formKey,
           child: ListView(
+            key: const Key('add_transaction_list_view'),
             padding: const EdgeInsets.all(16),
             children: [
               // Amount Input (Large & Prominent)
@@ -2370,7 +2390,8 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
           ),
         ),
       ),
-      ),
+        );
+      },
     );
   }
 }
