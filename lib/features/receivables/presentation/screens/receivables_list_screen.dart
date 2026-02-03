@@ -27,7 +27,8 @@ import 'package:material_symbols_icons/symbols.dart';
 import 'package:flowpaisa/shared/widgets/app_loading_indicator.dart';
 
 class ReceivablesListScreen extends ConsumerStatefulWidget {
-  const ReceivablesListScreen({super.key});
+  final bool startTour;
+  const ReceivablesListScreen({super.key, this.startTour = false});
 
   @override
   ConsumerState<ReceivablesListScreen> createState() =>
@@ -40,6 +41,7 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
   late ScrollController _scrollController;
   int _previousOverdueCount = -1;
   bool _isSearching = false;
+  bool _tourStarted = false;
 
   @override
   void initState() {
@@ -222,7 +224,22 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
         final tourNotifier = ref.read(tourNotifierProvider);
         tourNotifier.markTourCompleted(tourNotifier.receivablesKey);
       },
-      builder: (context) => Scaffold(
+      builder: (context) {
+        // Start tour if requested and we haven't started it yet
+        if (widget.startTour && !_tourStarted) {
+          _tourStarted = true;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              try {
+                final showcaseState = ShowCaseWidget.of(context);
+                showcaseState.startShowCase(TourService.receivablesTourKeys);
+              } catch (e) {
+                debugPrint('Error starting receivables tour: $e');
+              }
+            }
+          });
+        }
+        return Scaffold(
         appBar: AppBar(
         title: _isSearching
             ? TextField(
@@ -409,7 +426,8 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
         foregroundColor: Colors.white,
         child: const Icon(Icons.add),
       ),
-      ),
+    );
+      },
     );
   }
 

@@ -27,7 +27,8 @@ import 'package:material_symbols_icons/symbols.dart';
 import 'package:flowpaisa/shared/widgets/app_loading_indicator.dart';
 
 class PayablesListScreen extends ConsumerStatefulWidget {
-  const PayablesListScreen({super.key});
+  final bool startTour;
+  const PayablesListScreen({super.key, this.startTour = false});
 
   @override
   ConsumerState<PayablesListScreen> createState() => _PayablesListScreenState();
@@ -39,6 +40,7 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
   late ScrollController _scrollController;
   int _previousOverdueCount = -1;
   bool _isSearching = false;
+  bool _tourStarted = false;
 
   @override
   void initState() {
@@ -201,7 +203,22 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
         final tourNotifier = ref.read(tourNotifierProvider);
         tourNotifier.markTourCompleted(tourNotifier.payablesKey);
       },
-      builder: (context) => Scaffold(
+      builder: (context) {
+        // Start tour if requested and we haven't started it yet
+        if (widget.startTour && !_tourStarted) {
+          _tourStarted = true;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              try {
+                final showcaseState = ShowCaseWidget.of(context);
+                showcaseState.startShowCase(TourService.payablesTourKeys);
+              } catch (e) {
+                debugPrint('Error starting payables tour: $e');
+              }
+            }
+          });
+        }
+        return Scaffold(
         appBar: AppBar(
         title: _isSearching
             ? TextField(
@@ -386,7 +403,8 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
         foregroundColor: Colors.white,
         child: const Icon(Icons.add),
       ),
-      ),
+        );
+      },
     );
   }
 

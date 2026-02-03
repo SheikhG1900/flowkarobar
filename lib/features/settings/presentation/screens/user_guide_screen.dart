@@ -123,15 +123,9 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const ReceivablesListScreen(),
+                            builder: (context) => const ReceivablesListScreen(startTour: true),
                           ),
                         );
-                        // Start tour after navigation
-                        Future.delayed(const Duration(milliseconds: 500), () {
-                          if (context.mounted) {
-                            TourService.startReceivablesTour(context);
-                          }
-                        });
                       },
                     ),
                     _GuideItem(
@@ -141,15 +135,9 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const PayablesListScreen(),
+                            builder: (context) => const PayablesListScreen(startTour: true),
                           ),
                         );
-                        // Start tour after navigation
-                        Future.delayed(const Duration(milliseconds: 500), () {
-                          if (context.mounted) {
-                            TourService.startPayablesTour(context);
-                          }
-                        });
                       },
                     ),
                   ],
