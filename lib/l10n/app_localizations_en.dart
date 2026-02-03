@@ -1358,6 +1358,80 @@ class AppLocalizationsEn extends AppLocalizations {
   String get receive => 'Receive';
 
   @override
+  String get appTour => 'App Tour';
+
+  @override
+  String get tourWelcome => 'Welcome to Cashbook!';
+
+  @override
+  String get tourWelcomeDesc =>
+      'Let\'s take a quick tour to help you get started';
+
+  @override
+  String get tourDashboardHeaderTitle => 'Cashbook Selector';
+
+  @override
+  String get tourDashboardHeaderDesc =>
+      'Tap here to switch between your cashbooks or create a new one';
+
+  @override
+  String get tourBalanceTitle => 'Available Cash';
+
+  @override
+  String get tourBalanceDesc =>
+      'Your total available cash balance is displayed here. This updates automatically as you add transactions';
+
+  @override
+  String get tourCashFlowTitle => 'Cash Flow';
+
+  @override
+  String get tourCashFlowDesc =>
+      'View your income, expenses, and net cash flow. Tap any card to filter transactions';
+
+  @override
+  String get tourLendingTitle => 'Lending & Credit';
+
+  @override
+  String get tourLendingDesc =>
+      'Track money people owe you (Receivables) and money you owe (Payables). Tap to view details';
+
+  @override
+  String get tourQuickActionsTitle => 'Quick Actions';
+
+  @override
+  String get tourQuickActionsDesc =>
+      'Quick access to add transactions, scan receipts, manage receivables/payables, view analytics, and more';
+
+  @override
+  String get tourRecentTransactionsTitle => 'Recent Transactions';
+
+  @override
+  String get tourRecentTransactionsDesc =>
+      'View your most recent transactions here. Tap any transaction to see full details';
+
+  @override
+  String get tourBottomNavTitle => 'Navigation';
+
+  @override
+  String get tourBottomNavDesc =>
+      'Switch between Dashboard, Transactions, Analytics, and Settings using the bottom navigation';
+
+  @override
+  String get tourNext => 'Next';
+
+  @override
+  String get tourSkip => 'Skip';
+
+  @override
+  String get tourStartTour => 'Start Tour';
+
+  @override
+  String get tourCompleted => 'Tour completed';
+
+  @override
+  String get tourGotIt => 'Got it!';
+
+  @override
   String get messageTemplatesDesc =>
       'Customize message templates is available for Premium users.';
 

@@ -105,7 +105,8 @@ class AppTheme {
 
       // Color Scheme (GermGuard-inspired Cyan/Blue)
       colorScheme: ColorScheme.light(
-        primary: primary, // Dynamic Primary
+        primary: Color.lerp(Colors.black, primary, .8) ??
+            AppColors.brightCyan, // Dynamic Primary
         onPrimary: Color.lerp(Colors.white, primary, .1) ?? Colors.white,
         primaryContainer: primary.withValues(alpha: 0.1),
         onPrimaryContainer: Color.lerp(const Color(0xFF003D57), primary, .1) ??
@@ -305,7 +306,8 @@ class AppTheme {
 
       // Color Scheme (GermGuard Dark - Professional Cyan)
       colorScheme: ColorScheme.dark(
-        primary: primary, // Dynamic Primary
+        primary: Color.lerp(Colors.white, primary, .2) ??
+            AppColors.brightCyan, // Dynamic Primary
         onPrimary: const Color(0xFF003D57),
         primaryContainer: const Color(0xFF005580),
         onPrimaryContainer: const Color(0xFFB8F0FF),

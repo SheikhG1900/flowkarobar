@@ -2578,6 +2578,138 @@ abstract class AppLocalizations {
   /// **'Receive'**
   String get receive;
 
+  /// No description provided for @appTour.
+  ///
+  /// In en, this message translates to:
+  /// **'App Tour'**
+  String get appTour;
+
+  /// No description provided for @tourWelcome.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to Cashbook!'**
+  String get tourWelcome;
+
+  /// No description provided for @tourWelcomeDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Let\'s take a quick tour to help you get started'**
+  String get tourWelcomeDesc;
+
+  /// No description provided for @tourDashboardHeaderTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cashbook Selector'**
+  String get tourDashboardHeaderTitle;
+
+  /// No description provided for @tourDashboardHeaderDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap here to switch between your cashbooks or create a new one'**
+  String get tourDashboardHeaderDesc;
+
+  /// No description provided for @tourBalanceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Available Cash'**
+  String get tourBalanceTitle;
+
+  /// No description provided for @tourBalanceDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Your total available cash balance is displayed here. This updates automatically as you add transactions'**
+  String get tourBalanceDesc;
+
+  /// No description provided for @tourCashFlowTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash Flow'**
+  String get tourCashFlowTitle;
+
+  /// No description provided for @tourCashFlowDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'View your income, expenses, and net cash flow. Tap any card to filter transactions'**
+  String get tourCashFlowDesc;
+
+  /// No description provided for @tourLendingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Lending & Credit'**
+  String get tourLendingTitle;
+
+  /// No description provided for @tourLendingDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Track money people owe you (Receivables) and money you owe (Payables). Tap to view details'**
+  String get tourLendingDesc;
+
+  /// No description provided for @tourQuickActionsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick Actions'**
+  String get tourQuickActionsTitle;
+
+  /// No description provided for @tourQuickActionsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick access to add transactions, scan receipts, manage receivables/payables, view analytics, and more'**
+  String get tourQuickActionsDesc;
+
+  /// No description provided for @tourRecentTransactionsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent Transactions'**
+  String get tourRecentTransactionsTitle;
+
+  /// No description provided for @tourRecentTransactionsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'View your most recent transactions here. Tap any transaction to see full details'**
+  String get tourRecentTransactionsDesc;
+
+  /// No description provided for @tourBottomNavTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Navigation'**
+  String get tourBottomNavTitle;
+
+  /// No description provided for @tourBottomNavDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch between Dashboard, Transactions, Analytics, and Settings using the bottom navigation'**
+  String get tourBottomNavDesc;
+
+  /// No description provided for @tourNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get tourNext;
+
+  /// No description provided for @tourSkip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get tourSkip;
+
+  /// No description provided for @tourStartTour.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Tour'**
+  String get tourStartTour;
+
+  /// No description provided for @tourCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Tour completed'**
+  String get tourCompleted;
+
+  /// No description provided for @tourGotIt.
+  ///
+  /// In en, this message translates to:
+  /// **'Got it!'**
+  String get tourGotIt;
+
   /// No description provided for @messageTemplatesDesc.
   ///
   /// In en, this message translates to:

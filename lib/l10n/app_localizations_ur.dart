@@ -1369,6 +1369,80 @@ class AppLocalizationsUr extends AppLocalizations {
   String get receive => 'وصول کریں';
 
   @override
+  String get appTour => 'ایپ ٹور';
+
+  @override
+  String get tourWelcome => 'Cashbook میں خوش آمدید!';
+
+  @override
+  String get tourWelcomeDesc =>
+      'شروع کرنے میں آپ کی مدد کے لیے ایک مختصر ٹور لیں';
+
+  @override
+  String get tourDashboardHeaderTitle => 'کیش بک منتخب کنندہ';
+
+  @override
+  String get tourDashboardHeaderDesc =>
+      'اپنی کیش بکس کے درمیان سوئچ کرنے یا نیا بنانے کے لیے یہاں ٹیپ کریں';
+
+  @override
+  String get tourBalanceTitle => 'دستیاب رقم';
+
+  @override
+  String get tourBalanceDesc =>
+      'آپ کی کل دستیاب نقد بیلنس یہاں دکھائی جاتی ہے۔ لین دین شامل کرنے پر یہ خودکار طور پر اپ ڈیٹ ہوتی ہے';
+
+  @override
+  String get tourCashFlowTitle => 'نقدی بہاؤ';
+
+  @override
+  String get tourCashFlowDesc =>
+      'اپنی آمدنی، اخراجات اور خالص نقدی بہاؤ دیکھیں۔ لین دین فلٹر کرنے کے لیے کسی بھی کارڈ پر ٹیپ کریں';
+
+  @override
+  String get tourLendingTitle => 'قرض اور کریڈٹ';
+
+  @override
+  String get tourLendingDesc =>
+      'لوگوں کے ذمے آپ کی رقم (وصولی) اور آپ کے ذمے رقم (واجب الادا) کو ٹریک کریں۔ تفصیلات دیکھنے کے لیے ٹیپ کریں';
+
+  @override
+  String get tourQuickActionsTitle => 'فوری کارروائیاں';
+
+  @override
+  String get tourQuickActionsDesc =>
+      'لین دین شامل کرنے، رسید اسکین کرنے، وصولی/واجب الادا رقوم کا انتظام کرنے، تجزیات دیکھنے اور مزید کے لیے فوری رسائی';
+
+  @override
+  String get tourRecentTransactionsTitle => 'حالیہ لین دین';
+
+  @override
+  String get tourRecentTransactionsDesc =>
+      'اپنے حالیہ لین دین یہاں دیکھیں۔ مکمل تفصیلات دیکھنے کے لیے کسی بھی لین دین پر ٹیپ کریں';
+
+  @override
+  String get tourBottomNavTitle => 'نیویگیشن';
+
+  @override
+  String get tourBottomNavDesc =>
+      'نیچے نیویگیشن کا استعمال کرتے ہوئے ڈیش بورڈ، لین دین، تجزیات اور سیٹنگز کے درمیان سوئچ کریں';
+
+  @override
+  String get tourNext => 'اگلا';
+
+  @override
+  String get tourSkip => 'چھوڑیں';
+
+  @override
+  String get tourStartTour => 'ٹور شروع کریں';
+
+  @override
+  String get tourCompleted => 'ٹور مکمل';
+
+  @override
+  String get tourGotIt => 'سمجھ گئے!';
+
+  @override
   String get messageTemplatesDesc =>
       'میسج ٹیمپلیٹس کو حسب ضرورت بنانا پریمیم صارفین کے لیے دستیاب ہے۔';
 

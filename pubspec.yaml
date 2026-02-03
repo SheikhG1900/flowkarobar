@@ -60,6 +60,7 @@ dependencies:
   
   # UI & Charts
   fl_chart: ^1.1.1
+  showcaseview: ^3.0.0
   
   # Export
   csv: ^6.0.0

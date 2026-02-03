@@ -62,6 +62,9 @@ import 'package:flowpaisa/features/backup/data/sync/sync_scheduler.dart';
 
 import 'package:flutter_phoenix/flutter_phoenix.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:showcaseview/showcaseview.dart';
+import 'package:flowpaisa/features/tour/presentation/providers/tour_provider.dart';
+import 'package:flowpaisa/features/tour/domain/tour_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -222,8 +225,28 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       if (mounted) {
         final deepLinkHandler = ref.read(deepLinkHandlerProvider);
         deepLinkHandler.initialize(context, ref);
+        
+        // Check if tour should be shown on first launch
+        _checkAndShowTour();
       }
     });
+  }
+
+  Future<void> _checkAndShowTour() async {
+    final shouldShow = await ref.read(shouldShowTourProvider.future);
+    if (shouldShow && mounted) {
+      // Wait a bit for UI to settle, then start tour
+      await Future.delayed(const Duration(seconds: 1));
+      if (mounted && _selectedIndex == 0) {
+        // Only show tour if on dashboard tab
+        try {
+          final showcaseState = ShowCaseWidget.of(context);
+          showcaseState.startShowCase(TourService.dashboardTourKeys);
+        } catch (e) {
+          debugPrint('Error starting tour: $e');
+        }
+      }
+    }
   }
 
   Color _getSectionColor(int index) {
@@ -254,8 +277,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       _SettingsTab(),
     ];
 
-    return Scaffold(
-      body: LayoutBuilder(
+    return ShowCaseWidget(
+      enableAutoScroll: true,
+      blurValue: 3,
+      onStart: (index, key) {
+        debugPrint('Tour step $index started');
+      },
+      onComplete: (index, key) {
+        debugPrint('Tour step $index completed');
+      },
+      onFinish: () {
+        debugPrint('Tour finished');
+        // Mark tour as completed
+        ref.read(tourNotifierProvider).markTourCompleted();
+      },
+      builder: (context) => Scaffold(
+          body: LayoutBuilder(
         builder: (context, constraints) {
           if (constraints.maxWidth < 600) {
             // Mobile Layout
@@ -367,41 +404,59 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   }),
                 ),
               ),
-              child: NavigationBar(
-                selectedIndex: _selectedIndex,
-                onDestinationSelected: (index) {
-                  if (index == 1) {
-                    // Clear transactions filters and search when navigating via bottom bar
-                    final notifier =
-                        ref.read(transactionsPaginatedProvider.notifier);
-                    notifier.search('');
-                    notifier.applyFilters(TransactionFilters());
-                  }
-                  setState(() {
-                    _selectedIndex = index;
-                  });
+              child: Consumer(
+                builder: (context, ref, child) {
+                  final activeCashbook = ref.watch(activeCashbookProvider);
+                  final activeColor = activeCashbook.color;
+                  return Showcase(
+                    key: TourService.bottomNavKey,
+                    title: l10n.tourBottomNavTitle,
+                    description: l10n.tourBottomNavDesc,
+                    targetShapeBorder: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(20)),
+                    ),
+                    tooltipBackgroundColor: activeColor,
+                    textColor: Colors.white,
+                    targetBorderRadius: BorderRadius.circular(20),
+                    child: NavigationBar(
+                      selectedIndex: _selectedIndex,
+                      onDestinationSelected: (index) {
+                        if (index == 1) {
+                          // Clear transactions filters and search when navigating via bottom bar
+                          final notifier =
+                              ref.read(transactionsPaginatedProvider.notifier);
+                          notifier.search('');
+                          notifier.applyFilters(TransactionFilters());
+                        }
+                        setState(() {
+                          _selectedIndex = index;
+                        });
+                      },
+                      destinations: [
+                        NavigationDestination(
+                          icon: const Icon(Icons.dashboard),
+                          label: l10n.dashboard,
+                        ),
+                        NavigationDestination(
+                          icon: const Icon(Icons.receipt_long),
+                          label: l10n.transactions,
+                        ),
+                        NavigationDestination(
+                          icon: const Icon(Icons.analytics),
+                          label: l10n.analytics,
+                        ),
+                        NavigationDestination(
+                          icon: const Icon(Icons.settings),
+                          label: l10n.settings,
+                        ),
+                      ],
+                    ),
+                  );
                 },
-                destinations: [
-                  NavigationDestination(
-                    icon: const Icon(Icons.dashboard),
-                    label: l10n.dashboard,
-                  ),
-                  NavigationDestination(
-                    icon: const Icon(Icons.receipt_long),
-                    label: l10n.transactions,
-                  ),
-                  NavigationDestination(
-                    icon: const Icon(Icons.analytics),
-                    label: l10n.analytics,
-                  ),
-                  NavigationDestination(
-                    icon: const Icon(Icons.settings),
-                    label: l10n.settings,
-                  ),
-                ],
               ),
             )
           : null,
+      ),
     );
   }
 }
@@ -498,17 +553,27 @@ class _DashboardTab extends ConsumerWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         // App Title & Cashbook Selector
-                        InkWell(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const CashbooksScreen(),
-                              ),
-                            );
-                          },
-                          borderRadius: BorderRadius.circular(12),
-                          child: Padding(
+                        Showcase(
+                          key: TourService.dashboardHeaderKey,
+                          title: l10n.tourDashboardHeaderTitle,
+                          description: l10n.tourDashboardHeaderDesc,
+                          targetShapeBorder: const RoundedRectangleBorder(
+                            borderRadius: BorderRadius.all(Radius.circular(12)),
+                          ),
+                          tooltipBackgroundColor: activeColor,
+                          textColor: Colors.white,
+                          targetBorderRadius: BorderRadius.circular(12),
+                          child: InkWell(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const CashbooksScreen(),
+                                ),
+                              );
+                            },
+                            borderRadius: BorderRadius.circular(12),
+                            child: Padding(
                             padding: const EdgeInsets.symmetric(
                                 vertical: 8, horizontal: 4),
                             child: Column(
@@ -590,16 +655,27 @@ class _DashboardTab extends ConsumerWidget {
                             ),
                           ),
                         ),
+                        ),
                         const SizedBox(height: 12),
 
                         // Balance Section
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 4),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                l10n.availableCash,
+                        Showcase(
+                          key: TourService.balanceKey,
+                          title: l10n.tourBalanceTitle,
+                          description: l10n.tourBalanceDesc,
+                          targetShapeBorder: const RoundedRectangleBorder(
+                            borderRadius: BorderRadius.all(Radius.circular(12)),
+                          ),
+                          tooltipBackgroundColor: activeColor,
+                          textColor: Colors.white,
+                          targetBorderRadius: BorderRadius.circular(12),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 4),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  l10n.availableCash,
                                 style: theme.textTheme.titleSmall?.copyWith(
                                   color: isDark
                                       ? Colors.white.withValues(alpha: 0.9)
@@ -653,18 +729,29 @@ class _DashboardTab extends ConsumerWidget {
                             ],
                           ),
                         ),
+                        ),
                         const SizedBox(height: 16),
 
                         // Stats Grid
                         dashboardStatsAsync.when(
                           data: (stats) => Column(
                             children: [
-                              EntranceAnimation(
-                                index: 1,
-                                child: _buildSummaryRow(
-                                  context,
-                                  isDark: isDark,
-                                  title: l10n.cashFlow,
+                              Showcase(
+                                key: TourService.cashFlowStatsKey,
+                                title: l10n.tourCashFlowTitle,
+                                description: l10n.tourCashFlowDesc,
+                                targetShapeBorder: const RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.all(Radius.circular(12)),
+                                ),
+                                tooltipBackgroundColor: activeColor,
+                                textColor: Colors.white,
+                                targetBorderRadius: BorderRadius.circular(12),
+                                child: EntranceAnimation(
+                                  index: 1,
+                                  child: _buildSummaryRow(
+                                    context,
+                                    isDark: isDark,
+                                    title: l10n.cashFlow,
                                   items: [
                                     _SummaryItem(
                                       label: l10n.income,
@@ -780,13 +867,24 @@ class _DashboardTab extends ConsumerWidget {
                                   currency: currency,
                                 ),
                               ),
+                              ),
                               const SizedBox(height: 12),
-                              EntranceAnimation(
-                                index: 2,
-                                child: _buildSummaryRow(
-                                  context,
-                                  isDark: isDark,
-                                  title: l10n.lendingCredit,
+                              Showcase(
+                                key: TourService.lendingStatsKey,
+                                title: l10n.tourLendingTitle,
+                                description: l10n.tourLendingDesc,
+                                targetShapeBorder: const RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.all(Radius.circular(12)),
+                                ),
+                                tooltipBackgroundColor: activeColor,
+                                textColor: Colors.white,
+                                targetBorderRadius: BorderRadius.circular(12),
+                                child: EntranceAnimation(
+                                  index: 2,
+                                  child: _buildSummaryRow(
+                                    context,
+                                    isDark: isDark,
+                                    title: l10n.lendingCredit,
                                   items: [
                                     _SummaryItem(
                                       label: l10n.receivableTag,
@@ -873,6 +971,7 @@ class _DashboardTab extends ConsumerWidget {
                                   ],
                                   currency: currency,
                                 ),
+                              ),
                               ),
                               const SizedBox(height: 12),
                             ],
@@ -1044,16 +1143,27 @@ class _DashboardTab extends ConsumerWidget {
 
           // Quick Actions Section
           SliverToBoxAdapter(
-            child: EntranceAnimation(
-              index: 3,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 24, 16, 0),
-                child: Column(
-                  children: [
-                    _buildPrivacyHighlight(context, ref, l10n, isDark),
-                    const SizedBox(height: 16),
-                    _buildQuickActions(context, ref, l10n, isPremium),
-                  ],
+            child: Showcase(
+              key: TourService.quickActionsKey,
+              title: l10n.tourQuickActionsTitle,
+              description: l10n.tourQuickActionsDesc,
+              targetShapeBorder: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.all(Radius.circular(20)),
+              ),
+              tooltipBackgroundColor: activeColor,
+              textColor: Colors.white,
+              targetBorderRadius: BorderRadius.circular(20),
+              child: EntranceAnimation(
+                index: 3,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 24, 16, 0),
+                  child: Column(
+                    children: [
+                      _buildPrivacyHighlight(context, ref, l10n, isDark),
+                      const SizedBox(height: 16),
+                      _buildQuickActions(context, ref, l10n, isPremium),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -1072,9 +1182,20 @@ class _DashboardTab extends ConsumerWidget {
 
           // Recent Transactions List
           SliverToBoxAdapter(
-            child: EntranceAnimation(
-              index: 5,
-              child: _buildRecentTransactions(context, ref),
+            child: Showcase(
+              key: TourService.recentTransactionsKey,
+              title: l10n.tourRecentTransactionsTitle,
+              description: l10n.tourRecentTransactionsDesc,
+              targetShapeBorder: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.all(Radius.circular(16)),
+              ),
+              tooltipBackgroundColor: activeColor,
+              textColor: Colors.white,
+              targetBorderRadius: BorderRadius.circular(16),
+              child: EntranceAnimation(
+                index: 5,
+                child: _buildRecentTransactions(context, ref),
+              ),
             ),
           ),
 
@@ -1336,6 +1457,8 @@ class _DashboardTab extends ConsumerWidget {
   Widget _buildQuickActions(BuildContext context, WidgetRef ref,
       AppLocalizations l10n, bool isPremium) {
     final theme = Theme.of(context);
+    final activeCashbook = ref.watch(activeCashbookProvider);
+    final activeColor = activeCashbook.color;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 0),
       child: Column(
@@ -1491,6 +1614,20 @@ class _DashboardTab extends ConsumerWidget {
                             builder: (context) => const UserGuideScreen(),
                           ),
                         );
+                      },
+                    ),
+                    _QuickActionButton(
+                      icon: Icons.tour_outlined,
+                      label: l10n.appTour,
+                      gradient: AppColors.getPrimaryGradient(activeColor),
+                      onTap: () {
+                        // Start the dashboard tour
+                        try {
+                          final showcaseState = ShowCaseWidget.of(context);
+                          showcaseState.startShowCase(TourService.dashboardTourKeys);
+                        } catch (e) {
+                          debugPrint('Error starting tour: $e');
+                        }
                       },
                     ),
                   ],

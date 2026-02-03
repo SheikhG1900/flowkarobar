@@ -1364,6 +1364,80 @@ class AppLocalizationsHi extends AppLocalizations {
   String get receive => 'प्राप्त करें';
 
   @override
+  String get appTour => 'ऐप टूर';
+
+  @override
+  String get tourWelcome => 'Cashbook में आपका स्वागत है!';
+
+  @override
+  String get tourWelcomeDesc =>
+      'आइए शुरुआत करने में आपकी मदद के लिए एक त्वरित टूर लें';
+
+  @override
+  String get tourDashboardHeaderTitle => 'कैशबुक चयनकर्ता';
+
+  @override
+  String get tourDashboardHeaderDesc =>
+      'अपनी कैशबुक के बीच स्विच करने या नया बनाने के लिए यहाँ टैप करें';
+
+  @override
+  String get tourBalanceTitle => 'उपलब्ध नकद';
+
+  @override
+  String get tourBalanceDesc =>
+      'आपकी कुल उपलब्ध नकद बैलेंस यहाँ प्रदर्शित होती है। लेन-देन जोड़ने पर यह स्वचालित रूप से अपडेट होती है';
+
+  @override
+  String get tourCashFlowTitle => 'नकदी प्रवाह';
+
+  @override
+  String get tourCashFlowDesc =>
+      'अपनी आय, खर्च और शुद्ध नकदी प्रवाह देखें। लेन-देन फ़िल्टर करने के लिए किसी भी कार्ड पर टैप करें';
+
+  @override
+  String get tourLendingTitle => 'उधार और क्रेडिट';
+
+  @override
+  String get tourLendingDesc =>
+      'लोगों द्वारा आपको दी जाने वाली राशि (प्राप्य) और आपके द्वारा दी जाने वाली राशि (देय) को ट्रैक करें। विवरण देखने के लिए टैप करें';
+
+  @override
+  String get tourQuickActionsTitle => 'त्वरित कार्य';
+
+  @override
+  String get tourQuickActionsDesc =>
+      'लेन-देन जोड़ने, रसीद स्कैन करने, प्राप्य/देय राशि प्रबंधित करने, एनालिटिक्स देखने और अधिक के लिए त्वरित पहुंच';
+
+  @override
+  String get tourRecentTransactionsTitle => 'हाल की लेन-देन';
+
+  @override
+  String get tourRecentTransactionsDesc =>
+      'अपनी सबसे हाल की लेन-देन यहाँ देखें। पूर्ण विवरण देखने के लिए किसी भी लेन-देन पर टैप करें';
+
+  @override
+  String get tourBottomNavTitle => 'नेविगेशन';
+
+  @override
+  String get tourBottomNavDesc =>
+      'नीचे नेविगेशन का उपयोग करके डैशबोर्ड, लेन-देन, एनालिटिक्स और सेटिंग्स के बीच स्विच करें';
+
+  @override
+  String get tourNext => 'अगला';
+
+  @override
+  String get tourSkip => 'छोड़ें';
+
+  @override
+  String get tourStartTour => 'टूर शुरू करें';
+
+  @override
+  String get tourCompleted => 'टूर पूर्ण';
+
+  @override
+  String get tourGotIt => 'समझ गया!';
+
+  @override
   String get messageTemplatesDesc =>
       'संदेश टेम्पलेट्स को कस्टमाइज़ करना प्रीमियम उपयोगकर्ताओं के लिए उपलब्ध है।';
 
