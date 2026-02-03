@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
+import 'package:flowpaisa/features/tour/domain/tour_service.dart';
+import 'package:flowpaisa/features/transactions/presentation/screens/add_transaction_screen.dart';
+import 'package:flowpaisa/features/receivables/presentation/screens/receivables_list_screen.dart';
+import 'package:flowpaisa/features/payables/presentation/screens/payables_list_screen.dart';
 
 class UserGuideScreen extends StatefulWidget {
   const UserGuideScreen({super.key});
@@ -75,10 +79,33 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
                     _GuideItem(
                       question: l10n.guideAddTransaction,
                       answer: l10n.guideAddTransactionStep,
+                      tourAction: (context) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const AddTransactionScreen(),
+                          ),
+                        );
+                        // Start tour after navigation
+                        Future.delayed(const Duration(milliseconds: 500), () {
+                          if (context.mounted) {
+                            TourService.startAddTransactionTour(context);
+                          }
+                        });
+                      },
                     ),
                     _GuideItem(
                       question: l10n.guideSwitchCashbook,
                       answer: l10n.guideSwitchCashbookStep,
+                      tourAction: (context) {
+                        Navigator.popUntil(context, (route) => route.isFirst);
+                        // Dashboard is the first screen
+                        Future.delayed(const Duration(milliseconds: 500), () {
+                          if (context.mounted) {
+                            TourService.startDashboardTour(context);
+                          }
+                        });
+                      },
                     ),
                   ],
                 ),
@@ -91,6 +118,26 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
                     _GuideItem(
                       question: l10n.receivables,
                       answer: l10n.guideTrackReceivablesStep,
+                      tourAction: (context) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const ReceivablesListScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                    _GuideItem(
+                      question: l10n.payables,
+                      answer: l10n.guideTrackPayablesStep,
+                      tourAction: (context) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const PayablesListScreen(),
+                          ),
+                        );
+                      },
                     ),
                   ],
                 ),
@@ -266,12 +313,31 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
         childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
         expandedAlignment: Alignment.topLeft,
         children: [
-          Text(
-            item.answer,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-              height: 1.5,
-            ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                item.answer,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                  height: 1.5,
+                ),
+              ),
+              if (item.tourAction != null) ...[
+                const SizedBox(height: 12),
+                OutlinedButton.icon(
+                  onPressed: () => item.tourAction!(context),
+                  icon: const Icon(Icons.play_circle_outline, size: 18),
+                  label: Text(AppLocalizations.of(context)!.tourShowMeHow),
+                  style: OutlinedButton.styleFrom(
+                    visualDensity: VisualDensity.compact,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
+              ],
+            ],
           ),
         ],
       ),
@@ -282,6 +348,11 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
 class _GuideItem {
   final String question;
   final String answer;
+  final Function(BuildContext)? tourAction;
 
-  _GuideItem({required this.question, required this.answer});
+  _GuideItem({
+    required this.question,
+    required this.answer,
+    this.tourAction,
+  });
 }

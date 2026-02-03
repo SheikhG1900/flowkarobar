@@ -1253,6 +1253,10 @@ class AppLocalizationsUr extends AppLocalizations {
       'لوگوں کے ذمے آپ کی رقم کو ٹریک کرنے کے لیے \'وصولی\' سیکشن استعمال کریں۔ خودکار طور پر آمدنی بنانے کے لیے آپ انہیں وصول شدہ کے طور پر نشان زد کر سکتے ہیں۔';
 
   @override
+  String get guideTrackPayablesStep =>
+      'دوسروں کو آپ کے ذمے رقم کو ٹریک کرنے کے لیے \'واجبات\' سیکشن استعمال کریں۔ خودکار طور پر اخراجات بنانے کے لیے آپ انہیں ادا شدہ کے طور پر نشان زد کر سکتے ہیں۔';
+
+  @override
   String get guideLinkedTransactions =>
       'منسلک لین دین (Linked Transactions) کیا ہیں؟';
 
@@ -1525,6 +1529,44 @@ class AppLocalizationsUr extends AppLocalizations {
   @override
   String get tourSettingsPremiumDesc =>
       'فلو پیسہ پریمیم کے ساتھ جدید تجزیات، حسب ضرورت میسج ٹیمپلیٹس اور بہت کچھ ان لاک کریں۔';
+
+  @override
+  String get tourAddTxAmountTitle => 'رقم درج کریں';
+
+  @override
+  String get tourAddTxAmountDesc =>
+      'یہاں لین دین کی رقم ٹائپ کریں۔ اگر ضرورت ہو تو کیلکولیٹر استعمال کریں۔';
+
+  @override
+  String get tourAddTxCategoryTitle => 'زمرہ منتخب کریں';
+
+  @override
+  String get tourAddTxCategoryDesc =>
+      'تجزیات میں بہتر معلومات حاصل کرنے کے لیے اپنے لین دین کی درجہ بندی کریں۔';
+
+  @override
+  String get tourAddTxContactTitle => 'رابطہ لنک کریں';
+
+  @override
+  String get tourAddTxContactDesc =>
+      'اختیاری: واجبات یا وصولی کو ٹریک کرنے کے لیے اس لین دین کو کسی رابطے سے لنک کریں۔';
+
+  @override
+  String get tourAddTxDateTitle => 'لین دین کی تاریخ';
+
+  @override
+  String get tourAddTxDateDesc =>
+      'آپ آج یا کسی بھی ماضی/مستقبل کی تاریخ کے لیے لین دین ریکارڈ کر سکتے ہیں۔';
+
+  @override
+  String get tourAddTxSaveTitle => 'لین دین محفوظ کریں';
+
+  @override
+  String get tourAddTxSaveDesc =>
+      'اپنا لین دین محفوظ کرنے کے لیے یہاں ٹیپ کریں۔ آپ اسے فوری طور پر واٹس ایپ کے ذریعے شیئر بھی کر سکتے ہیں۔';
+
+  @override
+  String get tourShowMeHow => 'مجھے دکھائیں کیسے';
 
   @override
   String get messageTemplatesDesc =>

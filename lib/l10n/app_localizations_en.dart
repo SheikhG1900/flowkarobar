@@ -1244,6 +1244,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Use the \'Receivables\' section to track money people owe you. You can mark them as received to automatically create income.';
 
   @override
+  String get guideTrackPayablesStep =>
+      'Use the \'Payables\' section to track money you owe to others. You can mark them as paid to automatically create expense.';
+
+  @override
   String get guideLinkedTransactions => 'What are Linked Transactions?';
 
   @override
@@ -1514,6 +1518,44 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get tourSettingsPremiumDesc =>
       'Unlock advanced analytics, custom message templates, and more with Flowpaisa Premium.';
+
+  @override
+  String get tourAddTxAmountTitle => 'Enter Amount';
+
+  @override
+  String get tourAddTxAmountDesc =>
+      'Type the transaction amount here. Use the calculator if needed.';
+
+  @override
+  String get tourAddTxCategoryTitle => 'Select Category';
+
+  @override
+  String get tourAddTxCategoryDesc =>
+      'Categorize your transaction to get better insights in Analytics.';
+
+  @override
+  String get tourAddTxContactTitle => 'Link Contact';
+
+  @override
+  String get tourAddTxContactDesc =>
+      'Optional: Link this transaction to a contact for tracking receivables or payables.';
+
+  @override
+  String get tourAddTxDateTitle => 'Transaction Date';
+
+  @override
+  String get tourAddTxDateDesc =>
+      'You can record transactions for today or any past/future date.';
+
+  @override
+  String get tourAddTxSaveTitle => 'Save Transaction';
+
+  @override
+  String get tourAddTxSaveDesc =>
+      'Tap here to save your transaction. You can also share it via WhatsApp immediately.';
+
+  @override
+  String get tourShowMeHow => 'Show me how';
 
   @override
   String get messageTemplatesDesc =>

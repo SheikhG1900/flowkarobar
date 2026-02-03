@@ -1250,6 +1250,10 @@ class AppLocalizationsHi extends AppLocalizations {
       'लोगों द्वारा आपको दिए जाने वाले पैसे को ट्रैक करने के लिए \'प्राप्य\' अनुभाग का उपयोग करें। स्वचालित रूप से आय बनाने के लिए आप उन्हें प्राप्त के रूप में चिह्नित कर सकते हैं।';
 
   @override
+  String get guideTrackPayablesStep =>
+      'दूसरों को आपके द्वारा दिए जाने वाले पैसे को ट्रैक करने के लिए \'देय\' अनुभाग का उपयोग करें। स्वचालित रूप से व्यय बनाने के लिए आप उन्हें भुगतान किया गया के रूप में चिह्नित कर सकते हैं।';
+
+  @override
   String get guideLinkedTransactions => 'लिंक्ड लेन-देन क्या हैं?';
 
   @override
@@ -1520,6 +1524,44 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get tourSettingsPremiumDesc =>
       'फ्लोपैसा प्रीमियम के साथ उन्नत विश्लेषण, कस्टम संदेश टेम्पलेट और बहुत कुछ अनलॉक करें।';
+
+  @override
+  String get tourAddTxAmountTitle => 'राशि दर्ज करें';
+
+  @override
+  String get tourAddTxAmountDesc =>
+      'यहां लेनदेन की राशि टाइप करें। यदि आवश्यक हो तो कैलकुलेटर का उपयोग करें।';
+
+  @override
+  String get tourAddTxCategoryTitle => 'श्रेणी चुनें';
+
+  @override
+  String get tourAddTxCategoryDesc =>
+      'एनालिटिक्स में बेहतर जानकारी प्राप्त करने के लिए अपने लेनदेन को वर्गीकृत करें।';
+
+  @override
+  String get tourAddTxContactTitle => 'संपर्क लिंक करें';
+
+  @override
+  String get tourAddTxContactDesc =>
+      'वैकल्पिक: देय या प्राप्य को ट्रैक करने के लिए इस लेनदेन को किसी संपर्क से लिंक करें।';
+
+  @override
+  String get tourAddTxDateTitle => 'लेनदेन की तिथि';
+
+  @override
+  String get tourAddTxDateDesc =>
+      'आप आज या किसी भी पिछली/भविष्य की तिथि के लिए लेनदेन रिकॉर्ड कर सकते हैं।';
+
+  @override
+  String get tourAddTxSaveTitle => 'लेनदेन सहेजें';
+
+  @override
+  String get tourAddTxSaveDesc =>
+      'अपना लेनदेन सहेजने के लिए यहां टैप करें। आप इसे तुरंत व्हाट्सएप के माध्यम से साझा भी कर सकते हैं।';
+
+  @override
+  String get tourShowMeHow => 'मुझे दिखाओ कैसे';
 
   @override
   String get messageTemplatesDesc =>

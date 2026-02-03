@@ -30,6 +30,13 @@ class TourService {
   static final GlobalKey settingsBackupKey = GlobalKey();
   static final GlobalKey settingsPremiumKey = GlobalKey();
 
+  // Add Transaction Screen Keys
+  static final GlobalKey addTxAmountKey = GlobalKey();
+  static final GlobalKey addTxCategoryKey = GlobalKey();
+  static final GlobalKey addTxContactKey = GlobalKey();
+  static final GlobalKey addTxDateKey = GlobalKey();
+  static final GlobalKey addTxSaveKey = GlobalKey();
+
   /// List of showcase keys in order for dashboard tour
   static List<GlobalKey> get dashboardTourKeys => [
         dashboardHeaderKey,
@@ -60,6 +67,14 @@ class TourService {
         settingsAppPreferencesKey,
         settingsBackupKey,
         settingsPremiumKey,
+      ];
+
+  static List<GlobalKey> get addTransactionTourKeys => [
+        addTxAmountKey,
+        addTxCategoryKey,
+        addTxContactKey,
+        addTxDateKey,
+        addTxSaveKey,
       ];
 
   /// Start the dashboard tour
@@ -98,6 +113,15 @@ class TourService {
       showcaseState.startShowCase(settingsTourKeys);
     } catch (e) {
       debugPrint('Error starting settings tour: $e');
+    }
+  }
+
+  static void startAddTransactionTour(BuildContext context) {
+    try {
+      final showcaseState = ShowCaseWidget.of(context);
+      showcaseState.startShowCase(addTransactionTourKeys);
+    } catch (e) {
+      debugPrint('Error starting add transaction tour: $e');
     }
   }
 

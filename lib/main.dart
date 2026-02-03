@@ -233,8 +233,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Future<void> _checkAndShowTour() async {
-    final shouldShow = await ref.read(shouldShowTourProvider.future);
-    if (shouldShow && mounted) {
+    final tourNotifier = ref.read(tourNotifierProvider);
+    if (!tourNotifier.isTourCompleted(tourNotifier.dashboardKey) && mounted) {
       // Wait a bit for UI to settle, then start tour
       await Future.delayed(const Duration(seconds: 1));
       if (mounted && _selectedIndex == 0) {
@@ -288,11 +288,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       },
       onFinish: () {
         debugPrint('Tour finished');
-        // Mark tour as completed
-        ref.read(tourNotifierProvider).markTourCompleted();
-
-        // Check if we just finished the dashboard tour, maybe show a hint for next screen
-        // or just let the user explore.
+        // Mark dashboard tour as completed
+        final tourNotifier = ref.read(tourNotifierProvider);
+        tourNotifier.markTourCompleted(tourNotifier.dashboardKey);
       },
       builder: (context) => Scaffold(
         body: LayoutBuilder(
@@ -432,11 +430,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             notifier.applyFilters(TransactionFilters());
 
                             // Start transactions tour if not shown before
-                            // We can add a small delay to allow screen transition
                             Future.delayed(const Duration(milliseconds: 800),
                                 () {
                               if (context.mounted) {
-                                TourService.startTransactionsTour(context);
+                                final tourNotifier =
+                                    ref.read(tourNotifierProvider);
+                                if (!tourNotifier.isTourCompleted(
+                                    tourNotifier.transactionsKey)) {
+                                  TourService.startTransactionsTour(context);
+                                  tourNotifier.markTourCompleted(
+                                      tourNotifier.transactionsKey);
+                                }
                               }
                             });
                           } else if (index == 2) {
@@ -444,7 +448,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             Future.delayed(const Duration(milliseconds: 800),
                                 () {
                               if (context.mounted) {
-                                TourService.startAnalyticsTour(context);
+                                final tourNotifier =
+                                    ref.read(tourNotifierProvider);
+                                if (!tourNotifier.isTourCompleted(
+                                    tourNotifier.analyticsKey)) {
+                                  TourService.startAnalyticsTour(context);
+                                  tourNotifier.markTourCompleted(
+                                      tourNotifier.analyticsKey);
+                                }
                               }
                             });
                           } else if (index == 3) {
@@ -452,7 +463,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             Future.delayed(const Duration(milliseconds: 800),
                                 () {
                               if (context.mounted) {
-                                TourService.startSettingsTour(context);
+                                final tourNotifier =
+                                    ref.read(tourNotifierProvider);
+                                if (!tourNotifier.isTourCompleted(
+                                    tourNotifier.settingsKey)) {
+                                  TourService.startSettingsTour(context);
+                                  tourNotifier.markTourCompleted(
+                                      tourNotifier.settingsKey);
+                                }
                               }
                             });
                           }

@@ -2,22 +2,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flowpaisa/shared/providers/shared_preferences_provider.dart';
 
-/// Key for storing tour completion status in SharedPreferences
-const String _tourCompletedKey = 'app_tour_completed';
+/// Keys for storing tour completion status in SharedPreferences
+const String _tourDashboardKey = 'tour_completed_dashboard';
+const String _tourTransactionsKey = 'tour_completed_transactions';
+const String _tourAnalyticsKey = 'tour_completed_analytics';
+const String _tourSettingsKey = 'tour_completed_settings';
+const String _tourAddTransactionKey = 'tour_completed_add_transaction';
 
-/// Provider to check if the tour has been completed
-final tourCompletedProvider = FutureProvider<bool>((ref) async {
-  final prefs = ref.watch(sharedPreferencesProvider);
-  return prefs.getBool(_tourCompletedKey) ?? false;
-});
-
-/// Provider to check if tour should be shown (not completed yet)
-final shouldShowTourProvider = FutureProvider<bool>((ref) async {
-  final completed = await ref.watch(tourCompletedProvider.future);
-  return !completed;
-});
-
-/// Provider for marking tour as completed
+/// Provider for marking tours as completed
 final tourNotifierProvider = Provider((ref) {
   final prefs = ref.watch(sharedPreferencesProvider);
   return TourNotifier(prefs);
@@ -29,16 +21,28 @@ class TourNotifier {
 
   final SharedPreferences _prefs;
 
-  /// Mark the tour as completed
-  Future<void> markTourCompleted() async {
-    await _prefs.setBool(_tourCompletedKey, true);
+  /// Mark a specific tour as completed
+  Future<void> markTourCompleted(String key) async {
+    await _prefs.setBool(key, true);
   }
 
-  /// Reset tour completion (for testing or re-showing)
-  Future<void> resetTour() async {
-    await _prefs.remove(_tourCompletedKey);
+  /// Check if a specific tour is completed
+  bool isTourCompleted(String key) => _prefs.getBool(key) ?? false;
+
+  /// Reset all tours (for testing)
+  Future<void> resetAllTours() async {
+    await _prefs.remove(_tourDashboardKey);
+    await _prefs.remove(_tourTransactionsKey);
+    await _prefs.remove(_tourAnalyticsKey);
+    await _prefs.remove(_tourSettingsKey);
+    await _prefs.remove(_tourAddTransactionKey);
+    await _prefs.remove('app_tour_completed'); // Cleanup old key
   }
 
-  /// Check if tour is completed
-  bool get isCompleted => _prefs.getBool(_tourCompletedKey) ?? false;
+  // Helper getters for keys
+  String get dashboardKey => _tourDashboardKey;
+  String get transactionsKey => _tourTransactionsKey;
+  String get analyticsKey => _tourAnalyticsKey;
+  String get settingsKey => _tourSettingsKey;
+  String get addTransactionKey => _tourAddTransactionKey;
 }

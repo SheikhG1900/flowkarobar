@@ -2368,6 +2368,12 @@ abstract class AppLocalizations {
   /// **'Use the \'Receivables\' section to track money people owe you. You can mark them as received to automatically create income.'**
   String get guideTrackReceivablesStep;
 
+  /// No description provided for @guideTrackPayablesStep.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the \'Payables\' section to track money you owe to others. You can mark them as paid to automatically create expense.'**
+  String get guideTrackPayablesStep;
+
   /// No description provided for @guideLinkedTransactions.
   ///
   /// In en, this message translates to:
@@ -2853,6 +2859,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Unlock advanced analytics, custom message templates, and more with Flowpaisa Premium.'**
   String get tourSettingsPremiumDesc;
+
+  /// No description provided for @tourAddTxAmountTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter Amount'**
+  String get tourAddTxAmountTitle;
+
+  /// No description provided for @tourAddTxAmountDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Type the transaction amount here. Use the calculator if needed.'**
+  String get tourAddTxAmountDesc;
+
+  /// No description provided for @tourAddTxCategoryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Category'**
+  String get tourAddTxCategoryTitle;
+
+  /// No description provided for @tourAddTxCategoryDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Categorize your transaction to get better insights in Analytics.'**
+  String get tourAddTxCategoryDesc;
+
+  /// No description provided for @tourAddTxContactTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Link Contact'**
+  String get tourAddTxContactTitle;
+
+  /// No description provided for @tourAddTxContactDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional: Link this transaction to a contact for tracking receivables or payables.'**
+  String get tourAddTxContactDesc;
+
+  /// No description provided for @tourAddTxDateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Transaction Date'**
+  String get tourAddTxDateTitle;
+
+  /// No description provided for @tourAddTxDateDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'You can record transactions for today or any past/future date.'**
+  String get tourAddTxDateDesc;
+
+  /// No description provided for @tourAddTxSaveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Transaction'**
+  String get tourAddTxSaveTitle;
+
+  /// No description provided for @tourAddTxSaveDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap here to save your transaction. You can also share it via WhatsApp immediately.'**
+  String get tourAddTxSaveDesc;
+
+  /// No description provided for @tourShowMeHow.
+  ///
+  /// In en, this message translates to:
+  /// **'Show me how'**
+  String get tourShowMeHow;
 
   /// No description provided for @messageTemplatesDesc.
   ///
