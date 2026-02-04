@@ -197,7 +197,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                     description: l10n.tourAnalyticsExportPdfDesc,
                     targetShapeBorder: const CircleBorder(),
                     tooltipBackgroundColor: theme.colorScheme.primary,
-                    textColor: Colors.white,
+                    textColor: theme.colorScheme.onPrimary,
                     tooltipPosition: TooltipPosition.bottom,
                     child: IconButton(
                       icon: const Icon(Symbols.picture_as_pdf),
@@ -232,7 +232,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                       borderRadius: BorderRadius.all(Radius.circular(12)),
                     ),
                     tooltipBackgroundColor: theme.colorScheme.primary,
-                    textColor: Colors.white,
+                    textColor: theme.colorScheme.onPrimary,
                     tooltipPosition: TooltipPosition.bottom,
                     child: _DateRangeSelector(
                       selectedDateRange: selectedDateRange,
@@ -242,7 +242,9 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                             .updateRange(dateRange);
                       },
                       onNextPeriod: () {
-                        ref.read(selectedDateRangeProvider.notifier).nextPeriod();
+                        ref
+                            .read(selectedDateRangeProvider.notifier)
+                            .nextPeriod();
                       },
                       onPreviousPeriod: () {
                         ref
@@ -407,8 +409,6 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                             ),
                             const SizedBox(height: 24),
                             FilledButton(
-                              style: FilledButton.styleFrom(
-                                  foregroundColor: Colors.white),
                               onPressed: () =>
                                   PremiumGate.showPremiumDialog(context),
                               child: Text(l10n.unlockPremium),

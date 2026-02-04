@@ -2018,7 +2018,7 @@ class _SettingsTab extends ConsumerWidget {
             description: l10n.tourSettingsProfileDesc,
             targetShapeBorder: const CircleBorder(),
             tooltipBackgroundColor: theme.colorScheme.primary,
-            textColor: Colors.white,
+            textColor: theme.colorScheme.onPrimary,
             child: IconButton(
               icon: const Icon(Icons.person_outline),
               onPressed: () {
@@ -2043,7 +2043,7 @@ class _SettingsTab extends ConsumerWidget {
               borderRadius: BorderRadius.all(Radius.circular(12)),
             ),
             tooltipBackgroundColor: theme.colorScheme.primary,
-            textColor: Colors.white,
+            textColor: theme.colorScheme.onPrimary,
             child: Column(
               children: [
                 ListTile(
