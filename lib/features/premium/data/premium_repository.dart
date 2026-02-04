@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
+import 'package:in_app_purchase_android/in_app_purchase_android.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class PremiumRepository {
@@ -25,12 +26,7 @@ class PremiumRepository {
   }
 
   Future<void> init() async {
-    if (defaultTargetPlatform == TargetPlatform.android) {
-      // final InAppPurchaseAndroidPlatformAddition androidAddition =
-      //    _iap.getPlatformAddition<InAppPurchaseAndroidPlatformAddition>();
-      // Optional: Enable pending purchases
-      // await androidAddition.enablePendingPurchases(); 
-    }
+    // No specific initialization needed for modern in_app_purchase
   }
 
   /// Load products from the store
@@ -62,7 +58,14 @@ class PremiumRepository {
   /// Initiate a purchase
   Future<bool> buyPremium(ProductDetails productDetails) async {
     final PurchaseParam purchaseParam = PurchaseParam(productDetails: productDetails);
-    return await _iap.buyNonConsumable(purchaseParam: purchaseParam);
+    
+    if (productDetails.id == premiumLifetimeId) {
+      // Lifetime is a non-consumable in-app product
+      return await _iap.buyNonConsumable(purchaseParam: purchaseParam);
+    } else {
+      // Monthly and Yearly are subscriptions
+      return await _iap.buyNonConsumable(purchaseParam: purchaseParam);
+    }
   }
 
   /// Restore purchases

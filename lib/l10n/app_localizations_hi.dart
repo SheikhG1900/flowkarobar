@@ -960,6 +960,19 @@ class AppLocalizationsHi extends AppLocalizations {
   String get active => 'सक्रिय';
 
   @override
+  String get freeTrial => 'नि:शुल्क परीक्षण';
+
+  @override
+  String daysFreeTrial(int days) {
+    return '$days दिनों का नि:शुल्क परीक्षण';
+  }
+
+  @override
+  String monthFreeTrial(int months) {
+    return '$months महीने का नि:शुल्क परीक्षण';
+  }
+
+  @override
   String get googleDriveBackup => 'Google ड्राइव बैकअप';
 
   @override

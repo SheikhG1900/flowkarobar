@@ -31,7 +31,7 @@ class CashbookNotifier extends Notifier<List<Cashbook>> {
       final defaultCashbook = Cashbook(
         id: 'default',
         name: 'Main Cashbook',
-        colorCode: '#00D4FF',
+        colorCode: '#005262',
         iconCodePoint: Symbols.water_drop.codePoint.toString(),
         dbPath: 'flowpaisa.db',
         createdAt: DateTime.now(),
@@ -168,25 +168,25 @@ class CashbookNotifier extends Notifier<List<Cashbook>> {
 
   Future<void> clearCashbookData(String id) async {
     final cashbook = state.firstWhere((c) => c.id == id);
-    
+
     // Check if this is the active cashbook
     final isActive = ref.read(activeCashbookIdProvider) == id;
-    
+
     // ALWAYS create a temporary, independent database instance for the clear operation.
     // This is the ONLY way to completely avoid CircularDependencyError in Riverpod
     // because CashbookNotifier is a dependency of databaseProvider.
     final db = AppDatabase(fileName: cashbook.dbPath);
-    
+
     try {
       await db.clearAllData();
-      
+
       if (isActive) {
         Future.microtask(() {
           // Invalidate listing providers to clear UI state
           ref.invalidate(transactionsPaginatedProvider);
           ref.invalidate(payablesPaginatedProvider);
           ref.invalidate(receivablesPaginatedProvider);
-          
+
           // Invalidate summary providers
           ref.invalidate(allPayablesProvider);
           ref.invalidate(allReceivablesProvider);

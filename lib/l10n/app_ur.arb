@@ -325,6 +325,23 @@
   "restorePurchases": "خریداری بحال کریں",
   "premiumBenefitsNote": "اپنے منتخب کردہ پلان کے ساتھ تمام پریمیم فیچرز ان لاک کریں۔ مستقل رسائی کے لیے لائف ٹائم منتخب کریں!",
   "active": "فعال",
+  "freeTrial": "مفت ٹرائل",
+  "daysFreeTrial": "{days} دن کا مفت ٹرائل",
+  "@daysFreeTrial": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "monthFreeTrial": "{months} ماہ کا مفت ٹرائل",
+  "@monthFreeTrial": {
+    "placeholders": {
+      "months": {
+        "type": "int"
+      }
+    }
+  },
   "googleDriveBackup": "گوگل ڈرائیو بیک اپ",
   "cloudBackupPremiumDesc": "گوگل ڈرائیو پر کلاؤڈ بیک اپ پریمیم صارفین کے لیے دستیاب ہے۔",
   "signOut": "Sign Out",

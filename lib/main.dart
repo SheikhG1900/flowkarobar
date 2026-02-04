@@ -33,7 +33,6 @@ import 'package:flowpaisa/features/settings/presentation/screens/about_screen.da
 import 'package:flowpaisa/features/settings/presentation/screens/profile_screen.dart';
 import 'package:flowpaisa/features/notifications/presentation/screens/notifications_screen.dart';
 import 'package:flowpaisa/features/notifications/presentation/providers/notification_provider.dart';
-import 'package:flowpaisa/features/premium/presentation/screens/premium_screen.dart';
 import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 import 'package:flowpaisa/features/messages/presentation/screens/message_templates_screen.dart';
 import 'package:flowpaisa/features/transactions/presentation/screens/export_screen.dart';
@@ -2340,47 +2339,6 @@ class _SettingsTab extends ConsumerWidget {
               );
             },
           ),
-          // Premium List Item
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Color(0xFFFFD700), // Gold
-                  Color(0xFFFFA500), // Orange
-                  Color(0xFFFF8C00), // Dark Orange
-                ],
-              ),
-            ),
-            child: ListTile(
-              leading: const Icon(Icons.workspace_premium, color: Colors.white),
-              title: Text(
-                l10n.premium,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              subtitle: Text(
-                isPremium ? l10n.premiumActive : l10n.free,
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.9),
-                ),
-              ),
-              trailing: const Icon(Icons.arrow_forward_ios,
-                  size: 16, color: Colors.white),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const PremiumScreen(),
-                  ),
-                );
-              },
-            ),
-          ),
-          const Divider(),
           ListTile(
             leading: const Icon(Icons.info_outline),
             title: Text(l10n.about),

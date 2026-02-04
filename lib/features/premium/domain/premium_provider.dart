@@ -102,11 +102,15 @@ class PremiumNotifier extends Notifier<PremiumState> {
 
     state = state.copyWith(isLoading: true, error: null);
     try {
-      // Find the specific product
-      final product = state.products.firstWhere(
-        (p) => p.id == productId,
-        orElse: () => state.products.first,
-      );
+      // Find the specific product using a more robust method for release mode
+      final product = state.products.where((p) => p.id == productId).firstOrNull ?? 
+                     (state.products.isNotEmpty ? state.products.first : null);
+      
+      // Ensure the product is valid before attempting purchase
+      if (product == null || product.id != productId) {
+        state = state.copyWith(isLoading: false, error: 'Product not found: $productId');
+        return;
+      }
       
       await _repository.buyPremium(product);
       // State update happens in _onPurchaseUpdate

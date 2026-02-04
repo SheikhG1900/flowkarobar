@@ -97,7 +97,7 @@ class AppTheme {
   static ThemeData lightTheme(String languageCode, String fontName,
       {Color? primaryColor}) {
     final textTheme = getTextTheme(languageCode, fontName);
-    final primary = primaryColor ?? AppColors.brightCyan;
+    final primary = primaryColor ?? const Color.fromARGB(255, 0, 82, 98);
 
     return ThemeData(
       useMaterial3: true,

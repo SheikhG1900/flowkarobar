@@ -559,6 +559,23 @@
   "restorePurchases": "Restore Purchases",
   "premiumBenefitsNote": "Unlock all premium features with your chosen plan. Choose Lifetime for permanent access!",
   "active": "Active",
+  "freeTrial": "Free Trial",
+  "daysFreeTrial": "{days} days free trial",
+  "@daysFreeTrial": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "monthFreeTrial": "{months} month free trial",
+  "@monthFreeTrial": {
+    "placeholders": {
+      "months": {
+        "type": "int"
+      }
+    }
+  },
   "googleDriveBackup": "Google Drive Backup",
   "cloudBackupPremiumDesc": "Cloud backup to Google Drive is available for Premium users.",
   "signOut": "Sign Out",

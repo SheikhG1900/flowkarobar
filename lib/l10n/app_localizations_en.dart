@@ -957,6 +957,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get active => 'Active';
 
   @override
+  String get freeTrial => 'Free Trial';
+
+  @override
+  String daysFreeTrial(int days) {
+    return '$days days free trial';
+  }
+
+  @override
+  String monthFreeTrial(int months) {
+    return '$months month free trial';
+  }
+
+  @override
   String get googleDriveBackup => 'Google Drive Backup';
 
   @override

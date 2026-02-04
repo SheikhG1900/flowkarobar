@@ -962,6 +962,19 @@ class AppLocalizationsUr extends AppLocalizations {
   String get active => 'فعال';
 
   @override
+  String get freeTrial => 'مفت ٹرائل';
+
+  @override
+  String daysFreeTrial(int days) {
+    return '$days دن کا مفت ٹرائل';
+  }
+
+  @override
+  String monthFreeTrial(int months) {
+    return '$months ماہ کا مفت ٹرائل';
+  }
+
+  @override
   String get googleDriveBackup => 'گوگل ڈرائیو بیک اپ';
 
   @override

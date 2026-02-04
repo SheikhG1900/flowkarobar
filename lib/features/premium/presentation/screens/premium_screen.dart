@@ -6,6 +6,7 @@ import 'package:flowpaisa/features/premium/data/premium_repository.dart';
 import 'package:flowpaisa/features/premium/domain/premium_provider.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
+import 'package:in_app_purchase_android/in_app_purchase_android.dart';
 import 'package:flowpaisa/shared/widgets/premium_badge.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 
@@ -14,6 +15,14 @@ class PremiumScreen extends ConsumerStatefulWidget {
 
   @override
   ConsumerState<PremiumScreen> createState() => _PremiumScreenState();
+}
+
+class ProductInfo {
+  final String price; // The Regular/Base price
+  final String? trial; // e.g., "trial 7 days"
+  final String? discountedPrice; // e.g., "$25"
+
+  ProductInfo({required this.price, this.trial, this.discountedPrice});
 }
 
 class _PremiumScreenState extends ConsumerState<PremiumScreen> {
@@ -316,9 +325,21 @@ class _PremiumScreenState extends ConsumerState<PremiumScreen> {
                       id: PremiumRepository.premiumMonthlyId,
                       title: l10n.monthly,
                       subtitle: l10n.cancelAnytime,
-                      price: _getPriceForId(premiumState.products,
-                              PremiumRepository.premiumMonthlyId) ??
-                          "₹29",
+                      productInfo: _getDetailedProductInfo(
+                        context,
+                        premiumState.products
+                                .where((p) =>
+                                    p.id == PremiumRepository.premiumMonthlyId)
+                                .firstOrNull ??
+                            ProductDetails(
+                              id: PremiumRepository.premiumMonthlyId,
+                              title: '',
+                              description: '',
+                              price: '₹29',
+                              rawPrice: 29.0,
+                              currencyCode: 'INR',
+                            ),
+                      ),
                       isSelected: _selectedProductId ==
                           PremiumRepository.premiumMonthlyId,
                     ),
@@ -330,9 +351,21 @@ class _PremiumScreenState extends ConsumerState<PremiumScreen> {
                       id: PremiumRepository.premiumYearlyId,
                       title: l10n.yearly,
                       subtitle: l10n.savePercentage("50"),
-                      price: _getPriceForId(premiumState.products,
-                              PremiumRepository.premiumYearlyId) ??
-                          "₹199",
+                      productInfo: _getDetailedProductInfo(
+                        context,
+                        premiumState.products
+                                .where((p) =>
+                                    p.id == PremiumRepository.premiumYearlyId)
+                                .firstOrNull ??
+                            ProductDetails(
+                              id: PremiumRepository.premiumYearlyId,
+                              title: '',
+                              description: '',
+                              price: '₹199',
+                              rawPrice: 199.0,
+                              currencyCode: 'INR',
+                            ),
+                      ),
                       isSelected: _selectedProductId ==
                           PremiumRepository.premiumYearlyId,
                       isRecommended: true,
@@ -345,9 +378,21 @@ class _PremiumScreenState extends ConsumerState<PremiumScreen> {
                       id: PremiumRepository.premiumLifetimeId,
                       title: l10n.lifetime,
                       subtitle: l10n.oneTimePayment,
-                      price: _getPriceForId(premiumState.products,
-                              PremiumRepository.premiumLifetimeId) ??
-                          "₹399",
+                      productInfo: _getDetailedProductInfo(
+                        context,
+                        premiumState.products
+                                .where((p) =>
+                                    p.id == PremiumRepository.premiumLifetimeId)
+                                .firstOrNull ??
+                            ProductDetails(
+                              id: PremiumRepository.premiumLifetimeId,
+                              title: '',
+                              description: '',
+                              price: '₹399',
+                              rawPrice: 399.0,
+                              currencyCode: 'INR',
+                            ),
+                      ),
                       isSelected: _selectedProductId ==
                           PremiumRepository.premiumLifetimeId,
                     ),
@@ -430,12 +475,73 @@ class _PremiumScreenState extends ConsumerState<PremiumScreen> {
     );
   }
 
-  String? _getPriceForId(List<ProductDetails> products, String id) {
-    try {
-      return products.firstWhere((p) => p.id == id).price;
-    } catch (_) {
-      return null;
+  String _parseIsoDuration(BuildContext context, String period) {
+    final l10n = AppLocalizations.of(context)!;
+    final numericValue = RegExp(r'[0-9]+').firstMatch(period)?.group(0);
+    if (numericValue == null) return period;
+
+    final count = int.parse(numericValue);
+    if (period.contains('D')) {
+      return l10n.daysFreeTrial(count);
+    } else if (period.contains('M')) {
+      return l10n.monthFreeTrial(count);
+    } else if (period.contains('W')) {
+      // Fallback for weeks if not in l10n, or just return as is
+      return '$count weeks';
     }
+    return period;
+  }
+
+  ProductInfo _getDetailedProductInfo(
+      BuildContext context, ProductDetails product) {
+    String regularPrice = product.price;
+    String? trial;
+    String? discountedPrice;
+
+    if (product is GooglePlayProductDetails) {
+      final googleProduct = product.productDetails;
+
+      // --- CASE 1: SUBSCRIPTIONS (Phases) ---
+      if (googleProduct.subscriptionOfferDetails != null &&
+          googleProduct.subscriptionOfferDetails!.isNotEmpty) {
+        final offer = googleProduct.subscriptionOfferDetails!.first;
+        final phases = offer.pricingPhases;
+
+        regularPrice = phases.last.formattedPrice;
+
+        if (phases.length > 1) {
+          for (var i = 0; i < phases.length - 1; i++) {
+            var phase = phases[i];
+            if (phase.priceAmountMicros == 0) {
+              trial = _parseIsoDuration(context, phase.billingPeriod);
+            } else if (phase.priceAmountMicros <
+                phases.last.priceAmountMicros) {
+              discountedPrice = phase.formattedPrice;
+            }
+          }
+        }
+      }
+      // --- CASE 2: ONE-TIME PRODUCTS (Offers) ---
+      else if (googleProduct.oneTimePurchaseOfferDetails != null) {
+        final oneTimeDetails = googleProduct.oneTimePurchaseOfferDetails!;
+
+        // The 'price' from product.price is usually the currently active offer price.
+        // We look for the base price in the details to show the "original" price.
+        regularPrice = oneTimeDetails.formattedPrice;
+
+        // If Google Play returns a discounted price in the main object,
+        // but it differs from our base price, we mark it as a discount.
+        if (product.price != regularPrice) {
+          discountedPrice = product.price;
+        }
+      }
+    }
+
+    return ProductInfo(
+      price: regularPrice,
+      trial: trial,
+      discountedPrice: discountedPrice,
+    );
   }
 
   Widget _buildPlanOption(
@@ -443,11 +549,12 @@ class _PremiumScreenState extends ConsumerState<PremiumScreen> {
     required String id,
     required String title,
     required String subtitle,
-    required String price,
+    required ProductInfo productInfo,
     required bool isSelected,
     bool isRecommended = false,
   }) {
     final theme = Theme.of(context);
+    final isRtl = Directionality.of(context) == TextDirection.rtl;
 
     return GestureDetector(
       onTap: () => setState(() => _selectedProductId = id),
@@ -521,22 +628,54 @@ class _PremiumScreenState extends ConsumerState<PremiumScreen> {
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
                       ),
+                      if (productInfo.trial != null)
+                        Container(
+                          margin: const EdgeInsets.only(top: 4),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: Colors.green.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            productInfo.trial!,
+                            style: const TextStyle(
+                              color: Colors.green,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
                     ],
                   ),
                 ),
-                Text(
-                  price,
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: isSelected ? theme.colorScheme.primary : null,
-                  ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    if (productInfo.discountedPrice != null)
+                      Text(
+                        productInfo.price,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          decoration: TextDecoration.lineThrough,
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    Text(
+                      productInfo.discountedPrice ?? productInfo.price,
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: isSelected ? theme.colorScheme.primary : null,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
             if (isRecommended)
               Positioned(
                 top: -24,
-                right: -8,
+                right: isRtl ? null : -8,
+                left: isRtl ? -8 : null,
                 child: Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -551,9 +690,9 @@ class _PremiumScreenState extends ConsumerState<PremiumScreen> {
                       ),
                     ],
                   ),
-                  child: const Text(
-                    'BEST VALUE',
-                    style: TextStyle(
+                  child: Text(
+                    AppLocalizations.of(context)!.bestValue.toUpperCase(),
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 10,
                       fontWeight: FontWeight.bold,

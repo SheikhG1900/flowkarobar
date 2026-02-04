@@ -325,6 +325,23 @@
   "restorePurchases": "खरीद बहाल करें",
   "premiumBenefitsNote": "अपने चुने हुए प्लान के साथ सभी प्रीमियम सुविधाओं को अनलॉक करें। स्थायी पहुंच के लिए लाइफटाइम चुनें!",
   "active": "सक्रिय",
+  "freeTrial": "नि:शुल्क परीक्षण",
+  "daysFreeTrial": "{days} दिनों का नि:शुल्क परीक्षण",
+  "@daysFreeTrial": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "monthFreeTrial": "{months} महीने का नि:शुल्क परीक्षण",
+  "@monthFreeTrial": {
+    "placeholders": {
+      "months": {
+        "type": "int"
+      }
+    }
+  },
   "googleDriveBackup": "Google ड्राइव बैकअप",
   "cloudBackupPremiumDesc": "Google ड्राइव पर क्लाउड बैकअप प्रीमियम उपयोगकर्ताओं के लिए उपलब्ध है।",
   "signOut": "Sign Out",

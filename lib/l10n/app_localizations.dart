@@ -1834,6 +1834,24 @@ abstract class AppLocalizations {
   /// **'Active'**
   String get active;
 
+  /// No description provided for @freeTrial.
+  ///
+  /// In en, this message translates to:
+  /// **'Free Trial'**
+  String get freeTrial;
+
+  /// No description provided for @daysFreeTrial.
+  ///
+  /// In en, this message translates to:
+  /// **'{days} days free trial'**
+  String daysFreeTrial(int days);
+
+  /// No description provided for @monthFreeTrial.
+  ///
+  /// In en, this message translates to:
+  /// **'{months} month free trial'**
+  String monthFreeTrial(int months);
+
   /// No description provided for @googleDriveBackup.
   ///
   /// In en, this message translates to:
