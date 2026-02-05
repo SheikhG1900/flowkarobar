@@ -101,8 +101,19 @@ dev_dependencies:
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
+  web:
+    generate: true
+    image_path: "assets/images/logo_square.png"
+  macos:
+    generate: true
+    image_path: "assets/images/logo_square.png"
+  windows:
+    generate: true
+    image_path: "assets/images/logo_square.png"
+    icon_size: 256
   image_path: "assets/images/logo_square.png"
   min_sdk_android: 21
+  remove_alpha_ios: true
 
 dependency_overrides:
   win32: ^5.15.0  # Fix compatibility with Dart 3.10.4
