@@ -478,16 +478,16 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
               ),
               child: Column(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.file_download,
-                    color: Colors.white,
+                    color: theme.colorScheme.onPrimary,
                     size: 48,
                   ),
                   const SizedBox(height: 12),
                   Text(
                     l10n.exportYourData,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: theme.colorScheme.onPrimary,
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
                     ),
@@ -495,8 +495,8 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
                   const SizedBox(height: 8),
                   Text(
                     l10n.downloadHistoryCsvPdf,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: theme.colorScheme.onPrimary,
                       fontSize: 14,
                     ),
                     textAlign: TextAlign.center,

@@ -306,7 +306,7 @@ class AppTheme {
 
       // Color Scheme (GermGuard Dark - Professional Cyan)
       colorScheme: ColorScheme.dark(
-        primary: Color.lerp(Colors.white, primary, .2) ??
+        primary: Color.lerp(Colors.white, primary, .35) ??
             AppColors.brightCyan, // Dynamic Primary
         onPrimary: const Color(0xFF003D57),
         primaryContainer: const Color(0xFF005580),

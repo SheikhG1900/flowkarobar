@@ -252,7 +252,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final activeCashbook = ref.watch(activeCashbookProvider);
     switch (index) {
       case 0: // Dashboard
-        return activeCashbook.color;
+        return activeCashbook.foreColor(context);
       case 1: // Transactions
         return AppColors.transactionsSectionColor;
       case 2: // Analytics
@@ -443,14 +443,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               }
                             });
                           } else if (index == 2) {
-                            // Start analytics tour if not shown before
+                            // Start analytics tour if not shown before and premium is active
                             Future.delayed(const Duration(milliseconds: 800),
                                 () {
                               if (context.mounted) {
                                 final tourNotifier =
                                     ref.read(tourNotifierProvider);
+                                final isPremium = PremiumGate.isPremium(ref);
                                 if (!tourNotifier.isTourCompleted(
-                                    tourNotifier.analyticsKey)) {
+                                        tourNotifier.analyticsKey) &&
+                                    isPremium) {
                                   TourService.startAnalyticsTour(context);
                                   tourNotifier.markTourCompleted(
                                       tourNotifier.analyticsKey);
@@ -519,6 +521,7 @@ class _DashboardTab extends ConsumerWidget {
     final activeCashbook = ref.watch(activeCashbookProvider);
     final activeColor = activeCashbook.color;
     final activeIcon = activeCashbook.icon;
+    final activeForeColor = activeCashbook.foreColor(context);
 
     // Watch dashboard statistics and filter
     final dashboardStatsAsync = ref.watch(dashboardStatsProvider);
@@ -674,13 +677,13 @@ class _DashboardTab extends ConsumerWidget {
                                       Icon(
                                         activeIcon,
                                         size: 14,
-                                        color: activeColor,
+                                        color: activeForeColor,
                                       ),
                                       const SizedBox(width: 4),
                                       Text(
                                         activeCashbook.name,
                                         style: TextStyle(
-                                          color: activeColor,
+                                          color: activeForeColor,
                                           fontSize: 12,
                                           fontWeight: FontWeight.w600,
                                         ),
@@ -882,7 +885,7 @@ class _DashboardTab extends ConsumerWidget {
                                       _SummaryItem(
                                         label: l10n.netCash,
                                         amount: stats.netCash(filter),
-                                        color: Colors.white,
+                                        color: activeForeColor,
                                         icon: Icons.account_balance_wallet,
                                         onTap: () {
                                           final isMonthly =
@@ -1020,7 +1023,7 @@ class _DashboardTab extends ConsumerWidget {
                                       _SummaryItem(
                                         label: l10n.netCredit,
                                         amount: stats.netCredit(filter),
-                                        color: Colors.white,
+                                        color: activeForeColor,
                                         icon: Icons.swap_horiz,
                                       ),
                                     ],
@@ -1268,6 +1271,7 @@ class _DashboardTab extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final activeCashbook = ref.watch(activeCashbookProvider);
+    final activeForeColor = activeCashbook.foreColor(context);
     final isMonthly = currentFilter == DashboardFilter.monthly;
     final label = isMonthly
         ? AppDateFormatter.formatMonth(DateTime.now(), context: context)
@@ -1278,12 +1282,12 @@ class _DashboardTab extends ConsumerWidget {
       color: WidgetStateProperty.all(activeCashbook.color.withAlpha(50)),
       label: Row(
         children: [
-          Icon(icon, size: 16, color: theme.colorScheme.onSurface),
+          Icon(icon, size: 16, color: activeForeColor),
           const SizedBox(width: 4),
           Text(
             label,
             style: TextStyle(
-              color: theme.colorScheme.onSurface,
+              color: activeForeColor,
               fontSize: 12,
               fontWeight: FontWeight.bold,
             ),
@@ -1450,7 +1454,7 @@ class _DashboardTab extends ConsumerWidget {
       BuildContext context, WidgetRef ref, AppLocalizations l10n, bool isDark) {
     final theme = Theme.of(context);
     final activeCashbook = ref.watch(activeCashbookProvider);
-
+    final activeForeColor = activeCashbook.foreColor(context);
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -1478,7 +1482,7 @@ class _DashboardTab extends ConsumerWidget {
             ),
             child: Icon(
               Icons.security_rounded,
-              color: activeCashbook.color,
+              color: activeForeColor,
               size: 24,
             ),
           ),
@@ -1491,7 +1495,7 @@ class _DashboardTab extends ConsumerWidget {
                   l10n.privacyHighlight,
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: activeCashbook.color,
+                    color: activeForeColor,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -1655,6 +1659,20 @@ class _DashboardTab extends ConsumerWidget {
                             builder: (context) => const AnalyticsScreen(),
                           ),
                         );
+
+                        // Start analytics tour if not shown before and premium is active
+                        Future.delayed(const Duration(milliseconds: 800), () {
+                          if (context.mounted) {
+                            final tourNotifier = ref.read(tourNotifierProvider);
+                            if (!tourNotifier.isTourCompleted(
+                                    tourNotifier.analyticsKey) &&
+                                isPremium) {
+                              TourService.startAnalyticsTour(context);
+                              tourNotifier
+                                  .markTourCompleted(tourNotifier.analyticsKey);
+                            }
+                          }
+                        });
                       },
                     ),
                     _QuickActionButton(
@@ -2105,7 +2123,7 @@ class _SettingsTab extends ConsumerWidget {
               borderRadius: BorderRadius.all(Radius.circular(12)),
             ),
             tooltipBackgroundColor: theme.colorScheme.primary,
-            textColor: Colors.white,
+            textColor: theme.colorScheme.onPrimary,
             child: ListTile(
               leading: const Icon(Icons.backup),
               title: Row(
@@ -2137,7 +2155,7 @@ class _SettingsTab extends ConsumerWidget {
               borderRadius: BorderRadius.all(Radius.circular(12)),
             ),
             tooltipBackgroundColor: theme.colorScheme.primary,
-            textColor: Colors.white,
+            textColor: theme.colorScheme.onPrimary,
             child: Container(
               decoration: const BoxDecoration(
                 gradient: LinearGradient(

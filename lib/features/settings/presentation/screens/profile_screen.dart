@@ -140,8 +140,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   ...predefinedFormats.map((format) => ListTile(
                         title: Text(format),
                         subtitle: Text(l10n.sample(
-                            AppDateFormatter.formatDate(now,
-                                pattern: format))),
+                            AppDateFormatter.formatDate(now, pattern: format))),
                         trailing: profile.dateFormat == format
                             ? Icon(Icons.check_circle,
                                 color: theme.colorScheme.primary)
@@ -199,9 +198,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               const SizedBox(height: 12),
               if (controller.text.isNotEmpty)
                 Text(
-                  l10n.sample(
-                      AppDateFormatter.formatDate(DateTime.now(),
-                          pattern: controller.text)),
+                  l10n.sample(AppDateFormatter.formatDate(DateTime.now(),
+                      pattern: controller.text)),
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.primary,
                   ),
@@ -276,10 +274,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       child: Center(
                         child: Text(
                           _getInitials(profile.name ?? ''),
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 36,
                             fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                            color: theme.colorScheme.onPrimary,
                           ),
                         ),
                       ),
@@ -429,8 +427,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       ),
                       error: (error, stack) => ListTile(
                         title: Text(l10n.currency),
-                        subtitle:
-                            Text(l10n.errorOccurred(error.toString())),
+                        subtitle: Text(l10n.errorOccurred(error.toString())),
                       ),
                     );
                   },
@@ -471,8 +468,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               GradientButton(
                 label: l10n.saveProfile,
                 icon: Icons.check,
-                gradient:
-                    AppColors.getPrimaryGradient(theme.colorScheme.primary),
                 onPressed: _saveProfile,
               ),
               const SizedBox(height: 32),

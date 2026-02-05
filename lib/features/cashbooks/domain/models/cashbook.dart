@@ -10,7 +10,7 @@ class Cashbook {
   final String? iconCodePoint; // Icon codePoint string
   final String dbPath; // Filename like 'flowpaisa.db' or 'travel.db'
   final DateTime createdAt;
-
+  Color? _color;
   Cashbook({
     required this.id,
     required this.name,
@@ -20,7 +20,24 @@ class Cashbook {
     required this.createdAt,
   });
 
-  Color get color => Color(int.parse(colorCode.replaceAll('#', '0xFF')));
+  Color get color =>
+      _color ??= Color(int.parse(colorCode.replaceAll('#', '0xFF')));
+
+  Color foreColor(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    if (isDark) {
+      return Color.lerp(Colors.white, color, 0.3) ?? theme.colorScheme.primary;
+    } else {
+      return Color.lerp(Colors.black, color, .8) ?? theme.colorScheme.primary;
+    }
+  }
+
+  Color backColor(BuildContext context) {
+    final theme = Theme.of(context);
+    return Color.lerp(theme.colorScheme.onPrimary, color, 0.5) ??
+        theme.colorScheme.onPrimary;
+  }
 
   IconData get icon =>
       IconHelper.getIconData(iconCodePoint) ?? Symbols.water_drop;

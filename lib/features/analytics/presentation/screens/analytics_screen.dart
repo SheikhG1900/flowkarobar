@@ -272,7 +272,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                           borderRadius: BorderRadius.all(Radius.circular(12)),
                         ),
                         tooltipBackgroundColor: theme.colorScheme.primary,
-                        textColor: Colors.white,
+                        textColor: theme.colorScheme.onPrimary,
                         tooltipPosition: TooltipPosition.bottom,
                         child: _CollapsibleSection(
                           title: l10n.financialSummary,
@@ -297,7 +297,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                           borderRadius: BorderRadius.all(Radius.circular(12)),
                         ),
                         tooltipBackgroundColor: theme.colorScheme.primary,
-                        textColor: Colors.white,
+                        textColor: theme.colorScheme.onPrimary,
                         tooltipPosition: TooltipPosition.bottom,
                         child: _CollapsibleSection(
                           title: l10n.expensesByCategory,

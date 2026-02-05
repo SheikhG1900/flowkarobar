@@ -1,3 +1,4 @@
+import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 
 /// Gradient Button Widget
@@ -5,7 +6,7 @@ import 'package:flutter/material.dart';
 class GradientButton extends StatelessWidget {
   final String label;
   final VoidCallback? onPressed;
-  final Gradient gradient;
+  final Gradient? gradient;
   final double borderRadius;
   final EdgeInsetsGeometry padding;
   final TextStyle? textStyle;
@@ -13,12 +14,13 @@ class GradientButton extends StatelessWidget {
   final bool isLoading;
   final double? width;
   final double? height;
+  final Color? foreColor;
 
   const GradientButton({
     super.key,
     required this.label,
     required this.onPressed,
-    required this.gradient,
+    this.gradient,
     this.borderRadius = 16,
     this.padding = const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
     this.textStyle,
@@ -26,26 +28,33 @@ class GradientButton extends StatelessWidget {
     this.isLoading = false,
     this.width,
     this.height,
+    this.foreColor,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final defaultTextStyle = theme.textTheme.labelLarge?.copyWith(
-      color: Colors.white,
-      fontWeight: FontWeight.w600,
-    );
+    final defaultGradient =
+        AppColors.getPrimaryGradient(theme.colorScheme.primary);
+    final defaultTextStyle = textStyle ??
+        theme.textTheme.labelLarge?.copyWith(
+          color: foreColor ?? theme.colorScheme.onPrimary,
+          fontWeight: FontWeight.w600,
+        );
 
     return Container(
       width: width,
       height: height,
       decoration: BoxDecoration(
-        gradient: gradient,
+        gradient: gradient ?? defaultGradient,
         borderRadius: BorderRadius.circular(borderRadius),
         boxShadow: onPressed != null
             ? [
                 BoxShadow(
-                  color: gradient.colors.first.withValues(alpha: 0.3),
+                  color: (gradient ?? defaultGradient)
+                      .colors
+                      .first
+                      .withValues(alpha: 0.3),
                   blurRadius: 12,
                   offset: const Offset(0, 6),
                 ),
@@ -75,7 +84,9 @@ class GradientButton extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       if (icon != null) ...[
-                        Icon(icon, color: Colors.white, size: 20),
+                        Icon(icon,
+                            color: foreColor ?? theme.colorScheme.onPrimary,
+                            size: 20),
                         const SizedBox(width: 8),
                       ],
                       Text(
@@ -158,4 +169,3 @@ class OutlinedGradientButton extends StatelessWidget {
     );
   }
 }
-
