@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- Primary Meta Tags -->
+    <title>Flowpaisa - Shared Transaction</title>
+    <meta name="title" content="Flowpaisa - Shared Transaction">
+    <meta name="description" content="View and import this shared transaction into your Flowpaisa app. Track every paisa with ease.">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://tamatasoft.github.io/flowpaisa/share/">
+    <meta property="og:title" content="Flowpaisa - Shared Transaction">
+    <meta property="og:description" content="A transaction has been shared with you via Flowpaisa. Tap to view details and import.">
+    <meta property="og:image" content="https://tamatasoft.github.io/flowpaisa/assets/logo.png">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary">
+    <meta property="twitter:url" content="https://tamatasoft.github.io/flowpaisa/share/">
+    <meta property="twitter:title" content="Flowpaisa - Shared Transaction">
+    <meta property="twitter:description" content="A transaction has been shared with you via Flowpaisa. Tap to view details and import.">
+    <meta property="twitter:image" content="https://tamatasoft.github.io/flowpaisa/assets/logo.png">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="../assets/logo.png">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Use existing website styles -->
+    <link rel="stylesheet" href="../css/style.css">
+
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.05) 0%, rgba(0, 136, 204, 0.02) 100%);
+        }
+
+        .share-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+            margin-top: 80px; /* Space for fixed header */
+        }
+
+        .share-card {
+            background: var(--white);
+            border-radius: 30px;
+            box-shadow: var(--shadow);
+            width: 100%;
+            max-width: 480px;
+            padding: 40px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .share-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: linear-gradient(to right, var(--primary-cyan), var(--primary-blue));
+        }
+
+        .transaction-preview {
+            background: #F8FAFC;
+            border-radius: 24px;
+            padding: 30px;
+            margin: 30px 0;
+            text-align: left;
+            border: 1px solid rgba(0, 0, 0, 0.03);
+        }
+
+        .preview-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            border-bottom: 1px dashed rgba(0, 0, 0, 0.05);
+            padding-bottom: 10px;
+        }
+
+        .preview-row:last-child {
+            margin-bottom: 0;
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .label {
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .value {
+            font-weight: 700;
+            color: var(--text-dark);
+            font-size: 14px;
+        }
+
+        .amount-display {
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--primary-blue);
+            text-align: center;
+            margin-bottom: 20px;
+            display: block;
+            letter-spacing: -1px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 50px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 15px;
+        }
+
+        .badge-income { background: rgba(16, 185, 129, 0.1); color: var(--income-green); }
+        .badge-expense { background: rgba(255, 112, 67, 0.1); color: var(--expense-orange); }
+        .badge-receivable { background: rgba(34, 211, 238, 0.1); color: var(--receivable-cyan); }
+        .badge-payable { background: rgba(251, 191, 36, 0.1); color: var(--payable-amber); }
+
+        .import-btn {
+            width: 100%;
+            border: none;
+            cursor: pointer;
+            font-family: inherit;
+            margin-bottom: 20px;
+        }
+
+        #loading-state {
+            padding: 40px 0;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(0, 212, 255, 0.1);
+            border-left-color: var(--primary-cyan);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .hidden { display: none !important; }
+
+        h1.share-title {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: var(--text-dark);
+        }
+
+        p.share-subtitle {
+            font-size: 15px;
+            color: var(--text-secondary);
+            margin-bottom: 0;
+        }
+    </style>
+</head>
+<body>
+
+    <header id="header" class="scrolled">
+        <div class="container">
+            <nav>
+                <a href="../index.html" class="logo">
+                    <img src="../assets/logo.png" alt="Flowpaisa Logo">
+                    <span>lowpaisa</span>
+                </a>
+                <ul class="nav-links">
+                    <li><a href="../index.html">Home</a></li>
+                    <li><a href="../about.html">About</a></li>
+                    <li><a href="../index.html#features">Features</a></li>
+                </ul>
+                <a href="https://tamatasoft.github.io/flowpaisa/" class="cta-button" style="padding: 10px 25px; font-size: 14px;">Download</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="share-container">
+        <div class="share-card">
+            <div id="loading-state">
+                <div class="spinner"></div>
+                <p class="text-secondary">Fetching transaction details...</p>
+            </div>
+
+            <div id="content-state" class="hidden">
+                <div id="type-badge" class="badge">Transaction</div>
+                <h1 class="share-title" id="display-title">Shared with you</h1>
+                <p class="share-subtitle">You can import this record directly into your Flowpaisa app.</p>
+
+                <div class="transaction-preview">
+                    <span class="amount-display" id="amount-val">--</span>
+                    
+                    <div class="preview-row">
+                        <span class="label">Date</span>
+                        <span class="value" id="date-val">--</span>
+                    </div>
+                    <div class="preview-row" id="desc-row">
+                        <span class="label">Description</span>
+                        <span class="value" id="desc-val">--</span>
+                    </div>
+                    <div class="preview-row" id="sender-row">
+                        <span class="label">Shared by</span>
+                        <span class="value" id="sender-val">--</span>
+                    </div>
+                </div>
+
+                <button class="cta-button import-btn" onclick="openFlowpaisa()">
+                    <i class="fas fa-file-import"></i> &nbsp; Import to Flowpaisa
+                </button>
+
+                <a href="../index.html" class="secondary-link">Learn more about Flowpaisa</a>
+            </div>
+
+            <div id="error-state" class="hidden">
+                <i class="fas fa-exclamation-circle" style="font-size: 48px; color: var(--expense-orange); margin-bottom: 20px;"></i>
+                <h1 class="share-title">Invalid Link</h1>
+                <p class="text-secondary" style="margin-bottom: 30px;">This shared link seems to be invalid or has expired.</p>
+                <a href="../index.html" class="cta-button">Back to Home</a>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="copyright">
+                <p>&copy; 2026 TamataSoft. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        let appLink = '';
+
+        function decodeData(str) {
+            try {
+                str = str.replace(/-/g, '+').replace(/_/g, '/');
+                while (str.length % 4) str += '=';
+                return decodeURIComponent(escape(window.atob(str)));
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function init() {
+            const params = new URLSearchParams(window.location.search);
+            const type = params.get('type');
+            const data = params.get('data');
+
+            if (!type || !data) {
+                showErr();
+                return;
+            }
+
+            const json = decodeData(data);
+            if (!json) {
+                showErr();
+                return;
+            }
+
+            try {
+                const parsed = JSON.parse(json);
+                render(type, parsed);
+                appLink = `flowpaisa://share?type=${type}&data=${data}`;
+            } catch (e) {
+                showErr();
+            }
+        }
+
+        function render(type, data) {
+            document.getElementById('loading-state').classList.add('hidden');
+            document.getElementById('content-state').classList.remove('hidden');
+
+            const badge = document.getElementById('type-badge');
+            badge.innerText = type;
+            badge.className = 'badge badge-' + type.toLowerCase();
+
+            const amount = data.a || data.amount || 0;
+            document.getElementById('amount-val').innerText = amount.toLocaleString(undefined, { 
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+
+            const dateStr = data.d || data.date;
+            if (dateStr) {
+                const d = new Date(dateStr);
+                document.getElementById('date-val').innerText = d.toLocaleDateString(undefined, { 
+                    year: 'numeric', month: 'long', day: 'numeric' 
+                });
+            }
+
+            const desc = data.ds || data.description;
+            if (desc) {
+                document.getElementById('desc-val').innerText = desc;
+            } else {
+                document.getElementById('desc-row').classList.add('hidden');
+            }
+
+            const sender = data.sn || data.senderName;
+            if (sender) {
+                document.getElementById('sender-val').innerText = sender;
+                document.getElementById('display-title').innerText = sender + ' shared a ' + type;
+                document.title = 'Shared by ' + sender + ' | Flowpaisa';
+            } else {
+                document.getElementById('sender-row').classList.add('hidden');
+                document.title = 'Shared ' + type + ' | Flowpaisa';
+            }
+        }
+
+        function showErr() {
+            document.getElementById('loading-state').classList.add('hidden');
+            document.getElementById('error-state').classList.remove('hidden');
+        }
+
+        function openFlowpaisa() {
+            if (appLink) {
+                window.location.href = appLink;
+                setTimeout(() => {
+                    if (confirm("Flowpaisa app didn't open. Go to download page?")) {
+                        window.location.href = "../index.html";
+                    }
+                }, 2500);
+            }
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
