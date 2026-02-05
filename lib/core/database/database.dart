@@ -258,7 +258,7 @@ class SyncMetadata extends Table {
   TextColumn get deviceId => text()();
   IntColumn get version => integer().withDefault(const Constant(0))();
   DateTimeColumn get lastSyncAt => dateTime().nullable()();
-  
+
   @override
   Set<Column> get primaryKey => {deviceId};
 }
@@ -297,7 +297,8 @@ class AppDatabase extends _$AppDatabase {
           // ... existing migrations ...
           // Migration from version 10 to 11: Add dueDateOffset to TransactionSchedules
           if (from <= 10) {
-            await m.addColumn(transactionSchedules, transactionSchedules.dueDateOffset);
+            await m.addColumn(
+                transactionSchedules, transactionSchedules.dueDateOffset);
           }
           // Migration from version 11 to 12: Add isScheduled to Receivables and Payables
           if (from <= 11) {
@@ -310,22 +311,100 @@ class AppDatabase extends _$AppDatabase {
   Future<void> _insertDefaultCategories() async {
     // Fixed UUIDs for default categories to prevent duplicates during sync
     final expenseCategories = [
-      ('Food', Symbols.restaurant.codePoint.toString(), '#FF5252', 'EXPENSE', 'default_cat_food'),
-      ('Transport', Symbols.directions_car.codePoint.toString(), '#FF6F00', 'EXPENSE', 'default_cat_transport'),
-      ('Shopping', Symbols.shopping_cart.codePoint.toString(), '#E91E63', 'EXPENSE', 'default_cat_shopping'),
-      ('Bills', Symbols.receipt_long.codePoint.toString(), '#9C27B0', 'EXPENSE', 'default_cat_bills'),
-      ('Entertainment', Symbols.movie.codePoint.toString(), '#3F51B5', 'EXPENSE', 'default_cat_entertainment'),
-      ('Health', Symbols.local_hospital.codePoint.toString(), '#00BCD4', 'EXPENSE', 'default_cat_health'),
-      ('Education', Symbols.school.codePoint.toString(), '#4CAF50', 'EXPENSE', 'default_cat_education'),
-      ('Other', Symbols.category.codePoint.toString(), '#757575', 'EXPENSE', 'default_cat_other_exp'),
+      (
+        'Food',
+        Symbols.restaurant.codePoint.toString(),
+        '#FF5252',
+        'EXPENSE',
+        'default_cat_food'
+      ),
+      (
+        'Transport',
+        Symbols.directions_car.codePoint.toString(),
+        '#FF6F00',
+        'EXPENSE',
+        'default_cat_transport'
+      ),
+      (
+        'Shopping',
+        Symbols.shopping_cart.codePoint.toString(),
+        '#E91E63',
+        'EXPENSE',
+        'default_cat_shopping'
+      ),
+      (
+        'Bills',
+        Symbols.receipt_long.codePoint.toString(),
+        '#9C27B0',
+        'EXPENSE',
+        'default_cat_bills'
+      ),
+      (
+        'Entertainment',
+        Symbols.movie.codePoint.toString(),
+        '#3F51B5',
+        'EXPENSE',
+        'default_cat_entertainment'
+      ),
+      (
+        'Health',
+        Symbols.local_hospital.codePoint.toString(),
+        '#00BCD4',
+        'EXPENSE',
+        'default_cat_health'
+      ),
+      (
+        'Education',
+        Symbols.school.codePoint.toString(),
+        '#4CAF50',
+        'EXPENSE',
+        'default_cat_education'
+      ),
+      (
+        'Other',
+        Symbols.category.codePoint.toString(),
+        '#757575',
+        'EXPENSE',
+        'default_cat_other_exp'
+      ),
     ];
 
     final incomeCategories = [
-      ('Salary', Symbols.account_balance_wallet.codePoint.toString(), '#4CAF50', 'INCOME', 'default_cat_salary'),
-      ('Business', Symbols.business_center.codePoint.toString(), '#2196F3', 'INCOME', 'default_cat_business'),
-      ('Investment', Symbols.trending_up.codePoint.toString(), '#00BCD4', 'INCOME', 'default_cat_investment'),
-      ('Gift', Symbols.card_giftcard.codePoint.toString(), '#E91E63', 'INCOME', 'default_cat_gift'),
-      ('Other', Symbols.category.codePoint.toString(), '#757575', 'INCOME', 'default_cat_other_inc'),
+      (
+        'Salary',
+        Symbols.account_balance_wallet.codePoint.toString(),
+        '#4CAF50',
+        'INCOME',
+        'default_cat_salary'
+      ),
+      (
+        'Business',
+        Symbols.business_center.codePoint.toString(),
+        '#2196F3',
+        'INCOME',
+        'default_cat_business'
+      ),
+      (
+        'Investment',
+        Symbols.trending_up.codePoint.toString(),
+        '#00BCD4',
+        'INCOME',
+        'default_cat_investment'
+      ),
+      (
+        'Gift',
+        Symbols.card_giftcard.codePoint.toString(),
+        '#E91E63',
+        'INCOME',
+        'default_cat_gift'
+      ),
+      (
+        'Other',
+        Symbols.category.codePoint.toString(),
+        '#757575',
+        'INCOME',
+        'default_cat_other_inc'
+      ),
     ];
 
     for (final cat in expenseCategories) {
@@ -364,7 +443,7 @@ class AppDatabase extends _$AppDatabase {
     final defaultCurrencies = [
       ('US Dollar', '\$', 'USD', 2, 'default_curr_usd'),
       ('Indian Rupee', '₹', 'INR', 0, 'default_curr_inr'),
-      ('Pakistani Rupee', 'Rs.', 'PKR', 0, 'default_curr_pkr'),
+      ('Pakistani Rupee', 'R', 'PKR', 0, 'default_curr_pkr'),
     ];
 
     for (final curr in defaultCurrencies) {
@@ -396,7 +475,7 @@ class AppDatabase extends _$AppDatabase {
       await delete(contactUsageStats).go();
       await delete(contacts).go();
       await delete(syncLog).go();
-      
+
       // Reset sync metadata instead of deleting it, or delete it to start fresh
       await delete(syncMetadata).go();
 

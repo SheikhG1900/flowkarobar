@@ -31,7 +31,7 @@ class CashbookNotifier extends Notifier<List<Cashbook>> {
       final defaultCashbook = Cashbook(
         id: 'default',
         name: 'Main Cashbook',
-        colorCode: '#005262',
+        colorCode: '#05DCF0',
         iconCodePoint: Symbols.water_drop.codePoint.toString(),
         dbPath: 'flowpaisa.db',
         createdAt: DateTime.now(),

@@ -11,6 +11,7 @@ import 'package:flowpaisa/core/utils/date_formatter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
+import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
 
 class ScanReceiptScreen extends ConsumerStatefulWidget {
   const ScanReceiptScreen({super.key});
@@ -73,7 +74,8 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ToastUtils.showErrorToast(context, ref, l10n.errorPickingImage(e.toString()));
+        ToastUtils.showErrorToast(
+            context, ref, l10n.errorPickingImage(e.toString()));
       }
     }
   }
@@ -105,7 +107,8 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
     } catch (e) {
       setState(() => _isScanning = false);
       if (mounted) {
-        ToastUtils.showErrorToast(context, ref, l10n.errorScanningReceipt(e.toString()));
+        ToastUtils.showErrorToast(
+            context, ref, l10n.errorScanningReceipt(e.toString()));
       }
     }
   }
@@ -135,244 +138,356 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final currencySymbol = ref.watch(currencySymbolProvider);
     final l10n = AppLocalizations.of(context)!;
+    final activeCashbookColor = ref.watch(activeCashbookProvider).color;
 
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.scanReceipt),
-        backgroundColor: theme.colorScheme.primary,
-        foregroundColor: theme.colorScheme.onPrimary,
+        leading: IconButton(
+          icon: const Icon(Icons.close),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Image Preview
-            if (_image != null)
-              Container(
-                height: 300,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.grey.shade300),
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(16),
-                  child: Image.file(_image!, fit: BoxFit.cover),
-                ),
-              )
-            else
-              Container(
-                height: 300,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withAlpha(20),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: theme.colorScheme.primary),
-                ),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              activeCashbookColor.withValues(alpha: 0.05),
+              Colors.transparent
+            ],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: _isScanning
+            ? Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.receipt_long,
-                        size: 80, color: theme.colorScheme.primary),
+                    CircularProgressIndicator(
+                      valueColor:
+                          AlwaysStoppedAnimation<Color>(activeCashbookColor),
+                    ),
                     const SizedBox(height: 16),
                     Text(
-                      l10n.noReceiptSelected,
-                      style: TextStyle(color: theme.colorScheme.primary),
+                      l10n.scanningReceipt,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ],
                 ),
-              ),
-            const SizedBox(height: 20),
-
-            // Camera/Gallery Buttons
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: _isScanning
-                        ? null
-                        : () => _pickImage(ImageSource.camera),
-                    icon: const Icon(Icons.camera_alt),
-                    label: Text(l10n.camera),
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: _isScanning
-                        ? null
-                        : () => _pickImage(ImageSource.gallery),
-                    icon: const Icon(Icons.photo_library),
-                    label: Text(l10n.gallery),
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-
-            // Scanning Indicator
-            if (_isScanning)
-              Center(
-                child: Column(
-                  children: [
-                    const CircularProgressIndicator(),
-                    const SizedBox(height: 16),
-                    Text(l10n.scanningReceipt),
-                  ],
-                ),
-              ),
-
-            // Editable Fields
-            if (_receiptData != null && !_isScanning) ...[
-              Text(
-                l10n.reviewAndEdit,
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Merchant Field
-              TextField(
-                controller: _merchantController,
-                decoration: InputDecoration(
-                  labelText: l10n.merchantName,
-                  prefixIcon: const Icon(Icons.store),
-                  border: const OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Amount Field with Chips
-              TextField(
-                controller: _amountController,
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
-                decoration: InputDecoration(
-                  labelText: l10n.totalAmount,
-                  prefixIcon: const Icon(Icons.attach_money),
-                  border: const OutlineInputBorder(),
-                ),
-              ),
-              // Suggestion Chips for Amount
-              if (_receiptData?.amountCandidates.isNotEmpty == true &&
-                  _receiptData!.amountCandidates.length > 1)
-                Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: Wrap(
-                    spacing: 8,
-                    children: _receiptData!.amountCandidates.map((amt) {
-                      final isSelected =
-                          _amountController.text == amt.toStringAsFixed(2);
-                      return ActionChip(
-                        label: Text(
-                          '$currencySymbol${amt.toStringAsFixed(2)}',
-                          style: TextStyle(
-                            color: isSelected
-                                ? theme.colorScheme.primary
-                                : theme.colorScheme.onSurfaceVariant,
+              )
+            : _receiptData != null
+                ? Column(
+                    children: [
+                      Expanded(
+                        child: ListView(
+                          padding: const EdgeInsets.all(16),
+                          children: [
+                            // Amount Input (Large & Prominent)
+                            Container(
+                              padding: const EdgeInsets.all(24),
+                              decoration: BoxDecoration(
+                                color: theme.cardColor,
+                                borderRadius: BorderRadius.circular(20),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: activeCashbookColor.withValues(
+                                        alpha: 0.1),
+                                    blurRadius: 20,
+                                    offset: const Offset(0, 10),
+                                  ),
+                                ],
+                              ),
+                              child: Column(
+                                children: [
+                                  Text(
+                                    l10n.totalAmount,
+                                    style:
+                                        theme.textTheme.titleMedium?.copyWith(
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  TextFormField(
+                                    controller: _amountController,
+                                    textAlign: TextAlign.center,
+                                    style:
+                                        theme.textTheme.displayLarge?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: activeCashbookColor,
+                                    ),
+                                    decoration: InputDecoration(
+                                      prefixText: '$currencySymbol ',
+                                      prefixStyle: theme.textTheme.displayMedium
+                                          ?.copyWith(
+                                        color:
+                                            theme.colorScheme.onSurfaceVariant,
+                                      ),
+                                      border: InputBorder.none,
+                                      hintText: l10n.amountHint,
+                                      hintStyle: theme.textTheme.displayLarge
+                                          ?.copyWith(
+                                        color:
+                                            Colors.grey.withValues(alpha: 0.3),
+                                      ),
+                                    ),
+                                    keyboardType:
+                                        const TextInputType.numberWithOptions(
+                                            decimal: true),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            // Amount Chips
+                            if (_receiptData?.amountCandidates.isNotEmpty ==
+                                    true &&
+                                _receiptData!.amountCandidates.length > 1)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 12),
+                                child: Wrap(
+                                  spacing: 10,
+                                  runSpacing: 10,
+                                  children:
+                                      _receiptData!.amountCandidates.map((amt) {
+                                    final isSelected = _amountController.text ==
+                                        amt.toStringAsFixed(2);
+                                    return _buildSuggestionChip(
+                                      label:
+                                          '$currencySymbol${amt.toStringAsFixed(2)}',
+                                      isSelected: isSelected,
+                                      activeColor: activeCashbookColor,
+                                      isDark: isDark,
+                                      onPressed: () => setState(() =>
+                                          _amountController.text =
+                                              amt.toStringAsFixed(2)),
+                                    );
+                                  }).toList(),
+                                ),
+                              ),
+                            const SizedBox(height: 24),
+                            // Merchant Name
+                            TextFormField(
+                              controller: _merchantController,
+                              decoration: InputDecoration(
+                                labelText: l10n.merchantName,
+                                hintText: l10n.merchantName,
+                                prefixIcon: const Icon(Icons.store_rounded),
+                              ),
+                              textCapitalization: TextCapitalization.words,
+                            ),
+                            const SizedBox(height: 24),
+                            // Date Field
+                            InkWell(
+                              onTap: () async {
+                                final picked = await showDatePicker(
+                                  context: context,
+                                  initialDate: _selectedDate,
+                                  firstDate: DateTime(2000),
+                                  lastDate: DateTime.now(),
+                                  builder: (context, child) => Theme(
+                                    data: theme.copyWith(
+                                      colorScheme: theme.colorScheme.copyWith(
+                                          primary: activeCashbookColor),
+                                    ),
+                                    child: child!,
+                                  ),
+                                );
+                                if (picked != null) {
+                                  setState(() {
+                                    _selectedDate = picked;
+                                    _dateController.text =
+                                        AppDateFormatter.formatDate(picked);
+                                  });
+                                }
+                              },
+                              borderRadius: BorderRadius.circular(12),
+                              child: Container(
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.surface,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: theme.dividerColor,
+                                  ),
+                                ),
+                                child: IgnorePointer(
+                                  child: TextFormField(
+                                    controller: _dateController,
+                                    decoration: InputDecoration(
+                                      labelText: l10n.date,
+                                      prefixIcon: const Icon(
+                                          Icons.calendar_today_rounded),
+                                      border: InputBorder.none,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            // Date Chips
+                            if (_receiptData?.dateCandidates.isNotEmpty ==
+                                    true &&
+                                _receiptData!.dateCandidates.length > 1)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 12),
+                                child: Wrap(
+                                  spacing: 10,
+                                  runSpacing: 10,
+                                  children:
+                                      _receiptData!.dateCandidates.map((date) {
+                                    final isSelected =
+                                        AppDateFormatter.formatDate(
+                                                _selectedDate) ==
+                                            AppDateFormatter.formatDate(date);
+                                    return _buildSuggestionChip(
+                                      label: AppDateFormatter.formatDate(date),
+                                      isSelected: isSelected,
+                                      activeColor: activeCashbookColor,
+                                      isDark: isDark,
+                                      onPressed: () => setState(() {
+                                        _selectedDate = date;
+                                        _dateController.text =
+                                            AppDateFormatter.formatDate(date);
+                                      }),
+                                    );
+                                  }).toList(),
+                                ),
+                              ),
+                            const SizedBox(height: 100), // Space for button
+                          ],
+                        ),
+                      ),
+                      // Docked Floating Button Panel
+                      Container(
+                        padding: EdgeInsets.only(
+                          left: 16,
+                          right: 16,
+                          top: 16,
+                          bottom: MediaQuery.of(context).padding.bottom + 16,
+                        ),
+                        decoration: BoxDecoration(
+                          color: theme.scaffoldBackgroundColor,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.1),
+                              blurRadius: 10,
+                              offset: const Offset(0, -5),
+                            ),
+                          ],
+                        ),
+                        child: GradientButton(
+                          onPressed: _proceedToAddTransaction,
+                          gradient:
+                              AppColors.getPrimaryGradient(activeCashbookColor),
+                          label: l10n.proceedToAddTransaction,
+                          width: double.infinity,
+                        ),
+                      ),
+                    ],
+                  )
+                : Column(
+                    children: [
+                      Expanded(
+                        child: Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.receipt_long_outlined,
+                                size: 120,
+                                color: theme.colorScheme.onSurfaceVariant
+                                    .withValues(alpha: 0.3),
+                              ),
+                              const SizedBox(height: 24),
+                              Text(
+                                l10n.noReceiptSelected,
+                                style: theme.textTheme.titleLarge?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        backgroundColor: isSelected
-                            ? theme.colorScheme.primary.withValues(alpha: 0.1)
-                            : theme.colorScheme.surfaceContainerHighest,
-                        side: isSelected
-                            ? BorderSide(color: theme.colorScheme.primary)
-                            : BorderSide(color: theme.colorScheme.outline),
-                        onPressed: () {
-                          setState(() {
-                            _amountController.text = amt.toStringAsFixed(2);
-                          });
-                        },
-                      );
-                    }).toList(),
-                  ),
-                ),
-              const SizedBox(height: 16),
-
-              // Date Field with Chips
-              InkWell(
-                onTap: () async {
-                  final picked = await showDatePicker(
-                    context: context,
-                    initialDate: _selectedDate,
-                    firstDate: DateTime(2000),
-                    lastDate: DateTime.now(),
-                  );
-                  if (picked != null) {
-                    setState(() {
-                      _selectedDate = picked;
-                      _dateController.text = AppDateFormatter.formatDate(picked);
-                    });
-                  }
-                },
-                child: IgnorePointer(
-                  child: TextField(
-                    controller: _dateController,
-                    decoration: InputDecoration(
-                      labelText: l10n.date,
-                      prefixIcon: const Icon(Icons.calendar_today),
-                      border: const OutlineInputBorder(),
-                    ),
-                  ),
-                ),
-              ),
-              // Suggestion Chips for Date
-              if (_receiptData?.dateCandidates.isNotEmpty == true &&
-                  _receiptData!.dateCandidates.length > 1)
-                Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: Wrap(
-                    spacing: 8,
-                    children: _receiptData!.dateCandidates.map((date) {
-                      final isSelected = AppDateFormatter.formatDate(
-                          _selectedDate) ==
-                          AppDateFormatter.formatDate(date);
-                      return ActionChip(
-                        label: Text(
-                          AppDateFormatter.formatDate(date),
-                          style: TextStyle(
-                            color: isSelected
-                                ? theme.colorScheme.primary
-                                : theme.colorScheme.onSurfaceVariant,
-                          ),
+                      ),
+                      // Docked Floating Button Panel
+                      Container(
+                        padding: EdgeInsets.only(
+                          left: 16,
+                          right: 16,
+                          top: 16,
+                          bottom: MediaQuery.of(context).padding.bottom + 16,
                         ),
-                        backgroundColor: isSelected
-                            ? theme.colorScheme.primary.withValues(alpha: 0.1)
-                            : theme.colorScheme.surfaceVariant,
-                        side: isSelected
-                            ? BorderSide(color: theme.colorScheme.primary)
-                            : BorderSide(color: theme.colorScheme.outline),
-                        onPressed: () {
-                          setState(() {
-                            _selectedDate = date;
-                            _dateController.text = AppDateFormatter.formatDate(
-                                date);
-                          });
-                        },
-                      );
-                    }).toList(),
+                        decoration: BoxDecoration(
+                          color: theme.scaffoldBackgroundColor,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.1),
+                              blurRadius: 10,
+                              offset: const Offset(0, -5),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: GradientButton(
+                                onPressed: () => _pickImage(ImageSource.camera),
+                                icon: Icons.camera_alt_rounded,
+                                label: l10n.camera,
+                                gradient: AppColors.getPrimaryGradient(
+                                    activeCashbookColor),
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: GradientButton(
+                                onPressed: () =>
+                                    _pickImage(ImageSource.gallery),
+                                icon: Icons.photo_library_rounded,
+                                label: l10n.gallery,
+                                gradient: AppColors.getPrimaryGradient(
+                                    activeCashbookColor),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              const SizedBox(height: 24),
+      ),
+    );
+  }
 
-              // Proceed Button
-              GradientButton(
-                onPressed: _proceedToAddTransaction,
-                gradient: AppColors.getPrimaryGradient(theme.colorScheme.primary),
-                label: l10n.proceedToAddTransaction,
-              ),
-            ],
-          ],
+  Widget _buildSuggestionChip({
+    required String label,
+    required bool isSelected,
+    required Color activeColor,
+    required bool isDark,
+    required VoidCallback onPressed,
+  }) {
+    final theme = Theme.of(context);
+    return ActionChip(
+      label: Text(
+        label,
+        style: TextStyle(
+          color: isSelected ? Colors.white : theme.colorScheme.onSurfaceVariant,
+          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+          fontSize: 12,
         ),
       ),
+      backgroundColor: isSelected ? activeColor : theme.colorScheme.surface,
+      side: BorderSide(
+        color: isSelected ? activeColor : theme.dividerColor,
+      ),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+      ),
+      onPressed: onPressed,
     );
   }
 }

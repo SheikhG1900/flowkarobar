@@ -164,266 +164,278 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
     final theme = Theme.of(context);
     final isPremium = PremiumGate.isPremium(ref);
 
-    return Scaffold(
-      body: Stack(
-        children: [
-          CustomScrollView(
-            slivers: [
-              // App Bar with Date Range Selector
-              SliverAppBar(
-                floating: true,
-                pinned: true,
-                backgroundColor: theme.scaffoldBackgroundColor,
-                title: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      l10n.analytics,
-                      style: TextStyle(
-                        color: theme.colorScheme.onSurface,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    if (!isPremium)
-                      const PremiumBadge(isSmall: true, showLock: true),
-                  ],
-                ),
-                centerTitle: true,
-                actions: [
-                  Showcase(
-                    key: TourService.analyticsExportPdfKey,
-                    title: l10n.tourAnalyticsExportPdfTitle,
-                    description: l10n.tourAnalyticsExportPdfDesc,
-                    targetShapeBorder: const CircleBorder(),
-                    tooltipBackgroundColor: theme.colorScheme.primary,
-                    textColor: theme.colorScheme.onPrimary,
-                    tooltipPosition: TooltipPosition.bottom,
-                    child: IconButton(
-                      icon: const Icon(Symbols.picture_as_pdf),
-                      onPressed: _exportAnalyticsToPDF,
-                      tooltip: l10n.exportAnalyticsPDF,
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Symbols.refresh),
-                    onPressed: () {
-                      // Invalidate all analytics providers to refresh data
-                      ref.invalidate(financialSummaryProvider);
-                      ref.invalidate(allTimeFinancialSummaryProvider);
-                      ref.invalidate(contactSummariesProvider);
-                      ref.invalidate(expensesByCategoryProvider);
-                      ref.invalidate(monthlyTrendsProvider);
-                      ref.invalidate(payableReceivableTrendsProvider);
-                      ref.invalidate(topContactsByBalanceProvider);
-                      ref.invalidate(paymentStatusDistributionProvider);
-                      ref.invalidate(incomeByCategoryProvider);
-                    },
-                    tooltip: l10n.refreshAnalytics,
-                  ),
-                ],
-                bottom: PreferredSize(
-                  preferredSize: const Size.fromHeight(107),
-                  child: Showcase(
-                    key: TourService.analyticsDateRangeKey,
-                    title: l10n.tourAnalyticsDateRangeTitle,
-                    description: l10n.tourAnalyticsDateRangeDesc,
-                    targetShapeBorder: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(12)),
-                    ),
-                    tooltipBackgroundColor: theme.colorScheme.primary,
-                    textColor: theme.colorScheme.onPrimary,
-                    tooltipPosition: TooltipPosition.bottom,
-                    child: _DateRangeSelector(
-                      selectedDateRange: selectedDateRange,
-                      onDateRangeChanged: (dateRange) {
-                        ref
-                            .read(selectedDateRangeProvider.notifier)
-                            .updateRange(dateRange);
-                      },
-                      onNextPeriod: () {
-                        ref
-                            .read(selectedDateRangeProvider.notifier)
-                            .nextPeriod();
-                      },
-                      onPreviousPeriod: () {
-                        ref
-                            .read(selectedDateRangeProvider.notifier)
-                            .previousPeriod();
-                      },
-                    ),
-                  ),
-                ),
-              ),
-
-              // Content
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Financial Summary (Combined)
-                      Showcase(
-                        key: TourService.analyticsFinancialSummaryKey,
-                        title: l10n.tourAnalyticsFinancialSummaryTitle,
-                        description: l10n.tourAnalyticsFinancialSummaryDesc,
-                        targetShapeBorder: const RoundedRectangleBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(12)),
-                        ),
-                        tooltipBackgroundColor: theme.colorScheme.primary,
-                        textColor: theme.colorScheme.onPrimary,
-                        tooltipPosition: TooltipPosition.bottom,
-                        child: _CollapsibleSection(
-                          title: l10n.financialSummary,
-                          sectionIndex: 0,
-                          child: const _FinancialSummaryCard(),
-                        ),
-                      ),
-
-                      // Contact Summaries
-                      _CollapsibleSection(
-                        title: l10n.contactSummaries,
-                        sectionIndex: 1,
-                        child: const _ContactSummariesSection(),
-                      ),
-
-                      // Pie Chart Section
-                      Showcase(
-                        key: TourService.analyticsChartsKey,
-                        title: l10n.tourAnalyticsChartsTitle,
-                        description: l10n.tourAnalyticsChartsDesc,
-                        targetShapeBorder: const RoundedRectangleBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(12)),
-                        ),
-                        tooltipBackgroundColor: theme.colorScheme.primary,
-                        textColor: theme.colorScheme.onPrimary,
-                        tooltipPosition: TooltipPosition.bottom,
-                        child: _CollapsibleSection(
-                          title: l10n.expensesByCategory,
-                          sectionIndex: 2,
-                          child: const _ExpensesPieChart(),
-                        ),
-                      ),
-
-                      // Trend Chart Section
-                      _CollapsibleSection(
-                        title: l10n.incomeVsExpenseTrend,
-                        sectionIndex: 3,
-                        child: const _TrendsBarChart(),
-                      ),
-
-                      // Payables vs Receivables Trend
-                      _CollapsibleSection(
-                        title: l10n.payablesVsReceivablesTrend,
-                        sectionIndex: 4,
-                        child: const _PayableReceivableTrendsChart(),
-                      ),
-
-                      // Top Contacts by Balance
-                      _CollapsibleSection(
-                        title: l10n.topContactsByBalance,
-                        sectionIndex: 5,
-                        child: const _TopContactsChart(),
-                      ),
-
-                      // Payment Status Distribution
-                      _CollapsibleSection(
-                        title: l10n.paymentStatusDistribution,
-                        sectionIndex: 6,
-                        child: const _PaymentStatusDistributionChart(),
-                      ),
-
-                      // Income by Category
-                      _CollapsibleSection(
-                        title: l10n.incomeByCategory,
-                        sectionIndex: 7,
-                        child: const _IncomePieChart(),
-                      ),
-
-                      const SizedBox(height: 80), // Bottom padding
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-
-          // Premium Lock Overlay
-          if (!isPremium)
-            Positioned.fill(
-              child: ClipRect(
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-                  child: Container(
-                    color: Colors.black.withValues(alpha: 0.5),
-                    child: Center(
-                      child: Container(
-                        margin: const EdgeInsets.all(32),
-                        padding: const EdgeInsets.all(24),
-                        decoration: BoxDecoration(
-                          color: theme.cardColor,
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.2),
-                              blurRadius: 20,
-                              offset: const Offset(0, 10),
-                            ),
-                          ],
-                        ),
-                        child: Column(
+    return ShowCaseWidget(
+        builder: (context) => Scaffold(
+              body: Stack(
+                children: [
+                  CustomScrollView(
+                    slivers: [
+                      // App Bar with Date Range Selector
+                      SliverAppBar(
+                        floating: true,
+                        pinned: true,
+                        backgroundColor: theme.scaffoldBackgroundColor,
+                        title: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Container(
-                              padding: const EdgeInsets.all(16),
-                              decoration: const BoxDecoration(
-                                shape: BoxShape.circle,
-                                gradient: LinearGradient(
-                                  colors: [
-                                    Color(0xFFFFD700),
-                                    Color(0xFFFFA500)
-                                  ],
-                                ),
-                              ),
-                              child: const Icon(
-                                Icons.lock_outline,
-                                size: 40,
-                                color: Colors.white,
-                              ),
-                            ),
-                            const SizedBox(height: 16),
                             Text(
-                              l10n.premiumFeature,
-                              style: theme.textTheme.titleLarge?.copyWith(
+                              l10n.analytics,
+                              style: TextStyle(
+                                color: theme.colorScheme.onSurface,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            const SizedBox(height: 8),
-                            Text(
-                              l10n.unlockAdvancedAnalytics,
-                              textAlign: TextAlign.center,
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
+                            const SizedBox(width: 8),
+                            if (!isPremium)
+                              const PremiumBadge(isSmall: true, showLock: true),
+                          ],
+                        ),
+                        centerTitle: true,
+                        actions: [
+                          Showcase(
+                            key: TourService.analyticsExportPdfKey,
+                            title: l10n.tourAnalyticsExportPdfTitle,
+                            description: l10n.tourAnalyticsExportPdfDesc,
+                            targetShapeBorder: const CircleBorder(),
+                            tooltipBackgroundColor: theme.colorScheme.primary,
+                            textColor: theme.colorScheme.onPrimary,
+                            tooltipPosition: TooltipPosition.bottom,
+                            child: IconButton(
+                              icon: const Icon(Symbols.picture_as_pdf),
+                              onPressed: _exportAnalyticsToPDF,
+                              tooltip: l10n.exportAnalyticsPDF,
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Symbols.refresh),
+                            onPressed: () {
+                              // Invalidate all analytics providers to refresh data
+                              ref.invalidate(financialSummaryProvider);
+                              ref.invalidate(allTimeFinancialSummaryProvider);
+                              ref.invalidate(contactSummariesProvider);
+                              ref.invalidate(expensesByCategoryProvider);
+                              ref.invalidate(monthlyTrendsProvider);
+                              ref.invalidate(payableReceivableTrendsProvider);
+                              ref.invalidate(topContactsByBalanceProvider);
+                              ref.invalidate(paymentStatusDistributionProvider);
+                              ref.invalidate(incomeByCategoryProvider);
+                            },
+                            tooltip: l10n.refreshAnalytics,
+                          ),
+                        ],
+                        bottom: PreferredSize(
+                          preferredSize: const Size.fromHeight(107),
+                          child: Showcase(
+                            key: TourService.analyticsDateRangeKey,
+                            title: l10n.tourAnalyticsDateRangeTitle,
+                            description: l10n.tourAnalyticsDateRangeDesc,
+                            targetShapeBorder: const RoundedRectangleBorder(
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(12)),
+                            ),
+                            tooltipBackgroundColor: theme.colorScheme.primary,
+                            textColor: theme.colorScheme.onPrimary,
+                            tooltipPosition: TooltipPosition.bottom,
+                            child: _DateRangeSelector(
+                              selectedDateRange: selectedDateRange,
+                              onDateRangeChanged: (dateRange) {
+                                ref
+                                    .read(selectedDateRangeProvider.notifier)
+                                    .updateRange(dateRange);
+                              },
+                              onNextPeriod: () {
+                                ref
+                                    .read(selectedDateRangeProvider.notifier)
+                                    .nextPeriod();
+                              },
+                              onPreviousPeriod: () {
+                                ref
+                                    .read(selectedDateRangeProvider.notifier)
+                                    .previousPeriod();
+                              },
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      // Content
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 16.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Financial Summary (Combined)
+                              Showcase(
+                                key: TourService.analyticsFinancialSummaryKey,
+                                title: l10n.tourAnalyticsFinancialSummaryTitle,
+                                description:
+                                    l10n.tourAnalyticsFinancialSummaryDesc,
+                                targetShapeBorder: const RoundedRectangleBorder(
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(12)),
+                                ),
+                                tooltipBackgroundColor:
+                                    theme.colorScheme.primary,
+                                textColor: theme.colorScheme.onPrimary,
+                                tooltipPosition: TooltipPosition.bottom,
+                                child: _CollapsibleSection(
+                                  title: l10n.financialSummary,
+                                  sectionIndex: 0,
+                                  child: const _FinancialSummaryCard(),
+                                ),
+                              ),
+
+                              // Contact Summaries
+                              _CollapsibleSection(
+                                title: l10n.contactSummaries,
+                                sectionIndex: 1,
+                                child: const _ContactSummariesSection(),
+                              ),
+
+                              // Pie Chart Section
+                              Showcase(
+                                key: TourService.analyticsChartsKey,
+                                title: l10n.tourAnalyticsChartsTitle,
+                                description: l10n.tourAnalyticsChartsDesc,
+                                targetShapeBorder: const RoundedRectangleBorder(
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(12)),
+                                ),
+                                tooltipBackgroundColor:
+                                    theme.colorScheme.primary,
+                                textColor: theme.colorScheme.onPrimary,
+                                tooltipPosition: TooltipPosition.bottom,
+                                child: _CollapsibleSection(
+                                  title: l10n.expensesByCategory,
+                                  sectionIndex: 2,
+                                  child: const _ExpensesPieChart(),
+                                ),
+                              ),
+
+                              // Trend Chart Section
+                              _CollapsibleSection(
+                                title: l10n.incomeVsExpenseTrend,
+                                sectionIndex: 3,
+                                child: const _TrendsBarChart(),
+                              ),
+
+                              // Payables vs Receivables Trend
+                              _CollapsibleSection(
+                                title: l10n.payablesVsReceivablesTrend,
+                                sectionIndex: 4,
+                                child: const _PayableReceivableTrendsChart(),
+                              ),
+
+                              // Top Contacts by Balance
+                              _CollapsibleSection(
+                                title: l10n.topContactsByBalance,
+                                sectionIndex: 5,
+                                child: const _TopContactsChart(),
+                              ),
+
+                              // Payment Status Distribution
+                              _CollapsibleSection(
+                                title: l10n.paymentStatusDistribution,
+                                sectionIndex: 6,
+                                child: const _PaymentStatusDistributionChart(),
+                              ),
+
+                              // Income by Category
+                              _CollapsibleSection(
+                                title: l10n.incomeByCategory,
+                                sectionIndex: 7,
+                                child: const _IncomePieChart(),
+                              ),
+
+                              const SizedBox(height: 80), // Bottom padding
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  // Premium Lock Overlay
+                  if (!isPremium)
+                    Positioned.fill(
+                      child: ClipRect(
+                        child: BackdropFilter(
+                          filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+                          child: Container(
+                            color: Colors.black.withValues(alpha: 0.5),
+                            child: Center(
+                              child: Container(
+                                margin: const EdgeInsets.all(32),
+                                padding: const EdgeInsets.all(24),
+                                decoration: BoxDecoration(
+                                  color: theme.cardColor,
+                                  borderRadius: BorderRadius.circular(20),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color:
+                                          Colors.black.withValues(alpha: 0.2),
+                                      blurRadius: 20,
+                                      offset: const Offset(0, 10),
+                                    ),
+                                  ],
+                                ),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(16),
+                                      decoration: const BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        gradient: LinearGradient(
+                                          colors: [
+                                            Color(0xFFFFD700),
+                                            Color(0xFFFFA500)
+                                          ],
+                                        ),
+                                      ),
+                                      child: const Icon(
+                                        Icons.lock_outline,
+                                        size: 40,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    Text(
+                                      l10n.premiumFeature,
+                                      style:
+                                          theme.textTheme.titleLarge?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      l10n.unlockAdvancedAnalytics,
+                                      textAlign: TextAlign.center,
+                                      style:
+                                          theme.textTheme.bodyMedium?.copyWith(
+                                        color:
+                                            theme.colorScheme.onSurfaceVariant,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 24),
+                                    FilledButton(
+                                      onPressed: () =>
+                                          PremiumGate.showPremiumDialog(
+                                              context),
+                                      child: Text(l10n.unlockPremium),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
-                            const SizedBox(height: 24),
-                            FilledButton(
-                              onPressed: () =>
-                                  PremiumGate.showPremiumDialog(context),
-                              child: Text(l10n.unlockPremium),
-                            ),
-                          ],
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ),
+                ],
               ),
-            ),
-        ],
-      ),
-    );
+            ));
   }
 }
 

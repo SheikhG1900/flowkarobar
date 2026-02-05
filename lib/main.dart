@@ -1659,20 +1659,6 @@ class _DashboardTab extends ConsumerWidget {
                             builder: (context) => const AnalyticsScreen(),
                           ),
                         );
-
-                        // Start analytics tour if not shown before and premium is active
-                        Future.delayed(const Duration(milliseconds: 800), () {
-                          if (context.mounted) {
-                            final tourNotifier = ref.read(tourNotifierProvider);
-                            if (!tourNotifier.isTourCompleted(
-                                    tourNotifier.analyticsKey) &&
-                                isPremium) {
-                              TourService.startAnalyticsTour(context);
-                              tourNotifier
-                                  .markTourCompleted(tourNotifier.analyticsKey);
-                            }
-                          }
-                        });
                       },
                     ),
                     _QuickActionButton(
