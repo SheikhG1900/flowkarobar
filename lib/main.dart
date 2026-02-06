@@ -1095,6 +1095,38 @@ class _DashboardTab extends ConsumerWidget {
                             loading: () => const SizedBox(height: 100),
                             error: (_, __) => const SizedBox.shrink(),
                           ),
+                          const SizedBox(height: 20),
+                          // App Logo in Rounded Circle
+                          Center(
+                            child: EntranceAnimation(
+                              index: 3,
+                              child: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: theme.scaffoldBackgroundColor,
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: activeColor.withValues(alpha: 0.2),
+                                      blurRadius: 10,
+                                      spreadRadius: 2,
+                                    ),
+                                  ],
+                                ),
+                                child: SvgPicture.asset(
+                                  'assets/images/logo_square.svg',
+                                  height: 120,
+                                  width: 120,
+                                  fit: BoxFit.contain,
+                                  colorFilter: ColorFilter.mode(
+                                    activeColor,
+                                    BlendMode.srcIn,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
                         ],
                       ),
                     ),
@@ -1334,9 +1366,25 @@ class _DashboardTab extends ConsumerWidget {
                 ),
               ),
             ),
-            // Bottom Padding
-            const SliverToBoxAdapter(
-              child: SizedBox(height: 80),
+            // Bottom Padding with Logo
+            SliverToBoxAdapter(
+              child: Column(
+                children: [
+                  const SizedBox(height: 40),
+                  Opacity(
+                    opacity: 0.1,
+                    child: SvgPicture.asset(
+                      'assets/images/logo_square.svg',
+                      height: 60,
+                      colorFilter: ColorFilter.mode(
+                        activeColor,
+                        BlendMode.srcIn,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 100),
+                ],
+              ),
             ),
             // Add an empty sliver to ensure the scroll view is always scrollable
             // This allows pull-to-refresh to work even when there's little content
