@@ -21,7 +21,8 @@ class SyncStatusSection extends ConsumerWidget {
 
     final bool isSyncing = backupState.syncStatus == 'Syncing...';
     final bool hasUnsynced = backupState.unsyncedCount > 0;
-    final bool hasCloudUpdates = backupState.cloudVersion > backupState.localVersion;
+    final bool hasCloudUpdates =
+        backupState.cloudVersion > backupState.localVersion;
     final bool isSignedIn = backupState.currentUser != null;
 
     // Hide section if nothing to sync and no updates available
@@ -59,7 +60,9 @@ class SyncStatusSection extends ConsumerWidget {
       margin: const EdgeInsets.symmetric(vertical: 8),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.02),
+        color: isDark
+            ? Colors.white.withValues(alpha: 0.05)
+            : Colors.black.withValues(alpha: 0.02),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: statusColor.withValues(alpha: 0.2),
