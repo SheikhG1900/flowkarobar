@@ -196,7 +196,7 @@ class PayablesRepository {
       String uuid, PayablesCompanion companion) {
     return (_database.update(_database.payables)
           ..where((p) => p.uuid.equals(uuid)))
-        .write(companion);
+        .write(companion.copyWith(isNotSynced: const Value(true)));
   }
 
   /// Get payable by UUID

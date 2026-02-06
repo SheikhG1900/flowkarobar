@@ -197,7 +197,7 @@ class ReceivablesRepository {
       String uuid, ReceivablesCompanion companion) {
     return (_database.update(_database.receivables)
           ..where((r) => r.uuid.equals(uuid)))
-        .write(companion);
+        .write(companion.copyWith(isNotSynced: const Value(true)));
   }
 
   /// Get receivable by UUID
