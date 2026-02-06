@@ -8,11 +8,65 @@ import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/shared/widgets/app_loading_indicator.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
-class SyncStatusSection extends ConsumerWidget {
+class SyncStatusSection extends ConsumerStatefulWidget {
   const SyncStatusSection({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SyncStatusSection> createState() => _SyncStatusSectionState();
+}
+
+class _SyncStatusSectionState extends ConsumerState<SyncStatusSection>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+  late Animation<double> _scaleAnimation;
+  late Animation<double> _fadeAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
+
+    // Scale animation with bounce effect
+    _scaleAnimation = Tween<double>(
+      begin: 0.8,
+      end: 1.0,
+    ).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: Curves.elasticOut,
+      ),
+    );
+
+    // Fade animation
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: Curves.easeOut,
+      ),
+    );
+
+    // Start animation after a small delay
+    Future.delayed(const Duration(milliseconds: 100), () {
+      if (mounted) {
+        _animationController.forward();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final backupState = ref.watch(backupProvider);
     final isPremium = PremiumGate.isPremium(ref);
     final l10n = AppLocalizations.of(context)!;
@@ -27,7 +81,20 @@ class SyncStatusSection extends ConsumerWidget {
 
     // Hide section if nothing to sync and no updates available
     if (!isSyncing && !hasUnsynced && !hasCloudUpdates) {
+      // Reset animation when hiding
+      if (_animationController.isAnimating || _animationController.value > 0) {
+        _animationController.reset();
+      }
       return const SizedBox.shrink();
+    }
+
+    // Restart animation when section appears
+    if (!_animationController.isAnimating && _animationController.value == 0) {
+      Future.delayed(const Duration(milliseconds: 100), () {
+        if (mounted) {
+          _animationController.forward();
+        }
+      });
     }
 
     String statusText;
@@ -56,81 +123,119 @@ class SyncStatusSection extends ConsumerWidget {
       statusColor = Colors.green;
     }
 
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: isDark
-            ? Colors.white.withValues(alpha: 0.05)
-            : Colors.black.withValues(alpha: 0.02),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: statusColor.withValues(alpha: 0.2),
-          width: 1,
-        ),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: statusColor.withValues(alpha: 0.1),
-              shape: BoxShape.circle,
-            ),
-            child: isSyncing
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: AppLoadingIndicator(size: 16),
-                  )
-                : Icon(
-                    statusIcon,
-                    color: statusColor,
-                    size: 20,
-                  ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l10n.syncStatusTitle,
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Text(
-                  statusText,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: theme.colorScheme.onSurface,
-                  ),
-                ),
+    return ScaleTransition(
+      scale: _scaleAnimation,
+      child: FadeTransition(
+        opacity: _fadeAnimation,
+        child: Container(
+          margin: const EdgeInsets.symmetric(vertical: 12),
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                statusColor.withValues(alpha: isDark ? 0.3 : 0.1),
+                statusColor.withValues(alpha: isDark ? 0.4 : 0.2),
               ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: statusColor.withValues(alpha: 0.6),
+              width: 1,
             ),
           ),
-          IconButton(
-            onPressed: () {
-              if (isPremium && isSignedIn) {
-                ref.read(backupProvider.notifier).triggerSync(l10n);
-              } else {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const BackupScreen(),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      statusColor.withValues(alpha: 0.3),
+                      statusColor.withValues(alpha: 0.2),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                );
-              }
-            },
-            icon: Icon(
-              isSyncing ? Symbols.sync : Symbols.sync,
-              color: theme.colorScheme.primary,
-            ),
-            tooltip: l10n.syncNow,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: statusColor.withValues(alpha: 0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: isSyncing
+                    ? const SizedBox(
+                        width: 28,
+                        height: 28,
+                        child: AppLoadingIndicator(size: 24),
+                      )
+                    : Icon(
+                        statusIcon,
+                        color: statusColor,
+                        size: 28,
+                      ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      l10n.syncStatusTitle,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        color: statusColor,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      statusText,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: theme.colorScheme.onSurface,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                decoration: BoxDecoration(
+                  color: statusColor.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: IconButton(
+                  onPressed: () {
+                    if (isPremium && isSignedIn) {
+                      ref.read(backupProvider.notifier).triggerSync(l10n);
+                    } else {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const BackupScreen(),
+                        ),
+                      );
+                    }
+                  },
+                  icon: Icon(
+                    isSyncing ? Symbols.sync : Symbols.sync,
+                    color: statusColor,
+                    size: 24,
+                  ),
+                  tooltip: l10n.syncNow,
+                  padding: const EdgeInsets.all(12),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

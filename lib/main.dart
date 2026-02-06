@@ -1200,9 +1200,23 @@ class _DashboardTab extends ConsumerWidget {
                   color: theme.colorScheme.onSurface,
                 ),
                 onPressed: () {
-                  // Phoenix.rebirth re-initializes the entire application
-                  // including all Riverpod providers and database connections.
-                  Phoenix.rebirth(context);
+                  // Dismiss any active showcase overlay before restarting
+                  try {
+                    final showcaseState = ShowCaseWidget.of(context);
+                    showcaseState.dismiss();
+                  } catch (e) {
+                    // Showcase might not be active, ignore
+                    if (kDebugMode) {
+                      debugPrint('No active showcase to dismiss: $e');
+                    }
+                  }
+
+                  // Use post-frame callback to ensure showcase is dismissed before restart
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    // Phoenix.rebirth re-initializes the entire application
+                    // including all Riverpod providers and database connections.
+                    Phoenix.rebirth(context);
+                  });
                 },
                 tooltip: 'Restart App',
               ),
