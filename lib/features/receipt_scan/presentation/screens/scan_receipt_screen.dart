@@ -381,8 +381,6 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
                         ),
                         child: GradientButton(
                           onPressed: _proceedToAddTransaction,
-                          gradient:
-                              AppColors.getPrimaryGradient(activeCashbookColor),
                           label: l10n.proceedToAddTransaction,
                           width: double.infinity,
                         ),
