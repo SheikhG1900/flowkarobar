@@ -258,6 +258,8 @@ class SyncMetadata extends Table {
   TextColumn get deviceId => text()();
   IntColumn get version => integer().withDefault(const Constant(0))();
   DateTimeColumn get lastSyncAt => dateTime().nullable()();
+  TextColumn get syncStatus => text().withDefault(const Constant('Idle'))();
+  DateTimeColumn get syncStartedAt => dateTime().nullable()();
 
   @override
   Set<Column> get primaryKey => {deviceId};
@@ -284,7 +286,7 @@ class AppDatabase extends _$AppDatabase {
       : super(_openConnection(fileName));
 
   @override
-  int get schemaVersion => 12;
+  int get schemaVersion => 13;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -294,7 +296,6 @@ class AppDatabase extends _$AppDatabase {
           await _insertDefaultCurrencies();
         },
         onUpgrade: (Migrator m, int from, int to) async {
-          // ... existing migrations ...
           // Migration from version 10 to 11: Add dueDateOffset to TransactionSchedules
           if (from <= 10) {
             await m.addColumn(
@@ -304,6 +305,11 @@ class AppDatabase extends _$AppDatabase {
           if (from <= 11) {
             await m.addColumn(receivables, receivables.isScheduled);
             await m.addColumn(payables, payables.isScheduled);
+          }
+          // Migration from version 12 to 13: Add syncStatus and syncStartedAt to SyncMetadata
+          if (from <= 12) {
+            await m.addColumn(syncMetadata, syncMetadata.syncStatus);
+            await m.addColumn(syncMetadata, syncMetadata.syncStartedAt);
           }
         },
       );

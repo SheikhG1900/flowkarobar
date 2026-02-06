@@ -74,7 +74,9 @@ class _SyncStatusSectionState extends ConsumerState<SyncStatusSection>
     final isDark = theme.brightness == Brightness.dark;
 
     final bool isSyncing = backupState.syncStatus == 'Syncing...' ||
-        backupState.syncStatus == 'Processing...';
+        backupState.syncStatus == 'Processing...' ||
+        backupState.syncStatus == 'Pulling...' ||
+        backupState.syncStatus == 'Pushing...';
     final bool isSuccess = backupState.syncStatus == 'Success';
     final bool hasUnsynced = backupState.unsyncedCount > 0;
     final bool hasCloudUpdates =

@@ -38,6 +38,9 @@ class SyncEngine {
       if (kDebugMode) {
         print('SyncEngine: Device ID: $deviceId');
       }
+
+      // Initial status update
+      await _updateSyncStatus(deviceId, 'Pulling...', isStarting: true);
       
       final cashbookFolderId = await _driveService.getOrCreateCashbookFolder(
         _cashbook.id,
@@ -97,8 +100,9 @@ class SyncEngine {
           final prefs = await SharedPreferences.getInstance();
           while (DateTime.now().toUtc().difference(lockTime).inMinutes < 60) {
             final remainingMinutes = 60 - DateTime.now().toUtc().difference(lockTime).inMinutes;
-            await prefs.setString('sync_status_${_cashbook.id}', 
-                'Locked by another device. Force push allowed in $remainingMinutes min.');
+            final status = 'Locked by another device. Force push allowed in $remainingMinutes min.';
+            await prefs.setString('sync_status_${_cashbook.id}', status);
+            await _updateSyncStatus(deviceId, status);
             
             // Wait a minute before updating countdown again, or exit if we should
             await Future.delayed(const Duration(seconds: 30));
@@ -109,6 +113,7 @@ class SyncEngine {
           }
           
           await prefs.setString('sync_status_${_cashbook.id}', 'Success');
+          await _updateSyncStatus(deviceId, 'Success', isEnding: true);
           return; // Abort push
         }
         if (kDebugMode) {
@@ -139,6 +144,7 @@ class SyncEngine {
         // Report success so UI refreshes
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('sync_status_${_cashbook.id}', 'Success');
+        await _updateSyncStatus(deviceId, 'Success', isEnding: true);
         return;
       }
 
@@ -147,6 +153,7 @@ class SyncEngine {
       }
 
       // Step 3: Acquire Lock
+      await _updateSyncStatus(deviceId, 'Pushing...');
       if (kDebugMode) {
         print('SyncEngine: Acquiring lock...');
       }
@@ -242,6 +249,7 @@ class SyncEngine {
         // Update status to Success in SharedPreferences
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('sync_status_${_cashbook.id}', 'Success');
+        await _updateSyncStatus(deviceId, 'Success', isEnding: true);
         
         // Force a small delay to ensure SharedPreferences is flushed
         await Future.delayed(const Duration(milliseconds: 500));
@@ -289,7 +297,23 @@ class SyncEngine {
         print('SyncEngine: Sync failed with error: $e');
         print('SyncEngine: Stack trace: $stack');
       }
+      final deviceId = await _getDeviceId();
+      await _updateSyncStatus(deviceId, 'Error: $e', isEnding: true);
       rethrow;
+    }
+  }
+
+  Future<void> _updateSyncStatus(String deviceId, String status, {bool isStarting = false, bool isEnding = false}) async {
+    try {
+      await (_db.update(_db.syncMetadata)..where((t) => t.deviceId.equals(deviceId)))
+          .write(SyncMetadataCompanion(
+        syncStatus: Value(status),
+        syncStartedAt: isStarting ? Value(DateTime.now().toUtc()) : (isEnding ? const Value(null) : const Value.absent()),
+      ));
+    } catch (e) {
+      if (kDebugMode) {
+        print('SyncEngine: Failed to update sync status in DB: $e');
+      }
     }
   }
 
@@ -305,7 +329,7 @@ class SyncEngine {
   Future<SyncMetadataData> _getLocalMetadata(String deviceId) async {
     final metadata = await (_db.select(_db.syncMetadata)..where((t) => t.deviceId.equals(deviceId))).getSingleOrNull();
     if (metadata == null) {
-      final newMetadata = SyncMetadataData(deviceId: deviceId, version: 0);
+      final newMetadata = SyncMetadataData(deviceId: deviceId, version: 0, syncStatus: 'Idle');
       await _db.into(_db.syncMetadata).insert(newMetadata);
       return newMetadata;
     }
@@ -320,6 +344,8 @@ class SyncEngine {
         .write(SyncMetadataCompanion(
       version: Value(version),
       lastSyncAt: Value(DateTime.now().toUtc()),
+      syncStatus: const Value('Success'),
+      syncStartedAt: const Value(null),
     ));
     
     // Verify the write

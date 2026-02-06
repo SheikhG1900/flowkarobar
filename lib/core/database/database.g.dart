@@ -7043,8 +7043,23 @@ class $SyncMetadataTable extends SyncMetadata
   late final GeneratedColumn<DateTime> lastSyncAt = GeneratedColumn<DateTime>(
       'last_sync_at', aliasedName, true,
       type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  static const VerificationMeta _syncStatusMeta =
+      const VerificationMeta('syncStatus');
   @override
-  List<GeneratedColumn> get $columns => [deviceId, version, lastSyncAt];
+  late final GeneratedColumn<String> syncStatus = GeneratedColumn<String>(
+      'sync_status', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('Idle'));
+  static const VerificationMeta _syncStartedAtMeta =
+      const VerificationMeta('syncStartedAt');
+  @override
+  late final GeneratedColumn<DateTime> syncStartedAt =
+      GeneratedColumn<DateTime>('sync_started_at', aliasedName, true,
+          type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  @override
+  List<GeneratedColumn> get $columns =>
+      [deviceId, version, lastSyncAt, syncStatus, syncStartedAt];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -7071,6 +7086,18 @@ class $SyncMetadataTable extends SyncMetadata
           lastSyncAt.isAcceptableOrUnknown(
               data['last_sync_at']!, _lastSyncAtMeta));
     }
+    if (data.containsKey('sync_status')) {
+      context.handle(
+          _syncStatusMeta,
+          syncStatus.isAcceptableOrUnknown(
+              data['sync_status']!, _syncStatusMeta));
+    }
+    if (data.containsKey('sync_started_at')) {
+      context.handle(
+          _syncStartedAtMeta,
+          syncStartedAt.isAcceptableOrUnknown(
+              data['sync_started_at']!, _syncStartedAtMeta));
+    }
     return context;
   }
 
@@ -7086,6 +7113,10 @@ class $SyncMetadataTable extends SyncMetadata
           .read(DriftSqlType.int, data['${effectivePrefix}version'])!,
       lastSyncAt: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}last_sync_at']),
+      syncStatus: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}sync_status'])!,
+      syncStartedAt: attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime, data['${effectivePrefix}sync_started_at']),
     );
   }
 
@@ -7100,8 +7131,14 @@ class SyncMetadataData extends DataClass
   final String deviceId;
   final int version;
   final DateTime? lastSyncAt;
+  final String syncStatus;
+  final DateTime? syncStartedAt;
   const SyncMetadataData(
-      {required this.deviceId, required this.version, this.lastSyncAt});
+      {required this.deviceId,
+      required this.version,
+      this.lastSyncAt,
+      required this.syncStatus,
+      this.syncStartedAt});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -7109,6 +7146,10 @@ class SyncMetadataData extends DataClass
     map['version'] = Variable<int>(version);
     if (!nullToAbsent || lastSyncAt != null) {
       map['last_sync_at'] = Variable<DateTime>(lastSyncAt);
+    }
+    map['sync_status'] = Variable<String>(syncStatus);
+    if (!nullToAbsent || syncStartedAt != null) {
+      map['sync_started_at'] = Variable<DateTime>(syncStartedAt);
     }
     return map;
   }
@@ -7120,6 +7161,10 @@ class SyncMetadataData extends DataClass
       lastSyncAt: lastSyncAt == null && nullToAbsent
           ? const Value.absent()
           : Value(lastSyncAt),
+      syncStatus: Value(syncStatus),
+      syncStartedAt: syncStartedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(syncStartedAt),
     );
   }
 
@@ -7130,6 +7175,8 @@ class SyncMetadataData extends DataClass
       deviceId: serializer.fromJson<String>(json['deviceId']),
       version: serializer.fromJson<int>(json['version']),
       lastSyncAt: serializer.fromJson<DateTime?>(json['lastSyncAt']),
+      syncStatus: serializer.fromJson<String>(json['syncStatus']),
+      syncStartedAt: serializer.fromJson<DateTime?>(json['syncStartedAt']),
     );
   }
   @override
@@ -7139,17 +7186,24 @@ class SyncMetadataData extends DataClass
       'deviceId': serializer.toJson<String>(deviceId),
       'version': serializer.toJson<int>(version),
       'lastSyncAt': serializer.toJson<DateTime?>(lastSyncAt),
+      'syncStatus': serializer.toJson<String>(syncStatus),
+      'syncStartedAt': serializer.toJson<DateTime?>(syncStartedAt),
     };
   }
 
   SyncMetadataData copyWith(
           {String? deviceId,
           int? version,
-          Value<DateTime?> lastSyncAt = const Value.absent()}) =>
+          Value<DateTime?> lastSyncAt = const Value.absent(),
+          String? syncStatus,
+          Value<DateTime?> syncStartedAt = const Value.absent()}) =>
       SyncMetadataData(
         deviceId: deviceId ?? this.deviceId,
         version: version ?? this.version,
         lastSyncAt: lastSyncAt.present ? lastSyncAt.value : this.lastSyncAt,
+        syncStatus: syncStatus ?? this.syncStatus,
+        syncStartedAt:
+            syncStartedAt.present ? syncStartedAt.value : this.syncStartedAt,
       );
   SyncMetadataData copyWithCompanion(SyncMetadataCompanion data) {
     return SyncMetadataData(
@@ -7157,6 +7211,11 @@ class SyncMetadataData extends DataClass
       version: data.version.present ? data.version.value : this.version,
       lastSyncAt:
           data.lastSyncAt.present ? data.lastSyncAt.value : this.lastSyncAt,
+      syncStatus:
+          data.syncStatus.present ? data.syncStatus.value : this.syncStatus,
+      syncStartedAt: data.syncStartedAt.present
+          ? data.syncStartedAt.value
+          : this.syncStartedAt,
     );
   }
 
@@ -7165,49 +7224,64 @@ class SyncMetadataData extends DataClass
     return (StringBuffer('SyncMetadataData(')
           ..write('deviceId: $deviceId, ')
           ..write('version: $version, ')
-          ..write('lastSyncAt: $lastSyncAt')
+          ..write('lastSyncAt: $lastSyncAt, ')
+          ..write('syncStatus: $syncStatus, ')
+          ..write('syncStartedAt: $syncStartedAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(deviceId, version, lastSyncAt);
+  int get hashCode =>
+      Object.hash(deviceId, version, lastSyncAt, syncStatus, syncStartedAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is SyncMetadataData &&
           other.deviceId == this.deviceId &&
           other.version == this.version &&
-          other.lastSyncAt == this.lastSyncAt);
+          other.lastSyncAt == this.lastSyncAt &&
+          other.syncStatus == this.syncStatus &&
+          other.syncStartedAt == this.syncStartedAt);
 }
 
 class SyncMetadataCompanion extends UpdateCompanion<SyncMetadataData> {
   final Value<String> deviceId;
   final Value<int> version;
   final Value<DateTime?> lastSyncAt;
+  final Value<String> syncStatus;
+  final Value<DateTime?> syncStartedAt;
   final Value<int> rowid;
   const SyncMetadataCompanion({
     this.deviceId = const Value.absent(),
     this.version = const Value.absent(),
     this.lastSyncAt = const Value.absent(),
+    this.syncStatus = const Value.absent(),
+    this.syncStartedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   SyncMetadataCompanion.insert({
     required String deviceId,
     this.version = const Value.absent(),
     this.lastSyncAt = const Value.absent(),
+    this.syncStatus = const Value.absent(),
+    this.syncStartedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : deviceId = Value(deviceId);
   static Insertable<SyncMetadataData> custom({
     Expression<String>? deviceId,
     Expression<int>? version,
     Expression<DateTime>? lastSyncAt,
+    Expression<String>? syncStatus,
+    Expression<DateTime>? syncStartedAt,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (deviceId != null) 'device_id': deviceId,
       if (version != null) 'version': version,
       if (lastSyncAt != null) 'last_sync_at': lastSyncAt,
+      if (syncStatus != null) 'sync_status': syncStatus,
+      if (syncStartedAt != null) 'sync_started_at': syncStartedAt,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -7216,11 +7290,15 @@ class SyncMetadataCompanion extends UpdateCompanion<SyncMetadataData> {
       {Value<String>? deviceId,
       Value<int>? version,
       Value<DateTime?>? lastSyncAt,
+      Value<String>? syncStatus,
+      Value<DateTime?>? syncStartedAt,
       Value<int>? rowid}) {
     return SyncMetadataCompanion(
       deviceId: deviceId ?? this.deviceId,
       version: version ?? this.version,
       lastSyncAt: lastSyncAt ?? this.lastSyncAt,
+      syncStatus: syncStatus ?? this.syncStatus,
+      syncStartedAt: syncStartedAt ?? this.syncStartedAt,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -7237,6 +7315,12 @@ class SyncMetadataCompanion extends UpdateCompanion<SyncMetadataData> {
     if (lastSyncAt.present) {
       map['last_sync_at'] = Variable<DateTime>(lastSyncAt.value);
     }
+    if (syncStatus.present) {
+      map['sync_status'] = Variable<String>(syncStatus.value);
+    }
+    if (syncStartedAt.present) {
+      map['sync_started_at'] = Variable<DateTime>(syncStartedAt.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -7249,6 +7333,8 @@ class SyncMetadataCompanion extends UpdateCompanion<SyncMetadataData> {
           ..write('deviceId: $deviceId, ')
           ..write('version: $version, ')
           ..write('lastSyncAt: $lastSyncAt, ')
+          ..write('syncStatus: $syncStatus, ')
+          ..write('syncStartedAt: $syncStartedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -12486,6 +12572,8 @@ typedef $$SyncMetadataTableCreateCompanionBuilder = SyncMetadataCompanion
   required String deviceId,
   Value<int> version,
   Value<DateTime?> lastSyncAt,
+  Value<String> syncStatus,
+  Value<DateTime?> syncStartedAt,
   Value<int> rowid,
 });
 typedef $$SyncMetadataTableUpdateCompanionBuilder = SyncMetadataCompanion
@@ -12493,6 +12581,8 @@ typedef $$SyncMetadataTableUpdateCompanionBuilder = SyncMetadataCompanion
   Value<String> deviceId,
   Value<int> version,
   Value<DateTime?> lastSyncAt,
+  Value<String> syncStatus,
+  Value<DateTime?> syncStartedAt,
   Value<int> rowid,
 });
 
@@ -12513,6 +12603,12 @@ class $$SyncMetadataTableFilterComposer
 
   ColumnFilters<DateTime> get lastSyncAt => $composableBuilder(
       column: $table.lastSyncAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get syncStatus => $composableBuilder(
+      column: $table.syncStatus, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get syncStartedAt => $composableBuilder(
+      column: $table.syncStartedAt, builder: (column) => ColumnFilters(column));
 }
 
 class $$SyncMetadataTableOrderingComposer
@@ -12532,6 +12628,13 @@ class $$SyncMetadataTableOrderingComposer
 
   ColumnOrderings<DateTime> get lastSyncAt => $composableBuilder(
       column: $table.lastSyncAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get syncStatus => $composableBuilder(
+      column: $table.syncStatus, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get syncStartedAt => $composableBuilder(
+      column: $table.syncStartedAt,
+      builder: (column) => ColumnOrderings(column));
 }
 
 class $$SyncMetadataTableAnnotationComposer
@@ -12551,6 +12654,12 @@ class $$SyncMetadataTableAnnotationComposer
 
   GeneratedColumn<DateTime> get lastSyncAt => $composableBuilder(
       column: $table.lastSyncAt, builder: (column) => column);
+
+  GeneratedColumn<String> get syncStatus => $composableBuilder(
+      column: $table.syncStatus, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get syncStartedAt => $composableBuilder(
+      column: $table.syncStartedAt, builder: (column) => column);
 }
 
 class $$SyncMetadataTableTableManager extends RootTableManager<
@@ -12582,24 +12691,32 @@ class $$SyncMetadataTableTableManager extends RootTableManager<
             Value<String> deviceId = const Value.absent(),
             Value<int> version = const Value.absent(),
             Value<DateTime?> lastSyncAt = const Value.absent(),
+            Value<String> syncStatus = const Value.absent(),
+            Value<DateTime?> syncStartedAt = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               SyncMetadataCompanion(
             deviceId: deviceId,
             version: version,
             lastSyncAt: lastSyncAt,
+            syncStatus: syncStatus,
+            syncStartedAt: syncStartedAt,
             rowid: rowid,
           ),
           createCompanionCallback: ({
             required String deviceId,
             Value<int> version = const Value.absent(),
             Value<DateTime?> lastSyncAt = const Value.absent(),
+            Value<String> syncStatus = const Value.absent(),
+            Value<DateTime?> syncStartedAt = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               SyncMetadataCompanion.insert(
             deviceId: deviceId,
             version: version,
             lastSyncAt: lastSyncAt,
+            syncStatus: syncStatus,
+            syncStartedAt: syncStartedAt,
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0

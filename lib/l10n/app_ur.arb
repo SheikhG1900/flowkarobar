@@ -1099,7 +1099,7 @@
   "netIncome": "خالص آمدنی",
   "netExpenses": "خالص اخراجات",
   "syncStatusTitle": "سنک کی حالت",
-  "changesToPush": "پش کرنے کے لیے {count} تبدیلیاں",
+  "changesToPush": "{count, plural, =1{1 تبدیلی پش کرنے کے لیے} other{{count} تبدیلیاں پش کرنے کے لیے}}",
   "@changesToPush": {
     "placeholders": {
       "count": {

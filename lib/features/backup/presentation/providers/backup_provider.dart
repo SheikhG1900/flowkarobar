@@ -1,3 +1,4 @@
+import 'package:flowpaisa/core/database/database.dart';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -17,6 +18,9 @@ import 'package:flowpaisa/features/receivables/presentation/providers/receivable
 import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:device_info_plus/device_info_plus.dart' as import_device_info;
+import 'package:drift/drift.dart';
+import 'dart:io';
 
 /// Provider for GoogleDriveService
 final googleDriveServiceProvider = Provider<GoogleDriveService>((ref) {
@@ -68,6 +72,7 @@ class BackupState {
   final int unsyncedCount;
   final List<drive.File> deltaFiles;
   final String syncStatus; // 'Idle', 'Syncing...', 'Success', 'Error: ...'
+  final DateTime? syncStartedAt;
 
   BackupState({
     this.isLoading = false,
@@ -88,6 +93,7 @@ class BackupState {
     this.unsyncedCount = 0,
     this.deltaFiles = const [],
     this.syncStatus = 'Idle',
+    this.syncStartedAt,
   });
 
   factory BackupState.initial() {
@@ -113,6 +119,7 @@ class BackupState {
     int? unsyncedCount,
     List<drive.File>? deltaFiles,
     String? syncStatus,
+    DateTime? syncStartedAt,
   }) {
     return BackupState(
       isLoading: isLoading ?? this.isLoading,
@@ -134,6 +141,7 @@ class BackupState {
       unsyncedCount: unsyncedCount ?? this.unsyncedCount,
       deltaFiles: deltaFiles ?? this.deltaFiles,
       syncStatus: syncStatus ?? this.syncStatus,
+      syncStartedAt: syncStartedAt ?? this.syncStartedAt,
     );
   }
 }
@@ -189,7 +197,7 @@ class BackupNotifier extends Notifier<BackupState> {
     );
 
     await _refreshVersions();
-    _startStatusPolling();
+    _startDatabaseStatusWatcher();
 
     if (_driveService.isSignedIn) {
       await loadBackups();
@@ -432,7 +440,8 @@ class BackupNotifier extends Notifier<BackupState> {
                 'SELECT COUNT(*) as count FROM $table WHERE is_not_synced = 1')
             .watchSingle();
 
-        countStream.listen((countResult) {
+        final subscription = countStream.listen((countResult) {
+          if (!ref.mounted) return;
           _updateTotalUnsyncedCount();
           // Also fetch cloud state when a sync might have happened (unsynced count drops to 0)
           final count = (countResult.data['count'] as num).toInt();
@@ -440,6 +449,7 @@ class BackupNotifier extends Notifier<BackupState> {
             _fetchCloudState();
           }
         });
+        ref.onDispose(() => subscription.cancel());
       }
     } catch (e) {
       if (kDebugMode) {
@@ -577,82 +587,95 @@ class BackupNotifier extends Notifier<BackupState> {
     state = state.copyWith(unsyncedCount: total);
   }
 
-  void _startStatusPolling() {
-    // Poll SharedPreferences for sync status every 1 second for faster feedback
-    final subscription =
-        Stream.periodic(const Duration(seconds: 1)).listen((_) async {
+  Future<String> _getDeviceId() async {
+    final deviceInfo = import_device_info.DeviceInfoPlugin();
+    if (Platform.isAndroid) {
+      final androidInfo = await deviceInfo.androidInfo;
+      return androidInfo.id;
+    } else if (Platform.isIOS) {
+      final iosInfo = await deviceInfo.iosInfo;
+      return iosInfo.identifierForVendor ?? 'unknown_ios';
+    }
+    return 'unknown_device';
+  }
+
+  void _startDatabaseStatusWatcher() async {
+    final db = ref.read(databaseProvider);
+    final deviceId = await _getDeviceId();
+
+    final subscription = (db.select(db.syncMetadata)
+          ..where((t) => t.deviceId.equals(deviceId)))
+        .watchSingleOrNull()
+        .listen((metadata) {
       if (!ref.mounted) return;
 
-      final activeCashbook = ref.read(activeCashbookProvider);
-      final prefs = await SharedPreferences.getInstance();
-      final status =
-          prefs.getString('sync_status_${activeCashbook.id}') ?? 'Idle';
+      if (metadata != null) {
+        String status = metadata.syncStatus;
+        final startedAt = metadata.syncStartedAt;
 
-      if (status.contains('Error')) {
-        if (kDebugMode) {
-          print('BackupNotifier: Sync Error detected: $status');
-        }
-      }
-
-      // Also update cloud state periodically to catch lock releases or version changes
-      if (DateTime.now().second % 10 == 0) {
-        _fetchCloudState();
-      }
-
-      if (state.syncStatus != status) {
-        state = state.copyWith(
-          syncStatus: status,
-          // Only show global loading if we are explicitly in the "Syncing..." phase
-          // and haven't timed out to allow interaction
-          isLoading: status == 'Syncing...' ? state.isLoading : false,
-        );
-
-        // If status just changed to Success or Error, ensure loading is cleared
-        if (status != 'Syncing...' && !status.contains('Locked')) {
-          state = state.copyWith(isLoading: false);
+        // Stuck sync detection: if started more than 10 minutes ago, treat as Idle
+        if (startedAt != null &&
+            DateTime.now().toUtc().difference(startedAt).inMinutes > 10) {
+          status = 'Idle';
         }
 
-        // If status just changed to Success, refresh versions and UI
-        if (status == 'Success') {
-          _refreshVersions();
+        if (state.syncStatus != status || state.syncStartedAt != startedAt) {
+          state = state.copyWith(
+            syncStatus: status,
+            syncStartedAt: startedAt,
+            localVersion: metadata.version,
+            lastSyncTime: metadata.lastSyncAt,
+            isLoading: status.contains('Syncing') ||
+                status.contains('Pulling') ||
+                status.contains('Pushing'),
+          );
 
-          // CRITICAL: Invalidate the database provider first.
-          // This ensures all repositories get a fresh reference to the database
-          // and triggers all stream-based watchers (like watchAllTransactions) to restart.
-          ref.invalidate(databaseProvider);
-
-          // Then invalidate the specific list providers
-          ref.invalidate(transactionsPaginatedProvider);
-          ref.invalidate(payablesPaginatedProvider);
-          ref.invalidate(receivablesPaginatedProvider);
-
-          // Refresh summary providers
-          ref.invalidate(allPayablesProvider);
-          ref.invalidate(allReceivablesProvider);
-          ref.invalidate(pendingPayablesCountProvider);
-          ref.invalidate(pendingReceivablesCountProvider);
-          ref.invalidate(overduePayablesCountProvider);
-          ref.invalidate(overdueReceivablesCountProvider);
-          ref.invalidate(totalPendingPayablesProvider);
-          ref.invalidate(totalPendingReceivablesProvider);
-
-          // Reset status to Idle after a delay
-          Future.delayed(const Duration(seconds: 3), () {
-            if (!ref.mounted) return;
-            prefs.setString('sync_status_${activeCashbook.id}', 'Idle');
-            // Also update the local state immediately so UI doesn't wait for next poll
-            state = state.copyWith(syncStatus: 'Idle');
-          });
+          // If status just changed to Success, trigger UI refreshes
+          if (status == 'Success') {
+            _handleSyncSuccess();
+          }
         }
-      } else if (status.contains('Locked')) {
-        // If it's already Locked and hasn't changed, we still want to refresh the state
-        // to show any countdown updates if the SyncEngine is still running
-        state = state.copyWith(syncStatus: status);
       }
     });
 
     ref.onDispose(() {
       subscription.cancel();
+    });
+  }
+
+  Future<void> _handleSyncSuccess() async {
+    // CRITICAL: Invalidate the database provider first.
+    ref.invalidate(databaseProvider);
+
+    // Then invalidate the specific list providers
+    ref.invalidate(transactionsPaginatedProvider);
+    ref.invalidate(payablesPaginatedProvider);
+    ref.invalidate(receivablesPaginatedProvider);
+
+    // Refresh summary providers
+    ref.invalidate(allPayablesProvider);
+    ref.invalidate(allReceivablesProvider);
+    ref.invalidate(pendingPayablesCountProvider);
+    ref.invalidate(pendingReceivablesCountProvider);
+    ref.invalidate(overduePayablesCountProvider);
+    ref.invalidate(overdueReceivablesCountProvider);
+    ref.invalidate(totalPendingPayablesProvider);
+    ref.invalidate(totalPendingReceivablesProvider);
+
+    // Refresh unsynced counts and cloud state immediately
+    await _updateTotalUnsyncedCount();
+    await _fetchCloudState();
+
+    // Reset status to Idle after a delay in the database
+    Future.delayed(const Duration(seconds: 3), () async {
+      if (!ref.mounted) return;
+      final db = ref.read(databaseProvider);
+      final deviceId = await _getDeviceId();
+      await (db.update(db.syncMetadata)..where((t) => t.deviceId.equals(deviceId)))
+          .write(SyncMetadataCompanion(
+        syncStatus: const Value('Idle'),
+        syncStartedAt: const Value(null),
+      ));
     });
   }
 

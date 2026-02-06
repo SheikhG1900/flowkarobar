@@ -2925,7 +2925,13 @@ class AppLocalizationsUr extends AppLocalizations {
 
   @override
   String changesToPush(int count) {
-    return 'پش کرنے کے لیے $count تبدیلیاں';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count تبدیلیاں پش کرنے کے لیے',
+      one: '1 تبدیلی پش کرنے کے لیے',
+    );
+    return '$_temp0';
   }
 
   @override

@@ -16,6 +16,9 @@ import 'package:flowpaisa/features/contacts/data/contacts_repository.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
+import 'package:device_info_plus/device_info_plus.dart' as import_device_info;
+import 'package:drift/drift.dart';
+import 'dart:io';
 
 const String syncTaskName = 'com.flowpaisa.app.sync_task';
 
@@ -93,12 +96,13 @@ Future<bool> handleSyncTask(String task, Map<String, dynamic>? inputData) async 
         print('SyncScheduler: Background sync starting for: ${cashbook.name} (DB: ${cashbook.dbPath})');
       }
       
-      // Update progress in SharedPreferences
       await prefs.setString('sync_status_${cashbook.id}', 'Syncing...');
       
       final db = AppDatabase(fileName: cashbook.dbPath);
-
-      // 1. Process schedules first so any new transactions are synced
+      
+      // Update progress in database and SharedPreferences
+      final deviceId = await _getDeviceId();
+      await _updateSyncStatus(db, deviceId, 'Syncing...', isStarting: true);
       try {
         final schedulesRepository = SchedulesRepository(db);
         final scheduleService = ScheduleService(
@@ -222,6 +226,32 @@ Future<bool> handleSyncTask(String task, Map<String, dynamic>? inputData) async 
       print('SyncScheduler: Stack trace: $stack');
     }
     return false;
+  }
+}
+
+Future<String> _getDeviceId() async {
+  final deviceInfo = import_device_info.DeviceInfoPlugin();
+  if (Platform.isAndroid) {
+    final androidInfo = await deviceInfo.androidInfo;
+    return androidInfo.id;
+  } else if (Platform.isIOS) {
+    final iosInfo = await deviceInfo.iosInfo;
+    return iosInfo.identifierForVendor ?? 'unknown_ios';
+  }
+  return 'unknown_device';
+}
+
+Future<void> _updateSyncStatus(AppDatabase db, String deviceId, String status, {bool isStarting = false}) async {
+  try {
+    await (db.update(db.syncMetadata)..where((t) => t.deviceId.equals(deviceId)))
+        .write(SyncMetadataCompanion(
+      syncStatus: Value(status),
+      syncStartedAt: isStarting ? Value(DateTime.now().toUtc()) : const Value.absent(),
+    ));
+  } catch (e) {
+    if (kDebugMode) {
+      print('SyncScheduler: Failed to update sync status in DB: $e');
+    }
   }
 }
 

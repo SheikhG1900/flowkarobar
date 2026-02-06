@@ -2917,7 +2917,13 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String changesToPush(int count) {
-    return '$count परिवर्तन पुश करने के लिए';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count परिवर्तन पुश करने के लिए',
+      one: '1 परिवर्तन पुश करने के लिए',
+    );
+    return '$_temp0';
   }
 
   @override

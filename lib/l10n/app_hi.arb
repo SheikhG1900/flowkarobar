@@ -1099,7 +1099,7 @@
   "netIncome": "शुद्ध आय",
   "netExpenses": "शुद्ध खर्च",
   "syncStatusTitle": "सिंक स्थिति",
-  "changesToPush": "{count} परिवर्तन पुश करने के लिए",
+  "changesToPush": "{count, plural, =1{1 परिवर्तन पुश करने के लिए} other{{count} परिवर्तन पुश करने के लिए}}",
   "@changesToPush": {
     "placeholders": {
       "count": {

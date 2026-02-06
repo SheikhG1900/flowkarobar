@@ -531,7 +531,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                     ),
                     child: Row(
                       children: [
-                        if (state.syncStatus == 'Syncing...')
+                        if (state.isLoading)
                           const SizedBox(
                             width: 12,
                             height: 12,
@@ -540,9 +540,12 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                         else if (state.syncStatus.contains('Error'))
                           const Icon(Icons.error_outline,
                               size: 16, color: Colors.red)
-                        else
+                        else if (state.syncStatus == 'Success')
                           const Icon(Icons.check_circle_outline,
-                              size: 16, color: Colors.green),
+                              size: 16, color: Colors.green)
+                        else
+                          const Icon(Icons.info_outline,
+                              size: 16, color: Colors.blue),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
