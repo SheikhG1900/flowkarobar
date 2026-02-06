@@ -1095,5 +1095,19 @@
   "payableVsReceivableTrend": "देय बनाम प्राप्य रुझान",
   "categoryDetails": "श्रेणी का विवरण",
   "netIncome": "शुद्ध आय",
-  "netExpenses": "शुद्ध खर्च"
+  "netExpenses": "शुद्ध खर्च",
+  "syncStatusTitle": "सिंक स्थिति",
+  "changesToPush": "{count} परिवर्तन पुश करने के लिए",
+  "@changesToPush": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "updatesAvailable": "क्लाउड पर अपडेट उपलब्ध हैं",
+  "dataSynced": "डेटा सिंक हो गया है",
+  "syncNow": "अभी सिंक करें",
+  "premiumRequiredForSync": "क्लाउड सिंक के लिए प्रीमियम आवश्यक है",
+  "signInRequiredForSync": "सिंक करने के लिए Google के साथ साइन इन करें"
 }

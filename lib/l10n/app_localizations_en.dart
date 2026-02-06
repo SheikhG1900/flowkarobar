@@ -2893,4 +2893,30 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get netExpenses => 'Net Expenses';
+
+  @override
+  String get syncStatusTitle => 'Sync Status';
+
+  @override
+  String changesToPush(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count changes to push',
+      one: '1 change to push',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get updatesAvailable => 'Updates available on cloud';
+
+  @override
+  String get dataSynced => 'Data is synced';
+
+  @override
+  String get premiumRequiredForSync => 'Premium required for cloud sync';
+
+  @override
+  String get signInRequiredForSync => 'Sign in with Google to sync';
 }

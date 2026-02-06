@@ -26,6 +26,7 @@ import 'package:flowpaisa/features/currencies/presentation/screens/currencies_li
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flowpaisa/features/analytics/presentation/screens/analytics_screen.dart';
 import 'package:flowpaisa/features/backup/presentation/screens/backup_screen.dart';
+import 'package:flowpaisa/features/backup/presentation/providers/backup_provider.dart';
 import 'package:flowpaisa/features/settings/presentation/screens/language_selector_screen.dart';
 import 'package:flowpaisa/features/settings/presentation/screens/font_selector_screen.dart';
 import 'package:flowpaisa/features/settings/presentation/screens/theme_selector_screen.dart';
@@ -46,6 +47,7 @@ import 'package:flowpaisa/shared/widgets/premium_badge.dart';
 import 'package:flowpaisa/features/cashbooks/presentation/screens/cashbooks_screen.dart';
 import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
 
+import 'package:flowpaisa/features/dashboard/presentation/widgets/sync_status_section.dart';
 import 'package:flowpaisa/shared/providers/shared_preferences_provider.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
@@ -155,7 +157,30 @@ class FlowpaisaApp extends ConsumerStatefulWidget {
   ConsumerState<FlowpaisaApp> createState() => _FlowpaisaAppState();
 }
 
-class _FlowpaisaAppState extends ConsumerState<FlowpaisaApp> {
+class _FlowpaisaAppState extends ConsumerState<FlowpaisaApp>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.resumed) {
+      // App came to foreground, refresh cloud state
+      final backupNotifier = ref.read(backupProvider.notifier);
+      backupNotifier.refreshCloudState();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     // Watch language and theme mode from providers
@@ -1217,6 +1242,9 @@ class _DashboardTab extends ConsumerWidget {
                   padding: const EdgeInsets.fromLTRB(16, 24, 16, 0),
                   child: Column(
                     children: [
+                      // Sync Status Section
+                      const SyncStatusSection(),
+                      const SizedBox(height: 16),
                       _buildPrivacyHighlight(context, ref, l10n, isDark),
                       const SizedBox(height: 16),
                       _buildQuickActions(context, ref, l10n, isPremium),
@@ -1237,7 +1265,6 @@ class _DashboardTab extends ConsumerWidget {
               ),
             ),
           ),
-
           // Recent Transactions List
           SliverToBoxAdapter(
             child: Showcase(
@@ -1256,7 +1283,6 @@ class _DashboardTab extends ConsumerWidget {
               ),
             ),
           ),
-
           // Bottom Padding
           const SliverToBoxAdapter(
             child: SizedBox(height: 80),
@@ -1269,7 +1295,6 @@ class _DashboardTab extends ConsumerWidget {
   Widget _buildFilterChip(BuildContext context, WidgetRef ref,
       DashboardFilter currentFilter, bool isDark) {
     final l10n = AppLocalizations.of(context)!;
-    final theme = Theme.of(context);
     final activeCashbook = ref.watch(activeCashbookProvider);
     final activeForeColor = activeCashbook.foreColor(context);
     final isMonthly = currentFilter == DashboardFilter.monthly;

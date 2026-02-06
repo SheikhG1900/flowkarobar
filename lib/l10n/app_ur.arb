@@ -1095,5 +1095,19 @@
   "payableVsReceivableTrend": "قابل ادائیگی بمقابلہ قابل وصول رجحان",
   "categoryDetails": "زمرہ کی تفصیلات",
   "netIncome": "خالص آمدنی",
-  "netExpenses": "خالص اخراجات"
+  "netExpenses": "خالص اخراجات",
+  "syncStatusTitle": "سنک کی حالت",
+  "changesToPush": "پش کرنے کے لیے {count} تبدیلیاں",
+  "@changesToPush": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "updatesAvailable": "کلاؤڈ پر اپ ڈیٹس دستیاب ہیں",
+  "dataSynced": "ڈیٹا سنک ہو گیا ہے",
+  "syncNow": "ابھی سنک کریں",
+  "premiumRequiredForSync": "کلاؤڈ سنک کے لیے پریمیم درکار ہے",
+  "signInRequiredForSync": "سنک کرنے کے لیے گوگل کے ساتھ سائن ان کریں"
 }

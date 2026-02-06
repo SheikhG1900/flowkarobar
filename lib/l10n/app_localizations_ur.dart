@@ -2912,4 +2912,25 @@ class AppLocalizationsUr extends AppLocalizations {
 
   @override
   String get netExpenses => 'خالص اخراجات';
+
+  @override
+  String get syncStatusTitle => 'سنک کی حالت';
+
+  @override
+  String changesToPush(int count) {
+    return 'پش کرنے کے لیے $count تبدیلیاں';
+  }
+
+  @override
+  String get updatesAvailable => 'کلاؤڈ پر اپ ڈیٹس دستیاب ہیں';
+
+  @override
+  String get dataSynced => 'ڈیٹا سنک ہو گیا ہے';
+
+  @override
+  String get premiumRequiredForSync => 'کلاؤڈ سنک کے لیے پریمیم درکار ہے';
+
+  @override
+  String get signInRequiredForSync =>
+      'سنک کرنے کے لیے گوگل کے ساتھ سائن ان کریں';
 }

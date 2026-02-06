@@ -1579,5 +1579,19 @@
   "payableVsReceivableTrend": "Payable vs Receivable Trend",
   "categoryDetails": "Category Details",
   "netIncome": "Net Income",
-  "netExpenses": "Net Expenses"
+  "netExpenses": "Net Expenses",
+  "syncStatusTitle": "Sync Status",
+  "changesToPush": "{count, plural, =1{1 change to push} other{{count} changes to push}}",
+  "@changesToPush": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "updatesAvailable": "Updates available on cloud",
+  "dataSynced": "Data is synced",
+  "syncNow": "Sync Now",
+  "premiumRequiredForSync": "Premium required for cloud sync",
+  "signInRequiredForSync": "Sign in with Google to sync"
 }

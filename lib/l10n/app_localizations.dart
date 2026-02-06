@@ -5326,6 +5326,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Net Expenses'**
   String get netExpenses;
+
+  /// No description provided for @syncStatusTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync Status'**
+  String get syncStatusTitle;
+
+  /// No description provided for @changesToPush.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 change to push} other{{count} changes to push}}'**
+  String changesToPush(int count);
+
+  /// No description provided for @updatesAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Updates available on cloud'**
+  String get updatesAvailable;
+
+  /// No description provided for @dataSynced.
+  ///
+  /// In en, this message translates to:
+  /// **'Data is synced'**
+  String get dataSynced;
+
+  /// No description provided for @premiumRequiredForSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Premium required for cloud sync'**
+  String get premiumRequiredForSync;
+
+  /// No description provided for @signInRequiredForSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with Google to sync'**
+  String get signInRequiredForSync;
 }
 
 class _AppLocalizationsDelegate

@@ -306,6 +306,11 @@ class BackupNotifier extends Notifier<BackupState> {
     }
   }
 
+  /// Public method to refresh cloud state (e.g., when app comes to foreground)
+  Future<void> refreshCloudState() async {
+    await _fetchCloudState();
+  }
+
   Future<void> _checkFinalStatus() async {
     final activeCashbook = ref.read(activeCashbookProvider);
     final prefs = await SharedPreferences.getInstance();

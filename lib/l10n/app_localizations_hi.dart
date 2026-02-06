@@ -2904,4 +2904,25 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get netExpenses => 'शुद्ध खर्च';
+
+  @override
+  String get syncStatusTitle => 'सिंक स्थिति';
+
+  @override
+  String changesToPush(int count) {
+    return '$count परिवर्तन पुश करने के लिए';
+  }
+
+  @override
+  String get updatesAvailable => 'क्लाउड पर अपडेट उपलब्ध हैं';
+
+  @override
+  String get dataSynced => 'डेटा सिंक हो गया है';
+
+  @override
+  String get premiumRequiredForSync => 'क्लाउड सिंक के लिए प्रीमियम आवश्यक है';
+
+  @override
+  String get signInRequiredForSync =>
+      'सिंक करने के लिए Google के साथ साइन इन करें';
 }
