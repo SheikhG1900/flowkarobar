@@ -438,6 +438,8 @@
   "noPaymentStatusData": "No payment status data",
   "noIncome": "No income for this period",
   "pdfReady": "PDF Ready",
+  "backupReady": "Backup Ready",
+  "backupReadyMessage": "Your database backup is ready. Choose an action:",
   "analyticsPDFReadyMessage": "Your analytics PDF report is ready. Choose an action:",
   "saveCopy": "Save Copy",
   "preview": "Preview",

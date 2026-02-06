@@ -750,6 +750,13 @@ class AppLocalizationsUr extends AppLocalizations {
   String get pdfReady => 'پی ڈی ایف تیار ہے';
 
   @override
+  String get backupReady => 'بیک اپ تیار ہے';
+
+  @override
+  String get backupReadyMessage =>
+      'آپ کا ڈیٹا بیس بیک اپ تیار ہے۔ کوئی عمل منتخب کریں:';
+
+  @override
   String get analyticsPDFReadyMessage =>
       'آپ کی تجزیاتی پی ڈی ایف رپورٹ تیار ہے۔ کوئی عمل منتخب کریں:';
 

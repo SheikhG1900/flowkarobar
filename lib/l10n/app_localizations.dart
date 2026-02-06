@@ -1444,6 +1444,18 @@ abstract class AppLocalizations {
   /// **'PDF Ready'**
   String get pdfReady;
 
+  /// No description provided for @backupReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup Ready'**
+  String get backupReady;
+
+  /// No description provided for @backupReadyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Your database backup is ready. Choose an action:'**
+  String get backupReadyMessage;
+
   /// No description provided for @analyticsPDFReadyMessage.
   ///
   /// In en, this message translates to:

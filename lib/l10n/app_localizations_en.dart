@@ -746,6 +746,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pdfReady => 'PDF Ready';
 
   @override
+  String get backupReady => 'Backup Ready';
+
+  @override
+  String get backupReadyMessage =>
+      'Your database backup is ready. Choose an action:';
+
+  @override
   String get analyticsPDFReadyMessage =>
       'Your analytics PDF report is ready. Choose an action:';
 

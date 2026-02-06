@@ -56,7 +56,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
       PremiumGate.showPremiumDialog(context);
       return;
     }
-
+    final theme = Theme.of(context);
     final selectedDateRange = ref.read(selectedDateRangeProvider);
     final currencySymbol = ref.read(currencySymbolProvider);
 
@@ -135,7 +135,8 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                 child: Text(l10n.share),
               ),
               FilledButton(
-                style: FilledButton.styleFrom(foregroundColor: Colors.white),
+                style: FilledButton.styleFrom(
+                    foregroundColor: theme.colorScheme.onPrimary),
                 onPressed: () async {
                   Navigator.pop(context);
                   await Printing.layoutPdf(

@@ -81,7 +81,8 @@ class _CopyPreferencesSheetState extends ConsumerState<CopyPreferencesSheet> {
             Text(l10n.noOtherCashbooks),
             const SizedBox(height: 24),
             FilledButton(
-              style: FilledButton.styleFrom(foregroundColor: Colors.white),
+              style: FilledButton.styleFrom(
+                  foregroundColor: theme.colorScheme.onPrimary),
               onPressed: () => Navigator.pop(context),
               child: Text(l10n.ok),
             ),
@@ -253,7 +254,8 @@ class _CopyPreferencesSheetState extends ConsumerState<CopyPreferencesSheet> {
               Expanded(
                 flex: 2,
                 child: FilledButton(
-                  style: FilledButton.styleFrom(foregroundColor: Colors.white),
+                  style: FilledButton.styleFrom(
+                      foregroundColor: theme.colorScheme.onPrimary),
                   onPressed: _isLoading ? null : _performCopyPreferences,
                   child: _isLoading
                       ? const SizedBox(

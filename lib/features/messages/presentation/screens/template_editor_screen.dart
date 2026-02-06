@@ -253,8 +253,8 @@ class _TemplateEditorScreenState extends ConsumerState<TemplateEditorScreen> {
                   child: SizedBox(
                     width: double.infinity,
                     child: FilledButton(
-                      style:
-                          FilledButton.styleFrom(foregroundColor: Colors.white),
+                      style: FilledButton.styleFrom(
+                          foregroundColor: theme.colorScheme.onPrimary),
                       onPressed: _isLoading ? null : _saveTemplate,
                       child: Text(l10n.saveTemplate),
                     ),

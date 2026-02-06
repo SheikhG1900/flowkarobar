@@ -748,6 +748,13 @@ class AppLocalizationsHi extends AppLocalizations {
   String get pdfReady => 'पीडीएफ तैयार है';
 
   @override
+  String get backupReady => 'बैकअप तैयार है';
+
+  @override
+  String get backupReadyMessage =>
+      'आपका डेटाबेस बैकअप तैयार है। एक क्रिया चुनें:';
+
+  @override
   String get analyticsPDFReadyMessage =>
       'आपकी एनालिटिक्स पीडीएफ रिपोर्ट तैयार है। एक क्रिया चुनें:';
 

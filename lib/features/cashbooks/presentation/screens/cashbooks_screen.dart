@@ -253,6 +253,7 @@ class CashbooksScreen extends ConsumerWidget {
 
   Future<void> _handleBackup(
       BuildContext context, WidgetRef ref, Cashbook cashbook) async {
+    final theme = Theme.of(context);
     if (!PremiumGate.isPremium(ref)) {
       PremiumGate.showPremiumDialog(context);
       return;
@@ -300,8 +301,8 @@ class CashbooksScreen extends ConsumerWidget {
           await showDialog<void>(
             context: context,
             builder: (context) => AlertDialog(
-              title: Text(l10n.pdfReady),
-              content: Text(l10n.analyticsPDFReadyMessage),
+              title: Text(l10n.backupReady),
+              content: Text(l10n.backupReadyMessage),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
@@ -326,7 +327,8 @@ class CashbooksScreen extends ConsumerWidget {
                   child: Text(l10n.saveCopy),
                 ),
                 FilledButton(
-                  style: FilledButton.styleFrom(foregroundColor: Colors.white),
+                  style: FilledButton.styleFrom(
+                      foregroundColor: theme.colorScheme.onPrimary),
                   onPressed: () async {
                     Navigator.pop(context);
                     await LocalBackupService.shareBackupFile(filePath);

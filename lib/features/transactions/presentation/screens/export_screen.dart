@@ -78,6 +78,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
   }
 
   Future<void> _exportToCSV() async {
+    final theme = Theme.of(context);
     if (_startDate == null || _endDate == null) {
       ToastUtils.showWarningToast(context, ref, l10n.selectDateRange);
       return;
@@ -176,7 +177,8 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
                   child: Text(l10n.saveCopy),
                 ),
                 FilledButton(
-                  style: FilledButton.styleFrom(foregroundColor: Colors.white),
+                  style: FilledButton.styleFrom(
+                      foregroundColor: theme.colorScheme.onPrimary),
                   onPressed: () async {
                     Navigator.pop(context);
                     await exportService.shareCSVFile(filePath);
@@ -200,6 +202,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
   }
 
   Future<void> _exportToPDF() async {
+    final theme = Theme.of(context);
     if (!PremiumGate.isPremium(ref)) {
       PremiumGate.showPremiumDialog(context);
       return;
@@ -285,7 +288,8 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
                 child: Text(l10n.share),
               ),
               FilledButton(
-                style: FilledButton.styleFrom(foregroundColor: Colors.white),
+                style: FilledButton.styleFrom(
+                    foregroundColor: theme.colorScheme.onPrimary),
                 onPressed: () async {
                   Navigator.pop(context);
                   await Printing.layoutPdf(
@@ -329,7 +333,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
         child: CircularProgressIndicator(),
       ),
     );
-
+    final theme = Theme.of(context);
     try {
       final exportService = ref.read(exportServiceProvider);
 
@@ -391,7 +395,8 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
                 child: Text(l10n.share),
               ),
               FilledButton(
-                style: FilledButton.styleFrom(foregroundColor: Colors.white),
+                style: FilledButton.styleFrom(
+                    foregroundColor: theme.colorScheme.onPrimary),
                 onPressed: () async {
                   Navigator.pop(context);
                   await Printing.layoutPdf(
