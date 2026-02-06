@@ -155,6 +155,42 @@ class PayablesRepository {
     });
   }
 
+  /// Watch payable with linked data by UUID
+  Stream<PayableWithLinkedData?> watchPayableWithLinkedDataByUuid(String uuid) {
+    final query = _database.select(_database.payables).join([
+      leftOuterJoin(
+        _database.contacts,
+        _database.contacts.uuid.equalsExp(_database.payables.contactUuid),
+      ),
+      leftOuterJoin(
+        _database.transactions,
+        _database.transactions.uuid
+                .equalsExp(_database.payables.linkedExpenseUuid) |
+            _database.transactions.uuid
+                .equalsExp(_database.payables.linkedIncomeUuid),
+      ),
+      leftOuterJoin(
+        _database.categories,
+        _database.categories.uuid
+            .equalsExp(_database.transactions.categoryUuid),
+      ),
+    ]);
+
+    query.where(_database.payables.uuid.equals(uuid) &
+        _database.payables.isDeleted.equals(false));
+
+    return query.watch().map((rows) {
+      if (rows.isEmpty) return null;
+      final row = rows.first;
+      return PayableWithLinkedData(
+        payable: row.readTable(_database.payables),
+        contact: row.readTableOrNull(_database.contacts),
+        linkedTransaction: row.readTableOrNull(_database.transactions),
+        linkedCategory: row.readTableOrNull(_database.categories),
+      );
+    });
+  }
+
   /// Update payable (with companion for partial updates)
   Future<int> updatePayableWithCompanion(
       String uuid, PayablesCompanion companion) {

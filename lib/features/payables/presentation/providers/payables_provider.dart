@@ -82,6 +82,13 @@ final payablesWithLinkedDataProvider =
   return repository.watchPayablesWithLinkedData(status);
 });
 
+// Watch a single payable with linked data by UUID
+final payableWithLinkedDataProvider =
+    StreamProvider.family<PayableWithLinkedData?, String>((ref, uuid) {
+  final repository = ref.watch(payablesRepositoryProvider);
+  return repository.watchPayableWithLinkedDataByUuid(uuid);
+});
+
 // Paginated payables provider
 class PayablesPaginatedNotifier
     extends Notifier<PaginatedState<PayableWithLinkedData>> {

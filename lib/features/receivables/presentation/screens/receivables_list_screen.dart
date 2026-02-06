@@ -700,7 +700,8 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => ReceivableDetailsDialog(item: item),
+                builder: (context) =>
+                    ReceivableDetailsDialog(receivableUuid: receivable.uuid),
               ),
             );
           },

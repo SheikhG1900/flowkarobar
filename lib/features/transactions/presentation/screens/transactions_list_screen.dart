@@ -55,7 +55,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
     _scrollController.addListener(_onScroll);
     _tabController = TabController(length: 2, vsync: this);
     _searchController = TextEditingController();
-    
+
     // Auto-start tour on first visit to this screen
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkAndStartTour();
@@ -145,163 +145,166 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
           });
         }
         return Scaffold(
-      appBar: AppBar(
-        title: _isSearching
-            ? TextField(
-                controller: _searchController,
-                autofocus: true,
-                decoration: InputDecoration(
-                  hintText: l10n.searchTransactions,
-                  border: InputBorder.none,
-                  hintStyle: theme.textTheme.bodyLarge?.copyWith(
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                  ),
-                ),
-                style: theme.textTheme.bodyLarge,
-                onChanged: (value) {
-                  ref
-                      .read(transactionsPaginatedProvider.notifier)
-                      .search(value);
-                },
-              )
-            : Text(l10n.transactions),
-        bottom: hasSchedules && !_isSearching
-            ? TabBar(
-                controller: _tabController,
-                tabs: [
-                  Tab(text: l10n.transactions),
-                  Tab(text: l10n.schedules),
-                ],
-              )
-            : null,
-        actions: [
-          Showcase(
-            key: TourService.transactionsFilterKey,
-            title: l10n.tourTransactionsFilterTitle,
-            description: l10n.tourTransactionsFilterDesc,
-            targetShapeBorder: const CircleBorder(),
-            tooltipBackgroundColor: AppColors.transactionsSectionColor,
-            textColor: Colors.white,
-            tooltipPosition: TooltipPosition.bottom,
-            child: IconButton(
-              icon: Stack(
-                children: [
-                  const Icon(Icons.filter_list),
-                  if (hasActiveFilters)
-                    Positioned(
-                      right: 0,
-                      top: 0,
-                      child: Container(
-                        padding: const EdgeInsets.all(2),
-                        decoration: const BoxDecoration(
-                          color: Colors.red,
-                          shape: BoxShape.circle,
-                        ),
-                        constraints: const BoxConstraints(
-                          minWidth: 8,
-                          minHeight: 8,
-                        ),
+          appBar: AppBar(
+            title: _isSearching
+                ? TextField(
+                    controller: _searchController,
+                    autofocus: true,
+                    decoration: InputDecoration(
+                      hintText: l10n.searchTransactions,
+                      border: InputBorder.none,
+                      hintStyle: theme.textTheme.bodyLarge?.copyWith(
+                        color:
+                            theme.colorScheme.onSurface.withValues(alpha: 0.6),
                       ),
                     ),
-                ],
+                    style: theme.textTheme.bodyLarge,
+                    onChanged: (value) {
+                      ref
+                          .read(transactionsPaginatedProvider.notifier)
+                          .search(value);
+                    },
+                  )
+                : Text(l10n.transactions),
+            bottom: hasSchedules && !_isSearching
+                ? TabBar(
+                    controller: _tabController,
+                    tabs: [
+                      Tab(text: l10n.transactions),
+                      Tab(text: l10n.schedules),
+                    ],
+                  )
+                : null,
+            actions: [
+              Showcase(
+                key: TourService.transactionsFilterKey,
+                title: l10n.tourTransactionsFilterTitle,
+                description: l10n.tourTransactionsFilterDesc,
+                targetShapeBorder: const CircleBorder(),
+                tooltipBackgroundColor: AppColors.transactionsSectionColor,
+                textColor: Colors.white,
+                tooltipPosition: TooltipPosition.bottom,
+                child: IconButton(
+                  icon: Stack(
+                    children: [
+                      const Icon(Icons.filter_list),
+                      if (hasActiveFilters)
+                        Positioned(
+                          right: 0,
+                          top: 0,
+                          child: Container(
+                            padding: const EdgeInsets.all(2),
+                            decoration: const BoxDecoration(
+                              color: Colors.red,
+                              shape: BoxShape.circle,
+                            ),
+                            constraints: const BoxConstraints(
+                              minWidth: 8,
+                              minHeight: 8,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  onPressed: _showFilterBottomSheet,
+                ),
               ),
-              onPressed: _showFilterBottomSheet,
-            ),
+              Showcase(
+                key: TourService.transactionsSearchKey,
+                title: l10n.tourTransactionsSearchTitle,
+                description: l10n.tourTransactionsSearchDesc,
+                targetShapeBorder: const CircleBorder(),
+                tooltipBackgroundColor: AppColors.transactionsSectionColor,
+                textColor: Colors.white,
+                tooltipPosition: TooltipPosition.bottom,
+                child: IconButton(
+                  icon: Icon(_isSearching ? Icons.close : Icons.search),
+                  onPressed: () {
+                    setState(() {
+                      if (_isSearching) {
+                        _isSearching = false;
+                        _searchController.clear();
+                        ref
+                            .read(transactionsPaginatedProvider.notifier)
+                            .search('');
+                      } else {
+                        _isSearching = true;
+                      }
+                    });
+                  },
+                ),
+              ),
+              // Debug button to generate dummy transactions (only in debug mode)
+              if (kDebugMode && !_isSearching)
+                PopupMenuButton<String>(
+                  icon: const Icon(Icons.bug_report),
+                  onSelected: (value) async {
+                    if (value == 'generate_dummy') {
+                      final service = ref.read(transactionServiceProvider);
+                      try {
+                        await service.generateDummyTransactions(count: 100);
+                        if (context.mounted) {
+                          ToastUtils.showSuccessToast(
+                              context, ref, l10n.generated100DummyTransactions);
+                          // Refresh the paginated list
+                          ref
+                              .read(transactionsPaginatedProvider.notifier)
+                              .refresh();
+                        }
+                      } catch (e) {
+                        if (context.mounted) {
+                          ToastUtils.showErrorToast(
+                              context, ref, l10n.errorOccurred(e.toString()));
+                        }
+                      }
+                    }
+                  },
+                  itemBuilder: (context) => [
+                    PopupMenuItem(
+                      value: 'generate_dummy',
+                      child: Row(
+                        children: [
+                          const Icon(Icons.add_circle_outline),
+                          const SizedBox(width: 8),
+                          Text(l10n.generate100DummyTransactions),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+            ],
           ),
-          Showcase(
-            key: TourService.transactionsSearchKey,
-            title: l10n.tourTransactionsSearchTitle,
-            description: l10n.tourTransactionsSearchDesc,
+          body: hasSchedules
+              ? TabBarView(
+                  controller: _tabController,
+                  children: [
+                    _buildBody(paginatedState, theme),
+                    _buildSchedulesTab(schedulesAsync.value ?? []),
+                  ],
+                )
+              : _buildBody(paginatedState, theme),
+          floatingActionButton: Showcase(
+            key: TourService.transactionsFabKey,
+            title: l10n.tourTransactionsFabTitle,
+            description: l10n.tourTransactionsFabDesc,
             targetShapeBorder: const CircleBorder(),
             tooltipBackgroundColor: AppColors.transactionsSectionColor,
             textColor: Colors.white,
-            tooltipPosition: TooltipPosition.bottom,
-            child: IconButton(
-              icon: Icon(_isSearching ? Icons.close : Icons.search),
+            tooltipPosition: TooltipPosition.top,
+            child: FloatingActionButton(
               onPressed: () {
-                setState(() {
-                  if (_isSearching) {
-                    _isSearching = false;
-                    _searchController.clear();
-                    ref.read(transactionsPaginatedProvider.notifier).search('');
-                  } else {
-                    _isSearching = true;
-                  }
-                });
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const AddTransactionScreen(),
+                  ),
+                );
               },
+              backgroundColor: AppColors.transactionsSectionColor,
+              foregroundColor: Colors.white,
+              child: const Icon(Icons.add),
             ),
           ),
-          // Debug button to generate dummy transactions (only in debug mode)
-          if (kDebugMode && !_isSearching)
-            PopupMenuButton<String>(
-              icon: const Icon(Icons.bug_report),
-              onSelected: (value) async {
-                if (value == 'generate_dummy') {
-                  final service = ref.read(transactionServiceProvider);
-                  try {
-                    await service.generateDummyTransactions(count: 100);
-                    if (context.mounted) {
-                      ToastUtils.showSuccessToast(
-                          context, ref, l10n.generated100DummyTransactions);
-                      // Refresh the paginated list
-                      ref
-                          .read(transactionsPaginatedProvider.notifier)
-                          .refresh();
-                    }
-                  } catch (e) {
-                    if (context.mounted) {
-                      ToastUtils.showErrorToast(
-                          context, ref, l10n.errorOccurred(e.toString()));
-                    }
-                  }
-                }
-              },
-              itemBuilder: (context) => [
-                PopupMenuItem(
-                  value: 'generate_dummy',
-                  child: Row(
-                    children: [
-                      const Icon(Icons.add_circle_outline),
-                      const SizedBox(width: 8),
-                      Text(l10n.generate100DummyTransactions),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-        ],
-      ),
-      body: hasSchedules
-          ? TabBarView(
-              controller: _tabController,
-              children: [
-                _buildBody(paginatedState, theme),
-                _buildSchedulesTab(schedulesAsync.value ?? []),
-              ],
-            )
-          : _buildBody(paginatedState, theme),
-      floatingActionButton: Showcase(
-        key: TourService.transactionsFabKey,
-        title: l10n.tourTransactionsFabTitle,
-        description: l10n.tourTransactionsFabDesc,
-        targetShapeBorder: const CircleBorder(),
-        tooltipBackgroundColor: AppColors.transactionsSectionColor,
-        textColor: Colors.white,
-        tooltipPosition: TooltipPosition.top,
-        child: FloatingActionButton(
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const AddTransactionScreen(),
-              ),
-            );
-          },
-          backgroundColor: AppColors.transactionsSectionColor,
-          foregroundColor: Colors.white,
-          child: const Icon(Icons.add),
-        ),
-      ),
         );
       },
     );
@@ -404,20 +407,20 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
         // Date sections with sticky headers
         for (int i = 0; i < keys.length; i++)
           SliverStickyHeader(
-            header: i == 0 
-              ? Showcase(
-                  key: TourService.transactionsListKey,
-                  title: l10n.tourTransactionsListTitle,
-                  description: l10n.tourTransactionsListDesc,
-                  targetShapeBorder: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(20)),
-                  ),
-                  tooltipBackgroundColor: AppColors.transactionsSectionColor,
-                  textColor: Colors.white,
-                  tooltipPosition: TooltipPosition.bottom,
-                  child: _buildDateHeader(theme, keys[i]),
-                )
-              : _buildDateHeader(theme, keys[i]),
+            header: i == 0
+                ? Showcase(
+                    key: TourService.transactionsListKey,
+                    title: l10n.tourTransactionsListTitle,
+                    description: l10n.tourTransactionsListDesc,
+                    targetShapeBorder: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(20)),
+                    ),
+                    tooltipBackgroundColor: AppColors.transactionsSectionColor,
+                    textColor: Colors.white,
+                    tooltipPosition: TooltipPosition.bottom,
+                    child: _buildDateHeader(theme, keys[i]),
+                  )
+                : _buildDateHeader(theme, keys[i]),
             sliver: SliverList(
               delegate: SliverChildBuilderDelegate(
                 (context, itemIndex) {
@@ -818,7 +821,8 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => TransactionDetailsDialog(item: item),
+                  builder: (context) => TransactionDetailsDialog(
+                      transactionUuid: transaction.uuid),
                 ),
               );
             },

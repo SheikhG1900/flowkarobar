@@ -80,6 +80,13 @@ final receivablesWithLinkedDataProvider =
   return repository.watchReceivablesWithLinkedData(status);
 });
 
+// Watch a single receivable with linked data by UUID
+final receivableWithLinkedDataProvider =
+    StreamProvider.family<ReceivableWithLinkedData?, String>((ref, uuid) {
+  final repository = ref.watch(receivablesRepositoryProvider);
+  return repository.watchReceivableWithLinkedDataByUuid(uuid);
+});
+
 // Paginated receivables provider
 class ReceivablesPaginatedNotifier
     extends Notifier<PaginatedState<ReceivableWithLinkedData>> {

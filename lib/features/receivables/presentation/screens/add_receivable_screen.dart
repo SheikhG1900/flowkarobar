@@ -241,7 +241,7 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
           navigator.push(
             MaterialPageRoute(
               builder: (context) =>
-                  ReceivableDetailsDialog(item: receivableWithLinkedData),
+                  ReceivableDetailsDialog(receivableUuid: receivableWithLinkedData.receivable.uuid),
             ),
           );
         } else {

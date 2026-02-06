@@ -178,6 +178,47 @@ class TransactionsRepository {
     );
   }
 
+  // Watch transaction with details by UUID
+  Stream<TransactionWithDetails?> watchTransactionWithDetailsByUuid(
+      String uuid) {
+    final query = _database.select(_database.transactions).join([
+      leftOuterJoin(
+        _database.categories,
+        _database.categories.uuid
+            .equalsExp(_database.transactions.categoryUuid),
+      ),
+      leftOuterJoin(
+        _database.contacts,
+        _database.contacts.uuid.equalsExp(_database.transactions.contactUuid),
+      ),
+      leftOuterJoin(
+        _database.payables,
+        _database.payables.uuid
+            .equalsExp(_database.transactions.linkedPayableUuid),
+      ),
+      leftOuterJoin(
+        _database.receivables,
+        _database.receivables.uuid
+            .equalsExp(_database.transactions.linkedReceivableUuid),
+      ),
+    ]);
+
+    query.where(_database.transactions.uuid.equals(uuid) &
+        _database.transactions.isDeleted.equals(false));
+
+    return query.watch().map((rows) {
+      if (rows.isEmpty) return null;
+      final row = rows.first;
+      return TransactionWithDetails(
+        transaction: row.readTable(_database.transactions),
+        category: row.readTableOrNull(_database.categories),
+        contact: row.readTableOrNull(_database.contacts),
+        linkedPayable: row.readTableOrNull(_database.payables),
+        linkedReceivable: row.readTableOrNull(_database.receivables),
+      );
+    });
+  }
+
   // Create transaction
   Future<String> createTransaction(TransactionsCompanion transaction) async {
     final uuid =

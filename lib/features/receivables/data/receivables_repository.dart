@@ -155,6 +155,43 @@ class ReceivablesRepository {
     });
   }
 
+  /// Watch receivable with linked data by UUID
+  Stream<ReceivableWithLinkedData?> watchReceivableWithLinkedDataByUuid(
+      String uuid) {
+    final query = _database.select(_database.receivables).join([
+      leftOuterJoin(
+        _database.contacts,
+        _database.contacts.uuid.equalsExp(_database.receivables.contactUuid),
+      ),
+      leftOuterJoin(
+        _database.transactions,
+        _database.transactions.uuid
+                .equalsExp(_database.receivables.linkedExpenseUuid) |
+            _database.transactions.uuid
+                .equalsExp(_database.receivables.linkedIncomeUuid),
+      ),
+      leftOuterJoin(
+        _database.categories,
+        _database.categories.uuid
+            .equalsExp(_database.transactions.categoryUuid),
+      ),
+    ]);
+
+    query.where(_database.receivables.uuid.equals(uuid) &
+        _database.receivables.isDeleted.equals(false));
+
+    return query.watch().map((rows) {
+      if (rows.isEmpty) return null;
+      final row = rows.first;
+      return ReceivableWithLinkedData(
+        receivable: row.readTable(_database.receivables),
+        contact: row.readTableOrNull(_database.contacts),
+        linkedTransaction: row.readTableOrNull(_database.transactions),
+        linkedCategory: row.readTableOrNull(_database.categories),
+      );
+    });
+  }
+
   /// Update receivable (with companion for partial updates)
   Future<int> updateReceivableWithCompanion(
       String uuid, ReceivablesCompanion companion) {

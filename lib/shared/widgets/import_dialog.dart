@@ -94,7 +94,7 @@ class _ImportDialogState extends ConsumerState<ImportDialog> {
         context,
         MaterialPageRoute(
           builder: (context) =>
-              ReceivableDetailsDialog(item: _existingItemWithLinkedData),
+              ReceivableDetailsDialog(receivableUuid: _existingItemWithLinkedData.receivable.uuid),
         ),
       );
     } else if (_existingItemWithLinkedData is PayableWithLinkedData) {
@@ -102,7 +102,7 @@ class _ImportDialogState extends ConsumerState<ImportDialog> {
         context,
         MaterialPageRoute(
           builder: (context) =>
-              PayableDetailsDialog(item: _existingItemWithLinkedData),
+              PayableDetailsDialog(payableUuid: _existingItemWithLinkedData.payable.uuid),
         ),
       );
     }

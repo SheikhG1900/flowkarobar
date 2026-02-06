@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:flowpaisa/core/database/database.dart';
+import 'package:rxdart/rxdart.dart';
 import 'package:uuid/uuid.dart';
 
 class ContactsRepository {
@@ -292,7 +293,14 @@ class ContactsRepository {
 
   /// Watch contact statistics (reactive version)
   Stream<ContactStatistics> watchContactStatistics(String contactUuid) {
-    return watchContactByUuid(contactUuid).asyncMap((contact) async {
+    // Combine multiple tables to ensure reactivity when any related data changes
+    return Rx.combineLatest4(
+      watchContactByUuid(contactUuid),
+      _database.select(_database.transactions).watch(),
+      _database.select(_database.receivables).watch(),
+      _database.select(_database.payables).watch(),
+      (contact, txs, recs, pays) => contact,
+    ).asyncMap((contact) async {
       if (contact == null) {
         throw Exception('Contact not found');
       }
@@ -301,7 +309,8 @@ class ContactsRepository {
       final transactionsCount = await (_database
               .selectOnly(_database.transactions)
             ..addColumns([_database.transactions.uuid.count()])
-            ..where(_database.transactions.contactUuid.equals(contactUuid)))
+            ..where(_database.transactions.contactUuid.equals(contactUuid) &
+                _database.transactions.isDeleted.equals(false)))
           .getSingle()
           .then((row) => row.read(_database.transactions.uuid.count()) ?? 0);
 
@@ -309,21 +318,24 @@ class ContactsRepository {
       final receivablesCount =
           await (_database.selectOnly(_database.receivables)
                 ..addColumns([_database.receivables.uuid.count()])
-                ..where(_database.receivables.contactUuid.equals(contactUuid)))
+                ..where(_database.receivables.contactUuid.equals(contactUuid) &
+                    _database.receivables.isDeleted.equals(false)))
               .getSingle()
               .then((row) => row.read(_database.receivables.uuid.count()) ?? 0);
 
       // Get payables count
       final payablesCount = await (_database.selectOnly(_database.payables)
             ..addColumns([_database.payables.uuid.count()])
-            ..where(_database.payables.contactUuid.equals(contactUuid)))
+            ..where(_database.payables.contactUuid.equals(contactUuid) &
+                _database.payables.isDeleted.equals(false)))
           .getSingle()
           .then((row) => row.read(_database.payables.uuid.count()) ?? 0);
 
       // Get total receivable amount
       final totalReceivable = await (_database.selectOnly(_database.receivables)
             ..addColumns([_database.receivables.amount.sum()])
-            ..where(_database.receivables.contactUuid.equals(contactUuid))
+            ..where(_database.receivables.contactUuid.equals(contactUuid) &
+                _database.receivables.isDeleted.equals(false))
             ..where(_database.receivables.status.equals('PENDING')))
           .getSingle()
           .then((row) => row.read(_database.receivables.amount.sum()) ?? 0.0);
@@ -331,7 +343,8 @@ class ContactsRepository {
       // Get total payable amount
       final totalPayable = await (_database.selectOnly(_database.payables)
             ..addColumns([_database.payables.amount.sum()])
-            ..where(_database.payables.contactUuid.equals(contactUuid))
+            ..where(_database.payables.contactUuid.equals(contactUuid) &
+                _database.payables.isDeleted.equals(false))
             ..where(_database.payables.status.equals('PENDING')))
           .getSingle()
           .then((row) => row.read(_database.payables.amount.sum()) ?? 0.0);

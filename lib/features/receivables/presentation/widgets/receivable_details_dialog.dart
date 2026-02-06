@@ -8,7 +8,6 @@ import 'package:flowpaisa/core/utils/date_formatter.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/core/utils/icon_helper.dart';
 import 'package:material_symbols_icons/symbols.dart';
-import 'package:flowpaisa/features/receivables/domain/models.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transaction_service_provider.dart';
 import 'package:flowpaisa/features/receivables/presentation/providers/receivables_provider.dart';
@@ -21,11 +20,11 @@ import 'package:flowpaisa/features/whatsapp/presentation/providers/whatsapp_prov
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
 
 class ReceivableDetailsDialog extends ConsumerWidget {
-  final ReceivableWithLinkedData item;
+  final String receivableUuid;
 
   const ReceivableDetailsDialog({
     super.key,
-    required this.item,
+    required this.receivableUuid,
   });
 
   bool _canEditReceivable(Receivable receivable) {
@@ -41,321 +40,345 @@ class ReceivableDetailsDialog extends ConsumerWidget {
     final theme = Theme.of(context);
     final currencyAsync = ref.watch(currentCurrencyProvider);
     final currency = currencyAsync.value;
-    final receivable = item.receivable;
-    final contact = item.contact;
-    final linkedTransaction = item.linkedTransaction;
 
-    if (currency == null) {
-      return const Center(child: CircularProgressIndicator());
-    }
-    final linkedCategory = item.linkedCategory;
-    final isPending = receivable.status == 'PENDING';
+    final itemAsync = ref.watch(receivableWithLinkedDataProvider(receivableUuid));
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.receivableDetails),
-        actions: [
-          // Share button
-          IconButton(
-            icon: const Icon(Icons.share),
-            onPressed: () {
-              final capturedCurrency = currency;
-              final capturedUserProfile = ref.read(userProfileProvider);
-              final capturedTransactionService =
-                  ref.read(transactionServiceProvider);
-              final capturedWhatsAppService = ref.read(whatsAppServiceProvider);
-              final capturedTemplateService =
-                  ref.read(messageTemplateServiceProvider);
-              final capturedLanguage = getCurrentLanguageCode(ref);
+    return itemAsync.when(
+      data: (item) {
+        if (item == null) {
+          return Scaffold(
+            appBar: AppBar(title: Text(l10n.receivableDetails)),
+            body: Center(child: Text(l10n.receivableNotFound)),
+          );
+        }
 
-              ShareHelper.shareReceivable(
-                context,
-                ref,
-                receivable,
-                contact,
-                currencyOverride: capturedCurrency,
-                userProfileOverride: capturedUserProfile,
-                transactionServiceOverride: capturedTransactionService,
-                whatsAppServiceOverride: capturedWhatsAppService,
-                templateServiceOverride: capturedTemplateService,
-                languageOverride: capturedLanguage,
-              );
-            },
-          ),
-          // Edit button (hide if received or linked)
-          if (_canEditReceivable(receivable))
-            IconButton(
-              icon: const Icon(Icons.edit),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) =>
-                        EditReceivableScreen(receivableUuid: receivable.uuid),
-                  ),
-                );
-              },
-            ),
-          // Delete button (hide if received)
-          if (receivable.status != 'RECEIVED')
-            IconButton(
-              icon: const Icon(Icons.delete),
-              onPressed: () => _deleteReceivable(context, ref, receivable.uuid),
-            ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Amount Card
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    AppColors.receivableColor,
-                    AppColors.receivableColor.withValues(alpha: 0.7),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+        final receivable = item.receivable;
+        final contact = item.contact;
+        final linkedTransaction = item.linkedTransaction;
+
+        if (currency == null) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        final linkedCategory = item.linkedCategory;
+        final isPending = receivable.status == 'PENDING';
+
+        return Scaffold(
+          appBar: AppBar(
+            title: Text(l10n.receivableDetails),
+            actions: [
+              // Share button
+              IconButton(
+                icon: const Icon(Icons.share),
+                onPressed: () {
+                  final capturedCurrency = currency;
+                  final capturedUserProfile = ref.read(userProfileProvider);
+                  final capturedTransactionService =
+                      ref.read(transactionServiceProvider);
+                  final capturedWhatsAppService =
+                      ref.read(whatsAppServiceProvider);
+                  final capturedTemplateService =
+                      ref.read(messageTemplateServiceProvider);
+                  final capturedLanguage = getCurrentLanguageCode(ref);
+
+                  ShareHelper.shareReceivable(
+                    context,
+                    ref,
+                    receivable,
+                    contact,
+                    currencyOverride: capturedCurrency,
+                    userProfileOverride: capturedUserProfile,
+                    transactionServiceOverride: capturedTransactionService,
+                    whatsAppServiceOverride: capturedWhatsAppService,
+                    templateServiceOverride: capturedTemplateService,
+                    languageOverride: capturedLanguage,
+                  );
+                },
+              ),
+              // Edit button (hide if received or linked)
+              if (_canEditReceivable(receivable))
+                IconButton(
+                  icon: const Icon(Icons.edit),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => EditReceivableScreen(
+                            receivableUuid: receivable.uuid),
+                      ),
+                    );
+                  },
                 ),
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.receivableColor.withValues(alpha: 0.3),
-                    blurRadius: 16,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
-              ),
-              child: Column(
-                children: [
-                  Text(
-                    isPending
-                        ? '${l10n.receivableTag} (${l10n.statusPending})'
-                        : l10n.receivedTag,
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    '\u200E${AmountFormatter.formatWithCurrency(receivable.amount, currency.symbol, currency.decimalPlaces)}',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: AmountFormatter.getFontSize(receivable.amount,
-                              decimalPlaces: currency.decimalPlaces) +
-                          6,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  if (!isPending) ...[
-                    const SizedBox(height: 12),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.check_circle,
-                            size: 16,
-                            color: Colors.white,
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            l10n.receivedTag,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
-            // Contact Header Section
-            if (contact != null) ...[
-              Row(
-                children: [
-                  Container(
-                    width: 60,
-                    height: 60,
-                    decoration: BoxDecoration(
-                      gradient: AppColors.getContactGradient(contact.name),
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.getContactColor(contact.name)
-                              .withValues(alpha: 0.3),
-                          blurRadius: 12,
-                          offset: const Offset(0, 4),
-                        ),
+              // Delete button (hide if received)
+              if (receivable.status != 'RECEIVED')
+                IconButton(
+                  icon: const Icon(Icons.delete),
+                  onPressed: () =>
+                      _deleteReceivable(context, ref, receivable.uuid),
+                ),
+            ],
+          ),
+          body: SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Amount Card
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        AppColors.receivableColor,
+                        AppColors.receivableColor.withValues(alpha: 0.7),
                       ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                     ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      contact.name.isNotEmpty
-                          ? contact.name[0].toUpperCase()
-                          : '?',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.receivableColor.withValues(alpha: 0.3),
+                        blurRadius: 16,
+                        offset: const Offset(0, 8),
                       ),
-                    ),
+                    ],
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          contact.name,
-                          style: theme.textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                  child: Column(
+                    children: [
+                      Text(
+                        isPending
+                            ? '${l10n.receivableTag} (${l10n.statusPending})'
+                            : l10n.receivedTag,
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
                         ),
-                        if (contact.phone != null) ...[
-                          const SizedBox(height: 4),
-                          Row(
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '\u200E${AmountFormatter.formatWithCurrency(receivable.amount, currency.symbol, currency.decimalPlaces)}',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: AmountFormatter.getFontSize(
+                                  receivable.amount,
+                                  decimalPlaces: currency.decimalPlaces) +
+                              6,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      if (!isPending) ...[
+                        const SizedBox(height: 12),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(
-                                Icons.phone,
+                              const Icon(
+                                Icons.check_circle,
                                 size: 16,
-                                color: theme.colorScheme.onSurfaceVariant,
+                                color: Colors.white,
                               ),
-                              const SizedBox(width: 4),
+                              const SizedBox(width: 6),
                               Text(
-                                contact.phone!,
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: theme.colorScheme.onSurfaceVariant,
+                                l10n.receivedTag,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
                             ],
                           ),
-                        ],
+                        ),
                       ],
-                    ),
+                    ],
                   ),
-                  if (contact.phone != null)
-                    IconButton(
-                      icon: const Icon(Icons.chat, color: Color(0xFF25D366)),
-                      onPressed: () {
-                        final capturedCurrency = currency;
-                        final capturedUserProfile =
-                            ref.read(userProfileProvider);
-                        final capturedTransactionService =
-                            ref.read(transactionServiceProvider);
-                        final capturedWhatsAppService =
-                            ref.read(whatsAppServiceProvider);
-                        final capturedTemplateService =
-                            ref.read(messageTemplateServiceProvider);
-                        final capturedLanguage = getCurrentLanguageCode(ref);
+                ),
 
-                        ShareHelper.shareReceivable(
-                          context,
-                          ref,
-                          receivable,
-                          contact,
-                          currencyOverride: capturedCurrency,
-                          userProfileOverride: capturedUserProfile,
-                          transactionServiceOverride:
-                              capturedTransactionService,
-                          whatsAppServiceOverride: capturedWhatsAppService,
-                          templateServiceOverride: capturedTemplateService,
-                          languageOverride: capturedLanguage,
-                        );
-                      },
-                    ),
+                const SizedBox(height: 24),
+
+                // Contact Header Section
+                if (contact != null) ...[
+                  Row(
+                    children: [
+                      Container(
+                        width: 60,
+                        height: 60,
+                        decoration: BoxDecoration(
+                          gradient: AppColors.getContactGradient(contact.name),
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.getContactColor(contact.name)
+                                  .withValues(alpha: 0.3),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          contact.name.isNotEmpty
+                              ? contact.name[0].toUpperCase()
+                              : '?',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              contact.name,
+                              style: theme.textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            if (contact.phone != null) ...[
+                              const SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.phone,
+                                    size: 16,
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    contact.phone!,
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                      if (contact.phone != null)
+                        IconButton(
+                          icon: const Icon(Icons.chat, color: Color(0xFF25D366)),
+                          onPressed: () {
+                            final capturedCurrency = currency;
+                            final capturedUserProfile =
+                                ref.read(userProfileProvider);
+                            final capturedTransactionService =
+                                ref.read(transactionServiceProvider);
+                            final capturedWhatsAppService =
+                                ref.read(whatsAppServiceProvider);
+                            final capturedTemplateService =
+                                ref.read(messageTemplateServiceProvider);
+                            final capturedLanguage = getCurrentLanguageCode(ref);
+
+                            ShareHelper.shareReceivable(
+                              context,
+                              ref,
+                              receivable,
+                              contact,
+                              currencyOverride: capturedCurrency,
+                              userProfileOverride: capturedUserProfile,
+                              transactionServiceOverride:
+                                  capturedTransactionService,
+                              whatsAppServiceOverride: capturedWhatsAppService,
+                              templateServiceOverride: capturedTemplateService,
+                              languageOverride: capturedLanguage,
+                            );
+                          },
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  const Divider(),
+                  const SizedBox(height: 16),
                 ],
-              ),
-              const SizedBox(height: 24),
-              const Divider(),
-              const SizedBox(height: 16),
-            ],
 
-            // Details Section
-            _buildDetailRow(
-              context,
-              icon: Icons.calendar_today,
-              label: l10n.date,
-              value: AppDateFormatter.formatDate(receivable.date),
-            ),
-
-            if (receivable.dueDate != null)
-              _buildDetailRow(
-                context,
-                icon: Icons.event,
-                label: l10n.dueDate,
-                value: AppDateFormatter.formatDate(receivable.dueDate!),
-                valueColor: isPending
-                    ? (receivable.dueDate!.isBefore(DateTime.now())
-                        ? Colors.red
-                        : Colors.orange)
-                    : null,
-              ),
-
-            if (receivable.description != null &&
-                receivable.description!.isNotEmpty)
-              _buildDetailRow(
-                context,
-                icon: Icons.description,
-                label: l10n.description,
-                value: receivable.description!,
-              ),
-
-            // Linked Transaction Section
-            if (linkedTransaction != null) ...[
-              const SizedBox(height: 24),
-              const Divider(),
-              const SizedBox(height: 16),
-              Text(
-                l10n.linkedTransaction,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
+                // Details Section
+                _buildDetailRow(
+                  context,
+                  icon: Icons.calendar_today,
+                  label: l10n.date,
+                  value: AppDateFormatter.formatDate(receivable.date),
                 ),
-              ),
-              const SizedBox(height: 16),
-              _buildLinkedTransactionCard(
-                  context, ref, linkedTransaction, linkedCategory),
-            ],
 
-            // Actions
-            if (isPending) ...[
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton.icon(
-                  onPressed: () =>
-                      _markAsReceived(context, ref, receivable.uuid),
-                  icon: const Icon(Icons.check_circle),
-                  label: Text(l10n.markAsReceived),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.receivableColor,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
+                if (receivable.dueDate != null)
+                  _buildDetailRow(
+                    context,
+                    icon: Icons.event,
+                    label: l10n.dueDate,
+                    value: AppDateFormatter.formatDate(receivable.dueDate!),
+                    valueColor: isPending
+                        ? (receivable.dueDate!.isBefore(DateTime.now())
+                            ? Colors.red
+                            : Colors.orange)
+                        : null,
                   ),
-                ),
-              ),
-            ],
-          ],
-        ),
+
+                if (receivable.description != null &&
+                    receivable.description!.isNotEmpty)
+                  _buildDetailRow(
+                    context,
+                    icon: Icons.description,
+                    label: l10n.description,
+                    value: receivable.description!,
+                  ),
+
+                // Linked Transaction Section
+                if (linkedTransaction != null) ...[
+                  const SizedBox(height: 24),
+                  const Divider(),
+                  const SizedBox(height: 16),
+                  Text(
+                    l10n.linkedTransaction,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  _buildLinkedTransactionCard(
+                      context, ref, linkedTransaction, linkedCategory),
+                ],
+
+                // Actions
+                if (isPending) ...[
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton.icon(
+                      onPressed: () =>
+                          _markAsReceived(context, ref, receivable.uuid),
+                      icon: const Icon(Icons.check_circle),
+                      label: Text(l10n.markAsReceived),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AppColors.receivableColor,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        );
+      },
+      loading: () => const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      ),
+      error: (e, s) => Scaffold(
+        appBar: AppBar(title: Text(l10n.receivableDetails)),
+        body: Center(child: Text(l10n.errorOccurred(e.toString()))),
       ),
     );
   }

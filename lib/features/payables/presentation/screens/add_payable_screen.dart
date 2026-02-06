@@ -238,7 +238,7 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
           navigator.push(
             MaterialPageRoute(
               builder: (context) =>
-                  PayableDetailsDialog(item: payableWithLinkedData),
+                  PayableDetailsDialog(payableUuid: payableWithLinkedData.payable.uuid),
             ),
           );
         } else {

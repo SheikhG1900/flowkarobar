@@ -670,7 +670,8 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => PayableDetailsDialog(item: item),
+                builder: (context) =>
+                    PayableDetailsDialog(payableUuid: payable.uuid),
               ),
             );
           },

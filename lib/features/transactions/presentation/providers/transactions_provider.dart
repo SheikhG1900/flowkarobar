@@ -46,6 +46,13 @@ final transactionsWithDetailsProvider =
   return repository.watchTransactionsWithDetails();
 });
 
+// Watch a single transaction with details by UUID
+final transactionWithDetailsProvider =
+    StreamProvider.family<TransactionWithDetails?, String>((ref, uuid) {
+  final repository = ref.watch(transactionsRepositoryProvider);
+  return repository.watchTransactionWithDetailsByUuid(uuid);
+});
+
 // Watch transactions by date range
 final transactionsByDateRangeProvider =
     StreamProvider.family<List<Transaction>, DateRange>(
