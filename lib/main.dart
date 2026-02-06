@@ -1845,7 +1845,8 @@ class _DashboardTab extends ConsumerWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => TransactionDetailsDialog(transactionUuid: transaction.uuid),
+                    builder: (context) => TransactionDetailsDialog(
+                        transactionUuid: transaction.uuid),
                   ),
                 );
               },
