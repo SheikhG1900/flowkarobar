@@ -374,9 +374,37 @@ class BackupNotifier extends Notifier<BackupState> {
   Future<void> _refreshVersions() async {
     final db = ref.read(databaseProvider);
 
-    // 1. Listen to local version changes
+    // 1. Get initial local version (Instant)
+    try {
+      final metadata = await (db.select(db.syncMetadata)).get();
+      if (metadata.isNotEmpty) {
+        final localVersion = metadata
+            .map((m) => m.version)
+            .fold(0, (prev, v) => v > prev ? v : prev);
+        final lastSyncTime = metadata.map((m) => m.lastSyncAt).fold<DateTime?>(
+            null,
+            (prev, v) =>
+                (v != null && (prev == null || v.isAfter(prev))) ? v : prev);
+        state = state.copyWith(
+          localVersion: localVersion,
+          lastSyncTime: lastSyncTime,
+        );
+      } else {
+        state = state.copyWith(localVersion: 0, lastSyncTime: null);
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Failed to load local version: $e');
+      }
+    }
+
+    // 2. Initial unsynced count update (Instant)
+    _updateTotalUnsyncedCount();
+
+    // 3. Listen to local version changes
     final versionStream = db.select(db.syncMetadata).watch();
-    versionStream.listen((metadata) {
+    final versionSub = versionStream.listen((metadata) {
+      if (!ref.mounted) return;
       if (metadata.isNotEmpty) {
         final localVersion = metadata
             .map((m) => m.version)
@@ -393,34 +421,7 @@ class BackupNotifier extends Notifier<BackupState> {
         state = state.copyWith(localVersion: 0, lastSyncTime: null);
       }
     });
-
-    // 2. Get initial local version
-    try {
-      final metadata = await (db.select(db.syncMetadata)).get();
-      if (metadata.isNotEmpty) {
-        final localVersion = metadata
-            .map((m) => m.version)
-            .fold(0, (prev, v) => v > prev ? v : prev);
-        final lastSyncTime = metadata.map((m) => m.lastSyncAt).fold<DateTime?>(
-            null,
-            (prev, v) =>
-                (v != null && (prev == null || v.isAfter(prev))) ? v : prev);
-        state = state.copyWith(
-          localVersion: localVersion,
-          lastSyncTime: lastSyncTime,
-        );
-      } else {
-        // Explicitly set to 0 if metadata is empty (e.g. after clear data)
-        state = state.copyWith(localVersion: 0, lastSyncTime: null);
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print('Failed to load local version: $e');
-      }
-    }
-
-    // 3. Get initial cloud state
-    await _fetchCloudState();
+    ref.onDispose(() => versionSub.cancel());
 
     // 4. Listen to unsynced counts
     try {
@@ -457,8 +458,8 @@ class BackupNotifier extends Notifier<BackupState> {
       }
     }
 
-    // 5. Initial unsynced count update
-    _updateTotalUnsyncedCount();
+    // 5. Fetch cloud state in background (Network - Non-blocking)
+    _fetchCloudState();
   }
 
   Future<void> _fetchCloudState() async {
