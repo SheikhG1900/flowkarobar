@@ -46,7 +46,9 @@ class CategoriesRepository {
       return rows.map((row) {
         return CategoryWithUsage(
           category: row.readTable(_database.categories),
-          usageCount: row.readTableOrNull(_database.categoryUsageStats)?.usageCount ?? 0,
+          usageCount:
+              row.readTableOrNull(_database.categoryUsageStats)?.usageCount ??
+                  0,
           lastUsed: row.readTableOrNull(_database.categoryUsageStats)?.lastUsed,
         );
       }).toList();
@@ -56,7 +58,7 @@ class CategoriesRepository {
   /// Get category by UUID
   Future<Category?> getCategoryByUuid(String uuid) {
     return (_database.select(_database.categories)
-          ..where((c) => c.uuid.equals(uuid)))
+          ..where((c) => c.uuid.equals(uuid) & c.isDeleted.equals(false)))
         .getSingleOrNull();
   }
 
@@ -84,10 +86,12 @@ class CategoriesRepository {
   Future<bool> categoryHasTransactions(String categoryUuid) async {
     final count = await (_database.selectOnly(_database.transactions)
           ..addColumns([_database.transactions.uuid.count()])
-          ..where(_database.transactions.categoryUuid.equals(categoryUuid)))
+          ..where(_database.transactions.categoryUuid.equals(categoryUuid) &
+              _database.transactions.isDeleted.equals(false)))
         .getSingle();
-    
-    final transactionCount = count.read(_database.transactions.uuid.count()) ?? 0;
+
+    final transactionCount =
+        count.read(_database.transactions.uuid.count()) ?? 0;
     return transactionCount > 0;
   }
 
@@ -97,7 +101,7 @@ class CategoriesRepository {
     if (category == null) {
       throw Exception('Category not found');
     }
-    
+
     if (category.isDefault) {
       throw Exception('Cannot delete default category');
     }
@@ -110,18 +114,18 @@ class CategoriesRepository {
       await (_database.update(_database.categories)
             ..where((c) => c.uuid.equals(uuid)))
           .write(const CategoriesCompanion(
-            isDeleted: Value(true),
-            isNotSynced: Value(true),
-          ));
+        isDeleted: Value(true),
+        isNotSynced: Value(true),
+      ));
     } else {
       // Even for hard delete, we should mark as deleted and sync first
       // so other devices know to remove it.
       await (_database.update(_database.categories)
             ..where((c) => c.uuid.equals(uuid)))
           .write(const CategoriesCompanion(
-            isDeleted: Value(true),
-            isNotSynced: Value(true),
-          ));
+        isDeleted: Value(true),
+        isNotSynced: Value(true),
+      ));
     }
   }
 
@@ -174,7 +178,8 @@ class CategoriesRepository {
   }
 
   /// Get most used categories (excluding soft-deleted)
-  Future<List<CategoryWithUsage>> getMostUsedCategories(String type, int limit) async {
+  Future<List<CategoryWithUsage>> getMostUsedCategories(
+      String type, int limit) async {
     final query = _database.select(_database.categories).join([
       leftOuterJoin(
         _database.categoryUsageStats,
@@ -195,14 +200,16 @@ class CategoriesRepository {
     return rows.map((row) {
       return CategoryWithUsage(
         category: row.readTable(_database.categories),
-        usageCount: row.readTableOrNull(_database.categoryUsageStats)?.usageCount ?? 0,
+        usageCount:
+            row.readTableOrNull(_database.categoryUsageStats)?.usageCount ?? 0,
         lastUsed: row.readTableOrNull(_database.categoryUsageStats)?.lastUsed,
       );
     }).toList();
   }
 
   /// Get recently used categories (excluding soft-deleted)
-  Future<List<CategoryWithUsage>> getRecentlyUsedCategories(String type, int limit) async {
+  Future<List<CategoryWithUsage>> getRecentlyUsedCategories(
+      String type, int limit) async {
     final query = _database.select(_database.categories).join([
       innerJoin(
         _database.categoryUsageStats,
@@ -242,4 +249,3 @@ class CategoryWithUsage {
     this.lastUsed,
   });
 }
-

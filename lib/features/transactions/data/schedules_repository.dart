@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:flowpaisa/core/database/database.dart';
+import 'package:uuid/uuid.dart';
 
 class SchedulesRepository {
   final AppDatabase _database;
@@ -8,19 +9,23 @@ class SchedulesRepository {
 
   // Get all schedules
   Stream<List<TransactionSchedule>> watchAllSchedules() {
-    return _database.select(_database.transactionSchedules).watch();
+    return (_database.select(_database.transactionSchedules)
+          ..where((s) => s.isDeleted.equals(false)))
+        .watch();
   }
 
   // Get all schedules (Future)
   Future<List<TransactionSchedule>> getAllSchedules() {
-    return _database.select(_database.transactionSchedules).get();
+    return (_database.select(_database.transactionSchedules)
+          ..where((s) => s.isDeleted.equals(false)))
+        .get();
   }
 
   // Get active schedules (not paused, within date range)
   Future<List<TransactionSchedule>> getActiveSchedules() {
     final now = DateTime.now();
     return (_database.select(_database.transactionSchedules)
-          ..where((s) => s.isPaused.equals(false))
+          ..where((s) => s.isPaused.equals(false) & s.isDeleted.equals(false))
           ..where((s) {
             // Check if startDate is null or before/equal to now
             final startCheck =
@@ -36,14 +41,21 @@ class SchedulesRepository {
   // Get schedule by UUID
   Future<TransactionSchedule?> getScheduleByUuid(String uuid) {
     return (_database.select(_database.transactionSchedules)
-          ..where((s) => s.uuid.equals(uuid)))
+          ..where((s) => s.uuid.equals(uuid) & s.isDeleted.equals(false)))
         .getSingleOrNull();
   }
 
   // Create schedule
   Future<String> createSchedule(TransactionSchedulesCompanion schedule) async {
-    await _database.into(_database.transactionSchedules).insert(schedule);
-    return schedule.uuid.value;
+    final uuid =
+        schedule.uuid.present ? schedule.uuid.value : const Uuid().v4();
+    await _database.into(_database.transactionSchedules).insert(
+          schedule.copyWith(
+            uuid: Value(uuid),
+            isNotSynced: const Value(true),
+          ),
+        );
+    return uuid;
   }
 
   // Update schedule
@@ -51,7 +63,7 @@ class SchedulesRepository {
       String uuid, TransactionSchedulesCompanion schedule) async {
     final result = await (_database.update(_database.transactionSchedules)
           ..where((s) => s.uuid.equals(uuid)))
-        .write(schedule);
+        .write(schedule.copyWith(isNotSynced: const Value(true)));
     return result > 0;
   }
 
@@ -62,6 +74,7 @@ class SchedulesRepository {
         .write(TransactionSchedulesCompanion(
       lastGeneratedDate: Value(date),
       updatedAt: Value(DateTime.now()),
+      isNotSynced: const Value(true),
     ));
     return result > 0;
   }
@@ -73,6 +86,7 @@ class SchedulesRepository {
         .write(TransactionSchedulesCompanion(
       isPaused: const Value(true),
       updatedAt: Value(DateTime.now()),
+      isNotSynced: const Value(true),
     ));
     return result > 0;
   }
@@ -86,15 +100,19 @@ class SchedulesRepository {
       isPaused: const Value(false),
       lastGeneratedDate: Value(dayBefore),
       updatedAt: Value(DateTime.now()),
+      isNotSynced: const Value(true),
     ));
     return result > 0;
   }
 
   // Delete schedule
   Future<bool> deleteSchedule(String uuid) async {
-    final result = await (_database.delete(_database.transactionSchedules)
+    final result = await (_database.update(_database.transactionSchedules)
           ..where((s) => s.uuid.equals(uuid)))
-        .go();
+        .write(const TransactionSchedulesCompanion(
+      isDeleted: Value(true),
+      isNotSynced: Value(true),
+    ));
     return result > 0;
   }
 
