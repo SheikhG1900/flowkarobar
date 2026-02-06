@@ -118,7 +118,8 @@ class _ContactsListScreenState extends ConsumerState<ContactsListScreen> {
                       child: GradientButton(
                         label: l10n.addContact,
                         icon: Icons.person_add,
-                        gradient: AppColors.getPrimaryGradient(theme.colorScheme.primary),
+                        gradient: AppColors.getPrimaryGradient(
+                            theme.colorScheme.primary),
                         onPressed: () {
                           Navigator.push(
                             context,
@@ -150,6 +151,7 @@ class _ContactsListScreenState extends ConsumerState<ContactsListScreen> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
+        backgroundColor: theme.colorScheme.primary,
         onPressed: () {
           Navigator.push(
             context,
@@ -158,7 +160,7 @@ class _ContactsListScreenState extends ConsumerState<ContactsListScreen> {
             ),
           );
         },
-        child: const Icon(Icons.person_add, color: Colors.white),
+        child: Icon(Icons.person_add, color: theme.colorScheme.onPrimary),
       ),
     );
   }
@@ -180,7 +182,8 @@ class _ContactCard extends ConsumerWidget {
       }
     } catch (e) {
       if (context.mounted) {
-        ToastUtils.showErrorToast(context, ref, l10n.errorOccurred(e.toString()));
+        ToastUtils.showErrorToast(
+            context, ref, l10n.errorOccurred(e.toString()));
       }
     }
   }

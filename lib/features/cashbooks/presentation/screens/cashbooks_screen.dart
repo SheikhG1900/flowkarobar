@@ -195,9 +195,10 @@ class CashbooksScreen extends ConsumerWidget {
               },
             ),
       floatingActionButton: FloatingActionButton(
+        backgroundColor: theme.colorScheme.primary,
         onPressed: () => _showAddSheet(context),
         tooltip: l10n.addCashbook,
-        child: const Icon(Icons.add, color: Colors.white),
+        child: Icon(Icons.add, color: theme.colorScheme.onPrimary),
       ),
     );
   }

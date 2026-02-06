@@ -19,7 +19,7 @@ class CurrenciesListScreen extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final currenciesAsync = ref.watch(currenciesListProvider);
     final selectedCurrencyIdAsync = ref.watch(selectedCurrencyIdProvider);
-
+    final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.currencies),
@@ -67,9 +67,11 @@ class CurrenciesListScreen extends ConsumerWidget {
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) => Center(child: Text(l10n.errorOccurred(error.toString()))),
+        error: (error, stack) =>
+            Center(child: Text(l10n.errorOccurred(error.toString()))),
       ),
       floatingActionButton: FloatingActionButton(
+        backgroundColor: theme.colorScheme.primary,
         onPressed: () {
           Navigator.push(
             context,
@@ -78,7 +80,7 @@ class CurrenciesListScreen extends ConsumerWidget {
             ),
           );
         },
-        child: const Icon(Icons.add, color: Colors.white),
+        child: Icon(Icons.add, color: theme.colorScheme.onPrimary),
       ),
     );
   }
@@ -100,12 +102,12 @@ class _CurrencyCard extends ConsumerWidget {
     try {
       await repository.deleteCurrency(currency.uuid);
       if (context.mounted) {
-        ToastUtils.showSuccessToast(
-            context, ref, l10n.currencyDeleted);
+        ToastUtils.showSuccessToast(context, ref, l10n.currencyDeleted);
       }
     } catch (e) {
       if (context.mounted) {
-        ToastUtils.showErrorToast(context, ref, l10n.errorOccurred(e.toString()));
+        ToastUtils.showErrorToast(
+            context, ref, l10n.errorOccurred(e.toString()));
       }
     }
   }
@@ -125,7 +127,8 @@ class _CurrencyCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final color = isSelected ? theme.colorScheme.primary : AppColors.secondaryColor;
+    final color =
+        isSelected ? theme.colorScheme.primary : AppColors.secondaryColor;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
