@@ -73,14 +73,16 @@ class _SyncStatusSectionState extends ConsumerState<SyncStatusSection>
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    final bool isSyncing = backupState.syncStatus == 'Syncing...';
+    final bool isSyncing = backupState.syncStatus == 'Syncing...' ||
+        backupState.syncStatus == 'Processing...';
+    final bool isSuccess = backupState.syncStatus == 'Success';
     final bool hasUnsynced = backupState.unsyncedCount > 0;
     final bool hasCloudUpdates =
         backupState.cloudVersion > backupState.localVersion;
     final bool isSignedIn = backupState.currentUser != null;
 
-    // Hide section if nothing to sync and no updates available
-    if (!isSyncing && !hasUnsynced && !hasCloudUpdates) {
+    // Hide section if nothing to sync, no updates available, and not in success/syncing state
+    if (!isSyncing && !isSuccess && !hasUnsynced && !hasCloudUpdates) {
       // Reset animation when hiding
       if (_animationController.isAnimating || _animationController.value > 0) {
         _animationController.reset();
@@ -105,6 +107,10 @@ class _SyncStatusSectionState extends ConsumerState<SyncStatusSection>
       statusText = l10n.processing;
       statusIcon = Symbols.sync;
       statusColor = theme.colorScheme.primary;
+    } else if (isSuccess) {
+      statusText = l10n.dataSynced;
+      statusIcon = Symbols.check_circle;
+      statusColor = Colors.green;
     } else if (hasUnsynced && hasCloudUpdates) {
       statusText = l10n.synchronization; // "Sync needed" fallback
       statusIcon = Symbols.sync_problem;
@@ -206,33 +212,40 @@ class _SyncStatusSectionState extends ConsumerState<SyncStatusSection>
                 ),
               ),
               const SizedBox(width: 8),
-              Container(
-                decoration: BoxDecoration(
-                  color: statusColor.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: IconButton(
-                  onPressed: () {
-                    if (isPremium && isSignedIn) {
-                      ref.read(backupProvider.notifier).triggerSync(l10n);
-                    } else {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const BackupScreen(),
-                        ),
-                      );
-                    }
-                  },
-                  icon: Icon(
-                    isSyncing ? Symbols.sync : Symbols.sync,
-                    color: statusColor,
-                    size: 24,
+              if (!isSuccess)
+                Container(
+                  decoration: BoxDecoration(
+                    color: statusColor.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  tooltip: l10n.syncNow,
-                  padding: const EdgeInsets.all(12),
+                  child: IconButton(
+                    onPressed: () {
+                      if (isPremium && isSignedIn) {
+                        ref.read(backupProvider.notifier).triggerSync(l10n);
+                      } else {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const BackupScreen(),
+                          ),
+                        );
+                      }
+                    },
+                    icon: Icon(
+                      isSyncing ? Symbols.sync : Symbols.sync,
+                      color: statusColor,
+                      size: 24,
+                    ),
+                    tooltip: l10n.syncNow,
+                    padding: const EdgeInsets.all(12),
+                  ),
                 ),
-              ),
+              if (isSuccess)
+                Icon(
+                  Symbols.check_circle,
+                  color: Colors.green.withValues(alpha: 0.7),
+                  size: 28,
+                ),
             ],
           ),
         ),
