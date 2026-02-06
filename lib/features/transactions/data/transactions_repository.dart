@@ -13,12 +13,15 @@ class TransactionsRepository {
 
   // Get all transactions
   Stream<List<Transaction>> watchAllTransactions() {
-    return _database.select(_database.transactions).watch();
+    return (_database.select(_database.transactions)
+          ..where((t) => t.isDeleted.equals(false)))
+        .watch();
   }
 
   // Watch recent transactions
   Stream<List<Transaction>> watchRecentTransactions({int limit = 5}) {
     return (_database.select(_database.transactions)
+          ..where((t) => t.isDeleted.equals(false))
           ..orderBy([(t) => OrderingTerm.desc(t.date)])
           ..limit(limit))
         .watch();
@@ -64,6 +67,7 @@ class TransactionsRepository {
     final query = _database.selectOnly(_database.transactions);
     query.addColumns([_database.transactions.amount.sum()]);
     query.where(_database.transactions.type.equals(type));
+    query.where(_database.transactions.isDeleted.equals(false));
 
     if (start != null) {
       query.where(_database.transactions.date.isBiggerOrEqualValue(start));
@@ -108,7 +112,8 @@ class TransactionsRepository {
     DateTime end,
   ) {
     return (_database.select(_database.transactions)
-          ..where((t) => t.date.isBetweenValues(start, end))
+          ..where((t) =>
+              t.date.isBetweenValues(start, end) & t.isDeleted.equals(false))
           ..orderBy([(t) => OrderingTerm.desc(t.date)]))
         .watch();
   }
@@ -119,7 +124,8 @@ class TransactionsRepository {
     DateTime end,
   ) {
     return (_database.select(_database.transactions)
-          ..where((t) => t.date.isBetweenValues(start, end))
+          ..where((t) =>
+              t.date.isBetweenValues(start, end) & t.isDeleted.equals(false))
           ..orderBy([(t) => OrderingTerm.desc(t.date)]))
         .get();
   }
@@ -127,16 +133,18 @@ class TransactionsRepository {
   // Get transaction by UUID
   Future<Transaction?> getTransactionByUuid(String uuid) {
     return (_database.select(_database.transactions)
-          ..where((t) => t.uuid.equals(uuid)))
+          ..where((t) => t.uuid.equals(uuid) & t.isDeleted.equals(false)))
         .getSingleOrNull();
   }
 
   // Get transaction with details by UUID
-  Future<TransactionWithDetails?> getTransactionWithDetailsByUuid(String uuid) async {
+  Future<TransactionWithDetails?> getTransactionWithDetailsByUuid(
+      String uuid) async {
     final query = _database.select(_database.transactions).join([
       leftOuterJoin(
         _database.categories,
-        _database.categories.uuid.equalsExp(_database.transactions.categoryUuid),
+        _database.categories.uuid
+            .equalsExp(_database.transactions.categoryUuid),
       ),
       leftOuterJoin(
         _database.contacts,
@@ -144,7 +152,8 @@ class TransactionsRepository {
       ),
       leftOuterJoin(
         _database.payables,
-        _database.payables.uuid.equalsExp(_database.transactions.linkedPayableUuid),
+        _database.payables.uuid
+            .equalsExp(_database.transactions.linkedPayableUuid),
       ),
       leftOuterJoin(
         _database.receivables,
@@ -153,7 +162,8 @@ class TransactionsRepository {
       ),
     ]);
 
-    query.where(_database.transactions.uuid.equals(uuid));
+    query.where(_database.transactions.uuid.equals(uuid) &
+        _database.transactions.isDeleted.equals(false));
 
     final rows = await query.get();
     if (rows.isEmpty) return null;
@@ -170,7 +180,8 @@ class TransactionsRepository {
 
   // Create transaction
   Future<String> createTransaction(TransactionsCompanion transaction) async {
-    final uuid = transaction.uuid.present ? transaction.uuid.value : Uuid().v4();
+    final uuid =
+        transaction.uuid.present ? transaction.uuid.value : Uuid().v4();
     await _database.into(_database.transactions).insert(
           transaction.copyWith(
             uuid: Value(uuid),
@@ -212,17 +223,18 @@ class TransactionsRepository {
 
   // Delete transaction
   Future<int> deleteTransaction(String uuid) {
-    return (_database.update(_database.transactions)..where((t) => t.uuid.equals(uuid)))
+    return (_database.update(_database.transactions)
+          ..where((t) => t.uuid.equals(uuid)))
         .write(const TransactionsCompanion(
-          isDeleted: Value(true),
-          isNotSynced: Value(true),
-        ));
+      isDeleted: Value(true),
+      isNotSynced: Value(true),
+    ));
   }
 
   // Get transactions by type (EXPENSE or INCOME)
   Stream<List<Transaction>> watchTransactionsByType(String type) {
     return (_database.select(_database.transactions)
-          ..where((t) => t.type.equals(type))
+          ..where((t) => t.type.equals(type) & t.isDeleted.equals(false))
           ..orderBy([(t) => OrderingTerm.desc(t.date)]))
         .watch();
   }
@@ -230,7 +242,8 @@ class TransactionsRepository {
   // Get transactions by category
   Stream<List<Transaction>> watchTransactionsByCategory(String categoryUuid) {
     return (_database.select(_database.transactions)
-          ..where((t) => t.categoryUuid.equals(categoryUuid))
+          ..where((t) =>
+              t.categoryUuid.equals(categoryUuid) & t.isDeleted.equals(false))
           ..orderBy([(t) => OrderingTerm.desc(t.date)]))
         .watch();
   }
@@ -239,7 +252,8 @@ class TransactionsRepository {
   Future<double> getTotalExpense(DateTime? start, DateTime? end) async {
     final query = _database.selectOnly(_database.transactions)
       ..addColumns([_database.transactions.amount.sum()])
-      ..where(_database.transactions.type.equals('EXPENSE'));
+      ..where(_database.transactions.type.equals('EXPENSE') &
+          _database.transactions.isDeleted.equals(false));
 
     if (start != null && end != null) {
       query.where(_database.transactions.date.isBetweenValues(start, end));
@@ -253,7 +267,8 @@ class TransactionsRepository {
   Future<double> getTotalIncome(DateTime? start, DateTime? end) async {
     final query = _database.selectOnly(_database.transactions)
       ..addColumns([_database.transactions.amount.sum()])
-      ..where(_database.transactions.type.equals('INCOME'));
+      ..where(_database.transactions.type.equals('INCOME') &
+          _database.transactions.isDeleted.equals(false));
 
     if (start != null && end != null) {
       query.where(_database.transactions.date.isBetweenValues(start, end));
@@ -311,9 +326,11 @@ class TransactionsRepository {
     final query = _database.select(_database.transactions).join([
       leftOuterJoin(
         _database.categories,
-        _database.categories.uuid.equalsExp(_database.transactions.categoryUuid),
+        _database.categories.uuid
+            .equalsExp(_database.transactions.categoryUuid),
       ),
     ])
+      ..where(_database.transactions.isDeleted.equals(false))
       ..orderBy([OrderingTerm.desc(_database.transactions.date)]);
 
     return query.watch().map((rows) {
@@ -332,7 +349,8 @@ class TransactionsRepository {
     final query = _database.select(_database.transactions).join([
       leftOuterJoin(
         _database.categories,
-        _database.categories.uuid.equalsExp(_database.transactions.categoryUuid),
+        _database.categories.uuid
+            .equalsExp(_database.transactions.categoryUuid),
       ),
       leftOuterJoin(
         _database.contacts,
@@ -340,7 +358,8 @@ class TransactionsRepository {
       ),
       leftOuterJoin(
         _database.payables,
-        _database.payables.uuid.equalsExp(_database.transactions.linkedPayableUuid),
+        _database.payables.uuid
+            .equalsExp(_database.transactions.linkedPayableUuid),
       ),
       leftOuterJoin(
         _database.receivables,
@@ -348,6 +367,7 @@ class TransactionsRepository {
             .equalsExp(_database.transactions.linkedReceivableUuid),
       ),
     ])
+      ..where(_database.transactions.isDeleted.equals(false))
       ..orderBy([OrderingTerm.desc(_database.transactions.date)]);
 
     return query.watch().map((rows) {
@@ -371,7 +391,8 @@ class TransactionsRepository {
     final query = _database.select(_database.transactions).join([
       leftOuterJoin(
         _database.categories,
-        _database.categories.uuid.equalsExp(_database.transactions.categoryUuid),
+        _database.categories.uuid
+            .equalsExp(_database.transactions.categoryUuid),
       ),
       leftOuterJoin(
         _database.contacts,
@@ -379,7 +400,8 @@ class TransactionsRepository {
       ),
       leftOuterJoin(
         _database.payables,
-        _database.payables.uuid.equalsExp(_database.transactions.linkedPayableUuid),
+        _database.payables.uuid
+            .equalsExp(_database.transactions.linkedPayableUuid),
       ),
       leftOuterJoin(
         _database.receivables,
@@ -389,6 +411,7 @@ class TransactionsRepository {
     ]);
 
     query.where(_database.transactions.date.isBetweenValues(start, end));
+    query.where(_database.transactions.isDeleted.equals(false));
     query.orderBy([OrderingTerm.desc(_database.transactions.date)]);
 
     return query.get().then((rows) {
@@ -413,7 +436,8 @@ class TransactionsRepository {
   }
 
   // Search transactions with details (paginated) - Stream version
-  Stream<List<TransactionWithDetails>> watchTransactionsWithDetailsSearchPaginated({
+  Stream<List<TransactionWithDetails>>
+      watchTransactionsWithDetailsSearchPaginated({
     required String query,
     int limit = 50,
     int offset = 0,
@@ -421,7 +445,8 @@ class TransactionsRepository {
     final dbQuery = _database.select(_database.transactions).join([
       leftOuterJoin(
         _database.categories,
-        _database.categories.uuid.equalsExp(_database.transactions.categoryUuid),
+        _database.categories.uuid
+            .equalsExp(_database.transactions.categoryUuid),
       ),
       leftOuterJoin(
         _database.contacts,
@@ -429,7 +454,8 @@ class TransactionsRepository {
       ),
       leftOuterJoin(
         _database.payables,
-        _database.payables.uuid.equalsExp(_database.transactions.linkedPayableUuid),
+        _database.payables.uuid
+            .equalsExp(_database.transactions.linkedPayableUuid),
       ),
       leftOuterJoin(
         _database.receivables,
@@ -456,7 +482,8 @@ class TransactionsRepository {
   }
 
   // Search transactions with details (paginated) - Future version
-  Future<List<TransactionWithDetails>> getTransactionsWithDetailsSearchPaginated({
+  Future<List<TransactionWithDetails>>
+      getTransactionsWithDetailsSearchPaginated({
     required String query,
     int limit = 50,
     int offset = 0,
@@ -464,7 +491,8 @@ class TransactionsRepository {
     final dbQuery = _database.select(_database.transactions).join([
       leftOuterJoin(
         _database.categories,
-        _database.categories.uuid.equalsExp(_database.transactions.categoryUuid),
+        _database.categories.uuid
+            .equalsExp(_database.transactions.categoryUuid),
       ),
       leftOuterJoin(
         _database.contacts,
@@ -472,7 +500,8 @@ class TransactionsRepository {
       ),
       leftOuterJoin(
         _database.payables,
-        _database.payables.uuid.equalsExp(_database.transactions.linkedPayableUuid),
+        _database.payables.uuid
+            .equalsExp(_database.transactions.linkedPayableUuid),
       ),
       leftOuterJoin(
         _database.receivables,
@@ -499,7 +528,8 @@ class TransactionsRepository {
   }
 
   // Get transactions with details (filtered and paginated) - Future version
-  Future<List<TransactionWithDetails>> getTransactionsWithDetailsFilteredPaginated({
+  Future<List<TransactionWithDetails>>
+      getTransactionsWithDetailsFilteredPaginated({
     required TransactionFilters filters,
     String? searchQuery,
     int limit = 50,
@@ -508,7 +538,8 @@ class TransactionsRepository {
     final query = _database.select(_database.transactions).join([
       leftOuterJoin(
         _database.categories,
-        _database.categories.uuid.equalsExp(_database.transactions.categoryUuid),
+        _database.categories.uuid
+            .equalsExp(_database.transactions.categoryUuid),
       ),
       leftOuterJoin(
         _database.contacts,
@@ -516,7 +547,8 @@ class TransactionsRepository {
       ),
       leftOuterJoin(
         _database.payables,
-        _database.payables.uuid.equalsExp(_database.transactions.linkedPayableUuid),
+        _database.payables.uuid
+            .equalsExp(_database.transactions.linkedPayableUuid),
       ),
       leftOuterJoin(
         _database.receivables,
@@ -530,26 +562,34 @@ class TransactionsRepository {
     }
 
     if (filters.startDate != null) {
-      query.where(_database.transactions.date.isBiggerOrEqualValue(filters.startDate!));
+      query.where(
+          _database.transactions.date.isBiggerOrEqualValue(filters.startDate!));
     }
     if (filters.endDate != null) {
-      query.where(_database.transactions.date.isSmallerOrEqualValue(filters.endDate!));
+      query.where(
+          _database.transactions.date.isSmallerOrEqualValue(filters.endDate!));
     }
     if (filters.type != null) {
       query.where(_database.transactions.type.equals(filters.type!));
     }
     if (filters.categoryUuids != null && filters.categoryUuids!.isNotEmpty) {
-      query.where(_database.transactions.categoryUuid.isIn(filters.categoryUuids!));
+      query.where(
+          _database.transactions.categoryUuid.isIn(filters.categoryUuids!));
     }
     if (filters.contactUuids != null && filters.contactUuids!.isNotEmpty) {
-      query.where(_database.transactions.contactUuid.isIn(filters.contactUuids!));
+      query.where(
+          _database.transactions.contactUuid.isIn(filters.contactUuids!));
     }
     if (filters.minAmount != null) {
-      query.where(_database.transactions.amount.isBiggerOrEqualValue(filters.minAmount!));
+      query.where(_database.transactions.amount
+          .isBiggerOrEqualValue(filters.minAmount!));
     }
     if (filters.maxAmount != null) {
-      query.where(_database.transactions.amount.isSmallerOrEqualValue(filters.maxAmount!));
+      query.where(_database.transactions.amount
+          .isSmallerOrEqualValue(filters.maxAmount!));
     }
+
+    query.where(_database.transactions.isDeleted.equals(false));
 
     query.orderBy([OrderingTerm.desc(_database.transactions.date)]);
     query.limit(limit, offset: offset);
@@ -568,7 +608,8 @@ class TransactionsRepository {
   }
 
   // Watch transactions with details (filtered and paginated) - Stream version
-  Stream<List<TransactionWithDetails>> watchTransactionsWithDetailsFilteredPaginated({
+  Stream<List<TransactionWithDetails>>
+      watchTransactionsWithDetailsFilteredPaginated({
     required TransactionFilters filters,
     String? searchQuery,
     int limit = 50,
@@ -577,7 +618,8 @@ class TransactionsRepository {
     final query = _database.select(_database.transactions).join([
       leftOuterJoin(
         _database.categories,
-        _database.categories.uuid.equalsExp(_database.transactions.categoryUuid),
+        _database.categories.uuid
+            .equalsExp(_database.transactions.categoryUuid),
       ),
       leftOuterJoin(
         _database.contacts,
@@ -585,7 +627,8 @@ class TransactionsRepository {
       ),
       leftOuterJoin(
         _database.payables,
-        _database.payables.uuid.equalsExp(_database.transactions.linkedPayableUuid),
+        _database.payables.uuid
+            .equalsExp(_database.transactions.linkedPayableUuid),
       ),
       leftOuterJoin(
         _database.receivables,
@@ -599,26 +642,34 @@ class TransactionsRepository {
     }
 
     if (filters.startDate != null) {
-      query.where(_database.transactions.date.isBiggerOrEqualValue(filters.startDate!));
+      query.where(
+          _database.transactions.date.isBiggerOrEqualValue(filters.startDate!));
     }
     if (filters.endDate != null) {
-      query.where(_database.transactions.date.isSmallerOrEqualValue(filters.endDate!));
+      query.where(
+          _database.transactions.date.isSmallerOrEqualValue(filters.endDate!));
     }
     if (filters.type != null) {
       query.where(_database.transactions.type.equals(filters.type!));
     }
     if (filters.categoryUuids != null && filters.categoryUuids!.isNotEmpty) {
-      query.where(_database.transactions.categoryUuid.isIn(filters.categoryUuids!));
+      query.where(
+          _database.transactions.categoryUuid.isIn(filters.categoryUuids!));
     }
     if (filters.contactUuids != null && filters.contactUuids!.isNotEmpty) {
-      query.where(_database.transactions.contactUuid.isIn(filters.contactUuids!));
+      query.where(
+          _database.transactions.contactUuid.isIn(filters.contactUuids!));
     }
     if (filters.minAmount != null) {
-      query.where(_database.transactions.amount.isBiggerOrEqualValue(filters.minAmount!));
+      query.where(_database.transactions.amount
+          .isBiggerOrEqualValue(filters.minAmount!));
     }
     if (filters.maxAmount != null) {
-      query.where(_database.transactions.amount.isSmallerOrEqualValue(filters.maxAmount!));
+      query.where(_database.transactions.amount
+          .isSmallerOrEqualValue(filters.maxAmount!));
     }
+
+    query.where(_database.transactions.isDeleted.equals(false));
 
     query.orderBy([OrderingTerm.desc(_database.transactions.date)]);
     query.limit(limit, offset: offset);
@@ -644,7 +695,8 @@ class TransactionsRepository {
     final query = _database.select(_database.transactions).join([
       leftOuterJoin(
         _database.categories,
-        _database.categories.uuid.equalsExp(_database.transactions.categoryUuid),
+        _database.categories.uuid
+            .equalsExp(_database.transactions.categoryUuid),
       ),
       leftOuterJoin(
         _database.contacts,
@@ -652,7 +704,8 @@ class TransactionsRepository {
       ),
       leftOuterJoin(
         _database.payables,
-        _database.payables.uuid.equalsExp(_database.transactions.linkedPayableUuid),
+        _database.payables.uuid
+            .equalsExp(_database.transactions.linkedPayableUuid),
       ),
       leftOuterJoin(
         _database.receivables,
@@ -660,6 +713,7 @@ class TransactionsRepository {
             .equalsExp(_database.transactions.linkedReceivableUuid),
       ),
     ])
+      ..where(_database.transactions.isDeleted.equals(false))
       ..orderBy([OrderingTerm.desc(_database.transactions.date)])
       ..limit(limit, offset: offset);
 
@@ -684,7 +738,8 @@ class TransactionsRepository {
     final query = _database.select(_database.transactions).join([
       leftOuterJoin(
         _database.categories,
-        _database.categories.uuid.equalsExp(_database.transactions.categoryUuid),
+        _database.categories.uuid
+            .equalsExp(_database.transactions.categoryUuid),
       ),
       leftOuterJoin(
         _database.contacts,
@@ -692,7 +747,8 @@ class TransactionsRepository {
       ),
       leftOuterJoin(
         _database.payables,
-        _database.payables.uuid.equalsExp(_database.transactions.linkedPayableUuid),
+        _database.payables.uuid
+            .equalsExp(_database.transactions.linkedPayableUuid),
       ),
       leftOuterJoin(
         _database.receivables,
@@ -700,6 +756,7 @@ class TransactionsRepository {
             .equalsExp(_database.transactions.linkedReceivableUuid),
       ),
     ])
+      ..where(_database.transactions.isDeleted.equals(false))
       ..orderBy([OrderingTerm.desc(_database.transactions.date)])
       ..limit(limit, offset: offset);
 
