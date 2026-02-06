@@ -5,6 +5,7 @@ import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_pro
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
+import 'package:flowpaisa/shared/widgets/gradient_button.dart';
 
 import 'package:material_symbols_icons/symbols.dart';
 
@@ -168,7 +169,8 @@ class _AddCashbookSheetState extends ConsumerState<AddCashbookSheet> {
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.lock, size: 20, color: AppColors.warning),
+                      const Icon(Icons.lock,
+                          size: 20, color: AppColors.warning),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
@@ -219,8 +221,8 @@ class _AddCashbookSheetState extends ConsumerState<AddCashbookSheet> {
                     final iconData = _cashbookIcons[index];
                     final iconCode = iconData.codePoint.toString();
                     final isSelected = _selectedIcon == iconCode;
-                    final color =
-                        Color(int.parse(_selectedColor.replaceAll('#', '0xFF')));
+                    final color = Color(
+                        int.parse(_selectedColor.replaceAll('#', '0xFF')));
                     return InkWell(
                       onTap: (isEdit || limits.canAdd)
                           ? () => setState(() => _selectedIcon = iconCode)
@@ -258,7 +260,8 @@ class _AddCashbookSheetState extends ConsumerState<AddCashbookSheet> {
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
                   itemCount: _colorVariants.length,
-                  separatorBuilder: (context, index) => const SizedBox(width: 16),
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(width: 16),
                   itemBuilder: (context, index) {
                     final variants = _colorVariants[index];
                     return Column(
@@ -271,7 +274,8 @@ class _AddCashbookSheetState extends ConsumerState<AddCashbookSheet> {
                           padding: const EdgeInsets.only(bottom: 8),
                           child: InkWell(
                             onTap: (isEdit || limits.canAdd)
-                                ? () => setState(() => _selectedColor = colorHex)
+                                ? () =>
+                                    setState(() => _selectedColor = colorHex)
                                 : null,
                             borderRadius: BorderRadius.circular(25),
                             child: Container(
@@ -282,8 +286,9 @@ class _AddCashbookSheetState extends ConsumerState<AddCashbookSheet> {
                                 shape: BoxShape.circle,
                                 border: isSelected
                                     ? Border.all(
-                                        color:
-                                            isDark ? Colors.white : Colors.black,
+                                        color: isDark
+                                            ? Colors.white
+                                            : Colors.black,
                                         width: 3,
                                       )
                                     : null,
@@ -314,45 +319,19 @@ class _AddCashbookSheetState extends ConsumerState<AddCashbookSheet> {
               ),
               const SizedBox(height: 32),
               if (!isEdit && !limits.canAdd)
-                FilledButton.icon(
+                GradientButton(
                   onPressed: () {
                     Navigator.pop(context);
                     PremiumGate.showPremiumDialog(context);
                   },
-                  icon: const Icon(Icons.star),
-                  label: Text(l10n.upgradeToPremium),
-                  style: FilledButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
+                  icon: Icons.star,
+                  label: l10n.upgradeToPremium,
                 )
               else
-                FilledButton(
-                  onPressed: _isLoading ? null : _save,
-                  style: FilledButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: _isLoading
-                      ? const SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(
-                              strokeWidth: 2, color: Colors.white))
-                      : Text(
-                          isEdit ? l10n.updateCashbook : l10n.createCashbook,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
+                GradientButton(
+                  onPressed: _save,
+                  isLoading: _isLoading,
+                  label: isEdit ? l10n.updateCashbook : l10n.createCashbook,
                 ),
             ],
           ),

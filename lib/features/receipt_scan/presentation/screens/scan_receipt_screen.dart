@@ -439,8 +439,6 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
                                 onPressed: () => _pickImage(ImageSource.camera),
                                 icon: Icons.camera_alt_rounded,
                                 label: l10n.camera,
-                                gradient: AppColors.getPrimaryGradient(
-                                    activeCashbookColor),
                               ),
                             ),
                             const SizedBox(width: 16),
@@ -450,8 +448,6 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
                                     _pickImage(ImageSource.gallery),
                                 icon: Icons.photo_library_rounded,
                                 label: l10n.gallery,
-                                gradient: AppColors.getPrimaryGradient(
-                                    activeCashbookColor),
                               ),
                             ),
                           ],
