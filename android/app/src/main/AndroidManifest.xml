@@ -56,12 +56,12 @@
                 <data android:scheme="flowpaisa" android:host="share" />
             </intent-filter>
 
-            <!-- App Link Handler for https://tamatasoft.github.io/flowpaisa/share URLs -->
+            <!-- App Link Handler for https://tamatasoft.github.io URLs -->
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="https" android:host="tamatasoft.github.io" android:pathPrefix="/flowpaisa/share" />
+                <data android:scheme="https" android:host="tamatasoft.github.io" />
             </intent-filter>
         </activity>
         <!-- FileProvider for sharing files -->

@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.tamatasoft.flowpaisa",
+      "sha256_cert_fingerprints": [
+        "07:CA:73:6E:70:64:92:8E:AD:0F:98:97:CD:9B:9F:BA:AD:9B:5F:47:A1:CC:A9:64:FD:2D:D7:9C:BD:83:C9:59"
+      ]
+    }
+  }
+]
