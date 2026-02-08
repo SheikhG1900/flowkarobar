@@ -1,4 +1,8 @@
+import 'dart:async';
+import 'package:flutter/material.dart';
+import 'package:flutter_phoenix/flutter_phoenix.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/foundation.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:flowpaisa/features/cashbooks/domain/models/cashbook.dart';
 import 'package:flowpaisa/shared/providers/shared_preferences_provider.dart';
@@ -8,14 +12,9 @@ import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import 'package:flowpaisa/core/database/database.dart';
-import 'package:sqlite3/sqlite3.dart' as sqlite3_lib;
+import 'package:flowpaisa/features/backup/presentation/providers/backup_provider.dart';
+import 'package:flowpaisa/shared/providers/database_provider.dart';
 import 'package:flowpaisa/features/settings/data/user_preferences_repository.dart';
-import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
-import 'package:flowpaisa/shared/providers/currency_provider.dart';
-import 'package:flowpaisa/features/dashboard/presentation/providers/dashboard_provider.dart';
-import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
-import 'package:flowpaisa/features/payables/presentation/providers/payables_provider.dart';
-import 'package:flowpaisa/features/receivables/presentation/providers/receivables_provider.dart';
 
 class CashbookNotifier extends Notifier<List<Cashbook>> {
   static const String _storageKey = 'cashbooks_list';
@@ -151,20 +150,30 @@ class CashbookNotifier extends Notifier<List<Cashbook>> {
 
     // Delete the database file and sync metadata
     try {
-      final dbFolder = await getApplicationDocumentsDirectory();
-      final file = File(p.join(dbFolder.path, cashbookToDelete.dbPath));
-      if (await file.exists()) {
-        await file.delete();
-      }
+      if (kIsWeb) {
+        // On web, we just need to clear the data from the DB as we can't easily delete "files"
+        final db = AppDatabase(fileName: cashbookToDelete.dbPath);
+        try {
+          await db.clearAllData();
+        } finally {
+          await db.close();
+        }
+      } else {
+        final dbFolder = await getApplicationDocumentsDirectory();
+        final file = File(p.join(dbFolder.path, cashbookToDelete.dbPath));
+        if (await file.exists()) {
+          await file.delete();
+        }
 
-      // Also clear sync metadata for this cashbook
-      final db = AppDatabase(fileName: cashbookToDelete.dbPath);
-      try {
-        await (db.delete(db.syncMetadata)).go();
-      } catch (e) {
-        // Ignore if table doesn't exist yet
-      } finally {
-        await db.close();
+        // Also clear sync metadata for this cashbook
+        final db = AppDatabase(fileName: cashbookToDelete.dbPath);
+        try {
+          await (db.delete(db.syncMetadata)).go();
+        } catch (e) {
+          // Ignore if table doesn't exist yet
+        } finally {
+          await db.close();
+        }
       }
     } catch (e) {
       // Log error but continue
@@ -172,86 +181,78 @@ class CashbookNotifier extends Notifier<List<Cashbook>> {
     }
   }
 
-  Future<void> clearCashbookData(String id) async {
-    final cashbook = state.firstWhere((c) => c.id == id);
-
-    // Check if this is the active cashbook to trigger UI refreshes
-    final isActive = ref.read(activeCashbookIdProvider) == id;
-
-    // CRITICAL: We MUST NOT use ref.read(databaseProvider) or AppDatabase(fileName) directly here
-    // if it's the active cashbook, because it triggers Drift's "opened multiple times" warning
-    // or CircularDependencyError.
-    
+  Future<void> clearCashbookData(String id,
+      {BuildContext? context, bool shouldClearCloud = false}) async {
     try {
-      final dbFolder = await getApplicationDocumentsDirectory();
-      final file = File(p.join(dbFolder.path, cashbook.dbPath));
-      
-      // Open a raw sqlite connection to perform the deletion.
-      // This is safe because it doesn't instantiate the Drift AppDatabase class.
-      final rawDb = sqlite3_lib.sqlite3.open(file.path);
-      
-      try {
-        rawDb.execute('BEGIN TRANSACTION;');
-        rawDb.execute('DELETE FROM transaction_schedules;');
-        rawDb.execute('DELETE FROM reminders;');
-        rawDb.execute('DELETE FROM whats_app_queue;');
-        rawDb.execute('DELETE FROM receivables;');
-        rawDb.execute('DELETE FROM payables;');
-        rawDb.execute('DELETE FROM transactions;');
-        rawDb.execute('DELETE FROM category_usage_stats;');
-        rawDb.execute('DELETE FROM contact_usage_stats;');
-        rawDb.execute('DELETE FROM contacts;');
-        rawDb.execute('DELETE FROM sync_log;');
-        rawDb.execute('DELETE FROM sync_metadata;');
-        rawDb.execute('DELETE FROM categories;');
-        rawDb.execute('DELETE FROM app_currencies;');
-        rawDb.execute('COMMIT;');
-      } catch (e) {
-        rawDb.execute('ROLLBACK;');
-        rethrow;
-      } finally {
-        rawDb.dispose();
+      final cashbook = state.firstWhere((c) => c.id == id);
+      final isActive = ref.read(activeCashbookIdProvider) == id;
+
+      // 1. Reset Cloud Sync Version for this cashbook ID ONLY if explicitly requested
+      if (shouldClearCloud) {
+        try {
+          final driveService = ref.read(googleDriveServiceProvider);
+          if (driveService.isSignedIn) {
+            final repository = ref.read(backupRepositoryProvider);
+            // This resets ONLY the specific cashbook ID in the cloud (manifest + delta files)
+            await repository.resetSyncToVersion(id, 0);
+          }
+        } catch (e) {
+          // Ignore cloud reset errors
+        }
       }
 
-      if (isActive) {
-        // Since we cleared the tables via raw SQL, the existing Drift instance (if any)
-        // needs to re-insert the default categories and currencies.
-        // We use a microtask to avoid blocking the current execution.
-        Future.microtask(() async {
-          // Let's use a temporary instance just for the re-insertion, then close it.
-          final tempDb = AppDatabase(fileName: cashbook.dbPath);
-          try {
-            await tempDb.insertDefaultData();
-          } finally {
-            await tempDb.close();
-          }
+      // 2. Generate a new unique filename for this cashbook (Blue-Green Switch)
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final newDbPath = id == 'default'
+          ? 'flowpaisa_$timestamp.db'
+          : 'cashbook_${id}_$timestamp.db';
+      final oldDbPath = cashbook.dbPath;
 
-          // Invalidate all data-dependent providers
-          ref.invalidate(transactionsPaginatedProvider);
-          ref.invalidate(payablesPaginatedProvider);
-          ref.invalidate(receivablesPaginatedProvider);
-          ref.invalidate(allPayablesProvider);
-          ref.invalidate(allReceivablesProvider);
-          ref.invalidate(pendingPayablesCountProvider);
-          ref.invalidate(pendingReceivablesCountProvider);
-          ref.invalidate(overduePayablesCountProvider);
-          ref.invalidate(overdueReceivablesCountProvider);
-          ref.invalidate(totalPendingPayablesProvider);
-          ref.invalidate(totalPendingReceivablesProvider);
-          
-          // Also invalidate profile/settings providers as they depend on the DB
-          ref.invalidate(userProfileProvider);
-          
-          // Force a refresh of the dashboard stats
-          ref.invalidate(dashboardStatsProvider);
-          ref.invalidate(currencyInitializerProvider);
-          ref.invalidate(selectedCurrencyIdProvider);
-          ref.invalidate(currentCurrencyProvider);
-        });
+      // 3. Update the cashbook model with the new path
+      final updatedCashbook = cashbook.copyWith(dbPath: newDbPath);
+
+      // Update local state
+      state = state.map((c) => c.id == id ? updatedCashbook : c).toList();
+
+      // CRITICAL: Ensure the updated list is saved to SharedPreferences immediately
+      final jsonList = state.map((c) => c.toJson()).toList();
+      final prefs = ref.read(sharedPreferencesProvider);
+      await prefs.setStringList('cashbooks_list', jsonList);
+
+      // 4. If active, clear the database cache and restart
+      if (isActive && context != null && context.mounted) {
+        clearDatabaseCache();
+
+        Phoenix.rebirth(context);
+      }
+
+      // 5. Attempt to delete the old file in the background
+      if (!kIsWeb) {
+        unawaited(Future.delayed(const Duration(seconds: 5), () async {
+          try {
+            final dbFolder = await getApplicationDocumentsDirectory();
+            final oldFile = File(p.join(dbFolder.path, oldDbPath));
+
+            final walFile = File('${oldFile.path}-wal');
+            final shmFile = File('${oldFile.path}-shm');
+
+            if (await oldFile.exists()) {
+              await oldFile.delete();
+            }
+            if (await walFile.exists()) await walFile.delete();
+            if (await shmFile.exists()) await shmFile.delete();
+          } catch (e) {
+            // Ignore cleanup errors
+          }
+        }));
       }
     } catch (e) {
-      print('Error clearing cashbook data: $e');
-      rethrow;
+      print('Error in clearCashbookData: $e');
+      if (context != null && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Failed to clear data: $e")),
+        );
+      }
     }
   }
 

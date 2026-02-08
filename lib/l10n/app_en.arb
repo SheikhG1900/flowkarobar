@@ -1604,5 +1604,7 @@
   "dataSynced": "Data is synced",
   "syncNow": "Sync Now",
   "premiumRequiredForSync": "Premium required for cloud sync",
-  "signInRequiredForSync": "Sign in with Google to sync"
+  "signInRequiredForSync": "Sign in with Google to sync",
+  "alsoClearCloud": "Also clear cloud backup",
+  "clearCloudSubtitle": "Wipes history from Google Drive for this cashbook only"
 }

@@ -413,36 +413,81 @@ class CashbooksScreen extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Row(
-          children: [
-            const Icon(Icons.warning_amber, color: Colors.orange),
-            const SizedBox(width: 12),
-            Text(l10n.deleteCashbookTitle),
-          ],
-        ),
-        content: Text(l10n.deleteCashbookMessage(cashbook.name)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              await ref
-                  .read(cashbooksProvider.notifier)
-                  .clearCashbookData(cashbook.id);
-              if (context.mounted) {
-                ToastUtils.showSuccessToast(context, ref, l10n.cashbookDeleted);
-              }
-            },
-            style: FilledButton.styleFrom(
-                backgroundColor: Colors.orange, foregroundColor: Colors.white),
-            child: Text(l10n.deletePermanently),
-          ),
-        ],
-      ),
+      builder: (context) {
+        bool shouldClearCloud = false;
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Row(
+                children: [
+                  const Icon(Icons.warning_amber, color: Colors.orange),
+                  const SizedBox(width: 12),
+                  Text(l10n.clearData),
+                ],
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(l10n.confirmDelete(cashbook.name)),
+                  const SizedBox(height: 20),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.orange.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
+                    ),
+                    child: CheckboxListTile(
+                      title: Text(
+                        l10n.alsoClearCloud,
+                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                      ),
+                      subtitle: Text(
+                        l10n.clearCloudSubtitle,
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                      value: shouldClearCloud,
+                      onChanged: (val) => setState(() => shouldClearCloud = val ?? false),
+                      controlAffinity: ListTileControlAffinity.leading,
+                      activeColor: Colors.orange,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text(l10n.cancel),
+                ),
+                FilledButton(
+                  onPressed: () async {
+                    // Store context before async call
+                    final currentContext = context;
+                    Navigator.pop(context);
+                    
+                    await ref
+                        .read(cashbooksProvider.notifier)
+                        .clearCashbookData(
+                          cashbook.id, 
+                          context: currentContext, 
+                          shouldClearCloud: shouldClearCloud
+                        );
+                    
+                    if (currentContext.mounted) {
+                      final l10nSuccess = AppLocalizations.of(currentContext)!;
+                      ToastUtils.showSuccessToast(currentContext, ref, l10nSuccess.cashbookUpdated);
+                    }
+                  },
+                  style: FilledButton.styleFrom(
+                      backgroundColor: Colors.orange, foregroundColor: Colors.white),
+                  child: Text(l10n.clearData),
+                ),
+              ],
+            );
+          }
+        );
+      },
     );
   }
 

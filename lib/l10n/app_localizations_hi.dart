@@ -2946,4 +2946,11 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get signInRequiredForSync =>
       'सिंक करने के लिए Google के साथ साइन इन करें';
+
+  @override
+  String get alsoClearCloud => 'क्लाउड बैकअप भी साफ़ करें';
+
+  @override
+  String get clearCloudSubtitle =>
+      'केवल इसी कैशबुक के लिए Google ड्राइव से इतिहास साफ़ करता है';
 }

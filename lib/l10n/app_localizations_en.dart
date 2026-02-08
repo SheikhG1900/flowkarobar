@@ -2934,4 +2934,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get signInRequiredForSync => 'Sign in with Google to sync';
+
+  @override
+  String get alsoClearCloud => 'Also clear cloud backup';
+
+  @override
+  String get clearCloudSubtitle =>
+      'Wipes history from Google Drive for this cashbook only';
 }

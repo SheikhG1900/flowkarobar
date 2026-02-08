@@ -2954,4 +2954,11 @@ class AppLocalizationsUr extends AppLocalizations {
   @override
   String get signInRequiredForSync =>
       'سنک کرنے کے لیے گوگل کے ساتھ سائن ان کریں';
+
+  @override
+  String get alsoClearCloud => 'کلاؤڈ بیک اپ بھی صاف کریں';
+
+  @override
+  String get clearCloudSubtitle =>
+      'صرف اسی کیش بک کے لیے گوگل ڈرائیو سے ہسٹری صاف کرتا ہے';
 }

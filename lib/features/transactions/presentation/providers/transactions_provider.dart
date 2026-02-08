@@ -43,6 +43,10 @@ final transactionsWithCategoryProvider =
 final transactionsWithDetailsProvider =
     StreamProvider<List<TransactionWithDetails>>((ref) {
   final repository = ref.watch(transactionsRepositoryProvider);
+
+  // Explicitly watch the underlying table to ensure refresh after sync
+  ref.watch(allTransactionsProvider);
+
   return repository.watchTransactionsWithDetails();
 });
 
@@ -123,7 +127,8 @@ class TransactionsPaginatedNotifier
     try {
       // Load first page
       final List<TransactionWithDetails> initialItems;
-      initialItems = await _repository.getTransactionsWithDetailsFilteredPaginated(
+      initialItems =
+          await _repository.getTransactionsWithDetailsFilteredPaginated(
         filters: _filters,
         searchQuery: _searchQuery,
         limit: state.pageSize,
@@ -184,7 +189,8 @@ class TransactionsPaginatedNotifier
 
         // Update subscription to watch all loaded items
         _subscription?.cancel();
-        final stream = _repository.watchTransactionsWithDetailsFilteredPaginated(
+        final stream =
+            _repository.watchTransactionsWithDetailsFilteredPaginated(
           filters: _filters,
           searchQuery: _searchQuery,
           limit: state.items.length > state.pageSize

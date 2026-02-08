@@ -4,6 +4,7 @@ import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/features/receivables/presentation/providers/receivables_provider.dart';
 import 'package:flowpaisa/features/payables/presentation/providers/payables_provider.dart';
 import 'package:flowpaisa/features/dashboard/domain/models.dart';
+import 'package:flowpaisa/features/backup/presentation/providers/backup_provider.dart';
 import 'package:rxdart/rxdart.dart';
 
 class DashboardFilterNotifier extends Notifier<DashboardFilter> {
@@ -22,6 +23,13 @@ final dashboardStatsProvider = StreamProvider<DashboardStats>((ref) {
   final txRepo = ref.watch(transactionsRepositoryProvider);
   final receivableRepo = ref.watch(receivablesRepositoryProvider);
   final payableRepo = ref.watch(payablesRepositoryProvider);
+
+  // We watch the underlying tables to ensure the dashboard refreshes
+  // whenever ANY transaction, receivable, or payable changes.
+  // This is a safety measure for cross-isolate sync updates.
+  ref.watch(allTransactionsProvider);
+  ref.watch(allReceivablesProvider);
+  ref.watch(allPayablesProvider);
 
   final txStatsStream = txRepo.watchTransactionStats();
   final recentTxStream = txRepo.watchRecentTransactions(limit: 5);
@@ -55,6 +63,16 @@ final dashboardStatsProvider = StreamProvider<DashboardStats>((ref) {
 /// Provider for recent transactions (last 10)
 final recentTransactionsProvider = StreamProvider<List<Transaction>>((ref) {
   final txRepo = ref.watch(transactionsRepositoryProvider);
+
+  // Explicitly watch the underlying table to ensure refresh after sync
+  ref.watch(allTransactionsProvider);
+
+  // Also watch the sync status - if it goes from 'Pulling' to 'Idle' or 'Success', refresh
+  final syncStatus = ref.watch(backupProvider.select((s) => s.syncStatus));
+  if (syncStatus == 'Idle' || syncStatus == 'Success') {
+    // This ensures we re-fetch after sync completes
+  }
+
   return txRepo.watchRecentTransactions(limit: 10);
 });
 

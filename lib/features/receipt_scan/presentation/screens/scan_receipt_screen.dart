@@ -1,6 +1,8 @@
-import 'dart:io';
+import 'dart:io' if (dart.library.html) 'dart:html';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
+import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart'
+    show InputImage, TextRecognizer;
 import 'package:image_picker/image_picker.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
@@ -57,6 +59,10 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
 
   Future<void> _pickImage(ImageSource source) async {
     final l10n = AppLocalizations.of(context)!;
+    if (kIsWeb) {
+      ToastUtils.showErrorToast(context, ref, "Scanning not available on Web");
+      return;
+    }
     try {
       final XFile? pickedFile = await _picker.pickImage(
         source: source,

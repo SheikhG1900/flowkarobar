@@ -104,6 +104,16 @@ class SyncEngine {
         await _updateLocalMetadata(
             deviceId, localMetadata.version, manifest.version,
             markAsSuccess: false);
+
+        // CRITICAL: Notify Drift after catch-up so UI components like Recent Transactions refresh
+        // even if the push phase is still pending or skipped.
+        _db.markTablesUpdated({
+          _db.transactions,
+          _db.categories,
+          _db.contacts,
+          _db.receivables,
+          _db.payables
+        });
       }
 
       // Step 2: Lock Assessment
@@ -585,6 +595,55 @@ class SyncEngine {
         }
       }
     });
+
+    // CRITICAL: Notify Drift that tables have been updated.
+    // This ensures that all Stream-based watchers (like Recent Transactions) refresh.
+    final updatedTableNames =
+        changes.keys.where((k) => !k.startsWith('_')).toSet();
+    if (updatedTableNames.isNotEmpty) {
+      if (kDebugMode) {
+        print(
+            'SyncEngine: Marking tables as updated: ${updatedTableNames.join(', ')}');
+      }
+      // We map string table names to Drift's TableInfo objects
+      final tableInfos = updatedTableNames
+          .map((name) {
+            switch (name) {
+              case 'categories':
+                return _db.categories;
+              case 'contacts':
+                return _db.contacts;
+              case 'transactions':
+                return _db.transactions;
+              case 'receivables':
+                return _db.receivables;
+              case 'payables':
+                return _db.payables;
+              case 'reminders':
+                return _db.reminders;
+              case 'app_currencies':
+                return _db.appCurrencies;
+              case 'transaction_schedules':
+                return _db.transactionSchedules;
+              default:
+                return null;
+            }
+          })
+          .whereType<TableInfo>()
+          .toSet();
+
+      if (tableInfos.isNotEmpty) {
+        _db.markTablesUpdated(tableInfos);
+
+        // CRITICAL: Force a WAL checkpoint to ensure data is visible to other connections
+        // and broadcast a change event that Riverpod can pick up.
+        try {
+          await _db.customStatement('PRAGMA wal_checkpoint(FULL);');
+        } catch (e) {
+          // Ignore errors if WAL mode is not enabled
+        }
+      }
+    }
   }
 
   Future<Map<String, List<Map<String, dynamic>>>> _getLocalChanges() async {

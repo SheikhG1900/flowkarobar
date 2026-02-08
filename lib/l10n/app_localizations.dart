@@ -5386,6 +5386,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sign in with Google to sync'**
   String get signInRequiredForSync;
+
+  /// No description provided for @alsoClearCloud.
+  ///
+  /// In en, this message translates to:
+  /// **'Also clear cloud backup'**
+  String get alsoClearCloud;
+
+  /// No description provided for @clearCloudSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Wipes history from Google Drive for this cashbook only'**
+  String get clearCloudSubtitle;
 }
 
 class _AppLocalizationsDelegate

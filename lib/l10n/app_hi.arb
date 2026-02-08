@@ -1120,5 +1120,7 @@
   "dataSynced": "डेटा सिंक हो गया है",
   "syncNow": "अभी सिंक करें",
   "premiumRequiredForSync": "क्लाउड सिंक के लिए प्रीमियम आवश्यक है",
-  "signInRequiredForSync": "सिंक करने के लिए Google के साथ साइन इन करें"
+  "signInRequiredForSync": "सिंक करने के लिए Google के साथ साइन इन करें",
+  "alsoClearCloud": "क्लाउड बैकअप भी साफ़ करें",
+  "clearCloudSubtitle": "केवल इसी कैशबुक के लिए Google ड्राइव से इतिहास साफ़ करता है"
 }

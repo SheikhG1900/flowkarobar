@@ -20,9 +20,14 @@ class TransactionsRepository {
 
   // Watch recent transactions
   Stream<List<Transaction>> watchRecentTransactions({int limit = 5}) {
+    // We explicitly include the table in the stream to ensure Drift's
+    // invalidation logic picks it up even after raw SQL updates
     return (_database.select(_database.transactions)
           ..where((t) => t.isDeleted.equals(false))
-          ..orderBy([(t) => OrderingTerm.desc(t.date)])
+          ..orderBy([
+            (t) => OrderingTerm.desc(t.date),
+            (t) => OrderingTerm.desc(t.createdAt)
+          ])
           ..limit(limit))
         .watch();
   }

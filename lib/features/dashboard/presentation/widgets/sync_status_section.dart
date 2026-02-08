@@ -127,13 +127,13 @@ class _SyncStatusSectionState extends ConsumerState<SyncStatusSection>
     } else if (hasUnsynced) {
       statusText = l10n.changesToPush(backupState.unsyncedCount);
       statusIcon = Symbols.cloud_upload;
-      statusColor = theme.colorScheme.primary;
+      statusColor = Colors.orange;
     } else if (hasCloudUpdates) {
       statusText = updatesCount == 1
           ? l10n.oneUpdateAvailable
           : l10n.multipleUpdatesAvailable(updatesCount);
       statusIcon = Symbols.cloud_download;
-      statusColor = theme.colorScheme.secondary;
+      statusColor = Colors.lightBlue;
     } else {
       statusText = l10n.dataSynced;
       statusIcon = Symbols.cloud_done;
@@ -242,9 +242,9 @@ class _SyncStatusSectionState extends ConsumerState<SyncStatusSection>
                         );
                       }
                     },
-                    icon: const Icon(
+                    icon: Icon(
                       Symbols.sync,
-                      color: Colors.blue,
+                      color: statusColor,
                       size: 24,
                     ),
                     tooltip: l10n.syncNow,

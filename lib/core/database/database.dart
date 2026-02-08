@@ -1,12 +1,10 @@
-import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:drift/drift.dart';
-import 'package:drift/native.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:path/path.dart' as p;
-import 'package:sqlite3/sqlite3.dart' as sqlite3_lib;
-import 'package:sqlite3_flutter_libs/sqlite3_flutter_libs.dart';
+import 'connection/connection.dart'
+    if (dart.library.io) 'connection/native.dart'
+    if (dart.library.html) 'connection/web.dart'
+    if (dart.library.js_interop) 'connection/web.dart';
 
 part 'database.g.dart';
 
@@ -284,14 +282,19 @@ class SyncMetadata extends Table {
   SyncMetadata,
 ])
 class AppDatabase extends _$AppDatabase {
-  AppDatabase({String fileName = 'flowpaisa.db'})
-      : super(_openConnection(fileName));
+  AppDatabase({String fileName = 'flowpaisa.db', QueryExecutor? executor})
+      : super(executor ?? openConnection(fileName));
 
   @override
   int get schemaVersion => 14;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
+        beforeOpen: (details) async {
+          // Ensure default data exists every time the database is opened
+          // This handles cases where data was cleared via raw SQL
+          await insertDefaultData();
+        },
         onCreate: (Migrator m) async {
           await m.createAll();
           await _insertDefaultCategories();
@@ -509,21 +512,4 @@ class AppDatabase extends _$AppDatabase {
     await _insertDefaultCategories();
     await _insertDefaultCurrencies();
   }
-}
-
-LazyDatabase _openConnection(String fileName) {
-  return LazyDatabase(() async {
-    final dbFolder = await getApplicationDocumentsDirectory();
-    final file = File(p.join(dbFolder.path, fileName));
-
-    // Setup sqlite3 for Android
-    if (Platform.isAndroid) {
-      await applyWorkaroundToOpenSqlite3OnOldAndroidVersions();
-    }
-
-    final cachebase = (await getTemporaryDirectory()).path;
-    sqlite3_lib.sqlite3.tempDirectory = cachebase;
-
-    return NativeDatabase.createInBackground(file);
-  });
 }

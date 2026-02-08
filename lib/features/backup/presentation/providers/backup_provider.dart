@@ -1,3 +1,4 @@
+import 'package:flowpaisa/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
@@ -691,7 +692,30 @@ class BackupNotifier extends Notifier<BackupState> {
     await _updateTotalUnsyncedCount();
     await _fetchCloudState();
 
+    // Small delay to ensure SQLite has finished file operations in the background isolate
+    await Future.delayed(const Duration(milliseconds: 500));
+
+    // CRITICAL: Notify the main isolate's database connection that tables have been updated
+    // in the background. This forces all Drift streams to re-query.
+    if (kDebugMode) {
+      print('BackupNotifier: Notifying main isolate about background updates...');
+    }
+    db.markTablesUpdated({
+      db.categories,
+      db.contacts,
+      db.transactions,
+      db.receivables,
+      db.payables,
+      db.reminders,
+      db.appCurrencies,
+      db.transactionSchedules,
+    });
+
     // Refresh summary providers without invalidating the whole database
+    ref.invalidate(allTransactionsProvider);
+    ref.invalidate(dashboardStatsProvider);
+    ref.invalidate(recentTransactionsProvider);
+    ref.invalidate(transactionsWithDetailsProvider);
     ref.invalidate(transactionsPaginatedProvider);
     ref.invalidate(payablesPaginatedProvider);
     ref.invalidate(receivablesPaginatedProvider);

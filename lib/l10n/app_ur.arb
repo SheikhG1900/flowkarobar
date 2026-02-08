@@ -1120,5 +1120,7 @@
   "dataSynced": "ڈیٹا سنک ہو گیا ہے",
   "syncNow": "ابھی سنک کریں",
   "premiumRequiredForSync": "کلاؤڈ سنک کے لیے پریمیم درکار ہے",
-  "signInRequiredForSync": "سنک کرنے کے لیے گوگل کے ساتھ سائن ان کریں"
+  "signInRequiredForSync": "سنک کرنے کے لیے گوگل کے ساتھ سائن ان کریں",
+  "alsoClearCloud": "کلاؤڈ بیک اپ بھی صاف کریں",
+  "clearCloudSubtitle": "صرف اسی کیش بک کے لیے گوگل ڈرائیو سے ہسٹری صاف کرتا ہے"
 }

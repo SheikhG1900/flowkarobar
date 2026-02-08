@@ -100,14 +100,16 @@ void main() async {
   Symbols.forceCompileTimeTreeShaking();
 
   // Initialize workmanager for background tasks
-  await Workmanager().initialize(
-    callbackDispatcher,
-    isInDebugMode: false,
-  );
+  if (!kIsWeb) {
+    await Workmanager().initialize(
+      callbackDispatcher,
+      isInDebugMode: false,
+    );
 
-  // Initialize Sync Scheduler
-  await SyncScheduler.init();
-  await SyncScheduler.scheduleDailySync();
+    // Initialize Sync Scheduler
+    await SyncScheduler.init();
+    await SyncScheduler.scheduleDailySync();
+  }
 
   runApp(
     Phoenix(
@@ -563,6 +565,7 @@ class _DashboardTab extends ConsumerWidget {
         onRefresh: () async {
           // Invalidate data providers to trigger a fresh fetch
           ref.invalidate(dashboardStatsProvider);
+          ref.invalidate(recentTransactionsProvider);
           ref.invalidate(transactionsWithDetailsProvider);
           ref.invalidate(currentCurrencyProvider);
           ref.invalidate(activeCashbookProvider);
@@ -572,7 +575,10 @@ class _DashboardTab extends ConsumerWidget {
           ref.read(backupProvider.notifier).refreshCloudState();
 
           // Wait for the main stats to load so the spinner stays visible until data is ready
-          await ref.read(dashboardStatsProvider.future);
+          await Future.wait([
+            ref.read(dashboardStatsProvider.future),
+            ref.read(transactionsWithDetailsProvider.future),
+          ]);
         },
         child: CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(
