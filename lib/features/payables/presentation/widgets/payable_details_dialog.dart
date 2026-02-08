@@ -1,3 +1,5 @@
+import 'package:flowpaisa/features/transactions/presentation/widgets/transaction_details_dialog.dart';
+import 'package:flowpaisa/features/contacts/presentation/screens/contact_details_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
@@ -201,99 +203,123 @@ class PayableDetailsDialog extends ConsumerWidget {
 
                 // Contact Header Section
                 if (contact != null) ...[
-                  Row(
-                    children: [
-                      Container(
-                        width: 60,
-                        height: 60,
-                        decoration: BoxDecoration(
-                          gradient: AppColors.getContactGradient(contact.name),
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.getContactColor(contact.name)
-                                  .withValues(alpha: 0.3),
-                              blurRadius: 12,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        alignment: Alignment.center,
-                        child: Text(
-                          contact.name.isNotEmpty
-                              ? contact.name[0].toUpperCase()
-                              : '?',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
+                  InkWell(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ContactDetailsScreen(
+                            contactUuid: contact.uuid,
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              contact.name,
-                              style: theme.textTheme.titleLarge?.copyWith(
+                      );
+                    },
+                    borderRadius: BorderRadius.circular(12),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 60,
+                            height: 60,
+                            decoration: BoxDecoration(
+                              gradient:
+                                  AppColors.getContactGradient(contact.name),
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.getContactColor(contact.name)
+                                      .withValues(alpha: 0.3),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            alignment: Alignment.center,
+                            child: Text(
+                              contact.name.isNotEmpty
+                                  ? contact.name[0].toUpperCase()
+                                  : '?',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 28,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            if (contact.phone != null) ...[
-                              const SizedBox(height: 4),
-                              Row(
-                                children: [
-                                  Icon(
-                                    Icons.phone,
-                                    size: 16,
-                                    color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  contact.name,
+                                  style: theme.textTheme.titleLarge?.copyWith(
+                                    fontWeight: FontWeight.bold,
                                   ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    contact.phone!,
-                                    style: theme.textTheme.bodyMedium?.copyWith(
-                                      color: theme.colorScheme.onSurfaceVariant,
-                                    ),
+                                ),
+                                if (contact.phone != null) ...[
+                                  const SizedBox(height: 4),
+                                  Row(
+                                    children: [
+                                      Icon(
+                                        Icons.phone,
+                                        size: 16,
+                                        color:
+                                            theme.colorScheme.onSurfaceVariant,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        contact.phone!,
+                                        style: theme.textTheme.bodyMedium
+                                            ?.copyWith(
+                                          color: theme
+                                              .colorScheme.onSurfaceVariant,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ],
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
-                      if (contact.phone != null)
-                        IconButton(
-                          icon: const Icon(Icons.chat, color: Color(0xFF25D366)),
-                          onPressed: () {
-                            final capturedCurrency = currency;
-                            final capturedUserProfile =
-                                ref.read(userProfileProvider);
-                            final capturedTransactionService =
-                                ref.read(transactionServiceProvider);
-                            final capturedWhatsAppService =
-                                ref.read(whatsAppServiceProvider);
-                            final capturedTemplateService =
-                                ref.read(messageTemplateServiceProvider);
-                            final capturedLanguage = getCurrentLanguageCode(ref);
+                              ],
+                            ),
+                          ),
+                          if (contact.phone != null)
+                            IconButton(
+                              icon: const Icon(Icons.chat,
+                                  color: Color(0xFF25D366)),
+                              onPressed: () {
+                                final capturedCurrency = currency;
+                                final capturedUserProfile =
+                                    ref.read(userProfileProvider);
+                                final capturedTransactionService =
+                                    ref.read(transactionServiceProvider);
+                                final capturedWhatsAppService =
+                                    ref.read(whatsAppServiceProvider);
+                                final capturedTemplateService =
+                                    ref.read(messageTemplateServiceProvider);
+                                final capturedLanguage =
+                                    getCurrentLanguageCode(ref);
 
-                            ShareHelper.sharePayable(
-                              context,
-                              ref,
-                              payable,
-                              contact,
-                              currencyOverride: capturedCurrency,
-                              userProfileOverride: capturedUserProfile,
-                              transactionServiceOverride:
-                                  capturedTransactionService,
-                              whatsAppServiceOverride: capturedWhatsAppService,
-                              templateServiceOverride: capturedTemplateService,
-                              languageOverride: capturedLanguage,
-                            );
-                          },
-                        ),
-                    ],
+                                ShareHelper.sharePayable(
+                                  context,
+                                  ref,
+                                  payable,
+                                  contact,
+                                  currencyOverride: capturedCurrency,
+                                  userProfileOverride: capturedUserProfile,
+                                  transactionServiceOverride:
+                                      capturedTransactionService,
+                                  whatsAppServiceOverride:
+                                      capturedWhatsAppService,
+                                  templateServiceOverride:
+                                      capturedTemplateService,
+                                  languageOverride: capturedLanguage,
+                                );
+                              },
+                            ),
+                        ],
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 24),
                   const Divider(),
@@ -342,8 +368,19 @@ class PayableDetailsDialog extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  _buildLinkedTransactionCard(
-                      context, ref, linkedTransaction, linkedCategory),
+                  InkWell(
+                    onTap: () {
+                      showDialog(
+                        context: context,
+                        builder: (context) => TransactionDetailsDialog(
+                          transactionUuid: linkedTransaction.uuid,
+                        ),
+                      );
+                    },
+                    borderRadius: BorderRadius.circular(16),
+                    child: _buildLinkedTransactionCard(
+                        context, ref, linkedTransaction, linkedCategory),
+                  ),
                 ],
 
                 // Actions

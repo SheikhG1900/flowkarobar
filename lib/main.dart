@@ -1095,7 +1095,7 @@ class _DashboardTab extends ConsumerWidget {
                             loading: () => const SizedBox(height: 100),
                             error: (_, __) => const SizedBox.shrink(),
                           ),
-                          const SizedBox(height: 20),
+                          const SizedBox(height: 25),
                           // App Logo in Rounded Circle
                           Center(
                             child: EntranceAnimation(

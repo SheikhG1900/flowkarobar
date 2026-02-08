@@ -1,3 +1,7 @@
+import 'package:flowpaisa/features/payables/presentation/widgets/payable_details_dialog.dart';
+import 'package:flowpaisa/features/receivables/presentation/widgets/receivable_details_dialog.dart';
+import 'package:flowpaisa/features/contacts/presentation/screens/contact_details_screen.dart';
+import 'package:flowpaisa/features/categories/presentation/screens/category_details_screen.dart';
 import 'package:flowpaisa/features/messages/presentation/providers/message_template_provider.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/core/utils/localization_helper.dart';
@@ -282,199 +286,236 @@ class TransactionDetailsDialog extends ConsumerWidget {
 
                 // Contact & Category Header Section
                 if (contact != null || category != null) ...[
-                  Row(
-                    children: [
-                      // Contact Section
-                      if (contact != null) ...[
-                        Container(
-                          width: 60,
-                          height: 60,
-                          decoration: BoxDecoration(
-                            gradient: AppColors.getContactGradient(contact.name),
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppColors.getContactColor(contact.name)
-                                    .withValues(alpha: 0.3),
-                                blurRadius: 12,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          alignment: Alignment.center,
-                          child: Text(
-                            contact.name.isNotEmpty
-                                ? contact.name[0].toUpperCase()
-                                : '?',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 28,
-                              fontWeight: FontWeight.bold,
+                  if (contact != null) ...[
+                    InkWell(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ContactDetailsScreen(
+                              contactUuid: contact.uuid,
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                contact.name,
-                                style: theme.textTheme.titleLarge?.copyWith(
+                        );
+                      },
+                      borderRadius: BorderRadius.circular(12),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: Row(
+                          children: [
+                            // Contact Section
+                            Container(
+                              width: 60,
+                              height: 60,
+                              decoration: BoxDecoration(
+                                gradient:
+                                    AppColors.getContactGradient(contact.name),
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color:
+                                        AppColors.getContactColor(contact.name)
+                                            .withValues(alpha: 0.3),
+                                    blurRadius: 12,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              alignment: Alignment.center,
+                              child: Text(
+                                contact.name.isNotEmpty
+                                    ? contact.name[0].toUpperCase()
+                                    : '?',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 28,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              if (contact.phone != null) ...[
-                                const SizedBox(height: 4),
-                                Row(
-                                  children: [
-                                    Icon(
-                                      Icons.phone,
-                                      size: 16,
-                                      color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    contact.name,
+                                    style: theme.textTheme.titleLarge?.copyWith(
+                                      fontWeight: FontWeight.bold,
                                     ),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      contact.phone!,
-                                      style: theme.textTheme.bodyMedium?.copyWith(
-                                        color:
-                                            theme.colorScheme.onSurfaceVariant,
-                                      ),
+                                  ),
+                                  if (contact.phone != null) ...[
+                                    const SizedBox(height: 4),
+                                    Row(
+                                      children: [
+                                        Icon(
+                                          Icons.phone,
+                                          size: 16,
+                                          color: theme
+                                              .colorScheme.onSurfaceVariant,
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          contact.phone!,
+                                          style: theme.textTheme.bodyMedium
+                                              ?.copyWith(
+                                            color: theme
+                                                .colorScheme.onSurfaceVariant,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ],
-                                ),
-                              ],
-                            ],
-                          ),
-                        ),
-                        if (contact.phone != null &&
-                            transaction.isAutoGenerated != true)
-                          IconButton(
-                            icon: const Icon(Icons.chat,
-                                color: Color(0xFF25D366)),
-                            onPressed: () {
-                              final capturedCurrency = currency;
-                              final capturedUserProfile =
-                                  ref.read(userProfileProvider);
-                              final capturedTransactionService =
-                                  ref.read(transactionServiceProvider);
-                              final capturedWhatsAppService =
-                                  ref.read(whatsAppServiceProvider);
-                              final capturedTemplateService =
-                                  ref.read(messageTemplateServiceProvider);
-                              final capturedLanguage =
-                                  getCurrentLanguageCode(ref);
+                                ],
+                              ),
+                            ),
+                            if (contact.phone != null &&
+                                transaction.isAutoGenerated != true)
+                              IconButton(
+                                icon: const Icon(Icons.chat,
+                                    color: Color(0xFF25D366)),
+                                onPressed: () {
+                                  final capturedCurrency = currency;
+                                  final capturedUserProfile =
+                                      ref.read(userProfileProvider);
+                                  final capturedTransactionService =
+                                      ref.read(transactionServiceProvider);
+                                  final capturedWhatsAppService =
+                                      ref.read(whatsAppServiceProvider);
+                                  final capturedTemplateService =
+                                      ref.read(messageTemplateServiceProvider);
+                                  final capturedLanguage =
+                                      getCurrentLanguageCode(ref);
 
-                              ShareHelper.shareTransaction(
-                                context,
-                                ref,
-                                transaction,
-                                contact,
-                                category,
-                                item.isLinkedEntryMarked,
-                                currencyOverride: capturedCurrency,
-                                userProfileOverride: capturedUserProfile,
-                                transactionServiceOverride:
-                                    capturedTransactionService,
-                                whatsAppServiceOverride:
-                                    capturedWhatsAppService,
-                                templateServiceOverride:
-                                    capturedTemplateService,
-                                languageOverride: capturedLanguage,
-                              );
-                            },
-                            tooltip: l10n.sendMessage,
-                          ),
-                      ],
-                    ],
-                  ),
-                  const SizedBox(height: 16),
+                                  ShareHelper.shareTransaction(
+                                    context,
+                                    ref,
+                                    transaction,
+                                    contact,
+                                    category,
+                                    item.isLinkedEntryMarked,
+                                    currencyOverride: capturedCurrency,
+                                    userProfileOverride: capturedUserProfile,
+                                    transactionServiceOverride:
+                                        capturedTransactionService,
+                                    whatsAppServiceOverride:
+                                        capturedWhatsAppService,
+                                    templateServiceOverride:
+                                        capturedTemplateService,
+                                    languageOverride: capturedLanguage,
+                                  );
+                                },
+                                tooltip: l10n.sendMessage,
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
                   // Category Section
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: category != null
-                          ? Color(int.parse(
-                                  category.color!.replaceAll('#', '0xFF')))
-                              .withValues(alpha: 0.1)
-                          : (isExpense
-                                  ? AppColors.expenseColor
-                                  : AppColors.incomeColor)
-                              .withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
+                  InkWell(
+                    onTap: category != null
+                        ? () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => CategoryDetailsScreen(
+                                  categoryUuid: category.uuid,
+                                ),
+                              ),
+                            );
+                          }
+                        : null,
+                    borderRadius: BorderRadius.circular(16),
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
                         color: category != null
                             ? Color(int.parse(
                                     category.color!.replaceAll('#', '0xFF')))
-                                .withValues(alpha: 0.3)
+                                .withValues(alpha: 0.1)
                             : (isExpense
                                     ? AppColors.expenseColor
                                     : AppColors.incomeColor)
-                                .withValues(alpha: 0.3),
-                        width: 1,
+                                .withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: category != null
+                              ? Color(int.parse(category.color!
+                                      .replaceAll('#', '0xFF')))
+                                  .withValues(alpha: 0.3)
+                              : (isExpense
+                                      ? AppColors.expenseColor
+                                      : AppColors.incomeColor)
+                                  .withValues(alpha: 0.3),
+                          width: 1,
+                        ),
                       ),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 48,
-                          height: 48,
-                          decoration: BoxDecoration(
-                            color: category != null
-                                ? Color(int.parse(category.color!
-                                        .replaceAll('#', '0xFF')))
-                                    .withValues(alpha: 0.2)
-                                : (isExpense
-                                        ? AppColors.expenseColor
-                                        : AppColors.incomeColor)
-                                    .withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Icon(
-                            category != null && category.icon != null
-                                ? IconHelper.getIconData(category.icon!)
-                                : (isExpense
-                                    ? Icons.arrow_circle_down
-                                    : Icons.arrow_circle_up),
-                            color: category != null
-                                ? Color(int.parse(category.color!
-                                    .replaceAll('#', '0xFF')))
-                                : (isExpense
-                                    ? AppColors.expenseColor
-                                    : AppColors.incomeColor),
-                            size: 28,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                l10n.category,
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: theme.colorScheme.onSurfaceVariant,
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                category != null
-                                    ? LocalizationHelper
-                                        .getLocalizedCategoryName(
-                                            context, category.name)
-                                    : (isExpense ? l10n.expense : l10n.income),
-                                style: theme.textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: category != null
-                                      ? Color(int.parse(category.color!
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 48,
+                            height: 48,
+                            decoration: BoxDecoration(
+                              color: category != null
+                                  ? Color(int.parse(category.color!
                                           .replaceAll('#', '0xFF')))
-                                      : null,
-                                ),
-                              ),
-                            ],
+                                      .withValues(alpha: 0.2)
+                                  : (isExpense
+                                          ? AppColors.expenseColor
+                                          : AppColors.incomeColor)
+                                      .withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(
+                              category != null && category.icon != null
+                                  ? IconHelper.getIconData(category.icon!)
+                                  : (isExpense
+                                      ? Icons.arrow_circle_down
+                                      : Icons.arrow_circle_up),
+                              color: category != null
+                                  ? Color(int.parse(category.color!
+                                      .replaceAll('#', '0xFF')))
+                                  : (isExpense
+                                      ? AppColors.expenseColor
+                                      : AppColors.incomeColor),
+                              size: 28,
+                            ),
                           ),
-                        ),
-                      ],
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  l10n.category,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  category != null
+                                      ? LocalizationHelper
+                                          .getLocalizedCategoryName(
+                                              context, category.name)
+                                      : (isExpense
+                                          ? l10n.expense
+                                          : l10n.income),
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: category != null
+                                        ? Color(int.parse(category.color!
+                                            .replaceAll('#', '0xFF')))
+                                        : null,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -513,10 +554,32 @@ class TransactionDetailsDialog extends ConsumerWidget {
                   ),
                   const SizedBox(height: 16),
                   if (linkedPayable != null)
-                    _buildLinkedPayableCard(context, ref, linkedPayable, item),
+                    InkWell(
+                      onTap: () {
+                        showDialog(
+                          context: context,
+                          builder: (context) => PayableDetailsDialog(
+                            payableUuid: linkedPayable.uuid,
+                          ),
+                        );
+                      },
+                      borderRadius: BorderRadius.circular(16),
+                      child: _buildLinkedPayableCard(context, ref, linkedPayable, item),
+                    ),
                   if (linkedReceivable != null)
-                    _buildLinkedReceivableCard(
-                        context, ref, linkedReceivable, item),
+                    InkWell(
+                      onTap: () {
+                        showDialog(
+                          context: context,
+                          builder: (context) => ReceivableDetailsDialog(
+                            receivableUuid: linkedReceivable.uuid,
+                          ),
+                        );
+                      },
+                      borderRadius: BorderRadius.circular(16),
+                      child: _buildLinkedReceivableCard(
+                          context, ref, linkedReceivable, item),
+                    ),
                 ],
 
                 if (kDebugMode) ...[
