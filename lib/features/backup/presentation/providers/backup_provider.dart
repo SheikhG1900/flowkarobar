@@ -357,10 +357,14 @@ class BackupNotifier extends Notifier<BackupState> {
       if (metadata != null) {
         final bool statusChanged = state.syncStatus != status;
         final bool localVerChanged = state.localVersion != metadata.version;
-        final bool cloudVerChanged = state.cloudVersion != metadata.cloudVersion;
+        final bool cloudVerChanged =
+            state.cloudVersion != metadata.cloudVersion;
         final bool timeChanged = state.lastSyncTime != metadata.lastSyncAt;
 
-        if (statusChanged || localVerChanged || cloudVerChanged || timeChanged) {
+        if (statusChanged ||
+            localVerChanged ||
+            cloudVerChanged ||
+            timeChanged) {
           if (kDebugMode) {
             print(
                 'BackupNotifier: Periodic Refresh - Status: $status, LocalVer: ${metadata.version}, CloudVer: ${metadata.cloudVersion}');
@@ -375,6 +379,9 @@ class BackupNotifier extends Notifier<BackupState> {
                 status.contains('Pulling') ||
                 status.contains('Pushing'),
           );
+
+          // Force refresh unsynced count during sync progress
+          _updateTotalUnsyncedCount();
 
           if (status == 'Success') {
             _syncProgressTimer?.cancel();
@@ -519,7 +526,8 @@ class BackupNotifier extends Notifier<BackupState> {
               syncStatus: const Value('Idle'),
             ));
         if (kDebugMode) {
-          print('BackupNotifier: Created new metadata row with cloud version $cloudVersion');
+          print(
+              'BackupNotifier: Created new metadata row with cloud version $cloudVersion');
         }
       } else if (currentMetadata.cloudVersion != cloudVersion) {
         // Update existing row only if cloud version changed
@@ -529,7 +537,8 @@ class BackupNotifier extends Notifier<BackupState> {
           cloudVersion: Value(cloudVersion),
         ));
         if (kDebugMode) {
-          print('BackupNotifier: Updated existing cloud version to $cloudVersion in DB');
+          print(
+              'BackupNotifier: Updated existing cloud version to $cloudVersion in DB');
         }
       }
     } catch (e) {
@@ -574,7 +583,7 @@ class BackupNotifier extends Notifier<BackupState> {
         }
       }
     }
-    
+
     if (state.unsyncedCount != total) {
       state = state.copyWith(unsyncedCount: total);
     }
@@ -646,6 +655,27 @@ class BackupNotifier extends Notifier<BackupState> {
                 status.contains('Pushing'),
           );
 
+          // Force refresh unsynced count when DB metadata changes
+          _updateTotalUnsyncedCount();
+
+          // CRITICAL: Also notify Drift that tables might have changed in the background
+          // This ensures the UI isolate's stream listeners (like the dashboard) re-query.
+          db.markTablesUpdated({
+            db.categories,
+            db.contacts,
+            db.transactions,
+            db.receivables,
+            db.payables,
+            db.reminders,
+            db.appCurrencies,
+            db.transactionSchedules,
+          });
+
+          // FORCE INVALIDATION: Explicitly tell Riverpod to discard the cached state
+          // for these specific providers. This is the most aggressive way to refresh.
+          ref.invalidate(dashboardStatsProvider);
+          ref.invalidate(recentTransactionsProvider);
+
           // If we just finished a sync (transitioned from syncing to success), trigger refreshes
           if (wasSyncing && isNowSuccess) {
             _handleSyncSuccess();
@@ -698,7 +728,8 @@ class BackupNotifier extends Notifier<BackupState> {
     // CRITICAL: Notify the main isolate's database connection that tables have been updated
     // in the background. This forces all Drift streams to re-query.
     if (kDebugMode) {
-      print('BackupNotifier: Notifying main isolate about background updates...');
+      print(
+          'BackupNotifier: Notifying main isolate about background updates...');
     }
     db.markTablesUpdated({
       db.categories,
@@ -711,7 +742,7 @@ class BackupNotifier extends Notifier<BackupState> {
       db.transactionSchedules,
     });
 
-    // Refresh summary providers without invalidating the whole database
+    // FORCE REFRESH: Explicitly tell Riverpod to discard cached state
     ref.invalidate(allTransactionsProvider);
     ref.invalidate(dashboardStatsProvider);
     ref.invalidate(recentTransactionsProvider);

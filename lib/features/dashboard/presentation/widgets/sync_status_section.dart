@@ -91,6 +91,7 @@ class _SyncStatusSectionState extends ConsumerState<SyncStatusSection>
       print('AW: cloudVer: $cloudVer');
       print('AW: localVer: $localVer');
       print('AW: syncStatus: ${backupState.syncStatus}');
+      print('AW: unsyncedCount: ${backupState.unsyncedCount}');
     }
     // Hide section if nothing to sync, no updates available, and not in success/syncing state
     if (!isSyncing && !isSuccess && !hasUnsynced && !hasCloudUpdates) {

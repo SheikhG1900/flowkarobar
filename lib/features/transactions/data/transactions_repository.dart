@@ -228,12 +228,14 @@ class TransactionsRepository {
   Future<String> createTransaction(TransactionsCompanion transaction) async {
     final uuid =
         transaction.uuid.present ? transaction.uuid.value : Uuid().v4();
-    await _database.into(_database.transactions).insert(
-          transaction.copyWith(
-            uuid: Value(uuid),
-            isNotSynced: const Value(true),
-          ),
-        );
+    await _database.transaction(() async {
+      await _database.into(_database.transactions).insert(
+            transaction.copyWith(
+              uuid: Value(uuid),
+              isNotSynced: const Value(true),
+            ),
+          );
+    });
     return uuid;
   }
 
@@ -261,20 +263,24 @@ class TransactionsRepository {
   }
 
   // Update transaction
-  Future<bool> updateTransaction(Transaction transaction) {
-    return _database.update(_database.transactions).replace(
-          transaction.copyWith(isNotSynced: true),
-        );
+  Future<bool> updateTransaction(Transaction transaction) async {
+    return await _database.transaction(() async {
+      return await _database.update(_database.transactions).replace(
+            transaction.copyWith(isNotSynced: true),
+          );
+    });
   }
 
   // Delete transaction
-  Future<int> deleteTransaction(String uuid) {
-    return (_database.update(_database.transactions)
-          ..where((t) => t.uuid.equals(uuid)))
-        .write(const TransactionsCompanion(
-      isDeleted: Value(true),
-      isNotSynced: Value(true),
-    ));
+  Future<int> deleteTransaction(String uuid) async {
+    return await _database.transaction(() async {
+      return await (_database.update(_database.transactions)
+            ..where((t) => t.uuid.equals(uuid)))
+          .write(const TransactionsCompanion(
+        isDeleted: Value(true),
+        isNotSynced: Value(true),
+      ));
+    });
   }
 
   // Get transactions by type (EXPENSE or INCOME)

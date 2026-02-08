@@ -291,8 +291,24 @@ class AppDatabase extends _$AppDatabase {
   @override
   MigrationStrategy get migration => MigrationStrategy(
         beforeOpen: (details) async {
+          // Enable WAL mode for better concurrency
+          try {
+            await customStatement('PRAGMA journal_mode=WAL;');
+            await customStatement('PRAGMA synchronous=NORMAL;');
+            // Set busy timeout to 5 seconds to wait for locks to clear
+            await customStatement('PRAGMA busy_timeout=5000;');
+          } catch (e) {
+            if (kDebugMode) {
+              print('Database: Warning - Failed to set WAL mode (database likely locked): $e');
+            }
+          }
+
           // Ensure default data exists every time the database is opened
           // This handles cases where data was cleared via raw SQL
+          if (details.wasCreated) {
+            // Data is already inserted in onCreate
+            return;
+          }
           await insertDefaultData();
         },
         onCreate: (Migrator m) async {
@@ -429,35 +445,39 @@ class AppDatabase extends _$AppDatabase {
       ),
     ];
 
-    for (final cat in expenseCategories) {
-      await into(categories).insert(
-        CategoriesCompanion.insert(
-          uuid: cat.$5,
-          name: cat.$1,
-          icon: Value(cat.$2),
-          color: Value(cat.$3),
-          type: cat.$4,
-          isDefault: const Value(true),
-          isNotSynced: const Value(false),
-        ),
-        mode: InsertMode.insertOrIgnore,
-      );
-    }
+    await batch((batch) {
+      for (final cat in expenseCategories) {
+        batch.insert(
+          categories,
+          CategoriesCompanion.insert(
+            uuid: cat.$5,
+            name: cat.$1,
+            icon: Value(cat.$2),
+            color: Value(cat.$3),
+            type: cat.$4,
+            isDefault: const Value(true),
+            isNotSynced: const Value(false),
+          ),
+          mode: InsertMode.insertOrIgnore,
+        );
+      }
 
-    for (final cat in incomeCategories) {
-      await into(categories).insert(
-        CategoriesCompanion.insert(
-          uuid: cat.$5,
-          name: cat.$1,
-          icon: Value(cat.$2),
-          color: Value(cat.$3),
-          type: cat.$4,
-          isDefault: const Value(true),
-          isNotSynced: const Value(false),
-        ),
-        mode: InsertMode.insertOrIgnore,
-      );
-    }
+      for (final cat in incomeCategories) {
+        batch.insert(
+          categories,
+          CategoriesCompanion.insert(
+            uuid: cat.$5,
+            name: cat.$1,
+            icon: Value(cat.$2),
+            color: Value(cat.$3),
+            type: cat.$4,
+            isDefault: const Value(true),
+            isNotSynced: const Value(false),
+          ),
+          mode: InsertMode.insertOrIgnore,
+        );
+      }
+    });
   }
 
   Future<void> _insertDefaultCurrencies() async {
@@ -468,20 +488,23 @@ class AppDatabase extends _$AppDatabase {
       ('Pakistani Rupee', 'R', 'PKR', 0, 'default_curr_pkr'),
     ];
 
-    for (final curr in defaultCurrencies) {
-      await into(appCurrencies).insert(
-        AppCurrenciesCompanion.insert(
-          uuid: curr.$5,
-          name: curr.$1,
-          symbol: curr.$2,
-          code: curr.$3,
-          decimalPlaces: Value(curr.$4),
-          isDefault: const Value(true),
-          isNotSynced: const Value(false),
-        ),
-        mode: InsertMode.insertOrIgnore,
-      );
-    }
+    await batch((batch) {
+      for (final curr in defaultCurrencies) {
+        batch.insert(
+          appCurrencies,
+          AppCurrenciesCompanion.insert(
+            uuid: curr.$5,
+            name: curr.$1,
+            symbol: curr.$2,
+            code: curr.$3,
+            decimalPlaces: Value(curr.$4),
+            isDefault: const Value(true),
+            isNotSynced: const Value(false),
+          ),
+          mode: InsertMode.insertOrIgnore,
+        );
+      }
+    });
   }
 
   Future<void> clearAllData() async {
@@ -509,7 +532,13 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<void> insertDefaultData() async {
-    await _insertDefaultCategories();
-    await _insertDefaultCurrencies();
+    try {
+      await _insertDefaultCategories();
+      await _insertDefaultCurrencies();
+    } catch (e) {
+      if (kDebugMode) {
+        print('Database: Warning - Failed to insert default data (likely already being inserted): $e');
+      }
+    }
   }
 }

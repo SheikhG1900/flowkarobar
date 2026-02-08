@@ -23,6 +23,17 @@ class SyncEngine {
         _cashbook = cashbook;
 
   Future<void> sync() async {
+    // Enable WAL mode for this connection
+    try {
+      await _db.customStatement('PRAGMA journal_mode=WAL;');
+      await _db.customStatement('PRAGMA synchronous=NORMAL;');
+      await _db.customStatement('PRAGMA busy_timeout=5000;');
+    } catch (e) {
+      if (kDebugMode) {
+        print('SyncEngine: Warning - Failed to set WAL mode: $e');
+      }
+    }
+
     if (kDebugMode) {
       print(
           'SyncEngine: Starting sync for cashbook: ${_cashbook.name} (ID: ${_cashbook.id})');
@@ -231,6 +242,15 @@ class SyncEngine {
         print('SyncEngine: Committing version $nextVersion...');
       }
 
+      // Enable WAL mode for this connection
+      try {
+        await _db.customStatement('PRAGMA journal_mode=WAL;');
+        await _db.customStatement('PRAGMA synchronous=NORMAL;');
+        await _db.customStatement('PRAGMA busy_timeout=5000;');
+      } catch (e) {
+        // Ignore
+      }
+
       // Add summary to changes for local display
       final changesWithSummary =
           Map<String, List<Map<String, dynamic>>>.from(localChanges);
@@ -291,15 +311,20 @@ class SyncEngine {
         // Update status to Success in SharedPreferences
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('sync_status_${_cashbook.id}', 'Success');
+        await prefs.reload(); // Ensure it's flushed
+
         await _updateSyncStatus(deviceId, 'Success', isEnding: true);
+
+        // CRITICAL: Update local metadata with the new version and Success status
+        // This mirrors the approach used in the pulling/catch-up phase.
+        await _updateLocalMetadata(deviceId, nextVersion, nextVersion,
+            markAsSuccess: true);
 
         // Force a small delay to ensure SharedPreferences is flushed
         await Future.delayed(const Duration(milliseconds: 500));
 
         // Local Cleanup
         await _markLocalChangesSynced(localChanges);
-        await _updateLocalMetadata(deviceId, nextVersion, nextVersion,
-            markAsSuccess: true);
       } catch (e) {
         if (kDebugMode) {
           print('SyncEngine: Error during commit phase: $e');
@@ -354,6 +379,15 @@ class SyncEngine {
             'SyncEngine: Updating status to: $status (isStarting: $isStarting, isEnding: $isEnding) for device $deviceId');
       }
 
+      // Enable WAL mode for this connection
+      try {
+        await _db.customStatement('PRAGMA journal_mode=WAL;');
+        await _db.customStatement('PRAGMA synchronous=NORMAL;');
+        await _db.customStatement('PRAGMA busy_timeout=5000;');
+      } catch (e) {
+        // Ignore lock errors during status updates
+      }
+
       // CRITICAL: We update the status in SharedPreferences FIRST to ensure the UI
       // sees the change immediately even if the DB write is slightly delayed.
       final prefs = await SharedPreferences.getInstance();
@@ -395,6 +429,15 @@ class SyncEngine {
   }
 
   Future<SyncMetadataData> _getLocalMetadata(String deviceId) async {
+    // Enable WAL mode for this connection
+    try {
+      await _db.customStatement('PRAGMA journal_mode=WAL;');
+      await _db.customStatement('PRAGMA synchronous=NORMAL;');
+      await _db.customStatement('PRAGMA busy_timeout=5000;');
+    } catch (e) {
+      // Ignore
+    }
+
     final metadata = await (_db.select(_db.syncMetadata)
           ..where((t) => t.deviceId.equals(deviceId)))
         .getSingleOrNull();
@@ -413,6 +456,15 @@ class SyncEngine {
     if (kDebugMode) {
       print(
           'SyncEngine: Writing version $version (Cloud: $cloudVersion) to local sync_metadata for device $deviceId (markAsSuccess: $markAsSuccess)');
+    }
+
+    // Enable WAL mode for this connection
+    try {
+      await _db.customStatement('PRAGMA journal_mode=WAL;');
+      await _db.customStatement('PRAGMA synchronous=NORMAL;');
+      await _db.customStatement('PRAGMA busy_timeout=5000;');
+    } catch (e) {
+      // Ignore
     }
 
     await (_db.update(_db.syncMetadata)
@@ -451,6 +503,16 @@ class SyncEngine {
       print(
           'SyncEngine: Saving progress - local version $version for device $deviceId');
     }
+
+    // Enable WAL mode for this connection
+    try {
+      await _db.customStatement('PRAGMA journal_mode=WAL;');
+      await _db.customStatement('PRAGMA synchronous=NORMAL;');
+      await _db.customStatement('PRAGMA busy_timeout=5000;');
+    } catch (e) {
+      // Ignore
+    }
+
     // CRITICAL: We only update the version number here.
     // We MUST NOT touch sync_status or sync_started_at during incremental progress.
     await (_db.update(_db.syncMetadata)
@@ -475,6 +537,16 @@ class SyncEngine {
       print(
           'SyncEngine: Updating cloud version to $cloudVersion in local sync_metadata for device $deviceId');
     }
+
+    // Enable WAL mode for this connection
+    try {
+      await _db.customStatement('PRAGMA journal_mode=WAL;');
+      await _db.customStatement('PRAGMA synchronous=NORMAL;');
+      await _db.customStatement('PRAGMA busy_timeout=5000;');
+    } catch (e) {
+      // Ignore
+    }
+
     // CRITICAL: We only update the cloud version here.
     // We MUST NOT touch sync_status or sync_started_at.
     await (_db.update(_db.syncMetadata)
@@ -533,8 +605,17 @@ class SyncEngine {
 
   Future<void> _applyChanges(
       Map<String, List<Map<String, dynamic>>> changes) async {
+    // Enable WAL mode for this connection if not already enabled
+    try {
+      await _db.customStatement('PRAGMA journal_mode=WAL;');
+      await _db.customStatement('PRAGMA synchronous=NORMAL;');
+      await _db.customStatement('PRAGMA busy_timeout=5000;');
+    } catch (e) {
+      // Ignore
+    }
+
+    // CRITICAL: Use a transaction for the entire batch of changes
     await _db.transaction(() async {
-      // Sort tables to respect foreign key constraints
       // Contacts and Categories should be first, then Transactions, then linked tables
       final tableOrder = [
         'categories',
@@ -647,6 +728,15 @@ class SyncEngine {
   }
 
   Future<Map<String, List<Map<String, dynamic>>>> _getLocalChanges() async {
+    // Enable WAL mode for this connection
+    try {
+      await _db.customStatement('PRAGMA journal_mode=WAL;');
+      await _db.customStatement('PRAGMA synchronous=NORMAL;');
+      await _db.customStatement('PRAGMA busy_timeout=5000;');
+    } catch (e) {
+      // Ignore
+    }
+
     final changes = <String, List<Map<String, dynamic>>>{};
 
     final tables = [
@@ -716,6 +806,15 @@ class SyncEngine {
   Future<void> _markLocalChangesSynced(
       Map<String, List<Map<String, dynamic>>> changes) async {
     await _db.transaction(() async {
+      // Enable WAL mode for this connection
+      try {
+        await _db.customStatement('PRAGMA journal_mode=WAL;');
+        await _db.customStatement('PRAGMA synchronous=NORMAL;');
+        await _db.customStatement('PRAGMA busy_timeout=5000;');
+      } catch (e) {
+        // Ignore
+      }
+
       for (final entry in changes.entries) {
         final tableName = entry.key;
         if (tableName.startsWith('_')) continue; // Skip metadata like _summary
@@ -733,6 +832,15 @@ class SyncEngine {
   }
 
   Future<void> _upsertRow(String tableName, Map<String, dynamic> data) async {
+    // Enable WAL mode for this connection
+    try {
+      await _db.customStatement('PRAGMA journal_mode=WAL;');
+      await _db.customStatement('PRAGMA synchronous=NORMAL;');
+      await _db.customStatement('PRAGMA busy_timeout=5000;');
+    } catch (e) {
+      // Ignore
+    }
+
     // Reset isNotSynced flag for incoming changes
     final rowData = Map<String, dynamic>.from(data);
     rowData['is_not_synced'] = 0;
