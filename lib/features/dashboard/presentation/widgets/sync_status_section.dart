@@ -124,10 +124,6 @@ class _SyncStatusSectionState extends ConsumerState<SyncStatusSection>
       statusText = l10n.processing;
       statusIcon = Symbols.sync;
       statusColor = theme.colorScheme.primary;
-    } else if (isSuccess) {
-      statusText = l10n.dataSynced;
-      statusIcon = Symbols.check_circle;
-      statusColor = Colors.green;
     } else if (hasUnsynced) {
       statusText = l10n.changesToPush(backupState.unsyncedCount);
       statusIcon = Symbols.cloud_upload;
@@ -227,7 +223,7 @@ class _SyncStatusSectionState extends ConsumerState<SyncStatusSection>
                 ),
               ),
               const SizedBox(width: 8),
-              if (hasUnsynced || hasCloudUpdates)
+              if ((hasUnsynced || hasCloudUpdates) && !isSyncing)
                 Container(
                   decoration: BoxDecoration(
                     color: statusColor.withValues(alpha: 0.15),
@@ -258,7 +254,13 @@ class _SyncStatusSectionState extends ConsumerState<SyncStatusSection>
               if (isSuccess && !hasUnsynced && !hasCloudUpdates)
                 Icon(
                   Symbols.check_circle,
-                  color: Colors.green.withValues(alpha: 0.7),
+                  color: statusColor.withValues(alpha: 0.7),
+                  size: 28,
+                ),
+              if (isSyncing)
+                Icon(
+                  Symbols.clock_loader_20_rounded,
+                  color: statusColor.withValues(alpha: 0.7),
                   size: 28,
                 ),
             ],

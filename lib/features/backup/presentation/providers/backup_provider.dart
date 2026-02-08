@@ -354,9 +354,12 @@ class BackupNotifier extends Notifier<BackupState> {
           .getSingleOrNull();
 
       if (metadata != null) {
-        if (state.syncStatus != status ||
-            state.localVersion != metadata.version ||
-            state.cloudVersion != metadata.cloudVersion) {
+        final bool statusChanged = state.syncStatus != status;
+        final bool localVerChanged = state.localVersion != metadata.version;
+        final bool cloudVerChanged = state.cloudVersion != metadata.cloudVersion;
+        final bool timeChanged = state.lastSyncTime != metadata.lastSyncAt;
+
+        if (statusChanged || localVerChanged || cloudVerChanged || timeChanged) {
           if (kDebugMode) {
             print(
                 'BackupNotifier: Periodic Refresh - Status: $status, LocalVer: ${metadata.version}, CloudVer: ${metadata.cloudVersion}');
@@ -409,64 +412,34 @@ class BackupNotifier extends Notifier<BackupState> {
   Future<void> refreshVersions() async {
     state = state.copyWith(isLoading: true);
 
-    // 1. Refresh local version and sync time from DB
-    final db = ref.read(databaseProvider);
-    try {
-      final metadata = await (db.select(db.syncMetadata)).get();
-      if (metadata.isNotEmpty) {
-        final localVersion = metadata
-            .map((m) => m.version)
-            .fold(0, (prev, v) => v > prev ? v : prev);
-        final lastSyncTime = metadata.map((m) => m.lastSyncAt).fold<DateTime?>(
-            null,
-            (prev, v) =>
-                (v != null && (prev == null || v.isAfter(prev))) ? v : prev);
-        state = state.copyWith(
-          localVersion: localVersion,
-          lastSyncTime: lastSyncTime,
-        );
-      } else {
-        state = state.copyWith(localVersion: 0, lastSyncTime: null);
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print('BackupNotifier: Failed to refresh local version: $e');
-      }
-    }
-
-    // 2. Fetch fresh cloud state (cloud version, lock status, delta files)
+    // 1. Fetch fresh cloud state (cloud version, lock status, delta files)
     await _fetchCloudState();
 
-    // 3. Refresh unsynced counts
+    // 2. Refresh unsynced counts
     await _updateTotalUnsyncedCount();
 
     state = state.copyWith(isLoading: false);
   }
 
   Future<void> _refreshVersions() async {
+    // 1. Initial local version and cloud version from DB (Instant)
     final db = ref.read(databaseProvider);
-
-    // 1. Get initial local version (Instant)
+    final deviceId = await _getDeviceId();
     try {
-      final metadata = await (db.select(db.syncMetadata)).get();
-      if (metadata.isNotEmpty) {
-        final localVersion = metadata
-            .map((m) => m.version)
-            .fold(0, (prev, v) => v > prev ? v : prev);
-        final lastSyncTime = metadata.map((m) => m.lastSyncAt).fold<DateTime?>(
-            null,
-            (prev, v) =>
-                (v != null && (prev == null || v.isAfter(prev))) ? v : prev);
+      final metadata = await (db.select(db.syncMetadata)
+            ..where((t) => t.deviceId.equals(deviceId)))
+          .getSingleOrNull();
+      if (metadata != null) {
         state = state.copyWith(
-          localVersion: localVersion,
-          lastSyncTime: lastSyncTime,
+          localVersion: metadata.version,
+          cloudVersion: metadata.cloudVersion,
+          lastSyncTime: metadata.lastSyncAt,
+          syncStatus: metadata.syncStatus,
         );
-      } else {
-        state = state.copyWith(localVersion: 0, lastSyncTime: null);
       }
     } catch (e) {
       if (kDebugMode) {
-        print('Failed to load local version: $e');
+        print('BackupNotifier: Failed to load initial metadata: $e');
       }
     }
 
@@ -501,7 +474,7 @@ class BackupNotifier extends Notifier<BackupState> {
       }
     }
 
-    // 5. Fetch cloud state in background (Network - Non-blocking)
+    // 4. Fetch cloud state in background (Network - Non-blocking)
     _fetchCloudState();
   }
 
@@ -520,72 +493,44 @@ class BackupNotifier extends Notifier<BackupState> {
 
       // Load manifest
       int cloudVersion = 0;
-      String? lockedBy;
-      DateTime? lockedAt;
       final manifestFileId =
           await _driveService.getFileIdByName('manifest.json', folderId);
       if (manifestFileId != null) {
         final result = await _driveService.downloadFileWithETag(manifestFileId);
         final manifest = SyncManifest.fromJson(result.content);
         cloudVersion = manifest.version;
-        lockedBy = manifest.lockedBy;
-        lockedAt = manifest.lockedAt;
       }
 
-      // Load delta files
-      final allDeltas = await _driveService.listSyncFiles(folderId);
+      // CRITICAL: Ensure the row exists and update the cloud version.
+      final deviceId = await _getDeviceId();
+      final db = ref.read(databaseProvider);
 
-      // Filter deltas that are above the current local version
-      final localVersion = state.localVersion;
-      final upcomingDeltas = allDeltas.where((file) {
-        final ver = int.tryParse(
-                file.name?.replaceAll('v', '').replaceAll('.json', '') ??
-                    '0') ??
-            0;
-        return ver > localVersion;
-      }).toList();
+      final currentMetadata = await (db.select(db.syncMetadata)
+            ..where((t) => t.deviceId.equals(deviceId)))
+          .getSingleOrNull();
 
-      // Sort ascending to show the next ones to sync first
-      upcomingDeltas.sort((a, b) {
-        final aVer = int.tryParse(
-                a.name?.replaceAll('v', '').replaceAll('.json', '') ?? '0') ??
-            0;
-        final bVer = int.tryParse(
-                b.name?.replaceAll('v', '').replaceAll('.json', '') ?? '0') ??
-            0;
-        return aVer.compareTo(bVer);
-      });
-
-      // If no upcoming deltas, show the last 5 synced deltas (descending)
-      List<drive.File> displayDeltas;
-      if (upcomingDeltas.isNotEmpty) {
-        displayDeltas = upcomingDeltas.take(5).toList();
-      } else {
-        final syncedDeltas = allDeltas.where((file) {
-          final ver = int.tryParse(
-                  file.name?.replaceAll('v', '').replaceAll('.json', '') ??
-                      '0') ??
-              0;
-          return ver <= localVersion && ver > 0;
-        }).toList();
-        syncedDeltas.sort((a, b) {
-          final aVer = int.tryParse(
-                  a.name?.replaceAll('v', '').replaceAll('.json', '') ?? '0') ??
-              0;
-          final bVer = int.tryParse(
-                  b.name?.replaceAll('v', '').replaceAll('.json', '') ?? '0') ??
-              0;
-          return bVer.compareTo(aVer);
-        });
-        displayDeltas = syncedDeltas.take(5).toList();
+      if (currentMetadata == null) {
+        // Insert new row if it doesn't exist
+        await db.into(db.syncMetadata).insert(SyncMetadataCompanion(
+              deviceId: Value(deviceId),
+              cloudVersion: Value(cloudVersion),
+              version: const Value(0),
+              syncStatus: const Value('Idle'),
+            ));
+        if (kDebugMode) {
+          print('BackupNotifier: Created new metadata row with cloud version $cloudVersion');
+        }
+      } else if (currentMetadata.cloudVersion != cloudVersion) {
+        // Update existing row only if cloud version changed
+        await (db.update(db.syncMetadata)
+              ..where((t) => t.deviceId.equals(deviceId)))
+            .write(SyncMetadataCompanion(
+          cloudVersion: Value(cloudVersion),
+        ));
+        if (kDebugMode) {
+          print('BackupNotifier: Updated existing cloud version to $cloudVersion in DB');
+        }
       }
-
-      state = state.copyWith(
-        cloudVersion: cloudVersion,
-        lockedBy: lockedBy,
-        lockedAt: lockedAt,
-        deltaFiles: displayDeltas,
-      );
     } catch (e) {
       if (kDebugMode) {
         print('Failed to fetch cloud state: $e');
@@ -628,7 +573,10 @@ class BackupNotifier extends Notifier<BackupState> {
         }
       }
     }
-    state = state.copyWith(unsyncedCount: total);
+    
+    if (state.unsyncedCount != total) {
+      state = state.copyWith(unsyncedCount: total);
+    }
   }
 
   Future<String> _getDeviceId() async {
