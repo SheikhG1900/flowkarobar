@@ -13,6 +13,7 @@ import 'package:flowpaisa/features/backup/data/sync/sync_scheduler.dart';
 import 'package:flowpaisa/features/notifications/presentation/providers/notification_provider.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:googleapis/drive/v3.dart' as drive;
+import 'dart:async';
 import 'package:flowpaisa/features/payables/presentation/providers/payables_provider.dart';
 import 'package:flowpaisa/features/receivables/presentation/providers/receivables_provider.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
@@ -301,16 +302,86 @@ class BackupNotifier extends Notifier<BackupState> {
       // 1. Trigger the background task
       await SyncScheduler.triggerOnDemandSync();
 
-      // 2. Safety timeout: If background task doesn't report back, clear loading state
-      Future.delayed(const Duration(seconds: 15), () {
-        if (state.isLoading && state.syncStatus == 'Syncing...') {
-          // Check if it's still "Syncing..." in SharedPreferences
+      // 2. Start a periodic refresh timer to catch updates from the background isolate.
+      // This is necessary because Drift streams don't automatically propagate
+      // across isolates without a shared connection.
+      _startSyncProgressTimer();
+
+      // 3. Safety timeout: If background task doesn't report back, clear loading state
+      Future.delayed(const Duration(seconds: 30), () {
+        if (state.isLoading) {
           _checkFinalStatus();
         }
       });
     } catch (e) {
       state = state.copyWith(
           isLoading: false, error: e.toString(), syncStatus: 'Idle');
+    }
+  }
+
+  Timer? _syncProgressTimer;
+
+  void _startSyncProgressTimer() {
+    _syncProgressTimer?.cancel();
+    _syncProgressTimer =
+        Timer.periodic(const Duration(seconds: 2), (timer) async {
+      if (!ref.mounted || (!state.isLoading && state.syncStatus == 'Idle')) {
+        timer.cancel();
+        return;
+      }
+
+      // Force a refresh of versions and status from the database and SharedPreferences
+      await _refreshSyncProgress();
+    });
+  }
+
+  Future<void> _refreshSyncProgress() async {
+    final db = ref.read(databaseProvider);
+    final deviceId = await _getDeviceId();
+    final activeCashbook = ref.read(activeCashbookProvider);
+    final prefs = await SharedPreferences.getInstance();
+
+    try {
+      // 1. Refresh status from SharedPreferences (most reliable cross-isolate)
+      // CRITICAL: We MUST reload SharedPreferences to see changes from the background isolate.
+      await prefs.reload();
+      final status =
+          prefs.getString('sync_status_${activeCashbook.id}') ?? 'Idle';
+
+      // 2. Refresh metadata from DB (bypass Drift's stream cache by doing a fresh get)
+      final metadata = await (db.select(db.syncMetadata)
+            ..where((t) => t.deviceId.equals(deviceId)))
+          .getSingleOrNull();
+
+      if (metadata != null) {
+        if (state.syncStatus != status ||
+            state.localVersion != metadata.version ||
+            state.cloudVersion != metadata.cloudVersion) {
+          if (kDebugMode) {
+            print(
+                'BackupNotifier: Periodic Refresh - Status: $status, LocalVer: ${metadata.version}, CloudVer: ${metadata.cloudVersion}');
+          }
+
+          state = state.copyWith(
+            syncStatus: status,
+            localVersion: metadata.version,
+            cloudVersion: metadata.cloudVersion,
+            lastSyncTime: metadata.lastSyncAt,
+            isLoading: status.contains('Syncing') ||
+                status.contains('Pulling') ||
+                status.contains('Pushing'),
+          );
+
+          if (status == 'Success') {
+            _syncProgressTimer?.cancel();
+            _handleSyncSuccess();
+          }
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('BackupNotifier: Failed periodic refresh: $e');
+      }
     }
   }
 
@@ -322,6 +393,7 @@ class BackupNotifier extends Notifier<BackupState> {
   Future<void> _checkFinalStatus() async {
     final activeCashbook = ref.read(activeCashbookProvider);
     final prefs = await SharedPreferences.getInstance();
+    await prefs.reload();
     final status =
         prefs.getString('sync_status_${activeCashbook.id}') ?? 'Idle';
 
@@ -401,54 +473,25 @@ class BackupNotifier extends Notifier<BackupState> {
     // 2. Initial unsynced count update (Instant)
     _updateTotalUnsyncedCount();
 
-    // 3. Listen to local version changes
-    final versionStream = db.select(db.syncMetadata).watch();
-    final versionSub = versionStream.listen((metadata) {
-      if (!ref.mounted) return;
-      if (metadata.isNotEmpty) {
-        final localVersion = metadata
-            .map((m) => m.version)
-            .fold(0, (prev, v) => v > prev ? v : prev);
-        final lastSyncTime = metadata.map((m) => m.lastSyncAt).fold<DateTime?>(
-            null,
-            (prev, v) =>
-                (v != null && (prev == null || v.isAfter(prev))) ? v : prev);
-        state = state.copyWith(
-          localVersion: localVersion,
-          lastSyncTime: lastSyncTime,
-        );
-      } else {
-        state = state.copyWith(localVersion: 0, lastSyncTime: null);
-      }
-    });
-    ref.onDispose(() => versionSub.cancel());
-
-    // 4. Listen to unsynced counts
+    // 3. Listen to unsynced counts
     try {
-      final tables = [
-        'categories',
-        'contacts',
-        'transactions',
-        'receivables',
-        'payables',
-        'reminders',
-        'app_currencies',
-        'transaction_schedules'
+      // We watch the tables using their specific generated classes to satisfy Drift's type system.
+      // This is the most reliable way to get updates whenever any row in the table changes.
+      final streams = [
+        db.select(db.categories).watch(),
+        db.select(db.contacts).watch(),
+        db.select(db.transactions).watch(),
+        db.select(db.receivables).watch(),
+        db.select(db.payables).watch(),
+        db.select(db.reminders).watch(),
+        db.select(db.appCurrencies).watch(),
+        db.select(db.transactionSchedules).watch(),
       ];
-      for (final table in tables) {
-        final countStream = db
-            .customSelect(
-                'SELECT COUNT(*) as count FROM $table WHERE is_not_synced = 1')
-            .watchSingle();
 
-        final subscription = countStream.listen((countResult) {
+      for (final stream in streams) {
+        final subscription = stream.listen((_) {
           if (!ref.mounted) return;
           _updateTotalUnsyncedCount();
-          // Also fetch cloud state when a sync might have happened (unsynced count drops to 0)
-          final count = (countResult.data['count'] as num).toInt();
-          if (count == 0) {
-            _fetchCloudState();
-          }
         });
         ref.onDispose(() => subscription.cancel());
       }
@@ -604,11 +647,16 @@ class BackupNotifier extends Notifier<BackupState> {
     final db = ref.read(databaseProvider);
     final deviceId = await _getDeviceId();
 
-    final subscription = (db.select(db.syncMetadata)
-          ..where((t) => t.deviceId.equals(deviceId)))
-        .watchSingleOrNull()
-        .listen((metadata) {
+    if (kDebugMode) {
+      print('BackupNotifier: Starting DB watcher for device: $deviceId');
+    }
+
+    // Use a stream that watches the entire table to be more resilient
+    final subscription = db.select(db.syncMetadata).watch().listen((list) {
       if (!ref.mounted) return;
+
+      // Find the metadata for OUR device in the list
+      final metadata = list.where((t) => t.deviceId == deviceId).firstOrNull;
 
       if (metadata != null) {
         String status = metadata.syncStatus;
@@ -620,21 +668,44 @@ class BackupNotifier extends Notifier<BackupState> {
           status = 'Idle';
         }
 
-        if (state.syncStatus != status || state.syncStartedAt != startedAt) {
+        // CRITICAL: We only update the state if the incoming metadata has a different version,
+        // status, or cloud version than what we currently have.
+        // We also check for 'Success' specifically to trigger refreshes.
+        if (state.syncStatus != status ||
+            state.syncStartedAt != startedAt ||
+            state.cloudVersion != metadata.cloudVersion ||
+            state.localVersion != metadata.version ||
+            state.lastSyncTime != metadata.lastSyncAt) {
+          final bool wasSyncing = state.syncStatus.contains('Syncing') ||
+              state.syncStatus.contains('Pulling') ||
+              state.syncStatus.contains('Pushing');
+          final bool isNowSuccess = status == 'Success';
+
+          if (kDebugMode) {
+            print(
+                'BackupNotifier: DB Watcher - Status: $status, LocalVer: ${metadata.version}, CloudVer: ${metadata.cloudVersion}, DeviceID: ${metadata.deviceId}');
+          }
+
           state = state.copyWith(
             syncStatus: status,
             syncStartedAt: startedAt,
             localVersion: metadata.version,
+            cloudVersion: metadata.cloudVersion,
             lastSyncTime: metadata.lastSyncAt,
             isLoading: status.contains('Syncing') ||
                 status.contains('Pulling') ||
                 status.contains('Pushing'),
           );
 
-          // If status just changed to Success, trigger UI refreshes
-          if (status == 'Success') {
+          // If we just finished a sync (transitioned from syncing to success), trigger refreshes
+          if (wasSyncing && isNowSuccess) {
             _handleSyncSuccess();
           }
+        }
+      } else {
+        if (kDebugMode) {
+          print(
+              'BackupNotifier: DB Watcher - No metadata found in table for device: $deviceId. Total rows: ${list.length}');
         }
       }
     });
@@ -645,10 +716,34 @@ class BackupNotifier extends Notifier<BackupState> {
   }
 
   Future<void> _handleSyncSuccess() async {
-    // CRITICAL: Invalidate the database provider first.
-    ref.invalidate(databaseProvider);
+    // 1. Refresh local version and sync time from DB manually to ensure state is updated
+    // even if the watcher hasn't fired yet
+    final db = ref.read(databaseProvider);
+    try {
+      final deviceId = await _getDeviceId();
+      final metadataList = await (db.select(db.syncMetadata)
+            ..where((t) => t.deviceId.equals(deviceId)))
+          .get();
+      if (metadataList.isNotEmpty) {
+        final metadata = metadataList.first;
 
-    // Then invalidate the specific list providers
+        state = state.copyWith(
+          localVersion: metadata.version,
+          cloudVersion: metadata.cloudVersion,
+          syncStatus: metadata.syncStatus,
+        );
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('BackupNotifier: Failed to manual refresh after success: $e');
+      }
+    }
+
+    // Refresh unsynced counts and cloud state immediately
+    await _updateTotalUnsyncedCount();
+    await _fetchCloudState();
+
+    // Refresh summary providers without invalidating the whole database
     ref.invalidate(transactionsPaginatedProvider);
     ref.invalidate(payablesPaginatedProvider);
     ref.invalidate(receivablesPaginatedProvider);
@@ -663,20 +758,25 @@ class BackupNotifier extends Notifier<BackupState> {
     ref.invalidate(totalPendingPayablesProvider);
     ref.invalidate(totalPendingReceivablesProvider);
 
-    // Refresh unsynced counts and cloud state immediately
-    await _updateTotalUnsyncedCount();
-    await _fetchCloudState();
-
     // Reset status to Idle after a delay in the database
-    Future.delayed(const Duration(seconds: 3), () async {
+    Future.delayed(const Duration(seconds: 10), () async {
       if (!ref.mounted) return;
       final db = ref.read(databaseProvider);
       final deviceId = await _getDeviceId();
-      await (db.update(db.syncMetadata)..where((t) => t.deviceId.equals(deviceId)))
-          .write(SyncMetadataCompanion(
-        syncStatus: const Value('Idle'),
-        syncStartedAt: const Value(null),
-      ));
+
+      // Only reset if it's still Success (don't overwrite a new sync that might have started)
+      final currentMetadata = await (db.select(db.syncMetadata)
+            ..where((t) => t.deviceId.equals(deviceId)))
+          .getSingleOrNull();
+
+      if (currentMetadata?.syncStatus == 'Success') {
+        await (db.update(db.syncMetadata)
+              ..where((t) => t.deviceId.equals(deviceId)))
+            .write(SyncMetadataCompanion(
+          syncStatus: const Value('Idle'),
+          syncStartedAt: const Value(null),
+        ));
+      }
     });
   }
 

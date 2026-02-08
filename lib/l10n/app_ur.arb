@@ -1108,6 +1108,15 @@
     }
   },
   "updatesAvailable": "کلاؤڈ پر اپ ڈیٹس دستیاب ہیں",
+  "oneUpdateAvailable": "کلاؤڈ پر 1 اپ ڈیٹ دستیاب ہے",
+  "multipleUpdatesAvailable": "کلاؤڈ پر {count} اپ ڈیٹس دستیاب ہیں",
+  "@multipleUpdatesAvailable": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "dataSynced": "ڈیٹا سنک ہو گیا ہے",
   "syncNow": "ابھی سنک کریں",
   "premiumRequiredForSync": "کلاؤڈ سنک کے لیے پریمیم درکار ہے",

@@ -2930,6 +2930,14 @@ class AppLocalizationsHi extends AppLocalizations {
   String get updatesAvailable => 'क्लाउड पर अपडेट उपलब्ध हैं';
 
   @override
+  String get oneUpdateAvailable => 'क्लाउड पर 1 अपडेट उपलब्ध है';
+
+  @override
+  String multipleUpdatesAvailable(int count) {
+    return 'क्लाउड पर $count अपडेट उपलब्ध हैं';
+  }
+
+  @override
   String get dataSynced => 'डेटा सिंक हो गया है';
 
   @override

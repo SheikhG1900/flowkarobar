@@ -1108,6 +1108,15 @@
     }
   },
   "updatesAvailable": "क्लाउड पर अपडेट उपलब्ध हैं",
+  "oneUpdateAvailable": "क्लाउड पर 1 अपडेट उपलब्ध है",
+  "multipleUpdatesAvailable": "क्लाउड पर {count} अपडेट उपलब्ध हैं",
+  "@multipleUpdatesAvailable": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "dataSynced": "डेटा सिंक हो गया है",
   "syncNow": "अभी सिंक करें",
   "premiumRequiredForSync": "क्लाउड सिंक के लिए प्रीमियम आवश्यक है",

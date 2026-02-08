@@ -8,7 +8,11 @@ import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import 'package:flowpaisa/core/database/database.dart';
+import 'package:sqlite3/sqlite3.dart' as sqlite3_lib;
 import 'package:flowpaisa/features/settings/data/user_preferences_repository.dart';
+import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
+import 'package:flowpaisa/shared/providers/currency_provider.dart';
+import 'package:flowpaisa/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
 import 'package:flowpaisa/features/payables/presentation/providers/payables_provider.dart';
 import 'package:flowpaisa/features/receivables/presentation/providers/receivables_provider.dart';
@@ -110,6 +114,8 @@ class CashbookNotifier extends Notifier<List<Cashbook>> {
           await newDb.close();
         }
       }
+    } catch (e) {
+      print('Error copying profile data: $e');
     } finally {
       await defaultDb.close();
     }
@@ -169,25 +175,61 @@ class CashbookNotifier extends Notifier<List<Cashbook>> {
   Future<void> clearCashbookData(String id) async {
     final cashbook = state.firstWhere((c) => c.id == id);
 
-    // Check if this is the active cashbook
+    // Check if this is the active cashbook to trigger UI refreshes
     final isActive = ref.read(activeCashbookIdProvider) == id;
 
-    // ALWAYS create a temporary, independent database instance for the clear operation.
-    // This is the ONLY way to completely avoid CircularDependencyError in Riverpod
-    // because CashbookNotifier is a dependency of databaseProvider.
-    final db = AppDatabase(fileName: cashbook.dbPath);
-
+    // CRITICAL: We MUST NOT use ref.read(databaseProvider) or AppDatabase(fileName) directly here
+    // if it's the active cashbook, because it triggers Drift's "opened multiple times" warning
+    // or CircularDependencyError.
+    
     try {
-      await db.clearAllData();
+      final dbFolder = await getApplicationDocumentsDirectory();
+      final file = File(p.join(dbFolder.path, cashbook.dbPath));
+      
+      // Open a raw sqlite connection to perform the deletion.
+      // This is safe because it doesn't instantiate the Drift AppDatabase class.
+      final rawDb = sqlite3_lib.sqlite3.open(file.path);
+      
+      try {
+        rawDb.execute('BEGIN TRANSACTION;');
+        rawDb.execute('DELETE FROM transaction_schedules;');
+        rawDb.execute('DELETE FROM reminders;');
+        rawDb.execute('DELETE FROM whats_app_queue;');
+        rawDb.execute('DELETE FROM receivables;');
+        rawDb.execute('DELETE FROM payables;');
+        rawDb.execute('DELETE FROM transactions;');
+        rawDb.execute('DELETE FROM category_usage_stats;');
+        rawDb.execute('DELETE FROM contact_usage_stats;');
+        rawDb.execute('DELETE FROM contacts;');
+        rawDb.execute('DELETE FROM sync_log;');
+        rawDb.execute('DELETE FROM sync_metadata;');
+        rawDb.execute('DELETE FROM categories;');
+        rawDb.execute('DELETE FROM app_currencies;');
+        rawDb.execute('COMMIT;');
+      } catch (e) {
+        rawDb.execute('ROLLBACK;');
+        rethrow;
+      } finally {
+        rawDb.dispose();
+      }
 
       if (isActive) {
-        Future.microtask(() {
-          // Invalidate listing providers to clear UI state
+        // Since we cleared the tables via raw SQL, the existing Drift instance (if any)
+        // needs to re-insert the default categories and currencies.
+        // We use a microtask to avoid blocking the current execution.
+        Future.microtask(() async {
+          // Let's use a temporary instance just for the re-insertion, then close it.
+          final tempDb = AppDatabase(fileName: cashbook.dbPath);
+          try {
+            await tempDb.insertDefaultData();
+          } finally {
+            await tempDb.close();
+          }
+
+          // Invalidate all data-dependent providers
           ref.invalidate(transactionsPaginatedProvider);
           ref.invalidate(payablesPaginatedProvider);
           ref.invalidate(receivablesPaginatedProvider);
-
-          // Invalidate summary providers
           ref.invalidate(allPayablesProvider);
           ref.invalidate(allReceivablesProvider);
           ref.invalidate(pendingPayablesCountProvider);
@@ -196,14 +238,20 @@ class CashbookNotifier extends Notifier<List<Cashbook>> {
           ref.invalidate(overdueReceivablesCountProvider);
           ref.invalidate(totalPendingPayablesProvider);
           ref.invalidate(totalPendingReceivablesProvider);
+          
+          // Also invalidate profile/settings providers as they depend on the DB
+          ref.invalidate(userProfileProvider);
+          
+          // Force a refresh of the dashboard stats
+          ref.invalidate(dashboardStatsProvider);
+          ref.invalidate(currencyInitializerProvider);
+          ref.invalidate(selectedCurrencyIdProvider);
+          ref.invalidate(currentCurrencyProvider);
         });
       }
     } catch (e) {
       print('Error clearing cashbook data: $e');
       rethrow;
-    } finally {
-      // Always close the temporary instance
-      await db.close();
     }
   }
 

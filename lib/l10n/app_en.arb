@@ -1592,6 +1592,15 @@
     }
   },
   "updatesAvailable": "Updates available on cloud",
+  "oneUpdateAvailable": "1 update available on cloud",
+  "multipleUpdatesAvailable": "{count} updates available on cloud",
+  "@multipleUpdatesAvailable": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "dataSynced": "Data is synced",
   "syncNow": "Sync Now",
   "premiumRequiredForSync": "Premium required for cloud sync",

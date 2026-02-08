@@ -2919,6 +2919,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get updatesAvailable => 'Updates available on cloud';
 
   @override
+  String get oneUpdateAvailable => '1 update available on cloud';
+
+  @override
+  String multipleUpdatesAvailable(int count) {
+    return '$count updates available on cloud';
+  }
+
+  @override
   String get dataSynced => 'Data is synced';
 
   @override

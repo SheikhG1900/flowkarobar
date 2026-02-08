@@ -5357,6 +5357,18 @@ abstract class AppLocalizations {
   /// **'Updates available on cloud'**
   String get updatesAvailable;
 
+  /// No description provided for @oneUpdateAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'1 update available on cloud'**
+  String get oneUpdateAvailable;
+
+  /// No description provided for @multipleUpdatesAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} updates available on cloud'**
+  String multipleUpdatesAvailable(int count);
+
   /// No description provided for @dataSynced.
   ///
   /// In en, this message translates to:

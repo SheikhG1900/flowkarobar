@@ -7037,6 +7037,14 @@ class $SyncMetadataTable extends SyncMetadata
       type: DriftSqlType.int,
       requiredDuringInsert: false,
       defaultValue: const Constant(0));
+  static const VerificationMeta _cloudVersionMeta =
+      const VerificationMeta('cloudVersion');
+  @override
+  late final GeneratedColumn<int> cloudVersion = GeneratedColumn<int>(
+      'cloud_version', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
   static const VerificationMeta _lastSyncAtMeta =
       const VerificationMeta('lastSyncAt');
   @override
@@ -7059,7 +7067,7 @@ class $SyncMetadataTable extends SyncMetadata
           type: DriftSqlType.dateTime, requiredDuringInsert: false);
   @override
   List<GeneratedColumn> get $columns =>
-      [deviceId, version, lastSyncAt, syncStatus, syncStartedAt];
+      [deviceId, version, cloudVersion, lastSyncAt, syncStatus, syncStartedAt];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -7079,6 +7087,12 @@ class $SyncMetadataTable extends SyncMetadata
     if (data.containsKey('version')) {
       context.handle(_versionMeta,
           version.isAcceptableOrUnknown(data['version']!, _versionMeta));
+    }
+    if (data.containsKey('cloud_version')) {
+      context.handle(
+          _cloudVersionMeta,
+          cloudVersion.isAcceptableOrUnknown(
+              data['cloud_version']!, _cloudVersionMeta));
     }
     if (data.containsKey('last_sync_at')) {
       context.handle(
@@ -7111,6 +7125,8 @@ class $SyncMetadataTable extends SyncMetadata
           .read(DriftSqlType.string, data['${effectivePrefix}device_id'])!,
       version: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}version'])!,
+      cloudVersion: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}cloud_version'])!,
       lastSyncAt: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}last_sync_at']),
       syncStatus: attachedDatabase.typeMapping
@@ -7130,12 +7146,14 @@ class SyncMetadataData extends DataClass
     implements Insertable<SyncMetadataData> {
   final String deviceId;
   final int version;
+  final int cloudVersion;
   final DateTime? lastSyncAt;
   final String syncStatus;
   final DateTime? syncStartedAt;
   const SyncMetadataData(
       {required this.deviceId,
       required this.version,
+      required this.cloudVersion,
       this.lastSyncAt,
       required this.syncStatus,
       this.syncStartedAt});
@@ -7144,6 +7162,7 @@ class SyncMetadataData extends DataClass
     final map = <String, Expression>{};
     map['device_id'] = Variable<String>(deviceId);
     map['version'] = Variable<int>(version);
+    map['cloud_version'] = Variable<int>(cloudVersion);
     if (!nullToAbsent || lastSyncAt != null) {
       map['last_sync_at'] = Variable<DateTime>(lastSyncAt);
     }
@@ -7158,6 +7177,7 @@ class SyncMetadataData extends DataClass
     return SyncMetadataCompanion(
       deviceId: Value(deviceId),
       version: Value(version),
+      cloudVersion: Value(cloudVersion),
       lastSyncAt: lastSyncAt == null && nullToAbsent
           ? const Value.absent()
           : Value(lastSyncAt),
@@ -7174,6 +7194,7 @@ class SyncMetadataData extends DataClass
     return SyncMetadataData(
       deviceId: serializer.fromJson<String>(json['deviceId']),
       version: serializer.fromJson<int>(json['version']),
+      cloudVersion: serializer.fromJson<int>(json['cloudVersion']),
       lastSyncAt: serializer.fromJson<DateTime?>(json['lastSyncAt']),
       syncStatus: serializer.fromJson<String>(json['syncStatus']),
       syncStartedAt: serializer.fromJson<DateTime?>(json['syncStartedAt']),
@@ -7185,6 +7206,7 @@ class SyncMetadataData extends DataClass
     return <String, dynamic>{
       'deviceId': serializer.toJson<String>(deviceId),
       'version': serializer.toJson<int>(version),
+      'cloudVersion': serializer.toJson<int>(cloudVersion),
       'lastSyncAt': serializer.toJson<DateTime?>(lastSyncAt),
       'syncStatus': serializer.toJson<String>(syncStatus),
       'syncStartedAt': serializer.toJson<DateTime?>(syncStartedAt),
@@ -7194,12 +7216,14 @@ class SyncMetadataData extends DataClass
   SyncMetadataData copyWith(
           {String? deviceId,
           int? version,
+          int? cloudVersion,
           Value<DateTime?> lastSyncAt = const Value.absent(),
           String? syncStatus,
           Value<DateTime?> syncStartedAt = const Value.absent()}) =>
       SyncMetadataData(
         deviceId: deviceId ?? this.deviceId,
         version: version ?? this.version,
+        cloudVersion: cloudVersion ?? this.cloudVersion,
         lastSyncAt: lastSyncAt.present ? lastSyncAt.value : this.lastSyncAt,
         syncStatus: syncStatus ?? this.syncStatus,
         syncStartedAt:
@@ -7209,6 +7233,9 @@ class SyncMetadataData extends DataClass
     return SyncMetadataData(
       deviceId: data.deviceId.present ? data.deviceId.value : this.deviceId,
       version: data.version.present ? data.version.value : this.version,
+      cloudVersion: data.cloudVersion.present
+          ? data.cloudVersion.value
+          : this.cloudVersion,
       lastSyncAt:
           data.lastSyncAt.present ? data.lastSyncAt.value : this.lastSyncAt,
       syncStatus:
@@ -7224,6 +7251,7 @@ class SyncMetadataData extends DataClass
     return (StringBuffer('SyncMetadataData(')
           ..write('deviceId: $deviceId, ')
           ..write('version: $version, ')
+          ..write('cloudVersion: $cloudVersion, ')
           ..write('lastSyncAt: $lastSyncAt, ')
           ..write('syncStatus: $syncStatus, ')
           ..write('syncStartedAt: $syncStartedAt')
@@ -7232,14 +7260,15 @@ class SyncMetadataData extends DataClass
   }
 
   @override
-  int get hashCode =>
-      Object.hash(deviceId, version, lastSyncAt, syncStatus, syncStartedAt);
+  int get hashCode => Object.hash(
+      deviceId, version, cloudVersion, lastSyncAt, syncStatus, syncStartedAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is SyncMetadataData &&
           other.deviceId == this.deviceId &&
           other.version == this.version &&
+          other.cloudVersion == this.cloudVersion &&
           other.lastSyncAt == this.lastSyncAt &&
           other.syncStatus == this.syncStatus &&
           other.syncStartedAt == this.syncStartedAt);
@@ -7248,6 +7277,7 @@ class SyncMetadataData extends DataClass
 class SyncMetadataCompanion extends UpdateCompanion<SyncMetadataData> {
   final Value<String> deviceId;
   final Value<int> version;
+  final Value<int> cloudVersion;
   final Value<DateTime?> lastSyncAt;
   final Value<String> syncStatus;
   final Value<DateTime?> syncStartedAt;
@@ -7255,6 +7285,7 @@ class SyncMetadataCompanion extends UpdateCompanion<SyncMetadataData> {
   const SyncMetadataCompanion({
     this.deviceId = const Value.absent(),
     this.version = const Value.absent(),
+    this.cloudVersion = const Value.absent(),
     this.lastSyncAt = const Value.absent(),
     this.syncStatus = const Value.absent(),
     this.syncStartedAt = const Value.absent(),
@@ -7263,6 +7294,7 @@ class SyncMetadataCompanion extends UpdateCompanion<SyncMetadataData> {
   SyncMetadataCompanion.insert({
     required String deviceId,
     this.version = const Value.absent(),
+    this.cloudVersion = const Value.absent(),
     this.lastSyncAt = const Value.absent(),
     this.syncStatus = const Value.absent(),
     this.syncStartedAt = const Value.absent(),
@@ -7271,6 +7303,7 @@ class SyncMetadataCompanion extends UpdateCompanion<SyncMetadataData> {
   static Insertable<SyncMetadataData> custom({
     Expression<String>? deviceId,
     Expression<int>? version,
+    Expression<int>? cloudVersion,
     Expression<DateTime>? lastSyncAt,
     Expression<String>? syncStatus,
     Expression<DateTime>? syncStartedAt,
@@ -7279,6 +7312,7 @@ class SyncMetadataCompanion extends UpdateCompanion<SyncMetadataData> {
     return RawValuesInsertable({
       if (deviceId != null) 'device_id': deviceId,
       if (version != null) 'version': version,
+      if (cloudVersion != null) 'cloud_version': cloudVersion,
       if (lastSyncAt != null) 'last_sync_at': lastSyncAt,
       if (syncStatus != null) 'sync_status': syncStatus,
       if (syncStartedAt != null) 'sync_started_at': syncStartedAt,
@@ -7289,6 +7323,7 @@ class SyncMetadataCompanion extends UpdateCompanion<SyncMetadataData> {
   SyncMetadataCompanion copyWith(
       {Value<String>? deviceId,
       Value<int>? version,
+      Value<int>? cloudVersion,
       Value<DateTime?>? lastSyncAt,
       Value<String>? syncStatus,
       Value<DateTime?>? syncStartedAt,
@@ -7296,6 +7331,7 @@ class SyncMetadataCompanion extends UpdateCompanion<SyncMetadataData> {
     return SyncMetadataCompanion(
       deviceId: deviceId ?? this.deviceId,
       version: version ?? this.version,
+      cloudVersion: cloudVersion ?? this.cloudVersion,
       lastSyncAt: lastSyncAt ?? this.lastSyncAt,
       syncStatus: syncStatus ?? this.syncStatus,
       syncStartedAt: syncStartedAt ?? this.syncStartedAt,
@@ -7311,6 +7347,9 @@ class SyncMetadataCompanion extends UpdateCompanion<SyncMetadataData> {
     }
     if (version.present) {
       map['version'] = Variable<int>(version.value);
+    }
+    if (cloudVersion.present) {
+      map['cloud_version'] = Variable<int>(cloudVersion.value);
     }
     if (lastSyncAt.present) {
       map['last_sync_at'] = Variable<DateTime>(lastSyncAt.value);
@@ -7332,6 +7371,7 @@ class SyncMetadataCompanion extends UpdateCompanion<SyncMetadataData> {
     return (StringBuffer('SyncMetadataCompanion(')
           ..write('deviceId: $deviceId, ')
           ..write('version: $version, ')
+          ..write('cloudVersion: $cloudVersion, ')
           ..write('lastSyncAt: $lastSyncAt, ')
           ..write('syncStatus: $syncStatus, ')
           ..write('syncStartedAt: $syncStartedAt, ')
@@ -12571,6 +12611,7 @@ typedef $$SyncMetadataTableCreateCompanionBuilder = SyncMetadataCompanion
     Function({
   required String deviceId,
   Value<int> version,
+  Value<int> cloudVersion,
   Value<DateTime?> lastSyncAt,
   Value<String> syncStatus,
   Value<DateTime?> syncStartedAt,
@@ -12580,6 +12621,7 @@ typedef $$SyncMetadataTableUpdateCompanionBuilder = SyncMetadataCompanion
     Function({
   Value<String> deviceId,
   Value<int> version,
+  Value<int> cloudVersion,
   Value<DateTime?> lastSyncAt,
   Value<String> syncStatus,
   Value<DateTime?> syncStartedAt,
@@ -12600,6 +12642,9 @@ class $$SyncMetadataTableFilterComposer
 
   ColumnFilters<int> get version => $composableBuilder(
       column: $table.version, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get cloudVersion => $composableBuilder(
+      column: $table.cloudVersion, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get lastSyncAt => $composableBuilder(
       column: $table.lastSyncAt, builder: (column) => ColumnFilters(column));
@@ -12626,6 +12671,10 @@ class $$SyncMetadataTableOrderingComposer
   ColumnOrderings<int> get version => $composableBuilder(
       column: $table.version, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<int> get cloudVersion => $composableBuilder(
+      column: $table.cloudVersion,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<DateTime> get lastSyncAt => $composableBuilder(
       column: $table.lastSyncAt, builder: (column) => ColumnOrderings(column));
 
@@ -12651,6 +12700,9 @@ class $$SyncMetadataTableAnnotationComposer
 
   GeneratedColumn<int> get version =>
       $composableBuilder(column: $table.version, builder: (column) => column);
+
+  GeneratedColumn<int> get cloudVersion => $composableBuilder(
+      column: $table.cloudVersion, builder: (column) => column);
 
   GeneratedColumn<DateTime> get lastSyncAt => $composableBuilder(
       column: $table.lastSyncAt, builder: (column) => column);
@@ -12690,6 +12742,7 @@ class $$SyncMetadataTableTableManager extends RootTableManager<
           updateCompanionCallback: ({
             Value<String> deviceId = const Value.absent(),
             Value<int> version = const Value.absent(),
+            Value<int> cloudVersion = const Value.absent(),
             Value<DateTime?> lastSyncAt = const Value.absent(),
             Value<String> syncStatus = const Value.absent(),
             Value<DateTime?> syncStartedAt = const Value.absent(),
@@ -12698,6 +12751,7 @@ class $$SyncMetadataTableTableManager extends RootTableManager<
               SyncMetadataCompanion(
             deviceId: deviceId,
             version: version,
+            cloudVersion: cloudVersion,
             lastSyncAt: lastSyncAt,
             syncStatus: syncStatus,
             syncStartedAt: syncStartedAt,
@@ -12706,6 +12760,7 @@ class $$SyncMetadataTableTableManager extends RootTableManager<
           createCompanionCallback: ({
             required String deviceId,
             Value<int> version = const Value.absent(),
+            Value<int> cloudVersion = const Value.absent(),
             Value<DateTime?> lastSyncAt = const Value.absent(),
             Value<String> syncStatus = const Value.absent(),
             Value<DateTime?> syncStartedAt = const Value.absent(),
@@ -12714,6 +12769,7 @@ class $$SyncMetadataTableTableManager extends RootTableManager<
               SyncMetadataCompanion.insert(
             deviceId: deviceId,
             version: version,
+            cloudVersion: cloudVersion,
             lastSyncAt: lastSyncAt,
             syncStatus: syncStatus,
             syncStartedAt: syncStartedAt,

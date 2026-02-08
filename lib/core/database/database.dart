@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
@@ -257,6 +258,7 @@ class TransactionSchedules extends Table {
 class SyncMetadata extends Table {
   TextColumn get deviceId => text()();
   IntColumn get version => integer().withDefault(const Constant(0))();
+  IntColumn get cloudVersion => integer().withDefault(const Constant(0))();
   DateTimeColumn get lastSyncAt => dateTime().nullable()();
   TextColumn get syncStatus => text().withDefault(const Constant('Idle'))();
   DateTimeColumn get syncStartedAt => dateTime().nullable()();
@@ -286,7 +288,7 @@ class AppDatabase extends _$AppDatabase {
       : super(_openConnection(fileName));
 
   @override
-  int get schemaVersion => 13;
+  int get schemaVersion => 14;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -310,6 +312,17 @@ class AppDatabase extends _$AppDatabase {
           if (from <= 12) {
             await m.addColumn(syncMetadata, syncMetadata.syncStatus);
             await m.addColumn(syncMetadata, syncMetadata.syncStartedAt);
+          }
+          // Migration from version 13 to 14: Add cloudVersion to SyncMetadata
+          if (from <= 13) {
+            try {
+              await m.addColumn(syncMetadata, syncMetadata.cloudVersion);
+            } catch (e) {
+              // Column might already exist if migration was partially successful
+              if (kDebugMode) {
+                print('Migration: Column cloudVersion might already exist: $e');
+              }
+            }
           }
         },
       );
@@ -488,9 +501,13 @@ class AppDatabase extends _$AppDatabase {
       // Delete ALL categories and currencies, then re-insert defaults with fixed UUIDs
       await delete(categories).go();
       await delete(appCurrencies).go();
-      await _insertDefaultCategories();
-      await _insertDefaultCurrencies();
+      await insertDefaultData();
     });
+  }
+
+  Future<void> insertDefaultData() async {
+    await _insertDefaultCategories();
+    await _insertDefaultCurrencies();
   }
 }
 

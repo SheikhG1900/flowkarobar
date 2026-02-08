@@ -2938,6 +2938,14 @@ class AppLocalizationsUr extends AppLocalizations {
   String get updatesAvailable => 'کلاؤڈ پر اپ ڈیٹس دستیاب ہیں';
 
   @override
+  String get oneUpdateAvailable => 'کلاؤڈ پر 1 اپ ڈیٹ دستیاب ہے';
+
+  @override
+  String multipleUpdatesAvailable(int count) {
+    return 'کلاؤڈ پر $count اپ ڈیٹس دستیاب ہیں';
+  }
+
+  @override
   String get dataSynced => 'ڈیٹا سنک ہو گیا ہے';
 
   @override

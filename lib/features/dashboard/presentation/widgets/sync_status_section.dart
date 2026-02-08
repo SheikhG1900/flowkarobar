@@ -1,10 +1,10 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/features/backup/presentation/providers/backup_provider.dart';
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/features/backup/presentation/screens/backup_screen.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
-import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/shared/widgets/app_loading_indicator.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
@@ -79,26 +79,41 @@ class _SyncStatusSectionState extends ConsumerState<SyncStatusSection>
         backupState.syncStatus == 'Pushing...';
     final bool isSuccess = backupState.syncStatus == 'Success';
     final bool hasUnsynced = backupState.unsyncedCount > 0;
-    final bool hasCloudUpdates =
-        backupState.cloudVersion > backupState.localVersion;
-    final bool isSignedIn = backupState.currentUser != null;
 
+    // Recalculate these values on every build to ensure reactivity
+    final int localVer = backupState.localVersion;
+    final int cloudVer = backupState.cloudVersion;
+    final int updatesCount = cloudVer - localVer;
+    final bool hasCloudUpdates = updatesCount > 0;
+
+    final bool isSignedIn = backupState.currentUser != null;
+    if (kDebugMode) {
+      print('AW: cloudVer: $cloudVer');
+      print('AW: localVer: $localVer');
+      print('AW: syncStatus: ${backupState.syncStatus}');
+    }
     // Hide section if nothing to sync, no updates available, and not in success/syncing state
     if (!isSyncing && !isSuccess && !hasUnsynced && !hasCloudUpdates) {
       // Reset animation when hiding
       if (_animationController.isAnimating || _animationController.value > 0) {
-        _animationController.reset();
+        _animationController.reverse();
+      }
+      return const SizedBox.shrink();
+    }
+
+    // Additional check: If cloud version is equal or less than local version,
+    // and there are no unsynced changes, and we are not syncing, hide it.
+    // BUT we allow it to show if isSuccess is true (the temporary success message)
+    if (!isSyncing && !isSuccess && !hasUnsynced && !hasCloudUpdates) {
+      if (_animationController.isAnimating || _animationController.value > 0) {
+        _animationController.reverse();
       }
       return const SizedBox.shrink();
     }
 
     // Restart animation when section appears
     if (!_animationController.isAnimating && _animationController.value == 0) {
-      Future.delayed(const Duration(milliseconds: 100), () {
-        if (mounted) {
-          _animationController.forward();
-        }
-      });
+      _animationController.forward();
     }
 
     String statusText;
@@ -113,16 +128,14 @@ class _SyncStatusSectionState extends ConsumerState<SyncStatusSection>
       statusText = l10n.dataSynced;
       statusIcon = Symbols.check_circle;
       statusColor = Colors.green;
-    } else if (hasUnsynced && hasCloudUpdates) {
-      statusText = l10n.synchronization; // "Sync needed" fallback
-      statusIcon = Symbols.sync_problem;
-      statusColor = AppColors.error;
     } else if (hasUnsynced) {
       statusText = l10n.changesToPush(backupState.unsyncedCount);
       statusIcon = Symbols.cloud_upload;
       statusColor = theme.colorScheme.primary;
     } else if (hasCloudUpdates) {
-      statusText = l10n.updatesAvailable;
+      statusText = updatesCount == 1
+          ? l10n.oneUpdateAvailable
+          : l10n.multipleUpdatesAvailable(updatesCount);
       statusIcon = Symbols.cloud_download;
       statusColor = theme.colorScheme.secondary;
     } else {
@@ -214,7 +227,7 @@ class _SyncStatusSectionState extends ConsumerState<SyncStatusSection>
                 ),
               ),
               const SizedBox(width: 8),
-              if (!isSuccess)
+              if (hasUnsynced || hasCloudUpdates)
                 Container(
                   decoration: BoxDecoration(
                     color: statusColor.withValues(alpha: 0.15),
@@ -233,16 +246,16 @@ class _SyncStatusSectionState extends ConsumerState<SyncStatusSection>
                         );
                       }
                     },
-                    icon: Icon(
-                      isSyncing ? Symbols.sync : Symbols.sync,
-                      color: statusColor,
+                    icon: const Icon(
+                      Symbols.sync,
+                      color: Colors.blue,
                       size: 24,
                     ),
                     tooltip: l10n.syncNow,
                     padding: const EdgeInsets.all(12),
                   ),
                 ),
-              if (isSuccess)
+              if (isSuccess && !hasUnsynced && !hasCloudUpdates)
                 Icon(
                   Symbols.check_circle,
                   color: Colors.green.withValues(alpha: 0.7),
