@@ -245,7 +245,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         centerTitle: true,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.only(
+          left: 16,
+          right: 16,
+          top: 16,
+          bottom: MediaQuery.of(context).padding.bottom,
+        ),
         child: Form(
           key: _formKey,
           child: Column(
@@ -283,17 +288,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       ),
                     ),
                   ],
-                ),
-              ),
-              const SizedBox(height: 8),
-              Center(
-                child: TextButton(
-                  onPressed: () {
-                    // TODO: Implement photo upload
-                    ToastUtils.showInfoToast(
-                        context, ref, l10n.photoUploadComingSoon);
-                  },
-                  child: Text(l10n.changePhoto),
                 ),
               ),
               const SizedBox(height: 32),
