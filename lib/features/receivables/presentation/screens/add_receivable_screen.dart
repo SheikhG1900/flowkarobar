@@ -329,7 +329,6 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
                       ),
                       TextButton.icon(
                         onPressed: () async {
-                          Navigator.pop(context); // Close picker
                           final newContact = await Navigator.push<Contact>(
                             context,
                             MaterialPageRoute(
@@ -340,6 +339,7 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
                               _selectedContact = newContact;
                               _selectedContactUuid = newContact.uuid;
                             });
+                            Navigator.pop(context); // Close picker
                           }
                         },
                         icon: const Icon(Icons.add),

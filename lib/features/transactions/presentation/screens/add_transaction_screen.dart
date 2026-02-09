@@ -1039,6 +1039,10 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
 
           return Container(
             height: MediaQuery.of(context).size.height,
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom +
+                  MediaQuery.of(context).padding.bottom,
+            ),
             decoration: BoxDecoration(
               color: theme.scaffoldBackgroundColor,
               borderRadius:
@@ -1249,7 +1253,14 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                                 borderRadius: const BorderRadius.vertical(
                                     top: Radius.circular(24)),
                               ),
-                              padding: const EdgeInsets.all(24),
+                              padding: EdgeInsets.fromLTRB(
+                                24,
+                                24,
+                                24,
+                                MediaQuery.of(context).viewInsets.bottom +
+                                    MediaQuery.of(context).padding.bottom +
+                                    24,
+                              ),
                               child: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [

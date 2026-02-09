@@ -326,7 +326,6 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
                       ),
                       TextButton.icon(
                         onPressed: () async {
-                          Navigator.pop(context); // Close picker
                           final newContact = await Navigator.push<Contact>(
                             context,
                             MaterialPageRoute(
@@ -337,6 +336,7 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
                               _selectedContact = newContact;
                               _selectedContactUuid = newContact.uuid;
                             });
+                            Navigator.pop(context); // Close picker
                           }
                         },
                         icon: const Icon(Icons.add),
