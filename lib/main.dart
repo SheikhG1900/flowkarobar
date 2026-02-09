@@ -563,22 +563,24 @@ class _DashboardTab extends ConsumerWidget {
       body: RefreshIndicator(
         color: activeColor,
         onRefresh: () async {
-          // Invalidate data providers to trigger a fresh fetch
-          ref.invalidate(dashboardStatsProvider);
-          ref.invalidate(recentTransactionsProvider);
-          ref.invalidate(transactionsWithDetailsProvider);
-          ref.invalidate(currentCurrencyProvider);
-          ref.invalidate(activeCashbookProvider);
-          ref.invalidate(notificationProvider);
+          // Dismiss any active showcase overlay before restarting
+          try {
+            final showcaseState = ShowCaseWidget.of(context);
+            showcaseState.dismiss();
+          } catch (e) {
+            // Showcase might not be active, ignore
+          }
 
-          // Refresh cloud sync status
-          ref.read(backupProvider.notifier).refreshCloudState();
+          // Use post-frame callback to ensure showcase is dismissed before restart
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            // Phoenix.rebirth re-initializes the entire application
+            // including all Riverpod providers and database connections.
+            Phoenix.rebirth(context);
+          });
 
-          // Wait for the main stats to load so the spinner stays visible until data is ready
-          await Future.wait([
-            ref.read(dashboardStatsProvider.future),
-            ref.read(transactionsWithDetailsProvider.future),
-          ]);
+          // Return a future that never completes or completes after a short delay
+          // since Phoenix.rebirth will restart the app anyway.
+          await Future.delayed(const Duration(milliseconds: 500));
         },
         child: CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(
