@@ -54,7 +54,12 @@ class _CopyPreferencesSheetState extends ConsumerState<CopyPreferencesSheet> {
 
     if (availableSources.isEmpty) {
       return Container(
-        padding: const EdgeInsets.all(24),
+        padding: EdgeInsets.fromLTRB(
+          24,
+          24,
+          24,
+          MediaQuery.of(context).padding.bottom + 24,
+        ),
         decoration: BoxDecoration(
           color: theme.scaffoldBackgroundColor,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
@@ -96,7 +101,9 @@ class _CopyPreferencesSheetState extends ConsumerState<CopyPreferencesSheet> {
         left: 20,
         right: 20,
         top: 20,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+        bottom: MediaQuery.of(context).viewInsets.bottom +
+            MediaQuery.of(context).padding.bottom +
+            20,
       ),
       decoration: BoxDecoration(
         color: theme.scaffoldBackgroundColor,

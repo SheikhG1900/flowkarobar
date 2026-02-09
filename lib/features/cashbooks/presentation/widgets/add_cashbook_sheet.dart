@@ -128,7 +128,9 @@ class _AddCashbookSheetState extends ConsumerState<AddCashbookSheet> {
         left: 20,
         right: 20,
         top: 20,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+        bottom: MediaQuery.of(context).viewInsets.bottom +
+            MediaQuery.of(context).padding.bottom +
+            20,
       ),
       decoration: BoxDecoration(
         color: theme.scaffoldBackgroundColor,
