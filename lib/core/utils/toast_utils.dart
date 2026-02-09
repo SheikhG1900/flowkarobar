@@ -1,3 +1,4 @@
+import 'package:flowpaisa/features/cashbooks/domain/models/cashbook.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../features/cashbooks/presentation/providers/cashbook_provider.dart';
@@ -8,13 +9,15 @@ class ToastUtils {
       {String? actionLabel,
       void Function(BuildContext)? onActionPressed,
       Color? color}) {
-    final activeColor = color ?? ref.read(activeCashbookProvider).color;
+    final activeCahbook = ref.read(activeCashbookProvider);
+    final toastColor = color ?? activeCahbook.color;
 
     _showToast(
       context,
       message,
       icon: Icons.check_circle_outline_rounded,
-      activeColor: activeColor,
+      toastColor: toastColor,
+      activeCashbook: activeCahbook,
       actionLabel: actionLabel,
       onActionPressed: onActionPressed,
     );
@@ -25,13 +28,15 @@ class ToastUtils {
       {String? actionLabel,
       void Function(BuildContext)? onActionPressed,
       Color? color}) {
-    final activeColor = color ?? ref.read(activeCashbookProvider).color;
+    final activeCahbook = ref.read(activeCashbookProvider);
+    final toastColor = color ?? activeCahbook.color;
 
     _showToast(
       context,
       message,
       icon: Icons.error_outline_rounded,
-      activeColor: activeColor,
+      toastColor: toastColor,
+      activeCashbook: activeCahbook,
       actionLabel: actionLabel,
       onActionPressed: onActionPressed,
     );
@@ -41,13 +46,15 @@ class ToastUtils {
       {String? actionLabel,
       void Function(BuildContext)? onActionPressed,
       Color? color}) {
-    final activeColor = color ?? ref.read(activeCashbookProvider).color;
+    final activeCahbook = ref.read(activeCashbookProvider);
+    final toastColor = color ?? activeCahbook.color;
 
     _showToast(
       context,
       message,
       icon: Icons.info_outline_rounded,
-      activeColor: activeColor,
+      toastColor: toastColor,
+      activeCashbook: activeCahbook,
       actionLabel: actionLabel,
       onActionPressed: onActionPressed,
     );
@@ -58,13 +65,14 @@ class ToastUtils {
       {String? actionLabel,
       void Function(BuildContext)? onActionPressed,
       Color? color}) {
-    final activeColor = color ?? ref.read(activeCashbookProvider).color;
-
+    final activeCahbook = ref.read(activeCashbookProvider);
+    final toastColor = color ?? activeCahbook.color;
     _showToast(
       context,
       message,
       icon: Icons.warning_amber_rounded,
-      activeColor: activeColor,
+      toastColor: toastColor,
+      activeCashbook: activeCahbook,
       actionLabel: actionLabel,
       onActionPressed: onActionPressed,
     );
@@ -74,7 +82,8 @@ class ToastUtils {
     BuildContext context,
     String message, {
     required IconData icon,
-    required Color activeColor,
+    required Color toastColor,
+    required Cashbook activeCashbook,
     String? actionLabel,
     void Function(BuildContext)? onActionPressed,
   }) {
@@ -82,6 +91,8 @@ class ToastUtils {
     final theme = Theme.of(context);
     final textColor = theme.colorScheme.onSurface;
     final backgroundColor = theme.scaffoldBackgroundColor;
+    final activeForeColor = activeCashbook.foreColor(context);
+    final activeBackColor = activeCashbook.backColor(context);
 
     scaffoldMessenger.hideCurrentSnackBar();
     scaffoldMessenger.showSnackBar(
@@ -109,14 +120,14 @@ class ToastUtils {
                 boxShadow: [
                   // Tightened primary shadow to prevent edge clipping
                   BoxShadow(
-                    color: activeColor.withValues(alpha: 0.3),
+                    color: toastColor.withValues(alpha: 0.3),
                     blurRadius: 16,
                     offset: const Offset(0, 10),
                     spreadRadius: -4, // Pulls the shadow in from the edges
                   ),
                   // Tightened colored glow
                   BoxShadow(
-                    color: activeColor.withValues(alpha: 0.2),
+                    color: toastColor.withValues(alpha: 0.2),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                     spreadRadius: -2,
@@ -128,7 +139,7 @@ class ToastUtils {
                   color: backgroundColor,
                   borderRadius: BorderRadius.zero,
                   border: Border.all(
-                    color: activeColor.withValues(alpha: 1),
+                    color: activeForeColor.withValues(alpha: 1),
                     width: 1,
                   ),
                 ),
@@ -143,8 +154,8 @@ class ToastUtils {
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               colors: [
-                                activeColor.withValues(alpha: 0.4),
-                                activeColor.withValues(alpha: 0.1),
+                                toastColor.withValues(alpha: 0.4),
+                                toastColor.withValues(alpha: 0.1),
                               ],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
@@ -191,15 +202,15 @@ class ToastUtils {
                                   },
                                   style: TextButton.styleFrom(
                                     backgroundColor:
-                                        activeColor.withValues(alpha: 0.2),
+                                        activeBackColor.withValues(alpha: 0.7),
                                     padding: const EdgeInsets.symmetric(
                                         horizontal: 16, vertical: 10),
                                     minimumSize: Size.zero,
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.zero,
                                       side: BorderSide(
-                                        color:
-                                            activeColor.withValues(alpha: 0.5),
+                                        color: activeForeColor.withValues(
+                                            alpha: 9),
                                         width: 1,
                                       ),
                                     ),
@@ -207,7 +218,7 @@ class ToastUtils {
                                   child: Text(
                                     actionLabel,
                                     style: TextStyle(
-                                      color: activeColor,
+                                      color: activeForeColor,
                                       fontSize: 12,
                                       fontWeight: FontWeight.bold,
                                       letterSpacing: 1.2,
