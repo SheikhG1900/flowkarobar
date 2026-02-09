@@ -338,6 +338,7 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
                           if (newContact != null && mounted) {
                             setState(() {
                               _selectedContact = newContact;
+                              _selectedContactUuid = newContact.uuid;
                             });
                           }
                         },

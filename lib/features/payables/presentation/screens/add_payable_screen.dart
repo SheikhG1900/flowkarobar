@@ -335,6 +335,7 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
                           if (newContact != null && mounted) {
                             setState(() {
                               _selectedContact = newContact;
+                              _selectedContactUuid = newContact.uuid;
                             });
                           }
                         },
