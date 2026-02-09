@@ -2953,4 +2953,10 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get clearCloudSubtitle =>
       'केवल इसी कैशबुक के लिए Google ड्राइव से इतिहास साफ़ करता है';
+
+  @override
+  String get addCloudCashbook => 'क्लाउड कैशबुक जोड़ें';
+
+  @override
+  String get addFromCloud => 'क्लाउड से जोड़ें';
 }

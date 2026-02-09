@@ -2961,4 +2961,10 @@ class AppLocalizationsUr extends AppLocalizations {
   @override
   String get clearCloudSubtitle =>
       'صرف اسی کیش بک کے لیے گوگل ڈرائیو سے ہسٹری صاف کرتا ہے';
+
+  @override
+  String get addCloudCashbook => 'کلاؤڈ کیش بک شامل کریں';
+
+  @override
+  String get addFromCloud => 'کلاؤڈ سے شامل کریں';
 }

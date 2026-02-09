@@ -5398,6 +5398,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Wipes history from Google Drive for this cashbook only'**
   String get clearCloudSubtitle;
+
+  /// No description provided for @addCloudCashbook.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Cloud Cashbook'**
+  String get addCloudCashbook;
+
+  /// No description provided for @addFromCloud.
+  ///
+  /// In en, this message translates to:
+  /// **'Add from Cloud'**
+  String get addFromCloud;
 }
 
 class _AppLocalizationsDelegate

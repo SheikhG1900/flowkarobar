@@ -3,10 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/features/cashbooks/domain/models/cashbook.dart';
 import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
 import 'package:flowpaisa/features/cashbooks/presentation/widgets/add_cashbook_sheet.dart';
+import 'package:flowpaisa/features/cashbooks/presentation/widgets/cloud_cashbook_selection_sheet.dart';
 import 'package:flowpaisa/features/cashbooks/presentation/widgets/copy_preferences_dialog.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/core/utils/date_formatter.dart';
 import 'package:flowpaisa/features/backup/data/local_backup_service.dart';
+import 'package:flowpaisa/features/backup/presentation/providers/backup_provider.dart';
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/shared/widgets/premium_badge.dart';
 import 'package:flowpaisa/shared/providers/database_provider.dart';
@@ -194,12 +196,40 @@ class CashbooksScreen extends ConsumerWidget {
                 );
               },
             ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: theme.colorScheme.primary,
-        onPressed: () => _showAddSheet(context),
-        tooltip: l10n.addCashbook,
-        child: Icon(Icons.add, color: theme.colorScheme.onPrimary),
+      floatingActionButton: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (ref.watch(backupProvider).currentUser != null) ...[
+            FloatingActionButton(
+              heroTag: 'add_cloud_cashbook',
+              backgroundColor: theme.colorScheme.secondaryContainer,
+              onPressed: () => _showCloudSelectionSheet(context, ref),
+              tooltip: l10n.addFromCloud,
+              child: Icon(Icons.cloud_download,
+                  color: theme.colorScheme.onSecondaryContainer),
+            ),
+            const SizedBox(height: 12),
+          ],
+          FloatingActionButton(
+            heroTag: 'add_local_cashbook',
+            backgroundColor: theme.colorScheme.primary,
+            onPressed: () => _showAddSheet(context),
+            tooltip: l10n.addCashbook,
+            child: Icon(Icons.add, color: theme.colorScheme.onPrimary),
+          ),
+        ],
       ),
+    );
+  }
+
+  void _showCloudSelectionSheet(BuildContext context, WidgetRef ref) {
+    // Refresh available cashbooks from cloud before showing
+    ref.read(backupProvider.notifier).loadAvailableCashbooks();
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => const CloudCashbookSelectionSheet(),
     );
   }
 
@@ -415,78 +445,78 @@ class CashbooksScreen extends ConsumerWidget {
       context: context,
       builder: (context) {
         bool shouldClearCloud = false;
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              title: Row(
-                children: [
-                  const Icon(Icons.warning_amber, color: Colors.orange),
-                  const SizedBox(width: 12),
-                  Text(l10n.clearData),
-                ],
-              ),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(l10n.confirmDelete(cashbook.name)),
-                  const SizedBox(height: 20),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.orange.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
-                    ),
-                    child: CheckboxListTile(
-                      title: Text(
-                        l10n.alsoClearCloud,
-                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                      ),
-                      subtitle: Text(
-                        l10n.clearCloudSubtitle,
-                        style: const TextStyle(fontSize: 12),
-                      ),
-                      value: shouldClearCloud,
-                      onChanged: (val) => setState(() => shouldClearCloud = val ?? false),
-                      controlAffinity: ListTileControlAffinity.leading,
-                      activeColor: Colors.orange,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 8),
-                    ),
+        return StatefulBuilder(builder: (context, setState) {
+          return AlertDialog(
+            title: Row(
+              children: [
+                const Icon(Icons.warning_amber, color: Colors.orange),
+                const SizedBox(width: 12),
+                Text(l10n.clearData),
+              ],
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(l10n.confirmDelete(cashbook.name)),
+                const SizedBox(height: 20),
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border:
+                        Border.all(color: Colors.orange.withValues(alpha: 0.3)),
                   ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text(l10n.cancel),
-                ),
-                FilledButton(
-                  onPressed: () async {
-                    // Store context before async call
-                    final currentContext = context;
-                    Navigator.pop(context);
-                    
-                    await ref
-                        .read(cashbooksProvider.notifier)
-                        .clearCashbookData(
-                          cashbook.id, 
-                          context: currentContext, 
-                          shouldClearCloud: shouldClearCloud
-                        );
-                    
-                    if (currentContext.mounted) {
-                      final l10nSuccess = AppLocalizations.of(currentContext)!;
-                      ToastUtils.showSuccessToast(currentContext, ref, l10nSuccess.cashbookUpdated);
-                    }
-                  },
-                  style: FilledButton.styleFrom(
-                      backgroundColor: Colors.orange, foregroundColor: Colors.white),
-                  child: Text(l10n.clearData),
+                  child: CheckboxListTile(
+                    title: Text(
+                      l10n.alsoClearCloud,
+                      style: const TextStyle(
+                          fontSize: 14, fontWeight: FontWeight.bold),
+                    ),
+                    subtitle: Text(
+                      l10n.clearCloudSubtitle,
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                    value: shouldClearCloud,
+                    onChanged: (val) =>
+                        setState(() => shouldClearCloud = val ?? false),
+                    controlAffinity: ListTileControlAffinity.leading,
+                    activeColor: Colors.orange,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                  ),
                 ),
               ],
-            );
-          }
-        );
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(l10n.cancel),
+              ),
+              FilledButton(
+                onPressed: () async {
+                  // Store context before async call
+                  final currentContext = context;
+                  Navigator.pop(context);
+
+                  await ref.read(cashbooksProvider.notifier).clearCashbookData(
+                      cashbook.id,
+                      context: currentContext,
+                      shouldClearCloud: shouldClearCloud);
+
+                  if (currentContext.mounted) {
+                    final l10nSuccess = AppLocalizations.of(currentContext)!;
+                    ToastUtils.showSuccessToast(
+                        currentContext, ref, l10nSuccess.cashbookUpdated);
+                  }
+                },
+                style: FilledButton.styleFrom(
+                    backgroundColor: Colors.orange,
+                    foregroundColor: Colors.white),
+                child: Text(l10n.clearData),
+              ),
+            ],
+          );
+        });
       },
     );
   }

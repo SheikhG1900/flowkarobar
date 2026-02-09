@@ -2941,4 +2941,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get clearCloudSubtitle =>
       'Wipes history from Google Drive for this cashbook only';
+
+  @override
+  String get addCloudCashbook => 'Add Cloud Cashbook';
+
+  @override
+  String get addFromCloud => 'Add from Cloud';
 }

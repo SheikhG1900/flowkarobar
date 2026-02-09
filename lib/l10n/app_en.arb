@@ -1606,5 +1606,7 @@
   "premiumRequiredForSync": "Premium required for cloud sync",
   "signInRequiredForSync": "Sign in with Google to sync",
   "alsoClearCloud": "Also clear cloud backup",
-  "clearCloudSubtitle": "Wipes history from Google Drive for this cashbook only"
+  "clearCloudSubtitle": "Wipes history from Google Drive for this cashbook only",
+  "addCloudCashbook": "Add Cloud Cashbook",
+  "addFromCloud": "Add from Cloud"
 }
