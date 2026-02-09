@@ -86,88 +86,93 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
             ? AppColors.payableColor
             : AppColors.receivableColor;
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                l10n.filters,
-                style: theme.textTheme.headlineSmall
-                    ?.copyWith(fontWeight: FontWeight.bold),
-              ),
-              TextButton(
-                onPressed: _resetFilters,
-                child: Text(l10n.reset),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          Flexible(
-            child: SingleChildScrollView(
-              controller: widget.scrollController,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildSectionTitle(l10n.dateRange),
-                  _buildDateRangePicker(
-                      context, userProfile.dateFormat, primaryFilterColor),
-                  if (widget.type != FilterType.transactions) ...[
-                    const SizedBox(height: 16),
-                    _buildDueDateSwitch(l10n, primaryFilterColor),
-                  ],
-                  if (widget.type == FilterType.transactions) ...[
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  l10n.filters,
+                  style: theme.textTheme.headlineSmall
+                      ?.copyWith(fontWeight: FontWeight.bold),
+                ),
+                TextButton(
+                  onPressed: _resetFilters,
+                  child: Text(l10n.reset),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Flexible(
+              child: SingleChildScrollView(
+                controller: widget.scrollController,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildSectionTitle(l10n.dateRange),
+                    _buildDateRangePicker(
+                        context, userProfile.dateFormat, primaryFilterColor),
+                    if (widget.type != FilterType.transactions) ...[
+                      const SizedBox(height: 16),
+                      _buildDueDateSwitch(l10n, primaryFilterColor),
+                    ],
+                    if (widget.type == FilterType.transactions) ...[
+                      const SizedBox(height: 24),
+                      _buildSectionTitle(l10n.transactionType),
+                      _buildTransactionTypeSelector(l10n, primaryFilterColor),
+                      const SizedBox(height: 24),
+                      _buildSectionTitle(l10n.categories),
+                      _buildCategorySelector(),
+                    ],
                     const SizedBox(height: 24),
-                    _buildSectionTitle(l10n.transactionType),
-                    _buildTransactionTypeSelector(l10n, primaryFilterColor),
+                    _buildSectionTitle(l10n.contacts),
+                    _buildContactSelector(),
                     const SizedBox(height: 24),
-                    _buildSectionTitle(l10n.categories),
-                    _buildCategorySelector(),
+                    _buildSectionTitle(l10n.amountRange),
+                    _buildAmountRangeInputs(l10n, primaryFilterColor),
+                    const SizedBox(height: 32),
                   ],
-                  const SizedBox(height: 24),
-                  _buildSectionTitle(l10n.contacts),
-                  _buildContactSelector(),
-                  const SizedBox(height: 24),
-                  _buildSectionTitle(l10n.amountRange),
-                  _buildAmountRangeInputs(l10n, primaryFilterColor),
-                  const SizedBox(height: 32),
-                ],
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            height: 56,
-            child: ElevatedButton(
-              onPressed: () {
-                widget.onApply(_getUpdatedFilters());
-                Navigator.pop(context);
-              },
-              style: ElevatedButton.styleFrom(
-                side: BorderSide(color: primaryFilterColor, width: 1),
-                backgroundColor: primaryFilterColor.withValues(alpha: 0.3),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16)),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              height: 56,
+              child: ElevatedButton(
+                onPressed: () {
+                  widget.onApply(_getUpdatedFilters());
+                  Navigator.pop(context);
+                },
+                style: ElevatedButton.styleFrom(
+                  side: BorderSide(color: primaryFilterColor, width: 1),
+                  backgroundColor: primaryFilterColor.withValues(alpha: 0.3),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16)),
+                ),
+                child: Text(l10n.applyFilters,
+                    style: TextStyle(
+                        color: theme.brightness == Brightness.dark
+                            ? Colors.white
+                            : theme.colorScheme.onSurface,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold)),
               ),
-              child: Text(l10n.applyFilters,
-                  style: TextStyle(
-                      color: theme.brightness == Brightness.dark
-                          ? Colors.white
-                          : theme.colorScheme.onSurface,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold)),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
