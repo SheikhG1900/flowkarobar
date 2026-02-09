@@ -1511,7 +1511,12 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
               key: _formKey,
               child: ListView(
                 key: const Key('add_transaction_list_view'),
-                padding: const EdgeInsets.all(16),
+                padding: EdgeInsets.only(
+                  left: 16,
+                  right: 16,
+                  top: 16,
+                  bottom: MediaQuery.of(context).padding.bottom + 16,
+                ),
                 children: [
                   // Amount Input (Large & Prominent)
                   Showcase(

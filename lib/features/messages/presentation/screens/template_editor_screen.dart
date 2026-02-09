@@ -249,7 +249,12 @@ class _TemplateEditorScreenState extends ConsumerState<TemplateEditorScreen> {
                 ),
                 // Save button
                 Padding(
-                  padding: const EdgeInsets.all(16),
+                  padding: EdgeInsets.fromLTRB(
+                    16,
+                    16,
+                    16,
+                    MediaQuery.of(context).padding.bottom + 16,
+                  ),
                   child: SizedBox(
                     width: double.infinity,
                     child: FilledButton(

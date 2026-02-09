@@ -180,7 +180,12 @@ class _AddCategoryScreenState extends ConsumerState<AddCategoryScreen> {
         title: Text(l10n.addCategory),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.only(
+          left: 16,
+          right: 16,
+          top: 16,
+          bottom: MediaQuery.of(context).padding.bottom + 16,
+        ),
         child: Form(
           key: _formKey,
           child: Column(

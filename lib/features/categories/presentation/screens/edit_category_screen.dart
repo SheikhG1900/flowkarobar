@@ -125,14 +125,16 @@ class _EditCategoryScreenState extends ConsumerState<EditCategoryScreen> {
       if (mounted) {
         if (success) {
           Navigator.pop(context, true); // Return true to indicate success
-          ToastUtils.showSuccessToast(context, ref, l10n.categoryUpdatedSuccessfully);
+          ToastUtils.showSuccessToast(
+              context, ref, l10n.categoryUpdatedSuccessfully);
         } else {
           ToastUtils.showErrorToast(context, ref, l10n.failedToUpdateCategory);
         }
       }
     } catch (e, stackTrace) {
       if (mounted) {
-        ToastUtils.showErrorToast(context, ref, l10n.errorOccurred(e.toString()));
+        ToastUtils.showErrorToast(
+            context, ref, l10n.errorOccurred(e.toString()));
         // Print error for debugging
         debugPrint('Error updating category: $e');
         debugPrint('Stack trace: $stackTrace');
@@ -155,7 +157,12 @@ class _EditCategoryScreenState extends ConsumerState<EditCategoryScreen> {
         title: Text(l10n.editCategory),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.only(
+          left: 16,
+          right: 16,
+          top: 16,
+          bottom: MediaQuery.of(context).padding.bottom + 16,
+        ),
         child: Form(
           key: _formKey,
           child: Column(
@@ -252,9 +259,9 @@ class _EditCategoryScreenState extends ConsumerState<EditCategoryScreen> {
                     Text(
                       l10n.suggestedIcons,
                       style: theme.textTheme.titleSmall?.copyWith(
-                            color: theme.colorScheme.primary,
-                            fontWeight: FontWeight.bold,
-                          ),
+                        color: theme.colorScheme.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ],
                 ),

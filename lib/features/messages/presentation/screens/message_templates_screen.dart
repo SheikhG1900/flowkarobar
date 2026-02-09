@@ -60,7 +60,12 @@ class MessageTemplatesScreen extends ConsumerWidget {
         title: Text(l10n.messageTemplates),
       ),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.only(
+          left: 16,
+          right: 16,
+          top: 16,
+          bottom: MediaQuery.of(context).padding.bottom + 16,
+        ),
         children: [
           _buildTemplateSection(
             context,
