@@ -106,6 +106,114 @@ abstract class AppLocalizations {
   /// **'Cashbook'**
   String get appTitle;
 
+  /// No description provided for @bulkImport.
+  ///
+  /// In en, this message translates to:
+  /// **'Bulk Import'**
+  String get bulkImport;
+
+  /// No description provided for @pasteFromClipboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste from Clipboard'**
+  String get pasteFromClipboard;
+
+  /// No description provided for @pickCsvFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick CSV File'**
+  String get pickCsvFile;
+
+  /// No description provided for @importSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Import Settings'**
+  String get importSettings;
+
+  /// No description provided for @separator.
+  ///
+  /// In en, this message translates to:
+  /// **'Separator'**
+  String get separator;
+
+  /// No description provided for @tab.
+  ///
+  /// In en, this message translates to:
+  /// **'Tab'**
+  String get tab;
+
+  /// No description provided for @comma.
+  ///
+  /// In en, this message translates to:
+  /// **'Comma'**
+  String get comma;
+
+  /// No description provided for @semicolon.
+  ///
+  /// In en, this message translates to:
+  /// **'Semicolon'**
+  String get semicolon;
+
+  /// No description provided for @pipe.
+  ///
+  /// In en, this message translates to:
+  /// **'Pipe'**
+  String get pipe;
+
+  /// No description provided for @dateFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'Date Format'**
+  String get dateFormat;
+
+  /// No description provided for @hasHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'Has Header'**
+  String get hasHeader;
+
+  /// No description provided for @columnMapping.
+  ///
+  /// In en, this message translates to:
+  /// **'Column Mapping'**
+  String get columnMapping;
+
+  /// No description provided for @defaultValues.
+  ///
+  /// In en, this message translates to:
+  /// **'Default Values'**
+  String get defaultValues;
+
+  /// No description provided for @preview.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview'**
+  String get preview;
+
+  /// No description provided for @selected.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected'**
+  String get selected;
+
+  /// No description provided for @importedSuccessfully.
+  ///
+  /// In en, this message translates to:
+  /// **'Imported {count} transactions successfully'**
+  String importedSuccessfully(int count);
+
+  /// No description provided for @paste.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste'**
+  String get paste;
+
+  /// No description provided for @import.
+  ///
+  /// In en, this message translates to:
+  /// **'Import'**
+  String get import;
+
   /// No description provided for @cashbooks.
   ///
   /// In en, this message translates to:
@@ -1234,12 +1342,6 @@ abstract class AppLocalizations {
   /// **'Preferences'**
   String get preferences;
 
-  /// No description provided for @dateFormat.
-  ///
-  /// In en, this message translates to:
-  /// **'Date Format'**
-  String get dateFormat;
-
   /// No description provided for @saveProfile.
   ///
   /// In en, this message translates to:
@@ -1467,12 +1569,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Save Copy'**
   String get saveCopy;
-
-  /// No description provided for @preview.
-  ///
-  /// In en, this message translates to:
-  /// **'Preview'**
-  String get preview;
 
   /// No description provided for @savedToDownloads.
   ///

@@ -1,6 +1,31 @@
 {
   "@@locale": "en",
   "appTitle": "Cashbook",
+  "bulkImport": "Bulk Import",
+  "pasteFromClipboard": "Paste from Clipboard",
+  "pickCsvFile": "Pick CSV File",
+  "importSettings": "Import Settings",
+  "separator": "Separator",
+  "tab": "Tab",
+  "comma": "Comma",
+  "semicolon": "Semicolon",
+  "pipe": "Pipe",
+  "dateFormat": "Date Format",
+  "hasHeader": "Has Header",
+  "columnMapping": "Column Mapping",
+  "defaultValues": "Default Values",
+  "preview": "Preview",
+  "selected": "Selected",
+  "importedSuccessfully": "Imported {count} transactions successfully",
+  "@importedSuccessfully": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "paste": "Paste",
+  "import": "Import",
   "cashbooks": "Cashbooks",
   "transactions": "Transactions",
   "settings": "Settings",

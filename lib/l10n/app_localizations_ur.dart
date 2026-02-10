@@ -12,6 +12,62 @@ class AppLocalizationsUr extends AppLocalizations {
   String get appTitle => 'کیش بک';
 
   @override
+  String get bulkImport => 'بلک امپورٹ';
+
+  @override
+  String get pasteFromClipboard => 'کلپ بورڈ سے پیسٹ کریں';
+
+  @override
+  String get pickCsvFile => 'CSV فائل منتخب کریں';
+
+  @override
+  String get importSettings => 'امپورٹ سیٹنگز';
+
+  @override
+  String get separator => 'علیحدگی کار';
+
+  @override
+  String get tab => 'ٹیب';
+
+  @override
+  String get comma => 'کاما';
+
+  @override
+  String get semicolon => 'سیمی کولن';
+
+  @override
+  String get pipe => 'پائپ';
+
+  @override
+  String get dateFormat => 'تاریخ کا فارمیٹ';
+
+  @override
+  String get hasHeader => 'ہیڈر موجود ہے';
+
+  @override
+  String get columnMapping => 'کالم میپنگ';
+
+  @override
+  String get defaultValues => 'ڈیفالٹ اقدار';
+
+  @override
+  String get preview => 'پیش نظارہ';
+
+  @override
+  String get selected => 'منتخب شدہ';
+
+  @override
+  String importedSuccessfully(int count) {
+    return '$count ٹرانزیکشنز کامیابی سے امپورٹ ہو گئیں';
+  }
+
+  @override
+  String get paste => 'پیسٹ کریں';
+
+  @override
+  String get import => 'امپورٹ';
+
+  @override
   String get cashbooks => 'کیش بکس';
 
   @override
@@ -642,9 +698,6 @@ class AppLocalizationsUr extends AppLocalizations {
   String get preferences => 'ترجیحات';
 
   @override
-  String get dateFormat => 'تاریخ کا فارمیٹ';
-
-  @override
   String get saveProfile => 'پروفائل محفوظ کریں';
 
   @override
@@ -762,9 +815,6 @@ class AppLocalizationsUr extends AppLocalizations {
 
   @override
   String get saveCopy => 'کاپی محفوظ کریں';
-
-  @override
-  String get preview => 'پیش نظارہ';
 
   @override
   String get savedToDownloads => 'ڈاؤن لوڈز میں محفوظ ہو گیا';

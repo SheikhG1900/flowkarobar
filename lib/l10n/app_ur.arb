@@ -1,6 +1,31 @@
 {
   "@@locale": "ur",
   "appTitle": "کیش بک",
+  "bulkImport": "بلک امپورٹ",
+  "pasteFromClipboard": "کلپ بورڈ سے پیسٹ کریں",
+  "pickCsvFile": "CSV فائل منتخب کریں",
+  "importSettings": "امپورٹ سیٹنگز",
+  "separator": "علیحدگی کار",
+  "tab": "ٹیب",
+  "comma": "کاما",
+  "semicolon": "سیمی کولن",
+  "pipe": "پائپ",
+  "dateFormat": "تاریخ کا فارمیٹ",
+  "hasHeader": "ہیڈر موجود ہے",
+  "columnMapping": "کالم میپنگ",
+  "defaultValues": "ڈیفالٹ اقدار",
+  "preview": "پیش نظارہ",
+  "selected": "منتخب شدہ",
+  "importedSuccessfully": "{count} ٹرانزیکشنز کامیابی سے امپورٹ ہو گئیں",
+  "@importedSuccessfully": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "paste": "پیسٹ کریں",
+  "import": "امپورٹ",
   "cashbooks": "کیش بکس",
   "transactions": "لین دین",
   "settings": "سیٹنگز",

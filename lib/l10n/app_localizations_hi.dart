@@ -12,6 +12,62 @@ class AppLocalizationsHi extends AppLocalizations {
   String get appTitle => 'कैशबुक';
 
   @override
+  String get bulkImport => 'बल्क इंपोर्ट';
+
+  @override
+  String get pasteFromClipboard => 'क्लिपबोर्ड से पेस्ट करें';
+
+  @override
+  String get pickCsvFile => 'CSV फ़ाइल चुनें';
+
+  @override
+  String get importSettings => 'इंपोर्ट सेटिंग्स';
+
+  @override
+  String get separator => 'विभाजक';
+
+  @override
+  String get tab => 'टैब';
+
+  @override
+  String get comma => 'कोमा';
+
+  @override
+  String get semicolon => 'सेमीकोलन';
+
+  @override
+  String get pipe => 'पाइप';
+
+  @override
+  String get dateFormat => 'तारीख का प्रारूप';
+
+  @override
+  String get hasHeader => 'हेडर है';
+
+  @override
+  String get columnMapping => 'कॉलम मैपिंग';
+
+  @override
+  String get defaultValues => 'डिफ़ॉल्ट मान';
+
+  @override
+  String get preview => 'पूर्वावलोकन';
+
+  @override
+  String get selected => 'चयनित';
+
+  @override
+  String importedSuccessfully(int count) {
+    return '$count लेनदेन सफलतापूर्वक इंपोर्ट किए गए';
+  }
+
+  @override
+  String get paste => 'पेस्ट करें';
+
+  @override
+  String get import => 'इंपورت';
+
+  @override
   String get cashbooks => 'कैशबुक';
 
   @override
@@ -640,9 +696,6 @@ class AppLocalizationsHi extends AppLocalizations {
   String get preferences => 'प्राथमिकताएं';
 
   @override
-  String get dateFormat => 'तारीख का प्रारूप';
-
-  @override
   String get saveProfile => 'प्रोफ़ाइल सहेजें';
 
   @override
@@ -760,9 +813,6 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get saveCopy => 'कॉपी सहेजें';
-
-  @override
-  String get preview => 'पूर्वावलोकन';
 
   @override
   String get savedToDownloads => 'डाउनलोड में सहेजा गया';

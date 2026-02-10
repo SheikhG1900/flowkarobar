@@ -12,6 +12,62 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appTitle => 'Cashbook';
 
   @override
+  String get bulkImport => 'Bulk Import';
+
+  @override
+  String get pasteFromClipboard => 'Paste from Clipboard';
+
+  @override
+  String get pickCsvFile => 'Pick CSV File';
+
+  @override
+  String get importSettings => 'Import Settings';
+
+  @override
+  String get separator => 'Separator';
+
+  @override
+  String get tab => 'Tab';
+
+  @override
+  String get comma => 'Comma';
+
+  @override
+  String get semicolon => 'Semicolon';
+
+  @override
+  String get pipe => 'Pipe';
+
+  @override
+  String get dateFormat => 'Date Format';
+
+  @override
+  String get hasHeader => 'Has Header';
+
+  @override
+  String get columnMapping => 'Column Mapping';
+
+  @override
+  String get defaultValues => 'Default Values';
+
+  @override
+  String get preview => 'Preview';
+
+  @override
+  String get selected => 'Selected';
+
+  @override
+  String importedSuccessfully(int count) {
+    return 'Imported $count transactions successfully';
+  }
+
+  @override
+  String get paste => 'Paste';
+
+  @override
+  String get import => 'Import';
+
+  @override
   String get cashbooks => 'Cashbooks';
 
   @override
@@ -639,9 +695,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get preferences => 'Preferences';
 
   @override
-  String get dateFormat => 'Date Format';
-
-  @override
   String get saveProfile => 'Save Profile';
 
   @override
@@ -758,9 +811,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get saveCopy => 'Save Copy';
-
-  @override
-  String get preview => 'Preview';
 
   @override
   String get savedToDownloads => 'Saved to Downloads';

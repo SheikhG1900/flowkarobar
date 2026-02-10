@@ -1,5 +1,8 @@
+import 'dart:io';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_sticky_header/flutter_sticky_header.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
@@ -22,6 +25,9 @@ import 'package:flowpaisa/core/utils/localization_helper.dart';
 import 'package:flowpaisa/features/transactions/presentation/widgets/schedule_icon_badge.dart';
 import 'package:flowpaisa/features/transactions/presentation/widgets/schedule_list_item.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/schedule_service_provider.dart';
+import 'package:flowpaisa/features/transactions/presentation/screens/bulk_import_screen.dart';
+import 'package:flowpaisa/features/premium/domain/premium_provider.dart';
+import 'package:flowpaisa/features/premium/presentation/screens/premium_screen.dart';
 import 'package:flowpaisa/features/transactions/presentation/screens/edit_schedule_screen.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/shared/widgets/filter_bottom_sheet.dart';
@@ -107,6 +113,90 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
             notifier.applyFilters(filters);
             setState(() {}); // Force rebuild to update badge
           },
+        ),
+      ),
+    );
+  }
+
+  void _showImportOptions(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final isPremium = ref.read(premiumProvider).isPremium;
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Row(
+                children: [
+                  Text(
+                    l10n.bulkImport,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(width: 8),
+                  if (!isPremium)
+                    const Icon(Icons.lock, color: Colors.orange, size: 20),
+                  if (isPremium)
+                    const Icon(Icons.verified, color: Colors.blue, size: 20),
+                ],
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.content_paste),
+              title: Text(l10n.pasteFromClipboard),
+              onTap: () async {
+                Navigator.pop(context);
+                if (!isPremium) {
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => const PremiumScreen()));
+                  return;
+                }
+                final data = await Clipboard.getData(Clipboard.kTextPlain);
+                if (data?.text != null) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => BulkImportScreen(initialContent: data!.text),
+                    ),
+                  );
+                } else {
+                  ToastUtils.showInfoToast(context, ref, 'Clipboard is empty');
+                }
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.file_open),
+              title: Text(l10n.pickCsvFile),
+              onTap: () async {
+                Navigator.pop(context);
+                if (!isPremium) {
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => const PremiumScreen()));
+                  return;
+                }
+                final result = await FilePicker.platform.pickFiles(
+                  type: FileType.custom,
+                  allowedExtensions: ['csv', 'txt'],
+                );
+
+                if (result != null && result.files.single.path != null) {
+                  final file = File(result.files.single.path!);
+                  final content = await file.readAsString();
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => BulkImportScreen(initialContent: content),
+                    ),
+                  );
+                }
+              },
+            ),
+            const SizedBox(height: 16),
+          ],
         ),
       ),
     );
@@ -234,10 +324,14 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                   },
                 ),
               ),
-              // Debug button to generate dummy transactions (only in debug mode)
-              if (kDebugMode && !_isSearching)
+              if (!_isSearching)
+                IconButton(
+                  icon: const Icon(Icons.upload_file),
+                  onPressed: () => _showImportOptions(context),
+                ),
+              if (!_isSearching)
                 PopupMenuButton<String>(
-                  icon: const Icon(Icons.bug_report),
+                  icon: const Icon(Icons.more_vert),
                   onSelected: (value) async {
                     if (value == 'generate_dummy') {
                       final service = ref.read(transactionServiceProvider);
@@ -260,16 +354,17 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                     }
                   },
                   itemBuilder: (context) => [
-                    PopupMenuItem(
-                      value: 'generate_dummy',
-                      child: Row(
-                        children: [
-                          const Icon(Icons.add_circle_outline),
-                          const SizedBox(width: 8),
-                          Text(l10n.generate100DummyTransactions),
-                        ],
+                    if (kDebugMode)
+                      PopupMenuItem(
+                        value: 'generate_dummy',
+                        child: Row(
+                          children: [
+                            const Icon(Icons.add_circle_outline),
+                            const SizedBox(width: 8),
+                            Text(l10n.generate100DummyTransactions),
+                          ],
+                        ),
                       ),
-                    ),
                   ],
                 ),
             ],

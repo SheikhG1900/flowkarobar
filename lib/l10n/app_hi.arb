@@ -1,6 +1,31 @@
 {
   "@@locale": "hi",
   "appTitle": "कैशबुक",
+  "bulkImport": "बल्क इंपोर्ट",
+  "pasteFromClipboard": "क्लिपबोर्ड से पेस्ट करें",
+  "pickCsvFile": "CSV फ़ाइल चुनें",
+  "importSettings": "इंपोर्ट सेटिंग्स",
+  "separator": "विभाजक",
+  "tab": "टैब",
+  "comma": "कोमा",
+  "semicolon": "सेमीकोलन",
+  "pipe": "पाइप",
+  "dateFormat": "दिनांक प्रारूप",
+  "hasHeader": "हेडर है",
+  "columnMapping": "कॉलम मैपिंग",
+  "defaultValues": "डिफ़ॉल्ट मान",
+  "preview": "पूर्वावलोकन",
+  "selected": "चयनित",
+  "importedSuccessfully": "{count} लेनदेन सफलतापूर्वक इंपोर्ट किए गए",
+  "@importedSuccessfully": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "paste": "पेस्ट करें",
+  "import": "इंपورت",
   "cashbooks": "कैशबुक",
   "transactions": "लेन-देन",
   "settings": "सेटिंग्स",
