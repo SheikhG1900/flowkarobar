@@ -310,6 +310,15 @@ class _PremiumScreenState extends ConsumerState<PremiumScreen> {
                     color: Colors.cyan,
                     isPremium: premiumState.isPremium,
                   ),
+                  const SizedBox(height: 12),
+                  _buildFeatureCard(
+                    context,
+                    icon: Icons.upload_file,
+                    title: l10n.featureBulkImportTitle,
+                    description: l10n.featureBulkImportDesc,
+                    color: Colors.orange,
+                    isPremium: premiumState.isPremium,
+                  ),
                   const SizedBox(height: 32),
 
                   if (!premiumState.isPremium) ...[

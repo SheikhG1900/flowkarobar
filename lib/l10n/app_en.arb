@@ -570,6 +570,8 @@
   "featureMultipleCashbooksDesc": "Create and manage as many additional cashbooks as you need for different businesses or personal use.",
   "featureUnlimitedSchedulesTitle": "Unlimited Schedules",
   "featureUnlimitedSchedulesDesc": "Set up unlimited recurring transaction schedules for your regular incomes and expenses.",
+  "featureBulkImportTitle": "Bulk Import",
+  "featureBulkImportDesc": "Import hundreds of transactions instantly from CSV files or your clipboard (Google Sheets).",
   "premiumPlan": "Premium Plan",
   "lifetime": "Lifetime",
   "monthly": "Monthly",

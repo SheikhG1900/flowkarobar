@@ -1846,6 +1846,18 @@ abstract class AppLocalizations {
   /// **'Set up unlimited recurring transaction schedules for your regular incomes and expenses.'**
   String get featureUnlimitedSchedulesDesc;
 
+  /// No description provided for @featureBulkImportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Bulk Import'**
+  String get featureBulkImportTitle;
+
+  /// No description provided for @featureBulkImportDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Import hundreds of transactions instantly from CSV files or your clipboard (Google Sheets).'**
+  String get featureBulkImportDesc;
+
   /// No description provided for @premiumPlan.
   ///
   /// In en, this message translates to:

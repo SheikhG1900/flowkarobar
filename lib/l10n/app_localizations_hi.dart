@@ -966,6 +966,13 @@ class AppLocalizationsHi extends AppLocalizations {
       'अपनी नियमित आय और खर्चों के लिए असीमित आवर्ती लेन-देन शेड्यूल सेट करें।';
 
   @override
+  String get featureBulkImportTitle => 'बल्क इंपोर्ट';
+
+  @override
+  String get featureBulkImportDesc =>
+      'CSV फ़ाइलों या अपने क्लिपबोर्ड (Google शीट्स) से सैकड़ों लेन-देन तुरंत इंपोर्ट करें।';
+
+  @override
   String get premiumPlan => 'प्रीमियम प्लान';
 
   @override

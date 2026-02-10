@@ -963,6 +963,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Set up unlimited recurring transaction schedules for your regular incomes and expenses.';
 
   @override
+  String get featureBulkImportTitle => 'Bulk Import';
+
+  @override
+  String get featureBulkImportDesc =>
+      'Import hundreds of transactions instantly from CSV files or your clipboard (Google Sheets).';
+
+  @override
   String get premiumPlan => 'Premium Plan';
 
   @override

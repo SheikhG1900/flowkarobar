@@ -968,6 +968,13 @@ class AppLocalizationsUr extends AppLocalizations {
       'اپنی باقاعدہ آمدنی اور اخراجات کے لیے لامحدود بار بار ہونے والے لین دین کے شیڈولز ترتیب دیں۔';
 
   @override
+  String get featureBulkImportTitle => 'بلک امپورٹ';
+
+  @override
+  String get featureBulkImportDesc =>
+      'CSV فائلوں یا اپنے کلپ بورڈ (Google Sheets) سے سینکڑوں لین دین فوری طور پر امپورٹ کریں۔';
+
+  @override
   String get premiumPlan => 'پریمیم پلان';
 
   @override

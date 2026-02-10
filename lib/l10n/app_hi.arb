@@ -336,6 +336,8 @@
   "featureMultipleCashbooksDesc": "विभिन्न व्यवसायों या व्यक्तिगत उपयोग के लिए जितनी आवश्यकता हो उतनी अतिरिक्त कैशबुक बनाएं और प्रबंधित करें।",
   "featureUnlimitedSchedulesTitle": "असीमित शेड्यूल",
   "featureUnlimitedSchedulesDesc": "अपनी नियमित आय और खर्चों के लिए असीमित आवर्ती लेन-देन शेड्यूल सेट करें।",
+  "featureBulkImportTitle": "बल्क इंपोर्ट",
+  "featureBulkImportDesc": "CSV फ़ाइलों या अपने क्लिपबोर्ड (Google शीट्स) से सैकड़ों लेन-देन तुरंत इंपोर्ट करें।",
   "premiumPlan": "प्रीमियम प्लान",
   "lifetime": "लाइफटाइम",
   "monthly": "मासिक",
