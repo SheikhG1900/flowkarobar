@@ -133,7 +133,9 @@ class PremiumNotifier extends Notifier<PremiumState> {
       if (purchaseDetails.status == PurchaseStatus.pending) {
         state = state.copyWith(isLoading: true);
       } else {
-        if (purchaseDetails.status == PurchaseStatus.error) {
+        if (purchaseDetails.status == PurchaseStatus.canceled) {
+          state = state.copyWith(isLoading: false);
+        } else if (purchaseDetails.status == PurchaseStatus.error) {
           state = state.copyWith(isLoading: false, error: purchaseDetails.error?.message ?? 'Purchase failed');
         } else if (purchaseDetails.status == PurchaseStatus.purchased ||
                    purchaseDetails.status == PurchaseStatus.restored) {
