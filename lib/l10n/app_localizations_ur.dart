@@ -1904,6 +1904,9 @@ class AppLocalizationsUr extends AppLocalizations {
   String get testCategoriesPdf => 'ٹیسٹ زمرہ جات پی ڈی ایف (آئیکنز)';
 
   @override
+  String get duplicate => 'ڈپلیکیٹ';
+
+  @override
   String get transactionDetails => 'لین دین کی تفصیلات';
 
   @override

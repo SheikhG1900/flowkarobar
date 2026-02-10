@@ -16,6 +16,7 @@ import 'package:flowpaisa/features/receivables/presentation/providers/receivable
 import 'package:flowpaisa/core/utils/share_helper.dart';
 import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
+import 'package:flowpaisa/features/receivables/presentation/screens/add_receivable_screen.dart';
 import 'package:flowpaisa/features/receivables/presentation/screens/edit_receivable_screen.dart';
 import 'package:flowpaisa/features/messages/presentation/providers/message_template_provider.dart';
 import 'package:flowpaisa/features/whatsapp/presentation/providers/whatsapp_provider.dart';
@@ -93,6 +94,37 @@ class ReceivableDetailsDialog extends ConsumerWidget {
                     whatsAppServiceOverride: capturedWhatsAppService,
                     templateServiceOverride: capturedTemplateService,
                     languageOverride: capturedLanguage,
+                  );
+                },
+              ),
+              // Duplicate button
+              IconButton(
+                icon: const Icon(Icons.copy),
+                tooltip: l10n.duplicate,
+                onPressed: () {
+                  int dueDateOffset = 0;
+                  if (receivable.dueDate != null) {
+                    dueDateOffset =
+                        receivable.dueDate!.difference(receivable.date).inDays;
+                  }
+
+                  final now = DateTime.now();
+                  final initialDueDate = dueDateOffset != 0
+                      ? now.add(Duration(days: dueDateOffset))
+                      : null;
+
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => AddReceivableScreen(
+                        initialAmount: receivable.amount,
+                        initialDate: now,
+                        initialDescription: receivable.description,
+                        initialContactName: contact?.name,
+                        initialContactPhone: contact?.phone,
+                        initialDueDate: initialDueDate,
+                      ),
+                    ),
                   );
                 },
               ),

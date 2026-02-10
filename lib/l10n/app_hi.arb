@@ -826,6 +826,7 @@
   "transactionAdded": "लेन-देन सफलतापूर्वक जोड़ा गया",
   "createCategoryNamed": "\"{name}\" श्रेणी बनाएं",
   "tapToAddCategory": "इस श्रेणी को जोड़ने के लिए टैप करें",
+  "duplicate": "डुप्लिकेट",
   "frequent": "अक्सर",
   "saving": "सहेजा जा रहा है...",
   "transactionDeletedSuccessfully": "लेन-देन सफलतापूर्वक हटा दिया गया",

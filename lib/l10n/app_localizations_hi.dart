@@ -1898,6 +1898,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get testCategoriesPdf => 'टेस्ट श्रेणियां पीडीएफ (आइकन)';
 
   @override
+  String get duplicate => 'डुप्लिकेट';
+
+  @override
   String get transactionDetails => 'लेन-देन विवरण';
 
   @override

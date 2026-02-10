@@ -1891,6 +1891,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get testCategoriesPdf => 'Test Categories PDF (Icons)';
 
   @override
+  String get duplicate => 'Duplicate';
+
+  @override
   String get transactionDetails => 'Transaction Details';
 
   @override

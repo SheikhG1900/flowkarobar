@@ -3514,6 +3514,12 @@ abstract class AppLocalizations {
   /// **'Test Categories PDF (Icons)'**
   String get testCategoriesPdf;
 
+  /// No description provided for @duplicate.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate'**
+  String get duplicate;
+
   /// No description provided for @transactionDetails.
   ///
   /// In en, this message translates to:

@@ -15,6 +15,7 @@ import 'package:flowpaisa/features/payables/presentation/providers/payables_prov
 import 'package:flowpaisa/core/utils/share_helper.dart';
 import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
+import 'package:flowpaisa/features/payables/presentation/screens/add_payable_screen.dart';
 import 'package:flowpaisa/features/payables/presentation/screens/edit_payable_screen.dart';
 import 'package:flowpaisa/features/messages/presentation/providers/message_template_provider.dart';
 import 'package:flowpaisa/features/whatsapp/presentation/providers/whatsapp_provider.dart';
@@ -92,6 +93,37 @@ class PayableDetailsDialog extends ConsumerWidget {
                     whatsAppServiceOverride: capturedWhatsAppService,
                     templateServiceOverride: capturedTemplateService,
                     languageOverride: capturedLanguage,
+                  );
+                },
+              ),
+              // Duplicate button
+              IconButton(
+                icon: const Icon(Icons.copy),
+                tooltip: l10n.duplicate,
+                onPressed: () {
+                  int dueDateOffset = 0;
+                  if (payable.dueDate != null) {
+                    dueDateOffset =
+                        payable.dueDate!.difference(payable.date).inDays;
+                  }
+
+                  final now = DateTime.now();
+                  final initialDueDate = dueDateOffset != 0
+                      ? now.add(Duration(days: dueDateOffset))
+                      : null;
+
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => AddPayableScreen(
+                        initialAmount: payable.amount,
+                        initialDate: now,
+                        initialDescription: payable.description,
+                        initialContactName: contact?.name,
+                        initialContactPhone: contact?.phone,
+                        initialDueDate: initialDueDate,
+                      ),
+                    ),
                   );
                 },
               ),
