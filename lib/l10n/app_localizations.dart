@@ -1852,6 +1852,12 @@ abstract class AppLocalizations {
   /// **'Free Trial'**
   String get freeTrial;
 
+  /// No description provided for @noPurchasesFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No purchases found to restore.'**
+  String get noPurchasesFound;
+
   /// No description provided for @daysFreeTrial.
   ///
   /// In en, this message translates to:

@@ -967,6 +967,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get freeTrial => 'Free Trial';
 
   @override
+  String get noPurchasesFound => 'No purchases found to restore.';
+
+  @override
   String daysFreeTrial(int days) {
     return '$days days free trial';
   }

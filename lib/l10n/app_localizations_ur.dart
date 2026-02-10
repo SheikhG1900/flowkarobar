@@ -972,6 +972,9 @@ class AppLocalizationsUr extends AppLocalizations {
   String get freeTrial => 'مفت ٹرائل';
 
   @override
+  String get noPurchasesFound => 'بحال کرنے کے لیے کوئی خریداری نہیں ملی۔';
+
+  @override
   String daysFreeTrial(int days) {
     return '$days دن کا مفت ٹرائل';
   }

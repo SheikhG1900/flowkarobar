@@ -328,6 +328,7 @@
   "premiumBenefitsNote": "اپنے منتخب کردہ پلان کے ساتھ تمام پریمیم فیچرز ان لاک کریں۔ مستقل رسائی کے لیے لائف ٹائم منتخب کریں!",
   "active": "فعال",
   "freeTrial": "مفت ٹرائل",
+  "noPurchasesFound": "بحال کرنے کے لیے کوئی خریداری نہیں ملی۔",
   "daysFreeTrial": "{days} دن کا مفت ٹرائل",
   "@daysFreeTrial": {
     "placeholders": {

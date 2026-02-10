@@ -970,6 +970,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get freeTrial => 'नि:शुल्क परीक्षण';
 
   @override
+  String get noPurchasesFound => 'बहाल करने के लिए कोई खरीदारी नहीं मिली।';
+
+  @override
   String daysFreeTrial(int days) {
     return '$days दिनों का नि:शुल्क परीक्षण';
   }

@@ -562,6 +562,7 @@
   "premiumBenefitsNote": "Unlock all premium features with your chosen plan. Choose Lifetime for permanent access!",
   "active": "Active",
   "freeTrial": "Free Trial",
+  "noPurchasesFound": "No purchases found to restore.",
   "daysFreeTrial": "{days} days free trial",
   "@daysFreeTrial": {
     "placeholders": {

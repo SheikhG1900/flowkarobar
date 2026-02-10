@@ -65,7 +65,7 @@ class PremiumNotifier extends Notifier<PremiumState> {
 
   Future<void> _init() async {
     await _repository.init();
-    
+
     // Listen to purchase updates
     _subscription = _repository.purchaseStream.listen(
       _onPurchaseUpdate,
@@ -79,7 +79,7 @@ class PremiumNotifier extends Notifier<PremiumState> {
 
     // Load products
     await loadProducts();
-    
+
     // Check if user is already premium locally (done in build), maybe verify with store?
     // Restoring purchases is usually explicit user action or on first install logic.
   }
@@ -103,15 +103,17 @@ class PremiumNotifier extends Notifier<PremiumState> {
     state = state.copyWith(isLoading: true, error: null);
     try {
       // Find the specific product using a more robust method for release mode
-      final product = state.products.where((p) => p.id == productId).firstOrNull ?? 
-                     (state.products.isNotEmpty ? state.products.first : null);
-      
+      final product =
+          state.products.where((p) => p.id == productId).firstOrNull ??
+              (state.products.isNotEmpty ? state.products.first : null);
+
       // Ensure the product is valid before attempting purchase
       if (product == null || product.id != productId) {
-        state = state.copyWith(isLoading: false, error: 'Product not found: $productId');
+        state = state.copyWith(
+            isLoading: false, error: 'Product not found: $productId');
         return;
       }
-      
+
       await _repository.buyPremium(product);
       // State update happens in _onPurchaseUpdate
     } catch (e) {
@@ -128,7 +130,14 @@ class PremiumNotifier extends Notifier<PremiumState> {
     }
   }
 
-  Future<void> _onPurchaseUpdate(List<PurchaseDetails> purchaseDetailsList) async {
+  Future<void> _onPurchaseUpdate(
+      List<PurchaseDetails> purchaseDetailsList) async {
+    // If we were loading and get an empty list back, it means no purchases were found
+    if (purchaseDetailsList.isEmpty && state.isLoading) {
+      state = state.copyWith(isLoading: false, error: 'No purchases found');
+      return;
+    }
+
     for (var purchaseDetails in purchaseDetailsList) {
       if (purchaseDetails.status == PurchaseStatus.pending) {
         state = state.copyWith(isLoading: true);
@@ -136,22 +145,26 @@ class PremiumNotifier extends Notifier<PremiumState> {
         if (purchaseDetails.status == PurchaseStatus.canceled) {
           state = state.copyWith(isLoading: false);
         } else if (purchaseDetails.status == PurchaseStatus.error) {
-          state = state.copyWith(isLoading: false, error: purchaseDetails.error?.message ?? 'Purchase failed');
+          state = state.copyWith(
+              isLoading: false,
+              error: purchaseDetails.error?.message ?? 'Purchase failed');
         } else if (purchaseDetails.status == PurchaseStatus.purchased ||
-                   purchaseDetails.status == PurchaseStatus.restored) {
-          
+            purchaseDetails.status == PurchaseStatus.restored) {
           final bool valid = await _repository.verifyPurchase(purchaseDetails);
           if (valid) {
             String? type;
             DateTime? expiry;
 
-            if (purchaseDetails.productID == PremiumRepository.premiumMonthlyId) {
+            if (purchaseDetails.productID ==
+                PremiumRepository.premiumMonthlyId) {
               type = 'monthly';
               expiry = DateTime.now().add(const Duration(days: 30));
-            } else if (purchaseDetails.productID == PremiumRepository.premiumYearlyId) {
+            } else if (purchaseDetails.productID ==
+                PremiumRepository.premiumYearlyId) {
               type = 'yearly';
               expiry = DateTime.now().add(const Duration(days: 365));
-            } else if (purchaseDetails.productID == PremiumRepository.premiumLifetimeId) {
+            } else if (purchaseDetails.productID ==
+                PremiumRepository.premiumLifetimeId) {
               type = 'lifetime';
               expiry = null;
             }
@@ -161,7 +174,7 @@ class PremiumNotifier extends Notifier<PremiumState> {
             await _repository.setExpiryDate(expiry);
 
             state = state.copyWith(
-              isLoading: false, 
+              isLoading: false,
               isPremium: true,
               subscriptionType: type,
               expiryDate: expiry,
@@ -170,7 +183,7 @@ class PremiumNotifier extends Notifier<PremiumState> {
             state = state.copyWith(isLoading: false, error: 'Invalid purchase');
           }
         }
-        
+
         if (purchaseDetails.pendingCompletePurchase) {
           await _repository.completePurchase(purchaseDetails);
         }
@@ -190,7 +203,7 @@ class PremiumNotifier extends Notifier<PremiumState> {
     await _repository.setPremiumStatus(false);
     state = state.copyWith(isPremium: false);
   }
-  
+
   /// Dev only: Force unlock premium
   Future<void> debugUnlockPremium() async {
     await _repository.setPremiumStatus(true);

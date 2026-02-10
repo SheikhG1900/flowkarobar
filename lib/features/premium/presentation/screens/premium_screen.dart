@@ -48,10 +48,14 @@ class _PremiumScreenState extends ConsumerState<PremiumScreen> {
       _selectedProductId = premiumState.products.first.id;
     }
 
-    // Listen for errors
+    // Listen for errors and notifications
     ref.listen(premiumProvider, (previous, next) {
       if (next.error != null && next.error != previous?.error) {
-        ToastUtils.showErrorToast(context, ref, next.error!);
+        if (next.error == 'No purchases found') {
+          ToastUtils.showInfoToast(context, ref, l10n.noPurchasesFound);
+        } else {
+          ToastUtils.showErrorToast(context, ref, next.error!);
+        }
       }
     });
 
