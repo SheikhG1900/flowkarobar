@@ -224,6 +224,95 @@ class TransactionsRepository {
     });
   }
 
+  /// Returns all transactions in the same split group (same linkedGroupId).
+  /// If the given transaction has no linkedGroupId, returns only that transaction.
+  Future<List<TransactionWithDetails>> getTransactionsWithDetailsByLinkedGroupId(
+    String? linkedGroupId,
+  ) async {
+    if (linkedGroupId == null || linkedGroupId.isEmpty) {
+      return [];
+    }
+    final query = _database.select(_database.transactions).join([
+      leftOuterJoin(
+        _database.categories,
+        _database.categories.uuid
+            .equalsExp(_database.transactions.categoryUuid),
+      ),
+      leftOuterJoin(
+        _database.contacts,
+        _database.contacts.uuid.equalsExp(_database.transactions.contactUuid),
+      ),
+      leftOuterJoin(
+        _database.payables,
+        _database.payables.uuid
+            .equalsExp(_database.transactions.linkedPayableUuid),
+      ),
+      leftOuterJoin(
+        _database.receivables,
+        _database.receivables.uuid
+            .equalsExp(_database.transactions.linkedReceivableUuid),
+      ),
+    ]);
+    query.where(_database.transactions.linkedGroupId.equals(linkedGroupId) &
+        _database.transactions.isDeleted.equals(false));
+    query.orderBy([OrderingTerm.desc(_database.transactions.date)]);
+    final rows = await query.get();
+    return rows.map((row) {
+      return TransactionWithDetails(
+        transaction: row.readTable(_database.transactions),
+        category: row.readTableOrNull(_database.categories),
+        contact: row.readTableOrNull(_database.contacts),
+        linkedPayable: row.readTableOrNull(_database.payables),
+        linkedReceivable: row.readTableOrNull(_database.receivables),
+      );
+    }).toList();
+  }
+
+  /// Watches all transactions in the same split group (same linkedGroupId).
+  Stream<List<TransactionWithDetails>> watchTransactionsWithDetailsByLinkedGroupId(
+    String? linkedGroupId,
+  ) {
+    if (linkedGroupId == null || linkedGroupId.isEmpty) {
+      return Stream.value([]);
+    }
+    final query = _database.select(_database.transactions).join([
+      leftOuterJoin(
+        _database.categories,
+        _database.categories.uuid
+            .equalsExp(_database.transactions.categoryUuid),
+      ),
+      leftOuterJoin(
+        _database.contacts,
+        _database.contacts.uuid.equalsExp(_database.transactions.contactUuid),
+      ),
+      leftOuterJoin(
+        _database.payables,
+        _database.payables.uuid
+            .equalsExp(_database.transactions.linkedPayableUuid),
+      ),
+      leftOuterJoin(
+        _database.receivables,
+        _database.receivables.uuid
+            .equalsExp(_database.transactions.linkedReceivableUuid),
+      ),
+    ]);
+    query.where(_database.transactions.linkedGroupId.equals(linkedGroupId) &
+        _database.transactions.isDeleted.equals(false));
+    query.orderBy([OrderingTerm.desc(_database.transactions.date)]);
+
+    return query.watch().map((rows) {
+      return rows.map((row) {
+        return TransactionWithDetails(
+          transaction: row.readTable(_database.transactions),
+          category: row.readTableOrNull(_database.categories),
+          contact: row.readTableOrNull(_database.contacts),
+          linkedPayable: row.readTableOrNull(_database.payables),
+          linkedReceivable: row.readTableOrNull(_database.receivables),
+        );
+      }).toList();
+    });
+  }
+
   // Create transaction
   Future<String> createTransaction(TransactionsCompanion transaction) async {
     final uuid =

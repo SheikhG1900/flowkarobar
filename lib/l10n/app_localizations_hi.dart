@@ -2261,6 +2261,18 @@ class AppLocalizationsHi extends AppLocalizations {
   String get summary => 'सारांश';
 
   @override
+  String get splittedTransactions => 'विभाजित लेनदेन';
+
+  @override
+  String get balance => 'शेष';
+
+  @override
+  String get received => 'प्राप्त किया गया';
+
+  @override
+  String get noTransactionsFound => 'कोई लेनदेन नहीं मिला';
+
+  @override
   String get noTransactionsInRange => 'इस तारीख सीमा में कोई लेन-देन नहीं है।';
 
   @override
@@ -2897,6 +2909,12 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get includeMe => 'मुझे शामिल करें';
+
+  @override
+  String get splittedBill => 'विभाजित बिल';
+
+  @override
+  String get me => 'मैं';
 
   @override
   String get distributeEqually => 'समान रूप से वितरित करें';

@@ -1,5 +1,4 @@
 import 'package:flutter/foundation.dart';
-import 'package:uuid/uuid.dart';
 import 'dart:convert';
 import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -63,7 +62,7 @@ class ScheduleService {
     try {
       final String scheduleUuid = await schedulesRepository.createSchedule(
         TransactionSchedulesCompanion(
-          uuid: Value(const Uuid().v4()),
+          uuid: Value(DeepLinkService.newMinifiedUuid()),
           amount: Value(amount),
           type: Value(type),
           description: Value(description),
@@ -180,21 +179,19 @@ class ScheduleService {
   }
 
   /// Internal helper to generate a single transaction for a date
+  /// Transaction id = scheduleId_date; same rules: externalLinkId = tx id, linked pay/rec = tx_rec, tx_pay
   Future<void> _generateForDate(
       TransactionSchedule schedule, DateTime date) async {
-    // Use a deterministic UUID based on schedule and date to prevent duplicates during sync
-    // Shorten the schedule UUID for external link consistency
-    final shortScheduleUuid = DeepLinkService.shortenUuid(schedule.uuid);
-    // Use 0-padding for month and day to avoid ambiguity (e.g., 20250111 vs 20251101)
+    // schedule.uuid is already minified; id = scheduleId_date
     final monthStr = date.month.toString().padLeft(2, '0');
     final dayStr = date.day.toString().padLeft(2, '0');
     final dateStr = "${date.year}$monthStr$dayStr";
-    final deterministicUuid = "${shortScheduleUuid}_$dateStr";
+    final transactionUuid = "${schedule.uuid}_$dateStr";
 
     if (kDebugMode) {
       debugPrint('DEBUG: Generating transaction for schedule: ${schedule.uuid}');
       debugPrint('DEBUG: Target date: $date');
-      debugPrint('DEBUG: Generated deterministic ID: $deterministicUuid');
+      debugPrint('DEBUG: Generated transaction ID: $transactionUuid');
     }
 
     // Calculate dynamic due date based on offset if available
@@ -215,13 +212,13 @@ class ScheduleService {
       paidRelationship: schedule.paidRelationship,
       dueDate: calculatedDueDate,
       isScheduled: true,
-      externalLinkId: deterministicUuid, // Use as external link ID as well
+      transactionUuid: transactionUuid,
     ).catchError((e) {
       final errorStr = e.toString();
       if (errorStr.contains('1555') || errorStr.contains('UNIQUE constraint failed')) {
         // Ignore unique constraint violations (already generated)
         if (kDebugMode) {
-          final msg = 'Transaction for $date already exists (deterministic ID: $deterministicUuid), skipping.';
+          final msg = 'Transaction for $date already exists (ID: $transactionUuid), skipping.';
           debugPrint('DEBUG: $msg');
         }
         // Also show in toast if possible via a callback or just log it

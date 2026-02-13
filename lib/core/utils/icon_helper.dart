@@ -691,4 +691,11 @@ class IconHelper {
       };
     }).toList();
   }
+
+  /// Returns a unique icon for a given group ID (deterministic per group for listing badges).
+  static IconData getGroupIcon(String groupId) {
+    if (groupId.isEmpty) return _iconList.first;
+    final int hash = groupId.hashCode;
+    return _iconList[hash.abs() % _iconList.length];
+  }
 }

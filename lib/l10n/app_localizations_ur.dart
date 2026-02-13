@@ -628,7 +628,7 @@ class AppLocalizationsUr extends AppLocalizations {
   String get payablePending => 'واجب الادا (زیر التواء)';
 
   @override
-  String get paid => 'ادا شدہ';
+  String get paid => 'ادا کیا گیا';
 
   @override
   String get markAsPaid => 'ادا شدہ کے طور پر نشان زد کریں';
@@ -2267,6 +2267,18 @@ class AppLocalizationsUr extends AppLocalizations {
   String get summary => 'خلاصہ';
 
   @override
+  String get splittedTransactions => 'تقسیم شدہ لین دین';
+
+  @override
+  String get balance => 'بقیہ';
+
+  @override
+  String get received => 'وصول کیا گیا';
+
+  @override
+  String get noTransactionsFound => 'کوئی لین دین نہیں ملا';
+
+  @override
   String get noTransactionsInRange =>
       'اس تاریخ کی حد میں کوئی لین دین نہیں ہے۔';
 
@@ -2906,6 +2918,12 @@ class AppLocalizationsUr extends AppLocalizations {
 
   @override
   String get includeMe => 'مجھے شامل کریں';
+
+  @override
+  String get splittedBill => 'تقسیم شدہ بل';
+
+  @override
+  String get me => 'میں';
 
   @override
   String get distributeEqually => 'برابر تقسیم کریں';

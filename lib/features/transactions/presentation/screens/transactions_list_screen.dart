@@ -23,6 +23,7 @@ import 'package:flowpaisa/shared/providers/currency_provider.dart';
 import 'package:flowpaisa/core/utils/category_helper.dart';
 import 'package:flowpaisa/core/utils/localization_helper.dart';
 import 'package:flowpaisa/features/transactions/presentation/widgets/schedule_icon_badge.dart';
+import 'package:flowpaisa/features/transactions/presentation/widgets/split_icon_badge.dart';
 import 'package:flowpaisa/features/transactions/presentation/widgets/schedule_list_item.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/schedule_service_provider.dart';
 import 'package:flowpaisa/features/transactions/presentation/screens/bulk_import_screen.dart';
@@ -137,7 +138,10 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                 children: [
                   Text(
                     l10n.bulkImport,
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleLarge
+                        ?.copyWith(fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(width: 8),
                   if (!isPremium)
@@ -153,7 +157,10 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
               onTap: () async {
                 Navigator.pop(context);
                 if (!isPremium) {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => const PremiumScreen()));
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const PremiumScreen()));
                   return;
                 }
                 final data = await Clipboard.getData(Clipboard.kTextPlain);
@@ -161,7 +168,8 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => BulkImportScreen(initialContent: data!.text),
+                      builder: (context) =>
+                          BulkImportScreen(initialContent: data!.text),
                     ),
                   );
                 } else {
@@ -175,7 +183,10 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
               onTap: () async {
                 Navigator.pop(context);
                 if (!isPremium) {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => const PremiumScreen()));
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const PremiumScreen()));
                   return;
                 }
                 final result = await FilePicker.platform.pickFiles(
@@ -189,7 +200,8 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => BulkImportScreen(initialContent: content),
+                      builder: (context) =>
+                          BulkImportScreen(initialContent: content),
                     ),
                   );
                 }
@@ -696,7 +708,11 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
     // Dynamic font size based on amount
     final amountFontSize = AmountFormatter.getFontSize(transaction.amount);
 
+    final linkedGroupId = transaction.linkedGroupId;
+    final showSplitBadge = linkedGroupId != null && linkedGroupId.isNotEmpty;
+
     return Stack(
+      clipBehavior: Clip.none,
       children: [
         Container(
           decoration: BoxDecoration(
@@ -732,8 +748,10 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                   category?.icon, displayColor, isExpense),
             ),
             title: Text(
-              transaction.description ??
-                  (isExpense ? l10n.expense : l10n.income),
+              category != null
+                  ? LocalizationHelper.getLocalizedCategoryName(
+                      context, category.name)
+                  : l10n.uncategorized,
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w600,
                 color: textColor,
@@ -745,10 +763,8 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  category != null
-                      ? LocalizationHelper.getLocalizedCategoryName(
-                          context, category.name)
-                      : l10n.uncategorized,
+                  transaction.description ??
+                      (isExpense ? l10n.expense : l10n.income),
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant
                         .withValues(alpha: isInactive ? 0.5 : 1.0),
@@ -925,6 +941,8 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
         ),
         // Schedule icon badge (top-right corner)
         if (transaction.isScheduled == true) const ScheduleIconBadge(),
+        // Split icon badge (top-right corner); same transaction has linkedGroupId from DB
+        if (showSplitBadge) SplitIconBadge(groupId: linkedGroupId!),
       ],
     );
   }

@@ -16,7 +16,7 @@ class TransactionWithDetails {
     this.linkedPayable,
     this.linkedReceivable,
   });
-  
+
   /// Returns true if the linked payable/receivable is marked/settled
   bool get isLinkedEntryMarked {
     if (linkedPayable != null) {

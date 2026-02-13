@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flowpaisa/core/constants/app_constants.dart';
 import 'package:flowpaisa/features/whatsapp/domain/models/shared_data_models.dart';
+import 'package:uuid/uuid.dart';
 
 class DeepLinkService {
   static const String _scheme = AppConstants.deepLinkScheme;
@@ -12,6 +13,11 @@ class DeepLinkService {
   static String shortenUuid(String uuid) {
     // Remove dashes and take the first 12 characters for a stable, unique prefix
     return uuid.replaceAll('-', '').substring(0, 12);
+  }
+
+  /// Generate a new minified UUID (12-char, no dashes) for use as primary IDs
+  static String newMinifiedUuid() {
+    return shortenUuid(const Uuid().v4());
   }
 
   /// Helper to create the link with both scheme and https fallback

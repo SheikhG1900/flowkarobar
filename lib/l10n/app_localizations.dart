@@ -4174,6 +4174,30 @@ abstract class AppLocalizations {
   /// **'Summary'**
   String get summary;
 
+  /// No description provided for @splittedTransactions.
+  ///
+  /// In en, this message translates to:
+  /// **'Splitted Transactions'**
+  String get splittedTransactions;
+
+  /// No description provided for @balance.
+  ///
+  /// In en, this message translates to:
+  /// **'Balance'**
+  String get balance;
+
+  /// No description provided for @received.
+  ///
+  /// In en, this message translates to:
+  /// **'Received'**
+  String get received;
+
+  /// No description provided for @noTransactionsFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No transactions found'**
+  String get noTransactionsFound;
+
   /// No description provided for @noTransactionsInRange.
   ///
   /// In en, this message translates to:
@@ -5320,6 +5344,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Include Me'**
   String get includeMe;
+
+  /// No description provided for @splittedBill.
+  ///
+  /// In en, this message translates to:
+  /// **'Splitted Bill'**
+  String get splittedBill;
+
+  /// No description provided for @me.
+  ///
+  /// In en, this message translates to:
+  /// **'Me'**
+  String get me;
 
   /// No description provided for @distributeEqually.
   ///

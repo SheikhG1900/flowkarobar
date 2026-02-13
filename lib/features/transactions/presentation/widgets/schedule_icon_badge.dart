@@ -5,11 +5,14 @@ class ScheduleIconBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isRtl = Directionality.of(context) == TextDirection.rtl;
+
     return Positioned(
       top: 8,
-      right: 8,
+      left: isRtl ? 8 : null,
+      right: isRtl ? null : 8,
       child: Container(
-        padding: const EdgeInsets.all(4),
+        padding: const EdgeInsets.all(0),
         decoration: BoxDecoration(
           color: Colors.blue.withValues(alpha: 0.9),
           shape: BoxShape.circle,
@@ -22,8 +25,8 @@ class ScheduleIconBadge extends StatelessWidget {
           ],
         ),
         child: const Icon(
-          Icons.schedule,
-          size: 14,
+          Icons.schedule_outlined,
+          size: 28,
           color: Colors.white,
         ),
       ),

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/features/transactions/data/transactions_repository.dart';
+import 'package:flowpaisa/features/transactions/domain/models.dart';
 import 'package:flowpaisa/features/receivables/data/receivables_repository.dart';
 import 'package:flowpaisa/features/payables/data/payables_repository.dart';
 import 'package:flowpaisa/features/categories/data/categories_repository.dart';
@@ -16,7 +17,6 @@ import 'package:flowpaisa/features/whatsapp/domain/deep_link_service.dart';
 import 'package:flowpaisa/shared/providers/database_provider.dart';
 
 import 'package:flutter/foundation.dart';
-import 'package:uuid/uuid.dart';
 
 final transactionServiceProvider = Provider<TransactionService>((ref) {
   return TransactionService(
@@ -59,39 +59,40 @@ class TransactionService {
     DateTime? dueDate,
     bool isScheduled = false,
     String? externalLinkId,
+    String? transactionUuid,
     double? myShareAmount,
     bool isSplitMode = true,
     bool isImport = false,
     AppLocalizations? l10n,
   }) async {
     return await database.transaction(() async {
-      // 0. Determine the final UUID for the transaction
-      String baseTransactionUuid;
+      // 0. Determine UUIDs and optional linkedGroupId for split bills
+      // Rule: transaction id = minified UUID (or scheduleId_date for scheduled); externalLinkId = same as transaction id
+      String contactTxUuid;
+      String? sharedLinkedGroupId;
       String effectiveExternalId;
 
       if (isImport && externalLinkId != null) {
-        // If it's an import from a deep link, use the provided externalLinkId exactly as is.
-        // It already contains the necessary suffixes and formatting.
-        baseTransactionUuid = externalLinkId;
+        contactTxUuid = externalLinkId;
         effectiveExternalId = externalLinkId;
+        // Imports do not use linkedGroupId; keep null
+      } else if (transactionUuid != null && transactionUuid.isNotEmpty) {
+        // Scheduled: id = scheduleId_date; externalLinkId = same
+        contactTxUuid = transactionUuid;
+        effectiveExternalId = contactTxUuid;
       } else {
-        // Standard creation (manual or scheduler)
-        final baseUuid = externalLinkId ?? const Uuid().v4();
-
-        // If externalLinkId was provided (e.g. from scheduler), use it as is to preserve the date suffix.
-        // Otherwise, shorten the newly generated random UUID.
-        effectiveExternalId =
-            externalLinkId ?? DeepLinkService.shortenUuid(baseUuid);
-
-        // Use the effectiveExternalId as the base UUID for the transaction to ensure consistency across devices
-        baseTransactionUuid = '${effectiveExternalId}_0';
+        // Standard creation: use minified UUID; externalLinkId = same as transaction id
+        contactTxUuid = DeepLinkService.newMinifiedUuid();
+        effectiveExternalId = contactTxUuid;
+        if (myShareAmount != null && myShareAmount > 0) {
+          sharedLinkedGroupId = DeepLinkService.newMinifiedUuid();
+        }
       }
 
       if (kDebugMode) {
         debugPrint('DEBUG: Transaction Service creating transaction');
         debugPrint('DEBUG: Is Import: $isImport');
-        debugPrint('DEBUG: Effective External ID: $effectiveExternalId');
-        debugPrint('DEBUG: Final Transaction UUID: $baseTransactionUuid');
+        debugPrint('DEBUG: linkedGroupId: $sharedLinkedGroupId');
       }
 
       // Determine actual amounts for contact and user
@@ -99,52 +100,51 @@ class TransactionService {
 
       if (myShareAmount != null && myShareAmount > 0) {
         if (isSplitMode) {
-          // Split: amount is total, contact gets (total - myShare)
           contactAmount = amount - myShareAmount;
         } else {
-          // Add: amount is contact's share, user gets myShareAmount
           contactAmount = amount;
         }
       }
 
-    final transactionUuid = await transactionsRepository.createTransaction(
-      TransactionsCompanion(
-        uuid: drift.Value(baseTransactionUuid),
-        amount: drift.Value(contactAmount),
-        type: drift.Value(type),
-        contactUuid: drift.Value(contactUuid),
-        categoryUuid: drift.Value(categoryUuid),
-        description: drift.Value(description),
-        date: drift.Value(date),
-        paidRelationship: drift.Value(paidRelationship),
-        isScheduled: drift.Value(isScheduled),
-        externalLinkId: drift.Value(baseTransactionUuid),
-        createdAt: drift.Value(DateTime.now()),
-        updatedAt: drift.Value(DateTime.now()),
-      ),
-    );
+      final createdTxUuid = await transactionsRepository.createTransaction(
+        TransactionsCompanion(
+          uuid: drift.Value(contactTxUuid),
+          amount: drift.Value(contactAmount),
+          type: drift.Value(type),
+          contactUuid: drift.Value(contactUuid),
+          categoryUuid: drift.Value(categoryUuid),
+          description: drift.Value(description),
+          date: drift.Value(date),
+          paidRelationship: drift.Value(paidRelationship),
+          isScheduled: drift.Value(isScheduled),
+          linkedGroupId: drift.Value(sharedLinkedGroupId),
+          externalLinkId: drift.Value(effectiveExternalId),
+          createdAt: drift.Value(DateTime.now()),
+          updatedAt: drift.Value(DateTime.now()),
+        ),
+      );
 
-    // Ensure linked entry creation is triggered if relationship is provided
-    final shouldCreateLinks = createLinkedEntry || paidRelationship != null;
+      final shouldCreateLinks = createLinkedEntry || paidRelationship != null;
 
-    // 1.1 Create "My Share" transaction if applicable
+      // 1.1 Create "My Share" transaction if applicable (same linkedGroupId, minified UUID; externalLinkId = same)
       if (myShareAmount != null && myShareAmount > 0) {
+        final userTxUuid = DeepLinkService.newMinifiedUuid();
         await transactionsRepository.createTransaction(
           TransactionsCompanion(
-            uuid: drift.Value(const Uuid().v4()), // Explicitly generate a new UUID
+            uuid: drift.Value(userTxUuid),
             amount: drift.Value(myShareAmount),
             type: drift.Value(type),
-            contactUuid: drift.Value(contactUuid), // Keep contact attached
+            contactUuid: drift.Value(contactUuid),
             categoryUuid: drift.Value(categoryUuid),
-            description: drift.Value(description), // Don't append suffix
+            description: drift.Value(description),
             date: drift.Value(date),
             isScheduled: drift.Value(isScheduled),
-            externalLinkId: drift.Value('${effectiveExternalId}_1'),
+            linkedGroupId: drift.Value(sharedLinkedGroupId),
+            externalLinkId: drift.Value(userTxUuid),
             createdAt: drift.Value(DateTime.now()),
             updatedAt: drift.Value(DateTime.now()),
           ),
         );
-        // Increment contact usage count for the second transaction as well
         if (contactUuid != null) {
           await contactsRepository.incrementUsageCount(contactUuid);
         }
@@ -158,7 +158,7 @@ class TransactionService {
         await contactsRepository.incrementUsageCount(contactUuid);
       }
 
-      // 3. Create linked entries based on logic (using contactAmount)
+      // 3. Create linked entries based on logic (using contactAmount); id = tx_rec / tx_pay, externalLinkId = tx id
       if (shouldCreateLinks && contactUuid != null) {
         // --- EXPENSE LOGIC ---
         if (type == 'EXPENSE') {
@@ -166,23 +166,23 @@ class TransactionService {
             final String receivableUuid =
                 await receivablesRepository.createReceivable(
               ReceivablesCompanion(
-                uuid: drift.Value('${transactionUuid}_rec'), // Derived from transaction
+                uuid: drift.Value('${createdTxUuid}_rec'),
                 contactUuid: drift.Value(contactUuid),
                 amount: drift.Value(contactAmount),
                 description: drift.Value(description),
                 date: drift.Value(date),
                 dueDate: drift.Value(dueDate),
                 status: const drift.Value('PENDING'),
-                linkedExpenseUuid: drift.Value(transactionUuid),
+                linkedExpenseUuid: drift.Value(createdTxUuid),
                 isScheduled: drift.Value(isScheduled),
                 autoCreateIncome: const drift.Value(true),
-                externalLinkId: drift.Value(baseTransactionUuid),
+                externalLinkId: drift.Value(createdTxUuid),
                 createdAt: drift.Value(DateTime.now()),
                 updatedAt: drift.Value(DateTime.now()),
               ),
             );
             await transactionsRepository.updateTransactionWithCompanion(
-              transactionUuid,
+              createdTxUuid,
               TransactionsCompanion(
                 linkedReceivableUuid: drift.Value(receivableUuid),
                 updatedAt: drift.Value(DateTime.now()),
@@ -191,23 +191,23 @@ class TransactionService {
           } else if (paidRelationship == 'PAID_BY') {
             final String payableUuid = await payablesRepository.createPayable(
               PayablesCompanion(
-                uuid: drift.Value('${transactionUuid}_pay'), // Derived from transaction
+                uuid: drift.Value('${createdTxUuid}_pay'),
                 contactUuid: drift.Value(contactUuid),
                 amount: drift.Value(contactAmount),
                 description: drift.Value(description),
                 date: drift.Value(date),
                 dueDate: drift.Value(dueDate),
                 status: const drift.Value('PENDING'),
-                linkedExpenseUuid: drift.Value(transactionUuid),
+                linkedExpenseUuid: drift.Value(createdTxUuid),
                 isScheduled: drift.Value(isScheduled),
                 autoCreateExpense: const drift.Value(false),
-                externalLinkId: drift.Value(baseTransactionUuid),
+                externalLinkId: drift.Value(createdTxUuid),
                 createdAt: drift.Value(DateTime.now()),
                 updatedAt: drift.Value(DateTime.now()),
               ),
             );
             await transactionsRepository.updateTransactionWithCompanion(
-              transactionUuid,
+              createdTxUuid,
               TransactionsCompanion(
                 linkedPayableUuid: drift.Value(payableUuid),
                 updatedAt: drift.Value(DateTime.now()),
@@ -220,23 +220,23 @@ class TransactionService {
           if (paidRelationship == 'RECEIVED_FROM') {
             final String payableUuid = await payablesRepository.createPayable(
               PayablesCompanion(
-                uuid: drift.Value('${transactionUuid}_pay'), // Derived from transaction
+                uuid: drift.Value('${createdTxUuid}_pay'),
                 contactUuid: drift.Value(contactUuid),
                 amount: drift.Value(contactAmount),
                 description: drift.Value(description),
                 date: drift.Value(date),
                 dueDate: drift.Value(dueDate),
                 status: const drift.Value('PENDING'),
-                linkedIncomeUuid: drift.Value(transactionUuid),
+                linkedIncomeUuid: drift.Value(createdTxUuid),
                 isScheduled: drift.Value(isScheduled),
                 autoCreateExpense: const drift.Value(true),
-                externalLinkId: drift.Value(baseTransactionUuid),
+                externalLinkId: drift.Value(createdTxUuid),
                 createdAt: drift.Value(DateTime.now()),
                 updatedAt: drift.Value(DateTime.now()),
               ),
             );
             await transactionsRepository.updateTransactionWithCompanion(
-              transactionUuid,
+              createdTxUuid,
               TransactionsCompanion(
                 linkedPayableUuid: drift.Value(payableUuid),
                 updatedAt: drift.Value(DateTime.now()),
@@ -246,23 +246,23 @@ class TransactionService {
             final String receivableUuid =
                 await receivablesRepository.createReceivable(
               ReceivablesCompanion(
-                uuid: drift.Value('${transactionUuid}_rec'), // Derived from transaction
+                uuid: drift.Value('${createdTxUuid}_rec'),
                 contactUuid: drift.Value(contactUuid),
                 amount: drift.Value(contactAmount),
                 description: drift.Value(description),
                 date: drift.Value(date),
                 dueDate: drift.Value(dueDate),
                 status: const drift.Value('PENDING'),
-                linkedIncomeUuid: drift.Value(transactionUuid),
+                linkedIncomeUuid: drift.Value(createdTxUuid),
                 isScheduled: drift.Value(isScheduled),
                 autoCreateIncome: const drift.Value(false),
-                externalLinkId: drift.Value(baseTransactionUuid),
+                externalLinkId: drift.Value(createdTxUuid),
                 createdAt: drift.Value(DateTime.now()),
                 updatedAt: drift.Value(DateTime.now()),
               ),
             );
             await transactionsRepository.updateTransactionWithCompanion(
-              transactionUuid,
+              createdTxUuid,
               TransactionsCompanion(
                 linkedReceivableUuid: drift.Value(receivableUuid),
                 updatedAt: drift.Value(DateTime.now()),
@@ -271,7 +271,7 @@ class TransactionService {
           }
         }
       }
-      return transactionUuid;
+      return createdTxUuid;
     });
   }
 
@@ -288,17 +288,14 @@ class TransactionService {
   }) async {
     try {
       await database.transaction(() async {
-        // Generate a unique group ID for this split using standard UUID, shortened
-        final groupBaseUuid = const Uuid().v4();
-        final groupPrefix = DeepLinkService.shortenUuid(groupBaseUuid);
+        final linkedGroupId = DeepLinkService.newMinifiedUuid();
 
         for (int i = 0; i < shares.length; i++) {
           final share = shares[i];
           if (share.amount <= 0) continue;
 
           if (share.isUser) {
-            // User's share: Just a regular transaction without contact or linked entry
-            final userTxUuid = '${groupPrefix}_$i';
+            final userTxUuid = DeepLinkService.newMinifiedUuid();
             await transactionsRepository.createTransaction(
               TransactionsCompanion(
                 uuid: drift.Value(userTxUuid),
@@ -307,14 +304,14 @@ class TransactionService {
                 categoryUuid: drift.Value(categoryUuid),
                 description: drift.Value(description),
                 date: drift.Value(date),
+                linkedGroupId: drift.Value(linkedGroupId),
                 externalLinkId: drift.Value(userTxUuid),
                 createdAt: drift.Value(DateTime.now()),
                 updatedAt: drift.Value(DateTime.now()),
               ),
             );
           } else if (share.contact != null) {
-            // Contact's share: Transaction + Linked Entry
-            final transactionUuid = '${groupPrefix}_$i';
+            final transactionUuid = DeepLinkService.newMinifiedUuid();
             await transactionsRepository.createTransaction(
               TransactionsCompanion(
                 uuid: drift.Value(transactionUuid),
@@ -325,6 +322,7 @@ class TransactionService {
                 description: drift.Value(description),
                 date: drift.Value(date),
                 paidRelationship: drift.Value(paidRelationship),
+                linkedGroupId: drift.Value(linkedGroupId),
                 externalLinkId: drift.Value(transactionUuid),
                 createdAt: drift.Value(DateTime.now()),
                 updatedAt: drift.Value(DateTime.now()),
@@ -455,6 +453,273 @@ class TransactionService {
     }
   }
 
+  /// Returns all transactions in the same split group as the given transaction.
+  /// If the transaction has no linkedGroupId, returns a list containing only that transaction with details.
+  Future<List<TransactionWithDetails>> getGroupByTransactionUuid(
+    String transactionUuid,
+  ) async {
+    final item = await transactionsRepository
+        .getTransactionWithDetailsByUuid(transactionUuid);
+    if (item == null) return [];
+    final linkedGroupId = item.transaction.linkedGroupId;
+    if (linkedGroupId == null || linkedGroupId.isEmpty) {
+      return [item];
+    }
+    return transactionsRepository
+        .getTransactionsWithDetailsByLinkedGroupId(linkedGroupId);
+  }
+
+  /// Updates a split group atomically: updates non-locked shares, removes non-locked shares not in [shares], adds new shares.
+  /// [shares] is the full desired list. Each item with [transactionUuid] non-null is an existing row (update or keep);
+  /// items with [transactionUuid] null are new. Existing DB rows in the group that are not in [shares] and not locked are deleted.
+  Future<void> updateGroupSplit({
+    required String linkedGroupId,
+    required String type,
+    required DateTime date,
+    String? description,
+    String? categoryUuid,
+    String? paidRelationship,
+    DateTime? dueDate,
+    required List<GroupShareEdit> shares,
+  }) async {
+    await database.transaction(() async {
+      final existing = await transactionsRepository
+          .getTransactionsWithDetailsByLinkedGroupId(linkedGroupId);
+
+      // Helper to find the effective relationship for new entries
+      // We look for the first existing transaction that has a relationship defined.
+      String? effectiveRelationship = paidRelationship;
+      if (effectiveRelationship == null) {
+        for (final e in existing) {
+          if (e.transaction.paidRelationship != null) {
+            effectiveRelationship = e.transaction.paidRelationship;
+            break;
+          }
+        }
+      }
+
+      // 1. First, handle updates and additions to ensure we have relationship context
+      // and to avoid issues if all existing records were to be deleted.
+
+      // Handle Updates
+      final desiredTxUuids = <String>{};
+      for (final s in shares) {
+        if (s.transactionUuid != null) desiredTxUuids.add(s.transactionUuid!);
+      }
+
+      for (final e in existing) {
+        final txUuid = e.transaction.uuid;
+        final locked = e.linkedPayable?.status == 'PAID' ||
+            e.linkedReceivable?.status == 'RECEIVED';
+
+        if (desiredTxUuids.contains(txUuid)) {
+          if (!locked) {
+            final edit = shares.firstWhere((s) => s.transactionUuid == txUuid);
+            await transactionsRepository.updateTransactionWithCompanion(
+              txUuid,
+              TransactionsCompanion(
+                amount: drift.Value(edit.amount),
+                description: drift.Value(description),
+                date: drift.Value(date),
+                categoryUuid: drift.Value(categoryUuid),
+                contactUuid: drift.Value(edit.contactUuid),
+                paidRelationship:
+                    drift.Value(edit.isUser ? null : effectiveRelationship),
+                updatedAt: drift.Value(DateTime.now()),
+              ),
+            );
+            if (e.transaction.linkedPayableUuid != null) {
+              await payablesRepository.updatePayableWithCompanion(
+                e.transaction.linkedPayableUuid!,
+                PayablesCompanion(
+                  amount: drift.Value(edit.amount),
+                  description: drift.Value(description),
+                  date: drift.Value(date),
+                  dueDate: drift.Value(dueDate),
+                  updatedAt: drift.Value(DateTime.now()),
+                ),
+              );
+            }
+            if (e.transaction.linkedReceivableUuid != null) {
+              await receivablesRepository.updateReceivableWithCompanion(
+                e.transaction.linkedReceivableUuid!,
+                ReceivablesCompanion(
+                  amount: drift.Value(edit.amount),
+                  description: drift.Value(description),
+                  date: drift.Value(date),
+                  dueDate: drift.Value(dueDate),
+                  updatedAt: drift.Value(DateTime.now()),
+                ),
+              );
+            }
+          }
+        }
+      }
+
+      // Handle Additions (minified tx id; externalLinkId = tx id; pay/rec = tx_rec, tx_pay; same externalLinkId)
+      for (final edit in shares.where((s) => s.transactionUuid == null)) {
+        if (edit.amount <= 0) continue;
+        if (edit.isUser) {
+          final userTxUuid = DeepLinkService.newMinifiedUuid();
+          await transactionsRepository.createTransaction(
+            TransactionsCompanion(
+              uuid: drift.Value(userTxUuid),
+              amount: drift.Value(edit.amount),
+              type: drift.Value(type),
+              categoryUuid: drift.Value(categoryUuid),
+              description: drift.Value(description),
+              date: drift.Value(date),
+              linkedGroupId: drift.Value(linkedGroupId),
+              externalLinkId: drift.Value(userTxUuid),
+              createdAt: drift.Value(DateTime.now()),
+              updatedAt: drift.Value(DateTime.now()),
+            ),
+          );
+        } else if (edit.contactUuid != null) {
+          final txUuid = DeepLinkService.newMinifiedUuid();
+          await transactionsRepository.createTransaction(
+            TransactionsCompanion(
+              uuid: drift.Value(txUuid),
+              amount: drift.Value(edit.amount),
+              type: drift.Value(type),
+              contactUuid: drift.Value(edit.contactUuid),
+              categoryUuid: drift.Value(categoryUuid),
+              description: drift.Value(description),
+              date: drift.Value(date),
+              paidRelationship: drift.Value(effectiveRelationship),
+              linkedGroupId: drift.Value(linkedGroupId),
+              externalLinkId: drift.Value(txUuid),
+              createdAt: drift.Value(DateTime.now()),
+              updatedAt: drift.Value(DateTime.now()),
+            ),
+          );
+          if (effectiveRelationship != null && type == 'EXPENSE') {
+            if (effectiveRelationship == 'PAID_FOR') {
+              final recUuid = '${txUuid}_rec';
+              await receivablesRepository.createReceivable(
+                ReceivablesCompanion(
+                  uuid: drift.Value(recUuid),
+                  contactUuid: drift.Value(edit.contactUuid!),
+                  amount: drift.Value(edit.amount),
+                  description: drift.Value(description),
+                  date: drift.Value(date),
+                  dueDate: drift.Value(dueDate),
+                  status: const drift.Value('PENDING'),
+                  linkedExpenseUuid: drift.Value(txUuid),
+                  autoCreateIncome: const drift.Value(true),
+                  externalLinkId: drift.Value(txUuid),
+                  createdAt: drift.Value(DateTime.now()),
+                  updatedAt: drift.Value(DateTime.now()),
+                ),
+              );
+              await transactionsRepository.updateTransactionWithCompanion(
+                txUuid,
+                TransactionsCompanion(
+                  linkedReceivableUuid: drift.Value(recUuid),
+                  updatedAt: drift.Value(DateTime.now()),
+                ),
+              );
+            } else if (effectiveRelationship == 'PAID_BY') {
+              final payUuid = '${txUuid}_pay';
+              await payablesRepository.createPayable(
+                PayablesCompanion(
+                  uuid: drift.Value(payUuid),
+                  contactUuid: drift.Value(edit.contactUuid!),
+                  amount: drift.Value(edit.amount),
+                  description: drift.Value(description),
+                  date: drift.Value(date),
+                  dueDate: drift.Value(dueDate),
+                  status: const drift.Value('PENDING'),
+                  linkedExpenseUuid: drift.Value(txUuid),
+                  autoCreateExpense: const drift.Value(false),
+                  externalLinkId: drift.Value(txUuid),
+                  createdAt: drift.Value(DateTime.now()),
+                  updatedAt: drift.Value(DateTime.now()),
+                ),
+              );
+              await transactionsRepository.updateTransactionWithCompanion(
+                txUuid,
+                TransactionsCompanion(
+                  linkedPayableUuid: drift.Value(payUuid),
+                  updatedAt: drift.Value(DateTime.now()),
+                ),
+              );
+            }
+          } else if (effectiveRelationship != null && type == 'INCOME') {
+            if (effectiveRelationship == 'RECEIVED_FROM') {
+              final payUuid = '${txUuid}_pay';
+              await payablesRepository.createPayable(
+                PayablesCompanion(
+                  uuid: drift.Value(payUuid),
+                  contactUuid: drift.Value(edit.contactUuid!),
+                  amount: drift.Value(edit.amount),
+                  description: drift.Value(description),
+                  date: drift.Value(date),
+                  dueDate: drift.Value(dueDate),
+                  status: const drift.Value('PENDING'),
+                  linkedIncomeUuid: drift.Value(txUuid),
+                  autoCreateExpense: const drift.Value(true),
+                  externalLinkId: drift.Value(txUuid),
+                  createdAt: drift.Value(DateTime.now()),
+                  updatedAt: drift.Value(DateTime.now()),
+                ),
+              );
+              await transactionsRepository.updateTransactionWithCompanion(
+                txUuid,
+                TransactionsCompanion(
+                  linkedPayableUuid: drift.Value(payUuid),
+                  updatedAt: drift.Value(DateTime.now()),
+                ),
+              );
+            } else if (effectiveRelationship == 'WILL_RECEIVE') {
+              final recUuid = '${txUuid}_rec';
+              await receivablesRepository.createReceivable(
+                ReceivablesCompanion(
+                  uuid: drift.Value(recUuid),
+                  contactUuid: drift.Value(edit.contactUuid!),
+                  amount: drift.Value(edit.amount),
+                  description: drift.Value(description),
+                  date: drift.Value(date),
+                  dueDate: drift.Value(dueDate),
+                  status: const drift.Value('PENDING'),
+                  linkedIncomeUuid: drift.Value(txUuid),
+                  autoCreateIncome: const drift.Value(false),
+                  externalLinkId: drift.Value(txUuid),
+                  createdAt: drift.Value(DateTime.now()),
+                  updatedAt: drift.Value(DateTime.now()),
+                ),
+              );
+              await transactionsRepository.updateTransactionWithCompanion(
+                txUuid,
+                TransactionsCompanion(
+                  linkedReceivableUuid: drift.Value(recUuid),
+                  updatedAt: drift.Value(DateTime.now()),
+                ),
+              );
+            }
+          }
+          if (edit.contactUuid != null) {
+            await contactsRepository.incrementUsageCount(edit.contactUuid!);
+          }
+        }
+      }
+
+      // 2. Finally, handle Deletions
+      for (final e in existing) {
+        final txUuid = e.transaction.uuid;
+        final locked = e.linkedPayable?.status == 'PAID' ||
+            e.linkedReceivable?.status == 'RECEIVED';
+        if (!desiredTxUuids.contains(txUuid) && !locked) {
+          await deleteTransaction(txUuid);
+        }
+      }
+
+      if (categoryUuid != null) {
+        await categoriesRepository.incrementUsageCount(categoryUuid);
+      }
+    });
+  }
+
   /// Ensure a transaction and its linked entries have a consistent externalLinkId
   Future<String> ensureExternalLinkId({
     String? transactionUuid,
@@ -521,8 +786,7 @@ class TransactionService {
         }
       }
 
-      // 2. If still no ID, generate a new one
-      // Derive the ID from the transaction ID if available, otherwise from payable/receivable
+      // 2. If still no ID, use transaction/payable/receivable id (same as tx id for linked); else new minified
       String sourceId;
       if (transactionUuid != null) {
         sourceId = transactionUuid;
@@ -531,10 +795,13 @@ class TransactionService {
       } else if (receivableUuid != null) {
         sourceId = receivableUuid;
       } else {
-        sourceId = const Uuid().v4();
+        sourceId = DeepLinkService.newMinifiedUuid();
       }
-      
-      final String finalId = existingId ?? DeepLinkService.shortenUuid(sourceId);
+
+      final String finalId = existingId ??
+          (sourceId.length <= 12
+              ? sourceId
+              : DeepLinkService.shortenUuid(sourceId));
 
       // 3. Update all related records with this ID
       // Update transaction
@@ -545,7 +812,8 @@ class TransactionService {
             TransactionsCompanion(externalLinkId: drift.Value(finalId)),
           );
         } catch (e) {
-          if (!e.toString().contains('1555') && !e.toString().contains('UNIQUE constraint failed')) {
+          if (!e.toString().contains('1555') &&
+              !e.toString().contains('UNIQUE constraint failed')) {
             rethrow;
           }
         }
@@ -556,7 +824,8 @@ class TransactionService {
             TransactionsCompanion(externalLinkId: drift.Value(finalId)),
           );
         } catch (e) {
-          if (!e.toString().contains('1555') && !e.toString().contains('UNIQUE constraint failed')) {
+          if (!e.toString().contains('1555') &&
+              !e.toString().contains('UNIQUE constraint failed')) {
             rethrow;
           }
         }
@@ -570,7 +839,8 @@ class TransactionService {
             PayablesCompanion(externalLinkId: drift.Value(finalId)),
           );
         } catch (e) {
-          if (!e.toString().contains('1555') && !e.toString().contains('UNIQUE constraint failed')) {
+          if (!e.toString().contains('1555') &&
+              !e.toString().contains('UNIQUE constraint failed')) {
             rethrow;
           }
         }
@@ -581,7 +851,8 @@ class TransactionService {
             PayablesCompanion(externalLinkId: drift.Value(finalId)),
           );
         } catch (e) {
-          if (!e.toString().contains('1555') && !e.toString().contains('UNIQUE constraint failed')) {
+          if (!e.toString().contains('1555') &&
+              !e.toString().contains('UNIQUE constraint failed')) {
             rethrow;
           }
         }
@@ -595,7 +866,8 @@ class TransactionService {
             ReceivablesCompanion(externalLinkId: drift.Value(finalId)),
           );
         } catch (e) {
-          if (!e.toString().contains('1555') && !e.toString().contains('UNIQUE constraint failed')) {
+          if (!e.toString().contains('1555') &&
+              !e.toString().contains('UNIQUE constraint failed')) {
             rethrow;
           }
         }
@@ -606,7 +878,8 @@ class TransactionService {
             ReceivablesCompanion(externalLinkId: drift.Value(finalId)),
           );
         } catch (e) {
-          if (!e.toString().contains('1555') && !e.toString().contains('UNIQUE constraint failed')) {
+          if (!e.toString().contains('1555') &&
+              !e.toString().contains('UNIQUE constraint failed')) {
             rethrow;
           }
         }
@@ -660,7 +933,8 @@ class TransactionService {
 
       // 3. If significant change, delete old linked entries
       String? oldLinkedPayableUuid = existingTransaction.linkedPayableUuid;
-      String? oldLinkedReceivableUuid = existingTransaction.linkedReceivableUuid;
+      String? oldLinkedReceivableUuid =
+          existingTransaction.linkedReceivableUuid;
 
       if (shouldDeleteOldLinks) {
         if (existingTransaction.linkedPayableUuid != null) {
@@ -692,17 +966,17 @@ class TransactionService {
         ),
       );
 
-      // 5. Recreate linked entries if needed
+      // 5. Recreate linked entries if needed (id = transactionId_rec / _pay; externalLinkId = transaction id)
       if (shouldCreateNewLinks) {
         String? newLinkedPayableUuid;
         String? newLinkedReceivableUuid;
 
         if (type == 'EXPENSE') {
           if (paidRelationship == 'PAID_FOR') {
-            // Create receivable
-            newLinkedReceivableUuid =
-                await receivablesRepository.createReceivable(
+            newLinkedReceivableUuid = '${transactionUuid}_rec';
+            await receivablesRepository.createReceivable(
               ReceivablesCompanion(
+                uuid: drift.Value(newLinkedReceivableUuid),
                 contactUuid: drift.Value(contactUuid),
                 amount: drift.Value(amount),
                 description: drift.Value(description),
@@ -711,14 +985,16 @@ class TransactionService {
                 status: const drift.Value('PENDING'),
                 linkedExpenseUuid: drift.Value(transactionUuid),
                 autoCreateIncome: const drift.Value(true),
+                externalLinkId: drift.Value(transactionUuid),
                 createdAt: drift.Value(DateTime.now()),
                 updatedAt: drift.Value(DateTime.now()),
               ),
             );
           } else if (paidRelationship == 'PAID_BY') {
-            // Create payable
-            newLinkedPayableUuid = await payablesRepository.createPayable(
+            newLinkedPayableUuid = '${transactionUuid}_pay';
+            await payablesRepository.createPayable(
               PayablesCompanion(
+                uuid: drift.Value(newLinkedPayableUuid),
                 contactUuid: drift.Value(contactUuid),
                 amount: drift.Value(amount),
                 description: drift.Value(description),
@@ -727,6 +1003,7 @@ class TransactionService {
                 status: const drift.Value('PENDING'),
                 linkedExpenseUuid: drift.Value(transactionUuid),
                 autoCreateExpense: const drift.Value(false),
+                externalLinkId: drift.Value(transactionUuid),
                 createdAt: drift.Value(DateTime.now()),
                 updatedAt: drift.Value(DateTime.now()),
               ),
@@ -734,9 +1011,10 @@ class TransactionService {
           }
         } else if (type == 'INCOME') {
           if (paidRelationship == 'RECEIVED_FROM') {
-            // Create payable
-            newLinkedPayableUuid = await payablesRepository.createPayable(
+            newLinkedPayableUuid = '${transactionUuid}_pay';
+            await payablesRepository.createPayable(
               PayablesCompanion(
+                uuid: drift.Value(newLinkedPayableUuid),
                 contactUuid: drift.Value(contactUuid),
                 amount: drift.Value(amount),
                 description: drift.Value(description),
@@ -745,15 +1023,16 @@ class TransactionService {
                 status: const drift.Value('PENDING'),
                 linkedIncomeUuid: drift.Value(transactionUuid),
                 autoCreateExpense: const drift.Value(true),
+                externalLinkId: drift.Value(transactionUuid),
                 createdAt: drift.Value(DateTime.now()),
                 updatedAt: drift.Value(DateTime.now()),
               ),
             );
           } else if (paidRelationship == 'WILL_RECEIVE') {
-            // Create receivable
-            newLinkedReceivableUuid =
-                await receivablesRepository.createReceivable(
+            newLinkedReceivableUuid = '${transactionUuid}_rec';
+            await receivablesRepository.createReceivable(
               ReceivablesCompanion(
+                uuid: drift.Value(newLinkedReceivableUuid),
                 contactUuid: drift.Value(contactUuid),
                 amount: drift.Value(amount),
                 description: drift.Value(description),
@@ -762,6 +1041,7 @@ class TransactionService {
                 status: const drift.Value('PENDING'),
                 linkedIncomeUuid: drift.Value(transactionUuid),
                 autoCreateIncome: const drift.Value(false),
+                externalLinkId: drift.Value(transactionUuid),
                 createdAt: drift.Value(DateTime.now()),
                 updatedAt: drift.Value(DateTime.now()),
               ),
@@ -815,7 +1095,8 @@ class TransactionService {
           if (contactUuid != null) {
             await receivablesRepository.updateReceivableWithCompanion(
               existingTransaction.linkedReceivableUuid!,
-              receivableCompanion.copyWith(contactUuid: drift.Value(contactUuid)),
+              receivableCompanion.copyWith(
+                  contactUuid: drift.Value(contactUuid)),
             );
           } else {
             await receivablesRepository.updateReceivableWithCompanion(
@@ -910,6 +1191,7 @@ class TransactionService {
       'Investment Return',
       'Gift Received',
       'Bonus Payment',
+      'Splitted Bill',
     ];
 
     for (int i = 0; i < count; i++) {
@@ -955,5 +1237,20 @@ class SplitShare {
     this.amount = 0.0,
     this.percentage = 0.0,
     this.isLocked = false,
+  });
+}
+
+/// One share in a group split edit (existing or new). Used by [TransactionService.updateGroupSplit].
+class GroupShareEdit {
+  final String? transactionUuid;
+  final String? contactUuid;
+  final double amount;
+  final bool isUser;
+
+  GroupShareEdit({
+    this.transactionUuid,
+    this.contactUuid,
+    required this.amount,
+    this.isUser = false,
   });
 }

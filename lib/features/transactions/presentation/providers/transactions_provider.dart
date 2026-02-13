@@ -1,11 +1,16 @@
 import 'dart:async';
+import 'package:rxdart/rxdart.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/features/transactions/data/transactions_repository.dart';
 import 'package:flowpaisa/features/transactions/data/schedules_repository.dart';
 import 'package:flowpaisa/features/transactions/domain/models.dart';
+import 'package:flowpaisa/features/transactions/presentation/providers/transaction_service_provider.dart';
 import 'package:flowpaisa/shared/providers/database_provider.dart';
 import 'package:flowpaisa/shared/models/paginated_state.dart';
+
+import 'package:flowpaisa/features/payables/presentation/providers/payables_provider.dart';
+import 'package:flowpaisa/features/receivables/presentation/providers/receivables_provider.dart';
 
 // Repository provider
 final transactionsRepositoryProvider = Provider<TransactionsRepository>((ref) {
@@ -54,7 +59,38 @@ final transactionsWithDetailsProvider =
 final transactionWithDetailsProvider =
     StreamProvider.family<TransactionWithDetails?, String>((ref, uuid) {
   final repository = ref.watch(transactionsRepositoryProvider);
+  
+  // Also watch all transactions, payables, and receivables to ensure we refresh 
+  // when any related data changes (e.g. when a linked entry is marked as paid)
+  ref.watch(allTransactionsProvider);
+  ref.watch(allPayablesProvider);
+  ref.watch(allReceivablesProvider);
+  
   return repository.watchTransactionWithDetailsByUuid(uuid);
+});
+
+/// All transactions in the same split group as the given transaction (for group edit / sibling list).
+final transactionGroupProvider =
+    StreamProvider.family<List<TransactionWithDetails>, String>((ref, transactionUuid) {
+  final repository = ref.watch(transactionsRepositoryProvider);
+  
+  // Watch all transactions, payables, and receivables to ensure we refresh 
+  // when any transaction in the group or its linked entries change
+  ref.watch(allTransactionsProvider);
+  ref.watch(allPayablesProvider);
+  ref.watch(allReceivablesProvider);
+  
+  // First get the transaction to find its linkedGroupId
+  // We use watchTransactionWithDetailsByUuid to get the initial item and its groupId
+  return repository.watchTransactionWithDetailsByUuid(transactionUuid).switchMap((item) {
+    if (item == null) return Stream.value(<TransactionWithDetails>[]);
+    final linkedGroupId = item.transaction.linkedGroupId;
+    if (linkedGroupId == null || linkedGroupId.isEmpty) return Stream.value([item]);
+    
+    // Watch the entire group. This stream will emit whenever any transaction, 
+    // payable, or receivable in the group changes because of the JOIN in the repository method.
+    return repository.watchTransactionsWithDetailsByLinkedGroupId(linkedGroupId);
+  });
 });
 
 // Watch transactions by date range

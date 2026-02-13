@@ -1130,7 +1130,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                                   ? theme.colorScheme.primary
                                   : theme.hintColor,
                             ),
-                            tooltip: l10n.includeMe,
+                            tooltip: l10n.me,
                           ),
                           // Add Contact Action
                           IconButton(
@@ -1269,7 +1269,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                                         MainAxisAlignment.spaceBetween,
                                     children: [
                                       Text(
-                                        '${l10n.percentage} - ${share.isUser ? l10n.includeMe : (share.contact?.name ?? '')}',
+                                        '${l10n.percentage} - ${share.isUser ? l10n.me : (share.contact?.name ?? '')}',
                                         style: theme.textTheme.titleMedium
                                             ?.copyWith(
                                           fontWeight: FontWeight.bold,
@@ -2031,8 +2031,8 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
                           color: _isGroupSplit
-                              ? theme.colorScheme.primary.withOpacity(0.1)
-                              : theme.cardColor,
+                          ? theme.colorScheme.primary.withValues(alpha: 0.1)
+                          : theme.cardColor,
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
                             color: _isGroupSplit
@@ -2043,7 +2043,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                         child: Row(
                           children: [
                             Icon(
-                              _isGroupSplit ? Icons.groups : Icons.call_split,
+                              _isGroupSplit ? Icons.groups : Icons.splitscreen,
                               color: _isGroupSplit
                                   ? theme.colorScheme.primary
                                   : theme.hintColor,
@@ -2615,7 +2615,7 @@ class _SplitShareCardState extends State<_SplitShareCard> {
               Expanded(
                 child: Text(
                   widget.share.isUser
-                      ? widget.l10n.includeMe
+                      ? widget.l10n.me
                       : (widget.share.contact?.name ?? ''),
                   style: TextStyle(
                     fontWeight: widget.share.isUser

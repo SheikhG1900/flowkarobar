@@ -2255,6 +2255,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get summary => 'Summary';
 
   @override
+  String get splittedTransactions => 'Splitted Transactions';
+
+  @override
+  String get balance => 'Balance';
+
+  @override
+  String get received => 'Received';
+
+  @override
+  String get noTransactionsFound => 'No transactions found';
+
+  @override
   String get noTransactionsInRange => 'No transactions in this date range.';
 
   @override
@@ -2887,6 +2899,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get includeMe => 'Include Me';
+
+  @override
+  String get splittedBill => 'Splitted Bill';
+
+  @override
+  String get me => 'Me';
 
   @override
   String get distributeEqually => 'Distribute Equally';
