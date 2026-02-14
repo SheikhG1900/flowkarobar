@@ -128,6 +128,18 @@ final cashbookLimitsProvider = Provider.autoDispose<TotalLimits>((ref) {
   );
 });
 
+final smartParsingLimitsProvider =
+    FutureProvider.autoDispose<UsageLimits>((ref) async {
+  final isPremium = ref.watch(premiumProvider).isPremium;
+  if (isPremium) return UsageLimits.unlimited();
+
+  final tracker = ref.read(usageTrackerRepositoryProvider);
+  final monthlyUsed = tracker.getSmartParsingCountThisMonth();
+
+  return PremiumGate._calculateLimits(PremiumGate._smartParsingMonthlyLimit,
+      PremiumGate._smartParsingMonthlyLimit, monthlyUsed, monthlyUsed);
+});
+
 class PremiumGate {
   // Limits Configuration
   static const int _transactionDailyLimit = 10;
@@ -143,6 +155,7 @@ class PremiumGate {
   static const int _categoryTotalLimit = 5;
   static const int _scheduleTotalLimit = 2;
   static const int _cashbookTotalLimit = 2; // 1 default + 1 extra
+  static const int _smartParsingMonthlyLimit = 10;
 
   // Helper to check premium status (using read for callbacks)
   static bool isPremium(WidgetRef ref) {
@@ -268,6 +281,18 @@ class PremiumGate {
       total: _cashbookTotalLimit,
       used: used,
     );
+  }
+
+  static Future<UsageLimits> getSmartParsingLimits(WidgetRef ref) async {
+    if (isPremium(ref)) {
+      return UsageLimits.unlimited();
+    }
+
+    final tracker = ref.read(usageTrackerRepositoryProvider);
+    final monthlyUsed = tracker.getSmartParsingCountThisMonth();
+
+    return _calculateLimits(_smartParsingMonthlyLimit,
+        _smartParsingMonthlyLimit, monthlyUsed, monthlyUsed);
   }
 
   // --- Internal Calculation Logic ---

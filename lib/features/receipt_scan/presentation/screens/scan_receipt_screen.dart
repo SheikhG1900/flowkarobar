@@ -1,10 +1,13 @@
+import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
+import 'package:flowpaisa/features/receipt_scan/domain/transaction_text_parser.dart';
+import 'package:flowpaisa/core/ml/model_download_service.dart';
+import 'package:flowpaisa/features/transactions/domain/models/parsed_transaction_input.dart';
 import 'dart:io' if (dart.library.html) 'dart:html';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart'
     show InputImage, TextRecognizer;
 import 'package:image_picker/image_picker.dart';
-import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/receipt_scan/domain/receipt_parser.dart';
 import 'package:flowpaisa/features/transactions/presentation/screens/add_transaction_screen.dart';
@@ -25,9 +28,12 @@ class ScanReceiptScreen extends ConsumerStatefulWidget {
 class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
   final ImagePicker _picker = ImagePicker();
   final ReceiptParser _parser = ReceiptParser();
+  final ModelDownloadService _modelService = ModelDownloadService();
+  late final TransactionAiParser _aiParser;
 
   File? _image;
   bool _isScanning = false;
+  bool _usedAi = false;
   ReceiptData? _receiptData;
 
   // Editable fields for review
@@ -39,6 +45,7 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
   @override
   void initState() {
     super.initState();
+    _aiParser = TransactionAiParser(_modelService);
     _amountController = TextEditingController();
     _merchantController = TextEditingController();
     _dateController = TextEditingController();
@@ -95,11 +102,41 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
       final textRecognizer = TextRecognizer();
       final recognizedText = await textRecognizer.processImage(inputImage);
 
-      // Parse the receipt
-      final receiptData = _parser.parse(recognizedText);
+      // 1. Try AI Parser first
+      ParsedTransactionInput? aiResult;
+      bool usedAi = false;
+      
+      // Check if model is downloaded and limit not reached
+      final isModelReady = await _modelService.isModelDownloaded(ModelDownloadService.transactionParserModel);
+      final limits = await PremiumGate.getSmartParsingLimits(ref);
+      
+      if (isModelReady && limits.canAdd) {
+        aiResult = await _aiParser.parse(recognizedText.text, isReceipt: true);
+        if (aiResult != null && !aiResult.isEmpty) {
+          usedAi = true;
+          // Increment usage
+          await ref.read(usageTrackerRepositoryProvider).incrementSmartParsingCount();
+        }
+      } else if (isModelReady && !limits.canAdd) {
+        if (mounted) {
+          ToastUtils.showWarningToast(context, ref, l10n.smartParsingLimitReached);
+        }
+      }
+
+      // 2. Fallback to rule-based parser if AI failed or not available
+      final receiptData = usedAi 
+          ? ReceiptData(
+              merchantName: aiResult!.description,
+              amount: aiResult.amount,
+              date: aiResult.date,
+              categoryName: aiResult.categoryName,
+              amountCandidates: aiResult.amountCandidates,
+            )
+          : _parser.parse(recognizedText);
 
       setState(() {
         _receiptData = receiptData;
+        _usedAi = usedAi;
         _amountController.text = receiptData.amount?.toStringAsFixed(2) ?? '';
         _merchantController.text = receiptData.merchantName ?? '';
         if (receiptData.date != null) {
@@ -211,6 +248,45 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
                               ),
                               child: Column(
                                 children: [
+                                  // AI Indicator
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 12, vertical: 4),
+                                    margin: const EdgeInsets.only(bottom: 16),
+                                    decoration: BoxDecoration(
+                                      color: _usedAi
+                                          ? Colors.blue.withValues(alpha: 0.1)
+                                          : Colors.grey.withValues(alpha: 0.1),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          _usedAi
+                                              ? Icons.auto_awesome
+                                              : Icons.rule_rounded,
+                                          size: 14,
+                                          color: _usedAi
+                                              ? Colors.blue
+                                              : Colors.grey,
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Text(
+                                          _usedAi
+                                              ? l10n.smartExtraction
+                                              : l10n.basicExtraction,
+                                          style: theme.textTheme.labelSmall
+                                              ?.copyWith(
+                                            color: _usedAi
+                                                ? Colors.blue
+                                                : Colors.grey,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
                                   Text(
                                     l10n.totalAmount,
                                     style:
@@ -387,7 +463,7 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
                         ),
                         child: GradientButton(
                           onPressed: _proceedToAddTransaction,
-                          label: l10n.proceedToAddTransaction,
+                          label: l10n.proceed,
                           width: double.infinity,
                         ),
                       ),

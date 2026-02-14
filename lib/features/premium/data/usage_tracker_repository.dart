@@ -9,6 +9,7 @@ class UsageTrackerRepository {
   static const String _transactionsPrefix = 'usage_transactions_';
   static const String _receivablesPrefix = 'usage_receivables_';
   static const String _payablesPrefix = 'usage_payables_';
+  static const String _smartParsingPrefix = 'usage_smart_parsing_';
   
   // Date formatters
   String _getDayKey(DateTime date) => DateFormat('yyyy-MM-dd').format(date);
@@ -83,6 +84,20 @@ class UsageTrackerRepository {
     final currentMonth = _prefs.getInt(monthKey) ?? 0;
 
     await _prefs.setInt(dayKey, currentDay + 1);
+    await _prefs.setInt(monthKey, currentMonth + 1);
+  }
+
+  // --- Smart Parsing ---
+
+  int getSmartParsingCountThisMonth() {
+    final key = '${_smartParsingPrefix}monthly_${_getMonthKey(DateTime.now())}';
+    return _prefs.getInt(key) ?? 0;
+  }
+
+  Future<void> incrementSmartParsingCount() async {
+    final now = DateTime.now();
+    final monthKey = '${_smartParsingPrefix}monthly_${_getMonthKey(now)}';
+    final currentMonth = _prefs.getInt(monthKey) ?? 0;
     await _prefs.setInt(monthKey, currentMonth + 1);
   }
 

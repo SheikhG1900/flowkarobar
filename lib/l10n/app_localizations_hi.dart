@@ -2102,6 +2102,64 @@ class AppLocalizationsHi extends AppLocalizations {
   String get scanReceipt => 'रसीद स्कैन करें';
 
   @override
+  String get voiceAdd => 'आवाज से जोड़ें';
+
+  @override
+  String get tapToSpeak => 'बोलने के लिए टैप करें';
+
+  @override
+  String get listening => 'सुन रहा हूँ...';
+
+  @override
+  String get whatWeHeard => 'हमने क्या सुना:';
+
+  @override
+  String get reParse => 'फिर से पार्स करें';
+
+  @override
+  String get smartExtraction => 'स्मार्ट निष्कर्षण (AI)';
+
+  @override
+  String get basicExtraction => 'बुनियादी निष्कर्षण';
+
+  @override
+  String get addNow => 'अभी जोड़ें';
+
+  @override
+  String get editAndAdd => 'संपादित करें और जोड़یں';
+
+  @override
+  String get downloadNow => 'अभी डाउनलोड करें';
+
+  @override
+  String get smartAiDownloadMessage =>
+      'स्मार्ट AI सुविधाओं के लिए एक बार डाउनलोड (~100MB) की आवश्यकता होती है। क्या आप बेहतर सटीकता के लिए अभी डाउनलोड करना चाहेंगे?';
+
+  @override
+  String get smartParsingLimitReached =>
+      'मासिक स्मार्ट पार्सिंग सीमा समाप्त हो गई है। बुनियादी निष्कर्षण का उपयोग कर रहे हैं।';
+
+  @override
+  String get voiceTips =>
+      'कहने की कोशिश करें: \'रात के खाने पर 500 खर्च किए\' या \'मैंने उस्मान को दोपहर के भोजन के लिए 100 दिए\'';
+
+  @override
+  String get proceed => 'आगे बढ़ें';
+
+  @override
+  String get relationship => 'संबंध';
+
+  @override
+  String get hints => 'संकेत';
+
+  @override
+  String get voiceGuideTitle => 'वॉयस फ़्रैज़िंग गाइड';
+
+  @override
+  String get includeTextAsDescription =>
+      'टेक्स्ट को विवरण के रूप में शामिल करें';
+
+  @override
   String get camera => 'कैमरा';
 
   @override

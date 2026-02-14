@@ -3874,6 +3874,114 @@ abstract class AppLocalizations {
   /// **'Scan Receipt'**
   String get scanReceipt;
 
+  /// No description provided for @voiceAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice Add'**
+  String get voiceAdd;
+
+  /// No description provided for @tapToSpeak.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to speak'**
+  String get tapToSpeak;
+
+  /// No description provided for @listening.
+  ///
+  /// In en, this message translates to:
+  /// **'Listening...'**
+  String get listening;
+
+  /// No description provided for @whatWeHeard.
+  ///
+  /// In en, this message translates to:
+  /// **'What we heard:'**
+  String get whatWeHeard;
+
+  /// No description provided for @reParse.
+  ///
+  /// In en, this message translates to:
+  /// **'Re-parse'**
+  String get reParse;
+
+  /// No description provided for @smartExtraction.
+  ///
+  /// In en, this message translates to:
+  /// **'Smart extraction (AI)'**
+  String get smartExtraction;
+
+  /// No description provided for @basicExtraction.
+  ///
+  /// In en, this message translates to:
+  /// **'Basic extraction'**
+  String get basicExtraction;
+
+  /// No description provided for @addNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Add now'**
+  String get addNow;
+
+  /// No description provided for @editAndAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit and add'**
+  String get editAndAdd;
+
+  /// No description provided for @downloadNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Download Now'**
+  String get downloadNow;
+
+  /// No description provided for @smartAiDownloadMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Smart AI features require a one-time download (~100MB). Would you like to download now for better accuracy?'**
+  String get smartAiDownloadMessage;
+
+  /// No description provided for @smartParsingLimitReached.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly smart parsing limit reached. Using basic extraction.'**
+  String get smartParsingLimitReached;
+
+  /// No description provided for @voiceTips.
+  ///
+  /// In en, this message translates to:
+  /// **'Try saying: \'Spent 500 on dinner\' or \'I gave 100 to Usman for lunch\''**
+  String get voiceTips;
+
+  /// No description provided for @proceed.
+  ///
+  /// In en, this message translates to:
+  /// **'Proceed'**
+  String get proceed;
+
+  /// No description provided for @relationship.
+  ///
+  /// In en, this message translates to:
+  /// **'Relationship'**
+  String get relationship;
+
+  /// No description provided for @hints.
+  ///
+  /// In en, this message translates to:
+  /// **'Hints'**
+  String get hints;
+
+  /// No description provided for @voiceGuideTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice Phrasing Guide'**
+  String get voiceGuideTitle;
+
+  /// No description provided for @includeTextAsDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Include text as description'**
+  String get includeTextAsDescription;
+
   /// No description provided for @camera.
   ///
   /// In en, this message translates to:

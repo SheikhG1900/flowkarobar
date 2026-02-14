@@ -2095,6 +2095,63 @@ class AppLocalizationsEn extends AppLocalizations {
   String get scanReceipt => 'Scan Receipt';
 
   @override
+  String get voiceAdd => 'Voice Add';
+
+  @override
+  String get tapToSpeak => 'Tap to speak';
+
+  @override
+  String get listening => 'Listening...';
+
+  @override
+  String get whatWeHeard => 'What we heard:';
+
+  @override
+  String get reParse => 'Re-parse';
+
+  @override
+  String get smartExtraction => 'Smart extraction (AI)';
+
+  @override
+  String get basicExtraction => 'Basic extraction';
+
+  @override
+  String get addNow => 'Add now';
+
+  @override
+  String get editAndAdd => 'Edit and add';
+
+  @override
+  String get downloadNow => 'Download Now';
+
+  @override
+  String get smartAiDownloadMessage =>
+      'Smart AI features require a one-time download (~100MB). Would you like to download now for better accuracy?';
+
+  @override
+  String get smartParsingLimitReached =>
+      'Monthly smart parsing limit reached. Using basic extraction.';
+
+  @override
+  String get voiceTips =>
+      'Try saying: \'Spent 500 on dinner\' or \'I gave 100 to Usman for lunch\'';
+
+  @override
+  String get proceed => 'Proceed';
+
+  @override
+  String get relationship => 'Relationship';
+
+  @override
+  String get hints => 'Hints';
+
+  @override
+  String get voiceGuideTitle => 'Voice Phrasing Guide';
+
+  @override
+  String get includeTextAsDescription => 'Include text as description';
+
+  @override
   String get camera => 'Camera';
 
   @override

@@ -65,6 +65,7 @@ import 'package:flutter_phoenix/flutter_phoenix.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:flowpaisa/features/tour/presentation/providers/tour_provider.dart';
+import 'package:flowpaisa/features/voice_command/presentation/screens/voice_add_screen.dart';
 import 'package:flowpaisa/features/tour/domain/tour_service.dart';
 
 void main() async {
@@ -1700,6 +1701,20 @@ class _DashboardTab extends ConsumerWidget {
                   crossAxisSpacing: 10,
                   childAspectRatio: childAspectRatio,
                   children: [
+                    _QuickActionButton(
+                      icon: Icons.mic_none_rounded,
+                      label: l10n.voiceAdd,
+                      gradient: AppColors.getPrimaryGradient(
+                          theme.colorScheme.secondary),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const VoiceAddScreen(),
+                          ),
+                        );
+                      },
+                    ),
                     _QuickActionButton(
                       icon: Icons.add,
                       label: l10n.add,

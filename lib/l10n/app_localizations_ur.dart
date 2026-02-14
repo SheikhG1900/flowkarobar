@@ -2108,6 +2108,63 @@ class AppLocalizationsUr extends AppLocalizations {
   String get scanReceipt => 'رسید اسکین کریں';
 
   @override
+  String get voiceAdd => 'آواز سے شامل کریں';
+
+  @override
+  String get tapToSpeak => 'بولنے کے لیے ٹیپ کریں';
+
+  @override
+  String get listening => 'سن رہا ہوں...';
+
+  @override
+  String get whatWeHeard => 'ہم نے کیا سنا:';
+
+  @override
+  String get reParse => 'دوبارہ پارس کریں';
+
+  @override
+  String get smartExtraction => 'اسمارٹ نکالنا (AI)';
+
+  @override
+  String get basicExtraction => 'بنیادی نکالنا';
+
+  @override
+  String get addNow => 'ابھی شامل کریں';
+
+  @override
+  String get editAndAdd => 'ترمیم کریں اور شامل کریں';
+
+  @override
+  String get downloadNow => 'ابھی ڈاؤن لوڈ کریں';
+
+  @override
+  String get smartAiDownloadMessage =>
+      'اسمارٹ AI خصوصیات کے لیے ایک بار ڈاؤن لوڈ (~100MB) کی ضرورت ہے۔ کیا آپ بہتر درستگی کے لیے ابھی ڈاؤن لوڈ کرنا چاہیں گے؟';
+
+  @override
+  String get smartParsingLimitReached =>
+      'ماہانہ اسمارٹ پارسنگ کی حد ختم ہوگئی ہے۔ بنیادی نکالنے کا استعمال کر رہے ہیں۔';
+
+  @override
+  String get voiceTips =>
+      'کہنے کی کوشش کریں: \'رات کے کھانے پر 500 خرچ کیے\' یا \'میں نے عثمان کو دوپہر کے کھانے کے لیے 100 دیے\'';
+
+  @override
+  String get proceed => 'آگے بڑھیں';
+
+  @override
+  String get relationship => 'تعلق';
+
+  @override
+  String get hints => 'ہنٹس';
+
+  @override
+  String get voiceGuideTitle => 'وائس فریزنگ گائیڈ';
+
+  @override
+  String get includeTextAsDescription => 'ٹیکسٹ کو تفصیل کے طور پر شامل کریں';
+
+  @override
   String get camera => 'کیمرہ';
 
   @override
