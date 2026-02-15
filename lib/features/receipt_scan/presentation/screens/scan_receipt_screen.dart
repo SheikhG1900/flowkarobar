@@ -121,32 +121,38 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
       final recognizedText = await textRecognizer.processImage(inputImage);
 
       // Get all active currency symbols from database
-      final currencies = await ref.read(currenciesRepositoryProvider).getAllCurrencies();
+      final currencies =
+          await ref.read(currenciesRepositoryProvider).getAllCurrencies();
       final dbSymbols = currencies.map((c) => c.symbol).toList();
 
       // 1. Try AI Parser first
       ParsedTransactionInput? aiResult;
       bool usedAi = false;
-      
+
       // Check if model is downloaded and limit not reached
-      final isModelReady = await _modelService.isModelDownloaded(ModelDownloadService.transactionParserModel);
+      final isModelReady = await _modelService
+          .isModelDownloaded(ModelDownloadService.transactionParserModel);
       final limits = await PremiumGate.getSmartParsingLimits(ref);
-      
+
       if (isModelReady && limits.canAdd) {
-        aiResult = await _aiParser.parse(recognizedText.text, isReceipt: true, customSymbols: dbSymbols);
+        aiResult = await _aiParser.parse(recognizedText.text,
+            isReceipt: true, customSymbols: dbSymbols);
         if (aiResult != null && !aiResult.isEmpty) {
           usedAi = true;
           // Increment usage
-          await ref.read(usageTrackerRepositoryProvider).incrementSmartParsingCount();
+          await ref
+              .read(usageTrackerRepositoryProvider)
+              .incrementSmartParsingCount();
         }
       } else if (isModelReady && !limits.canAdd) {
         if (mounted) {
-          ToastUtils.showWarningToast(context, ref, l10n.smartParsingLimitReached);
+          ToastUtils.showWarningToast(
+              context, ref, l10n.smartParsingLimitReached);
         }
       }
 
       // 2. Fallback to rule-based parser if AI failed or not available
-      final receiptData = usedAi 
+      final receiptData = usedAi
           ? ReceiptData(
               merchantName: aiResult!.description,
               amount: aiResult.amount,
@@ -237,8 +243,438 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
             end: Alignment.bottomCenter,
           ),
         ),
-        child: _isScanning
-            ? Center(
+        child: Stack(
+          children: [
+            Opacity(
+              opacity: (_isScanning && _receiptData == null) ? 0 : 1.0,
+              child: AbsorbPointer(
+                absorbing: _isScanning && _receiptData == null,
+                child: _receiptData != null
+                    ? Column(
+                        children: [
+                          Expanded(
+                            child: ListView(
+                              padding: const EdgeInsets.all(16),
+                              children: [
+                                Stack(
+                                  children: [
+                                    Opacity(
+                                      opacity: _isScanning ? 0.3 : 1.0,
+                                      child: AbsorbPointer(
+                                        absorbing: _isScanning,
+                                        child: Container(
+                                          padding: const EdgeInsets.all(24),
+                                          decoration: BoxDecoration(
+                                            color: theme.cardColor,
+                                            borderRadius:
+                                                BorderRadius.circular(20),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: activeCashbookColor
+                                                    .withValues(alpha: 0.1),
+                                                blurRadius: 20,
+                                                offset: const Offset(0, 10),
+                                              ),
+                                            ],
+                                          ),
+                                          child: Column(
+                                            children: [
+                                              // AI Indicator
+                                              Container(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                        horizontal: 12,
+                                                        vertical: 4),
+                                                margin: const EdgeInsets.only(
+                                                    bottom: 16),
+                                                decoration: BoxDecoration(
+                                                  color: _usedAi
+                                                      ? Colors.blue.withValues(
+                                                          alpha: 0.1)
+                                                      : Colors.grey.withValues(
+                                                          alpha: 0.1),
+                                                  borderRadius:
+                                                      BorderRadius.circular(12),
+                                                ),
+                                                child: Row(
+                                                  mainAxisSize:
+                                                      MainAxisSize.min,
+                                                  children: [
+                                                    Icon(
+                                                      _usedAi
+                                                          ? Icons.auto_awesome
+                                                          : Icons.rule_rounded,
+                                                      size: 14,
+                                                      color: _usedAi
+                                                          ? Colors.blue
+                                                          : Colors.grey,
+                                                    ),
+                                                    const SizedBox(width: 6),
+                                                    Text(
+                                                      _usedAi
+                                                          ? l10n.smartExtraction
+                                                          : l10n
+                                                              .basicExtraction,
+                                                      style: theme
+                                                          .textTheme.labelSmall
+                                                          ?.copyWith(
+                                                        color: _usedAi
+                                                            ? Colors.blue
+                                                            : Colors.grey,
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                              Text(
+                                                l10n.totalAmount,
+                                                style: theme
+                                                    .textTheme.titleMedium
+                                                    ?.copyWith(
+                                                  color: theme.colorScheme
+                                                      .onSurfaceVariant,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 16),
+                                              TextFormField(
+                                                controller: _amountController,
+                                                textAlign: TextAlign.center,
+                                                style: theme
+                                                    .textTheme.displayLarge
+                                                    ?.copyWith(
+                                                  fontWeight: FontWeight.bold,
+                                                  color: activeCashbookColor,
+                                                ),
+                                                decoration: InputDecoration(
+                                                  prefixText:
+                                                      '$currencySymbol ',
+                                                  prefixStyle: theme
+                                                      .textTheme.displayMedium
+                                                      ?.copyWith(
+                                                    color: theme.colorScheme
+                                                        .onSurfaceVariant,
+                                                  ),
+                                                  border: InputBorder.none,
+                                                  hintText: l10n.amountHint,
+                                                  hintStyle: theme
+                                                      .textTheme.displayLarge
+                                                      ?.copyWith(
+                                                    color: Colors.grey
+                                                        .withValues(alpha: 0.3),
+                                                  ),
+                                                ),
+                                                keyboardType:
+                                                    const TextInputType
+                                                        .numberWithOptions(
+                                                        decimal: true),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    if (_isScanning)
+                                      Positioned.fill(
+                                        child: Center(
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              const AppLoadingIndicator(
+                                                  size: 60),
+                                              const SizedBox(height: 16),
+                                              Text(
+                                                l10n.scanningReceipt,
+                                                style: theme
+                                                    .textTheme.labelMedium
+                                                    ?.copyWith(
+                                                  color: theme.colorScheme
+                                                      .onSurfaceVariant,
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    if (!_isScanning &&
+                                        !_usedAi &&
+                                        _modelDownloaded)
+                                      Positioned(
+                                        top: 8,
+                                        right: 8,
+                                        child: IconButton(
+                                          icon: const Icon(Icons.auto_awesome),
+                                          tooltip: l10n.smartExtraction,
+                                          onPressed: () => Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  const PremiumScreen(),
+                                            ),
+                                          ),
+                                          style: IconButton.styleFrom(
+                                            backgroundColor: Colors.blue
+                                                .withValues(alpha: 0.1),
+                                            foregroundColor: Colors.blue,
+                                            padding: const EdgeInsets.all(8),
+                                          ),
+                                          iconSize: 24,
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                                // Amount Chips
+                                if (_receiptData?.amountCandidates.isNotEmpty ==
+                                        true &&
+                                    _receiptData!.amountCandidates.length > 1)
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 12),
+                                    child: Wrap(
+                                      spacing: 10,
+                                      runSpacing: 10,
+                                      children: _receiptData!.amountCandidates
+                                          .map((amt) {
+                                        final isSelected =
+                                            _amountController.text ==
+                                                amt.toStringAsFixed(2);
+                                        return _buildSuggestionChip(
+                                          label:
+                                              '$currencySymbol${amt.toStringAsFixed(2)}',
+                                          isSelected: isSelected,
+                                          activeColor: activeCashbookColor,
+                                          isDark: isDark,
+                                          onPressed: () => setState(() =>
+                                              _amountController.text =
+                                                  amt.toStringAsFixed(2)),
+                                        );
+                                      }).toList(),
+                                    ),
+                                  ),
+                                const SizedBox(height: 24),
+                                // Description (from receipt / merchant)
+                                TextFormField(
+                                  controller: _merchantController,
+                                  decoration: InputDecoration(
+                                    labelText: l10n.description,
+                                    hintText: l10n.descriptionHint,
+                                    prefixIcon:
+                                        const Icon(Icons.description_rounded),
+                                  ),
+                                  textCapitalization: TextCapitalization.words,
+                                ),
+                                // Description suggestion chips from scanned text
+                                if (_receiptData
+                                        ?.descriptionCandidates.isNotEmpty ==
+                                    true)
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 12),
+                                    child: Wrap(
+                                      spacing: 10,
+                                      runSpacing: 10,
+                                      children: _receiptData!
+                                          .descriptionCandidates
+                                          .map((desc) {
+                                        final isSelected =
+                                            _merchantController.text == desc;
+                                        return _buildSuggestionChip(
+                                          label: desc,
+                                          isSelected: isSelected,
+                                          activeColor: activeCashbookColor,
+                                          isDark: isDark,
+                                          onPressed: () => setState(() =>
+                                              _merchantController.text = desc),
+                                        );
+                                      }).toList(),
+                                    ),
+                                  ),
+                                const SizedBox(height: 24),
+                                // Category suggestions (from description + parsed category)
+                                _buildCategorySuggestions(
+                                    theme, isDark, activeCashbookColor, l10n),
+                                const SizedBox(height: 24),
+                                // Date Field
+                                InkWell(
+                                  onTap: () async {
+                                    final picked = await showDatePicker(
+                                      context: context,
+                                      initialDate: _selectedDate,
+                                      firstDate: DateTime(2000),
+                                      lastDate: DateTime.now(),
+                                      builder: (context, child) => Theme(
+                                        data: theme.copyWith(
+                                          colorScheme: theme.colorScheme
+                                              .copyWith(
+                                                  primary: activeCashbookColor),
+                                        ),
+                                        child: child!,
+                                      ),
+                                    );
+                                    if (picked != null) {
+                                      setState(() {
+                                        _selectedDate = picked;
+                                        _dateController.text =
+                                            AppDateFormatter.formatDate(picked);
+                                      });
+                                    }
+                                  },
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Container(
+                                    padding: const EdgeInsets.all(16),
+                                    decoration: BoxDecoration(
+                                      color: theme.colorScheme.surface,
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(
+                                        color: theme.dividerColor,
+                                      ),
+                                    ),
+                                    child: IgnorePointer(
+                                      child: TextFormField(
+                                        controller: _dateController,
+                                        decoration: InputDecoration(
+                                          labelText: l10n.date,
+                                          prefixIcon: const Icon(
+                                              Icons.calendar_today_rounded),
+                                          border: InputBorder.none,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                // Date Chips
+                                if (_receiptData?.dateCandidates.isNotEmpty ==
+                                        true &&
+                                    _receiptData!.dateCandidates.length > 1)
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 12),
+                                    child: Wrap(
+                                      spacing: 10,
+                                      runSpacing: 10,
+                                      children: _receiptData!.dateCandidates
+                                          .map((date) {
+                                        final isSelected = AppDateFormatter
+                                                .formatDate(_selectedDate) ==
+                                            AppDateFormatter.formatDate(date);
+                                        return _buildSuggestionChip(
+                                          label:
+                                              AppDateFormatter.formatDate(date),
+                                          isSelected: isSelected,
+                                          activeColor: activeCashbookColor,
+                                          isDark: isDark,
+                                          onPressed: () => setState(() {
+                                            _selectedDate = date;
+                                            _dateController.text =
+                                                AppDateFormatter.formatDate(
+                                                    date);
+                                          }),
+                                        );
+                                      }).toList(),
+                                    ),
+                                  ),
+                                const SizedBox(height: 100), // Space for button
+                              ],
+                            ),
+                          ),
+                          // Docked Floating Button Panel
+                          Container(
+                            padding: EdgeInsets.only(
+                              left: 16,
+                              right: 16,
+                              top: 16,
+                              bottom:
+                                  MediaQuery.of(context).padding.bottom + 16,
+                            ),
+                            decoration: BoxDecoration(
+                              color: theme.scaffoldBackgroundColor,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.1),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, -5),
+                                ),
+                              ],
+                            ),
+                            child: GradientButton(
+                              onPressed: _proceedToAddTransaction,
+                              label: l10n.proceed,
+                              width: double.infinity,
+                            ),
+                          ),
+                        ],
+                      )
+                    : Column(
+                        children: [
+                          Expanded(
+                            child: Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.receipt_long_outlined,
+                                    size: 120,
+                                    color: theme.colorScheme.onSurfaceVariant
+                                        .withValues(alpha: 0.3),
+                                  ),
+                                  const SizedBox(height: 24),
+                                  Text(
+                                    l10n.noReceiptSelected,
+                                    style: theme.textTheme.titleLarge?.copyWith(
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          // Docked Floating Button Panel
+                          Container(
+                            padding: EdgeInsets.only(
+                              left: 16,
+                              right: 16,
+                              top: 16,
+                              bottom:
+                                  MediaQuery.of(context).padding.bottom + 16,
+                            ),
+                            decoration: BoxDecoration(
+                              color: theme.scaffoldBackgroundColor,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.1),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, -5),
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: GradientButton(
+                                    onPressed: () =>
+                                        _pickImage(ImageSource.camera),
+                                    icon: Icons.camera_alt_rounded,
+                                    label: l10n.camera,
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: GradientButton(
+                                    onPressed: () =>
+                                        _pickImage(ImageSource.gallery),
+                                    icon: Icons.photo_library_rounded,
+                                    label: l10n.gallery,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+              ),
+            ),
+            if (_isScanning && _receiptData == null)
+              Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -253,380 +689,22 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
                     ),
                   ],
                 ),
-              )
-            : _receiptData != null
-                ? Column(
-                    children: [
-                      Expanded(
-                        child: ListView(
-                          padding: const EdgeInsets.all(16),
-                          children: [
-                            Stack(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(24),
-                                  decoration: BoxDecoration(
-                                    color: theme.cardColor,
-                                    borderRadius: BorderRadius.circular(20),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: activeCashbookColor.withValues(
-                                            alpha: 0.1),
-                                        blurRadius: 20,
-                                        offset: const Offset(0, 10),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Column(
-                                    children: [
-                                      // AI Indicator
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 12, vertical: 4),
-                                        margin: const EdgeInsets.only(bottom: 16),
-                                        decoration: BoxDecoration(
-                                          color: _usedAi
-                                              ? Colors.blue.withValues(alpha: 0.1)
-                                              : Colors.grey.withValues(alpha: 0.1),
-                                          borderRadius: BorderRadius.circular(12),
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Icon(
-                                              _usedAi
-                                                  ? Icons.auto_awesome
-                                                  : Icons.rule_rounded,
-                                              size: 14,
-                                              color: _usedAi
-                                                  ? Colors.blue
-                                                  : Colors.grey,
-                                            ),
-                                            const SizedBox(width: 6),
-                                            Text(
-                                              _usedAi
-                                                  ? l10n.smartExtraction
-                                                  : l10n.basicExtraction,
-                                              style: theme.textTheme.labelSmall
-                                                  ?.copyWith(
-                                                color: _usedAi
-                                                    ? Colors.blue
-                                                    : Colors.grey,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      Text(
-                                        l10n.totalAmount,
-                                        style:
-                                            theme.textTheme.titleMedium?.copyWith(
-                                          color: theme.colorScheme.onSurfaceVariant,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 16),
-                                      TextFormField(
-                                        controller: _amountController,
-                                        textAlign: TextAlign.center,
-                                        style:
-                                            theme.textTheme.displayLarge?.copyWith(
-                                          fontWeight: FontWeight.bold,
-                                          color: activeCashbookColor,
-                                        ),
-                                        decoration: InputDecoration(
-                                          prefixText: '$currencySymbol ',
-                                          prefixStyle: theme.textTheme.displayMedium
-                                              ?.copyWith(
-                                            color:
-                                                theme.colorScheme.onSurfaceVariant,
-                                          ),
-                                          border: InputBorder.none,
-                                          hintText: l10n.amountHint,
-                                          hintStyle: theme.textTheme.displayLarge
-                                              ?.copyWith(
-                                            color:
-                                                Colors.grey.withValues(alpha: 0.3),
-                                          ),
-                                        ),
-                                        keyboardType:
-                                            const TextInputType.numberWithOptions(
-                                                decimal: true),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                if (!_usedAi && _modelDownloaded)
-                                  Positioned(
-                                    top: 8,
-                                    right: 8,
-                                    child: IconButton(
-                                      icon: const Icon(Icons.auto_awesome),
-                                      tooltip: l10n.smartExtraction,
-                                      onPressed: () => Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => const PremiumScreen(),
-                                        ),
-                                      ),
-                                      style: IconButton.styleFrom(
-                                        backgroundColor: Colors.blue.withValues(alpha: 0.1),
-                                        foregroundColor: Colors.blue,
-                                        padding: const EdgeInsets.all(8),
-                                      ),
-                                      iconSize: 24,
-                                    ),
-                                  ),
-                              ],
-                            ),
-                            // Amount Chips
-                            if (_receiptData?.amountCandidates.isNotEmpty ==
-                                    true &&
-                                _receiptData!.amountCandidates.length > 1)
-                              Padding(
-                                padding: const EdgeInsets.only(top: 12),
-                                child: Wrap(
-                                  spacing: 10,
-                                  runSpacing: 10,
-                                  children:
-                                      _receiptData!.amountCandidates.map((amt) {
-                                    final isSelected = _amountController.text ==
-                                        amt.toStringAsFixed(2);
-                                    return _buildSuggestionChip(
-                                      label:
-                                          '$currencySymbol${amt.toStringAsFixed(2)}',
-                                      isSelected: isSelected,
-                                      activeColor: activeCashbookColor,
-                                      isDark: isDark,
-                                      onPressed: () => setState(() =>
-                                          _amountController.text =
-                                              amt.toStringAsFixed(2)),
-                                    );
-                                  }).toList(),
-                                ),
-                              ),
-                            const SizedBox(height: 24),
-                            // Description (from receipt / merchant)
-                            TextFormField(
-                              controller: _merchantController,
-                              decoration: InputDecoration(
-                                labelText: l10n.description,
-                                hintText: l10n.descriptionHint,
-                                prefixIcon: const Icon(Icons.description_rounded),
-                              ),
-                              textCapitalization: TextCapitalization.words,
-                            ),
-                            // Description suggestion chips from scanned text
-                            if (_receiptData?.descriptionCandidates.isNotEmpty == true)
-                              Padding(
-                                padding: const EdgeInsets.only(top: 12),
-                                child: Wrap(
-                                  spacing: 10,
-                                  runSpacing: 10,
-                                  children:
-                                      _receiptData!.descriptionCandidates.map((desc) {
-                                    final isSelected =
-                                        _merchantController.text == desc;
-                                    return _buildSuggestionChip(
-                                      label: desc,
-                                      isSelected: isSelected,
-                                      activeColor: activeCashbookColor,
-                                      isDark: isDark,
-                                      onPressed: () => setState(() =>
-                                          _merchantController.text = desc),
-                                    );
-                                  }).toList(),
-                                ),
-                              ),
-                            const SizedBox(height: 24),
-                            // Category suggestions (from description + parsed category)
-                            _buildCategorySuggestions(theme, isDark, activeCashbookColor, l10n),
-                            const SizedBox(height: 24),
-                            // Date Field
-                            InkWell(
-                              onTap: () async {
-                                final picked = await showDatePicker(
-                                  context: context,
-                                  initialDate: _selectedDate,
-                                  firstDate: DateTime(2000),
-                                  lastDate: DateTime.now(),
-                                  builder: (context, child) => Theme(
-                                    data: theme.copyWith(
-                                      colorScheme: theme.colorScheme.copyWith(
-                                          primary: activeCashbookColor),
-                                    ),
-                                    child: child!,
-                                  ),
-                                );
-                                if (picked != null) {
-                                  setState(() {
-                                    _selectedDate = picked;
-                                    _dateController.text =
-                                        AppDateFormatter.formatDate(picked);
-                                  });
-                                }
-                              },
-                              borderRadius: BorderRadius.circular(12),
-                              child: Container(
-                                padding: const EdgeInsets.all(16),
-                                decoration: BoxDecoration(
-                                  color: theme.colorScheme.surface,
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
-                                    color: theme.dividerColor,
-                                  ),
-                                ),
-                                child: IgnorePointer(
-                                  child: TextFormField(
-                                    controller: _dateController,
-                                    decoration: InputDecoration(
-                                      labelText: l10n.date,
-                                      prefixIcon: const Icon(
-                                          Icons.calendar_today_rounded),
-                                      border: InputBorder.none,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            // Date Chips
-                            if (_receiptData?.dateCandidates.isNotEmpty ==
-                                    true &&
-                                _receiptData!.dateCandidates.length > 1)
-                              Padding(
-                                padding: const EdgeInsets.only(top: 12),
-                                child: Wrap(
-                                  spacing: 10,
-                                  runSpacing: 10,
-                                  children:
-                                      _receiptData!.dateCandidates.map((date) {
-                                    final isSelected =
-                                        AppDateFormatter.formatDate(
-                                                _selectedDate) ==
-                                            AppDateFormatter.formatDate(date);
-                                    return _buildSuggestionChip(
-                                      label: AppDateFormatter.formatDate(date),
-                                      isSelected: isSelected,
-                                      activeColor: activeCashbookColor,
-                                      isDark: isDark,
-                                      onPressed: () => setState(() {
-                                        _selectedDate = date;
-                                        _dateController.text =
-                                            AppDateFormatter.formatDate(date);
-                                      }),
-                                    );
-                                  }).toList(),
-                                ),
-                              ),
-                            const SizedBox(height: 100), // Space for button
-                          ],
-                        ),
-                      ),
-                      // Docked Floating Button Panel
-                      Container(
-                        padding: EdgeInsets.only(
-                          left: 16,
-                          right: 16,
-                          top: 16,
-                          bottom: MediaQuery.of(context).padding.bottom + 16,
-                        ),
-                        decoration: BoxDecoration(
-                          color: theme.scaffoldBackgroundColor,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.1),
-                              blurRadius: 10,
-                              offset: const Offset(0, -5),
-                            ),
-                          ],
-                        ),
-                        child: GradientButton(
-                          onPressed: _proceedToAddTransaction,
-                          label: l10n.proceed,
-                          width: double.infinity,
-                        ),
-                      ),
-                    ],
-                  )
-                : Column(
-                    children: [
-                      Expanded(
-                        child: Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.receipt_long_outlined,
-                                size: 120,
-                                color: theme.colorScheme.onSurfaceVariant
-                                    .withValues(alpha: 0.3),
-                              ),
-                              const SizedBox(height: 24),
-                              Text(
-                                l10n.noReceiptSelected,
-                                style: theme.textTheme.titleLarge?.copyWith(
-                                  color: theme.colorScheme.onSurfaceVariant,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      // Docked Floating Button Panel
-                      Container(
-                        padding: EdgeInsets.only(
-                          left: 16,
-                          right: 16,
-                          top: 16,
-                          bottom: MediaQuery.of(context).padding.bottom + 16,
-                        ),
-                        decoration: BoxDecoration(
-                          color: theme.scaffoldBackgroundColor,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.1),
-                              blurRadius: 10,
-                              offset: const Offset(0, -5),
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: GradientButton(
-                                onPressed: () => _pickImage(ImageSource.camera),
-                                icon: Icons.camera_alt_rounded,
-                                label: l10n.camera,
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: GradientButton(
-                                onPressed: () =>
-                                    _pickImage(ImageSource.gallery),
-                                icon: Icons.photo_library_rounded,
-                                label: l10n.gallery,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
+              ),
+          ],
+        ),
       ),
     );
   }
 
   /// Categories that match the current description or the receipt's parsed category.
-  List<db.Category> _getSuggestedCategories(List<db.Category> expenseCategories) {
+  List<db.Category> _getSuggestedCategories(
+      List<db.Category> expenseCategories) {
     if (_receiptData == null || expenseCategories.isEmpty) return [];
     final descriptionLower = (_merchantController.text +
             ' ' +
             (_receiptData!.descriptionCandidates.join(' ')))
         .toLowerCase();
-    final receiptCategoryLower =
-        _receiptData!.categoryName?.toLowerCase();
+    final receiptCategoryLower = _receiptData!.categoryName?.toLowerCase();
     final matched = expenseCategories.where((db.Category c) {
       final nameLower = c.name.toLowerCase();
       return descriptionLower.contains(nameLower) ||
@@ -634,8 +712,12 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
     }).toList();
     // Put parsed receipt category first if it matches
     if (receiptCategoryLower != null) {
-      final exact = matched.where((c) => c.name.toLowerCase() == receiptCategoryLower).toList();
-      final rest = matched.where((c) => c.name.toLowerCase() != receiptCategoryLower).toList();
+      final exact = matched
+          .where((c) => c.name.toLowerCase() == receiptCategoryLower)
+          .toList();
+      final rest = matched
+          .where((c) => c.name.toLowerCase() != receiptCategoryLower)
+          .toList();
       return [...exact, ...rest];
     }
     return matched;
@@ -653,7 +735,8 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
         final suggested = _getSuggestedCategories(expenseCategories);
         if (suggested.isEmpty) return const SizedBox.shrink();
         // Auto-select first suggested category if current selection is not in the list
-        final selectedInList = suggested.any((db.Category c) => c.name == _selectedCategoryName);
+        final selectedInList =
+            suggested.any((db.Category c) => c.name == _selectedCategoryName);
         if (!selectedInList) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (!mounted) return;
@@ -680,13 +763,13 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
               spacing: 10,
               runSpacing: 10,
               children: suggested.map((c) {
-                final isSelected =
-                    _selectedCategoryName != null && c.name == _selectedCategoryName;
+                final isSelected = _selectedCategoryName != null &&
+                    c.name == _selectedCategoryName;
                 Color chipColor = activeCashbookColor;
                 if (c.color != null && c.color!.isNotEmpty) {
                   try {
-                    chipColor = Color(int.parse(
-                        c.color!.replaceFirst('#', '0xFF')));
+                    chipColor =
+                        Color(int.parse(c.color!.replaceFirst('#', '0xFF')));
                   } catch (_) {}
                 } else {
                   chipColor = AppColors.expenseColor;

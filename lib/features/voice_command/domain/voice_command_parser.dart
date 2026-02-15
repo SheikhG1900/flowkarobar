@@ -2,7 +2,21 @@ import 'package:flowpaisa/features/transactions/domain/models/parsed_transaction
 
 class VoiceCommandParser {
   ParsedTransactionInput parse(String text) {
-    final lowerText = text.toLowerCase();
+    final lowerText = text.toLowerCase().trim();
+    final tokens = lowerText.split(RegExp(r'[\s,.]+'));
+    final commonCategories = [
+      'fuel',
+      'food',
+      'dinner',
+      'lunch',
+      'rent',
+      'salary',
+      'bonus',
+      'gift',
+      'bill',
+      'shopping',
+      'travel'
+    ];
 
     // 1. Extract Amount
     final amountRegex = RegExp(r'(\d+)\s*(?:rs|rupees|bucks|rupee)?');
@@ -14,11 +28,11 @@ class VoiceCommandParser {
 
     // 2. Extract Type
     String type = 'EXPENSE';
-    if (lowerText.contains('income') ||
-        lowerText.contains('received') ||
-        lowerText.contains('receved') ||
-        lowerText.contains('salary') ||
-        lowerText.contains('bonus') ||
+    if (tokens.contains('income') ||
+        tokens.contains('received') ||
+        tokens.contains('receved') ||
+        tokens.contains('salary') ||
+        tokens.contains('bonus') ||
         lowerText.contains('will receive')) {
       type = 'INCOME';
     }
@@ -26,12 +40,30 @@ class VoiceCommandParser {
     // 3. Extract Relationship (Linked Transactions)
     String? relationship;
     String? contactName;
-
-    // "I gave 100 to Usman" -> PAID_FOR
-    if (lowerText.contains('gave') || lowerText.contains('paid for')) {
+    // Check for "ne" and "diye" -> PAID_BY (They paid for me)
+    if ((tokens.contains('ne') &&
+            (tokens.contains('diye') || tokens.contains('diya'))) ||
+        (tokens.contains('se') &&
+            (tokens.contains('liye') || tokens.contains('liya')))) {
+      relationship = 'PAID_BY';
+    }
+    // Check for "ko" and "diye" -> PAID_FOR (I paid for them)
+    else if ((tokens.contains('ko') &&
+            (tokens.contains('diye') || tokens.contains('diya'))) ||
+        tokens.contains('ne') &&
+            (tokens.contains('liye') || tokens.contains('liya'))) {
       relationship = 'PAID_FOR';
     } else if (lowerText.contains('paid by') ||
-        lowerText.contains('will give')) {
+        lowerText.startsWith('will give') ||
+        lowerText.startsWith('i will give')) {
+      relationship = 'PAID_BY';
+    } else if (lowerText.startsWith('gave') ||
+        lowerText.startsWith('give') ||
+        lowerText.startsWith('i gave') ||
+        lowerText.startsWith('i give') ||
+        lowerText.contains('paid for')) {
+      relationship = 'PAID_FOR';
+    } else if (lowerText.contains('give') || lowerText.contains('gave')) {
       relationship = 'PAID_BY';
     } else if (lowerText.contains('received from') ||
         lowerText.contains('receive from') ||
@@ -42,22 +74,73 @@ class VoiceCommandParser {
       relationship = 'WILL_RECEIVE';
     }
 
-    // 4. Extract Contact Name (Simple heuristic: word after 'to', 'from', 'for', 'form')
-    final contactRegex = RegExp(r'(?:to|from|for|by|form)\s+([a-zA-Z]+)');
-    final contactMatch = contactRegex.firstMatch(lowerText);
-    if (contactMatch != null) {
-      contactName = contactMatch.group(1);
+    // 4. Extract Contact Name (Simple heuristic: word before 'ko' or 'ne', or after 'to', 'from', etc.)
+    // Pattern A: Name before 'ko' or 'ne'
+    final trailingContactRegex =
+        RegExp(r'([a-zA-Z]+)\s+(?:ko|ne|gave|give|received|receive|receve)\b');
+    final trailingMatch = trailingContactRegex.firstMatch(lowerText);
+    if (trailingMatch != null) {
+      final candidate = trailingMatch.group(1)!;
+      if (!commonCategories.contains(candidate.toLowerCase()) &&
+          candidate.trim() != "i") {
+        contactName = candidate;
+      }
     }
 
-    // 5. Extract Category/Description (Remaining words)
-    // This is a very basic fallback. AI will handle this much better.
-    String? description = text;
+    // Pattern B: word after 'to', 'from', 'for', 'form'
+    if (contactName == null) {
+      final contactRegex = RegExp(r'\b(?:to|from|for|by|form)\s+([a-zA-Z]+)\b');
+      final contactMatch = contactRegex.firstMatch(lowerText);
+      if (contactMatch != null) {
+        final candidate = contactMatch.group(1)!;
+        // Priority to commonCategories: if it's a category, it's not a contact
+        if (!commonCategories.contains(candidate.toLowerCase())) {
+          contactName = candidate;
+        }
+      }
+    }
+
+    // 5. Extract Category (Simple heuristic for basic mode)
+    String? category;
+
+    // Pattern A: Look for word before 'ka', 'ki', 'ke' (Hindi/Urdu possessive)
+    final possessiveCategoryRegex = RegExp(r'([a-zA-Z]+)\s+(?:ka|ki|ke)\b');
+    final possessiveMatch = possessiveCategoryRegex.firstMatch(lowerText);
+    if (possessiveMatch != null) {
+      final candidate = possessiveMatch.group(1);
+      if (candidate != contactName) {
+        category = candidate;
+      }
+    }
+
+    // Pattern B: Look for word after 'for', 'on', 'per', 'par'
+    if (category == null) {
+      final categoryRegex = RegExp(r'\b(?:for|on|per|par)\s+([a-zA-Z]+)\b');
+      final categoryMatch = categoryRegex.firstMatch(lowerText);
+      if (categoryMatch != null) {
+        final candidate = categoryMatch.group(1);
+        if (candidate != contactName) {
+          category = candidate;
+        }
+      }
+    }
+
+    // If no category found via keywords, check common categories directly
+    if (category == null) {
+      for (final cat in commonCategories) {
+        if (lowerText.contains(cat)) {
+          category = cat;
+          break;
+        }
+      }
+    }
 
     return ParsedTransactionInput(
       amount: amount,
       type: type,
       date: DateTime.now(),
-      description: description,
+      description: text,
+      categoryName: category,
       contactName: contactName,
       paidRelationship: relationship,
       usedFallback: true,

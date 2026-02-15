@@ -79,7 +79,7 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text(l10n.basicExtraction),
+            child: Text(l10n.cancel),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
@@ -293,24 +293,30 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                isSmart
-                    ? "Smart AI understands natural phrasing in English, Hindi, and Urdu."
-                    : "Basic mode works best with structured phrases like 'Paid [Amount] for [Category]'.",
-                style: Theme.of(context)
-                    .textTheme
-                    .bodySmall
-                    ?.copyWith(color: Colors.grey[600]),
-              ),
+                  isSmart
+                      ? "Smart AI understands natural phrasing in English, Hindi, and Urdu."
+                      : "Basic mode works best with structured phrases like 'Paid [Amount] for [Category]'.",
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context)
+                          .textTheme
+                          .bodySmall
+                          ?.color
+                          ?.withValues(alpha: 0.7))),
               const SizedBox(height: 24),
               if (isSmart) ...[
                 _buildHintSection(context, "Simple Expenses", [
                   "Spent 500 on fuel",
                   "Dinner per 1000 kharch kiye",
                 ]),
-                _buildHintSection(
-                    context, "Giving Money (Payable/Receivable)", [
+                _buildHintSection(context, "Giving Money (Receivable)", [
                   "I gave 1000 to Ashfaq for dinner",
                   "Ashfaq ko 500 dinner ke liye diye",
+                  "Kashif ne 500 dinner ke liye",
+                ]),
+                _buildHintSection(context, "Other Paid (Payable)", [
+                  "Kashif gave 1000 for dinner",
+                  "Ashfaq ne 500 dinner ke liye diye",
+                  "Kashif se 500 dinner ke liye",
                 ]),
                 _buildHintSection(context, "Receiving Money / Loans", [
                   "Received 2000 from Kashif",
@@ -337,7 +343,10 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
                 _buildHintSection(context, "Giving/Lending Money", [
                   "Gave 1000 to Ashfaq",
                   "Paid for Usman 500",
-                  "Will give 2000 to Ali",
+                ]),
+                _buildHintSection(context, "Borrowing Money", [
+                  "1000 paid by Ashfaq for dinner",
+                  "Will give 5000 to Ashfaq for dinner",
                 ]),
               ],
             ],
@@ -419,8 +428,375 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
             ),
         ],
       ),
-      body: _isProcessing
-          ? Center(
+      body: Stack(
+        children: [
+          SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: Opacity(
+              opacity: (_isProcessing && _parsedResult == null) ? 0 : 1.0,
+              child: AbsorbPointer(
+                absorbing: _isProcessing && _parsedResult == null,
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const SizedBox(height: 16),
+                      GestureDetector(
+                        onTap: _listen,
+                        child: Container(
+                          width: 100,
+                          height: 100,
+                          decoration: BoxDecoration(
+                            color:
+                                _isListening ? Colors.red : activeCashbookColor,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: (_isListening
+                                        ? Colors.red
+                                        : activeCashbookColor)
+                                    .withValues(alpha: 0.3),
+                                blurRadius: 20,
+                                spreadRadius: 5,
+                              ),
+                            ],
+                          ),
+                          child: Icon(
+                            _isListening ? Icons.stop : Icons.mic,
+                            color: Colors.white,
+                            size: 48,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        _isListening ? l10n.listening : l10n.tapToSpeak,
+                        style: theme.textTheme.titleMedium,
+                      ),
+
+                      const SizedBox(height: 20),
+                      // Instruction card: different style for basic vs Smart AI; tap to open hints
+                      InkWell(
+                        onTap: _showHints,
+                        borderRadius: BorderRadius.circular(16),
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 14),
+                          decoration: BoxDecoration(
+                            color: _canUseSmart
+                                ? Colors.blue.withValues(alpha: 0.08)
+                                : Colors.grey.withValues(alpha: 0.08),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: _canUseSmart
+                                  ? Colors.blue.withValues(alpha: 0.25)
+                                  : Colors.grey.withValues(alpha: 0.25),
+                              width: 1,
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                _canUseSmart
+                                    ? Icons.auto_awesome
+                                    : Icons.rule_rounded,
+                                size: 22,
+                                color: _canUseSmart ? Colors.blue : Colors.grey,
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  _canUseSmart
+                                      ? l10n.voiceInstructionSmart
+                                      : l10n.voiceInstructionBasic,
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    color: _canUseSmart
+                                        ? Colors.blue.shade800
+                                        : theme.colorScheme.onSurfaceVariant,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                              Icon(
+                                Icons.chevron_right,
+                                color: _canUseSmart ? Colors.blue : Colors.grey,
+                                size: 24,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                      if (_isDownloading) ...[
+                        const SizedBox(height: 24),
+                        Text(
+                          "Downloading Smart AI Model... ${(_downloadProgress * 100).toStringAsFixed(0)}%",
+                          style: theme.textTheme.bodySmall,
+                        ),
+                        const SizedBox(height: 8),
+                        SizedBox(
+                          width: 200,
+                          child: LinearProgressIndicator(
+                            value: _downloadProgress,
+                            backgroundColor:
+                                activeCashbookColor.withValues(alpha: 0.1),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                                activeCashbookColor),
+                          ),
+                        ),
+                      ],
+
+                      const SizedBox(height: 32),
+
+                      // Transcript Field
+                      if (_text.isNotEmpty || _isProcessing)
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(l10n.whatWeHeard,
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold)),
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                Text(l10n.includeTextAsDescription,
+                                    style: theme.textTheme.bodySmall),
+                                Transform.scale(
+                                  scale: 0.7,
+                                  child: Switch(
+                                    value: _includeTextAsDescription,
+                                    onChanged: (val) => setState(
+                                        () => _includeTextAsDescription = val),
+                                    activeColor: activeCashbookColor,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            TextField(
+                              controller: _transcriptController,
+                              maxLines: 3,
+                              decoration: InputDecoration(
+                                border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12)),
+                                suffixIcon: IconButton(
+                                  icon: const Icon(Icons.refresh),
+                                  onPressed: () =>
+                                      _processText(_transcriptController.text),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+
+                      const SizedBox(height: 32),
+
+                      // Review Section
+                      if (_parsedResult != null || _isProcessing)
+                        Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            Opacity(
+                              opacity: _isProcessing ? 0.3 : 1.0,
+                              child: AbsorbPointer(
+                                absorbing: _isProcessing,
+                                child: Container(
+                                  padding: const EdgeInsets.all(20),
+                                  decoration: BoxDecoration(
+                                    color: theme.cardColor,
+                                    borderRadius: BorderRadius.circular(20),
+                                    border:
+                                        Border.all(color: theme.dividerColor),
+                                  ),
+                                  child: Column(
+                                    children: [
+                                      // AI Indicator
+                                      Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.center,
+                                        children: [
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 12, vertical: 4),
+                                            margin: const EdgeInsets.only(
+                                                bottom: 16),
+                                            decoration: BoxDecoration(
+                                              color: _usedAi
+                                                  ? Colors.blue
+                                                      .withValues(alpha: 0.1)
+                                                  : Colors.grey
+                                                      .withValues(alpha: 0.1),
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                            ),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Icon(
+                                                    _usedAi
+                                                        ? Icons.auto_awesome
+                                                        : Icons.rule_rounded,
+                                                    size: 14,
+                                                    color: _usedAi
+                                                        ? Colors.blue
+                                                        : Colors.grey),
+                                                const SizedBox(width: 6),
+                                                Flexible(
+                                                  child: Text(
+                                                    _usedAi
+                                                        ? l10n.smartExtraction
+                                                        : l10n.basicExtraction,
+                                                    style: theme
+                                                        .textTheme.labelSmall
+                                                        ?.copyWith(
+                                                      color: _usedAi
+                                                          ? Colors.blue
+                                                          : Colors.grey,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                    ),
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+
+                                      _buildDetailRow(l10n.amount,
+                                          "${_parsedResult?.amount ?? 0}"),
+                                      _buildDetailRow(
+                                          l10n.type,
+                                          _parsedResult?.type == "INCOME"
+                                              ? l10n.income
+                                              : l10n.expense),
+                                      if (_parsedResult?.categoryName != null)
+                                        _buildDetailRow(l10n.category,
+                                            _parsedResult!.categoryName!),
+                                      if (_parsedResult?.contactName != null)
+                                        _buildDetailRow(l10n.contact,
+                                            _parsedResult!.contactName!),
+                                      if (_parsedResult?.paidRelationship !=
+                                          null)
+                                        _buildDetailRow(
+                                            l10n.relationship,
+                                            _getLocalizedRelationship(
+                                                _parsedResult!
+                                                    .paidRelationship!,
+                                                l10n)),
+
+                                      const SizedBox(height: 24),
+                                      GradientButton(
+                                        onPressed: () async {
+                                          if (_usedAi) {
+                                            await ref
+                                                .read(
+                                                    usageTrackerRepositoryProvider)
+                                                .incrementSmartParsingCount();
+                                          }
+                                          if (!mounted) return;
+                                          Navigator.pushReplacement(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  AddTransactionScreen(
+                                                initialAmount:
+                                                    _parsedResult?.amount,
+                                                initialDescription:
+                                                    _includeTextAsDescription
+                                                        ? (_transcriptController
+                                                                .text.isNotEmpty
+                                                            ? _transcriptController
+                                                                .text
+                                                            : _parsedResult
+                                                                ?.description)
+                                                        : null,
+                                                initialType:
+                                                    _parsedResult?.type ??
+                                                        "EXPENSE",
+                                                initialCategoryName:
+                                                    _parsedResult?.categoryName,
+                                                initialContactName:
+                                                    _parsedResult?.contactName,
+                                                initialRelationship:
+                                                    _parsedResult
+                                                        ?.paidRelationship,
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                        label: l10n.proceed,
+                                        width: double.infinity,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                            if (_isProcessing)
+                              Positioned.fill(
+                                child: Center(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      const AppLoadingIndicator(size: 60),
+                                      const SizedBox(height: 16),
+                                      Text(
+                                        l10n.processing,
+                                        style: theme.textTheme.labelMedium
+                                            ?.copyWith(
+                                          color: theme
+                                              .colorScheme.onSurfaceVariant,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            if (!_isProcessing && !_usedAi && _modelDownloaded)
+                              Positioned(
+                                top: 6,
+                                right: 6,
+                                child: IconButton(
+                                  icon: const Icon(Icons.auto_awesome),
+                                  tooltip: l10n.smartExtraction,
+                                  onPressed: () => Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          const PremiumScreen(),
+                                    ),
+                                  ),
+                                  padding: EdgeInsets.zero,
+                                  constraints: const BoxConstraints(
+                                    minWidth: 32,
+                                    minHeight: 32,
+                                  ),
+                                  style: IconButton.styleFrom(
+                                    backgroundColor:
+                                        Colors.blue.withValues(alpha: 0.1),
+                                    foregroundColor: Colors.blue,
+                                    padding: const EdgeInsets.all(8),
+                                  ),
+                                  iconSize: 24,
+                                  color: Colors.blue,
+                                ),
+                              ),
+                          ],
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          if (_isProcessing && _parsedResult == null)
+            Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -435,322 +811,9 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
                   ),
                 ],
               ),
-            )
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const SizedBox(height: 16),
-                    GestureDetector(
-                      onTap: _listen,
-                      child: Container(
-                        width: 100,
-                        height: 100,
-                        decoration: BoxDecoration(
-                          color:
-                              _isListening ? Colors.red : activeCashbookColor,
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: (_isListening
-                                      ? Colors.red
-                                      : activeCashbookColor)
-                                  .withValues(alpha: 0.3),
-                              blurRadius: 20,
-                              spreadRadius: 5,
-                            ),
-                          ],
-                        ),
-                        child: Icon(
-                          _isListening ? Icons.stop : Icons.mic,
-                          color: Colors.white,
-                          size: 48,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      _isListening ? l10n.listening : l10n.tapToSpeak,
-                      style: theme.textTheme.titleMedium,
-                    ),
-
-                    const SizedBox(height: 20),
-                    // Instruction card: different style for basic vs Smart AI; tap to open hints
-                    InkWell(
-                      onTap: _showHints,
-                      borderRadius: BorderRadius.circular(16),
-                      child: Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 14),
-                        decoration: BoxDecoration(
-                          color: _canUseSmart
-                              ? Colors.blue.withValues(alpha: 0.08)
-                              : Colors.grey.withValues(alpha: 0.08),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: _canUseSmart
-                                ? Colors.blue.withValues(alpha: 0.25)
-                                : Colors.grey.withValues(alpha: 0.25),
-                            width: 1,
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              _canUseSmart
-                                  ? Icons.auto_awesome
-                                  : Icons.rule_rounded,
-                              size: 22,
-                              color: _canUseSmart ? Colors.blue : Colors.grey,
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                _canUseSmart
-                                    ? l10n.voiceInstructionSmart
-                                    : l10n.voiceInstructionBasic,
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: _canUseSmart
-                                      ? Colors.blue.shade800
-                                      : theme.colorScheme.onSurfaceVariant,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
-                            Icon(
-                              Icons.chevron_right,
-                              color: _canUseSmart ? Colors.blue : Colors.grey,
-                              size: 24,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-
-                    if (_isDownloading) ...[
-                      const SizedBox(height: 24),
-                      Text(
-                        "Downloading Smart AI Model... ${(_downloadProgress * 100).toStringAsFixed(0)}%",
-                        style: theme.textTheme.bodySmall,
-                      ),
-                      const SizedBox(height: 8),
-                      SizedBox(
-                        width: 200,
-                        child: LinearProgressIndicator(
-                          value: _downloadProgress,
-                          backgroundColor:
-                              activeCashbookColor.withValues(alpha: 0.1),
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                              activeCashbookColor),
-                        ),
-                      ),
-                    ],
-
-                    const SizedBox(height: 32),
-
-                    // Transcript Field
-                    if (_text.isNotEmpty || _isProcessing)
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(l10n.whatWeHeard,
-                              style:
-                                  const TextStyle(fontWeight: FontWeight.bold)),
-                          const SizedBox(height: 8),
-                          Row(
-                            children: [
-                              Text(l10n.includeTextAsDescription,
-                                  style: theme.textTheme.bodySmall),
-                              Transform.scale(
-                                scale: 0.7,
-                                child: Switch(
-                                  value: _includeTextAsDescription,
-                                  onChanged: (val) => setState(
-                                      () => _includeTextAsDescription = val),
-                                  activeColor: activeCashbookColor,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          TextField(
-                            controller: _transcriptController,
-                            maxLines: 3,
-                            decoration: InputDecoration(
-                              border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12)),
-                              suffixIcon: IconButton(
-                                icon: const Icon(Icons.refresh),
-                                onPressed: () =>
-                                    _processText(_transcriptController.text),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-
-                    const SizedBox(height: 32),
-
-                    // Review Section
-                    if (_parsedResult != null && !_isProcessing)
-                      Stack(
-                        clipBehavior: Clip.none,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(20),
-                            decoration: BoxDecoration(
-                              color: theme.cardColor,
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(color: theme.dividerColor),
-                            ),
-                            child: Column(
-                              children: [
-                                // AI Indicator
-                                Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 12, vertical: 4),
-                                      margin: const EdgeInsets.only(bottom: 16),
-                                      decoration: BoxDecoration(
-                                        color: _usedAi
-                                            ? Colors.blue.withValues(alpha: 0.1)
-                                            : Colors.grey
-                                                .withValues(alpha: 0.1),
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Icon(
-                                              _usedAi
-                                                  ? Icons.auto_awesome
-                                                  : Icons.rule_rounded,
-                                              size: 14,
-                                              color: _usedAi
-                                                  ? Colors.blue
-                                                  : Colors.grey),
-                                          const SizedBox(width: 6),
-                                          Flexible(
-                                            child: Text(
-                                              _usedAi
-                                                  ? l10n.smartExtraction
-                                                  : l10n.basicExtraction,
-                                              style: theme.textTheme.labelSmall
-                                                  ?.copyWith(
-                                                color: _usedAi
-                                                    ? Colors.blue
-                                                    : Colors.grey,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-
-                                _buildDetailRow(l10n.amount,
-                                    "${_parsedResult!.amount ?? 0}"),
-                                _buildDetailRow(
-                                    l10n.type,
-                                    _parsedResult!.type == "INCOME"
-                                        ? l10n.income
-                                        : l10n.expense),
-                                if (_parsedResult!.categoryName != null)
-                                  _buildDetailRow(l10n.category,
-                                      _parsedResult!.categoryName!),
-                                if (_parsedResult!.contactName != null)
-                                  _buildDetailRow(l10n.contact,
-                                      _parsedResult!.contactName!),
-                                if (_parsedResult!.paidRelationship != null)
-                                  _buildDetailRow(
-                                      l10n.relationship,
-                                      _getLocalizedRelationship(
-                                          _parsedResult!.paidRelationship!,
-                                          l10n)),
-
-                                const SizedBox(height: 24),
-                                GradientButton(
-                                  onPressed: () async {
-                                    if (_usedAi) {
-                                      await ref
-                                          .read(usageTrackerRepositoryProvider)
-                                          .incrementSmartParsingCount();
-                                    }
-                                    if (!mounted) return;
-                                    Navigator.pushReplacement(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            AddTransactionScreen(
-                                          initialAmount: _parsedResult!.amount,
-                                          initialDescription:
-                                              _includeTextAsDescription
-                                                  ? (_transcriptController
-                                                          .text.isNotEmpty
-                                                      ? _transcriptController
-                                                          .text
-                                                      : _parsedResult!
-                                                          .description)
-                                                  : null,
-                                          initialType: _parsedResult!.type,
-                                          initialCategoryName:
-                                              _parsedResult!.categoryName,
-                                          initialContactName:
-                                              _parsedResult!.contactName,
-                                          initialRelationship:
-                                              _parsedResult!.paidRelationship,
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                  label: l10n.proceed,
-                                ),
-                              ],
-                            ),
-                          ),
-                          if (!_usedAi && _modelDownloaded)
-                            Positioned(
-                              top: 6,
-                              right: 6,
-                              child: IconButton(
-                                icon: const Icon(Icons.auto_awesome),
-                                tooltip: l10n.smartExtraction,
-                                onPressed: () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => const PremiumScreen(),
-                                  ),
-                                ),
-                                padding: EdgeInsets.zero,
-                                constraints: const BoxConstraints(
-                                  minWidth: 32,
-                                  minHeight: 32,
-                                ),
-                                style: IconButton.styleFrom(
-                                  backgroundColor:
-                                      Colors.blue.withValues(alpha: 0.1),
-                                  foregroundColor: Colors.blue,
-                                  padding: const EdgeInsets.all(8),
-                                ),
-                                iconSize: 24,
-                                color: Colors.blue,
-                              ),
-                            ),
-                        ],
-                      ),
-                  ],
-                ),
-              ),
             ),
+        ],
+      ),
     );
   }
 
