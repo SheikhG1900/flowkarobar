@@ -2162,6 +2162,14 @@ class AppLocalizationsUr extends AppLocalizations {
   String get voiceGuideTitle => 'وائس فریزنگ گائیڈ';
 
   @override
+  String get voiceInstructionBasic =>
+      'آپ سادہ اخراج موڈ استعمال کر رہے ہیں۔ اشارے پیغامات دیکھنے کے لیے یہاں ٹیپ کریں۔';
+
+  @override
+  String get voiceInstructionSmart =>
+      'آپ سمارٹ AI اخراج استعمال کر رہے ہیں۔ مزید تجاویز کے لیے یہاں ٹیپ کریں۔';
+
+  @override
   String get includeTextAsDescription => 'ٹیکسٹ کو تفصیل کے طور پر شامل کریں';
 
   @override

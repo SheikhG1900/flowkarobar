@@ -7,12 +7,14 @@ import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/voice_command/domain/voice_command_parser.dart';
 import 'package:flowpaisa/features/transactions/domain/models/parsed_transaction_input.dart';
 import 'package:flowpaisa/features/transactions/presentation/screens/add_transaction_screen.dart';
-import 'package:flowpaisa/features/categories/presentation/providers/categories_provider.dart';
 import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
+import 'package:flowpaisa/features/currencies/presentation/providers/currencies_provider.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/core/ml/model_download_service.dart';
 import 'package:flowpaisa/features/receipt_scan/domain/transaction_text_parser.dart';
+import 'package:flowpaisa/shared/widgets/app_loading_indicator.dart';
+import 'package:flowpaisa/features/premium/presentation/screens/premium_screen.dart';
 
 class VoiceAddScreen extends ConsumerStatefulWidget {
   const VoiceAddScreen({super.key});
@@ -35,6 +37,7 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
   double _downloadProgress = 0;
   bool _isDownloading = false;
   bool _modelDownloaded = false;
+  bool _canUseSmart = false;
   bool _includeTextAsDescription = true;
 
   late TextEditingController _transcriptController;
@@ -48,12 +51,19 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
   }
 
   Future<void> _checkModelStatus() async {
-    final downloaded = await _modelService.isModelDownloaded(ModelDownloadService.transactionParserModel);
+    final downloaded = await _modelService
+        .isModelDownloaded(ModelDownloadService.transactionParserModel);
+    final limits = await PremiumGate.getSmartParsingLimits(ref);
+    final canUseSmart = downloaded && limits.canAdd;
     if (mounted) {
-      setState(() => _modelDownloaded = downloaded);
+      setState(() {
+        _modelDownloaded = downloaded;
+        _canUseSmart = canUseSmart;
+      });
       if (!downloaded) {
         // Show dialog on first visit if not downloaded
-        WidgetsBinding.instance.addPostFrameCallback((_) => _showInitialDownloadDialog());
+        WidgetsBinding.instance
+            .addPostFrameCallback((_) => _showInitialDownloadDialog());
       }
     }
   }
@@ -103,10 +113,11 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
           }
         },
       );
-      if (success) {
-        setState(() => _modelDownloaded = true);
-      } else if (mounted) {
-        ToastUtils.showErrorToast(context, ref, "Failed to download AI model. Please check your connection.");
+      if (success && mounted) {
+        await _checkModelStatus();
+      } else if (mounted && !success) {
+        ToastUtils.showErrorToast(context, ref,
+            "Failed to download AI model. Please check your connection.");
       }
     } catch (e) {
       if (mounted) {
@@ -160,17 +171,25 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
       ParsedTransactionInput? result;
       bool usedAi = false;
 
-      final isModelReady = await _modelService.isModelDownloaded(ModelDownloadService.transactionParserModel);
+      final isModelReady = await _modelService
+          .isModelDownloaded(ModelDownloadService.transactionParserModel);
       final limits = await PremiumGate.getSmartParsingLimits(ref);
 
+      // Get all active currency symbols from database
+      final currencies =
+          await ref.read(currenciesRepositoryProvider).getAllCurrencies();
+      final dbSymbols = currencies.map((c) => c.symbol).toList();
+
       if (isModelReady && limits.canAdd) {
-        result = await _aiParser.parse(text, isReceipt: false);
+        result = await _aiParser.parse(text,
+            isReceipt: false, customSymbols: dbSymbols);
         if (result != null && !result.isEmpty) {
           usedAi = true;
         }
       } else if (isModelReady && !limits.canAdd) {
         if (mounted) {
-          ToastUtils.showWarningToast(context, ref, "Monthly smart parsing limit reached. Using basic extraction.");
+          ToastUtils.showWarningToast(context, ref,
+              "Monthly smart parsing limit reached. Using basic extraction.");
         }
       }
 
@@ -191,8 +210,20 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
     }
   }
 
-  void _showHints() {
+  Future<bool> _isSmartModeActive() async {
+    final isModelReady = await _modelService
+        .isModelDownloaded(ModelDownloadService.transactionParserModel);
+    if (!isModelReady) return false;
+
+    final limits = await PremiumGate.getSmartParsingLimits(ref);
+    return limits.canAdd;
+  }
+
+  void _showHints() async {
     final l10n = AppLocalizations.of(context)!;
+    final isSmart = await _isSmartModeActive();
+
+    if (!mounted) return;
 
     showModalBottomSheet(
       context: context,
@@ -222,29 +253,93 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
                   ),
                 ),
               ),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      l10n.voiceGuideTitle,
+                      style: Theme.of(context)
+                          .textTheme
+                          .headlineSmall
+                          ?.copyWith(fontWeight: FontWeight.bold),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: (isSmart ? Colors.blue : Colors.grey)
+                          .withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                          color: (isSmart ? Colors.blue : Colors.grey)
+                              .withValues(alpha: 0.2)),
+                    ),
+                    child: Text(
+                      isSmart ? l10n.smartExtraction : l10n.basicExtraction,
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: isSmart ? Colors.blue : Colors.grey,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
               Text(
-                l10n.voiceGuideTitle,
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+                isSmart
+                    ? "Smart AI understands natural phrasing in English, Hindi, and Urdu."
+                    : "Basic mode works best with structured phrases like 'Paid [Amount] for [Category]'.",
+                style: Theme.of(context)
+                    .textTheme
+                    .bodySmall
+                    ?.copyWith(color: Colors.grey[600]),
               ),
               const SizedBox(height: 24),
-              _buildHintSection(context, "Simple Expenses", [
-                "Spent 500 on fuel",
-                "Dinner per 1000 kharch kiye",
-              ]),
-              _buildHintSection(context, "Giving Money (Payable/Receivable)", [
-                "I gave 1000 to Ashfaq for dinner",
-                "Ashfaq ko 500 dinner ke liye diye",
-              ]),
-              _buildHintSection(context, "Receiving Money / Loans", [
-                "Received 2000 from Kashif",
-                "Kashif Ne ₹500 Udhar Diye",
-                "Maine Kashif se ₹50 Udhar Liye",
-              ]),
-              _buildHintSection(context, "Someone Else Paid for You", [
-                "Someone paid 500 for me",
-                "Ashfaq purchased dinner for me",
-                "Ashfaq Ne Mere dinner ke ₹500 Diye",
-              ]),
+              if (isSmart) ...[
+                _buildHintSection(context, "Simple Expenses", [
+                  "Spent 500 on fuel",
+                  "Dinner per 1000 kharch kiye",
+                ]),
+                _buildHintSection(
+                    context, "Giving Money (Payable/Receivable)", [
+                  "I gave 1000 to Ashfaq for dinner",
+                  "Ashfaq ko 500 dinner ke liye diye",
+                ]),
+                _buildHintSection(context, "Receiving Money / Loans", [
+                  "Received 2000 from Kashif",
+                  "Kashif Ne ₹500 Udhar Diye",
+                  "Maine Kashif se ₹50 Udhar Liye",
+                ]),
+                _buildHintSection(context, "Someone Else Paid for You", [
+                  "Someone paid 500 for me",
+                  "Ashfaq purchased dinner for me",
+                  "Ashfaq Ne Mere dinner ke ₹500 Diye",
+                ]),
+              ] else ...[
+                _buildHintSection(context, "Expenses (Basic)", [
+                  "Spent 500 on Fuel",
+                  "Paid 1000 for Dinner",
+                  "Expense 250 for Snacks",
+                ]),
+                _buildHintSection(context, "Income (Basic)", [
+                  "2000 Received from Kashif",
+                  "5000 Income from Salary",
+                  "Received 1000 for Bonus",
+                  "Will receive 2000 from Ali",
+                ]),
+                _buildHintSection(context, "Giving/Lending Money", [
+                  "Gave 1000 to Ashfaq",
+                  "Paid for Usman 500",
+                  "Will give 2000 to Ali",
+                ]),
+              ],
             ],
           ),
         ),
@@ -252,7 +347,8 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
     );
   }
 
-  Widget _buildHintSection(BuildContext context, String title, List<String> examples) {
+  Widget _buildHintSection(
+      BuildContext context, String title, List<String> examples) {
     final activeCashbookColor = ref.read(activeCashbookProvider).color;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -260,22 +356,25 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
         Text(
           title,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            color: activeCashbookColor,
-            fontWeight: FontWeight.bold,
-          ),
+                color: activeCashbookColor,
+                fontWeight: FontWeight.bold,
+              ),
         ),
         const SizedBox(height: 12),
         ...examples.map((ex) => Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Icon(Icons.check_circle_outline, size: 18, color: Colors.green),
-              const SizedBox(width: 8),
-              Expanded(child: Text(ex, style: const TextStyle(fontStyle: FontStyle.italic))),
-            ],
-          ),
-        )),
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(Icons.check_circle_outline,
+                      size: 18, color: Colors.green),
+                  const SizedBox(width: 8),
+                  Expanded(
+                      child: Text(ex,
+                          style: const TextStyle(fontStyle: FontStyle.italic))),
+                ],
+              ),
+            )),
         const SizedBox(height: 24),
       ],
     );
@@ -318,188 +417,340 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
                 }
               },
             ),
-          IconButton(
-            icon: const Icon(Icons.help_outline),
-            tooltip: l10n.hints,
-            onPressed: _showHints,
-          ),
-          const SizedBox(width: 8),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(height: 16),
-              
-              // Mic Button
-              GestureDetector(
-                onTap: _listen,
-                child: Container(
-                  width: 100,
-                  height: 100,
-                  decoration: BoxDecoration(
-                    color: _isListening ? Colors.red : activeCashbookColor,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: (_isListening ? Colors.red : activeCashbookColor).withValues(alpha: 0.3),
-                        blurRadius: 20,
-                        spreadRadius: 5,
-                      ),
-                    ],
+      body: _isProcessing
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const AppLoadingIndicator(size: 80),
+                  const SizedBox(height: 24),
+                  Text(
+                    l10n.processing,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                  child: Icon(
-                    _isListening ? Icons.stop : Icons.mic,
-                    color: Colors.white,
-                    size: 48,
-                  ),
-                ),
+                ],
               ),
-              const SizedBox(height: 16),
-              Text(
-                _isListening ? l10n.listening : l10n.tapToSpeak,
-                style: theme.textTheme.titleMedium,
-              ),
-              
-              if (_isDownloading) ...[
-                const SizedBox(height: 24),
-                Text(
-                  "Downloading Smart AI Model... ${(_downloadProgress * 100).toStringAsFixed(0)}%",
-                  style: theme.textTheme.bodySmall,
-                ),
-                const SizedBox(height: 8),
-                SizedBox(
-                  width: 200,
-                  child: LinearProgressIndicator(
-                    value: _downloadProgress,
-                    backgroundColor: activeCashbookColor.withValues(alpha: 0.1),
-                    valueColor: AlwaysStoppedAnimation<Color>(activeCashbookColor),
-                  ),
-                ),
-              ],
-              
-              const SizedBox(height: 32),
-              
-              // Transcript Field
-              if (_text.isNotEmpty || _isProcessing)
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+            )
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(l10n.whatWeHeard, style: const TextStyle(fontWeight: FontWeight.bold)),
-                        Row(
-                          children: [
-                            Text(l10n.includeTextAsDescription, style: theme.textTheme.bodySmall),
-                            Transform.scale(
-                              scale: 0.7,
-                              child: Switch(
-                                value: _includeTextAsDescription,
-                                onChanged: (val) => setState(() => _includeTextAsDescription = val),
-                                activeColor: activeCashbookColor,
-                              ),
+                    const SizedBox(height: 16),
+                    GestureDetector(
+                      onTap: _listen,
+                      child: Container(
+                        width: 100,
+                        height: 100,
+                        decoration: BoxDecoration(
+                          color:
+                              _isListening ? Colors.red : activeCashbookColor,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: (_isListening
+                                      ? Colors.red
+                                      : activeCashbookColor)
+                                  .withValues(alpha: 0.3),
+                              blurRadius: 20,
+                              spreadRadius: 5,
                             ),
                           ],
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: _transcriptController,
-                      maxLines: 3,
-                      decoration: InputDecoration(
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                        suffixIcon: IconButton(
-                          icon: const Icon(Icons.refresh),
-                          onPressed: () => _processText(_transcriptController.text),
+                        child: Icon(
+                          _isListening ? Icons.stop : Icons.mic,
+                          color: Colors.white,
+                          size: 48,
                         ),
                       ),
                     ),
-                  ],
-                ),
-                
-              const SizedBox(height: 32),
-              
-              // Review Section
-              if (_parsedResult != null && !_isProcessing)
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: theme.cardColor,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: theme.dividerColor),
-                  ),
-                  child: Column(
-                    children: [
-                      // AI Indicator
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                        margin: const EdgeInsets.only(bottom: 16),
+                    const SizedBox(height: 16),
+                    Text(
+                      _isListening ? l10n.listening : l10n.tapToSpeak,
+                      style: theme.textTheme.titleMedium,
+                    ),
+
+                    const SizedBox(height: 20),
+                    // Instruction card: different style for basic vs Smart AI; tap to open hints
+                    InkWell(
+                      onTap: _showHints,
+                      borderRadius: BorderRadius.circular(16),
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 14),
                         decoration: BoxDecoration(
-                          color: _usedAi ? Colors.blue.withValues(alpha: 0.1) : Colors.grey.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(12),
+                          color: _canUseSmart
+                              ? Colors.blue.withValues(alpha: 0.08)
+                              : Colors.grey.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: _canUseSmart
+                                ? Colors.blue.withValues(alpha: 0.25)
+                                : Colors.grey.withValues(alpha: 0.25),
+                            width: 1,
+                          ),
                         ),
                         child: Row(
-                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(_usedAi ? Icons.auto_awesome : Icons.rule_rounded, size: 14, color: _usedAi ? Colors.blue : Colors.grey),
-                            const SizedBox(width: 6),
-                            Flexible(
+                            Icon(
+                              _canUseSmart
+                                  ? Icons.auto_awesome
+                                  : Icons.rule_rounded,
+                              size: 22,
+                              color: _canUseSmart ? Colors.blue : Colors.grey,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
                               child: Text(
-                                _usedAi ? l10n.smartExtraction : l10n.basicExtraction,
-                                style: theme.textTheme.labelSmall?.copyWith(
-                                  color: _usedAi ? Colors.blue : Colors.grey,
-                                  fontWeight: FontWeight.bold,
+                                _canUseSmart
+                                    ? l10n.voiceInstructionSmart
+                                    : l10n.voiceInstructionBasic,
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: _canUseSmart
+                                      ? Colors.blue.shade800
+                                      : theme.colorScheme.onSurfaceVariant,
+                                  fontWeight: FontWeight.w500,
                                 ),
-                                overflow: TextOverflow.ellipsis,
                               ),
+                            ),
+                            Icon(
+                              Icons.chevron_right,
+                              color: _canUseSmart ? Colors.blue : Colors.grey,
+                              size: 24,
                             ),
                           ],
                         ),
                       ),
-                      
-                      _buildDetailRow(l10n.amount, "${_parsedResult!.amount ?? 0}"),
-                      _buildDetailRow(l10n.type, _parsedResult!.type == "INCOME" ? l10n.income : l10n.expense),
-                      if (_parsedResult!.categoryName != null) _buildDetailRow(l10n.category, _parsedResult!.categoryName!),
-                      if (_parsedResult!.contactName != null) _buildDetailRow(l10n.contact, _parsedResult!.contactName!),
-                      if (_parsedResult!.paidRelationship != null) _buildDetailRow(l10n.relationship, _getLocalizedRelationship(_parsedResult!.paidRelationship!, l10n)),
-                      
+                    ),
+
+                    if (_isDownloading) ...[
                       const SizedBox(height: 24),
-                      GradientButton(
-                        onPressed: () async {
-                          if (_usedAi) {
-                            await ref.read(usageTrackerRepositoryProvider).incrementSmartParsingCount();
-                          }
-                          if (!mounted) return;
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => AddTransactionScreen(
-                                initialAmount: _parsedResult!.amount,
-                                initialDescription: _includeTextAsDescription 
-                                    ? (_transcriptController.text.isNotEmpty ? _transcriptController.text : _parsedResult!.description)
-                                    : null,
-                                initialType: _parsedResult!.type,
-                                initialCategoryName: _parsedResult!.categoryName,
-                                initialContactName: _parsedResult!.contactName,
-                                initialRelationship: _parsedResult!.paidRelationship,
-                              ),
-                            ),
-                          );
-                        },
-                        label: l10n.proceed,
+                      Text(
+                        "Downloading Smart AI Model... ${(_downloadProgress * 100).toStringAsFixed(0)}%",
+                        style: theme.textTheme.bodySmall,
+                      ),
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        width: 200,
+                        child: LinearProgressIndicator(
+                          value: _downloadProgress,
+                          backgroundColor:
+                              activeCashbookColor.withValues(alpha: 0.1),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                              activeCashbookColor),
+                        ),
                       ),
                     ],
-                  ),
+
+                    const SizedBox(height: 32),
+
+                    // Transcript Field
+                    if (_text.isNotEmpty || _isProcessing)
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(l10n.whatWeHeard,
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.bold)),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Text(l10n.includeTextAsDescription,
+                                  style: theme.textTheme.bodySmall),
+                              Transform.scale(
+                                scale: 0.7,
+                                child: Switch(
+                                  value: _includeTextAsDescription,
+                                  onChanged: (val) => setState(
+                                      () => _includeTextAsDescription = val),
+                                  activeColor: activeCashbookColor,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          TextField(
+                            controller: _transcriptController,
+                            maxLines: 3,
+                            decoration: InputDecoration(
+                              border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12)),
+                              suffixIcon: IconButton(
+                                icon: const Icon(Icons.refresh),
+                                onPressed: () =>
+                                    _processText(_transcriptController.text),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+
+                    const SizedBox(height: 32),
+
+                    // Review Section
+                    if (_parsedResult != null && !_isProcessing)
+                      Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(20),
+                            decoration: BoxDecoration(
+                              color: theme.cardColor,
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: theme.dividerColor),
+                            ),
+                            child: Column(
+                              children: [
+                                // AI Indicator
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 12, vertical: 4),
+                                      margin: const EdgeInsets.only(bottom: 16),
+                                      decoration: BoxDecoration(
+                                        color: _usedAi
+                                            ? Colors.blue.withValues(alpha: 0.1)
+                                            : Colors.grey
+                                                .withValues(alpha: 0.1),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                              _usedAi
+                                                  ? Icons.auto_awesome
+                                                  : Icons.rule_rounded,
+                                              size: 14,
+                                              color: _usedAi
+                                                  ? Colors.blue
+                                                  : Colors.grey),
+                                          const SizedBox(width: 6),
+                                          Flexible(
+                                            child: Text(
+                                              _usedAi
+                                                  ? l10n.smartExtraction
+                                                  : l10n.basicExtraction,
+                                              style: theme.textTheme.labelSmall
+                                                  ?.copyWith(
+                                                color: _usedAi
+                                                    ? Colors.blue
+                                                    : Colors.grey,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+
+                                _buildDetailRow(l10n.amount,
+                                    "${_parsedResult!.amount ?? 0}"),
+                                _buildDetailRow(
+                                    l10n.type,
+                                    _parsedResult!.type == "INCOME"
+                                        ? l10n.income
+                                        : l10n.expense),
+                                if (_parsedResult!.categoryName != null)
+                                  _buildDetailRow(l10n.category,
+                                      _parsedResult!.categoryName!),
+                                if (_parsedResult!.contactName != null)
+                                  _buildDetailRow(l10n.contact,
+                                      _parsedResult!.contactName!),
+                                if (_parsedResult!.paidRelationship != null)
+                                  _buildDetailRow(
+                                      l10n.relationship,
+                                      _getLocalizedRelationship(
+                                          _parsedResult!.paidRelationship!,
+                                          l10n)),
+
+                                const SizedBox(height: 24),
+                                GradientButton(
+                                  onPressed: () async {
+                                    if (_usedAi) {
+                                      await ref
+                                          .read(usageTrackerRepositoryProvider)
+                                          .incrementSmartParsingCount();
+                                    }
+                                    if (!mounted) return;
+                                    Navigator.pushReplacement(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            AddTransactionScreen(
+                                          initialAmount: _parsedResult!.amount,
+                                          initialDescription:
+                                              _includeTextAsDescription
+                                                  ? (_transcriptController
+                                                          .text.isNotEmpty
+                                                      ? _transcriptController
+                                                          .text
+                                                      : _parsedResult!
+                                                          .description)
+                                                  : null,
+                                          initialType: _parsedResult!.type,
+                                          initialCategoryName:
+                                              _parsedResult!.categoryName,
+                                          initialContactName:
+                                              _parsedResult!.contactName,
+                                          initialRelationship:
+                                              _parsedResult!.paidRelationship,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                  label: l10n.proceed,
+                                ),
+                              ],
+                            ),
+                          ),
+                          if (!_usedAi && _modelDownloaded)
+                            Positioned(
+                              top: 6,
+                              right: 6,
+                              child: IconButton(
+                                icon: const Icon(Icons.auto_awesome),
+                                tooltip: l10n.smartExtraction,
+                                onPressed: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const PremiumScreen(),
+                                  ),
+                                ),
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(
+                                  minWidth: 32,
+                                  minHeight: 32,
+                                ),
+                                style: IconButton.styleFrom(
+                                  backgroundColor:
+                                      Colors.blue.withValues(alpha: 0.1),
+                                  foregroundColor: Colors.blue,
+                                  padding: const EdgeInsets.all(8),
+                                ),
+                                iconSize: 24,
+                                color: Colors.blue,
+                              ),
+                            ),
+                        ],
+                      ),
+                  ],
                 ),
-            ],
-          ),
-        ),
-      ),
+              ),
+            ),
     );
   }
 

@@ -2149,6 +2149,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get voiceGuideTitle => 'Voice Phrasing Guide';
 
   @override
+  String get voiceInstructionBasic =>
+      'You\'re using simple extraction mode. Tap here to see hint messages.';
+
+  @override
+  String get voiceInstructionSmart =>
+      'You\'re using Smart AI extraction. Tap here for more tips.';
+
+  @override
   String get includeTextAsDescription => 'Include text as description';
 
   @override

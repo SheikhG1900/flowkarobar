@@ -712,6 +712,8 @@
   "relationship": "تعلق",
   "hints": "ہنٹس",
   "voiceGuideTitle": "وائس فریزنگ گائیڈ",
+  "voiceInstructionBasic": "آپ سادہ اخراج موڈ استعمال کر رہے ہیں۔ اشارے پیغامات دیکھنے کے لیے یہاں ٹیپ کریں۔",
+  "voiceInstructionSmart": "آپ سمارٹ AI اخراج استعمال کر رہے ہیں۔ مزید تجاویز کے لیے یہاں ٹیپ کریں۔",
   "includeTextAsDescription": "ٹیکسٹ کو تفصیل کے طور پر شامل کریں",
   "camera": "کیمرہ",
   "gallery": "گیلری",

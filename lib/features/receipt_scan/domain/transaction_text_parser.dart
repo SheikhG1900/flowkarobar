@@ -7,7 +7,7 @@ import 'package:flowpaisa/features/transactions/domain/models/parsed_transaction
 import 'package:flowpaisa/core/ml/model_download_service.dart';
 
 abstract class TransactionTextParser {
-  Future<ParsedTransactionInput?> parse(String text, {required bool isReceipt});
+  Future<ParsedTransactionInput?> parse(String text, {required bool isReceipt, List<String>? customSymbols});
 }
 
 class TransactionAiParser implements TransactionTextParser {
@@ -50,7 +50,7 @@ class TransactionAiParser implements TransactionTextParser {
   }
 
   @override
-  Future<ParsedTransactionInput?> parse(String text, {required bool isReceipt}) async {
+  Future<ParsedTransactionInput?> parse(String text, {required bool isReceipt, List<String>? customSymbols}) async {
     await _initialize();
     if (_interpreter == null || _vocab == null) {
       if (kDebugMode) {
@@ -83,7 +83,7 @@ class TransactionAiParser implements TransactionTextParser {
         }
       }
 
-      final result = _mapAnswersToInput(answers, text, isReceipt: isReceipt);
+      final result = _mapAnswersToInput(answers, text, isReceipt: isReceipt, customSymbols: customSymbols);
       if (kDebugMode) {
         debugPrint('AI Parser: Final Result: amount=${result.amount}, type=${result.type}, category=${result.categoryName}, contact=${result.contactName}, relationship=${result.paidRelationship}');
       }
@@ -193,7 +193,7 @@ class TransactionAiParser implements TransactionTextParser {
     return maxIdx;
   }
 
-  ParsedTransactionInput _mapAnswersToInput(Map<String, String> answers, String originalText, {required bool isReceipt}) {
+  ParsedTransactionInput _mapAnswersToInput(Map<String, String> answers, String originalText, {required bool isReceipt, List<String>? customSymbols}) {
     double? amount;
     String? type;
     String? category;
@@ -205,25 +205,85 @@ class TransactionAiParser implements TransactionTextParser {
     final categoryKeywords = ['salary', 'bonus', 'rent', 'fuel', 'dinner', 'lunch', 'breakfast', 'travel', 'gift', 'profit', 'shopping', 'bills'];
 
     // 1. Amount Extraction (Prioritize Regex over confused AI)
-    // Look for patterns like "Total: 500" or "Amount 1200.50"
-    final amountRegex = RegExp(r'(?:total|amount|net|sum|due|paid|rs|₹|pkr)\s*[:\-\s]*(\d+(?:\.\d{1,2})?)', caseSensitive: false);
+    // Predefined symbols + custom ones from DB
+    final symbols = ['rs', '₹', 'pkr', r'\$', '€', '£', '¥', 'total', 'amount', 'net', 'sum', 'due', 'paid'];
+    if (customSymbols != null) {
+      for (var s in customSymbols) {
+        if (!symbols.contains(s.toLowerCase())) symbols.add(RegExp.escape(s.toLowerCase()));
+      }
+    }
+    
+    final symbolsPattern = symbols.join('|');
+    final amountRegex = RegExp('(?:$symbolsPattern)\\s*[:\\-\\s]*(\\d+(?:\\.\\d{1,2})?)', caseSensitive: false);
     final matches = amountRegex.allMatches(originalText);
     
+    // Helper to check if a number is likely a phone number or date
+    bool isNoiseNumber(String numStr, double value, int startPos) {
+      // 1. Phone numbers: usually 10+ digits
+      if (numStr.length >= 10 && !numStr.contains('.')) return true;
+      
+      // 2. Years: 2020-2030 (common in receipts)
+      if (value >= 2020 && value <= 2030 && !numStr.contains('.')) return true;
+      
+      // 3. Time check: Check if there's a colon immediately before or after
+      if (startPos > 0 && originalText[startPos - 1] == ':') return true;
+      if (startPos + numStr.length < originalText.length && originalText[startPos + numStr.length] == ':') return true;
+      
+      // 4. Date check: Check for common date separators / or -
+      if (startPos > 0 && (originalText[startPos - 1] == '/' || originalText[startPos - 1] == '-')) return true;
+      if (startPos + numStr.length < originalText.length && (originalText[startPos + numStr.length] == '/' || originalText[startPos + numStr.length] == '-')) return true;
+
+      // 5. Common receipt noise: check for patterns like "24/05/2024" or "12:30:45"
+      // If the number is part of a date or time string, ignore it
+      final surrounding = originalText.substring(
+        max(0, startPos - 5),
+        min(originalText.length, startPos + numStr.length + 5)
+      );
+      if (surrounding.contains(RegExp(r'\d{1,2}/\d{1,2}/\d{2,4}')) || 
+          surrounding.contains(RegExp(r'\d{1,2}-\d{1,2}-\d{2,4}')) ||
+          surrounding.contains(RegExp(r'\d{1,2}:\d{2}'))) {
+        return true;
+      }
+
+      // 6. User request: ignore numbers separated by space or brackets like "1234 123", "(456) 1245 124"
+      // Check if there are digits immediately before or after with a space or bracket
+      if (startPos > 1) {
+        final before = originalText.substring(max(0, startPos - 2), startPos);
+        if (before.contains(RegExp(r'[\d\(\)]\s'))) return true;
+      }
+      if (startPos + numStr.length < originalText.length - 1) {
+        final after = originalText.substring(startPos + numStr.length, min(originalText.length, startPos + numStr.length + 2));
+        if (after.contains(RegExp(r'\s[\d\(\)]'))) return true;
+      }
+
+      return false;
+    }
+
     if (matches.isNotEmpty) {
-      // Usually the last "Total" mention in a receipt is the final amount
-      amount = double.tryParse(matches.last.group(1)!);
+      // Filter out noise from keyword matches; skip duplicates
       for (var m in matches) {
-        double? val = double.tryParse(m.group(1)!);
-        if (val != null) amountCandidates.add(val);
+        final numStr = m.group(1)!;
+        final val = double.tryParse(numStr);
+        if (val != null && !amountCandidates.contains(val) && !isNoiseNumber(numStr, val, m.start + m.group(0)!.indexOf(numStr))) {
+          amountCandidates.add(val);
+        }
+      }
+      if (amountCandidates.isNotEmpty) {
+        // Usually the last "Total" mention in a receipt is the final amount
+        amount = amountCandidates.last;
       }
     }
 
-    final simpleAmountRegex = RegExp(r'(\d+(?:\.\d{1,2})?)');
+    final simpleAmountRegex = RegExp(r'\b\d+(?:\.\d{1,2})?\b');
     final allNumbers = simpleAmountRegex.allMatches(originalText);
     if (allNumbers.isNotEmpty) {
       for (var m in allNumbers) {
-        double? val = double.tryParse(m.group(1)!);
-        if (val != null && !amountCandidates.contains(val)) {
+        final numStr = m.group(0)!;
+        final val = double.tryParse(numStr);
+        if (val != null && !amountCandidates.contains(val) && !isNoiseNumber(numStr, val, m.start)) {
+          // Additional check for receipts: ignore very small numbers like 1, 2, 3 which are often quantities
+          if (isReceipt && val < 5 && !numStr.contains('.')) continue;
+          
           amountCandidates.add(val);
         }
       }
@@ -232,18 +292,13 @@ class TransactionAiParser implements TransactionTextParser {
         amountCandidates.sort((a, b) => b.compareTo(a));
       }
 
-      if (amount == null) {
+      if (amount == null && amountCandidates.isNotEmpty) {
         if (isReceipt) {
-          // In receipts, the largest number is almost always the total amount
-          double maxAmount = 0;
-          for (var m in allNumbers) {
-            double? val = double.tryParse(m.group(1)!);
-            if (val != null && val > maxAmount) maxAmount = val;
-          }
-          if (maxAmount > 0) amount = maxAmount;
+          // In receipts, the largest remaining number is likely the total amount
+          amount = amountCandidates.first;
         } else {
           // For voice commands, the first number is usually the amount
-          amount = double.tryParse(allNumbers.first.group(1)!);
+          amount = amountCandidates.first;
         }
       }
     }
@@ -376,6 +431,18 @@ class TransactionAiParser implements TransactionTextParser {
       relationship = null;
     }
 
+    // Ensure no duplicate amounts in suggestions
+    final uniqueCandidates = amountCandidates.toSet().toList();
+    if (isReceipt) {
+      uniqueCandidates.sort((a, b) => b.compareTo(a));
+    }
+
+    // Description suggestions from full text (for receipts)
+    List<String> descriptionCandidates = [];
+    if (isReceipt && originalText.isNotEmpty) {
+      descriptionCandidates = _descriptionCandidatesFromText(originalText);
+    }
+
     return ParsedTransactionInput(
       amount: amount,
       type: type ?? "EXPENSE",
@@ -385,7 +452,34 @@ class TransactionAiParser implements TransactionTextParser {
       description: originalText,
       date: DateTime.now(),
       usedFallback: false,
-      amountCandidates: amountCandidates,
+      amountCandidates: uniqueCandidates,
+      descriptionCandidates: descriptionCandidates,
     );
+  }
+
+  static const int _maxDescLen = 60;
+  static const int _maxDescCandidates = 8;
+
+  static List<String> _descriptionCandidatesFromText(String text) {
+    final List<String> candidates = [];
+    final seen = <String>{};
+    void add(String s) {
+      final t = s.trim();
+      if (t.isEmpty) return;
+      final key = t.length > _maxDescLen ? t.substring(0, _maxDescLen).toLowerCase() : t.toLowerCase();
+      if (seen.contains(key)) return;
+      seen.add(key);
+      candidates.add(t.length > _maxDescLen ? '${t.substring(0, _maxDescLen)}...' : t);
+    }
+    final noise = RegExp(r'^(RECEIPT|INVOICE|TAX|TOTAL|SUBTOTAL|DATE|TIME|QTY|ITEM|AMOUNT|CASH|CARD|THANK|VISIT|#|\d+\s*[xX]\s*|\d+\.\d{2})\s*$', caseSensitive: false);
+    final mostlyNumber = RegExp(r'^[\d\s.,₹\$€£¥]+$');
+    for (var line in text.split(RegExp(r'[\n\r]+'))) {
+      final t = line.trim();
+      if (t.length < 2) continue;
+      if (noise.hasMatch(t) || mostlyNumber.hasMatch(t)) continue;
+      add(t);
+      if (candidates.length >= _maxDescCandidates) break;
+    }
+    return candidates;
   }
 }

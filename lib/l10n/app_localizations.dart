@@ -3976,6 +3976,18 @@ abstract class AppLocalizations {
   /// **'Voice Phrasing Guide'**
   String get voiceGuideTitle;
 
+  /// No description provided for @voiceInstructionBasic.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re using simple extraction mode. Tap here to see hint messages.'**
+  String get voiceInstructionBasic;
+
+  /// No description provided for @voiceInstructionSmart.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re using Smart AI extraction. Tap here for more tips.'**
+  String get voiceInstructionSmart;
+
   /// No description provided for @includeTextAsDescription.
   ///
   /// In en, this message translates to:

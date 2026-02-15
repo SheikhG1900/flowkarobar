@@ -1,6 +1,8 @@
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/features/receipt_scan/domain/transaction_text_parser.dart';
+import 'package:flowpaisa/features/currencies/presentation/providers/currencies_provider.dart';
 import 'package:flowpaisa/core/ml/model_download_service.dart';
+import 'package:flowpaisa/shared/widgets/app_loading_indicator.dart';
 import 'package:flowpaisa/features/transactions/domain/models/parsed_transaction_input.dart';
 import 'dart:io' if (dart.library.html) 'dart:html';
 import 'package:flutter/foundation.dart';
@@ -17,6 +19,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
+import 'package:flowpaisa/features/premium/presentation/screens/premium_screen.dart';
+import 'package:flowpaisa/features/categories/presentation/providers/categories_provider.dart';
+import 'package:flowpaisa/core/database/database.dart' as db;
+import 'package:flowpaisa/core/theme/app_colors.dart';
+import 'package:flowpaisa/core/utils/category_helper.dart';
 
 class ScanReceiptScreen extends ConsumerStatefulWidget {
   const ScanReceiptScreen({super.key});
@@ -34,6 +41,7 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
   File? _image;
   bool _isScanning = false;
   bool _usedAi = false;
+  bool _modelDownloaded = false;
   ReceiptData? _receiptData;
 
   // Editable fields for review
@@ -41,6 +49,9 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
   late TextEditingController _merchantController;
   late TextEditingController _dateController;
   DateTime _selectedDate = DateTime.now();
+  String? _selectedCategoryName;
+  String? _selectedCategoryColor;
+  String? _selectedCategoryIcon;
 
   @override
   void initState() {
@@ -49,11 +60,18 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
     _amountController = TextEditingController();
     _merchantController = TextEditingController();
     _dateController = TextEditingController();
+    _checkModelDownloaded();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         _dateController.text = AppDateFormatter.formatDate(_selectedDate);
       }
     });
+  }
+
+  Future<void> _checkModelDownloaded() async {
+    final downloaded = await _modelService
+        .isModelDownloaded(ModelDownloadService.transactionParserModel);
+    if (mounted) setState(() => _modelDownloaded = downloaded);
   }
 
   @override
@@ -102,6 +120,10 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
       final textRecognizer = TextRecognizer();
       final recognizedText = await textRecognizer.processImage(inputImage);
 
+      // Get all active currency symbols from database
+      final currencies = await ref.read(currenciesRepositoryProvider).getAllCurrencies();
+      final dbSymbols = currencies.map((c) => c.symbol).toList();
+
       // 1. Try AI Parser first
       ParsedTransactionInput? aiResult;
       bool usedAi = false;
@@ -111,7 +133,7 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
       final limits = await PremiumGate.getSmartParsingLimits(ref);
       
       if (isModelReady && limits.canAdd) {
-        aiResult = await _aiParser.parse(recognizedText.text, isReceipt: true);
+        aiResult = await _aiParser.parse(recognizedText.text, isReceipt: true, customSymbols: dbSymbols);
         if (aiResult != null && !aiResult.isEmpty) {
           usedAi = true;
           // Increment usage
@@ -131,6 +153,7 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
               date: aiResult.date,
               categoryName: aiResult.categoryName,
               amountCandidates: aiResult.amountCandidates,
+              descriptionCandidates: aiResult.descriptionCandidates,
             )
           : _parser.parse(recognizedText);
 
@@ -138,7 +161,13 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
         _receiptData = receiptData;
         _usedAi = usedAi;
         _amountController.text = receiptData.amount?.toStringAsFixed(2) ?? '';
-        _merchantController.text = receiptData.merchantName ?? '';
+        // Auto-select most relevant description from suggested list (first candidate) or merchant
+        _merchantController.text = receiptData.descriptionCandidates.isNotEmpty
+            ? receiptData.descriptionCandidates.first
+            : (receiptData.merchantName ?? '');
+        _selectedCategoryName = receiptData.categoryName;
+        _selectedCategoryColor = null;
+        _selectedCategoryIcon = null;
         if (receiptData.date != null) {
           _selectedDate = receiptData.date!;
           _dateController.text = AppDateFormatter.formatDate(_selectedDate);
@@ -173,6 +202,9 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
               ? _merchantController.text
               : null,
           initialDate: _selectedDate,
+          initialCategoryName: _selectedCategoryName,
+          initialCategoryColor: _selectedCategoryColor,
+          initialCategoryIcon: _selectedCategoryIcon,
         ),
       ),
     );
@@ -210,15 +242,13 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    CircularProgressIndicator(
-                      valueColor:
-                          AlwaysStoppedAnimation<Color>(activeCashbookColor),
-                    ),
-                    const SizedBox(height: 16),
+                    const AppLoadingIndicator(size: 80),
+                    const SizedBox(height: 24),
                     Text(
                       l10n.scanningReceipt,
                       style: theme.textTheme.titleMedium?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ],
@@ -231,99 +261,123 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
                         child: ListView(
                           padding: const EdgeInsets.all(16),
                           children: [
-                            // Amount Input (Large & Prominent)
-                            Container(
-                              padding: const EdgeInsets.all(24),
-                              decoration: BoxDecoration(
-                                color: theme.cardColor,
-                                borderRadius: BorderRadius.circular(20),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: activeCashbookColor.withValues(
-                                        alpha: 0.1),
-                                    blurRadius: 20,
-                                    offset: const Offset(0, 10),
+                            Stack(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(24),
+                                  decoration: BoxDecoration(
+                                    color: theme.cardColor,
+                                    borderRadius: BorderRadius.circular(20),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: activeCashbookColor.withValues(
+                                            alpha: 0.1),
+                                        blurRadius: 20,
+                                        offset: const Offset(0, 10),
+                                      ),
+                                    ],
                                   ),
-                                ],
-                              ),
-                              child: Column(
-                                children: [
-                                  // AI Indicator
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 12, vertical: 4),
-                                    margin: const EdgeInsets.only(bottom: 16),
-                                    decoration: BoxDecoration(
-                                      color: _usedAi
-                                          ? Colors.blue.withValues(alpha: 0.1)
-                                          : Colors.grey.withValues(alpha: 0.1),
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(
-                                          _usedAi
-                                              ? Icons.auto_awesome
-                                              : Icons.rule_rounded,
-                                          size: 14,
+                                  child: Column(
+                                    children: [
+                                      // AI Indicator
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 12, vertical: 4),
+                                        margin: const EdgeInsets.only(bottom: 16),
+                                        decoration: BoxDecoration(
                                           color: _usedAi
-                                              ? Colors.blue
-                                              : Colors.grey,
+                                              ? Colors.blue.withValues(alpha: 0.1)
+                                              : Colors.grey.withValues(alpha: 0.1),
+                                          borderRadius: BorderRadius.circular(12),
                                         ),
-                                        const SizedBox(width: 6),
-                                        Text(
-                                          _usedAi
-                                              ? l10n.smartExtraction
-                                              : l10n.basicExtraction,
-                                          style: theme.textTheme.labelSmall
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(
+                                              _usedAi
+                                                  ? Icons.auto_awesome
+                                                  : Icons.rule_rounded,
+                                              size: 14,
+                                              color: _usedAi
+                                                  ? Colors.blue
+                                                  : Colors.grey,
+                                            ),
+                                            const SizedBox(width: 6),
+                                            Text(
+                                              _usedAi
+                                                  ? l10n.smartExtraction
+                                                  : l10n.basicExtraction,
+                                              style: theme.textTheme.labelSmall
+                                                  ?.copyWith(
+                                                color: _usedAi
+                                                    ? Colors.blue
+                                                    : Colors.grey,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      Text(
+                                        l10n.totalAmount,
+                                        style:
+                                            theme.textTheme.titleMedium?.copyWith(
+                                          color: theme.colorScheme.onSurfaceVariant,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 16),
+                                      TextFormField(
+                                        controller: _amountController,
+                                        textAlign: TextAlign.center,
+                                        style:
+                                            theme.textTheme.displayLarge?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                          color: activeCashbookColor,
+                                        ),
+                                        decoration: InputDecoration(
+                                          prefixText: '$currencySymbol ',
+                                          prefixStyle: theme.textTheme.displayMedium
                                               ?.copyWith(
-                                            color: _usedAi
-                                                ? Colors.blue
-                                                : Colors.grey,
-                                            fontWeight: FontWeight.bold,
+                                            color:
+                                                theme.colorScheme.onSurfaceVariant,
+                                          ),
+                                          border: InputBorder.none,
+                                          hintText: l10n.amountHint,
+                                          hintStyle: theme.textTheme.displayLarge
+                                              ?.copyWith(
+                                            color:
+                                                Colors.grey.withValues(alpha: 0.3),
                                           ),
                                         ),
-                                      ],
-                                    ),
-                                  ),
-                                  Text(
-                                    l10n.totalAmount,
-                                    style:
-                                        theme.textTheme.titleMedium?.copyWith(
-                                      color: theme.colorScheme.onSurfaceVariant,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 16),
-                                  TextFormField(
-                                    controller: _amountController,
-                                    textAlign: TextAlign.center,
-                                    style:
-                                        theme.textTheme.displayLarge?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                      color: activeCashbookColor,
-                                    ),
-                                    decoration: InputDecoration(
-                                      prefixText: '$currencySymbol ',
-                                      prefixStyle: theme.textTheme.displayMedium
-                                          ?.copyWith(
-                                        color:
-                                            theme.colorScheme.onSurfaceVariant,
+                                        keyboardType:
+                                            const TextInputType.numberWithOptions(
+                                                decimal: true),
                                       ),
-                                      border: InputBorder.none,
-                                      hintText: l10n.amountHint,
-                                      hintStyle: theme.textTheme.displayLarge
-                                          ?.copyWith(
-                                        color:
-                                            Colors.grey.withValues(alpha: 0.3),
-                                      ),
-                                    ),
-                                    keyboardType:
-                                        const TextInputType.numberWithOptions(
-                                            decimal: true),
+                                    ],
                                   ),
-                                ],
-                              ),
+                                ),
+                                if (!_usedAi && _modelDownloaded)
+                                  Positioned(
+                                    top: 8,
+                                    right: 8,
+                                    child: IconButton(
+                                      icon: const Icon(Icons.auto_awesome),
+                                      tooltip: l10n.smartExtraction,
+                                      onPressed: () => Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => const PremiumScreen(),
+                                        ),
+                                      ),
+                                      style: IconButton.styleFrom(
+                                        backgroundColor: Colors.blue.withValues(alpha: 0.1),
+                                        foregroundColor: Colors.blue,
+                                        padding: const EdgeInsets.all(8),
+                                      ),
+                                      iconSize: 24,
+                                    ),
+                                  ),
+                              ],
                             ),
                             // Amount Chips
                             if (_receiptData?.amountCandidates.isNotEmpty ==
@@ -352,16 +406,41 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
                                 ),
                               ),
                             const SizedBox(height: 24),
-                            // Merchant Name
+                            // Description (from receipt / merchant)
                             TextFormField(
                               controller: _merchantController,
                               decoration: InputDecoration(
-                                labelText: l10n.merchantName,
-                                hintText: l10n.merchantName,
-                                prefixIcon: const Icon(Icons.store_rounded),
+                                labelText: l10n.description,
+                                hintText: l10n.descriptionHint,
+                                prefixIcon: const Icon(Icons.description_rounded),
                               ),
                               textCapitalization: TextCapitalization.words,
                             ),
+                            // Description suggestion chips from scanned text
+                            if (_receiptData?.descriptionCandidates.isNotEmpty == true)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 12),
+                                child: Wrap(
+                                  spacing: 10,
+                                  runSpacing: 10,
+                                  children:
+                                      _receiptData!.descriptionCandidates.map((desc) {
+                                    final isSelected =
+                                        _merchantController.text == desc;
+                                    return _buildSuggestionChip(
+                                      label: desc,
+                                      isSelected: isSelected,
+                                      activeColor: activeCashbookColor,
+                                      isDark: isDark,
+                                      onPressed: () => setState(() =>
+                                          _merchantController.text = desc),
+                                    );
+                                  }).toList(),
+                                ),
+                              ),
+                            const SizedBox(height: 24),
+                            // Category suggestions (from description + parsed category)
+                            _buildCategorySuggestions(theme, isDark, activeCashbookColor, l10n),
                             const SizedBox(height: 24),
                             // Date Field
                             InkWell(
@@ -539,15 +618,118 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
     );
   }
 
+  /// Categories that match the current description or the receipt's parsed category.
+  List<db.Category> _getSuggestedCategories(List<db.Category> expenseCategories) {
+    if (_receiptData == null || expenseCategories.isEmpty) return [];
+    final descriptionLower = (_merchantController.text +
+            ' ' +
+            (_receiptData!.descriptionCandidates.join(' ')))
+        .toLowerCase();
+    final receiptCategoryLower =
+        _receiptData!.categoryName?.toLowerCase();
+    final matched = expenseCategories.where((db.Category c) {
+      final nameLower = c.name.toLowerCase();
+      return descriptionLower.contains(nameLower) ||
+          (receiptCategoryLower != null && nameLower == receiptCategoryLower);
+    }).toList();
+    // Put parsed receipt category first if it matches
+    if (receiptCategoryLower != null) {
+      final exact = matched.where((c) => c.name.toLowerCase() == receiptCategoryLower).toList();
+      final rest = matched.where((c) => c.name.toLowerCase() != receiptCategoryLower).toList();
+      return [...exact, ...rest];
+    }
+    return matched;
+  }
+
+  Widget _buildCategorySuggestions(
+    ThemeData theme,
+    bool isDark,
+    Color activeCashbookColor,
+    AppLocalizations l10n,
+  ) {
+    final categoriesAsync = ref.watch(categoriesByTypeProvider('EXPENSE'));
+    return categoriesAsync.when(
+      data: (expenseCategories) {
+        final suggested = _getSuggestedCategories(expenseCategories);
+        if (suggested.isEmpty) return const SizedBox.shrink();
+        // Auto-select first suggested category if current selection is not in the list
+        final selectedInList = suggested.any((db.Category c) => c.name == _selectedCategoryName);
+        if (!selectedInList) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!mounted) return;
+            final first = suggested.first;
+            setState(() {
+              _selectedCategoryName = first.name;
+              _selectedCategoryColor = first.color;
+              _selectedCategoryIcon = first.icon;
+            });
+          });
+        }
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              l10n.category,
+              style: theme.textTheme.labelLarge?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: suggested.map((c) {
+                final isSelected =
+                    _selectedCategoryName != null && c.name == _selectedCategoryName;
+                Color chipColor = activeCashbookColor;
+                if (c.color != null && c.color!.isNotEmpty) {
+                  try {
+                    chipColor = Color(int.parse(
+                        c.color!.replaceFirst('#', '0xFF')));
+                  } catch (_) {}
+                } else {
+                  chipColor = AppColors.expenseColor;
+                }
+                final iconColor = isSelected ? Colors.white : chipColor;
+                return _buildSuggestionChip(
+                  label: c.name,
+                  isSelected: isSelected,
+                  activeColor: chipColor,
+                  isDark: isDark,
+                  avatar: CategoryHelper.buildCategoryIcon(
+                    c.icon,
+                    iconColor,
+                    true,
+                    size: 18,
+                  ),
+                  onPressed: () => setState(() {
+                    _selectedCategoryName = c.name;
+                    _selectedCategoryColor = c.color;
+                    _selectedCategoryIcon = c.icon;
+                  }),
+                );
+              }).toList(),
+            ),
+          ],
+        );
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+    );
+  }
+
   Widget _buildSuggestionChip({
     required String label,
     required bool isSelected,
     required Color activeColor,
     required bool isDark,
+    Widget? avatar,
     required VoidCallback onPressed,
   }) {
     final theme = Theme.of(context);
     return ActionChip(
+      avatar: avatar,
       label: Text(
         label,
         style: TextStyle(

@@ -6,6 +6,14 @@ class CurrenciesRepository {
 
   CurrenciesRepository(this._database);
 
+  /// Get all active currencies
+  Future<List<AppCurrency>> getAllCurrencies() {
+    return (_database.select(_database.appCurrencies)
+          ..where((c) => c.isActive.equals(true))
+          ..orderBy([(c) => OrderingTerm.asc(c.name)]))
+        .get();
+  }
+
   /// Watch all active currencies
   Stream<List<AppCurrency>> watchAllCurrencies() {
     return (_database.select(_database.appCurrencies)

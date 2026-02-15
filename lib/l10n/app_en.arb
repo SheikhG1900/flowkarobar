@@ -1116,6 +1116,8 @@
   "relationship": "Relationship",
   "hints": "Hints",
   "voiceGuideTitle": "Voice Phrasing Guide",
+  "voiceInstructionBasic": "You're using simple extraction mode. Tap here to see hint messages.",
+  "voiceInstructionSmart": "You're using Smart AI extraction. Tap here for more tips.",
   "includeTextAsDescription": "Include text as description",
   "camera": "Camera",
   "gallery": "Gallery",

@@ -85,7 +85,12 @@ class _AppLoadingIndicatorState extends State<AppLoadingIndicator>
     }
 
     return Center(
-      child: indicator,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          indicator,
+        ],
+      ),
     );
   }
 }

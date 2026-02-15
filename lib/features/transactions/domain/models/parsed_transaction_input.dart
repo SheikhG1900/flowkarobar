@@ -8,6 +8,7 @@ class ParsedTransactionInput {
   final String? paidRelationship; // 'PAID_FOR', 'PAID_BY', 'RECEIVED_FROM', 'WILL_RECEIVE'
   final bool usedFallback;
   final List<double> amountCandidates;
+  final List<String> descriptionCandidates;
 
   ParsedTransactionInput({
     this.amount,
@@ -19,6 +20,7 @@ class ParsedTransactionInput {
     this.paidRelationship,
     this.usedFallback = false,
     this.amountCandidates = const [],
+    this.descriptionCandidates = const [],
   });
 
   bool get isEmpty =>

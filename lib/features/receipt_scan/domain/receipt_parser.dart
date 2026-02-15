@@ -9,6 +9,7 @@ class ReceiptData {
   // Candidates for ambiguity handling
   final List<double> amountCandidates;
   final List<DateTime> dateCandidates;
+  final List<String> descriptionCandidates;
 
   ReceiptData({
     this.merchantName,
@@ -17,6 +18,7 @@ class ReceiptData {
     this.categoryName,
     this.amountCandidates = const [],
     this.dateCandidates = const [],
+    this.descriptionCandidates = const [],
   });
 }
 
@@ -27,6 +29,7 @@ class ReceiptParser {
     final amounts = _extractAmounts(recognizedText);
     final dates = _extractDates(recognizedText);
     final category = _predictCategory(recognizedText);
+    final descriptionCandidates = _extractDescriptionCandidates(recognizedText, merchant);
 
     // Sort amounts: usually the Total is the largest number
     amounts.sort((a, b) => b.compareTo(a));
@@ -41,7 +44,47 @@ class ReceiptParser {
       categoryName: category,
       amountCandidates: amounts,
       dateCandidates: dates,
+      descriptionCandidates: descriptionCandidates,
     );
+  }
+
+  static const int _maxDescriptionLength = 60;
+  static const int _maxDescriptionCandidates = 8;
+
+  /// Build description suggestions from receipt lines (skip headers/total/tax, take meaningful lines).
+  List<String> _extractDescriptionCandidates(RecognizedText text, String? merchant) {
+    final List<String> candidates = [];
+    final seen = <String>{};
+    void add(String s) {
+      final t = s.trim();
+      if (t.isEmpty || t.length > _maxDescriptionLength) return;
+      final key = t.toLowerCase();
+      if (seen.contains(key)) return;
+      seen.add(key);
+      candidates.add(t);
+    }
+
+    if (merchant != null && merchant.trim().isNotEmpty) {
+      add(merchant.trim().length > _maxDescriptionLength
+          ? '${merchant.trim().substring(0, _maxDescriptionLength)}...'
+          : merchant.trim());
+    }
+
+    final noise = RegExp(r'^(RECEIPT|INVOICE|TAX|TOTAL|SUBTOTAL|DATE|TIME|QTY|ITEM|AMOUNT|CASH|CARD|THANK|VISIT|#|\d+\s*[xX]\s*|\d+\.\d{2})\s*$', caseSensitive: false);
+    final mostlyNumber = RegExp(r'^[\d\s.,₹\$€£¥]+$');
+
+    for (var block in text.blocks) {
+      for (var line in block.lines) {
+        final t = line.text.trim();
+        if (t.length < 2) continue;
+        if (noise.hasMatch(t) || mostlyNumber.hasMatch(t)) continue;
+        add(t.length > _maxDescriptionLength ? '${t.substring(0, _maxDescriptionLength)}...' : t);
+        if (candidates.length >= _maxDescriptionCandidates) break;
+      }
+      if (candidates.length >= _maxDescriptionCandidates) break;
+    }
+
+    return candidates;
   }
 
   /// Extract Merchant Name (Heuristic: Largest text in top 20%)

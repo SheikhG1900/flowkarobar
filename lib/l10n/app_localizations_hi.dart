@@ -2156,6 +2156,14 @@ class AppLocalizationsHi extends AppLocalizations {
   String get voiceGuideTitle => 'वॉयस फ़्रैज़िंग गाइड';
 
   @override
+  String get voiceInstructionBasic =>
+      'आप सरल एक्सट्रैक्शन मोड का उपयोग कर रहे हैं। संकेत संदेश देखने के लिए यहां टैप करें।';
+
+  @override
+  String get voiceInstructionSmart =>
+      'आप स्मार्ट AI एक्सट्रैक्शन का उपयोग कर रहे हैं। अधिक टिप्स के लिए यहां टैप करें।';
+
+  @override
   String get includeTextAsDescription =>
       'टेक्स्ट को विवरण के रूप में शामिल करें';
 
