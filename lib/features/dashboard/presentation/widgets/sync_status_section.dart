@@ -26,19 +26,27 @@ class _SyncStatusSectionState extends ConsumerState<SyncStatusSection>
     super.initState();
     _animationController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 600),
+      duration: const Duration(milliseconds: 500),
     );
 
-    // Scale animation with bounce effect
-    _scaleAnimation = Tween<double>(
-      begin: 0.8,
-      end: 1.0,
-    ).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: Curves.elasticOut,
+    // Scale animation with stronger bounce effect
+    _scaleAnimation = TweenSequence<double>([
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 0.8, end: 1.1)
+            .chain(CurveTween(curve: Curves.easeOut)),
+        weight: 60,
       ),
-    );
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 1.1, end: 0.95)
+            .chain(CurveTween(curve: Curves.easeInOut)),
+        weight: 20,
+      ),
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 0.95, end: 1.0)
+            .chain(CurveTween(curve: Curves.easeOut)),
+        weight: 20,
+      ),
+    ]).animate(_animationController);
 
     // Fade animation
     _fadeAnimation = Tween<double>(
@@ -95,25 +103,14 @@ class _SyncStatusSectionState extends ConsumerState<SyncStatusSection>
     }
     // Hide section if nothing to sync, no updates available, and not in success/syncing state
     if (!isSyncing && !isSuccess && !hasUnsynced && !hasCloudUpdates) {
-      // Reset animation when hiding
-      if (_animationController.isAnimating || _animationController.value > 0) {
-        _animationController.reverse();
+      if (_animationController.value != 0) {
+        _animationController.reset();
       }
       return const SizedBox.shrink();
     }
 
-    // Additional check: If cloud version is equal or less than local version,
-    // and there are no unsynced changes, and we are not syncing, hide it.
-    // BUT we allow it to show if isSuccess is true (the temporary success message)
-    if (!isSyncing && !isSuccess && !hasUnsynced && !hasCloudUpdates) {
-      if (_animationController.isAnimating || _animationController.value > 0) {
-        _animationController.reverse();
-      }
-      return const SizedBox.shrink();
-    }
-
-    // Restart animation when section appears
-    if (!_animationController.isAnimating && _animationController.value == 0) {
+    // Start animation if it hasn't started yet
+    if (_animationController.status == AnimationStatus.dismissed) {
       _animationController.forward();
     }
 

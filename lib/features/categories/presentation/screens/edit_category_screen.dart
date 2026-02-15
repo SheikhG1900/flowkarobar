@@ -52,11 +52,9 @@ class _EditCategoryScreenState extends ConsumerState<EditCategoryScreen> {
   ];
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    // Use didChangeDependencies to access context for localization
-    _nameController = TextEditingController(
-        text: widget.category.name.localizeCategory(context));
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController();
     _selectedIcon = widget.category.icon ?? '58668';
 
     // Parse color from category
@@ -75,12 +73,20 @@ class _EditCategoryScreenState extends ConsumerState<EditCategoryScreen> {
           : AppColors.incomeColor;
     }
 
-    // Initial suggestions check
-    if (widget.category.name.isNotEmpty) {
-      _updateSuggestions();
-    }
-
     _nameController.addListener(_updateSuggestions);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Only set the text if it hasn't been modified or if it's the first time
+    if (_nameController.text.isEmpty) {
+      _nameController.text = widget.category.name.localizeCategory(context);
+      // Initial suggestions check
+      if (_nameController.text.isNotEmpty) {
+        _updateSuggestions();
+      }
+    }
   }
 
   void _updateSuggestions() {

@@ -4,6 +4,7 @@ import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/core/utils/date_formatter.dart';
 import 'package:flowpaisa/core/utils/localization_helper.dart';
+import 'package:flowpaisa/features/categories/presentation/providers/categories_provider.dart';
 import 'package:flowpaisa/features/analytics/presentation/providers/analytics_provider.dart';
 import 'package:flowpaisa/features/categories/presentation/screens/edit_category_screen.dart';
 import 'package:flowpaisa/features/transactions/domain/models.dart';
@@ -42,14 +43,18 @@ class CategoryDetailsScreen extends ConsumerWidget {
               actions: [
                 IconButton(
                   icon: const Icon(Icons.edit_outlined),
-                  onPressed: () {
-                    Navigator.push(
+                  onPressed: () async {
+                    final updated = await Navigator.push<bool>(
                       context,
                       MaterialPageRoute(
                         builder: (context) =>
                             EditCategoryScreen(category: category),
                       ),
                     );
+                    if (updated == true) {
+                      ref.invalidate(categoryStatisticsProvider(categoryUuid));
+                      ref.invalidate(categoriesByTypeProvider);
+                    }
                   },
                 ),
               ],

@@ -189,13 +189,16 @@ class _CategoryCard extends ConsumerWidget {
         deleteBackgroundColor: AppColors.error,
         borderRadius: 16,
         backgroundMargin: const EdgeInsets.only(bottom: 12),
-        onEdit: () {
-          Navigator.push(
+        onEdit: () async {
+          final updated = await Navigator.push<bool>(
             context,
             MaterialPageRoute(
               builder: (context) => EditCategoryScreen(category: category),
             ),
           );
+          if (updated == true) {
+            ref.invalidate(categoriesByTypeProvider);
+          }
         },
         onDelete: category.isDefault
             ? null

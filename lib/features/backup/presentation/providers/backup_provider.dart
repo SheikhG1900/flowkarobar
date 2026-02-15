@@ -676,9 +676,13 @@ class BackupNotifier extends Notifier<BackupState> {
           ref.invalidate(dashboardStatsProvider);
           ref.invalidate(recentTransactionsProvider);
 
-          // If we just finished a sync (transitioned from syncing to success), trigger refreshes
+    // If we just finished a sync (transitioned from syncing to success), trigger refreshes
           if (wasSyncing && isNowSuccess) {
             _handleSyncSuccess();
+          } else if (isNowSuccess) {
+            // Even if we weren't "syncing" (e.g. background sync finished),
+            // if we are now in Success state, ensure we eventually go back to Idle
+            _resetSuccessStatus();
           }
         }
       } else {
@@ -762,6 +766,10 @@ class BackupNotifier extends Notifier<BackupState> {
     ref.invalidate(totalPendingReceivablesProvider);
 
     // Reset status to Idle after a delay in the database
+    _resetSuccessStatus();
+  }
+
+  void _resetSuccessStatus() {
     Future.delayed(const Duration(seconds: 10), () async {
       if (!ref.mounted) return;
       final db = ref.read(databaseProvider);
