@@ -2087,6 +2087,9 @@ class _QuickActionButton extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               label,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: const TextStyle(
                 fontWeight: FontWeight.w700,
                 fontSize: 14,
@@ -2208,7 +2211,20 @@ class _SettingsTab extends ConsumerWidget {
                 ListTile(
                   leading: const Icon(Icons.language),
                   title: Text(l10n.language),
-                  subtitle: Text(l10n.english),
+                  subtitle: Consumer(
+                    builder: (context, ref, child) {
+                      final currentLocale = ref.watch(languageProvider);
+                      switch (currentLocale.languageCode) {
+                        case 'hi':
+                          return Text(l10n.hindi);
+                        case 'ur':
+                          return Text(l10n.urdu);
+                        case 'en':
+                        default:
+                          return Text(l10n.english);
+                      }
+                    },
+                  ),
                   trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                   onTap: () {
                     Navigator.push(
@@ -2241,7 +2257,20 @@ class _SettingsTab extends ConsumerWidget {
                 ListTile(
                   leading: const Icon(Icons.dark_mode),
                   title: Text(l10n.theme),
-                  subtitle: Text(l10n.system),
+                  subtitle: Consumer(
+                    builder: (context, ref, child) {
+                      final themeMode = ref.watch(themeModeProvider);
+                      switch (themeMode) {
+                        case ThemeMode.light:
+                          return Text(l10n.light);
+                        case ThemeMode.dark:
+                          return Text(l10n.dark);
+                        case ThemeMode.system:
+                        default:
+                          return Text(l10n.system);
+                      }
+                    },
+                  ),
                   trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                   onTap: () {
                     Navigator.push(
