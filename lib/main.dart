@@ -1702,6 +1702,34 @@ class _DashboardTab extends ConsumerWidget {
                   childAspectRatio: childAspectRatio,
                   children: [
                     _QuickActionButton(
+                      icon: Icons.people_outline_rounded,
+                      label: l10n.contacts,
+                      gradient: AppColors.getPrimaryGradient(
+                          theme.colorScheme.primary),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const ContactsListScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                    _QuickActionButton(
+                      icon: Icons.category_outlined,
+                      label: l10n.categories,
+                      gradient: AppColors.getSecondaryGradient(
+                          theme.colorScheme.primary),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const CategoriesListScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                    _QuickActionButton(
                       icon: Icons.mic_none_rounded,
                       label: l10n.voiceAdd,
                       gradient: AppColors.getPrimaryGradient(

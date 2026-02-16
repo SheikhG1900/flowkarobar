@@ -1,3 +1,4 @@
+import 'package:flowpaisa/core/utils/name_utils.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -27,6 +28,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   void initState() {
     super.initState();
     _nameController = TextEditingController();
+    _nameController.addListener(() {
+      setState(() {});
+    });
     _emailController = TextEditingController();
     _phoneController = TextEditingController();
     _addressController = TextEditingController();
@@ -48,17 +52,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     _phoneController.dispose();
     _addressController.dispose();
     super.dispose();
-  }
-
-  String _getInitials(String name) {
-    if (name.trim().isEmpty) return '?';
-    final parts = name.trim().split(' ');
-    if (parts.length == 1) {
-      return parts[0].substring(0, 1).toUpperCase();
-    } else {
-      return '${parts[0].substring(0, 1)}${parts[1].substring(0, 1)}'
-          .toUpperCase();
-    }
   }
 
   Future<void> _saveProfile() async {
@@ -264,12 +257,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       width: 100,
                       height: 100,
                       decoration: BoxDecoration(
-                        gradient: AppColors.getPrimaryGradient(
-                            theme.colorScheme.primary),
+                        gradient: AppColors.getContactGradient(
+                            _nameController.text.isEmpty
+                                ? (profile.name ?? '')
+                                : _nameController.text),
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: theme.colorScheme.primary
+                            color: AppColors.getContactColor(
+                                    _nameController.text.isEmpty
+                                        ? (profile.name ?? '')
+                                        : _nameController.text)
                                 .withValues(alpha: 0.3),
                             blurRadius: 20,
                             offset: const Offset(0, 8),
@@ -278,7 +276,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       ),
                       child: Center(
                         child: Text(
-                          _getInitials(profile.name ?? ''),
+                          NameUtils.getInitials(_nameController.text.isEmpty
+                              ? (profile.name ?? '')
+                              : _nameController.text),
                           style: TextStyle(
                             fontSize: 36,
                             fontWeight: FontWeight.bold,

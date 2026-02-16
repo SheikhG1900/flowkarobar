@@ -1,3 +1,4 @@
+import 'package:flowpaisa/core/utils/name_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
@@ -262,9 +263,7 @@ class _ContactCard extends ConsumerWidget {
                       ),
                       alignment: Alignment.center,
                       child: Text(
-                        contact.name.isNotEmpty
-                            ? contact.name[0].toUpperCase()
-                            : '?',
+                        NameUtils.getInitials(contact.name),
                         style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
