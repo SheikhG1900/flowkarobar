@@ -1,4 +1,6 @@
 import 'package:flowpaisa/features/transactions/domain/models/parsed_transaction_input.dart';
+import 'package:flowpaisa/core/extensions/list_extensions.dart';
+import 'package:flowpaisa/core/extensions/string_extensions.dart';
 
 class VoiceCommandParser {
   ParsedTransactionInput parse(String text) {
@@ -28,11 +30,8 @@ class VoiceCommandParser {
 
     // 2. Extract Type
     String type = 'EXPENSE';
-    if (tokens.contains('income') ||
-        tokens.contains('received') ||
-        tokens.contains('receved') ||
-        tokens.contains('salary') ||
-        tokens.contains('bonus') ||
+    if (tokens.containsAny(
+            ['income', 'received', 'receved', 'salary', 'bonus']) ||
         lowerText.contains('will receive')) {
       type = 'INCOME';
     }
@@ -41,34 +40,24 @@ class VoiceCommandParser {
     String? relationship;
     String? contactName;
     // Check for "ne" and "diye" -> PAID_BY (They paid for me)
-    if ((tokens.contains('ne') &&
-            (tokens.contains('diye') || tokens.contains('diya'))) ||
-        (tokens.contains('se') &&
-            (tokens.contains('liye') || tokens.contains('liya')))) {
+    if ((tokens.contains('ne') && tokens.containsAny(['diye', 'diya'])) ||
+        (tokens.contains('se') && tokens.containsAny(['liye', 'liya']))) {
       relationship = 'PAID_BY';
     }
     // Check for "ko" and "diye" -> PAID_FOR (I paid for them)
-    else if ((tokens.contains('ko') &&
-            (tokens.contains('diye') || tokens.contains('diya'))) ||
-        tokens.contains('ne') &&
-            (tokens.contains('liye') || tokens.contains('liya'))) {
+    else if ((tokens.contains('ko') && tokens.containsAny(['diye', 'diya'])) ||
+        tokens.contains('ne') && tokens.containsAny(['liye', 'liya'])) {
       relationship = 'PAID_FOR';
-    } else if (lowerText.contains('paid by') ||
-        lowerText.startsWith('will give') ||
+    } else if (lowerText.containsAny(['paid by', 'will give']) ||
         lowerText.startsWith('i will give')) {
       relationship = 'PAID_BY';
-    } else if (lowerText.startsWith('gave') ||
-        lowerText.startsWith('give') ||
-        lowerText.startsWith('i gave') ||
-        lowerText.startsWith('i give') ||
+    } else if (lowerText.startsWithAny(['gave', 'give', 'i gave', 'i give']) ||
         lowerText.contains('paid for')) {
       relationship = 'PAID_FOR';
-    } else if (lowerText.contains('give') || lowerText.contains('gave')) {
+    } else if (lowerText.containsAny(['give', 'gave'])) {
       relationship = 'PAID_BY';
-    } else if (lowerText.contains('received from') ||
-        lowerText.contains('receive from') ||
-        lowerText.contains('receve from') ||
-        lowerText.contains('receved from')) {
+    } else if (lowerText.containsAny(
+        ['received from', 'receive from', 'receve from', 'receved from'])) {
       relationship = 'RECEIVED_FROM';
     } else if (lowerText.contains('will receive')) {
       relationship = 'WILL_RECEIVE';

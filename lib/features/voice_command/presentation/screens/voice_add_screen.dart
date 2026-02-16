@@ -321,12 +321,14 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
                 _buildHintSection(context, "Receiving Money / Loans", [
                   "Received 2000 from Kashif",
                   "Kashif Ne ₹500 Udhar Diye",
-                  "Maine Kashif se ₹50 Udhar Liye",
+                  "Kashif Ne ₹500 Diye",
+                  "Kashif se ₹50 Udhar Liye",
                 ]),
-                _buildHintSection(context, "Someone Else Paid for You", [
-                  "Someone paid 500 for me",
-                  "Ashfaq purchased dinner for me",
-                  "Ashfaq Ne Mere dinner ke ₹500 Diye",
+                _buildHintSection(context, "Will Receive Money", [
+                  "Will receive 500 for Shujaat",
+                  "Ashfaq se 100 loon ga",
+                  "Hamza se 5000 lene he",
+                  "Kashif se 5000 milay ga",
                 ]),
               ] else ...[
                 _buildHintSection(context, "Expenses (Basic)", [

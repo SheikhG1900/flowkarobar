@@ -5,6 +5,8 @@ import 'package:flutter/foundation.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
 import 'package:flowpaisa/features/transactions/domain/models/parsed_transaction_input.dart';
 import 'package:flowpaisa/core/ml/model_download_service.dart';
+import 'package:flowpaisa/core/extensions/list_extensions.dart';
+import 'package:flowpaisa/core/extensions/string_extensions.dart';
 
 abstract class TransactionTextParser {
   Future<ParsedTransactionInput?> parse(String text,
@@ -17,6 +19,15 @@ class TransactionAiParser implements TransactionTextParser {
   List<String>? _vocab;
 
   static const int _maxSeqLen = 384;
+
+  static final List<String> _willReceiveKeywords = [
+    'will receive',
+    ...('lene'.makeCombinations(['ha', 'hain', 'he'], ['', ' '])),
+    ...(['milay', 'mili', 'milen', 'milan', 'mile', 'mila']
+        .makeCombinations(['ga', 'gi', 'gay', 'ge'], ['', ' '])),
+    ...(['loon', 'lun', 'loo', 'lu', 'le', 'lain']
+        .makeCombinations(['ga', 'gi', 'gay', 'ge'], ['', ' ']))
+  ];
 
   TransactionAiParser(this._downloadService);
 
@@ -371,56 +382,61 @@ class TransactionAiParser implements TransactionTextParser {
 
     // 2. Type Detection (Enhanced logic with Hindi/Urdu)
     // Check for PAID_BY indicators first (someone paying for my expense)
-    if (lowerText.contains('for me') ||
-        lowerText.contains('mere liye') ||
+    if (lowerText.containsAny(['for me', 'mere liye']) ||
         (lowerText.contains('mere') &&
             categoryKeywords.any((kw) => lowerText.contains(kw)))) {
       type = "EXPENSE";
     }
     // INCOME triggers
-    else if (tokens.contains('receive') ||
-        tokens.contains('income') ||
-        tokens.contains('salary') ||
-        tokens.contains('got') ||
-        tokens.contains('mila') ||
-        tokens.contains('mile') ||
-        tokens.contains('aaye') ||
-        tokens.contains('masool') ||
-        lowerText.contains('taraf se') ||
-        tokens.contains('vasul') ||
-        tokens.contains('vasool') ||
-        tokens.contains('deceived') ||
-        tokens.contains('hasil') ||
-        tokens.contains('haasil') ||
-        lowerText.contains('has given') ||
-        tokens.contains('borrow') ||
-        tokens.contains('borrowed') ||
+    else if (tokens.containsAny([
+          'receive',
+          'income',
+          'salary',
+          'got',
+          'mila',
+          'mile',
+          'mili',
+          'milay',
+          'mil',
+          'aaye',
+          'masool',
+          'vasul',
+          'vasool',
+          'deceived',
+          'hasil',
+          'haasil',
+          'borrow',
+          'borrowed'
+        ]) ||
+        lowerText
+            .containsAny(['taraf se', 'has given', 'se liye', 'se liya']) ||
         (tokens.contains('ne') &&
-            tokens.contains('diye') &&
-            tokens.contains('udhar')) || // Someone gave me loan
+            tokens.containsAny(['diye', 'diya'])) || // Someone gave me loan
+        (tokens.contains('se') && tokens.containsAny(['liye', 'liya'])) ||
         (tokens.contains('maine') &&
             tokens.contains('liye')) || // I took from someone
-        (tokens.contains('i') &&
-            tokens.contains('took')) || // I took from someone
-        lowerText.contains('se liye')) {
+        (tokens.contains('i') && tokens.contains('took'))) {
+      // I took from someone
       type = "INCOME";
     }
     // EXPENSE triggers (only if not already detected as income)
-    else if (tokens.contains('spent') ||
-        tokens.contains('gave') ||
-        tokens.contains('paid') ||
-        tokens.contains('kharch') ||
-        tokens.contains('diye') ||
-        tokens.contains('diya') ||
-        tokens.contains('pay') ||
-        tokens.contains('cost') ||
-        tokens.contains('pada') ||
-        tokens.contains('ada') ||
-        tokens.contains('kiya') ||
-        tokens.contains('give') ||
-        tokens.contains('bought') ||
-        tokens.contains('spend') ||
-        tokens.contains('purchased')) {
+    else if (tokens.containsAny([
+      'spent',
+      'gave',
+      'paid',
+      'kharch',
+      'diye',
+      'diya',
+      'pay',
+      'cost',
+      'pada',
+      'ada',
+      'kiya',
+      'give',
+      'bought',
+      'spend',
+      'purchased'
+    ])) {
       type = "EXPENSE";
     }
 
@@ -494,25 +510,21 @@ class TransactionAiParser implements TransactionTextParser {
     // 4. Relationship Detection (Enhanced with Hindi/Urdu)
     // Check PAID_BY first (someone paying for my expense or borrowing from them)
     if ((tokens.contains('ne') &&
-            (tokens.contains('diye') || tokens.contains('diya'))) ||
+            tokens.containsAny(['diye', 'diya']) &&
+            tokens.containsAny(['ka', 'ki', "ke"])) ||
         (tokens.contains('se') &&
-            (tokens.contains('liye') || tokens.contains('liya'))) ||
-        lowerText.startsWith('will give') ||
-        lowerText.startsWith('i will give')) {
+            tokens.containsAny(['liye', 'liya']) &&
+            tokens.containsAny(['ka', 'ki', "ke", "kar", "ker"])) ||
+        lowerText.startsWithAny(['will give', 'i will give'])) {
       relationship = 'PAID_BY';
+      type = "EXPENSE";
     } else if ((tokens.contains('ko') &&
-            (tokens.contains('diye') || tokens.contains('diya'))) ||
-        tokens.contains('ne') &&
-            (tokens.contains('liye') || tokens.contains('liya')) ||
-        lowerText.startsWith('give') ||
-        lowerText.startsWith('gave') ||
-        lowerText.startsWith('i give') ||
-        lowerText.startsWith('i gave')) {
+            tokens.containsAny(['diye', 'diya'])) ||
+        (tokens.contains('ne') && tokens.containsAny(['liye', 'liya'])) ||
+        lowerText.startsWithAny(['give', 'gave', 'i give', 'i gave'])) {
       relationship = 'PAID_FOR';
-    } else if (lowerText.contains('paid by') ||
-        lowerText.contains('someone paid') ||
-        lowerText.contains('for me') ||
-        lowerText.contains('mere liye') ||
+    } else if (lowerText
+            .containsAny(['paid by', 'someone paid', 'for me', 'mere liye']) ||
         (lowerText.contains('mere') && category != null) ||
         (contact != null &&
             lowerText.contains('gave') &&
@@ -522,29 +534,25 @@ class TransactionAiParser implements TransactionTextParser {
     // Check RECEIVED_FROM for income
     else if (type == "INCOME" &&
         (contact != null ||
-            lowerText.contains('from') ||
-            lowerText.contains('se') ||
-            lowerText.contains('by') ||
+            lowerText.containsAny(['from', 'se', 'by']) ||
             tokens.contains('ne'))) {
       relationship = 'RECEIVED_FROM';
-    } else if (lowerText.contains('gave') ||
-        lowerText.contains('paid for') ||
-        lowerText.contains('bought for') ||
-        lowerText.contains('udhar diya') ||
-        lowerText.contains('udhaar diya') ||
-        lowerText.contains('udhar liye') ||
-        lowerText.contains('udhaar liye') ||
-        lowerText.contains('has taken') ||
-        lowerText.contains('took') ||
+    } else if (lowerText.containsAny([
+          'gave',
+          'paid for',
+          'bought for',
+          'udhar diya',
+          'udhaar diya',
+          'udhar liye',
+          'udhaar liye',
+          'has taken',
+          'took'
+        ]) ||
         (tokens.contains('ne') && lowerText.endsWith('liye'))) {
       relationship = 'PAID_FOR';
-    } else if (lowerText.contains('usne diye') ||
-        lowerText.contains('owe') ||
-        lowerText.contains('dene hain')) {
+    } else if (lowerText.containsAny(['usne diye', 'owe', 'dene hain'])) {
       relationship = 'PAID_BY';
-    } else if (lowerText.contains('will receive') ||
-        lowerText.contains('udhaar') ||
-        lowerText.contains('lene hain')) {
+    } else if (lowerText.containsAny(_willReceiveKeywords)) {
       relationship = 'WILL_RECEIVE';
     }
 
