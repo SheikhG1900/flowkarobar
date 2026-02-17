@@ -1,7 +1,6 @@
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/features/receipt_scan/domain/transaction_text_parser.dart';
 import 'package:flowpaisa/features/currencies/presentation/providers/currencies_provider.dart';
-import 'package:flowpaisa/core/ml/model_download_service.dart';
 import 'package:flowpaisa/shared/widgets/app_loading_indicator.dart';
 import 'package:flowpaisa/features/transactions/domain/models/parsed_transaction_input.dart';
 import 'dart:io' if (dart.library.html) 'dart:html';
@@ -24,6 +23,7 @@ import 'package:flowpaisa/features/categories/presentation/providers/categories_
 import 'package:flowpaisa/core/database/database.dart' as db;
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/category_helper.dart';
+import 'package:google_mlkit_entity_extraction/google_mlkit_entity_extraction.dart';
 
 class ScanReceiptScreen extends ConsumerStatefulWidget {
   const ScanReceiptScreen({super.key});
@@ -35,12 +35,14 @@ class ScanReceiptScreen extends ConsumerStatefulWidget {
 class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
   final ImagePicker _picker = ImagePicker();
   final ReceiptParser _parser = ReceiptParser();
-  final ModelDownloadService _modelService = ModelDownloadService();
-  late final TransactionAiParser _aiParser;
+  final TransactionAiParser _aiParser = TransactionAiParser();
+  final EntityExtractorModelManager _modelManager =
+      EntityExtractorModelManager();
 
   File? _image;
   bool _isScanning = false;
   bool _usedAi = false;
+  bool _isDownloading = false;
   bool _modelDownloaded = false;
   ReceiptData? _receiptData;
 
@@ -56,7 +58,6 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
   @override
   void initState() {
     super.initState();
-    _aiParser = TransactionAiParser(_modelService);
     _amountController = TextEditingController();
     _merchantController = TextEditingController();
     _dateController = TextEditingController();
@@ -69,8 +70,8 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
   }
 
   Future<void> _checkModelDownloaded() async {
-    final downloaded = await _modelService
-        .isModelDownloaded(ModelDownloadService.transactionParserModel);
+    final downloaded = await _modelManager
+        .isModelDownloaded(EntityExtractorLanguage.english.name);
     if (mounted) setState(() => _modelDownloaded = downloaded);
   }
 
@@ -79,7 +80,32 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
     _amountController.dispose();
     _merchantController.dispose();
     _dateController.dispose();
+    _aiParser.close();
     super.dispose();
+  }
+
+  Future<void> _startDownload() async {
+    setState(() {
+      _isDownloading = true;
+    });
+    try {
+      final success = await _modelManager
+          .downloadModel(EntityExtractorLanguage.english.name);
+      if (success && mounted) {
+        await _checkModelDownloaded();
+      } else if (mounted && !success) {
+        ToastUtils.showErrorToast(context, ref,
+            "Failed to download AI model. Please check your connection.");
+      }
+    } catch (e) {
+      if (mounted) {
+        ToastUtils.showErrorToast(context, ref, e.toString());
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isDownloading = false);
+      }
+    }
   }
 
   Future<void> _pickImage(ImageSource source) async {
@@ -130,8 +156,8 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
       bool usedAi = false;
 
       // Check if model is downloaded and limit not reached
-      final isModelReady = await _modelService
-          .isModelDownloaded(ModelDownloadService.transactionParserModel);
+      final isModelReady = await _modelManager
+          .isModelDownloaded(EntityExtractorLanguage.english.name);
       final limits = await PremiumGate.getSmartParsingLimits(ref);
 
       if (isModelReady && limits.canAdd) {
@@ -231,6 +257,36 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
           icon: const Icon(Icons.close),
           onPressed: () => Navigator.pop(context),
         ),
+        actions: [
+          if (!_modelDownloaded && !_isDownloading)
+            IconButton(
+              icon: const Icon(Icons.auto_awesome_outlined),
+              tooltip: l10n.smartExtraction,
+              onPressed: () async {
+                final shouldDownload = await showDialog<bool>(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: Text(l10n.smartExtraction),
+                    content: const Text(
+                        "Download Smart AI model (~10MB) for better entity extraction and offline support?"),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, false),
+                        child: Text(l10n.basicExtraction),
+                      ),
+                      ElevatedButton(
+                        onPressed: () => Navigator.pop(context, true),
+                        child: Text(l10n.downloadNow),
+                      ),
+                    ],
+                  ),
+                );
+                if (shouldDownload == true) {
+                  _startDownload();
+                }
+              },
+            ),
+        ],
       ),
       body: Container(
         decoration: BoxDecoration(
@@ -425,6 +481,25 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
                                       ),
                                   ],
                                 ),
+
+                                if (_isDownloading) ...[
+                                  const SizedBox(height: 24),
+                                  Text(
+                                    "Downloading Smart AI Model...",
+                                    style: theme.textTheme.bodySmall,
+                                  ),
+                                  const SizedBox(height: 8),
+                                  SizedBox(
+                                    width: double.infinity,
+                                    child: LinearProgressIndicator(
+                                      backgroundColor: activeCashbookColor
+                                          .withValues(alpha: 0.1),
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                          activeCashbookColor),
+                                    ),
+                                  ),
+                                ],
+
                                 // Amount Chips
                                 if (_receiptData?.amountCandidates.isNotEmpty ==
                                         true &&

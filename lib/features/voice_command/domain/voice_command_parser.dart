@@ -21,7 +21,7 @@ class VoiceCommandParser {
     ];
 
     // 1. Extract Amount
-    final amountRegex = RegExp(r'(\d+)\s*(?:rs|rupees|bucks|rupee)?');
+    final amountRegex = RegExp(r'(\d+(?:\.\d{1,2})?)\s*(?:rs|rupees|bucks|rupee)?', caseSensitive: false);
     final amountMatch = amountRegex.firstMatch(lowerText);
     double? amount;
     if (amountMatch != null) {

@@ -15,10 +15,10 @@ import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_pro
 import 'package:flowpaisa/features/currencies/presentation/providers/currencies_provider.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
-import 'package:flowpaisa/core/ml/model_download_service.dart';
 import 'package:flowpaisa/features/receipt_scan/domain/transaction_text_parser.dart';
 import 'package:flowpaisa/shared/widgets/app_loading_indicator.dart';
 import 'package:flowpaisa/features/premium/presentation/screens/premium_screen.dart';
+import 'package:google_mlkit_entity_extraction/google_mlkit_entity_extraction.dart';
 
 class VoiceAddScreen extends ConsumerStatefulWidget {
   const VoiceAddScreen({super.key});
@@ -30,18 +30,17 @@ class VoiceAddScreen extends ConsumerStatefulWidget {
 class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
   final stt.SpeechToText _speech = stt.SpeechToText();
   final VoiceCommandParser _fallbackParser = VoiceCommandParser();
-  final ModelDownloadService _modelService = ModelDownloadService();
-  late final TransactionAiParser _aiParser;
+  final TransactionAiParser _aiParser = TransactionAiParser();
+  final EntityExtractorModelManager _modelManager =
+      EntityExtractorModelManager();
 
   bool _isListening = false;
   String _text = '';
   ParsedTransactionInput? _parsedResult;
   bool _isProcessing = false;
   bool _usedAi = false;
-  double _downloadProgress = 0;
   bool _isDownloading = false;
   bool _modelDownloaded = false;
-  bool _canUseSmart = false;
   bool _includeTextAsDescription = true;
   String? _selectedCategoryName;
   String? _selectedCategoryColor;
@@ -53,74 +52,34 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
   @override
   void initState() {
     super.initState();
-    _aiParser = TransactionAiParser(_modelService);
     _transcriptController = TextEditingController();
     _checkModelStatus();
   }
 
   Future<void> _checkModelStatus() async {
-    final downloaded = await _modelService
-        .isModelDownloaded(ModelDownloadService.transactionParserModel);
-    final limits = await PremiumGate.getSmartParsingLimits(ref);
-    final canUseSmart = downloaded && limits.canAdd;
+    final downloaded = await _modelManager
+        .isModelDownloaded(EntityExtractorLanguage.english.name);
     if (mounted) {
       setState(() {
         _modelDownloaded = downloaded;
-        _canUseSmart = canUseSmart;
       });
-      if (!downloaded) {
-        // Show dialog on first visit if not downloaded
-        WidgetsBinding.instance
-            .addPostFrameCallback((_) => _showInitialDownloadDialog());
-      }
-    }
-  }
-
-  Future<void> _showInitialDownloadDialog() async {
-    if (!mounted) return;
-    final l10n = AppLocalizations.of(context)!;
-    final shouldDownload = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.smartExtraction),
-        content: Text(l10n.smartAiDownloadMessage),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(l10n.cancel),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(l10n.downloadNow),
-          ),
-        ],
-      ),
-    );
-    if (shouldDownload == true) {
-      _startDownload();
     }
   }
 
   @override
   void dispose() {
     _transcriptController.dispose();
+    _aiParser.close();
     super.dispose();
   }
 
   Future<void> _startDownload() async {
     setState(() {
       _isDownloading = true;
-      _downloadProgress = 0;
     });
     try {
-      final success = await _modelService.downloadModel(
-        ModelDownloadService.transactionParserModel,
-        onProgress: (progress) {
-          if (mounted) {
-            setState(() => _downloadProgress = progress);
-          }
-        },
-      );
+      final success = await _modelManager
+          .downloadModel(EntityExtractorLanguage.english.name);
       if (success && mounted) {
         await _checkModelStatus();
       } else if (mounted && !success) {
@@ -139,6 +98,11 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
   }
 
   Future<void> _listen() async {
+    // Auto-start download if not downloaded and not already downloading
+    if (!_modelDownloaded && !_isDownloading) {
+      _startDownload();
+    }
+
     if (!_isListening) {
       bool available = await _speech.initialize(
         onStatus: (val) {
@@ -179,8 +143,8 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
       ParsedTransactionInput? result;
       bool usedAi = false;
 
-      final isModelReady = await _modelService
-          .isModelDownloaded(ModelDownloadService.transactionParserModel);
+      final isModelReady = await _modelManager
+          .isModelDownloaded(EntityExtractorLanguage.english.name);
       final limits = await PremiumGate.getSmartParsingLimits(ref);
 
       // Get all active currency symbols from database
@@ -221,8 +185,8 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
   }
 
   Future<bool> _isSmartModeActive() async {
-    final isModelReady = await _modelService
-        .isModelDownloaded(ModelDownloadService.transactionParserModel);
+    final isModelReady = await _modelManager
+        .isModelDownloaded(EntityExtractorLanguage.english.name);
     if (!isModelReady) return false;
 
     final limits = await PremiumGate.getSmartParsingLimits(ref);
@@ -410,35 +374,6 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.voiceAdd),
-        actions: [
-          if (!_modelDownloaded && !_isDownloading)
-            IconButton(
-              icon: const Icon(Icons.auto_awesome_outlined),
-              tooltip: l10n.smartExtraction,
-              onPressed: () async {
-                final shouldDownload = await showDialog<bool>(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    title: Text(l10n.smartExtraction),
-                    content: Text(l10n.smartAiDownloadMessage),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context, false),
-                        child: Text(l10n.cancel),
-                      ),
-                      ElevatedButton(
-                        onPressed: () => Navigator.pop(context, true),
-                        child: Text(l10n.downloadNow),
-                      ),
-                    ],
-                  ),
-                );
-                if (shouldDownload == true) {
-                  _startDownload();
-                }
-              },
-            ),
-        ],
       ),
       body: Stack(
         children: [
@@ -496,12 +431,12 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 16, vertical: 14),
                           decoration: BoxDecoration(
-                            color: _canUseSmart
+                            color: _modelDownloaded
                                 ? Colors.blue.withValues(alpha: 0.08)
                                 : Colors.grey.withValues(alpha: 0.08),
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
-                              color: _canUseSmart
+                              color: _modelDownloaded
                                   ? Colors.blue.withValues(alpha: 0.25)
                                   : Colors.grey.withValues(alpha: 0.25),
                               width: 1,
@@ -510,20 +445,21 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
                           child: Row(
                             children: [
                               Icon(
-                                _canUseSmart
+                                _modelDownloaded
                                     ? Icons.auto_awesome
                                     : Icons.rule_rounded,
                                 size: 22,
-                                color: _canUseSmart ? Colors.blue : Colors.grey,
+                                color:
+                                    _modelDownloaded ? Colors.blue : Colors.grey,
                               ),
                               const SizedBox(width: 12),
                               Expanded(
                                 child: Text(
-                                  _canUseSmart
+                                  _modelDownloaded
                                       ? l10n.voiceInstructionSmart
                                       : l10n.voiceInstructionBasic,
                                   style: theme.textTheme.bodyMedium?.copyWith(
-                                    color: _canUseSmart
+                                    color: _modelDownloaded
                                         ? Colors.blue.shade800
                                         : theme.colorScheme.onSurfaceVariant,
                                     fontWeight: FontWeight.w500,
@@ -532,7 +468,8 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
                               ),
                               Icon(
                                 Icons.chevron_right,
-                                color: _canUseSmart ? Colors.blue : Colors.grey,
+                                color:
+                                    _modelDownloaded ? Colors.blue : Colors.grey,
                                 size: 24,
                               ),
                             ],
@@ -543,14 +480,13 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
                       if (_isDownloading) ...[
                         const SizedBox(height: 24),
                         Text(
-                          "Downloading Smart AI Model... ${(_downloadProgress * 100).toStringAsFixed(0)}%",
+                          "Downloading Smart AI Model...",
                           style: theme.textTheme.bodySmall,
                         ),
                         const SizedBox(height: 8),
                         SizedBox(
                           width: 200,
                           child: LinearProgressIndicator(
-                            value: _downloadProgress,
                             backgroundColor:
                                 activeCashbookColor.withValues(alpha: 0.1),
                             valueColor: AlwaysStoppedAnimation<Color>(
@@ -578,8 +514,8 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
                                   scale: 0.7,
                                   child: Switch(
                                     value: _includeTextAsDescription,
-                                    onChanged: (val) => setState(
-                                        () => _includeTextAsDescription = val),
+                                    onChanged: (val) => setState(() =>
+                                        _includeTextAsDescription = val),
                                     activeColor: activeCashbookColor,
                                   ),
                                 ),
@@ -705,47 +641,47 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
                                         width: double.infinity,
                                         child: GradientButton(
                                           onPressed: () async {
-                                          if (_usedAi) {
-                                            await ref
-                                                .read(
-                                                    usageTrackerRepositoryProvider)
-                                                .incrementSmartParsingCount();
-                                          }
-                                          if (!mounted) return;
-                                          Navigator.pushReplacement(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  AddTransactionScreen(
-                                                initialAmount:
-                                                    _parsedResult?.amount,
-                                                initialDescription:
-                                                    _includeTextAsDescription
-                                                        ? (_transcriptController
-                                                                .text.isNotEmpty
-                                                            ? _transcriptController
-                                                                .text
-                                                            : _parsedResult
-                                                                ?.description)
-                                                        : null,
-                                                initialType:
-                                                    _parsedResult?.type ??
-                                                        "EXPENSE",
-                                                initialCategoryName:
-                                                    _selectedCategoryName,
-                                                initialCategoryColor:
-                                                    _selectedCategoryColor,
-                                                initialCategoryIcon:
-                                                    _selectedCategoryIcon,
-                                                initialContactName:
-                                                    _selectedContactName,
-                                                initialRelationship:
-                                                    _parsedResult
-                                                        ?.paidRelationship,
+                                            if (_usedAi) {
+                                              await ref
+                                                  .read(
+                                                      usageTrackerRepositoryProvider)
+                                                  .incrementSmartParsingCount();
+                                            }
+                                            if (!mounted) return;
+                                            Navigator.pushReplacement(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    AddTransactionScreen(
+                                                  initialAmount:
+                                                      _parsedResult?.amount,
+                                                  initialDescription:
+                                                      _includeTextAsDescription
+                                                          ? (_transcriptController
+                                                                  .text.isNotEmpty
+                                                              ? _transcriptController
+                                                                  .text
+                                                              : _parsedResult
+                                                                  ?.description)
+                                                          : null,
+                                                  initialType:
+                                                      _parsedResult?.type ??
+                                                          "EXPENSE",
+                                                  initialCategoryName:
+                                                      _selectedCategoryName,
+                                                  initialCategoryColor:
+                                                      _selectedCategoryColor,
+                                                  initialCategoryIcon:
+                                                      _selectedCategoryIcon,
+                                                  initialContactName:
+                                                      _selectedContactName,
+                                                  initialRelationship:
+                                                      _parsedResult
+                                                          ?.paidRelationship,
+                                                ),
                                               ),
-                                            ),
-                                          );
-                                        },
+                                            );
+                                          },
                                           label: l10n.proceed,
                                         ),
                                       ),
@@ -775,7 +711,9 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
                                   ),
                                 ),
                               ),
-                            if (!_isProcessing && !_usedAi && _modelDownloaded)
+                            if (!_isProcessing &&
+                                !_usedAi &&
+                                _modelDownloaded)
                               Positioned(
                                 top: 6,
                                 right: 6,
@@ -1089,7 +1027,8 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
         ),
       ),
       onPressed: onPressed,
-      backgroundColor: isSelected ? activeColor : activeColor.withValues(alpha: 0.05),
+      backgroundColor:
+          isSelected ? activeColor : activeColor.withValues(alpha: 0.05),
       side: BorderSide(
         color: isSelected ? activeColor : activeColor.withValues(alpha: 0.2),
         width: 1,
