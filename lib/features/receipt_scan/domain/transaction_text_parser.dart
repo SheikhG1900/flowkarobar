@@ -50,10 +50,10 @@ class TransactionAiParser implements TransactionTextParser {
       };
 
       for (final annotation in annotations) {
-        bool moneyFoundInAnnotation = false;
+        bool amountFoundInAnnotation = false;
         for (final entity in annotation.entities) {
           if (entity.type == EntityType.money) {
-            moneyFoundInAnnotation = true;
+            amountFoundInAnnotation = true;
             final moneyEntity = entity as MoneyEntity;
             double val = (moneyEntity.integerPart).toDouble() +
                 ((moneyEntity.fractionPart) / 100.0);
@@ -63,19 +63,27 @@ class TransactionAiParser implements TransactionTextParser {
           }
         }
 
-      // If no money entity was found in this annotation, check if it's a plain number
-      if (!moneyFoundInAnnotation) {
-        // Handle commas in numbers (e.g., "3,170" -> "3170")
-        final cleanText = annotation.text.replaceAll(',', '');
-        final numericMatch = RegExp(r'(\d+(?:\.\d{1,2})?)').firstMatch(cleanText);
-        if (numericMatch != null) {
-          final val = double.tryParse(cleanText);
-          // Ignore numbers > 1,000,000 as garbage/invoice IDs
-          if (val != null && val > 0 && val <= 1000000) {
-            (extractedData['amount'] as List<double>).add(val);
+        // Check for plain numbers if no money entity was found, or if it's a voice command
+        // ML Kit often misses 'money' type for plain numbers in natural speech
+        if (!amountFoundInAnnotation || !isReceipt) {
+          // Handle commas in numbers (e.g., "3,170" -> "3170")
+          final cleanText = annotation.text.replaceAll(',', '');
+          // Use a more precise regex that doesn't truncate long numbers
+          final numericMatch =
+              RegExp(r'(\d+(?:\.\d+)?)').firstMatch(cleanText);
+          if (numericMatch != null) {
+            final val = double.tryParse(numericMatch.group(1)!);
+            // Ignore numbers > 1,000,000 as garbage/invoice IDs
+            if (val != null && val > 0 && val <= 1000000) {
+              if (!amountFoundInAnnotation) {
+                (extractedData['amount'] as List<double>).add(val);
+              } else if (!extractedData['amount'].contains(val)) {
+                // Add as candidate if not already there
+                (extractedData['amount'] as List<double>).add(val);
+              }
+            }
           }
         }
-      }
 
         for (final entity in annotation.entities) {
           if (kDebugMode) {
@@ -165,16 +173,23 @@ class TransactionAiParser implements TransactionTextParser {
     ];
     if (customSymbols != null) {
       for (var s in customSymbols) {
-        if (!symbols.contains(s.toLowerCase()))
+        if (!symbols.contains(s.toLowerCase())) {
           symbols.add(RegExp.escape(s.toLowerCase()));
+        }
       }
     }
 
     final symbolsPattern = symbols.join('|');
-    // Improved regex to allow common punctuation like (), ., :, - between symbol and amount
-    final amountRegex = RegExp(
-        '(?:$symbolsPattern)[\\s\\(\\)\\.:\\-]*(\\d{1,3}(?:,\\d{3})*(?:\\.\\d{1,2})?|\\d+(?:\\.\\d{1,2})?)',
-        caseSensitive: false);
+    // Improved regex:
+    // For receipts: require a symbol/keyword prefix
+    // For voice: make symbol/keyword prefix optional
+    final amountRegex = isReceipt
+        ? RegExp(
+            '(?:$symbolsPattern)[\\s\\(\\)\\.:\\-]*(\\d{1,3}(?:,\\d{3})*(?:\\.\\d+)?|\\d+(?:\\.\\d+)?)',
+            caseSensitive: false)
+        : RegExp(
+            '(?:(?:$symbolsPattern)[\\s\\(\\)\\.:\\-]*|\\b)(\\d+(?:\\.\\d+)?)',
+            caseSensitive: false);
     final matches = amountRegex.allMatches(originalText);
 
     for (var m in matches) {
