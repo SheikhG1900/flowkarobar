@@ -4,16 +4,267 @@ import 'package:flowpaisa/features/transactions/domain/models/parsed_transaction
 import 'package:flowpaisa/core/extensions/list_extensions.dart';
 import 'package:flowpaisa/core/extensions/string_extensions.dart';
 
+/// Base contract for text-to-transaction parsers.
 abstract class TransactionTextParser {
-  Future<ParsedTransactionInput?> parse(String text,
-      {required bool isReceipt, List<String>? customSymbols});
+  Future<ParsedTransactionInput?> parse(
+    String text, {
+    List<String>? customSymbols,
+  });
 }
 
-class TransactionAiParser implements TransactionTextParser {
-  // Use English as the primary language for entity extraction
+/// Shared ML Kit based entity extraction.
+abstract class _BaseTransactionAiParser implements TransactionTextParser {
   final EntityExtractor _extractor =
       EntityExtractor(language: EntityExtractorLanguage.english);
 
+  Future<void> close() async {
+    await _extractor.close();
+  }
+
+  @protected
+  Future<Map<String, dynamic>> extractEntities(String text) async {
+    final List<EntityAnnotation> annotations =
+        await _extractor.annotateText(text);
+
+    final Map<String, dynamic> extractedData = {
+      'amount': <double>[],
+      'date': <DateTime>[],
+      'phone': <String>[],
+    };
+
+    for (final annotation in annotations) {
+      bool amountFoundInAnnotation = false;
+      for (final entity in annotation.entities) {
+        if (entity.type == EntityType.money) {
+          amountFoundInAnnotation = true;
+          final moneyEntity = entity as MoneyEntity;
+          double val = (moneyEntity.integerPart).toDouble() +
+              ((moneyEntity.fractionPart) / 100.0);
+          if (val > 0) {
+            (extractedData['amount'] as List<double>).add(val);
+          }
+        }
+      }
+
+      // Also check for plain numbers. This helps both receipts and voice.
+      final cleanText = annotation.text.replaceAll(',', '');
+      final numericMatch = RegExp(r'(\d+(?:\.\d+)?)').firstMatch(cleanText);
+      if (numericMatch != null) {
+        final val = double.tryParse(numericMatch.group(1)!);
+        if (val != null && val > 0 && val <= 1000000) {
+          if (!amountFoundInAnnotation ||
+              !(extractedData['amount'] as List<double>).contains(val)) {
+            (extractedData['amount'] as List<double>).add(val);
+          }
+        }
+      }
+
+      for (final entity in annotation.entities) {
+        if (kDebugMode) {
+          debugPrint(
+              'ML Kit Found Entity: ${entity.type} -> ${annotation.text}');
+        }
+
+        switch (entity.type) {
+          case EntityType.money:
+            // Already handled above
+            break;
+          case EntityType.dateTime:
+            final dateEntity = entity as DateTimeEntity;
+            (extractedData['date'] as List<DateTime>).add(
+                DateTime.fromMillisecondsSinceEpoch(dateEntity.timestamp));
+            break;
+          case EntityType.phone:
+            (extractedData['phone'] as List<String>).add(annotation.text);
+            break;
+          default:
+            break;
+        }
+      }
+    }
+
+    return extractedData;
+  }
+}
+
+/// Receipt-specific AI parser using ML Kit entities + light rule based logic.
+class ReceiptAiParser extends _BaseTransactionAiParser {
+  @override
+  Future<ParsedTransactionInput?> parse(
+    String text, {
+    List<String>? customSymbols,
+  }) async {
+    try {
+      if (kDebugMode) {
+        debugPrint('Receipt AI Parser: Starting extraction for text: $text');
+        debugPrint('Receipt AI Parser: Raw Input Text:\n$text');
+      }
+
+      final extracted = await extractEntities(text);
+      final result = _mapEntitiesToInput(
+        extracted,
+        text,
+        customSymbols: customSymbols,
+      );
+
+      if (kDebugMode) {
+        debugPrint(
+            'Receipt AI Parser: Result amount=${result.amount}, category=${result.categoryName}');
+      }
+      return result;
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('Receipt AI Parser Error: $e');
+      }
+      return null;
+    }
+  }
+
+  ParsedTransactionInput _mapEntitiesToInput(
+    Map<String, dynamic> extracted,
+    String originalText, {
+    List<String>? customSymbols,
+  }) {
+    double? amount;
+    String? category;
+
+    final List<double> mlKitAmounts = extracted['amount'] as List<double>;
+    final List<DateTime> mlKitDates = extracted['date'] as List<DateTime>;
+    List<double> amountCandidates = List.from(mlKitAmounts);
+
+    final lowerText = originalText.toLowerCase();
+
+    // Amount refinement – tuned for receipts.
+    final symbols = [
+      'rs',
+      '₹',
+      'pkr',
+      r'\$',
+      '€',
+      '£',
+      '¥',
+      'total',
+      'amount',
+      'net',
+      'sum',
+      'due',
+      'paid'
+    ];
+    if (customSymbols != null) {
+      for (var s in customSymbols) {
+        if (!symbols.contains(s.toLowerCase())) {
+          symbols.add(RegExp.escape(s.toLowerCase()));
+        }
+      }
+    }
+
+    final symbolsPattern = symbols.join('|');
+    final amountRegex = RegExp(
+      '(?:$symbolsPattern)[\\s\\(\\)\\.:\\-]*(\\d{1,3}(?:,\\d{3})*(?:\\.\\d+)?|\\d+(?:\\.\\d+)?)',
+      caseSensitive: false,
+    );
+    final matches = amountRegex.allMatches(originalText);
+
+    for (var m in matches) {
+      final val = double.tryParse(m.group(1)!.replaceAll(',', ''));
+      if (val != null && val <= 1000000 && !amountCandidates.contains(val)) {
+        amountCandidates.add(val);
+      }
+    }
+
+    if (amountCandidates.isNotEmpty) {
+      // Priority logic for receipts:
+      // 1. Prefer numbers <= 100,000 (likely real transactions)
+      // 2. If all numbers are > 100,000, take the largest one under 1,000,000
+      final reasonableAmounts =
+          amountCandidates.where((a) => a <= 100000).toList();
+      if (reasonableAmounts.isNotEmpty) {
+        reasonableAmounts.sort((a, b) => b.compareTo(a));
+        amount = reasonableAmounts.first;
+      } else {
+        amountCandidates.sort((a, b) => b.compareTo(a));
+        amount = amountCandidates.first;
+      }
+    }
+
+    // Lightweight category hints – main heuristics still live in ReceiptParser.
+    final categoryKeywords = [
+      'salary',
+      'bonus',
+      'rent',
+      'fuel',
+      'dinner',
+      'lunch',
+      'breakfast',
+      'travel',
+      'gift',
+      'profit',
+      'shopping',
+      'bills'
+    ];
+    for (var kw in categoryKeywords) {
+      if (lowerText.contains(kw)) {
+        category = kw;
+        break;
+      }
+    }
+
+    final uniqueCandidates = amountCandidates.toSet().toList()
+      ..sort((a, b) => b.compareTo(a));
+    final descriptionCandidates =
+        _descriptionCandidatesFromText(originalText);
+
+    return ParsedTransactionInput(
+      amount: amount,
+      type: "EXPENSE",
+      categoryName: category,
+      contactName: null,
+      paidRelationship: null,
+      description: originalText,
+      date: mlKitDates.isNotEmpty ? mlKitDates.first : DateTime.now(),
+      usedFallback: false,
+      amountCandidates: uniqueCandidates,
+      descriptionCandidates: descriptionCandidates,
+    );
+  }
+
+  static const int _maxDescLen = 60;
+  static const int _maxDescCandidates = 8;
+
+  static List<String> _descriptionCandidatesFromText(String text) {
+    final List<String> candidates = [];
+    final seen = <String>{};
+    void add(String s) {
+      final t = s.trim();
+      if (t.isEmpty) return;
+      final key = t.length > _maxDescLen
+          ? t.substring(0, _maxDescLen).toLowerCase()
+          : t.toLowerCase();
+      if (seen.contains(key)) return;
+      seen.add(key);
+      candidates.add(
+        t.length > _maxDescLen ? '${t.substring(0, _maxDescLen)}...' : t,
+      );
+    }
+
+    final noise = RegExp(
+      r'^(RECEIPT|INVOICE|TAX|TOTAL|SUBTOTAL|DATE|TIME|QTY|ITEM|AMOUNT|CASH|CARD|THANK|VISIT|#|\d+\s*[xX]\s*|\d+\.\d{2})\s*$',
+      caseSensitive: false,
+    );
+    final mostlyNumber = RegExp(r'^[\d\s.,₹\$€£¥]+$');
+    for (var line in text.split(RegExp(r'[\n\r]+'))) {
+      final t = line.trim();
+      if (t.length < 2) continue;
+      if (noise.hasMatch(t) || mostlyNumber.hasMatch(t)) continue;
+      add(t);
+      if (candidates.length >= _maxDescCandidates) break;
+    }
+    return candidates;
+  }
+}
+
+/// Voice-command specific AI parser using ML Kit entities + rule based logic.
+class VoiceAiParser extends _BaseTransactionAiParser {
   static final List<String> _willReceiveKeywords = [
     'will receive',
     'will take',
@@ -22,112 +273,46 @@ class TransactionAiParser implements TransactionTextParser {
     ...(['milay', 'mili', 'milen', 'milan', 'mile', 'mila']
         .makeCombinations(['ga', 'gi', 'gay', 'ge'], ['', ' '])),
     ...(['loon', 'lun', 'loo', 'lu', 'le', 'lain']
-        .makeCombinations(['ga', 'gi', 'gay', 'ge'], ['', ' ']))
+        .makeCombinations(['ga', 'gi', 'gay', 'ge'], ['', ' '])),
   ];
 
-  TransactionAiParser();
-
-  Future<void> close() async {
-    await _extractor.close();
-  }
-
   @override
-  Future<ParsedTransactionInput?> parse(String text,
-      {required bool isReceipt, List<String>? customSymbols}) async {
+  Future<ParsedTransactionInput?> parse(
+    String text, {
+    List<String>? customSymbols,
+  }) async {
     try {
       if (kDebugMode) {
-        debugPrint('AI Parser (ML Kit): Starting extraction for text: $text');
-        debugPrint('AI Parser (ML Kit): Raw Input Text:\n$text');
+        debugPrint(
+            'Voice AI Parser (ML Kit): Starting extraction for text: $text');
+        debugPrint('Voice AI Parser (ML Kit): Raw Input Text:\n$text');
       }
 
-      final List<EntityAnnotation> annotations =
-          await _extractor.annotateText(text);
-
-      final Map<String, dynamic> extractedData = {
-        'amount': <double>[],
-        'date': <DateTime>[],
-        'phone': <String>[],
-      };
-
-      for (final annotation in annotations) {
-        bool amountFoundInAnnotation = false;
-        for (final entity in annotation.entities) {
-          if (entity.type == EntityType.money) {
-            amountFoundInAnnotation = true;
-            final moneyEntity = entity as MoneyEntity;
-            double val = (moneyEntity.integerPart).toDouble() +
-                ((moneyEntity.fractionPart) / 100.0);
-            if (val > 0) {
-              (extractedData['amount'] as List<double>).add(val);
-            }
-          }
-        }
-
-        // Check for plain numbers if no money entity was found, or if it's a voice command
-        // ML Kit often misses 'money' type for plain numbers in natural speech
-        if (!amountFoundInAnnotation || !isReceipt) {
-          // Handle commas in numbers (e.g., "3,170" -> "3170")
-          final cleanText = annotation.text.replaceAll(',', '');
-          // Use a more precise regex that doesn't truncate long numbers
-          final numericMatch =
-              RegExp(r'(\d+(?:\.\d+)?)').firstMatch(cleanText);
-          if (numericMatch != null) {
-            final val = double.tryParse(numericMatch.group(1)!);
-            // Ignore numbers > 1,000,000 as garbage/invoice IDs
-            if (val != null && val > 0 && val <= 1000000) {
-              if (!amountFoundInAnnotation) {
-                (extractedData['amount'] as List<double>).add(val);
-              } else if (!extractedData['amount'].contains(val)) {
-                // Add as candidate if not already there
-                (extractedData['amount'] as List<double>).add(val);
-              }
-            }
-          }
-        }
-
-        for (final entity in annotation.entities) {
-          if (kDebugMode) {
-            debugPrint(
-                'ML Kit Found Entity: ${entity.type} -> ${annotation.text}');
-          }
-
-          switch (entity.type) {
-            case EntityType.money:
-              // Already handled above
-              break;
-            case EntityType.dateTime:
-              final dateEntity = entity as DateTimeEntity;
-              (extractedData['date'] as List<DateTime>).add(
-                  DateTime.fromMillisecondsSinceEpoch(dateEntity.timestamp));
-              break;
-            case EntityType.phone:
-              (extractedData['phone'] as List<String>).add(annotation.text);
-              break;
-            default:
-              break;
-          }
-        }
-      }
-
-      final result = _mapEntitiesToInput(extractedData, text,
-          isReceipt: isReceipt, customSymbols: customSymbols);
+      final extracted = await extractEntities(text);
+      final result = _mapEntitiesToInput(
+        extracted,
+        text,
+        customSymbols: customSymbols,
+      );
 
       if (kDebugMode) {
         debugPrint(
-            'AI Parser: Final Result: amount=${result.amount}, type=${result.type}, category=${result.categoryName}, contact=${result.contactName}, relationship=${result.paidRelationship}');
+            'Voice AI Parser: Final Result: amount=${result.amount}, type=${result.type}, category=${result.categoryName}, contact=${result.contactName}, relationship=${result.paidRelationship}');
       }
       return result;
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('AI Parser Error: $e');
+        debugPrint('Voice AI Parser Error: $e');
       }
       return null;
     }
   }
 
   ParsedTransactionInput _mapEntitiesToInput(
-      Map<String, dynamic> extracted, String originalText,
-      {required bool isReceipt, List<String>? customSymbols}) {
+    Map<String, dynamic> extracted,
+    String originalText, {
+    List<String>? customSymbols,
+  }) {
     double? amount;
     String? type;
     String? category;
@@ -155,7 +340,7 @@ class TransactionAiParser implements TransactionTextParser {
       'bills'
     ];
 
-    // 1. Amount Refinement (Combine ML Kit with Regex for robustness)
+    // Amount refinement tuned for natural language voice input.
     final symbols = [
       'rs',
       '₹',
@@ -180,46 +365,25 @@ class TransactionAiParser implements TransactionTextParser {
     }
 
     final symbolsPattern = symbols.join('|');
-    // Improved regex:
-    // For receipts: require a symbol/keyword prefix
-    // For voice: make symbol/keyword prefix optional
-    final amountRegex = isReceipt
-        ? RegExp(
-            '(?:$symbolsPattern)[\\s\\(\\)\\.:\\-]*(\\d{1,3}(?:,\\d{3})*(?:\\.\\d+)?|\\d+(?:\\.\\d+)?)',
-            caseSensitive: false)
-        : RegExp(
-            '(?:(?:$symbolsPattern)[\\s\\(\\)\\.:\\-]*|\\b)(\\d+(?:\\.\\d+)?)',
-            caseSensitive: false);
+    final amountRegex = RegExp(
+      '(?:(?:$symbolsPattern)[\\s\\(\\)\\.:\\-]*|\\b)(\\d+(?:\\.\\d+)?)',
+      caseSensitive: false,
+    );
     final matches = amountRegex.allMatches(originalText);
 
     for (var m in matches) {
       final val = double.tryParse(m.group(1)!.replaceAll(',', ''));
-      // Ignore numbers > 1,000,000 as garbage/invoice IDs
       if (val != null && val <= 1000000 && !amountCandidates.contains(val)) {
         amountCandidates.add(val);
       }
     }
 
     if (amountCandidates.isNotEmpty) {
-      if (isReceipt) {
-        // Priority logic for receipts:
-        // 1. Prefer numbers <= 100,000 (likely real transactions)
-        // 2. If all numbers are > 100,000, take the largest one under 1,000,000
-        final reasonableAmounts =
-            amountCandidates.where((a) => a <= 100000).toList();
-        if (reasonableAmounts.isNotEmpty) {
-          reasonableAmounts.sort((a, b) => b.compareTo(a));
-          amount = reasonableAmounts.first;
-        } else {
-          amountCandidates.sort((a, b) => b.compareTo(a));
-          amount = amountCandidates.first;
-        }
-      } else {
-        amount = amountCandidates.first;
-      }
+      // For voice, keep the first reasonable candidate (closest to spoken order).
+      amount = amountCandidates.first;
     }
 
-    // 2. Type Detection (Existing logic)
+    // Type detection.
     if (lowerText.containsAny(['for me', 'mere liye']) ||
         (lowerText.contains('mere') &&
             categoryKeywords.any((kw) => lowerText.contains(kw)))) {
@@ -271,10 +435,11 @@ class TransactionAiParser implements TransactionTextParser {
       type = "EXPENSE";
     }
 
-    // 3. Contact Extraction (Existing Regex)
+    // Contact extraction.
     final subjectContactRegex = RegExp(
-        r'^([A-Z][a-z]+)\s+(?:has|ne|ko|took|borrowed|gave|is|was|purchased|paid|spent)\b',
-        caseSensitive: false);
+      r'^([A-Z][a-z]+)\s+(?:has|ne|ko|took|borrowed|gave|is|was|purchased|paid|spent)\b',
+      caseSensitive: false,
+    );
     final subjectMatch = subjectContactRegex.firstMatch(originalText);
     if (subjectMatch != null) {
       contact = subjectMatch.group(1);
@@ -282,8 +447,9 @@ class TransactionAiParser implements TransactionTextParser {
 
     if (contact == null) {
       final objectContactRegex = RegExp(
-          r'\b(?:to|from|by|with|ko|se|ne|gave|given)\s+([A-Z][a-z]+)\b',
-          caseSensitive: false);
+        r'\b(?:to|from|by|with|ko|se|ne|gave|given)\s+([A-Z][a-z]+)\b',
+        caseSensitive: false,
+      );
       final objectMatch = objectContactRegex.firstMatch(originalText);
       if (objectMatch != null) {
         contact = objectMatch.group(1);
@@ -292,8 +458,9 @@ class TransactionAiParser implements TransactionTextParser {
 
     if (contact == null) {
       final trailingContactRegex = RegExp(
-          r'([A-Z][a-z]+)\s+(?:ko|ne|se|ke|ki taraf)\b',
-          caseSensitive: false);
+        r'([A-Z][a-z]+)\s+(?:ko|ne|se|ke|ki taraf)\b',
+        caseSensitive: false,
+      );
       final trailingMatch = trailingContactRegex.firstMatch(originalText);
       if (trailingMatch != null) {
         contact = trailingMatch.group(1);
@@ -334,7 +501,7 @@ class TransactionAiParser implements TransactionTextParser {
       contact = null;
     }
 
-    // 4. Category Extraction (Moved up for relationship detection)
+    // Category extraction.
     for (var kw in categoryKeywords) {
       if (lowerText.contains(kw)) {
         if (kw != contact?.toLowerCase()) {
@@ -346,7 +513,8 @@ class TransactionAiParser implements TransactionTextParser {
 
     if (category == null) {
       final categoryRegex = RegExp(
-          r'\b(?:for|per|liye|on)\s+([a-z]{3,})|([a-z]{3,})\s+(?:ke liye|per|par|ka kharcha|kharch|ka|ki|ke)\b');
+        r'\b(?:for|per|liye|on)\s+([a-z]{3,})|([a-z]{3,})\s+(?:ke liye|per|par|ka kharcha|kharch|ka|ki|ke)\b',
+      );
       final categoryMatch = categoryRegex.firstMatch(lowerText);
       if (categoryMatch != null) {
         final found = categoryMatch.group(1) ?? categoryMatch.group(2);
@@ -358,7 +526,7 @@ class TransactionAiParser implements TransactionTextParser {
       }
     }
 
-    // 5. Relationship Detection (Existing logic)
+    // Relationship detection.
     if ((tokens.contains('ne') &&
             tokens.containsAny(['diye', 'diya']) &&
             tokens.containsAny(['ka', 'ki', "ke"])) ||
@@ -409,14 +577,6 @@ class TransactionAiParser implements TransactionTextParser {
     }
 
     final uniqueCandidates = amountCandidates.toSet().toList();
-    if (isReceipt) {
-      uniqueCandidates.sort((a, b) => b.compareTo(a));
-    }
-
-    List<String> descriptionCandidates = [];
-    if (isReceipt && originalText.isNotEmpty) {
-      descriptionCandidates = _descriptionCandidatesFromText(originalText);
-    }
 
     return ParsedTransactionInput(
       amount: amount,
@@ -428,39 +588,7 @@ class TransactionAiParser implements TransactionTextParser {
       date: mlKitDates.isNotEmpty ? mlKitDates.first : DateTime.now(),
       usedFallback: false,
       amountCandidates: uniqueCandidates,
-      descriptionCandidates: descriptionCandidates,
+      descriptionCandidates: const [],
     );
-  }
-
-  static const int _maxDescLen = 60;
-  static const int _maxDescCandidates = 8;
-
-  static List<String> _descriptionCandidatesFromText(String text) {
-    final List<String> candidates = [];
-    final seen = <String>{};
-    void add(String s) {
-      final t = s.trim();
-      if (t.isEmpty) return;
-      final key = t.length > _maxDescLen
-          ? t.substring(0, _maxDescLen).toLowerCase()
-          : t.toLowerCase();
-      if (seen.contains(key)) return;
-      seen.add(key);
-      candidates.add(
-          t.length > _maxDescLen ? '${t.substring(0, _maxDescLen)}...' : t);
-    }
-
-    final noise = RegExp(
-        r'^(RECEIPT|INVOICE|TAX|TOTAL|SUBTOTAL|DATE|TIME|QTY|ITEM|AMOUNT|CASH|CARD|THANK|VISIT|#|\d+\s*[xX]\s*|\d+\.\d{2})\s*$',
-        caseSensitive: false);
-    final mostlyNumber = RegExp(r'^[\d\s.,₹\$€£¥]+$');
-    for (var line in text.split(RegExp(r'[\n\r]+'))) {
-      final t = line.trim();
-      if (t.length < 2) continue;
-      if (noise.hasMatch(t) || mostlyNumber.hasMatch(t)) continue;
-      add(t);
-      if (candidates.length >= _maxDescCandidates) break;
-    }
-    return candidates;
   }
 }

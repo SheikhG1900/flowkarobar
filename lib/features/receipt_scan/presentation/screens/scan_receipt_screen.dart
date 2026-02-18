@@ -35,7 +35,7 @@ class ScanReceiptScreen extends ConsumerStatefulWidget {
 class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
   final ImagePicker _picker = ImagePicker();
   final ReceiptParser _parser = ReceiptParser();
-  final TransactionAiParser _aiParser = TransactionAiParser();
+  final ReceiptAiParser _aiParser = ReceiptAiParser();
   final EntityExtractorModelManager _modelManager =
       EntityExtractorModelManager();
 
@@ -161,8 +161,10 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
       final limits = await PremiumGate.getSmartParsingLimits(ref);
 
       if (isModelReady && limits.canAdd) {
-        aiResult = await _aiParser.parse(recognizedText.text,
-            isReceipt: true, customSymbols: dbSymbols);
+        aiResult = await _aiParser.parse(
+          recognizedText.text,
+          customSymbols: dbSymbols,
+        );
         if (aiResult != null && !aiResult.isEmpty) {
           usedAi = true;
           // Increment usage

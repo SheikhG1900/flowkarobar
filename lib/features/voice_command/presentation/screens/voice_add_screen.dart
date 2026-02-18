@@ -30,7 +30,7 @@ class VoiceAddScreen extends ConsumerStatefulWidget {
 class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
   final stt.SpeechToText _speech = stt.SpeechToText();
   final VoiceCommandParser _fallbackParser = VoiceCommandParser();
-  final TransactionAiParser _aiParser = TransactionAiParser();
+  final VoiceAiParser _aiParser = VoiceAiParser();
   final EntityExtractorModelManager _modelManager =
       EntityExtractorModelManager();
 
@@ -153,8 +153,10 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
       final dbSymbols = currencies.map((c) => c.symbol).toList();
 
       if (isModelReady && limits.canAdd) {
-        result = await _aiParser.parse(text,
-            isReceipt: false, customSymbols: dbSymbols);
+        result = await _aiParser.parse(
+          text,
+          customSymbols: dbSymbols,
+        );
         if (result != null && !result.isEmpty) {
           usedAi = true;
         }
