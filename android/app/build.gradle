@@ -27,7 +27,7 @@ if (flutterVersionName == null) {
 
 // Load keystore properties from key.properties file
 def keystoreProperties = new Properties()
-def keystorePropertiesFile = rootProject.file('key.properties')
+def keystorePropertiesFile = rootProject.file('../../private/key.properties')
 if (keystorePropertiesFile.exists()) {
     keystorePropertiesFile.withReader('UTF-8') { reader ->
         keystoreProperties.load(reader)
