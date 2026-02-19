@@ -302,11 +302,23 @@ class ReceiptAiParser extends BaseTransactionAiParser {
     String clean = buffer.toString();
     if (clean.isEmpty) return null;
 
-    // Normalize: treat comma as decimal if there is a single comma and no dot, else remove commas.
+    // Normalize: 
+    // 1. If comma is followed by exactly 3 digits, it's a thousands separator (e.g., 1,280)
+    final thousandsRegExp = RegExp(r',(\d{3})(?!\d)');
+    if (thousandsRegExp.hasMatch(clean)) {
+      clean = clean.replaceAll(',', '');
+    }
+
+    // 2. Handle remaining commas
     final dotCount = '.'.allMatches(clean).length;
     final commaCount = ','.allMatches(clean).length;
     if (dotCount == 0 && commaCount == 1) {
-      clean = clean.replaceAll(',', '.');
+      // If exactly one comma and no dot, check if it looks like a decimal (e.g., 12,50)
+      if (RegExp(r',\d{2}$').hasMatch(clean)) {
+        clean = clean.replaceAll(',', '.');
+      } else {
+        clean = clean.replaceAll(',', '');
+      }
     } else {
       clean = clean.replaceAll(',', '');
     }
