@@ -1,5 +1,5 @@
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
-import 'package:flowpaisa/features/receipt_scan/domain/transaction_text_parser.dart';
+import 'package:flowpaisa/features/receipt_scan/domain/receipt_ai_parser.dart';
 import 'package:flowpaisa/features/currencies/presentation/providers/currencies_provider.dart';
 import 'package:flowpaisa/shared/widgets/app_loading_indicator.dart';
 import 'package:flowpaisa/features/transactions/domain/models/parsed_transaction_input.dart';
@@ -7,7 +7,7 @@ import 'dart:io' if (dart.library.html) 'dart:html';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart'
-    show InputImage, TextRecognizer;
+    show InputImage, RecognizedText, TextRecognizer;
 import 'package:image_picker/image_picker.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/receipt_scan/domain/receipt_parser.dart';
@@ -164,6 +164,7 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
         aiResult = await _aiParser.parse(
           recognizedText.text,
           customSymbols: dbSymbols,
+          recognizedText: recognizedText,
         );
         if (aiResult != null && !aiResult.isEmpty) {
           usedAi = true;

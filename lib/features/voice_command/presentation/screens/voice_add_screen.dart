@@ -15,7 +15,7 @@ import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_pro
 import 'package:flowpaisa/features/currencies/presentation/providers/currencies_provider.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
-import 'package:flowpaisa/features/receipt_scan/domain/transaction_text_parser.dart';
+import 'package:flowpaisa/features/voice_command/domain/voice_ai_parser.dart';
 import 'package:flowpaisa/shared/widgets/app_loading_indicator.dart';
 import 'package:flowpaisa/features/premium/presentation/screens/premium_screen.dart';
 import 'package:google_mlkit_entity_extraction/google_mlkit_entity_extraction.dart';
