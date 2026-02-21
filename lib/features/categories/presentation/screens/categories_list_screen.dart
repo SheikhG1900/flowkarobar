@@ -7,7 +7,6 @@ import 'package:flowpaisa/features/categories/presentation/providers/categories_
 import 'package:flowpaisa/features/categories/presentation/screens/add_category_screen.dart';
 import 'package:flowpaisa/features/categories/presentation/screens/edit_category_screen.dart';
 import 'package:flowpaisa/features/categories/presentation/screens/category_details_screen.dart';
-import 'package:flowpaisa/shared/widgets/glass_card.dart';
 import 'package:flowpaisa/shared/widgets/swipeable_list_item.dart';
 import 'package:flowpaisa/core/utils/category_helper.dart';
 import 'package:material_symbols_icons/symbols.dart';
@@ -126,7 +125,10 @@ class _CategoryList extends ConsumerWidget {
           itemCount: categories.length,
           itemBuilder: (context, index) {
             final category = categories[index];
-            return _CategoryCard(category: category);
+            return _CategoryCard(
+              key: ValueKey(category.uuid),
+              category: category,
+            );
           },
         );
       },
@@ -140,7 +142,7 @@ class _CategoryList extends ConsumerWidget {
 class _CategoryCard extends ConsumerWidget {
   final Category category;
 
-  const _CategoryCard({required this.category});
+  const _CategoryCard({super.key, required this.category});
 
   Future<void> _deleteCategory(BuildContext context, WidgetRef ref) async {
     final repository = ref.read(categoriesRepositoryProvider);
@@ -183,6 +185,7 @@ class _CategoryCard extends ConsumerWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: SwipeableListItem(
+        key: ValueKey(category.uuid),
         enableEdit: true,
         enableDelete: !category.isDefault,
         editBackgroundColor: color,
@@ -216,8 +219,16 @@ class _CategoryCard extends ConsumerWidget {
             );
           },
           borderRadius: BorderRadius.circular(16),
-          child: GlassCard(
+          child: Container(
             padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: theme.cardColor,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: theme.dividerColor.withValues(alpha: 0.5),
+                width: 1,
+              ),
+            ),
             child: Row(
               children: [
                 Hero(

@@ -45,7 +45,7 @@ class SwipeableListItem extends StatelessWidget {
     }
 
     return Dismissible(
-      key: UniqueKey(),
+      key: key ?? UniqueKey(),
       confirmDismiss: (direction) async {
         // Add haptic feedback
         HapticFeedback.mediumImpact();
