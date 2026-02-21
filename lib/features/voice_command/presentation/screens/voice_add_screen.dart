@@ -309,11 +309,11 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
               ] else ...[
                 _buildHintSection(context, "Expenses (Basic)", [
                   "Spent 500 on Fuel",
-                  "Paid 1000 for Dinner",
-                  "Expense 250 for Snacks",
+                  "Paid 1000 on Dinner",
+                  "Expense 250 on Snacks",
                 ]),
                 _buildHintSection(context, "Income (Basic)", [
-                  "2000 Received from Kashif",
+                  "2000 Received from Kashif (Payable)",
                   "5000 Income from Salary",
                   "Received 1000 for Bonus",
                   "Will receive 2000 from Ali",
@@ -478,10 +478,12 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
                                           effectiveSmartMode
                                               ? l10n.voiceInstructionSmart
                                               : l10n.voiceInstructionBasic,
-                                          style: theme.textTheme.bodyMedium?.copyWith(
+                                          style: theme.textTheme.bodyMedium
+                                              ?.copyWith(
                                             color: effectiveSmartMode
                                                 ? Colors.blue.shade800
-                                                : theme.colorScheme.onSurfaceVariant,
+                                                : theme.colorScheme
+                                                    .onSurfaceVariant,
                                             fontWeight: FontWeight.w500,
                                           ),
                                         ),
@@ -513,7 +515,8 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
                                       Expanded(
                                         child: Text(
                                           l10n.useSmartExtractionForBetterResults,
-                                          style: theme.textTheme.bodySmall?.copyWith(
+                                          style: theme.textTheme.bodySmall
+                                              ?.copyWith(
                                             color: theme.colorScheme.onSurface,
                                           ),
                                         ),
@@ -576,8 +579,8 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
                                   scale: 0.7,
                                   child: Switch(
                                     value: _includeTextAsDescription,
-                                    onChanged: (val) => setState(() =>
-                                        _includeTextAsDescription = val),
+                                    onChanged: (val) => setState(
+                                        () => _includeTextAsDescription = val),
                                     activeColor: activeCashbookColor,
                                   ),
                                 ),
@@ -693,7 +696,8 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
                                                         .surfaceContainerHighest
                                                         .withValues(alpha: 0.8),
                                                     borderRadius:
-                                                        BorderRadius.circular(8),
+                                                        BorderRadius.circular(
+                                                            8),
                                                   ),
                                                   child: Text(
                                                     limits.isUnlimited
@@ -701,11 +705,12 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
                                                             .smartExtractionUnlimited
                                                         : l10n
                                                             .smartExtractionQuotaLeft(
-                                                          limits.monthlyRemaining,
-                                                          limits.monthlyTotal,
-                                                        ),
-                                                    style: theme.textTheme
-                                                        .labelSmall
+                                                            limits
+                                                                .monthlyRemaining,
+                                                            limits.monthlyTotal,
+                                                          ),
+                                                    style: theme
+                                                        .textTheme.labelSmall
                                                         ?.copyWith(
                                                       color: theme.colorScheme
                                                           .onSurfaceVariant,
@@ -715,21 +720,24 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
                                                 ),
                                               );
                                             },
-                                            loading: () => const SizedBox(
-                                                height: 32),
-                                            error: (_, __) => const SizedBox(
-                                                height: 32),
+                                            loading: () =>
+                                                const SizedBox(height: 32),
+                                            error: (_, __) =>
+                                                const SizedBox(height: 32),
                                           );
                                         },
                                       ),
 
-                                      _buildDetailRow(l10n.amount,
-                                          "${_parsedResult?.amount ?? 0}", theme),
+                                      _buildDetailRow(
+                                          l10n.amount,
+                                          "${_parsedResult?.amount ?? 0}",
+                                          theme),
                                       _buildDetailRow(
                                           l10n.type,
                                           _parsedResult?.type == "INCOME"
                                               ? l10n.income
-                                              : l10n.expense, theme),
+                                              : l10n.expense,
+                                          theme),
 
                                       // Category selection
                                       _buildCategorySuggestions(
@@ -746,7 +754,8 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
                                             _getLocalizedRelationship(
                                                 _parsedResult!
                                                     .paidRelationship!,
-                                                l10n), theme),
+                                                l10n),
+                                            theme),
 
                                       const SizedBox(height: 24),
                                       SizedBox(
@@ -770,7 +779,8 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
                                                   initialDescription:
                                                       _includeTextAsDescription
                                                           ? (_transcriptController
-                                                                  .text.isNotEmpty
+                                                                  .text
+                                                                  .isNotEmpty
                                                               ? _transcriptController
                                                                   .text
                                                               : _parsedResult
@@ -904,8 +914,7 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
           // Find similar categories
           suggested.addAll(categories.where((c) {
             final name = c.name.toLowerCase();
-            return name.contains(extractedName) ||
-                extractedName.contains(name);
+            return name.contains(extractedName) || extractedName.contains(name);
           }));
         }
 
@@ -1006,8 +1015,7 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
           // Find similar contacts
           suggested.addAll(contacts.where((c) {
             final name = c.name.toLowerCase();
-            return name.contains(extractedName) ||
-                extractedName.contains(name);
+            return name.contains(extractedName) || extractedName.contains(name);
           }));
         }
 
