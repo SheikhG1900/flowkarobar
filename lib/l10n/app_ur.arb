@@ -647,7 +647,7 @@
   "exportYourData": "اپنا ڈیٹا ایکسپورٹ کریں",
   "downloadHistoryCsvPdf": "اپنی لین دین کی ہسٹری CSV یا PDF کے طور پر ڈاؤن لوڈ کریں",
   "simpleExtractionResults": "سادہ اخراج کے نتائج",
-  "smartExtractionQuotaLeft": "{remaining} / {total} باقی",
+  "smartExtractionQuotaLeft": "اس مہینے {remaining} / {total} باقی",
   "smartExtractionUnlimited": "لامحدود",
   "useSmartExtractionForBetterResults": "بہتر نتائج کے لیے سمارٹ اخراج استعمال کریں۔",
   "getIt": "حاصل کریں",

@@ -302,29 +302,7 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
           icon: const Icon(Icons.close),
           onPressed: () => Navigator.pop(context),
         ),
-        actions: [
-          // Show premium/smart-scan button only when premium is required for smart scan (limit reached, model ready).
-          Consumer(
-            builder: (context, ref, _) {
-              final limitsAsync = ref.watch(smartParsingLimitsProvider);
-              final premiumRequired = limitsAsync.maybeWhen(
-                data: (limits) => !limits.canAdd && _modelDownloaded,
-                orElse: () => false,
-              );
-              if (!premiumRequired) return const SizedBox.shrink();
-              return IconButton(
-                icon: const Icon(Icons.auto_awesome_outlined),
-                tooltip: l10n.smartExtraction,
-                onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const PremiumScreen(),
-                  ),
-                ),
-              );
-            },
-          ),
-        ],
+        actions: const [],
       ),
       body: Container(
         decoration: BoxDecoration(
@@ -373,85 +351,93 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
                                           ),
                                           child: Column(
                                             children: [
-                                              // AI Indicator + Smart extraction quota
-                                              Container(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                        horizontal: 12,
-                                                        vertical: 6),
-                                                margin: const EdgeInsets.only(
-                                                    bottom: 16),
-                                                decoration: BoxDecoration(
-                                                  color: _usedAi
-                                                      ? Colors.blue.withValues(
-                                                          alpha: 0.1)
-                                                      : Colors.grey.withValues(
-                                                          alpha: 0.1),
-                                                  borderRadius:
-                                                      BorderRadius.circular(12),
-                                                ),
-                                                child: Row(
-                                                  children: [
-                                                    Icon(
-                                                      _usedAi
-                                                          ? Icons.auto_awesome
-                                                          : Icons.rule_rounded,
-                                                      size: 14,
-                                                      color: _usedAi
-                                                          ? Colors.blue
-                                                          : Colors.grey,
-                                                    ),
-                                                    const SizedBox(width: 6),
-                                                    Text(
-                                                      _usedAi
-                                                          ? l10n.smartExtraction
-                                                          : l10n
-                                                              .basicExtraction,
-                                                      style: theme
-                                                          .textTheme.labelSmall
-                                                          ?.copyWith(
+                                              // Extraction badge (centered)
+                                              Center(
+                                                child: Container(
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                          horizontal: 12,
+                                                          vertical: 6),
+                                                  margin: const EdgeInsets.only(
+                                                      bottom: 6),
+                                                  decoration: BoxDecoration(
+                                                    color: _usedAi
+                                                        ? Colors.blue.withValues(
+                                                            alpha: 0.1)
+                                                        : Colors.grey.withValues(
+                                                            alpha: 0.1),
+                                                    borderRadius:
+                                                        BorderRadius.circular(12),
+                                                  ),
+                                                  child: Row(
+                                                    mainAxisSize: MainAxisSize.min,
+                                                    children: [
+                                                      Icon(
+                                                        _usedAi
+                                                            ? Icons.auto_awesome
+                                                            : Icons.rule_rounded,
+                                                        size: 14,
                                                         color: _usedAi
                                                             ? Colors.blue
                                                             : Colors.grey,
-                                                        fontWeight:
-                                                            FontWeight.bold,
                                                       ),
-                                                    ),
-                                                    const SizedBox(width: 8),
-                                                    Consumer(
-                                                      builder: (context, ref, _) {
-                                                        final limitsAsync =
-                                                            ref.watch(
-                                                                smartParsingLimitsProvider);
-                                                        return limitsAsync.when(
-                                                          data: (limits) {
-                                                            if (limits.isUnlimited) {
-                                                              return Text(
-                                                                l10n.smartExtractionUnlimited,
-                                                                style: theme.textTheme.labelSmall?.copyWith(
-                                                                  color: theme.colorScheme.onSurfaceVariant,
-                                                                  fontSize: 11,
-                                                                ),
-                                                              );
-                                                            }
-                                                            return Text(
-                                                              l10n.smartExtractionQuotaLeft(
-                                                                limits.monthlyRemaining,
-                                                                limits.monthlyTotal,
-                                                              ),
-                                                              style: theme.textTheme.labelSmall?.copyWith(
-                                                                color: theme.colorScheme.onSurfaceVariant,
-                                                                fontSize: 11,
-                                                              ),
-                                                            );
-                                                          },
-                                                          loading: () => const SizedBox.shrink(),
-                                                          error: (_, __) => const SizedBox.shrink(),
-                                                        );
-                                                      },
-                                                    ),
-                                                  ],
+                                                      const SizedBox(width: 6),
+                                                      Text(
+                                                        _usedAi
+                                                            ? l10n.smartExtraction
+                                                            : l10n.basicExtraction,
+                                                        style: theme
+                                                            .textTheme.labelSmall
+                                                            ?.copyWith(
+                                                          color: _usedAi
+                                                              ? Colors.blue
+                                                              : Colors.grey,
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
                                                 ),
+                                              ),
+                                              // Quota chip (small, below badge)
+                                              Consumer(
+                                                builder: (context, ref, _) {
+                                                  final limitsAsync =
+                                                      ref.watch(smartParsingLimitsProvider);
+                                                  return limitsAsync.when(
+                                                    data: (limits) {
+                                                      return Center(
+                                                        child: Container(
+                                                          margin: const EdgeInsets.only(bottom: 16),
+                                                          padding: const EdgeInsets.symmetric(
+                                                            horizontal: 8,
+                                                            vertical: 4,
+                                                          ),
+                                                          decoration: BoxDecoration(
+                                                            color: theme.colorScheme.surfaceContainerHighest
+                                                                .withValues(alpha: 0.8),
+                                                            borderRadius: BorderRadius.circular(8),
+                                                          ),
+                                                          child: Text(
+                                                            limits.isUnlimited
+                                                                ? l10n.smartExtractionUnlimited
+                                                                : l10n.smartExtractionQuotaLeft(
+                                                                    limits.monthlyRemaining,
+                                                                    limits.monthlyTotal,
+                                                                  ),
+                                                            style: theme.textTheme.labelSmall?.copyWith(
+                                                              color: theme.colorScheme.onSurfaceVariant,
+                                                              fontSize: 11,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      );
+                                                    },
+                                                    loading: () => const SizedBox(height: 32),
+                                                    error: (_, __) => const SizedBox(height: 32),
+                                                  );
+                                                },
                                               ),
                                               // When simple extraction was used, prompt for Smart extraction
                                               if (!_usedAi && _receiptData != null)
@@ -554,31 +540,6 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
                                               ),
                                             ],
                                           ),
-                                        ),
-                                      ),
-                                    if (!_isScanning &&
-                                        !_usedAi &&
-                                        _modelDownloaded)
-                                      Positioned(
-                                        top: 8,
-                                        right: 8,
-                                        child: IconButton(
-                                          icon: const Icon(Icons.auto_awesome),
-                                          tooltip: l10n.smartExtraction,
-                                          onPressed: () => Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  const PremiumScreen(),
-                                            ),
-                                          ),
-                                          style: IconButton.styleFrom(
-                                            backgroundColor: Colors.blue
-                                                .withValues(alpha: 0.1),
-                                            foregroundColor: Colors.blue,
-                                            padding: const EdgeInsets.all(8),
-                                          ),
-                                          iconSize: 24,
                                         ),
                                       ),
                                   ],

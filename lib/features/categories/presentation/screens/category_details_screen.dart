@@ -154,7 +154,7 @@ class CategoryDetailsScreen extends ConsumerWidget {
 
                         // Summary Card
                         InkWell(
-                          onTap: () {
+                          onTap: () async {
                             ref
                                 .read(transactionsPaginatedProvider.notifier)
                                 .applyFilters(
@@ -164,13 +164,15 @@ class CategoryDetailsScreen extends ConsumerWidget {
                                     endDate: selectedDateRange.endDate,
                                   ),
                                 );
-                            Navigator.push(
+                            await Navigator.push(
                               context,
                               MaterialPageRoute(
                                 builder: (context) =>
                                     const TransactionsListScreen(),
                               ),
                             );
+                            // Refresh summary when returning (e.g. after editing a transaction)
+                            ref.invalidate(categoryStatisticsProvider(categoryUuid));
                           },
                           borderRadius: BorderRadius.circular(24),
                           child: Container(

@@ -424,59 +424,119 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
                       ),
 
                       const SizedBox(height: 20),
-                      // Instruction card: different style for basic vs Smart AI; tap to open hints
-                      InkWell(
-                        onTap: _showHints,
-                        borderRadius: BorderRadius.circular(16),
-                        child: Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 14),
-                          decoration: BoxDecoration(
-                            color: _modelDownloaded
-                                ? Colors.blue.withValues(alpha: 0.08)
-                                : Colors.grey.withValues(alpha: 0.08),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: _modelDownloaded
-                                  ? Colors.blue.withValues(alpha: 0.25)
-                                  : Colors.grey.withValues(alpha: 0.25),
-                              width: 1,
-                            ),
-                          ),
-                          child: Row(
+                      // Instruction card: reflect actual mode (Smart only when model + quota)
+                      Consumer(
+                        builder: (context, ref, _) {
+                          final limitsAsync =
+                              ref.watch(smartParsingLimitsProvider);
+                          final effectiveSmartMode = _modelDownloaded &&
+                              limitsAsync.maybeWhen(
+                                data: (limits) => limits.canAdd,
+                                orElse: () => false,
+                              );
+                          final simpleDueToQuota = _modelDownloaded &&
+                              limitsAsync.maybeWhen(
+                                data: (limits) => !limits.canAdd,
+                                orElse: () => false,
+                              );
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Icon(
-                                _modelDownloaded
-                                    ? Icons.auto_awesome
-                                    : Icons.rule_rounded,
-                                size: 22,
-                                color:
-                                    _modelDownloaded ? Colors.blue : Colors.grey,
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  _modelDownloaded
-                                      ? l10n.voiceInstructionSmart
-                                      : l10n.voiceInstructionBasic,
-                                  style: theme.textTheme.bodyMedium?.copyWith(
-                                    color: _modelDownloaded
-                                        ? Colors.blue.shade800
-                                        : theme.colorScheme.onSurfaceVariant,
-                                    fontWeight: FontWeight.w500,
+                              InkWell(
+                                onTap: _showHints,
+                                borderRadius: BorderRadius.circular(16),
+                                child: Container(
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16, vertical: 14),
+                                  decoration: BoxDecoration(
+                                    color: effectiveSmartMode
+                                        ? Colors.blue.withValues(alpha: 0.08)
+                                        : Colors.grey.withValues(alpha: 0.08),
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(
+                                      color: effectiveSmartMode
+                                          ? Colors.blue.withValues(alpha: 0.25)
+                                          : Colors.grey.withValues(alpha: 0.25),
+                                      width: 1,
+                                    ),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        effectiveSmartMode
+                                            ? Icons.auto_awesome
+                                            : Icons.rule_rounded,
+                                        size: 22,
+                                        color: effectiveSmartMode
+                                            ? Colors.blue
+                                            : Colors.grey,
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Text(
+                                          effectiveSmartMode
+                                              ? l10n.voiceInstructionSmart
+                                              : l10n.voiceInstructionBasic,
+                                          style: theme.textTheme.bodyMedium?.copyWith(
+                                            color: effectiveSmartMode
+                                                ? Colors.blue.shade800
+                                                : theme.colorScheme.onSurfaceVariant,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ),
+                                      Icon(
+                                        Icons.chevron_right,
+                                        color: effectiveSmartMode
+                                            ? Colors.blue
+                                            : Colors.grey,
+                                        size: 24,
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ),
-                              Icon(
-                                Icons.chevron_right,
-                                color:
-                                    _modelDownloaded ? Colors.blue : Colors.grey,
-                                size: 24,
-                              ),
+                              // When in simple mode due to quota expired, prompt for Smart extraction (same as receipt screen)
+                              if (simpleDueToQuota) ...[
+                                const SizedBox(height: 12),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 10),
+                                  decoration: BoxDecoration(
+                                    color: theme.colorScheme.primaryContainer
+                                        .withValues(alpha: 0.3),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          l10n.useSmartExtractionForBetterResults,
+                                          style: theme.textTheme.bodySmall?.copyWith(
+                                            color: theme.colorScheme.onSurface,
+                                          ),
+                                        ),
+                                      ),
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  const PremiumScreen(),
+                                            ),
+                                          );
+                                        },
+                                        child: Text(l10n.getIt),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
                             ],
-                          ),
-                        ),
+                          );
+                        },
                       ),
 
                       if (_isDownloading) ...[
@@ -563,13 +623,13 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      // AI Indicator
+                                      // Extraction badge (centered)
                                       Center(
                                         child: Container(
                                           padding: const EdgeInsets.symmetric(
-                                              horizontal: 12, vertical: 4),
+                                              horizontal: 12, vertical: 6),
                                           margin:
-                                              const EdgeInsets.only(bottom: 16),
+                                              const EdgeInsets.only(bottom: 6),
                                           decoration: BoxDecoration(
                                             color: _usedAi
                                                 ? Colors.blue
@@ -611,6 +671,56 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
                                             ],
                                           ),
                                         ),
+                                      ),
+                                      // Quota chip (small, below badge)
+                                      Consumer(
+                                        builder: (context, ref, _) {
+                                          final limitsAsync = ref.watch(
+                                              smartParsingLimitsProvider);
+                                          return limitsAsync.when(
+                                            data: (limits) {
+                                              return Center(
+                                                child: Container(
+                                                  margin: const EdgeInsets.only(
+                                                      bottom: 16),
+                                                  padding: const EdgeInsets
+                                                      .symmetric(
+                                                    horizontal: 8,
+                                                    vertical: 4,
+                                                  ),
+                                                  decoration: BoxDecoration(
+                                                    color: theme.colorScheme
+                                                        .surfaceContainerHighest
+                                                        .withValues(alpha: 0.8),
+                                                    borderRadius:
+                                                        BorderRadius.circular(8),
+                                                  ),
+                                                  child: Text(
+                                                    limits.isUnlimited
+                                                        ? l10n
+                                                            .smartExtractionUnlimited
+                                                        : l10n
+                                                            .smartExtractionQuotaLeft(
+                                                          limits.monthlyRemaining,
+                                                          limits.monthlyTotal,
+                                                        ),
+                                                    style: theme.textTheme
+                                                        .labelSmall
+                                                        ?.copyWith(
+                                                      color: theme.colorScheme
+                                                          .onSurfaceVariant,
+                                                      fontSize: 11,
+                                                    ),
+                                                  ),
+                                                ),
+                                              );
+                                            },
+                                            loading: () => const SizedBox(
+                                                height: 32),
+                                            error: (_, __) => const SizedBox(
+                                                height: 32),
+                                          );
+                                        },
                                       ),
 
                                       _buildDetailRow(l10n.amount,
@@ -711,37 +821,6 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
                                       ),
                                     ],
                                   ),
-                                ),
-                              ),
-                            if (!_isProcessing &&
-                                !_usedAi &&
-                                _modelDownloaded)
-                              Positioned(
-                                top: 6,
-                                right: 6,
-                                child: IconButton(
-                                  icon: const Icon(Icons.auto_awesome),
-                                  tooltip: l10n.smartExtraction,
-                                  onPressed: () => Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          const PremiumScreen(),
-                                    ),
-                                  ),
-                                  padding: EdgeInsets.zero,
-                                  constraints: const BoxConstraints(
-                                    minWidth: 32,
-                                    minHeight: 32,
-                                  ),
-                                  style: IconButton.styleFrom(
-                                    backgroundColor:
-                                        Colors.blue.withValues(alpha: 0.1),
-                                    foregroundColor: Colors.blue,
-                                    padding: const EdgeInsets.all(8),
-                                  ),
-                                  iconSize: 24,
-                                  color: Colors.blue,
                                 ),
                               ),
                           ],

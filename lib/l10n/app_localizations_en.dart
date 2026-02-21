@@ -1930,7 +1930,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String smartExtractionQuotaLeft(Object remaining, Object total) {
-    return '$remaining of $total left';
+    return '$remaining of $total left this month';
   }
 
   @override

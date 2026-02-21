@@ -947,7 +947,7 @@
   "exportYourData": "Export Your Data",
   "downloadHistoryCsvPdf": "Download your transaction history as CSV or PDF",
   "simpleExtractionResults": "Simple Extraction Results",
-  "smartExtractionQuotaLeft": "{remaining} of {total} left",
+  "smartExtractionQuotaLeft": "{remaining} of {total} left this month",
   "@smartExtractionQuotaLeft": {
     "placeholders": {
       "remaining": {},

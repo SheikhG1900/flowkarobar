@@ -3589,7 +3589,7 @@ abstract class AppLocalizations {
   /// No description provided for @smartExtractionQuotaLeft.
   ///
   /// In en, this message translates to:
-  /// **'{remaining} of {total} left'**
+  /// **'{remaining} of {total} left this month'**
   String smartExtractionQuotaLeft(Object remaining, Object total);
 
   /// No description provided for @smartExtractionUnlimited.

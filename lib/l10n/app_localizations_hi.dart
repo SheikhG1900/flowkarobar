@@ -1937,7 +1937,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String smartExtractionQuotaLeft(Object remaining, Object total) {
-    return '$remaining / $total शेष';
+    return 'इस महीने $remaining / $total शेष';
   }
 
   @override
