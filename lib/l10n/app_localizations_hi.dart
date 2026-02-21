@@ -1933,6 +1933,24 @@ class AppLocalizationsHi extends AppLocalizations {
       'अपना लेन-देन इतिहास CSV या PDF के रूप में डाउनलोड करें';
 
   @override
+  String get simpleExtractionResults => 'सरल निष्कर्षण परिणाम';
+
+  @override
+  String smartExtractionQuotaLeft(Object remaining, Object total) {
+    return '$remaining / $total शेष';
+  }
+
+  @override
+  String get smartExtractionUnlimited => 'असीमित';
+
+  @override
+  String get useSmartExtractionForBetterResults =>
+      'बेहतर परिणाम के लिए स्मार्ट निष्कर्षण इस्तेमाल करें।';
+
+  @override
+  String get getIt => 'लें';
+
+  @override
   String get startDate => 'शुरू होने की तारीख';
 
   @override

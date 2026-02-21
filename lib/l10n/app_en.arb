@@ -946,6 +946,17 @@
   "testPdfCategoriesReady": "Test PDF with all categories is ready. Choose an action:",
   "exportYourData": "Export Your Data",
   "downloadHistoryCsvPdf": "Download your transaction history as CSV or PDF",
+  "simpleExtractionResults": "Simple Extraction Results",
+  "smartExtractionQuotaLeft": "{remaining} of {total} left",
+  "@smartExtractionQuotaLeft": {
+    "placeholders": {
+      "remaining": {},
+      "total": {}
+    }
+  },
+  "smartExtractionUnlimited": "Unlimited",
+  "useSmartExtractionForBetterResults": "For better results use Smart extraction.",
+  "getIt": "Get it",
   "startDate": "Start Date",
   "endDate": "End Date",
   "selectDate": "Select date",

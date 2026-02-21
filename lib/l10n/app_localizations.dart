@@ -3580,6 +3580,36 @@ abstract class AppLocalizations {
   /// **'Download your transaction history as CSV or PDF'**
   String get downloadHistoryCsvPdf;
 
+  /// No description provided for @simpleExtractionResults.
+  ///
+  /// In en, this message translates to:
+  /// **'Simple Extraction Results'**
+  String get simpleExtractionResults;
+
+  /// No description provided for @smartExtractionQuotaLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'{remaining} of {total} left'**
+  String smartExtractionQuotaLeft(Object remaining, Object total);
+
+  /// No description provided for @smartExtractionUnlimited.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlimited'**
+  String get smartExtractionUnlimited;
+
+  /// No description provided for @useSmartExtractionForBetterResults.
+  ///
+  /// In en, this message translates to:
+  /// **'For better results use Smart extraction.'**
+  String get useSmartExtractionForBetterResults;
+
+  /// No description provided for @getIt.
+  ///
+  /// In en, this message translates to:
+  /// **'Get it'**
+  String get getIt;
+
   /// No description provided for @startDate.
   ///
   /// In en, this message translates to:

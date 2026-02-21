@@ -1,3 +1,4 @@
+import 'package:flowpaisa/features/transactions/domain/models/parsed_transaction_input.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 
 class ReceiptData {
@@ -7,7 +8,7 @@ class ReceiptData {
   final String? categoryName;
   
   // Candidates for ambiguity handling
-  final List<double> amountCandidates;
+  final List<AmountCandidate> amountCandidates;
   final List<DateTime> dateCandidates;
   final List<String> descriptionCandidates;
 
@@ -32,14 +33,14 @@ class ReceiptParser {
     final descriptionCandidates = _extractDescriptionCandidates(recognizedText, merchant);
 
     // Sort amounts: usually the Total is the largest number
-    amounts.sort((a, b) => b.compareTo(a));
-    
+    amounts.sort((a, b) => b.value.compareTo(a.value));
+
     // Sort dates: usually the receipt date is recent
     dates.sort((a, b) => b.compareTo(a));
 
     return ReceiptData(
       merchantName: merchant,
-      amount: amounts.isNotEmpty ? amounts.first : null,
+      amount: amounts.isNotEmpty ? amounts.first.value : null,
       date: dates.isNotEmpty ? dates.first : null,
       categoryName: category,
       amountCandidates: amounts,
@@ -116,23 +117,72 @@ class ReceiptParser {
     return topBlocks.first.text.split('\n').first.trim(); // Take first line of block
   }
 
-  /// Extract all possible amounts
-  List<double> _extractAmounts(RecognizedText text) {
-    final List<double> amounts = [];
-    // Regex for currency formats: 10.00, 1,200.50, .99
-    final regex = RegExp(r'[0-9]+[.,][0-9]{2}'); 
+  /// Extracts all possible amounts
+  List<AmountCandidate> _extractAmounts(RecognizedText text) {
+    final List<AmountCandidate> amounts = [];
+
+    // Use a flexible regex to find amount-shaped segments: digits followed by [.,] and digits.
+    // This prevents partial matches like "1,17" from "1,170".
+    final regex = RegExp(r'\d+(?:[.,]\d+)*');
 
     for (var line in text.blocks.expand((b) => b.lines)) {
-      final match = regex.firstMatch(line.text);
-      if (match != null) {
-        String cleanAmount = match.group(0)!.replaceAll(',', '');
-        final val = double.tryParse(cleanAmount);
-        if (val != null && val > 0 && val < 1000000) { // Sanity check
-          amounts.add(val);
+      final t = line.text.trim();
+      // Skip lines that are only fraction/percentage (e.g. "3/100" or "2.5%"); 
+      // keep lines that also have a clear amount (e.g. "3/100 Only. 2,239.63").
+      if ((t.contains('/') || t.contains('%')) &&
+          !RegExp(r'\d+[.,]\d{2}').hasMatch(t)) {
+        continue;
+      }
+
+      final matches = regex.allMatches(t);
+      for (final match in matches) {
+        final val = _normalizeAndParseAmount(match.group(0)!);
+        if (val != null && val > 0 && val < 1000000) {
+          amounts.add(AmountCandidate(value: val));
         }
       }
     }
     return amounts.toSet().toList(); // Remove duplicates
+  }
+
+  /// Normalizes digits/commas/dots and parses to double.
+  /// Uses the same logic as ReceiptAiParser for consistency.
+  static double? _normalizeAndParseAmount(String text) {
+    if (text.contains('%')) return null;
+
+    final buffer = StringBuffer();
+    for (int i = 0; i < text.length; i++) {
+      final c = text[i];
+      if (c == '.' ||
+          c == ',' ||
+          (c.codeUnitAt(0) >= 0x30 && c.codeUnitAt(0) <= 0x39)) {
+        buffer.write(c);
+      }
+    }
+    String clean = buffer.toString();
+    if (clean.isEmpty) return null;
+
+    final lastDot = clean.lastIndexOf('.');
+    final lastComma = clean.lastIndexOf(',');
+    final lastSeparatorIndex = (lastDot > lastComma) ? lastDot : lastComma;
+
+    if (lastSeparatorIndex != -1) {
+      final remainingAfterSeparator = clean.substring(lastSeparatorIndex + 1);
+      if (remainingAfterSeparator.length == 2 &&
+          RegExp(r'^\d{2}$').hasMatch(remainingAfterSeparator)) {
+        final prefix = clean.substring(0, lastSeparatorIndex);
+        final cleanPrefix = prefix.replaceAll('.', '').replaceAll(',', '');
+        clean = '$cleanPrefix.$remainingAfterSeparator';
+      } else {
+        clean = clean.replaceAll('.', '').replaceAll(',', '');
+      }
+    } else {
+      clean = clean.replaceAll('.', '').replaceAll(',', '');
+    }
+
+    final value = double.tryParse(clean);
+    if (value == null || value <= 0 || value > 1000000) return null;
+    return value;
   }
 
   /// Extract all possible dates

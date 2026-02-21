@@ -1,3 +1,4 @@
+import 'package:google_mlkit_document_scanner/google_mlkit_document_scanner.dart';
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/features/receipt_scan/domain/receipt_ai_parser.dart';
 import 'package:flowpaisa/features/currencies/presentation/providers/currencies_provider.dart';
@@ -7,7 +8,7 @@ import 'dart:io' if (dart.library.html) 'dart:html';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart'
-    show InputImage, RecognizedText, TextRecognizer;
+    show InputImage, TextRecognizer;
 import 'package:image_picker/image_picker.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/receipt_scan/domain/receipt_parser.dart';
@@ -22,6 +23,7 @@ import 'package:flowpaisa/features/premium/presentation/screens/premium_screen.d
 import 'package:flowpaisa/features/categories/presentation/providers/categories_provider.dart';
 import 'package:flowpaisa/core/database/database.dart' as db;
 import 'package:flowpaisa/core/theme/app_colors.dart';
+import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/core/utils/category_helper.dart';
 import 'package:google_mlkit_entity_extraction/google_mlkit_entity_extraction.dart';
 
@@ -44,7 +46,10 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
   bool _usedAi = false;
   bool _isDownloading = false;
   bool _modelDownloaded = false;
+  bool _showRuleBasedCandidates = false;
   ReceiptData? _receiptData;
+  ReceiptData? _aiRawResult;
+  ReceiptData? _ruleBasedRawResult;
 
   // Editable fields for review
   late TextEditingController _amountController;
@@ -115,6 +120,28 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
       return;
     }
     try {
+      if (source == ImageSource.camera) {
+        // Use Document Scanner for Camera
+        final options = DocumentScannerOptions(
+          mode: ScannerMode.filter,
+          pageLimit: 1,
+        );
+        final documentScanner = DocumentScanner(options: options);
+        final result = await documentScanner.scanDocument();
+        documentScanner.close();
+
+        final images = result.images;
+        if (images != null && images.isNotEmpty) {
+          setState(() {
+            _image = File(images.first);
+            _isScanning = true;
+          });
+          await _scanReceipt();
+        }
+        return;
+      }
+
+      // Use Image Picker for Gallery
       final XFile? pickedFile = await _picker.pickImage(
         source: source,
         maxWidth: 1800,
@@ -160,6 +187,11 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
           .isModelDownloaded(EntityExtractorLanguage.english.name);
       final limits = await PremiumGate.getSmartParsingLimits(ref);
 
+      // On first scan, download ML Kit model in background for next time (no explicit button).
+      if (!isModelReady && !_isDownloading) {
+        _startDownload();
+      }
+
       if (isModelReady && limits.canAdd) {
         aiResult = await _aiParser.parse(
           recognizedText.text,
@@ -181,20 +213,29 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
       }
 
       // 2. Fallback to rule-based parser if AI failed or not available
+      final ruleBasedData = _parser.parse(recognizedText);
+      
       final receiptData = usedAi
           ? ReceiptData(
               merchantName: aiResult!.description,
               amount: aiResult.amount,
               date: aiResult.date,
               categoryName: aiResult.categoryName,
-              amountCandidates: aiResult.amountCandidates,
-              descriptionCandidates: aiResult.descriptionCandidates,
+              // AI candidates only (with labels when available)
+              amountCandidates: [...aiResult.amountCandidates],
+              descriptionCandidates: {
+                ...aiResult.descriptionCandidates,
+                ...ruleBasedData.descriptionCandidates,
+              }.toList(),
             )
-          : _parser.parse(recognizedText);
+          : ruleBasedData;
 
       setState(() {
         _receiptData = receiptData;
+        _aiRawResult = usedAi ? receiptData : null;
+        _ruleBasedRawResult = ruleBasedData;
         _usedAi = usedAi;
+        _showRuleBasedCandidates = false; // Reset collapse state
         _amountController.text = receiptData.amount?.toStringAsFixed(2) ?? '';
         // Auto-select most relevant description from suggested list (first candidate) or merchant
         _merchantController.text = receiptData.descriptionCandidates.isNotEmpty
@@ -250,6 +291,7 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final currencySymbol = ref.watch(currencySymbolProvider);
+    final decimalPlaces = ref.watch(currencyDecimalPlacesProvider);
     final l10n = AppLocalizations.of(context)!;
     final activeCashbookColor = ref.watch(activeCashbookProvider).color;
 
@@ -261,34 +303,27 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
-          if (!_modelDownloaded && !_isDownloading)
-            IconButton(
-              icon: const Icon(Icons.auto_awesome_outlined),
-              tooltip: l10n.smartExtraction,
-              onPressed: () async {
-                final shouldDownload = await showDialog<bool>(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    title: Text(l10n.smartExtraction),
-                    content: const Text(
-                        "Download Smart AI model (~10MB) for better entity extraction and offline support?"),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context, false),
-                        child: Text(l10n.basicExtraction),
-                      ),
-                      ElevatedButton(
-                        onPressed: () => Navigator.pop(context, true),
-                        child: Text(l10n.downloadNow),
-                      ),
-                    ],
+          // Show premium/smart-scan button only when premium is required for smart scan (limit reached, model ready).
+          Consumer(
+            builder: (context, ref, _) {
+              final limitsAsync = ref.watch(smartParsingLimitsProvider);
+              final premiumRequired = limitsAsync.maybeWhen(
+                data: (limits) => !limits.canAdd && _modelDownloaded,
+                orElse: () => false,
+              );
+              if (!premiumRequired) return const SizedBox.shrink();
+              return IconButton(
+                icon: const Icon(Icons.auto_awesome_outlined),
+                tooltip: l10n.smartExtraction,
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const PremiumScreen(),
                   ),
-                );
-                if (shouldDownload == true) {
-                  _startDownload();
-                }
-              },
-            ),
+                ),
+              );
+            },
+          ),
         ],
       ),
       body: Container(
@@ -338,12 +373,12 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
                                           ),
                                           child: Column(
                                             children: [
-                                              // AI Indicator
+                                              // AI Indicator + Smart extraction quota
                                               Container(
                                                 padding:
                                                     const EdgeInsets.symmetric(
                                                         horizontal: 12,
-                                                        vertical: 4),
+                                                        vertical: 6),
                                                 margin: const EdgeInsets.only(
                                                     bottom: 16),
                                                 decoration: BoxDecoration(
@@ -356,8 +391,6 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
                                                       BorderRadius.circular(12),
                                                 ),
                                                 child: Row(
-                                                  mainAxisSize:
-                                                      MainAxisSize.min,
                                                   children: [
                                                     Icon(
                                                       _usedAi
@@ -384,9 +417,75 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
                                                             FontWeight.bold,
                                                       ),
                                                     ),
+                                                    const SizedBox(width: 8),
+                                                    Consumer(
+                                                      builder: (context, ref, _) {
+                                                        final limitsAsync =
+                                                            ref.watch(
+                                                                smartParsingLimitsProvider);
+                                                        return limitsAsync.when(
+                                                          data: (limits) {
+                                                            if (limits.isUnlimited) {
+                                                              return Text(
+                                                                l10n.smartExtractionUnlimited,
+                                                                style: theme.textTheme.labelSmall?.copyWith(
+                                                                  color: theme.colorScheme.onSurfaceVariant,
+                                                                  fontSize: 11,
+                                                                ),
+                                                              );
+                                                            }
+                                                            return Text(
+                                                              l10n.smartExtractionQuotaLeft(
+                                                                limits.monthlyRemaining,
+                                                                limits.monthlyTotal,
+                                                              ),
+                                                              style: theme.textTheme.labelSmall?.copyWith(
+                                                                color: theme.colorScheme.onSurfaceVariant,
+                                                                fontSize: 11,
+                                                              ),
+                                                            );
+                                                          },
+                                                          loading: () => const SizedBox.shrink(),
+                                                          error: (_, __) => const SizedBox.shrink(),
+                                                        );
+                                                      },
+                                                    ),
                                                   ],
                                                 ),
                                               ),
+                                              // When simple extraction was used, prompt for Smart extraction
+                                              if (!_usedAi && _receiptData != null)
+                                                Container(
+                                                  margin: const EdgeInsets.only(bottom: 16),
+                                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                                  decoration: BoxDecoration(
+                                                    color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
+                                                    borderRadius: BorderRadius.circular(12),
+                                                  ),
+                                                  child: Row(
+                                                    children: [
+                                                      Expanded(
+                                                        child: Text(
+                                                          l10n.useSmartExtractionForBetterResults,
+                                                          style: theme.textTheme.bodySmall?.copyWith(
+                                                            color: theme.colorScheme.onSurface,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      TextButton(
+                                                        onPressed: () {
+                                                          Navigator.push(
+                                                            context,
+                                                            MaterialPageRoute(
+                                                              builder: (context) => const PremiumScreen(),
+                                                            ),
+                                                          );
+                                                        },
+                                                        child: Text(l10n.getIt),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
                                               Text(
                                                 l10n.totalAmount,
                                                 style: theme
@@ -503,33 +602,28 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
                                   ),
                                 ],
 
-                                // Amount Chips
+                                // Amount candidates grouped by label (one card per label)
                                 if (_receiptData?.amountCandidates.isNotEmpty ==
                                         true &&
-                                    _receiptData!.amountCandidates.length > 1)
-                                  Padding(
-                                    padding: const EdgeInsets.only(top: 12),
-                                    child: Wrap(
-                                      spacing: 10,
-                                      runSpacing: 10,
-                                      children: _receiptData!.amountCandidates
-                                          .map((amt) {
-                                        final isSelected =
-                                            _amountController.text ==
-                                                amt.toStringAsFixed(2);
-                                        return _buildSuggestionChip(
-                                          label:
-                                              '$currencySymbol${amt.toStringAsFixed(2)}',
-                                          isSelected: isSelected,
-                                          activeColor: activeCashbookColor,
-                                          isDark: isDark,
-                                          onPressed: () => setState(() =>
-                                              _amountController.text =
-                                                  amt.toStringAsFixed(2)),
-                                        );
-                                      }).toList(),
-                                    ),
+                                    _receiptData!.amountCandidates.length >= 1)
+                                  _buildAmountCandidatesByLabel(
+                                    theme,
+                                    _receiptData!.amountCandidates,
+                                    currencySymbol,
+                                    decimalPlaces,
+                                    activeCashbookColor,
+                                    isDark,
+                                    l10n,
                                   ),
+
+                                // Rule-based (Simple Extraction) Candidates - Collapsed by default
+                                if (_usedAi &&
+                                    _ruleBasedRawResult != null &&
+                                    _ruleBasedRawResult!
+                                        .amountCandidates.isNotEmpty)
+                                  _buildRuleBasedSection(
+                                      theme, currencySymbol, decimalPlaces, isDark, activeCashbookColor, l10n),
+
                                 const SizedBox(height: 24),
                                 // Description (from receipt / merchant)
                                 TextFormField(
@@ -907,6 +1001,192 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
         borderRadius: BorderRadius.circular(20),
       ),
       onPressed: onPressed,
+    );
+  }
+
+  /// Groups amount candidates by normalized label and shows each group in a card.
+  /// Same label on multiple lines (e.g. split "Net" / "Amount") is grouped together.
+  Widget _buildAmountCandidatesByLabel(
+    ThemeData theme,
+    List<AmountCandidate> candidates,
+    String currencySymbol,
+    int decimalPlaces,
+    Color activeCashbookColor,
+    bool isDark,
+    AppLocalizations l10n,
+  ) {
+    if (candidates.isEmpty) return const SizedBox.shrink();
+
+    // Group by normalized label (trim + lowercase) so "Net Amount" and "net amount" merge
+    final Map<String, List<AmountCandidate>> byLabel = {};
+    for (final c in candidates) {
+      final key = (c.label ?? '').trim().toLowerCase();
+      byLabel.putIfAbsent(key, () => []).add(c);
+    }
+
+    // Within each group, dedupe by value (same amount from right/left/up/down)
+    final List<Widget> cards = [];
+    for (final entry in byLabel.entries) {
+      final displayLabel = entry.key.isEmpty
+          ? l10n.amount
+          : entry.value.first.label!.trim();
+      final seen = <double>{};
+      final uniqueInGroup = entry.value
+          .where((c) => seen.add(c.value))
+          .toList();
+      if (uniqueInGroup.isEmpty) continue;
+
+      cards.add(
+        SizedBox(
+          width: double.infinity,
+          child: Card(
+            margin: const EdgeInsets.only(top: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                alignment: WrapAlignment.start,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(right: 4),
+                    child: Text(
+                      displayLabel,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        color: theme.colorScheme.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  ...uniqueInGroup.map((candidate) {
+                    final formatted = AmountFormatter.formatAmount(
+                        candidate.value, decimalPlaces);
+                    final controllerVal = double.tryParse(
+                        _amountController.text.replaceAll(',', ''));
+                    final isSelected = controllerVal != null &&
+                        (controllerVal - candidate.value).abs() < 0.001;
+                    return _buildSuggestionChip(
+                      label: '$currencySymbol$formatted',
+                      isSelected: isSelected,
+                      activeColor: activeCashbookColor,
+                      isDark: isDark,
+                      onPressed: () => setState(
+                          () => _amountController.text = formatted),
+                    );
+                  }),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: cards,
+      ),
+    );
+  }
+
+  Widget _buildRuleBasedSection(
+    ThemeData theme,
+    String currencySymbol,
+    int decimalPlaces,
+    bool isDark,
+    Color activeCashbookColor,
+    AppLocalizations l10n,
+  ) {
+    // Filter out amounts already present in AI candidates to avoid duplicates
+    final aiAmounts = _aiRawResult?.amountCandidates ?? [];
+    final ruleBasedCandidates = _ruleBasedRawResult!.amountCandidates
+        .where((c) => !aiAmounts.any((aiC) => aiC.value == c.value))
+        .toList();
+
+    if (ruleBasedCandidates.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 16),
+        InkWell(
+          onTap: () => setState(
+              () => _showRuleBasedCandidates = !_showRuleBasedCandidates),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Row(
+              children: [
+                Icon(
+                  _showRuleBasedCandidates
+                      ? Icons.keyboard_arrow_down
+                      : Icons.keyboard_arrow_right,
+                  size: 20,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  l10n.simpleExtractionResults,
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.onSurfaceVariant
+                        .withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    ruleBasedCandidates.length.toString(),
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      fontSize: 10,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        if (_showRuleBasedCandidates)
+          Padding(
+            padding: const EdgeInsets.only(top: 8, left: 24),
+            child: Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: ruleBasedCandidates.map((candidate) {
+                final formatted = AmountFormatter.formatAmount(
+                    candidate.value, decimalPlaces);
+                final controllerVal = double.tryParse(
+                    _amountController.text.replaceAll(',', ''));
+                final isSelected = controllerVal != null &&
+                    (controllerVal - candidate.value).abs() < 0.001;
+                final labelText = candidate.label != null &&
+                        candidate.label!.trim().isNotEmpty
+                    ? '${candidate.label!.trim()}: $currencySymbol$formatted'
+                    : '$currencySymbol$formatted';
+                return _buildSuggestionChip(
+                  label: labelText,
+                  isSelected: isSelected,
+                  activeColor: activeCashbookColor,
+                  isDark: isDark,
+                  onPressed: () => setState(
+                      () => _amountController.text = formatted),
+                );
+              }).toList(),
+            ),
+          ),
+      ],
     );
   }
 }

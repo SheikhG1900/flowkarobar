@@ -1926,6 +1926,24 @@ class AppLocalizationsEn extends AppLocalizations {
       'Download your transaction history as CSV or PDF';
 
   @override
+  String get simpleExtractionResults => 'Simple Extraction Results';
+
+  @override
+  String smartExtractionQuotaLeft(Object remaining, Object total) {
+    return '$remaining of $total left';
+  }
+
+  @override
+  String get smartExtractionUnlimited => 'Unlimited';
+
+  @override
+  String get useSmartExtractionForBetterResults =>
+      'For better results use Smart extraction.';
+
+  @override
+  String get getIt => 'Get it';
+
+  @override
   String get startDate => 'Start Date';
 
   @override

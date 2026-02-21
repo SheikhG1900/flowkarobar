@@ -62,7 +62,8 @@ class VoiceAiParser extends BaseTransactionAiParser {
 
     final List<double> mlKitAmounts = extracted['amount'] as List<double>;
     final List<DateTime> mlKitDates = extracted['date'] as List<DateTime>;
-    List<double> amountCandidates = List.from(mlKitAmounts);
+    List<AmountCandidate> amountCandidates =
+        mlKitAmounts.map((v) => AmountCandidate(value: v)).toList();
 
     final lowerText = originalText.toLowerCase();
     final tokens = lowerText.split(RegExp(r'[\s,.]+'));
@@ -114,13 +115,15 @@ class VoiceAiParser extends BaseTransactionAiParser {
 
     for (var m in matches) {
       final val = double.tryParse(m.group(1)!.replaceAll(',', ''));
-      if (val != null && val <= 1000000 && !amountCandidates.contains(val)) {
-        amountCandidates.add(val);
+      if (val != null &&
+          val <= 1000000 &&
+          !amountCandidates.any((c) => c.value == val)) {
+        amountCandidates.add(AmountCandidate(value: val));
       }
     }
 
     if (amountCandidates.isNotEmpty) {
-      amount = amountCandidates.first;
+      amount = amountCandidates.first.value;
     }
 
     // Type detection.
@@ -316,7 +319,10 @@ class VoiceAiParser extends BaseTransactionAiParser {
       relationship = null;
     }
 
-    final uniqueCandidates = amountCandidates.toSet().toList();
+    final seen = <double>{};
+    final uniqueCandidates = amountCandidates
+        .where((c) => seen.add(c.value))
+        .toList();
 
     return ParsedTransactionInput(
       amount: amount,

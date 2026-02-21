@@ -1939,6 +1939,24 @@ class AppLocalizationsUr extends AppLocalizations {
       'اپنی لین دین کی ہسٹری CSV یا PDF کے طور پر ڈاؤن لوڈ کریں';
 
   @override
+  String get simpleExtractionResults => 'سادہ اخراج کے نتائج';
+
+  @override
+  String smartExtractionQuotaLeft(Object remaining, Object total) {
+    return '$remaining / $total باقی';
+  }
+
+  @override
+  String get smartExtractionUnlimited => 'لامحدود';
+
+  @override
+  String get useSmartExtractionForBetterResults =>
+      'بہتر نتائج کے لیے سمارٹ اخراج استعمال کریں۔';
+
+  @override
+  String get getIt => 'حاصل کریں';
+
+  @override
   String get startDate => 'شروع کی تاریخ';
 
   @override
