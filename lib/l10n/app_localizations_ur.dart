@@ -1957,6 +1957,24 @@ class AppLocalizationsUr extends AppLocalizations {
   String get getIt => 'حاصل کریں';
 
   @override
+  String get amountCalculatorTitle => 'رقم کا حساب لگائیں';
+
+  @override
+  String get amountCalculatorUndo => 'کالعدم کریں';
+
+  @override
+  String get amountCalculatorMultiply => 'ضرب';
+
+  @override
+  String get amountCalculatorDivide => 'تقسیم';
+
+  @override
+  String get amountCalculatorPercent => 'فیصد (%)';
+
+  @override
+  String get amountCalculatorButtonTooltip => 'کیلکولیٹر کھولیں';
+
+  @override
   String get startDate => 'شروع کی تاریخ';
 
   @override

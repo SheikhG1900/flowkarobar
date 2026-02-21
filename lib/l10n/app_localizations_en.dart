@@ -1944,6 +1944,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get getIt => 'Get it';
 
   @override
+  String get amountCalculatorTitle => 'Calculate amount';
+
+  @override
+  String get amountCalculatorUndo => 'Undo';
+
+  @override
+  String get amountCalculatorMultiply => 'Multiply';
+
+  @override
+  String get amountCalculatorDivide => 'Divide';
+
+  @override
+  String get amountCalculatorPercent => 'Percent (%)';
+
+  @override
+  String get amountCalculatorButtonTooltip => 'Open calculator';
+
+  @override
   String get startDate => 'Start Date';
 
   @override

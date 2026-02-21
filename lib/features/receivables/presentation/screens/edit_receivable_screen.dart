@@ -12,6 +12,9 @@ import 'package:flowpaisa/features/contacts/presentation/providers/contacts_prov
 import 'package:flowpaisa/features/contacts/presentation/screens/add_contact_screen.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
+import 'package:flowpaisa/shared/widgets/amount_calculator_sheet.dart';
+import 'package:flowpaisa/core/utils/amount_formatter.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 class EditReceivableScreen extends ConsumerStatefulWidget {
   final String receivableUuid;
@@ -94,8 +97,17 @@ class _EditReceivableScreenState extends ConsumerState<EditReceivableScreen> {
     }
   }
 
+  void _onAmountChanged() => setState(() {});
+
+  @override
+  void initState() {
+    super.initState();
+    _amountController.addListener(_onAmountChanged);
+  }
+
   @override
   void dispose() {
+    _amountController.removeListener(_onAmountChanged);
     _amountController.dispose();
     _descriptionController.dispose();
     super.dispose();
@@ -306,6 +318,7 @@ class _EditReceivableScreenState extends ConsumerState<EditReceivableScreen> {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final currencySymbol = ref.watch(currencySymbolProvider);
+    final decimalPlaces = ref.watch(currencyDecimalPlacesProvider);
 
     if (_isLoadingData) {
       return Scaffold(
@@ -409,6 +422,27 @@ class _EditReceivableScreenState extends ConsumerState<EditReceivableScreen> {
                         return null;
                       },
                     ),
+                    if ((double.tryParse(_amountController.text) ?? 0) > 0) ...[
+                      const SizedBox(height: 12),
+                      IconButton.filled(
+                        onPressed: () async {
+                          final amount = double.tryParse(_amountController.text) ?? 0.0;
+                          await AmountCalculatorSheet.show(
+                            context,
+                            initialAmount: amount,
+                            currencySymbol: currencySymbol,
+                            decimalPlaces: decimalPlaces,
+                            onDone: (result) {
+                              setState(() {
+                                _amountController.text = result.toStringAsFixed(decimalPlaces);
+                              });
+                            },
+                          );
+                        },
+                        icon: const Icon(Symbols.calculate, size: 22),
+                        tooltip: l10n.amountCalculatorButtonTooltip,
+                      ),
+                    ],
                   ],
                 ),
               ),

@@ -3610,6 +3610,42 @@ abstract class AppLocalizations {
   /// **'Get it'**
   String get getIt;
 
+  /// No description provided for @amountCalculatorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Calculate amount'**
+  String get amountCalculatorTitle;
+
+  /// No description provided for @amountCalculatorUndo.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get amountCalculatorUndo;
+
+  /// No description provided for @amountCalculatorMultiply.
+  ///
+  /// In en, this message translates to:
+  /// **'Multiply'**
+  String get amountCalculatorMultiply;
+
+  /// No description provided for @amountCalculatorDivide.
+  ///
+  /// In en, this message translates to:
+  /// **'Divide'**
+  String get amountCalculatorDivide;
+
+  /// No description provided for @amountCalculatorPercent.
+  ///
+  /// In en, this message translates to:
+  /// **'Percent (%)'**
+  String get amountCalculatorPercent;
+
+  /// No description provided for @amountCalculatorButtonTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Open calculator'**
+  String get amountCalculatorButtonTooltip;
+
   /// No description provided for @startDate.
   ///
   /// In en, this message translates to:

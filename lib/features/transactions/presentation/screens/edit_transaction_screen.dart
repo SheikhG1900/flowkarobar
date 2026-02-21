@@ -29,6 +29,8 @@ import 'package:flowpaisa/features/transactions/presentation/widgets/schedule_se
 import 'package:flowpaisa/features/transactions/presentation/providers/schedule_service_provider.dart';
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/features/transactions/presentation/screens/edit_split_transaction_screen.dart';
+import 'package:flowpaisa/shared/widgets/amount_calculator_sheet.dart';
+import 'package:flowpaisa/core/utils/amount_formatter.dart';
 
 class EditTransactionScreen extends ConsumerStatefulWidget {
   final Transaction transaction;
@@ -67,9 +69,12 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
   List<SplitShare> _groupShares = [];
   bool _isGroupSplit = false;
 
+  void _onAmountChanged() => setState(() {});
+
   @override
   void initState() {
     super.initState();
+    _amountController.addListener(_onAmountChanged);
     // Initialize with existing transaction data
     _amountController.text = widget.transaction.amount.toStringAsFixed(2);
     _descriptionController.text = widget.transaction.description ?? '';
@@ -110,6 +115,7 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
 
   @override
   void dispose() {
+    _amountController.removeListener(_onAmountChanged);
     _amountController.dispose();
     _descriptionController.dispose();
     super.dispose();
@@ -1226,6 +1232,7 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
     final theme = Theme.of(context);
     final isExpense = _selectedType == 'EXPENSE';
     final currencySymbol = ref.watch(currencySymbolProvider);
+    final decimalPlaces = ref.watch(currencyDecimalPlacesProvider);
     final scheduleLimitsAsync = ref.watch(scheduleLimitsProvider);
     final isSplitted = widget.transaction.linkedGroupId != null &&
         widget.transaction.linkedGroupId!.isNotEmpty;
@@ -1350,6 +1357,27 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                         return null;
                       },
                     ),
+                    if ((double.tryParse(_amountController.text) ?? 0) > 0) ...[
+                      const SizedBox(height: 12),
+                      IconButton.filled(
+                        onPressed: () async {
+                          final amount = double.tryParse(_amountController.text) ?? 0.0;
+                          await AmountCalculatorSheet.show(
+                            context,
+                            initialAmount: amount,
+                            currencySymbol: currencySymbol,
+                            decimalPlaces: decimalPlaces,
+                            onDone: (result) {
+                              setState(() {
+                                _amountController.text = result.toStringAsFixed(decimalPlaces);
+                              });
+                            },
+                          );
+                        },
+                        icon: const Icon(Symbols.calculate, size: 22),
+                        tooltip: l10n.amountCalculatorButtonTooltip,
+                      ),
+                    ],
                   ],
                 ),
               ),

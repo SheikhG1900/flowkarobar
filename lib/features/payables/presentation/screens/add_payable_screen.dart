@@ -21,6 +21,9 @@ import 'package:flowpaisa/shared/widgets/gradient_button.dart';
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/shared/widgets/limit_countdown_badge.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
+import 'package:flowpaisa/shared/widgets/amount_calculator_sheet.dart';
+import 'package:flowpaisa/core/utils/amount_formatter.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 class AddPayableScreen extends ConsumerStatefulWidget {
   final double? initialAmount;
@@ -60,9 +63,12 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
   Contact? _selectedContact;
   String? _selectedContactUuid;
 
+  void _onAmountChanged() => setState(() {});
+
   @override
   void initState() {
     super.initState();
+    _amountController.addListener(_onAmountChanged);
     if (widget.initialAmount != null) {
       _amountController.text = widget.initialAmount!.toStringAsFixed(2);
     }
@@ -133,6 +139,7 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
 
   @override
   void dispose() {
+    _amountController.removeListener(_onAmountChanged);
     _amountController.dispose();
     _descriptionController.dispose();
     super.dispose();
@@ -413,6 +420,7 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
     final theme = Theme.of(context);
     final limitsAsync = ref.watch(payableLimitsProvider);
     final currencySymbol = ref.watch(currencySymbolProvider);
+    final decimalPlaces = ref.watch(currencyDecimalPlacesProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -504,6 +512,27 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
                         return null;
                       },
                     ),
+                    if ((double.tryParse(_amountController.text) ?? 0) > 0) ...[
+                      const SizedBox(height: 12),
+                      IconButton.filled(
+                        onPressed: () async {
+                          final amount = double.tryParse(_amountController.text) ?? 0.0;
+                          await AmountCalculatorSheet.show(
+                            context,
+                            initialAmount: amount,
+                            currencySymbol: currencySymbol,
+                            decimalPlaces: decimalPlaces,
+                            onDone: (result) {
+                              setState(() {
+                                _amountController.text = result.toStringAsFixed(decimalPlaces);
+                              });
+                            },
+                          );
+                        },
+                        icon: const Icon(Symbols.calculate, size: 22),
+                        tooltip: l10n.amountCalculatorButtonTooltip,
+                      ),
+                    ],
                   ],
                 ),
               ),

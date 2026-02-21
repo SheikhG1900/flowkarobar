@@ -1951,6 +1951,24 @@ class AppLocalizationsHi extends AppLocalizations {
   String get getIt => 'लें';
 
   @override
+  String get amountCalculatorTitle => 'राशि की गणना करें';
+
+  @override
+  String get amountCalculatorUndo => 'पूर्ववत करें';
+
+  @override
+  String get amountCalculatorMultiply => 'गुणा';
+
+  @override
+  String get amountCalculatorDivide => 'भाग';
+
+  @override
+  String get amountCalculatorPercent => 'प्रतिशत (%)';
+
+  @override
+  String get amountCalculatorButtonTooltip => 'कैलकुलेटर खोलें';
+
+  @override
   String get startDate => 'शुरू होने की तारीख';
 
   @override
