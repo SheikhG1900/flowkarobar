@@ -1,3 +1,4 @@
+import 'package:flowpaisa/features/cashbooks/domain/models/cashbook.dart';
 import 'package:google_mlkit_document_scanner/google_mlkit_document_scanner.dart';
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/features/receipt_scan/domain/receipt_ai_parser.dart';
@@ -215,7 +216,7 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
 
       // 2. Fallback to rule-based parser if AI failed or not available
       final ruleBasedData = _parser.parse(recognizedText);
-      
+
       final receiptData = usedAi
           ? ReceiptData(
               merchantName: aiResult!.description,
@@ -294,7 +295,9 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
     final currencySymbol = ref.watch(currencySymbolProvider);
     final decimalPlaces = ref.watch(currencyDecimalPlacesProvider);
     final l10n = AppLocalizations.of(context)!;
-    final activeCashbookColor = ref.watch(activeCashbookProvider).color;
+    final activeCashbook = ref.watch(activeCashbookProvider);
+    final activeCashbookBackColor = activeCashbook.backColor(context);
+    final activeCashbookForeColor = activeCashbook.foreColor(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -309,7 +312,7 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              activeCashbookColor.withValues(alpha: 0.05),
+              activeCashbookBackColor.withValues(alpha: 0.05),
               Colors.transparent
             ],
             begin: Alignment.topCenter,
@@ -331,7 +334,8 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
                                 left: 16,
                                 right: 16,
                                 top: 16,
-                                bottom: MediaQuery.of(context).padding.bottom + 16,
+                                bottom:
+                                    MediaQuery.of(context).padding.bottom + 16,
                               ),
                               children: [
                                 Stack(
@@ -348,7 +352,7 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
                                                 BorderRadius.circular(20),
                                             boxShadow: [
                                               BoxShadow(
-                                                color: activeCashbookColor
+                                                color: activeCashbookBackColor
                                                     .withValues(alpha: 0.1),
                                                 blurRadius: 20,
                                                 offset: const Offset(0, 10),
@@ -360,28 +364,33 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
                                               // Extraction badge (centered)
                                               Center(
                                                 child: Container(
-                                                  padding:
-                                                      const EdgeInsets.symmetric(
-                                                          horizontal: 12,
-                                                          vertical: 6),
+                                                  padding: const EdgeInsets
+                                                      .symmetric(
+                                                      horizontal: 12,
+                                                      vertical: 6),
                                                   margin: const EdgeInsets.only(
                                                       bottom: 6),
                                                   decoration: BoxDecoration(
                                                     color: _usedAi
-                                                        ? Colors.blue.withValues(
-                                                            alpha: 0.1)
-                                                        : Colors.grey.withValues(
-                                                            alpha: 0.1),
+                                                        ? Colors.blue
+                                                            .withValues(
+                                                                alpha: 0.1)
+                                                        : Colors.grey
+                                                            .withValues(
+                                                                alpha: 0.1),
                                                     borderRadius:
-                                                        BorderRadius.circular(12),
+                                                        BorderRadius.circular(
+                                                            12),
                                                   ),
                                                   child: Row(
-                                                    mainAxisSize: MainAxisSize.min,
+                                                    mainAxisSize:
+                                                        MainAxisSize.min,
                                                     children: [
                                                       Icon(
                                                         _usedAi
                                                             ? Icons.auto_awesome
-                                                            : Icons.rule_rounded,
+                                                            : Icons
+                                                                .rule_rounded,
                                                         size: 14,
                                                         color: _usedAi
                                                             ? Colors.blue
@@ -390,10 +399,12 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
                                                       const SizedBox(width: 6),
                                                       Text(
                                                         _usedAi
-                                                            ? l10n.smartExtraction
-                                                            : l10n.basicExtraction,
-                                                        style: theme
-                                                            .textTheme.labelSmall
+                                                            ? l10n
+                                                                .smartExtraction
+                                                            : l10n
+                                                                .basicExtraction,
+                                                        style: theme.textTheme
+                                                            .labelSmall
                                                             ?.copyWith(
                                                           color: _usedAi
                                                               ? Colors.blue
@@ -409,58 +420,96 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
                                               // Quota chip (small, below badge)
                                               Consumer(
                                                 builder: (context, ref, _) {
-                                                  final limitsAsync =
-                                                      ref.watch(smartParsingLimitsProvider);
+                                                  final limitsAsync = ref.watch(
+                                                      smartParsingLimitsProvider);
                                                   return limitsAsync.when(
                                                     data: (limits) {
                                                       return Center(
                                                         child: Container(
-                                                          margin: const EdgeInsets.only(bottom: 16),
-                                                          padding: const EdgeInsets.symmetric(
+                                                          margin:
+                                                              const EdgeInsets
+                                                                  .only(
+                                                                  bottom: 16),
+                                                          padding:
+                                                              const EdgeInsets
+                                                                  .symmetric(
                                                             horizontal: 8,
                                                             vertical: 4,
                                                           ),
-                                                          decoration: BoxDecoration(
-                                                            color: theme.colorScheme.surfaceContainerHighest
-                                                                .withValues(alpha: 0.8),
-                                                            borderRadius: BorderRadius.circular(8),
+                                                          decoration:
+                                                              BoxDecoration(
+                                                            color: theme
+                                                                .colorScheme
+                                                                .surfaceContainerHighest
+                                                                .withValues(
+                                                                    alpha: 0.8),
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        8),
                                                           ),
                                                           child: Text(
                                                             limits.isUnlimited
-                                                                ? l10n.smartExtractionUnlimited
-                                                                : l10n.smartExtractionQuotaLeft(
-                                                                    limits.monthlyRemaining,
-                                                                    limits.monthlyTotal,
+                                                                ? l10n
+                                                                    .smartExtractionUnlimited
+                                                                : l10n
+                                                                    .smartExtractionQuotaLeft(
+                                                                    limits
+                                                                        .monthlyRemaining,
+                                                                    limits
+                                                                        .monthlyTotal,
                                                                   ),
-                                                            style: theme.textTheme.labelSmall?.copyWith(
-                                                              color: theme.colorScheme.onSurfaceVariant,
+                                                            style: theme
+                                                                .textTheme
+                                                                .labelSmall
+                                                                ?.copyWith(
+                                                              color: theme
+                                                                  .colorScheme
+                                                                  .onSurfaceVariant,
                                                               fontSize: 11,
                                                             ),
                                                           ),
                                                         ),
                                                       );
                                                     },
-                                                    loading: () => const SizedBox(height: 32),
-                                                    error: (_, __) => const SizedBox(height: 32),
+                                                    loading: () =>
+                                                        const SizedBox(
+                                                            height: 32),
+                                                    error: (_, __) =>
+                                                        const SizedBox(
+                                                            height: 32),
                                                   );
                                                 },
                                               ),
                                               // When simple extraction was used, prompt for Smart extraction
-                                              if (!_usedAi && _receiptData != null)
+                                              if (!_usedAi &&
+                                                  _receiptData != null)
                                                 Container(
-                                                  margin: const EdgeInsets.only(bottom: 16),
-                                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                                  margin: const EdgeInsets.only(
+                                                      bottom: 16),
+                                                  padding: const EdgeInsets
+                                                      .symmetric(
+                                                      horizontal: 12,
+                                                      vertical: 10),
                                                   decoration: BoxDecoration(
-                                                    color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
-                                                    borderRadius: BorderRadius.circular(12),
+                                                    color: theme.colorScheme
+                                                        .primaryContainer
+                                                        .withValues(alpha: 0.3),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            12),
                                                   ),
                                                   child: Row(
                                                     children: [
                                                       Expanded(
                                                         child: Text(
                                                           l10n.useSmartExtractionForBetterResults,
-                                                          style: theme.textTheme.bodySmall?.copyWith(
-                                                            color: theme.colorScheme.onSurface,
+                                                          style: theme.textTheme
+                                                              .bodySmall
+                                                              ?.copyWith(
+                                                            color: theme
+                                                                .colorScheme
+                                                                .onSurface,
                                                           ),
                                                         ),
                                                       ),
@@ -469,7 +518,8 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
                                                           Navigator.push(
                                                             context,
                                                             MaterialPageRoute(
-                                                              builder: (context) => const PremiumScreen(),
+                                                              builder: (context) =>
+                                                                  const PremiumScreen(),
                                                             ),
                                                           );
                                                         },
@@ -495,7 +545,8 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
                                                     .textTheme.displayLarge
                                                     ?.copyWith(
                                                   fontWeight: FontWeight.bold,
-                                                  color: activeCashbookColor,
+                                                  color:
+                                                      activeCashbookForeColor,
                                                 ),
                                                 decoration: InputDecoration(
                                                   prefixText:
@@ -561,10 +612,10 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
                                   SizedBox(
                                     width: double.infinity,
                                     child: LinearProgressIndicator(
-                                      backgroundColor: activeCashbookColor
+                                      backgroundColor: activeCashbookBackColor
                                           .withValues(alpha: 0.1),
                                       valueColor: AlwaysStoppedAnimation<Color>(
-                                          activeCashbookColor),
+                                          activeCashbookForeColor),
                                     ),
                                   ),
                                 ],
@@ -578,7 +629,7 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
                                     _receiptData!.amountCandidates,
                                     currencySymbol,
                                     decimalPlaces,
-                                    activeCashbookColor,
+                                    activeCashbook,
                                     isDark,
                                     l10n,
                                   ),
@@ -589,7 +640,12 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
                                     _ruleBasedRawResult!
                                         .amountCandidates.isNotEmpty)
                                   _buildRuleBasedSection(
-                                      theme, currencySymbol, decimalPlaces, isDark, activeCashbookColor, l10n),
+                                      theme,
+                                      currencySymbol,
+                                      decimalPlaces,
+                                      isDark,
+                                      activeCashbook,
+                                      l10n),
 
                                 const SizedBox(height: 24),
                                 // Description (from receipt / merchant)
@@ -620,7 +676,10 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
                                         return _buildSuggestionChip(
                                           label: desc,
                                           isSelected: isSelected,
-                                          activeColor: activeCashbookColor,
+                                          activeBackColor:
+                                              activeCashbookBackColor,
+                                          activeForeColor:
+                                              activeCashbookForeColor,
                                           isDark: isDark,
                                           onPressed: () => setState(() =>
                                               _merchantController.text = desc),
@@ -631,7 +690,7 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
                                 const SizedBox(height: 24),
                                 // Category suggestions (from description + parsed category)
                                 _buildCategorySuggestions(
-                                    theme, isDark, activeCashbookColor, l10n),
+                                    theme, isDark, activeCashbook, l10n),
                                 const SizedBox(height: 24),
                                 // Date Field
                                 InkWell(
@@ -645,7 +704,8 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
                                         data: theme.copyWith(
                                           colorScheme: theme.colorScheme
                                               .copyWith(
-                                                  primary: activeCashbookColor),
+                                                  primary:
+                                                      activeCashbookBackColor),
                                         ),
                                         child: child!,
                                       ),
@@ -699,7 +759,10 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
                                           label:
                                               AppDateFormatter.formatDate(date),
                                           isSelected: isSelected,
-                                          activeColor: activeCashbookColor,
+                                          activeForeColor:
+                                              activeCashbookForeColor,
+                                          activeBackColor:
+                                              activeCashbookBackColor,
                                           isDark: isDark,
                                           onPressed: () => setState(() {
                                             _selectedDate = date;
@@ -849,8 +912,10 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
     final matched = expenseCategories.where((db.Category c) {
       final nameLower = c.name.toLowerCase();
       if (descriptionLower.contains(nameLower)) return true;
-      if (receiptCategoryLower != null && nameLower == receiptCategoryLower) return true;
-      if (receiptCategoryLower != null && stringsMatchFuzzy(receiptCategoryLower, nameLower)) return true;
+      if (receiptCategoryLower != null && nameLower == receiptCategoryLower)
+        return true;
+      if (receiptCategoryLower != null &&
+          stringsMatchFuzzy(receiptCategoryLower, nameLower)) return true;
       for (final word in descriptionWords) {
         if (word.length >= 2 && stringsMatchFuzzy(word, nameLower)) return true;
       }
@@ -872,10 +937,12 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
   Widget _buildCategorySuggestions(
     ThemeData theme,
     bool isDark,
-    Color activeCashbookColor,
+    Cashbook activeCashbook,
     AppLocalizations l10n,
   ) {
     final categoriesAsync = ref.watch(categoriesByTypeProvider('EXPENSE'));
+    final activeCashbookBackColor = activeCashbook.backColor(context);
+    final activeCashbookForeColor = activeCashbook.foreColor(context);
     return categoriesAsync.when(
       data: (expenseCategories) {
         final suggested = _getSuggestedCategories(expenseCategories);
@@ -911,7 +978,7 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
               children: suggested.map((c) {
                 final isSelected = _selectedCategoryName != null &&
                     c.name == _selectedCategoryName;
-                Color chipColor = activeCashbookColor;
+                Color chipColor = activeCashbookBackColor;
                 if (c.color != null && c.color!.isNotEmpty) {
                   try {
                     chipColor =
@@ -924,7 +991,8 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
                 return _buildSuggestionChip(
                   label: c.name,
                   isSelected: isSelected,
-                  activeColor: chipColor,
+                  activeForeColor: iconColor,
+                  activeBackColor: chipColor,
                   isDark: isDark,
                   avatar: CategoryHelper.buildCategoryIcon(
                     c.icon,
@@ -951,7 +1019,8 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
   Widget _buildSuggestionChip({
     required String label,
     required bool isSelected,
-    required Color activeColor,
+    required Color activeForeColor,
+    required Color activeBackColor,
     required bool isDark,
     Widget? avatar,
     required VoidCallback onPressed,
@@ -962,14 +1031,15 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
       label: Text(
         label,
         style: TextStyle(
-          color: isSelected ? Colors.white : theme.colorScheme.onSurfaceVariant,
+          color:
+              isSelected ? activeForeColor : theme.colorScheme.onSurfaceVariant,
           fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
           fontSize: 12,
         ),
       ),
-      backgroundColor: isSelected ? activeColor : theme.colorScheme.surface,
+      backgroundColor: isSelected ? activeBackColor : theme.colorScheme.surface,
       side: BorderSide(
-        color: isSelected ? activeColor : theme.dividerColor,
+        color: isSelected ? activeForeColor : theme.dividerColor,
       ),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
@@ -985,10 +1055,12 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
     List<AmountCandidate> candidates,
     String currencySymbol,
     int decimalPlaces,
-    Color activeCashbookColor,
+    Cashbook activeCashbook,
     bool isDark,
     AppLocalizations l10n,
   ) {
+    final activeCashbookBackColor = activeCashbook.backColor(context);
+    final activeCashbookForeColor = activeCashbook.foreColor(context);
     if (candidates.isEmpty) return const SizedBox.shrink();
 
     // Group by normalized label (trim + lowercase) so "Net Amount" and "net amount" merge
@@ -1001,13 +1073,11 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
     // Within each group, dedupe by value (same amount from right/left/up/down)
     final List<Widget> cards = [];
     for (final entry in byLabel.entries) {
-      final displayLabel = entry.key.isEmpty
-          ? l10n.amount
-          : entry.value.first.label!.trim();
+      final displayLabel =
+          entry.key.isEmpty ? l10n.amount : entry.value.first.label!.trim();
       final seen = <double>{};
-      final uniqueInGroup = entry.value
-          .where((c) => seen.add(c.value))
-          .toList();
+      final uniqueInGroup =
+          entry.value.where((c) => seen.add(c.value)).toList();
       if (uniqueInGroup.isEmpty) continue;
 
       cards.add(
@@ -1046,10 +1116,11 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
                     return _buildSuggestionChip(
                       label: '$currencySymbol$formatted',
                       isSelected: isSelected,
-                      activeColor: activeCashbookColor,
+                      activeBackColor: activeCashbookBackColor,
+                      activeForeColor: activeCashbookForeColor,
                       isDark: isDark,
-                      onPressed: () => setState(
-                          () => _amountController.text = formatted),
+                      onPressed: () =>
+                          setState(() => _amountController.text = formatted),
                     );
                   }),
                 ],
@@ -1074,9 +1145,11 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
     String currencySymbol,
     int decimalPlaces,
     bool isDark,
-    Color activeCashbookColor,
+    Cashbook activeCashbook,
     AppLocalizations l10n,
   ) {
+    final activeCashbookBackColor = activeCashbook.backColor(context);
+    final activeCashbookForeColor = activeCashbook.foreColor(context);
     // Filter out amounts already present in AI candidates to avoid duplicates
     final aiAmounts = _aiRawResult?.amountCandidates ?? [];
     final ruleBasedCandidates = _ruleBasedRawResult!.amountCandidates
@@ -1141,8 +1214,8 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
               children: ruleBasedCandidates.map((candidate) {
                 final formatted = AmountFormatter.formatAmount(
                     candidate.value, decimalPlaces);
-                final controllerVal = double.tryParse(
-                    _amountController.text.replaceAll(',', ''));
+                final controllerVal =
+                    double.tryParse(_amountController.text.replaceAll(',', ''));
                 final isSelected = controllerVal != null &&
                     (controllerVal - candidate.value).abs() < 0.001;
                 final labelText = candidate.label != null &&
@@ -1152,10 +1225,11 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
                 return _buildSuggestionChip(
                   label: labelText,
                   isSelected: isSelected,
-                  activeColor: activeCashbookColor,
+                  activeBackColor: activeCashbookBackColor,
+                  activeForeColor: activeCashbookForeColor,
                   isDark: isDark,
-                  onPressed: () => setState(
-                      () => _amountController.text = formatted),
+                  onPressed: () =>
+                      setState(() => _amountController.text = formatted),
                 );
               }).toList(),
             ),

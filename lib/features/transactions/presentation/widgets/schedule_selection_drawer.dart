@@ -145,8 +145,8 @@ class _ScheduleSelectionDrawerState extends State<ScheduleSelectionDrawer> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: FilledButton(
-                      style:
-                          FilledButton.styleFrom(foregroundColor: Colors.white),
+                      style: FilledButton.styleFrom(
+                          foregroundColor: theme.colorScheme.onPrimary),
                       onPressed: _canConfirm() ? _onConfirm : null,
                       child: Text(l10n.confirm),
                     ),
