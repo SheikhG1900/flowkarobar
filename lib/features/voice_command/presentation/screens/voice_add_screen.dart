@@ -219,7 +219,12 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
         expand: false,
         builder: (context, scrollController) => SingleChildScrollView(
           controller: scrollController,
-          padding: const EdgeInsets.all(24),
+          padding: EdgeInsets.only(
+            left: 24,
+            right: 24,
+            top: 24,
+            bottom: MediaQuery.of(context).padding.bottom + 24,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -385,7 +390,12 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
       body: Stack(
         children: [
           SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
+            padding: EdgeInsets.only(
+              left: 24,
+              right: 24,
+              top: 24,
+              bottom: MediaQuery.of(context).padding.bottom + 24,
+            ),
             child: Opacity(
               opacity: (_isProcessing && _parsedResult == null) ? 0 : 1.0,
               child: AbsorbPointer(
