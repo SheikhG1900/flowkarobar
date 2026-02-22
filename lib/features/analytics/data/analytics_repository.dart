@@ -1,4 +1,4 @@
-﻿import 'package:drift/drift.dart';
+import 'package:drift/drift.dart';
 import 'package:flowpaisa/core/database/database.dart';
 
 class AnalyticsRepository {
@@ -17,6 +17,7 @@ class AnalyticsRepository {
       ..where(
           _database.transactions.date.isBetweenValues(startOfMonth, endOfMonth))
       ..where(_database.transactions.type.equals('EXPENSE'))
+      ..where(_database.transactions.isDeleted.equals(false))
       ..groupBy([_database.transactions.categoryUuid]);
     final results = await query.get();
     final List<CategoryExpense> categoryExpenses = [];
@@ -57,7 +58,8 @@ class AnalyticsRepository {
     final result = await (_database.selectOnly(_database.transactions)
           ..addColumns([_database.transactions.amount.sum()])
           ..where(_database.transactions.type.equals(type))
-          ..where(_database.transactions.date.isBetweenValues(start, end)))
+          ..where(_database.transactions.date.isBetweenValues(start, end))
+          ..where(_database.transactions.isDeleted.equals(false)))
         .getSingle();
     return result.read(_database.transactions.amount.sum()) ?? 0.0;
   }
@@ -67,6 +69,7 @@ class AnalyticsRepository {
     final contactsWithPayables = await (_database.selectOnly(_database.payables)
           ..addColumns([_database.payables.contactUuid])
           ..where(_database.payables.date.isBetweenValues(start, end))
+          ..where(_database.payables.isDeleted.equals(false))
           ..groupBy([_database.payables.contactUuid]))
         .get()
         .then((rows) =>
@@ -75,6 +78,7 @@ class AnalyticsRepository {
         await (_database.selectOnly(_database.receivables)
               ..addColumns([_database.receivables.contactUuid])
               ..where(_database.receivables.date.isBetweenValues(start, end))
+              ..where(_database.receivables.isDeleted.equals(false))
               ..groupBy([_database.receivables.contactUuid]))
             .get()
             .then((rows) => rows
@@ -94,13 +98,15 @@ class AnalyticsRepository {
       final totalPayable = await (_database.selectOnly(_database.payables)
             ..addColumns([_database.payables.amount.sum()])
             ..where(_database.payables.contactUuid.equals(contactUuid))
-            ..where(_database.payables.date.isBetweenValues(start, end)))
+            ..where(_database.payables.date.isBetweenValues(start, end))
+            ..where(_database.payables.isDeleted.equals(false)))
           .getSingle()
           .then((row) => row.read(_database.payables.amount.sum()) ?? 0.0);
       final totalReceivable = await (_database.selectOnly(_database.receivables)
             ..addColumns([_database.receivables.amount.sum()])
             ..where(_database.receivables.contactUuid.equals(contactUuid))
-            ..where(_database.receivables.date.isBetweenValues(start, end)))
+            ..where(_database.receivables.date.isBetweenValues(start, end))
+            ..where(_database.receivables.isDeleted.equals(false)))
           .getSingle()
           .then((row) => row.read(_database.receivables.amount.sum()) ?? 0.0);
       summaries.add(ContactSummary(
@@ -115,6 +121,7 @@ class AnalyticsRepository {
   Future<List<ContactSummary>> getAllTimeContactSummaries() async {
     final contactsWithPayables = await (_database.selectOnly(_database.payables)
           ..addColumns([_database.payables.contactUuid])
+          ..where(_database.payables.isDeleted.equals(false))
           ..groupBy([_database.payables.contactUuid]))
         .get()
         .then((rows) =>
@@ -122,6 +129,7 @@ class AnalyticsRepository {
     final contactsWithReceivables =
         await (_database.selectOnly(_database.receivables)
               ..addColumns([_database.receivables.contactUuid])
+              ..where(_database.receivables.isDeleted.equals(false))
               ..groupBy([_database.receivables.contactUuid]))
             .get()
             .then((rows) => rows
@@ -140,12 +148,14 @@ class AnalyticsRepository {
       if (contact == null) continue;
       final totalPayable = await (_database.selectOnly(_database.payables)
             ..addColumns([_database.payables.amount.sum()])
-            ..where(_database.payables.contactUuid.equals(contactUuid)))
+            ..where(_database.payables.contactUuid.equals(contactUuid))
+            ..where(_database.payables.isDeleted.equals(false)))
           .getSingle()
           .then((row) => row.read(_database.payables.amount.sum()) ?? 0.0);
       final totalReceivable = await (_database.selectOnly(_database.receivables)
             ..addColumns([_database.receivables.amount.sum()])
-            ..where(_database.receivables.contactUuid.equals(contactUuid)))
+            ..where(_database.receivables.contactUuid.equals(contactUuid))
+            ..where(_database.receivables.isDeleted.equals(false)))
           .getSingle()
           .then((row) => row.read(_database.receivables.amount.sum()) ?? 0.0);
       summaries.add(ContactSummary(
@@ -161,12 +171,14 @@ class AnalyticsRepository {
       DateTime start, DateTime end) async {
     final totalPayable = await (_database.selectOnly(_database.payables)
           ..addColumns([_database.payables.amount.sum()])
-          ..where(_database.payables.date.isBetweenValues(start, end)))
+          ..where(_database.payables.date.isBetweenValues(start, end))
+          ..where(_database.payables.isDeleted.equals(false)))
         .getSingle()
         .then((row) => row.read(_database.payables.amount.sum()) ?? 0.0);
     final totalReceivable = await (_database.selectOnly(_database.receivables)
           ..addColumns([_database.receivables.amount.sum()])
-          ..where(_database.receivables.date.isBetweenValues(start, end)))
+          ..where(_database.receivables.date.isBetweenValues(start, end))
+          ..where(_database.receivables.isDeleted.equals(false)))
         .getSingle()
         .then((row) => row.read(_database.receivables.amount.sum()) ?? 0.0);
     final totalExpense = await _getTotalByType('EXPENSE', start, end);
@@ -180,21 +192,25 @@ class AnalyticsRepository {
 
   Future<FinancialSummary> getAllTimeFinancialSummary() async {
     final totalPayable = await (_database.selectOnly(_database.payables)
-          ..addColumns([_database.payables.amount.sum()]))
+          ..addColumns([_database.payables.amount.sum()])
+          ..where(_database.payables.isDeleted.equals(false)))
         .getSingle()
         .then((row) => row.read(_database.payables.amount.sum()) ?? 0.0);
     final totalReceivable = await (_database.selectOnly(_database.receivables)
-          ..addColumns([_database.receivables.amount.sum()]))
+          ..addColumns([_database.receivables.amount.sum()])
+          ..where(_database.receivables.isDeleted.equals(false)))
         .getSingle()
         .then((row) => row.read(_database.receivables.amount.sum()) ?? 0.0);
     final totalExpense = await (_database.selectOnly(_database.transactions)
           ..addColumns([_database.transactions.amount.sum()])
-          ..where(_database.transactions.type.equals('EXPENSE')))
+          ..where(_database.transactions.type.equals('EXPENSE'))
+          ..where(_database.transactions.isDeleted.equals(false)))
         .getSingle()
         .then((row) => row.read(_database.transactions.amount.sum()) ?? 0.0);
     final totalIncome = await (_database.selectOnly(_database.transactions)
           ..addColumns([_database.transactions.amount.sum()])
-          ..where(_database.transactions.type.equals('INCOME')))
+          ..where(_database.transactions.type.equals('INCOME'))
+          ..where(_database.transactions.isDeleted.equals(false)))
         .getSingle()
         .then((row) => row.read(_database.transactions.amount.sum()) ?? 0.0);
     return FinancialSummary(
@@ -214,12 +230,14 @@ class AnalyticsRepository {
       final end = DateTime(month.year, month.month + 1, 0, 23, 59, 59);
       final totalPayable = await (_database.selectOnly(_database.payables)
             ..addColumns([_database.payables.amount.sum()])
-            ..where(_database.payables.date.isBetweenValues(start, end)))
+            ..where(_database.payables.date.isBetweenValues(start, end))
+            ..where(_database.payables.isDeleted.equals(false)))
           .getSingle()
           .then((row) => row.read(_database.payables.amount.sum()) ?? 0.0);
       final totalReceivable = await (_database.selectOnly(_database.receivables)
             ..addColumns([_database.receivables.amount.sum()])
-            ..where(_database.receivables.date.isBetweenValues(start, end)))
+            ..where(_database.receivables.date.isBetweenValues(start, end))
+            ..where(_database.receivables.isDeleted.equals(false)))
           .getSingle()
           .then((row) => row.read(_database.receivables.amount.sum()) ?? 0.0);
       trends.add(PayableReceivableTrend(
@@ -241,40 +259,46 @@ class AnalyticsRepository {
     final pendingPayables = await (_database.selectOnly(_database.payables)
           ..addColumns([_database.payables.amount.sum()])
           ..where(_database.payables.date.isBetweenValues(start, end))
-          ..where(_database.payables.status.equals('PENDING')))
+          ..where(_database.payables.status.equals('PENDING'))
+          ..where(_database.payables.isDeleted.equals(false)))
         .getSingle()
         .then((row) => row.read(_database.payables.amount.sum()) ?? 0.0);
     final paidPayables = await (_database.selectOnly(_database.payables)
           ..addColumns([_database.payables.amount.sum()])
           ..where(_database.payables.date.isBetweenValues(start, end))
-          ..where(_database.payables.status.equals('PAID')))
+          ..where(_database.payables.status.equals('PAID'))
+          ..where(_database.payables.isDeleted.equals(false)))
         .getSingle()
         .then((row) => row.read(_database.payables.amount.sum()) ?? 0.0);
     final cancelledPayables = await (_database.selectOnly(_database.payables)
           ..addColumns([_database.payables.amount.sum()])
           ..where(_database.payables.date.isBetweenValues(start, end))
-          ..where(_database.payables.status.equals('CANCELLED')))
+          ..where(_database.payables.status.equals('CANCELLED'))
+          ..where(_database.payables.isDeleted.equals(false)))
         .getSingle()
         .then((row) => row.read(_database.payables.amount.sum()) ?? 0.0);
     final pendingReceivables =
         await (_database.selectOnly(_database.receivables)
               ..addColumns([_database.receivables.amount.sum()])
               ..where(_database.receivables.date.isBetweenValues(start, end))
-              ..where(_database.receivables.status.equals('PENDING')))
+              ..where(_database.receivables.status.equals('PENDING'))
+              ..where(_database.receivables.isDeleted.equals(false)))
             .getSingle()
             .then((row) => row.read(_database.receivables.amount.sum()) ?? 0.0);
     final receivedReceivables =
         await (_database.selectOnly(_database.receivables)
               ..addColumns([_database.receivables.amount.sum()])
               ..where(_database.receivables.date.isBetweenValues(start, end))
-              ..where(_database.receivables.status.equals('RECEIVED')))
+              ..where(_database.receivables.status.equals('RECEIVED'))
+              ..where(_database.receivables.isDeleted.equals(false)))
             .getSingle()
             .then((row) => row.read(_database.receivables.amount.sum()) ?? 0.0);
     final cancelledReceivables =
         await (_database.selectOnly(_database.receivables)
               ..addColumns([_database.receivables.amount.sum()])
               ..where(_database.receivables.date.isBetweenValues(start, end))
-              ..where(_database.receivables.status.equals('CANCELLED')))
+              ..where(_database.receivables.status.equals('CANCELLED'))
+              ..where(_database.receivables.isDeleted.equals(false)))
             .getSingle()
             .then((row) => row.read(_database.receivables.amount.sum()) ?? 0.0);
     return StatusDistribution(
@@ -295,6 +319,7 @@ class AnalyticsRepository {
       ])
       ..where(_database.transactions.date.isBetweenValues(start, end))
       ..where(_database.transactions.type.equals('INCOME'))
+      ..where(_database.transactions.isDeleted.equals(false))
       ..groupBy([_database.transactions.categoryUuid]);
     final results = await query.get();
     final List<CategoryIncome> categoryIncomes = [];
@@ -325,14 +350,16 @@ class AnalyticsRepository {
     final totalAmount = await (_database.selectOnly(_database.transactions)
           ..addColumns([_database.transactions.amount.sum()])
           ..where(_database.transactions.categoryUuid.equals(categoryUuid))
-          ..where(_database.transactions.date.isBetweenValues(start, end)))
+          ..where(_database.transactions.date.isBetweenValues(start, end))
+          ..where(_database.transactions.isDeleted.equals(false)))
         .getSingle()
         .then((row) => row.read(_database.transactions.amount.sum()) ?? 0.0);
 
     final transactionCount = await (_database.selectOnly(_database.transactions)
           ..addColumns([_database.transactions.uuid.count()])
           ..where(_database.transactions.categoryUuid.equals(categoryUuid))
-          ..where(_database.transactions.date.isBetweenValues(start, end)))
+          ..where(_database.transactions.date.isBetweenValues(start, end))
+          ..where(_database.transactions.isDeleted.equals(false)))
         .getSingle()
         .then((row) => row.read(_database.transactions.uuid.count()) ?? 0);
 
