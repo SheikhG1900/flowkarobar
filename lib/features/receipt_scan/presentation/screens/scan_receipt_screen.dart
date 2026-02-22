@@ -677,9 +677,9 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
                                           label: desc,
                                           isSelected: isSelected,
                                           activeBackColor:
-                                              activeCashbookBackColor,
-                                          activeForeColor:
                                               activeCashbookForeColor,
+                                          activeForeColor:
+                                              activeCashbookBackColor,
                                           isDark: isDark,
                                           onPressed: () => setState(() =>
                                               _merchantController.text = desc),
@@ -760,9 +760,9 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
                                               AppDateFormatter.formatDate(date),
                                           isSelected: isSelected,
                                           activeForeColor:
-                                              activeCashbookForeColor,
-                                          activeBackColor:
                                               activeCashbookBackColor,
+                                          activeBackColor:
+                                              activeCashbookForeColor,
                                           isDark: isDark,
                                           onPressed: () => setState(() {
                                             _selectedDate = date;
@@ -978,7 +978,7 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
               children: suggested.map((c) {
                 final isSelected = _selectedCategoryName != null &&
                     c.name == _selectedCategoryName;
-                Color chipColor = activeCashbookBackColor;
+                Color chipColor = activeCashbookForeColor;
                 if (c.color != null && c.color!.isNotEmpty) {
                   try {
                     chipColor =
@@ -1116,8 +1116,8 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
                     return _buildSuggestionChip(
                       label: '$currencySymbol$formatted',
                       isSelected: isSelected,
-                      activeBackColor: activeCashbookBackColor,
-                      activeForeColor: activeCashbookForeColor,
+                      activeBackColor: activeCashbookForeColor,
+                      activeForeColor: activeCashbookBackColor,
                       isDark: isDark,
                       onPressed: () =>
                           setState(() => _amountController.text = formatted),
@@ -1225,8 +1225,8 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
                 return _buildSuggestionChip(
                   label: labelText,
                   isSelected: isSelected,
-                  activeBackColor: activeCashbookBackColor,
-                  activeForeColor: activeCashbookForeColor,
+                  activeBackColor: activeCashbookForeColor,
+                  activeForeColor: activeCashbookBackColor,
                   isDark: isDark,
                   onPressed: () =>
                       setState(() => _amountController.text = formatted),

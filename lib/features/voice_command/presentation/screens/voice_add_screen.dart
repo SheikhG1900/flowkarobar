@@ -1,3 +1,4 @@
+import 'package:flowpaisa/features/cashbooks/domain/models/cashbook.dart';
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
 import 'package:flowpaisa/features/categories/presentation/providers/categories_provider.dart';
@@ -381,7 +382,9 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
-    final activeCashbookColor = ref.watch(activeCashbookProvider).color;
+    final activeCashbook = ref.watch(activeCashbookProvider);
+    final activeCashbookBackColor = activeCashbook.backColor(context);
+    final activeCashbookForeColor = activeCashbook.foreColor(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -411,14 +414,15 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
                           width: 100,
                           height: 100,
                           decoration: BoxDecoration(
-                            color:
-                                _isListening ? Colors.red : activeCashbookColor,
+                            color: _isListening
+                                ? Colors.red
+                                : activeCashbookForeColor,
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
                                 color: (_isListening
                                         ? Colors.red
-                                        : activeCashbookColor)
+                                        : activeCashbookForeColor)
                                     .withValues(alpha: 0.3),
                                 blurRadius: 20,
                                 spreadRadius: 5,
@@ -427,7 +431,9 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
                           ),
                           child: Icon(
                             _isListening ? Icons.stop : Icons.mic,
-                            color: Colors.white,
+                            color: _isListening
+                                ? Colors.white
+                                : activeCashbookBackColor,
                             size: 48,
                           ),
                         ),
@@ -568,9 +574,9 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
                           width: 200,
                           child: LinearProgressIndicator(
                             backgroundColor:
-                                activeCashbookColor.withValues(alpha: 0.1),
+                                activeCashbookBackColor.withValues(alpha: 0.1),
                             valueColor: AlwaysStoppedAnimation<Color>(
-                                activeCashbookColor),
+                                activeCashbookForeColor),
                           ),
                         ),
                       ],
@@ -596,7 +602,7 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
                                     value: _includeTextAsDescription,
                                     onChanged: (val) => setState(
                                         () => _includeTextAsDescription = val),
-                                    activeColor: activeCashbookColor,
+                                    activeThumbColor: activeCashbookForeColor,
                                   ),
                                 ),
                               ],
@@ -756,11 +762,11 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
 
                                       // Category selection
                                       _buildCategorySuggestions(
-                                          theme, activeCashbookColor, l10n),
+                                          theme, activeCashbook, l10n),
 
                                       // Contact selection
                                       _buildContactSuggestions(
-                                          theme, activeCashbookColor, l10n),
+                                          theme, activeCashbook, l10n),
 
                                       if (_parsedResult?.paidRelationship !=
                                           null)
@@ -916,7 +922,10 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
   }
 
   Widget _buildCategorySuggestions(
-      ThemeData theme, Color activeCashbookColor, AppLocalizations l10n) {
+      ThemeData theme, Cashbook activeCashbook, AppLocalizations l10n) {
+    final activeCashbookBackColor = activeCashbook.backColor(context);
+    final activeCashbookForeColor = activeCashbook.foreColor(context);
+
     final type = _parsedResult?.type ?? 'EXPENSE';
     final categoriesAsync = ref.watch(categoriesByTypeProvider(type));
 
@@ -973,20 +982,20 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
                         c.name.toLowerCase() ==
                         _parsedResult!.categoryName!.toLowerCase()))
                   _buildSuggestionChip(
-                    label: _parsedResult!.categoryName!,
-                    isSelected:
-                        _selectedCategoryName == _parsedResult!.categoryName,
-                    onPressed: () => setState(() {
-                      _selectedCategoryName = _parsedResult!.categoryName;
-                      _selectedCategoryColor = null;
-                      _selectedCategoryIcon = null;
-                    }),
-                    activeColor: activeCashbookColor,
-                  ),
+                      label: _parsedResult!.categoryName!,
+                      isSelected:
+                          _selectedCategoryName == _parsedResult!.categoryName,
+                      onPressed: () => setState(() {
+                            _selectedCategoryName = _parsedResult!.categoryName;
+                            _selectedCategoryColor = null;
+                            _selectedCategoryIcon = null;
+                          }),
+                      activeForeColor: activeCashbookBackColor,
+                      activeBackColor: activeCashbookForeColor),
                 // Suggested ones from list
                 ...suggested.map((c) {
                   final isSelected = _selectedCategoryName == c.name;
-                  Color chipColor = activeCashbookColor;
+                  Color chipColor = activeCashbookForeColor;
                   if (c.color != null) {
                     try {
                       chipColor =
@@ -1002,7 +1011,8 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
                       _selectedCategoryColor = c.color;
                       _selectedCategoryIcon = c.icon;
                     }),
-                    activeColor: chipColor,
+                    activeBackColor: chipColor,
+                    activeForeColor: isSelected ? Colors.white : chipColor,
                     avatar: c.icon != null
                         ? Icon(
                             IconHelper.getIconData(c.icon),
@@ -1023,8 +1033,10 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
   }
 
   Widget _buildContactSuggestions(
-      ThemeData theme, Color activeCashbookColor, AppLocalizations l10n) {
+      ThemeData theme, Cashbook activeCashbook, AppLocalizations l10n) {
     final contactsAsync = ref.watch(contactsListProvider);
+    final activeCashbookBackColor = activeCashbook.backColor(context);
+    final activeCashbookForeColor = activeCashbook.foreColor(context);
 
     return contactsAsync.when(
       data: (contacts) {
@@ -1083,12 +1095,13 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
                     onPressed: () => setState(() {
                       _selectedContactName = _parsedResult!.contactName;
                     }),
-                    activeColor: activeCashbookColor,
+                    activeBackColor: activeCashbookForeColor,
+                    activeForeColor: activeCashbookBackColor,
                   ),
                 // Suggested ones
                 ...suggested.map((c) {
                   final isSelected = _selectedContactName == c.name;
-                  Color contactColor = activeCashbookColor;
+                  Color contactColor = activeCashbookForeColor;
 
                   return _buildSuggestionChip(
                     label: c.name,
@@ -1096,7 +1109,8 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
                     onPressed: () => setState(() {
                       _selectedContactName = c.name;
                     }),
-                    activeColor: contactColor,
+                    activeBackColor: contactColor,
+                    activeForeColor: activeCashbookBackColor,
                     avatar: CircleAvatar(
                       radius: 8,
                       backgroundColor: isSelected
@@ -1127,7 +1141,8 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
     required String label,
     required bool isSelected,
     required VoidCallback onPressed,
-    required Color activeColor,
+    required Color activeBackColor,
+    required Color activeForeColor,
     Widget? avatar,
   }) {
     return ActionChip(
@@ -1136,15 +1151,18 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
         label,
         style: TextStyle(
           fontSize: 12,
-          color: isSelected ? Colors.white : activeColor,
+          color: isSelected ? activeForeColor : activeForeColor,
           fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
         ),
       ),
       onPressed: onPressed,
-      backgroundColor:
-          isSelected ? activeColor : activeColor.withValues(alpha: 0.05),
+      backgroundColor: isSelected
+          ? activeBackColor
+          : activeBackColor.withValues(alpha: 0.05),
       side: BorderSide(
-        color: isSelected ? activeColor : activeColor.withValues(alpha: 0.2),
+        color: isSelected
+            ? activeForeColor
+            : activeForeColor.withValues(alpha: 0.2),
         width: 1,
       ),
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
