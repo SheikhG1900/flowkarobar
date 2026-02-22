@@ -3,6 +3,7 @@ import 'package:flowpaisa/features/contacts/presentation/providers/contacts_prov
 import 'package:flowpaisa/features/categories/presentation/providers/categories_provider.dart';
 import 'package:flowpaisa/core/database/database.dart' as db;
 import 'package:flowpaisa/core/utils/icon_helper.dart';
+import 'package:flowpaisa/core/utils/string_similarity.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -915,11 +916,16 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
         final extractedName = _parsedResult?.categoryName?.toLowerCase();
 
         if (extractedName != null) {
-          // Find similar categories
+          // Find similar categories (fuzzy so e.g. misheard names still match)
           suggested.addAll(categories.where((c) {
-            final name = c.name.toLowerCase();
-            return name.contains(extractedName) || extractedName.contains(name);
+            return stringsMatchFuzzy(extractedName!, c.name);
           }));
+          // Sort by similarity so best match first
+          suggested.sort((a, b) {
+            final scoreA = fuzzyScore(extractedName!, a.name);
+            final scoreB = fuzzyScore(extractedName!, b.name);
+            return scoreB.compareTo(scoreA);
+          });
         }
 
         if (suggested.isEmpty && _parsedResult?.categoryName == null) {
@@ -1016,11 +1022,16 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
         final extractedName = _parsedResult?.contactName?.toLowerCase();
 
         if (extractedName != null) {
-          // Find similar contacts
+          // Find similar contacts (fuzzy so e.g. "Afsar" matches "Absar Ahmed")
           suggested.addAll(contacts.where((c) {
-            final name = c.name.toLowerCase();
-            return name.contains(extractedName) || extractedName.contains(name);
+            return stringsMatchFuzzy(extractedName!, c.name);
           }));
+          // Sort by similarity so best match first
+          suggested.sort((a, b) {
+            final scoreA = fuzzyScore(extractedName!, a.name);
+            final scoreB = fuzzyScore(extractedName!, b.name);
+            return scoreB.compareTo(scoreA);
+          });
         }
 
         if (suggested.isEmpty && _parsedResult?.contactName == null) {

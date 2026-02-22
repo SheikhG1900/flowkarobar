@@ -25,6 +25,7 @@ import 'package:flowpaisa/core/database/database.dart' as db;
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/core/utils/category_helper.dart';
+import 'package:flowpaisa/core/utils/string_similarity.dart';
 import 'package:google_mlkit_entity_extraction/google_mlkit_entity_extraction.dart';
 
 class ScanReceiptScreen extends ConsumerStatefulWidget {
@@ -830,6 +831,7 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
   }
 
   /// Categories that match the current description or the receipt's parsed category.
+  /// Uses fuzzy matching so OCR/voice misreads (e.g. "Afsar" vs "Absar") still suggest correctly.
   List<db.Category> _getSuggestedCategories(
       List<db.Category> expenseCategories) {
     if (_receiptData == null || expenseCategories.isEmpty) return [];
@@ -838,10 +840,16 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
             (_receiptData!.descriptionCandidates.join(' ')))
         .toLowerCase();
     final receiptCategoryLower = _receiptData!.categoryName?.toLowerCase();
+    final descriptionWords = descriptionLower.split(RegExp(r'\s+'));
     final matched = expenseCategories.where((db.Category c) {
       final nameLower = c.name.toLowerCase();
-      return descriptionLower.contains(nameLower) ||
-          (receiptCategoryLower != null && nameLower == receiptCategoryLower);
+      if (descriptionLower.contains(nameLower)) return true;
+      if (receiptCategoryLower != null && nameLower == receiptCategoryLower) return true;
+      if (receiptCategoryLower != null && stringsMatchFuzzy(receiptCategoryLower, nameLower)) return true;
+      for (final word in descriptionWords) {
+        if (word.length >= 2 && stringsMatchFuzzy(word, nameLower)) return true;
+      }
+      return false;
     }).toList();
     // Put parsed receipt category first if it matches
     if (receiptCategoryLower != null) {
