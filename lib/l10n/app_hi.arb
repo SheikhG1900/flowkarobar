@@ -657,6 +657,7 @@
   "amountCalculatorDivide": "भाग",
   "amountCalculatorPercent": "प्रतिशत (%)",
   "amountCalculatorButtonTooltip": "कैलकुलेटर खोलें",
+  "amountCalculatorOriginal": "मूल",
   "startDate": "शुरू होने की तारीख",
   "endDate": "समाप्त होने की तारीख",
   "selectDate": "तारीख चुनें",

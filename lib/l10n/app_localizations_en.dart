@@ -1962,6 +1962,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get amountCalculatorButtonTooltip => 'Open calculator';
 
   @override
+  String get amountCalculatorOriginal => 'Original';
+
+  @override
   String get startDate => 'Start Date';
 
   @override

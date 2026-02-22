@@ -963,6 +963,7 @@
   "amountCalculatorDivide": "Divide",
   "amountCalculatorPercent": "Percent (%)",
   "amountCalculatorButtonTooltip": "Open calculator",
+  "amountCalculatorOriginal": "Original",
   "startDate": "Start Date",
   "endDate": "End Date",
   "selectDate": "Select date",

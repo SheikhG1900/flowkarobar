@@ -1969,6 +1969,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get amountCalculatorButtonTooltip => 'कैलकुलेटर खोलें';
 
   @override
+  String get amountCalculatorOriginal => 'मूल';
+
+  @override
   String get startDate => 'शुरू होने की तारीख';
 
   @override

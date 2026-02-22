@@ -103,9 +103,14 @@ class _AmountCalculatorSheetState extends State<AmountCalculatorSheet> {
     return v;
   }
 
-  /// Undo back to the state after the operation at [index] (removes that op and all after it).
-  void _undoTo(int index) {
-    if (index < 0 || index >= _stack.length) return;
+  /// Go to calculation state [index]. State 0 = original amount, state i = after (i-1)th op.
+  /// Clicking current state (index == _stack.length) does nothing.
+  void _goToState(int index) {
+    if (index <= 0) {
+      setState(() => _stack.clear());
+      return;
+    }
+    if (index >= _stack.length) return; // already at this state
     setState(() => _stack.removeRange(index, _stack.length));
   }
 
@@ -220,62 +225,81 @@ class _AmountCalculatorSheetState extends State<AmountCalculatorSheet> {
                     ),
                   ),
                 ),
-                // Applied operations stack: tap a chip to undo back to that step
-                if (_stack.isNotEmpty) ...[
-                  const SizedBox(height: 12),
-                  Wrap(
+                // Calculation states: first chip = original amount, then one per applied op. Tap to go to that state. LTR for numbers/ops.
+                const SizedBox(height: 12),
+                Directionality(
+                  textDirection: TextDirection.ltr,
+                  child: Wrap(
                     spacing: 8,
                     runSpacing: 8,
-                    children: List.generate(_stack.length, (i) {
-                      final op = _stack[i];
-                      final amountAfter = _valueAfterStep(i + 1);
-                      return _StackChip(
-                        label: _labelForOp(op),
+                    children: [
+                      // State 0: original amount
+                      _StackChip(
+                        label: l10n.amountCalculatorOriginal,
                         amountText: AmountFormatter.formatWithCurrency(
-                          amountAfter,
+                          widget.initialAmount,
                           widget.currencySymbol,
                           widget.decimalPlaces,
                         ),
-                        color: _colorForOp(op),
-                        onTap: () => _undoTo(i),
-                      );
-                    }),
-                  ),
-                ],
-                const SizedBox(height: 24),
-                // All operations in one wrap: ×2..×9, /2../9, %
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    ...[2, 3, 4, 5, 6, 7, 8, 9].map((n) => SizedBox(
-                          width: _kOpButtonSize,
-                          height: _kOpButtonSize,
-                          child: _OpChip(
-                            label: '×$n',
-                            color: AppColors.incomeColor,
-                            onTap: () => _applyMultiply(n),
-                          ),
-                        )),
-                    ...[2, 3, 4, 5, 6, 7, 8, 9].map((n) => SizedBox(
-                          width: _kOpButtonSize,
-                          height: _kOpButtonSize,
-                          child: _OpChip(
-                            label: '/$n',
-                            color: AppColors.expenseColor,
-                            onTap: () => _applyDivide(n),
-                          ),
-                        )),
-                    SizedBox(
-                      width: _kOpButtonSize,
-                      height: _kOpButtonSize,
-                      child: _OpChip(
-                        label: '%',
-                        color: AppColors.receivableColor,
-                        onTap: _openPercentDrawer,
+                        color: theme.colorScheme.outline,
+                        onTap: () => _goToState(0),
                       ),
-                    ),
-                  ],
+                      // State 1..n: after each operation
+                      ...List.generate(_stack.length, (i) {
+                        final op = _stack[i];
+                        final amountAfter = _valueAfterStep(i + 1);
+                        final stateIndex = i + 1;
+                        return _StackChip(
+                          label: _labelForOp(op),
+                          amountText: AmountFormatter.formatWithCurrency(
+                            amountAfter,
+                            widget.currencySymbol,
+                            widget.decimalPlaces,
+                          ),
+                          color: _colorForOp(op),
+                          onTap: () => _goToState(stateIndex),
+                        );
+                      }),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
+                // All operations in one wrap: ×2..×9, /2../9, %. LTR so order is consistent.
+                Directionality(
+                  textDirection: TextDirection.ltr,
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      ...[2, 3, 4, 5, 6, 7, 8, 9].map((n) => SizedBox(
+                            width: _kOpButtonSize,
+                            height: _kOpButtonSize,
+                            child: _OpChip(
+                              label: '×$n',
+                              color: AppColors.incomeColor,
+                              onTap: () => _applyMultiply(n),
+                            ),
+                          )),
+                      ...[2, 3, 4, 5, 6, 7, 8, 9].map((n) => SizedBox(
+                            width: _kOpButtonSize,
+                            height: _kOpButtonSize,
+                            child: _OpChip(
+                              label: '/$n',
+                              color: AppColors.expenseColor,
+                              onTap: () => _applyDivide(n),
+                            ),
+                          )),
+                      SizedBox(
+                        width: _kOpButtonSize,
+                        height: _kOpButtonSize,
+                        child: _OpChip(
+                          label: '%',
+                          color: AppColors.receivableColor,
+                          onTap: _openPercentDrawer,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 24),
                 // Done

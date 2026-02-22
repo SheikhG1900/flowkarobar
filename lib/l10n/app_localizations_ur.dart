@@ -1975,6 +1975,9 @@ class AppLocalizationsUr extends AppLocalizations {
   String get amountCalculatorButtonTooltip => 'کیلکولیٹر کھولیں';
 
   @override
+  String get amountCalculatorOriginal => 'اصل';
+
+  @override
   String get startDate => 'شروع کی تاریخ';
 
   @override

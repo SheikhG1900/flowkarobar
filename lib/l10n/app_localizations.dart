@@ -3646,6 +3646,12 @@ abstract class AppLocalizations {
   /// **'Open calculator'**
   String get amountCalculatorButtonTooltip;
 
+  /// No description provided for @amountCalculatorOriginal.
+  ///
+  /// In en, this message translates to:
+  /// **'Original'**
+  String get amountCalculatorOriginal;
+
   /// No description provided for @startDate.
   ///
   /// In en, this message translates to:
