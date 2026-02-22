@@ -63,6 +63,10 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
       setState(() {
         _modelDownloaded = downloaded;
       });
+      // Start download immediately when screen opens (model is not big); other screens keep their triggers.
+      if (!downloaded && !_isDownloading) {
+        _startDownload();
+      }
     }
   }
 
