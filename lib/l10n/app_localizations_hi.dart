@@ -966,6 +966,22 @@ class AppLocalizationsHi extends AppLocalizations {
       'अपनी नियमित आय और खर्चों के लिए असीमित आवर्ती लेन-देन शेड्यूल सेट करें।';
 
   @override
+  String get featureUnlimitedVoiceExtractionTitle =>
+      'असीमित वॉयस स्मार्ट एक्सट्रैक्शन';
+
+  @override
+  String get featureUnlimitedVoiceExtractionDesc =>
+      'मासिक सीमा के बिना आवाज़ कमांड के लिए AI-संचालित स्मार्ट एक्सट्रैक्शन का उपयोग करें। प्राकृतिक भाषा में बोलकर लेन-देन जोड़ें।';
+
+  @override
+  String get featureUnlimitedReceiptExtractionTitle =>
+      'असीमित रसीद स्मार्ट एक्सट्रैक्शन';
+
+  @override
+  String get featureUnlimitedReceiptExtractionDesc =>
+      'मासिक सीमा के बिना रसीद स्कैनिंग के लिए AI-संचालित स्मार्ट एक्सट्रैक्शन का उपयोग करें। रसीदों से राशि, व्यापारी और श्रेणी स्वचालित रूप से निकालें।';
+
+  @override
   String get featureBulkImportTitle => 'बल्क इंपोर्ट';
 
   @override

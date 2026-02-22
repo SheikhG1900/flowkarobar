@@ -963,6 +963,22 @@ class AppLocalizationsEn extends AppLocalizations {
       'Set up unlimited recurring transaction schedules for your regular incomes and expenses.';
 
   @override
+  String get featureUnlimitedVoiceExtractionTitle =>
+      'Unlimited Voice Smart Extraction';
+
+  @override
+  String get featureUnlimitedVoiceExtractionDesc =>
+      'Use AI-powered smart extraction for voice commands without monthly limits. Add transactions by speaking in natural language.';
+
+  @override
+  String get featureUnlimitedReceiptExtractionTitle =>
+      'Unlimited Receipt Smart Extraction';
+
+  @override
+  String get featureUnlimitedReceiptExtractionDesc =>
+      'Use AI-powered smart extraction for receipt scanning without monthly limits. Extract amount, merchant, and category from receipts automatically.';
+
+  @override
   String get featureBulkImportTitle => 'Bulk Import';
 
   @override

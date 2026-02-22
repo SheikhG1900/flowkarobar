@@ -1846,6 +1846,30 @@ abstract class AppLocalizations {
   /// **'Set up unlimited recurring transaction schedules for your regular incomes and expenses.'**
   String get featureUnlimitedSchedulesDesc;
 
+  /// No description provided for @featureUnlimitedVoiceExtractionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlimited Voice Smart Extraction'**
+  String get featureUnlimitedVoiceExtractionTitle;
+
+  /// No description provided for @featureUnlimitedVoiceExtractionDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Use AI-powered smart extraction for voice commands without monthly limits. Add transactions by speaking in natural language.'**
+  String get featureUnlimitedVoiceExtractionDesc;
+
+  /// No description provided for @featureUnlimitedReceiptExtractionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlimited Receipt Smart Extraction'**
+  String get featureUnlimitedReceiptExtractionTitle;
+
+  /// No description provided for @featureUnlimitedReceiptExtractionDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Use AI-powered smart extraction for receipt scanning without monthly limits. Extract amount, merchant, and category from receipts automatically.'**
+  String get featureUnlimitedReceiptExtractionDesc;
+
   /// No description provided for @featureBulkImportTitle.
   ///
   /// In en, this message translates to:

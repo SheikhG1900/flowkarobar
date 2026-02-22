@@ -968,6 +968,22 @@ class AppLocalizationsUr extends AppLocalizations {
       'اپنی باقاعدہ آمدنی اور اخراجات کے لیے لامحدود بار بار ہونے والے لین دین کے شیڈولز ترتیب دیں۔';
 
   @override
+  String get featureUnlimitedVoiceExtractionTitle =>
+      'لامحدود آواز اسمارٹ اخراج';
+
+  @override
+  String get featureUnlimitedVoiceExtractionDesc =>
+      'مہینہ وار حد بندی کے بغیر آواز کمانڈز کے لیے AI سے چلنے والے اسمارٹ اخراج کا استعمال کریں۔ قدرتی زبان میں بول کر لین دین شامل کریں۔';
+
+  @override
+  String get featureUnlimitedReceiptExtractionTitle =>
+      'لامحدود رسید اسمارٹ اخراج';
+
+  @override
+  String get featureUnlimitedReceiptExtractionDesc =>
+      'مہینہ وار حد بندی کے بغیر رسید اسکیننگ کے لیے AI سے چلنے والے اسمارٹ اخراج کا استعمال کریں۔ رسیدوں سے رقم، تاجر اور زمرہ خودکار طور پر نکالیں۔';
+
+  @override
   String get featureBulkImportTitle => 'بلک امپورٹ';
 
   @override
