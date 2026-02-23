@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
-import 'package:flowpaisa/core/utils/date_formatter.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
-import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 import 'package:flowpaisa/features/categories/presentation/providers/categories_provider.dart';
 import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
 import 'package:flowpaisa/core/utils/localization_helper.dart';
 import 'package:flowpaisa/core/utils/icon_helper.dart';
+import 'package:flowpaisa/shared/models/date_range_state.dart';
+import 'package:flowpaisa/shared/widgets/date_range_selector.dart';
 
 enum FilterType { transactions, payables, receivables }
 
@@ -35,9 +35,10 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
   late String? _transactionType;
   late List<String> _selectedCategoryUuids;
   late List<String> _selectedContactUuids;
-  late double? _minAmount;
-  late double? _maxAmount;
   late bool _filterByDueDate;
+  late TextEditingController _minAmountController;
+  late TextEditingController _maxAmountController;
+  DateRangeState? _dateRangeState;
 
   @override
   void initState() {
@@ -45,9 +46,14 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
     final filters = widget.initialFilters;
     _startDate = filters.startDate;
     _endDate = filters.endDate;
+    _dateRangeState = DateRangeState.fromDates(_startDate, _endDate);
     _selectedContactUuids = List.from(filters.contactUuids ?? []);
-    _minAmount = filters.minAmount;
-    _maxAmount = filters.maxAmount;
+    _minAmountController = TextEditingController(
+      text: filters.minAmount != null ? filters.minAmount!.toString() : '',
+    );
+    _maxAmountController = TextEditingController(
+      text: filters.maxAmount != null ? filters.maxAmount!.toString() : '',
+    );
     _filterByDueDate = (widget.type != FilterType.transactions)
         ? (filters.filterByDueDate ?? false)
         : false;
@@ -61,16 +67,93 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
     }
   }
 
+  @override
+  void dispose() {
+    _minAmountController.dispose();
+    _maxAmountController.dispose();
+    super.dispose();
+  }
+
   void _resetFilters() {
     setState(() {
       _startDate = null;
       _endDate = null;
+      _dateRangeState = null;
       _transactionType = null;
       _selectedCategoryUuids = [];
       _selectedContactUuids = [];
-      _minAmount = null;
-      _maxAmount = null;
+      _minAmountController.text = '';
+      _maxAmountController.text = '';
       _filterByDueDate = false;
+    });
+  }
+
+  void _onDateRangeChanged(DateRangeState? state) {
+    setState(() {
+      _dateRangeState = state;
+      if (state == null) {
+        _startDate = null;
+        _endDate = null;
+      } else {
+        _startDate = state.startDate;
+        _endDate = state.endDate;
+      }
+    });
+  }
+
+  void _onNextPeriod() {
+    setState(() {
+      if (_dateRangeState == null) return;
+      switch (_dateRangeState!.type) {
+        case DateRangeType.month:
+          final d = _dateRangeState!.startDate;
+          final nextMonth = DateTime(d.year, d.month + 1, 1);
+          _dateRangeState = DateRangeState.month(nextMonth);
+          break;
+        case DateRangeType.quarter:
+          final d = _dateRangeState!.startDate;
+          final q = ((d.month - 1) ~/ 3) + 1;
+          final nextYear = q == 4 ? d.year + 1 : d.year;
+          final nextQ = q == 4 ? 1 : q + 1;
+          _dateRangeState = DateRangeState.quarter(nextYear, nextQ);
+          break;
+        case DateRangeType.year:
+          _dateRangeState =
+              DateRangeState.year(_dateRangeState!.startDate.year + 1);
+          break;
+        case DateRangeType.custom:
+          return;
+      }
+      _startDate = _dateRangeState!.startDate;
+      _endDate = _dateRangeState!.endDate;
+    });
+  }
+
+  void _onPreviousPeriod() {
+    setState(() {
+      if (_dateRangeState == null) return;
+      switch (_dateRangeState!.type) {
+        case DateRangeType.month:
+          final d = _dateRangeState!.startDate;
+          final prevMonth = DateTime(d.year, d.month - 1, 1);
+          _dateRangeState = DateRangeState.month(prevMonth);
+          break;
+        case DateRangeType.quarter:
+          final d = _dateRangeState!.startDate;
+          final q = ((d.month - 1) ~/ 3) + 1;
+          final prevYear = q == 1 ? d.year - 1 : d.year;
+          final prevQ = q == 1 ? 4 : q - 1;
+          _dateRangeState = DateRangeState.quarter(prevYear, prevQ);
+          break;
+        case DateRangeType.year:
+          _dateRangeState =
+              DateRangeState.year(_dateRangeState!.startDate.year - 1);
+          break;
+        case DateRangeType.custom:
+          return;
+      }
+      _startDate = _dateRangeState!.startDate;
+      _endDate = _dateRangeState!.endDate;
     });
   }
 
@@ -78,7 +161,6 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final userProfile = ref.watch(userProfileProvider);
 
     final Color primaryFilterColor = widget.type == FilterType.transactions
         ? AppColors.brightCyan
@@ -123,8 +205,13 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildSectionTitle(l10n.dateRange),
-                    _buildDateRangePicker(
-                        context, userProfile.dateFormat, primaryFilterColor),
+                    DateRangeSelector(
+                      selectedDateRange: _dateRangeState,
+                      onDateRangeChanged: _onDateRangeChanged,
+                      onNextPeriod: _onNextPeriod,
+                      onPreviousPeriod: _onPreviousPeriod,
+                      accentColor: primaryFilterColor,
+                    ),
                     if (widget.type != FilterType.transactions) ...[
                       const SizedBox(height: 16),
                       _buildDueDateSwitch(l10n, primaryFilterColor),
@@ -178,11 +265,22 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
     );
   }
 
+  double? _getMinAmountFromControllers() {
+    final s = _minAmountController.text.trim();
+    if (s.isEmpty) return null;
+    return double.tryParse(s);
+  }
+
+  double? _getMaxAmountFromControllers() {
+    final s = _maxAmountController.text.trim();
+    if (s.isEmpty) return null;
+    return double.tryParse(s);
+  }
+
   dynamic _getUpdatedFilters() {
+    final minAmount = _getMinAmountFromControllers();
+    final maxAmount = _getMaxAmountFromControllers();
     if (widget.type == FilterType.transactions) {
-      // We'll need to import the filter models here or use dynamic
-      // Since we can't easily import from different features here without circular deps
-      // if they were in domain, it's fine.
       return widget.initialFilters.copyWith(
         startDate: _startDate,
         clearStartDate: _startDate == null,
@@ -192,10 +290,10 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
         clearType: _transactionType == null,
         categoryUuids: _selectedCategoryUuids,
         contactUuids: _selectedContactUuids,
-        minAmount: _minAmount,
-        clearMinAmount: _minAmount == null,
-        maxAmount: _maxAmount,
-        clearMaxAmount: _maxAmount == null,
+        minAmount: minAmount,
+        clearMinAmount: minAmount == null,
+        maxAmount: maxAmount,
+        clearMaxAmount: maxAmount == null,
       );
     } else {
       return widget.initialFilters.copyWith(
@@ -204,10 +302,10 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
         endDate: _endDate,
         clearEndDate: _endDate == null,
         contactUuids: _selectedContactUuids,
-        minAmount: _minAmount,
-        clearMinAmount: _minAmount == null,
-        maxAmount: _maxAmount,
-        clearMaxAmount: _maxAmount == null,
+        minAmount: minAmount,
+        clearMinAmount: minAmount == null,
+        maxAmount: maxAmount,
+        clearMaxAmount: maxAmount == null,
         filterByDueDate: _filterByDueDate,
       );
     }
@@ -240,100 +338,6 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
           value: _filterByDueDate,
           onChanged: (value) => setState(() => _filterByDueDate = value),
           activeColor: primaryColor,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildDateRangePicker(
-      BuildContext context, String dateFormat, Color primaryColor) {
-    final l10n = AppLocalizations.of(context)!;
-    final theme = Theme.of(context);
-    return Row(
-      children: [
-        Expanded(
-          child: OutlinedButton.icon(
-            onPressed: () async {
-              final picked = await showDatePicker(
-                context: context,
-                initialDate: _startDate ?? DateTime.now(),
-                firstDate: DateTime(2000),
-                lastDate: DateTime(2100),
-              );
-              if (picked != null) setState(() => _startDate = picked);
-            },
-            style: OutlinedButton.styleFrom(
-              backgroundColor: _startDate != null
-                  ? primaryColor.withValues(alpha: 0.1)
-                  : theme.colorScheme.surface,
-              side: BorderSide(
-                color: _startDate != null ? primaryColor : theme.dividerColor,
-                width: 1.5,
-              ),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16)),
-            ),
-            icon: Icon(
-              Icons.calendar_today,
-              size: 18,
-              color: _startDate != null
-                  ? primaryColor
-                  : theme.colorScheme.onSurfaceVariant,
-            ),
-            label: Text(
-              _startDate == null
-                  ? l10n.from
-                  : AppDateFormatter.formatDate(_startDate!,
-                      pattern: dateFormat),
-              style: TextStyle(
-                color: _startDate != null
-                    ? primaryColor
-                    : theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: OutlinedButton.icon(
-            onPressed: () async {
-              final picked = await showDatePicker(
-                context: context,
-                initialDate: _endDate ?? DateTime.now(),
-                firstDate: DateTime(2000),
-                lastDate: DateTime(2100),
-              );
-              if (picked != null) setState(() => _endDate = picked);
-            },
-            style: OutlinedButton.styleFrom(
-              backgroundColor: _endDate != null
-                  ? primaryColor.withValues(alpha: 0.1)
-                  : theme.colorScheme.surface,
-              side: BorderSide(
-                color: _endDate != null ? primaryColor : theme.dividerColor,
-                width: 1.5,
-              ),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16)),
-            ),
-            icon: Icon(
-              Icons.calendar_today,
-              size: 18,
-              color: _endDate != null
-                  ? primaryColor
-                  : theme.colorScheme.onSurfaceVariant,
-            ),
-            label: Text(
-              _endDate == null
-                  ? l10n.to
-                  : AppDateFormatter.formatDate(_endDate!, pattern: dateFormat),
-              style: TextStyle(
-                color: _endDate != null
-                    ? primaryColor
-                    : theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ),
         ),
       ],
     );
@@ -504,7 +508,8 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
       children: [
         Expanded(
           child: TextField(
-            keyboardType: TextInputType.number,
+            controller: _minAmountController,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
             style: theme.textTheme.bodyMedium,
             decoration: InputDecoration(
               hintText: l10n.minAmount,
@@ -527,14 +532,14 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
               contentPadding:
                   const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             ),
-            onChanged: (val) =>
-                setState(() => _minAmount = double.tryParse(val)),
+            onChanged: (_) => setState(() {}),
           ),
         ),
         const SizedBox(width: 12),
         Expanded(
           child: TextField(
-            keyboardType: TextInputType.number,
+            controller: _maxAmountController,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
             style: theme.textTheme.bodyMedium,
             decoration: InputDecoration(
               hintText: l10n.maxAmount,
@@ -557,8 +562,7 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
               contentPadding:
                   const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             ),
-            onChanged: (val) =>
-                setState(() => _maxAmount = double.tryParse(val)),
+            onChanged: (_) => setState(() {}),
           ),
         ),
       ],

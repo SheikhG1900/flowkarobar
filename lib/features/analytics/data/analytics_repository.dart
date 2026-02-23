@@ -195,6 +195,8 @@ class AnalyticsRepository {
       endDate: endDate,
       categoryUuids: filters.categoryUuids,
       contactUuids: filters.contactUuids,
+      minAmount: filters.minAmount,
+      maxAmount: filters.maxAmount,
     );
     final totalReceivable = await _getReceivableTotalForFilters(
       hasDateFilter: hasDateFilter,
@@ -202,6 +204,8 @@ class AnalyticsRepository {
       endDate: endDate,
       categoryUuids: filters.categoryUuids,
       contactUuids: filters.contactUuids,
+      minAmount: filters.minAmount,
+      maxAmount: filters.maxAmount,
     );
 
     return FinancialSummary(
@@ -217,6 +221,8 @@ class AnalyticsRepository {
     required DateTime endDate,
     List<String>? categoryUuids,
     List<String>? contactUuids,
+    double? minAmount,
+    double? maxAmount,
   }) async {
     final hasCategoryFilter =
         categoryUuids != null && categoryUuids.isNotEmpty;
@@ -236,6 +242,14 @@ class AnalyticsRepository {
       if (hasContactFilter) {
         whereExpr =
             whereExpr & _database.payables.contactUuid.isIn(contactUuids);
+      }
+      if (minAmount != null) {
+        whereExpr = whereExpr &
+            _database.payables.amount.isBiggerOrEqualValue(minAmount);
+      }
+      if (maxAmount != null) {
+        whereExpr = whereExpr &
+            _database.payables.amount.isSmallerOrEqualValue(maxAmount);
       }
       final query = _database.selectOnly(_database.payables)
         ..addColumns([_database.payables.amount.sum()])
@@ -259,6 +273,14 @@ class AnalyticsRepository {
       whereExpr =
           whereExpr & _database.payables.contactUuid.isIn(contactUuids!);
     }
+    if (minAmount != null) {
+      whereExpr = whereExpr &
+          _database.payables.amount.isBiggerOrEqualValue(minAmount);
+    }
+    if (maxAmount != null) {
+      whereExpr = whereExpr &
+          _database.payables.amount.isSmallerOrEqualValue(maxAmount);
+    }
     final query = _database.selectOnly(_database.payables)
       ..addColumns([_database.payables.amount.sum()])
       ..where(whereExpr);
@@ -272,6 +294,8 @@ class AnalyticsRepository {
     required DateTime endDate,
     List<String>? categoryUuids,
     List<String>? contactUuids,
+    double? minAmount,
+    double? maxAmount,
   }) async {
     final hasCategoryFilter =
         categoryUuids != null && categoryUuids.isNotEmpty;
@@ -291,6 +315,14 @@ class AnalyticsRepository {
       if (hasContactFilter) {
         whereExpr =
             whereExpr & _database.receivables.contactUuid.isIn(contactUuids);
+      }
+      if (minAmount != null) {
+        whereExpr = whereExpr &
+            _database.receivables.amount.isBiggerOrEqualValue(minAmount);
+      }
+      if (maxAmount != null) {
+        whereExpr = whereExpr &
+            _database.receivables.amount.isSmallerOrEqualValue(maxAmount);
       }
       final query = _database.selectOnly(_database.receivables)
         ..addColumns([_database.receivables.amount.sum()])
@@ -313,6 +345,14 @@ class AnalyticsRepository {
     if (hasContactFilter) {
       whereExpr =
           whereExpr & _database.receivables.contactUuid.isIn(contactUuids!);
+    }
+    if (minAmount != null) {
+      whereExpr = whereExpr &
+          _database.receivables.amount.isBiggerOrEqualValue(minAmount);
+    }
+    if (maxAmount != null) {
+      whereExpr = whereExpr &
+          _database.receivables.amount.isSmallerOrEqualValue(maxAmount);
     }
     final query = _database.selectOnly(_database.receivables)
       ..addColumns([_database.receivables.amount.sum()])
