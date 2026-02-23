@@ -1,4 +1,4 @@
-﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/features/analytics/data/analytics_repository.dart';
 import 'package:flowpaisa/shared/providers/database_provider.dart';
 
@@ -141,13 +141,13 @@ class DateRangeNotifier extends Notifier<DateRangeState> {
   }
 }
 
-// Expenses by Category Provider (Updated to use date range)
+// Expenses by Category Provider (uses full selected date range)
 final expensesByCategoryProvider =
     FutureProvider.autoDispose<List<CategoryExpense>>((ref) async {
   final repository = ref.watch(analyticsRepositoryProvider);
   final dateRange = ref.watch(selectedDateRangeProvider);
-  // For expenses by category, we use the month of the start date
-  return repository.getExpensesByCategory(dateRange.startDate);
+  return repository.getExpensesByCategory(
+      dateRange.startDate, dateRange.endDate);
 });
 
 // Monthly Trends Provider (Last 6 months)

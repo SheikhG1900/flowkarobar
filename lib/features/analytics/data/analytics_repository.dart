@@ -6,16 +6,17 @@ class AnalyticsRepository {
 
   AnalyticsRepository(this._database);
 
-  Future<List<CategoryExpense>> getExpensesByCategory(DateTime month) async {
-    final startOfMonth = DateTime(month.year, month.month, 1);
-    final endOfMonth = DateTime(month.year, month.month + 1, 0, 23, 59, 59);
+  Future<List<CategoryExpense>> getExpensesByCategory(
+      DateTime start, DateTime end) async {
+    final startDate = DateTime(start.year, start.month, start.day, 0, 0, 0);
+    final endDate =
+        DateTime(end.year, end.month, end.day, 23, 59, 59);
     final query = _database.selectOnly(_database.transactions)
       ..addColumns([
         _database.transactions.categoryUuid,
         _database.transactions.amount.sum()
       ])
-      ..where(
-          _database.transactions.date.isBetweenValues(startOfMonth, endOfMonth))
+      ..where(_database.transactions.date.isBetweenValues(startDate, endDate))
       ..where(_database.transactions.type.equals('EXPENSE'))
       ..where(_database.transactions.isDeleted.equals(false))
       ..groupBy([_database.transactions.categoryUuid]);

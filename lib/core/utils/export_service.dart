@@ -1645,7 +1645,7 @@ class ExportService {
     final contactSummaries =
         await _analyticsRepository.getContactSummaries(startDate, endDate);
     final expensesByCategory =
-        await _analyticsRepository.getExpensesByCategory(startDate);
+        await _analyticsRepository.getExpensesByCategory(startDate, endDate);
     final incomeByCategory =
         await _analyticsRepository.getIncomeByCategory(startDate, endDate);
     final monthlyTrends = await _analyticsRepository.getMonthlyTrends(6);
