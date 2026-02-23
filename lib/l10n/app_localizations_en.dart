@@ -837,6 +837,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get netBalance => 'Net Balance';
 
   @override
+  String get balanceReceivableMinusPayable => 'Balance (Receivable − Payable)';
+
+  @override
+  String get netReceivable => 'Net Receivable';
+
+  @override
+  String get netPayable => 'Net Payable';
+
+  @override
   String get allTime => 'All-time:';
 
   @override

@@ -87,6 +87,16 @@ final receivableWithLinkedDataProvider =
   return repository.watchReceivableWithLinkedDataByUuid(uuid);
 });
 
+/// Total amount for the current list tab and filters (for list summary).
+final receivablesListTotalProvider =
+    FutureProvider.autoDispose.family<double, String>((ref, status) async {
+  ref.watch(receivablesPaginatedProvider(status));
+  final filters =
+      ref.read(receivablesPaginatedProvider(status).notifier).currentFilters;
+  final repository = ref.watch(receivablesRepositoryProvider);
+  return repository.getTotalAmountForFilters(filters, status);
+});
+
 // Paginated receivables provider
 class ReceivablesPaginatedNotifier
     extends Notifier<PaginatedState<ReceivableWithLinkedData>> {

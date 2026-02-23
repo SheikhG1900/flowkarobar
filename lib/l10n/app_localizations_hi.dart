@@ -839,6 +839,15 @@ class AppLocalizationsHi extends AppLocalizations {
   String get netBalance => 'शुद्ध शेष';
 
   @override
+  String get balanceReceivableMinusPayable => 'बैलेंस (प्राप्य − देय)';
+
+  @override
+  String get netReceivable => 'शुद्ध प्राप्य';
+
+  @override
+  String get netPayable => 'शुद्ध देय';
+
+  @override
   String get allTime => 'कुल समय:';
 
   @override

@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:flowpaisa/core/database/database.dart';
+import 'package:flowpaisa/features/transactions/domain/models.dart';
 
 class AnalyticsRepository {
   final AppDatabase _database;
@@ -166,6 +167,200 @@ class AnalyticsRepository {
     }
     summaries.sort((a, b) => b.balance.abs().compareTo(a.balance.abs()));
     return summaries;
+  }
+
+  /// Financial summary for the transaction list's current filters (date, type, category, contact, amount).
+  Future<FinancialSummary> getFinancialSummaryForTransactionFilters(
+      TransactionFilters filters) async {
+    final totalExpense = await _getTransactionSumByFilter(filters, 'EXPENSE');
+    final totalIncome = await _getTransactionSumByFilter(filters, 'INCOME');
+
+    final bool hasDateFilter =
+        filters.startDate != null || filters.endDate != null;
+    final bool hasCategoryFilter = filters.categoryUuids != null &&
+        filters.categoryUuids!.isNotEmpty;
+    final bool hasContactFilter = filters.contactUuids != null &&
+        filters.contactUuids!.isNotEmpty;
+
+    final now = DateTime.now();
+    final start = filters.startDate ?? DateTime(now.year, 1, 1);
+    final end =
+        filters.endDate ?? DateTime(now.year, now.month, now.day, 23, 59, 59);
+    final startDate = DateTime(start.year, start.month, start.day, 0, 0, 0);
+    final endDate = DateTime(end.year, end.month, end.day, 23, 59, 59);
+
+    final totalPayable = await _getPayableTotalForFilters(
+      hasDateFilter: hasDateFilter,
+      startDate: startDate,
+      endDate: endDate,
+      categoryUuids: filters.categoryUuids,
+      contactUuids: filters.contactUuids,
+    );
+    final totalReceivable = await _getReceivableTotalForFilters(
+      hasDateFilter: hasDateFilter,
+      startDate: startDate,
+      endDate: endDate,
+      categoryUuids: filters.categoryUuids,
+      contactUuids: filters.contactUuids,
+    );
+
+    return FinancialSummary(
+        totalPayable: totalPayable,
+        totalReceivable: totalReceivable,
+        totalExpense: totalExpense,
+        totalIncome: totalIncome);
+  }
+
+  Future<double> _getPayableTotalForFilters({
+    required bool hasDateFilter,
+    required DateTime startDate,
+    required DateTime endDate,
+    List<String>? categoryUuids,
+    List<String>? contactUuids,
+  }) async {
+    final hasCategoryFilter =
+        categoryUuids != null && categoryUuids.isNotEmpty;
+    final hasContactFilter =
+        contactUuids != null && contactUuids.isNotEmpty;
+
+    if (hasCategoryFilter) {
+      final joinExpr =
+          _database.transactions.uuid.equalsExp(_database.payables.linkedExpenseUuid) |
+              _database.transactions.uuid.equalsExp(_database.payables.linkedIncomeUuid);
+      Expression<bool> whereExpr = _database.payables.isDeleted.equals(false) &
+          _database.transactions.categoryUuid.isIn(categoryUuids);
+      if (hasDateFilter) {
+        whereExpr = whereExpr &
+            _database.payables.date.isBetweenValues(startDate, endDate);
+      }
+      if (hasContactFilter) {
+        whereExpr =
+            whereExpr & _database.payables.contactUuid.isIn(contactUuids);
+      }
+      final query = _database.selectOnly(_database.payables)
+        ..addColumns([_database.payables.amount.sum()])
+        ..join([
+          innerJoin(
+            _database.transactions,
+            joinExpr,
+          ),
+        ])
+        ..where(whereExpr);
+      final row = await query.getSingle();
+      return row.read(_database.payables.amount.sum()) ?? 0.0;
+    }
+
+    Expression<bool> whereExpr = _database.payables.isDeleted.equals(false);
+    if (hasDateFilter) {
+      whereExpr = whereExpr &
+          _database.payables.date.isBetweenValues(startDate, endDate);
+    }
+    if (hasContactFilter) {
+      whereExpr =
+          whereExpr & _database.payables.contactUuid.isIn(contactUuids!);
+    }
+    final query = _database.selectOnly(_database.payables)
+      ..addColumns([_database.payables.amount.sum()])
+      ..where(whereExpr);
+    final row = await query.getSingle();
+    return row.read(_database.payables.amount.sum()) ?? 0.0;
+  }
+
+  Future<double> _getReceivableTotalForFilters({
+    required bool hasDateFilter,
+    required DateTime startDate,
+    required DateTime endDate,
+    List<String>? categoryUuids,
+    List<String>? contactUuids,
+  }) async {
+    final hasCategoryFilter =
+        categoryUuids != null && categoryUuids.isNotEmpty;
+    final hasContactFilter =
+        contactUuids != null && contactUuids.isNotEmpty;
+
+    if (hasCategoryFilter) {
+      final joinExpr =
+          _database.transactions.uuid.equalsExp(_database.receivables.linkedExpenseUuid) |
+              _database.transactions.uuid.equalsExp(_database.receivables.linkedIncomeUuid);
+      Expression<bool> whereExpr = _database.receivables.isDeleted.equals(false) &
+          _database.transactions.categoryUuid.isIn(categoryUuids);
+      if (hasDateFilter) {
+        whereExpr = whereExpr &
+            _database.receivables.date.isBetweenValues(startDate, endDate);
+      }
+      if (hasContactFilter) {
+        whereExpr =
+            whereExpr & _database.receivables.contactUuid.isIn(contactUuids);
+      }
+      final query = _database.selectOnly(_database.receivables)
+        ..addColumns([_database.receivables.amount.sum()])
+        ..join([
+          innerJoin(
+            _database.transactions,
+            joinExpr,
+          ),
+        ])
+        ..where(whereExpr);
+      final row = await query.getSingle();
+      return row.read(_database.receivables.amount.sum()) ?? 0.0;
+    }
+
+    Expression<bool> whereExpr = _database.receivables.isDeleted.equals(false);
+    if (hasDateFilter) {
+      whereExpr = whereExpr &
+          _database.receivables.date.isBetweenValues(startDate, endDate);
+    }
+    if (hasContactFilter) {
+      whereExpr =
+          whereExpr & _database.receivables.contactUuid.isIn(contactUuids!);
+    }
+    final query = _database.selectOnly(_database.receivables)
+      ..addColumns([_database.receivables.amount.sum()])
+      ..where(whereExpr);
+    final row = await query.getSingle();
+    return row.read(_database.receivables.amount.sum()) ?? 0.0;
+  }
+
+  Future<double> _getTransactionSumByFilter(
+      TransactionFilters filters, String type) async {
+    if (filters.type != null && filters.type != type) return 0.0;
+    Expression<bool> whereExpr = _database.transactions.type.equals(type) &
+        _database.transactions.isDeleted.equals(false);
+    if (filters.startDate != null) {
+      final startDate = DateTime(filters.startDate!.year, filters.startDate!.month,
+          filters.startDate!.day, 0, 0, 0);
+      whereExpr = whereExpr &
+          _database.transactions.date.isBiggerOrEqualValue(startDate);
+    }
+    if (filters.endDate != null) {
+      final endDate = DateTime(filters.endDate!.year, filters.endDate!.month,
+          filters.endDate!.day, 23, 59, 59);
+      whereExpr =
+          whereExpr & _database.transactions.date.isSmallerOrEqualValue(endDate);
+    }
+    if (filters.categoryUuids != null && filters.categoryUuids!.isNotEmpty) {
+      whereExpr = whereExpr &
+          _database.transactions.categoryUuid.isIn(filters.categoryUuids!);
+    }
+    if (filters.contactUuids != null && filters.contactUuids!.isNotEmpty) {
+      whereExpr = whereExpr &
+          _database.transactions.contactUuid.isIn(filters.contactUuids!);
+    }
+    if (filters.minAmount != null) {
+      whereExpr = whereExpr &
+          _database.transactions.amount
+              .isBiggerOrEqualValue(filters.minAmount!);
+    }
+    if (filters.maxAmount != null) {
+      whereExpr = whereExpr &
+          _database.transactions.amount
+              .isSmallerOrEqualValue(filters.maxAmount!);
+    }
+    final query = _database.selectOnly(_database.transactions)
+      ..addColumns([_database.transactions.amount.sum()])
+      ..where(whereExpr);
+    final row = await query.getSingle();
+    return row.read(_database.transactions.amount.sum()) ?? 0.0;
   }
 
   Future<FinancialSummary> getFinancialSummary(

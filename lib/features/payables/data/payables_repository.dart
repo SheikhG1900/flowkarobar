@@ -687,6 +687,69 @@ class PayablesRepository {
     });
   }
 
+  /// Total amount for current list filters and status (for list summary).
+  Future<double> getTotalAmountForFilters(
+      PayableFilters filters, String status) async {
+    final dateField = filters.filterByDueDate
+        ? _database.payables.dueDate
+        : _database.payables.date;
+
+    Expression<bool> whereExpr;
+    if (status == 'OVERDUE') {
+      final now = DateTime.now();
+      whereExpr = _database.payables.status.equals('PENDING') &
+          _database.payables.dueDate.isNotNull() &
+          _database.payables.dueDate.isSmallerThanValue(now) &
+          _database.payables.isDeleted.equals(false);
+    } else {
+      whereExpr = _database.payables.status.equals(status) &
+          _database.payables.isDeleted.equals(false);
+    }
+    if (filters.startDate != null) {
+      whereExpr = whereExpr & dateField.isBiggerOrEqualValue(filters.startDate!);
+    }
+    if (filters.endDate != null) {
+      whereExpr = whereExpr & dateField.isSmallerOrEqualValue(filters.endDate!);
+    }
+    if (filters.contactUuids != null && filters.contactUuids!.isNotEmpty) {
+      whereExpr =
+          whereExpr & _database.payables.contactUuid.isIn(filters.contactUuids!);
+    }
+    if (filters.minAmount != null) {
+      whereExpr = whereExpr &
+          _database.payables.amount.isBiggerOrEqualValue(filters.minAmount!);
+    }
+    if (filters.maxAmount != null) {
+      whereExpr = whereExpr &
+          _database.payables.amount.isSmallerOrEqualValue(filters.maxAmount!);
+    }
+    if (filters.searchQuery != null && filters.searchQuery!.isNotEmpty) {
+      final searchPattern = '%${filters.searchQuery}%';
+      whereExpr = whereExpr &
+          (_database.payables.description.like(searchPattern) |
+              _database.contacts.name.like(searchPattern));
+    }
+
+    if (filters.searchQuery != null && filters.searchQuery!.isNotEmpty) {
+      final query = _database.selectOnly(_database.payables)
+        ..addColumns([_database.payables.amount.sum()])
+        ..join([
+          leftOuterJoin(
+            _database.contacts,
+            _database.contacts.uuid.equalsExp(_database.payables.contactUuid),
+          ),
+        ])
+        ..where(whereExpr);
+      final row = await query.getSingle();
+      return row.read(_database.payables.amount.sum()) ?? 0.0;
+    }
+    final query = _database.selectOnly(_database.payables)
+      ..addColumns([_database.payables.amount.sum()])
+      ..where(whereExpr);
+    final row = await query.getSingle();
+    return row.read(_database.payables.amount.sum()) ?? 0.0;
+  }
+
   /// Get payables with details (filtered and paginated) - Future version
   Future<List<PayableWithLinkedData>>
       getPayablesWithLinkedDataFilteredPaginated({

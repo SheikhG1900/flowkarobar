@@ -1618,6 +1618,24 @@ abstract class AppLocalizations {
   /// **'Net Balance'**
   String get netBalance;
 
+  /// No description provided for @balanceReceivableMinusPayable.
+  ///
+  /// In en, this message translates to:
+  /// **'Balance (Receivable − Payable)'**
+  String get balanceReceivableMinusPayable;
+
+  /// No description provided for @netReceivable.
+  ///
+  /// In en, this message translates to:
+  /// **'Net Receivable'**
+  String get netReceivable;
+
+  /// No description provided for @netPayable.
+  ///
+  /// In en, this message translates to:
+  /// **'Net Payable'**
+  String get netPayable;
+
   /// No description provided for @allTime.
   ///
   /// In en, this message translates to:

@@ -25,6 +25,7 @@ import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/core/utils/localization_helper.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:flowpaisa/shared/widgets/app_loading_indicator.dart';
+import 'package:flowpaisa/shared/widgets/collapsible_list_summary.dart';
 
 class PayablesListScreen extends ConsumerStatefulWidget {
   final bool startTour;
@@ -523,6 +524,15 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
     return CustomScrollView(
       controller: _scrollController,
       slivers: [
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            child: CollapsibleListSummary(
+              title: l10n.summary,
+              child: _PayablesListSummaryContent(status: status),
+            ),
+          ),
+        ),
         // Date sections with sticky headers
         for (final dateKey in keys)
           SliverStickyHeader(
@@ -936,6 +946,62 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
           ),
         ),
       ),
+    );
+  }
+}
+
+class _PayablesListSummaryContent extends ConsumerWidget {
+  final String status;
+
+  const _PayablesListSummaryContent({required this.status});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final totalAsync = ref.watch(payablesListTotalProvider(status));
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final currencySymbol = ref.watch(currencySymbolProvider);
+    final decimalPlaces = ref.watch(currencyDecimalPlacesProvider);
+
+    return totalAsync.when(
+      data: (total) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: AppColors.payableColor.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+              color: AppColors.payableColor.withValues(alpha: 0.25)),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              status == 'PAID'
+                  ? l10n.paidTag
+                  : status == 'OVERDUE'
+                      ? l10n.overdue
+                      : l10n.payableTag,
+              style: theme.textTheme.labelMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            Text(
+              AmountFormatter.formatWithCurrency(
+                  total, currencySymbol, decimalPlaces),
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: AppColors.payableColor,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      ),
+      loading: () => const SizedBox(
+        height: 48,
+        child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+      ),
+      error: (_, __) => const SizedBox.shrink(),
     );
   }
 }

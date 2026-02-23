@@ -33,6 +33,8 @@ import 'package:flowpaisa/features/transactions/presentation/screens/edit_schedu
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/shared/widgets/filter_bottom_sheet.dart';
 import 'package:flowpaisa/shared/widgets/app_loading_indicator.dart';
+import 'package:flowpaisa/shared/widgets/collapsible_list_summary.dart';
+import 'package:flowpaisa/features/analytics/presentation/providers/analytics_provider.dart';
 
 import 'package:flowpaisa/features/tour/domain/tour_service.dart';
 import 'package:flowpaisa/features/tour/presentation/providers/tour_provider.dart';
@@ -511,6 +513,15 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
     return CustomScrollView(
       controller: _scrollController,
       slivers: [
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            child: CollapsibleListSummary(
+              title: l10n.financialSummary,
+              child: _TransactionListSummaryContent(),
+            ),
+          ),
+        ),
         // Date sections with sticky headers
         for (int i = 0; i < keys.length; i++)
           SliverStickyHeader(
@@ -1035,5 +1046,197 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
       default:
         return '';
     }
+  }
+}
+
+class _TransactionListSummaryContent extends ConsumerWidget {
+  const _TransactionListSummaryContent();
+
+  static Widget _buildBalanceRow({
+    required ThemeData theme,
+    required String currencySymbol,
+    required int decimalPlaces,
+    required bool isReceivableHigher,
+    required double amount,
+    required String labelWhenHigher,
+    required String labelWhenLower,
+    required LinearGradient gradientWhenHigher,
+    required LinearGradient gradientWhenLower,
+  }) {
+    final isHigher = isReceivableHigher;
+    final label = isHigher ? labelWhenHigher : labelWhenLower;
+    final gradient = isHigher ? gradientWhenHigher : gradientWhenLower;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        gradient: gradient,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: theme.textTheme.labelMedium?.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          Text(
+            AmountFormatter.formatWithCurrency(
+                amount, currencySymbol, decimalPlaces),
+            style: theme.textTheme.titleSmall?.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final summaryAsync = ref.watch(transactionListSummaryProvider);
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final currencySymbol = ref.watch(currencySymbolProvider);
+    final decimalPlaces = ref.watch(currencyDecimalPlacesProvider);
+
+    return summaryAsync.when(
+      data: (s) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: _SummaryTile(
+                  label: l10n.payableTag,
+                  amount: s.totalPayable,
+                  color: AppColors.payableColor,
+                  currencySymbol: currencySymbol,
+                  decimalPlaces: decimalPlaces,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _SummaryTile(
+                  label: l10n.receivableTag,
+                  amount: s.totalReceivable,
+                  color: AppColors.receivableColor,
+                  currencySymbol: currencySymbol,
+                  decimalPlaces: decimalPlaces,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: _SummaryTile(
+                  label: l10n.expenses,
+                  amount: s.totalExpense,
+                  color: AppColors.expenseColor,
+                  currencySymbol: currencySymbol,
+                  decimalPlaces: decimalPlaces,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _SummaryTile(
+                  label: l10n.income,
+                  amount: s.totalIncome,
+                  color: AppColors.incomeColor,
+                  currencySymbol: currencySymbol,
+                  decimalPlaces: decimalPlaces,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          _buildBalanceRow(
+            theme: theme,
+            currencySymbol: currencySymbol,
+            decimalPlaces: decimalPlaces,
+            isReceivableHigher: s.totalReceivable >= s.totalPayable,
+            amount: (s.totalReceivable - s.totalPayable).abs(),
+            labelWhenHigher: l10n.netReceivable,
+            labelWhenLower: l10n.netPayable,
+            gradientWhenHigher: AppColors.receivableGradient,
+            gradientWhenLower: AppColors.payableGradient,
+          ),
+          const SizedBox(height: 8),
+          _buildBalanceRow(
+            theme: theme,
+            currencySymbol: currencySymbol,
+            decimalPlaces: decimalPlaces,
+            isReceivableHigher: s.totalIncome >= s.totalExpense,
+            amount: (s.totalIncome - s.totalExpense).abs(),
+            labelWhenHigher: l10n.netIncome,
+            labelWhenLower: l10n.netExpenses,
+            gradientWhenHigher: AppColors.incomeGradient,
+            gradientWhenLower: AppColors.expenseGradient,
+          ),
+        ],
+      ),
+      loading: () => const SizedBox(
+        height: 80,
+        child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+      ),
+      error: (_, __) => const SizedBox.shrink(),
+    );
+  }
+}
+
+class _SummaryTile extends StatelessWidget {
+  final String label;
+  final double amount;
+  final Color color;
+  final String currencySymbol;
+  final int decimalPlaces;
+
+  const _SummaryTile({
+    required this.label,
+    required this.amount,
+    required this.color,
+    required this.currencySymbol,
+    required this.decimalPlaces,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            AmountFormatter.formatWithCurrency(
+                amount, currencySymbol, decimalPlaces),
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

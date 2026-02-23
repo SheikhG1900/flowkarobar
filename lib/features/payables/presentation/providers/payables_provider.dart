@@ -89,6 +89,16 @@ final payableWithLinkedDataProvider =
   return repository.watchPayableWithLinkedDataByUuid(uuid);
 });
 
+/// Total amount for the current list tab and filters (for list summary).
+final payablesListTotalProvider =
+    FutureProvider.autoDispose.family<double, String>((ref, status) async {
+  ref.watch(payablesPaginatedProvider(status));
+  final filters =
+      ref.read(payablesPaginatedProvider(status).notifier).currentFilters;
+  final repository = ref.watch(payablesRepositoryProvider);
+  return repository.getTotalAmountForFilters(filters, status);
+});
+
 // Paginated payables provider
 class PayablesPaginatedNotifier
     extends Notifier<PaginatedState<PayableWithLinkedData>> {

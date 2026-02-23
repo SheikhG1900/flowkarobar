@@ -691,6 +691,74 @@ class ReceivablesRepository {
     });
   }
 
+  /// Total amount for current list filters and status (for list summary).
+  Future<double> getTotalAmountForFilters(
+      ReceivableFilters filters, String status) async {
+    final dateField = filters.filterByDueDate
+        ? _database.receivables.dueDate
+        : _database.receivables.date;
+
+    Expression<bool> whereExpr;
+    if (status == 'OVERDUE') {
+      final now = DateTime.now();
+      whereExpr = _database.receivables.status.equals('PENDING') &
+          _database.receivables.dueDate.isNotNull() &
+          _database.receivables.dueDate.isSmallerThanValue(now) &
+          _database.receivables.isDeleted.equals(false);
+    } else {
+      whereExpr = _database.receivables.status.equals(status) &
+          _database.receivables.isDeleted.equals(false);
+    }
+    if (filters.startDate != null) {
+      whereExpr =
+          whereExpr & dateField.isBiggerOrEqualValue(filters.startDate!);
+    }
+    if (filters.endDate != null) {
+      whereExpr =
+          whereExpr & dateField.isSmallerOrEqualValue(filters.endDate!);
+    }
+    if (filters.contactUuids != null && filters.contactUuids!.isNotEmpty) {
+      whereExpr = whereExpr &
+          _database.receivables.contactUuid.isIn(filters.contactUuids!);
+    }
+    if (filters.minAmount != null) {
+      whereExpr = whereExpr &
+          _database.receivables.amount
+              .isBiggerOrEqualValue(filters.minAmount!);
+    }
+    if (filters.maxAmount != null) {
+      whereExpr = whereExpr &
+          _database.receivables.amount
+              .isSmallerOrEqualValue(filters.maxAmount!);
+    }
+    if (filters.searchQuery != null && filters.searchQuery!.isNotEmpty) {
+      final searchPattern = '%${filters.searchQuery}%';
+      whereExpr = whereExpr &
+          (_database.receivables.description.like(searchPattern) |
+              _database.contacts.name.like(searchPattern));
+    }
+
+    if (filters.searchQuery != null && filters.searchQuery!.isNotEmpty) {
+      final query = _database.selectOnly(_database.receivables)
+        ..addColumns([_database.receivables.amount.sum()])
+        ..join([
+          leftOuterJoin(
+            _database.contacts,
+            _database.contacts.uuid
+                .equalsExp(_database.receivables.contactUuid),
+          ),
+        ])
+        ..where(whereExpr);
+      final row = await query.getSingle();
+      return row.read(_database.receivables.amount.sum()) ?? 0.0;
+    }
+    final query = _database.selectOnly(_database.receivables)
+      ..addColumns([_database.receivables.amount.sum()])
+      ..where(whereExpr);
+    final row = await query.getSingle();
+    return row.read(_database.receivables.amount.sum()) ?? 0.0;
+  }
+
   /// Get receivables with details (filtered and paginated) - Future version
   Future<List<ReceivableWithLinkedData>>
       getReceivablesWithLinkedDataFilteredPaginated({

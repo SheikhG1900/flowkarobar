@@ -841,6 +841,15 @@ class AppLocalizationsUr extends AppLocalizations {
   String get netBalance => 'خالص بیلنس';
 
   @override
+  String get balanceReceivableMinusPayable => 'بیلنس (وصول − قابل ادائیگی)';
+
+  @override
+  String get netReceivable => 'خالص وصول';
+
+  @override
+  String get netPayable => 'خالص قابل ادائیگی';
+
+  @override
   String get allTime => 'کل وقت:';
 
   @override

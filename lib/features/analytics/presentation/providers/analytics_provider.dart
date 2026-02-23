@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/features/analytics/data/analytics_repository.dart';
+import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
 import 'package:flowpaisa/shared/providers/database_provider.dart';
 
 // Enum for date range types
@@ -227,4 +228,14 @@ final categoryStatisticsProvider = FutureProvider.autoDispose
   final dateRange = ref.watch(selectedDateRangeProvider);
   return repository.getCategoryStatistics(
       categoryUuid, dateRange.startDate, dateRange.endDate);
+});
+
+/// Financial summary for the transaction list, respecting current filters.
+final transactionListSummaryProvider =
+    FutureProvider.autoDispose<FinancialSummary>((ref) async {
+  ref.watch(transactionsPaginatedProvider);
+  final filters =
+      ref.read(transactionsPaginatedProvider.notifier).currentFilters;
+  final repository = ref.watch(analyticsRepositoryProvider);
+  return repository.getFinancialSummaryForTransactionFilters(filters);
 });
