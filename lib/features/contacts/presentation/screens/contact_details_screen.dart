@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
+import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
 import 'package:flowpaisa/features/contacts/presentation/screens/add_contact_screen.dart';
@@ -10,6 +11,7 @@ import 'package:flowpaisa/features/payables/presentation/screens/payables_list_s
 import 'package:flowpaisa/features/receivables/domain/models.dart';
 import 'package:flowpaisa/features/receivables/presentation/providers/receivables_provider.dart';
 import 'package:flowpaisa/features/receivables/presentation/screens/receivables_list_screen.dart';
+import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
 
 // Provider to get transactions for a contact
@@ -24,8 +26,10 @@ class ContactDetailsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final statsAsync = ref.watch(contactStatisticsProvider(contactUuid));
     final currencySymbol = ref.watch(currencySymbolProvider);
+    final currencyDecimalPlaces = ref.watch(currencyDecimalPlacesProvider);
 
     return Scaffold(
       body: statsAsync.when(
@@ -147,56 +151,38 @@ class ContactDetailsScreen extends ConsumerWidget {
 
               // Content Body
               SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Net Balance Card
-                      Container(
-                        padding: const EdgeInsets.all(24),
-                        decoration: BoxDecoration(
-                          gradient: isPositive
-                              ? AppColors.receivableGradient
-                              : AppColors.payableGradient,
-                          borderRadius: BorderRadius.circular(24),
-                          boxShadow: [
-                            BoxShadow(
-                              color: (isPositive
-                                      ? AppColors.receivableColor
-                                      : AppColors.payableColor)
-                                  .withValues(alpha: 0.3),
-                              blurRadius: 16,
-                              offset: const Offset(0, 8),
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'Net Balance',
-                                  style: TextStyle(
-                                    color: Colors.white70,
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  '$currencySymbol${netBalance.abs().toStringAsFixed(2)}',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 32,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            Container(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Net Balance Card: full width, badge top-right, amount centered
+                    Container(
+                      width: double.infinity,
+                      margin: const EdgeInsets.symmetric(horizontal: 12),
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        gradient: isPositive
+                            ? AppColors.receivableGradient
+                            : AppColors.payableGradient,
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: [
+                          BoxShadow(
+                            color: (isPositive
+                                    ? AppColors.receivableColor
+                                    : AppColors.payableColor)
+                                .withValues(alpha: 0.3),
+                            blurRadius: 16,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
+                      ),
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          // Receivable/Payable badge at top right
+                          Positioned(
+                            top: 0,
+                            right: 0,
+                            child: Container(
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 12, vertical: 6),
                               decoration: BoxDecoration(
@@ -205,8 +191,10 @@ class ContactDetailsScreen extends ConsumerWidget {
                               ),
                               child: Text(
                                 netBalance == 0
-                                    ? 'Settled'
-                                    : (isPositive ? 'Receivable' : 'Payable'),
+                                    ? l10n.settled
+                                    : (isPositive
+                                        ? l10n.receivable
+                                        : l10n.payable),
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
@@ -214,11 +202,47 @@ class ContactDetailsScreen extends ConsumerWidget {
                                 ),
                               ),
                             ),
-                          ],
-                        ),
+                          ),
+                          // Amount and label in center
+                          Column(
+                            mainAxisSize: MainAxisSize.min,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                l10n.netBalance,
+                                style: const TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                AmountFormatter.formatWithCurrency(
+                                  netBalance.abs(),
+                                  currencySymbol,
+                                  currencyDecimalPlaces,
+                                ),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 32,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 16),
+                    ),
+                    const SizedBox(height: 16),
 
+                    // Rest of content with padding
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
                       // Stats Row
                       Row(
                         children: [
@@ -226,12 +250,13 @@ class ContactDetailsScreen extends ConsumerWidget {
                           Expanded(
                             child: _buildStatCard(
                               context,
-                              title: 'Receivable',
+                              title: l10n.receivable,
                               amount: stats.totalReceivable,
                               count: stats.receivablesCount,
                               color: AppColors.receivableColor,
                               icon: Icons.arrow_downward,
                               currencySymbol: currencySymbol,
+                              currencyDecimalPlaces: currencyDecimalPlaces,
                               onTap: () {
                                 ref
                                     .read(
@@ -258,12 +283,13 @@ class ContactDetailsScreen extends ConsumerWidget {
                           Expanded(
                             child: _buildStatCard(
                               context,
-                              title: 'Payable',
+                              title: l10n.payable,
                               amount: stats.totalPayable,
                               count: stats.payablesCount,
                               color: AppColors.payableColor,
                               icon: Icons.arrow_upward,
                               currencySymbol: currencySymbol,
+                              currencyDecimalPlaces: currencyDecimalPlaces,
                               onTap: () {
                                 ref
                                     .read(payablesPaginatedProvider('PENDING')
@@ -291,7 +317,7 @@ class ContactDetailsScreen extends ConsumerWidget {
                       // Info Section
                       if (contact.email != null || contact.notes != null) ...[
                         Text(
-                          'Information',
+                          l10n.information,
                           style: theme.textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.bold,
                           ),
@@ -321,7 +347,7 @@ class ContactDetailsScreen extends ConsumerWidget {
                                         size: 20),
                                   ),
                                   title: Text(contact.email!),
-                                  subtitle: const Text('Email'),
+                                  subtitle: Text(l10n.emailLabel),
                                 ),
                               if (contact.notes != null &&
                                   contact.notes!.isNotEmpty)
@@ -337,22 +363,25 @@ class ContactDetailsScreen extends ConsumerWidget {
                                         size: 20),
                                   ),
                                   title: Text(contact.notes!),
-                                  subtitle: const Text('Notes'),
+                                  subtitle: Text(l10n.notesLabel),
                                 ),
                             ],
                           ),
                         ),
                       ],
                       const SizedBox(height: 80), // Bottom padding
-                    ],
-                  ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) => Center(child: Text('Error: $error')),
+        error: (error, stack) => Center(
+            child: Text(AppLocalizations.of(context)!.errorOccurred('$error'))),
       ),
     );
   }
@@ -365,9 +394,11 @@ class ContactDetailsScreen extends ConsumerWidget {
     required Color color,
     required IconData icon,
     required String currencySymbol,
+    required int currencyDecimalPlaces,
     VoidCallback? onTap,
   }) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return InkWell(
       onTap: onTap,
@@ -411,7 +442,11 @@ class ContactDetailsScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              '$currencySymbol${amount.toStringAsFixed(2)}',
+              AmountFormatter.formatWithCurrency(
+                amount,
+                currencySymbol,
+                currencyDecimalPlaces,
+              ),
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -420,7 +455,7 @@ class ContactDetailsScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              '$count pending',
+              '${count} ${l10n.pending}',
               style: theme.textTheme.labelSmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -432,16 +467,16 @@ class ContactDetailsScreen extends ConsumerWidget {
   }
 
   void _showDeleteDialog(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Contact'),
-        content: const Text(
-            'Are you sure you want to delete this contact? This will delete all associated transaction history.'),
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.deleteContactTitle),
+        content: Text(l10n.deleteContactConfirmation),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(l10n.cancel),
           ),
           FilledButton(
             style: FilledButton.styleFrom(
@@ -453,20 +488,20 @@ class ContactDetailsScreen extends ConsumerWidget {
                 final repository = ref.read(contactsRepositoryProvider);
                 await repository.deleteContact(contactUuid);
                 if (context.mounted) {
-                  Navigator.pop(context); // Close dialog
+                  Navigator.pop(dialogContext); // Close dialog
                   Navigator.pop(context); // Close details screen
                   ToastUtils.showSuccessToast(
-                      context, ref, 'Contact deleted successfully');
+                      context, ref, l10n.contactDeletedSuccessfully);
                 }
               } catch (e) {
                 if (context.mounted) {
-                  Navigator.pop(context);
+                  Navigator.pop(dialogContext);
                   ToastUtils.showErrorToast(
-                      context, ref, 'Error: ${e.toString()}');
+                      context, ref, l10n.errorOccurred(e.toString()));
                 }
               }
             },
-            child: const Text('Delete'),
+            child: Text(l10n.delete),
           ),
         ],
       ),

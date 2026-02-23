@@ -1230,6 +1230,8 @@
   "emailLabel": "Email",
   "notesLabel": "Notes",
   "deleteContactTitle": "Delete Contact",
+  "deleteContactConfirmation": "Are you sure you want to delete this contact? This will delete all associated transaction history.",
+  "information": "Information",
   "loading": "Loading...",
   "limitReachedTitle": "Limit Reached",
   "upgrade": "Upgrade",

@@ -785,6 +785,8 @@
   "emailLabel": "ای میل",
   "notesLabel": "نوٹس",
   "deleteContactTitle": "رابطہ حذف کریں",
+  "deleteContactConfirmation": "کیا آپ واقعی اس رابطے کو حذف کرنا چاہتے ہیں؟ اس سے منسلک تمام لین دین کی تاریخ حذف ہو جائے گی۔",
+  "information": "معلومات",
   "loading": "لوڈنگ...",
   "limitReachedTitle": "حد تک پہنچ گئے",
   "upgrade": "اپ گریڈ کریں",

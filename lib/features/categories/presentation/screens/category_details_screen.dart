@@ -240,51 +240,78 @@ class CategoryDetailsScreen extends ConsumerWidget {
                         ),
                         const SizedBox(height: 16),
 
-                        // Transaction Count Card
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: theme.cardColor,
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: theme.dividerColor.withValues(alpha: 0.5),
+                        // Transaction Count Card - same tap as summary: open filtered transactions list
+                        InkWell(
+                          onTap: () async {
+                            ref
+                                .read(transactionsPaginatedProvider.notifier)
+                                .applyFilters(
+                                  TransactionFilters(
+                                    categoryUuids: [categoryUuid],
+                                    startDate: selectedDateRange.startDate,
+                                    endDate: selectedDateRange.endDate,
+                                  ),
+                                );
+                            await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const TransactionsListScreen(),
+                              ),
+                            );
+                            ref.invalidate(categoryStatisticsProvider(categoryUuid));
+                          },
+                          borderRadius: BorderRadius.circular(16),
+                          child: Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: theme.cardColor,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: theme.dividerColor.withValues(alpha: 0.5),
+                              ),
                             ),
-                          ),
-                          child: Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(10),
-                                decoration: BoxDecoration(
-                                  color: color.withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(12),
+                            child: Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: color.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Icon(Icons.receipt_long_outlined,
+                                      color: color, size: 24),
                                 ),
-                                child: Icon(Icons.receipt_long_outlined,
-                                    color: color, size: 24),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      l10n.transactions,
-                                      style:
-                                          theme.textTheme.bodySmall?.copyWith(
-                                        color:
-                                            theme.colorScheme.onSurfaceVariant,
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        l10n.transactions,
+                                        style:
+                                            theme.textTheme.bodySmall?.copyWith(
+                                          color:
+                                              theme.colorScheme.onSurfaceVariant,
+                                        ),
                                       ),
-                                    ),
-                                    Text(
-                                      '${stats.transactionCount} ${l10n.transactions.toLowerCase()}',
-                                      style:
-                                          theme.textTheme.titleMedium?.copyWith(
-                                        fontWeight: FontWeight.bold,
+                                      Text(
+                                        '${stats.transactionCount} ${l10n.transactions.toLowerCase()}',
+                                        style:
+                                            theme.textTheme.titleMedium?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                       ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
-                              ),
-                            ],
+                                Icon(
+                                  Icons.arrow_forward_ios,
+                                  size: 16,
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                         const SizedBox(height: 80),

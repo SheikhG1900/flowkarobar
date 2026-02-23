@@ -2379,6 +2379,13 @@ class AppLocalizationsHi extends AppLocalizations {
   String get deleteContactTitle => 'संपर्क हटाएं';
 
   @override
+  String get deleteContactConfirmation =>
+      'क्या आप वाकई इस संपर्क को हटाना चाहते हैं? इससे संबंधित सभी लेनदेन इतिहास हट जाएगा।';
+
+  @override
+  String get information => 'जानकारी';
+
+  @override
   String get loading => 'लोड हो रहा है...';
 
   @override

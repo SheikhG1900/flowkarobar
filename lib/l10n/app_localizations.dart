@@ -4384,6 +4384,18 @@ abstract class AppLocalizations {
   /// **'Delete Contact'**
   String get deleteContactTitle;
 
+  /// No description provided for @deleteContactConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this contact? This will delete all associated transaction history.'**
+  String get deleteContactConfirmation;
+
+  /// No description provided for @information.
+  ///
+  /// In en, this message translates to:
+  /// **'Information'**
+  String get information;
+
   /// No description provided for @loading.
   ///
   /// In en, this message translates to:

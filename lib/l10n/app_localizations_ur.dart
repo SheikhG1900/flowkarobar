@@ -2384,6 +2384,13 @@ class AppLocalizationsUr extends AppLocalizations {
   String get deleteContactTitle => 'رابطہ حذف کریں';
 
   @override
+  String get deleteContactConfirmation =>
+      'کیا آپ واقعی اس رابطے کو حذف کرنا چاہتے ہیں؟ اس سے منسلک تمام لین دین کی تاریخ حذف ہو جائے گی۔';
+
+  @override
+  String get information => 'معلومات';
+
+  @override
   String get loading => 'لوڈنگ...';
 
   @override

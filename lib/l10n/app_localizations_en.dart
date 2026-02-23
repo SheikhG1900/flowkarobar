@@ -2372,6 +2372,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deleteContactTitle => 'Delete Contact';
 
   @override
+  String get deleteContactConfirmation =>
+      'Are you sure you want to delete this contact? This will delete all associated transaction history.';
+
+  @override
+  String get information => 'Information';
+
+  @override
   String get loading => 'Loading...';
 
   @override
