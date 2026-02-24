@@ -1,12 +1,29 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/database/database.dart';
+import 'package:flowpaisa/features/contacts/data/contact_bulk_settlement_service.dart';
 import 'package:flowpaisa/features/contacts/data/contacts_repository.dart';
+import 'package:flowpaisa/features/payables/presentation/providers/payables_provider.dart';
+import 'package:flowpaisa/features/receivables/presentation/providers/receivables_provider.dart';
+import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
 import 'package:flowpaisa/shared/providers/database_provider.dart';
 
 // Repository provider
 final contactsRepositoryProvider = Provider<ContactsRepository>((ref) {
   final database = ref.watch(databaseProvider);
   return ContactsRepository(database);
+});
+
+// Bulk settlement service provider (payables + receivables + transactions for a contact)
+final contactBulkSettlementServiceProvider =
+    Provider<ContactBulkSettlementService>((ref) {
+  final payablesRepository = ref.watch(payablesRepositoryProvider);
+  final receivablesRepository = ref.watch(receivablesRepositoryProvider);
+  final transactionsRepository = ref.watch(transactionsRepositoryProvider);
+  return ContactBulkSettlementService(
+    payablesRepository: payablesRepository,
+    receivablesRepository: receivablesRepository,
+    transactionsRepository: transactionsRepository,
+  );
 });
 
 // Stream providers

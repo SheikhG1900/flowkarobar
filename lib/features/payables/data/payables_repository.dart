@@ -380,6 +380,24 @@ class PayablesRepository {
         .get();
   }
 
+  /// Get all PENDING payables for a contact, ordered for bulk settlement.
+  ///
+  /// Ordering strategy:
+  /// - First by date ascending (oldest first).
+  /// - The bulk-settlement service will further prioritise overdue items
+  ///   (dueDate < now) by splitting this list into overdue vs non-overdue
+  ///   while preserving this stable order.
+  Future<List<Payable>> getPendingPayablesForContactOrderedForSettlement(
+      String contactUuid) {
+    final query = _database.select(_database.payables)
+      ..where((p) =>
+          p.contactUuid.equals(contactUuid) &
+          p.status.equals('PENDING') &
+          p.isDeleted.equals(false))
+      ..orderBy([(p) => OrderingTerm.asc(p.date)]);
+    return query.get();
+  }
+
   /// Get payables by contact
   Stream<List<Payable>> watchPayablesByContact(String contactUuid) {
     return (_database.select(_database.payables)

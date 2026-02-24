@@ -382,6 +382,25 @@ class ReceivablesRepository {
         .get();
   }
 
+  /// Get all PENDING receivables for a contact, ordered for bulk settlement.
+  ///
+  /// Ordering strategy:
+  /// - First by date ascending (oldest first).
+  /// - The bulk-settlement service will further prioritise overdue items
+  ///   (dueDate < now) by splitting this list into overdue vs non-overdue
+  ///   while preserving this stable order.
+  Future<List<Receivable>>
+      getPendingReceivablesForContactOrderedForSettlement(
+          String contactUuid) {
+    final query = _database.select(_database.receivables)
+      ..where((r) =>
+          r.contactUuid.equals(contactUuid) &
+          r.status.equals('PENDING') &
+          r.isDeleted.equals(false))
+      ..orderBy([(r) => OrderingTerm.asc(r.date)]);
+    return query.get();
+  }
+
   /// Get receivables by contact
   Stream<List<Receivable>> watchReceivablesByContact(String contactUuid) {
     return (_database.select(_database.receivables)

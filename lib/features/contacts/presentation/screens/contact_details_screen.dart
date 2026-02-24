@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
+import 'package:flowpaisa/features/contacts/data/contact_bulk_settlement_service.dart';
 import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
 import 'package:flowpaisa/features/contacts/presentation/screens/add_contact_screen.dart';
 import 'package:flowpaisa/features/payables/domain/models.dart';
@@ -314,6 +315,31 @@ class ContactDetailsScreen extends ConsumerWidget {
                       ),
                       const SizedBox(height: 24),
 
+                      // Bulk settle button (pay/receive)
+                      if (stats.totalReceivable > 0 || stats.totalPayable > 0)
+                        ...[
+                          SizedBox(
+                            width: double.infinity,
+                            child: OutlinedButton.icon(
+                              icon: Icon(
+                                netBalance >= 0
+                                    ? Icons.download_done
+                                    : Icons.upload,
+                              ),
+                              label: Text(
+                                // Dedicated key can be added, reuse summary for now
+                                l10n.summary,
+                              ),
+                              onPressed: () => _showBulkSettleSheet(
+                                context,
+                                ref,
+                                netBalance,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                        ],
+
                       // Info Section
                       if (contact.email != null || contact.notes != null) ...[
                         Text(
@@ -382,6 +408,30 @@ class ContactDetailsScreen extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stack) => Center(
             child: Text(AppLocalizations.of(context)!.errorOccurred('$error'))),
+      ),
+    );
+  }
+
+  Future<void> _showBulkSettleSheet(
+      BuildContext context, WidgetRef ref, double netBalance) async {
+    final l10n = AppLocalizations.of(context)!;
+    final isNetReceivable = netBalance >= 0;
+    final absNet = netBalance.abs();
+    final service = ref.read(contactBulkSettlementServiceProvider);
+
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => _BulkSettleSheetContent(
+        contactUuid: contactUuid,
+        absNet: absNet,
+        isNetReceivable: isNetReceivable,
+        service: service,
+        l10n: l10n,
+        ref: ref,
       ),
     );
   }
@@ -502,6 +552,169 @@ class ContactDetailsScreen extends ConsumerWidget {
               }
             },
             child: Text(l10n.delete),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _BulkSettleSheetContent extends StatefulWidget {
+  const _BulkSettleSheetContent({
+    required this.contactUuid,
+    required this.absNet,
+    required this.isNetReceivable,
+    required this.service,
+    required this.l10n,
+    required this.ref,
+  });
+
+  final String contactUuid;
+  final double absNet;
+  final bool isNetReceivable;
+  final ContactBulkSettlementService service;
+  final AppLocalizations l10n;
+  final WidgetRef ref;
+
+  @override
+  State<_BulkSettleSheetContent> createState() =>
+      _BulkSettleSheetContentState();
+}
+
+class _BulkSettleSheetContentState extends State<_BulkSettleSheetContent> {
+  late final TextEditingController _amountController;
+  bool _settleAll = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _amountController = TextEditingController(
+      text: widget.absNet.toStringAsFixed(2),
+    );
+  }
+
+  @override
+  void dispose() {
+    _amountController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final currencySymbol = widget.ref.read(currencySymbolProvider);
+    final currencyDecimalPlaces =
+        widget.ref.read(currencyDecimalPlacesProvider);
+
+    return Padding(
+      padding: EdgeInsets.only(
+        left: 20,
+        right: 20,
+        top: 16,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                widget.isNetReceivable
+                    ? widget.l10n.receivable
+                    : widget.l10n.payable,
+                style: theme.textTheme.titleMedium
+                    ?.copyWith(fontWeight: FontWeight.bold),
+              ),
+              IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            widget.isNetReceivable
+                ? widget.l10n.receivableShort
+                : widget.l10n.payableShort,
+            style: theme.textTheme.bodySmall,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            AmountFormatter.formatWithCurrency(
+              widget.absNet,
+              currencySymbol,
+              currencyDecimalPlaces,
+            ),
+            style: theme.textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _amountController,
+            keyboardType:
+                const TextInputType.numberWithOptions(decimal: true),
+            decoration: InputDecoration(
+              labelText: widget.l10n.amount,
+              border: const OutlineInputBorder(),
+            ),
+          ),
+          const SizedBox(height: 8),
+          CheckboxListTile(
+            contentPadding: EdgeInsets.zero,
+            title: const Text('Settle all'),
+            value: _settleAll,
+            onChanged: (value) {
+              setState(() {
+                _settleAll = value ?? false;
+              });
+            },
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              onPressed: () async {
+                try {
+                  if (_settleAll) {
+                    await widget.service.settleAll(widget.contactUuid);
+                  } else {
+                    final raw = _amountController.text.trim();
+                    final parsed = double.tryParse(raw) ?? 0;
+                    if (parsed <= 0) {
+                      ToastUtils.showErrorToast(
+                        context,
+                        widget.ref,
+                        widget.l10n.errorOccurred('Invalid amount'),
+                      );
+                      return;
+                    }
+                    await widget.service.settleAmount(
+                      widget.contactUuid,
+                      parsed,
+                      isNetReceivable: widget.isNetReceivable,
+                    );
+                  }
+                  if (mounted) {
+                    Navigator.pop(context);
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    Navigator.pop(context);
+                  }
+                  if (context.mounted) {
+                    ToastUtils.showErrorToast(
+                      context,
+                      widget.ref,
+                      widget.l10n.errorOccurred(e.toString()),
+                    );
+                  }
+                }
+              },
+              child: Text(widget.l10n.confirm),
+            ),
           ),
         ],
       ),
