@@ -192,7 +192,9 @@ class ContactBulkSettlementService {
           date: Value(now),
           status: const Value('PENDING'),
           linkedIncomeUuid: Value(txUuid),
-          autoCreateExpense: const Value(false),
+          // Explicitly enable auto expense creation so that when this payable
+          // is later marked as PAID, the usual auto EXPENSE is generated.
+          autoCreateExpense: const Value(true),
         ),
       );
       await transactionsRepository.updateTransactionWithCompanion(
@@ -281,7 +283,8 @@ class ContactBulkSettlementService {
           date: Value(now),
           status: const Value('PENDING'),
           linkedExpenseUuid: Value(txUuid),
-          autoCreateIncome: const Value(false),
+          // Keep autoCreateIncome as default (true) so that when this receivable
+          // is later marked as RECEIVED, the usual auto income transaction is generated.
         ),
       );
       await transactionsRepository.updateTransactionWithCompanion(
