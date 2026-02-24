@@ -2358,6 +2358,15 @@ class AppLocalizationsHi extends AppLocalizations {
   String get autoBadge => 'स्वचालित';
 
   @override
+  String get bulkReceiveInBulk => 'बल्क में प्राप्त करें';
+
+  @override
+  String get bulkPayInBulk => 'बल्क में भुगतान करें';
+
+  @override
+  String get bulkProcessInBulk => 'बल्क में प्रोसेस करें';
+
+  @override
   String get uncategorized => 'बिना श्रेणी';
 
   @override

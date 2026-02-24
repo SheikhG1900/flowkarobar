@@ -42,6 +42,9 @@ class TransactionFilters {
   final List<String>? contactUuids;
   final double? minAmount;
   final double? maxAmount;
+  /// Optional transaction status filters:
+  /// 'PAID', 'RECEIVED', 'PAYABLE', 'RECEIVABLE', 'AUTO'
+  final List<String>? statusCodes;
 
   TransactionFilters({
     this.startDate,
@@ -51,6 +54,7 @@ class TransactionFilters {
     this.contactUuids,
     this.minAmount,
     this.maxAmount,
+    this.statusCodes,
   });
 
   bool get isEmpty =>
@@ -60,7 +64,8 @@ class TransactionFilters {
       (categoryUuids == null || categoryUuids!.isEmpty) &&
       (contactUuids == null || contactUuids!.isEmpty) &&
       minAmount == null &&
-      maxAmount == null;
+      maxAmount == null &&
+      (statusCodes == null || statusCodes!.isEmpty);
 
   TransactionFilters copyWith({
     DateTime? startDate,
@@ -75,6 +80,7 @@ class TransactionFilters {
     bool clearMinAmount = false,
     double? maxAmount,
     bool clearMaxAmount = false,
+    List<String>? statusCodes,
   }) {
     return TransactionFilters(
       startDate: clearStartDate ? null : (startDate ?? this.startDate),
@@ -84,6 +90,7 @@ class TransactionFilters {
       contactUuids: contactUuids ?? this.contactUuids,
       minAmount: clearMinAmount ? null : (minAmount ?? this.minAmount),
       maxAmount: clearMaxAmount ? null : (maxAmount ?? this.maxAmount),
+      statusCodes: statusCodes ?? this.statusCodes,
     );
   }
 }

@@ -14,6 +14,8 @@ import 'package:flowpaisa/features/receivables/presentation/providers/receivable
 import 'package:flowpaisa/features/receivables/presentation/screens/receivables_list_screen.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
+import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
+import 'package:flowpaisa/features/premium/presentation/screens/premium_screen.dart';
 
 // Provider to get transactions for a contact
 // Note: We'll fetch this from the database directly in a future iteration
@@ -155,7 +157,7 @@ class ContactDetailsScreen extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // Net Balance Card: full width, badge top-right, amount centered
+                    // Net Balance Card: full width, amount and badge centered
                     Container(
                       width: double.infinity,
                       margin: const EdgeInsets.symmetric(horizontal: 12),
@@ -176,62 +178,55 @@ class ContactDetailsScreen extends ConsumerWidget {
                           ),
                         ],
                       ),
-                      child: Stack(
-                        alignment: Alignment.center,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          // Receivable/Payable badge at top right
-                          Positioned(
-                            top: 0,
-                            right: 0,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 6),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.2),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Text(
-                                netBalance == 0
-                                    ? l10n.settled
-                                    : (isPositive
-                                        ? l10n.receivable
-                                        : l10n.payable),
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 12,
-                                ),
-                              ),
+                          Text(
+                            l10n.netBalance,
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
                             ),
+                            textAlign: TextAlign.center,
                           ),
-                          // Amount and label in center
-                          Column(
-                            mainAxisSize: MainAxisSize.min,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                l10n.netBalance,
-                                style: const TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                ),
+                          const SizedBox(height: 8),
+                          Text(
+                            AmountFormatter.formatWithCurrency(
+                              netBalance.abs(),
+                              currencySymbol,
+                              currencyDecimalPlaces,
+                            ),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 32,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 12),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              netBalance == 0
+                                  ? l10n.settled
+                                  : (isPositive
+                                      ? l10n.receivable
+                                      : l10n.payable),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
                               ),
-                              const SizedBox(height: 8),
-                              Text(
-                                AmountFormatter.formatWithCurrency(
-                                  netBalance.abs(),
-                                  currencySymbol,
-                                  currencyDecimalPlaces,
-                                ),
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 32,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                            ],
+                              textAlign: TextAlign.center,
+                            ),
                           ),
                         ],
                       ),
@@ -244,104 +239,204 @@ class ContactDetailsScreen extends ConsumerWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                      // Stats Row
-                      Row(
-                        children: [
-                          // Receivable Stats
-                          Expanded(
-                            child: _buildStatCard(
-                              context,
-                              title: l10n.receivable,
-                              amount: stats.totalReceivable,
-                              count: stats.receivablesCount,
-                              color: AppColors.receivableColor,
-                              icon: Icons.arrow_downward,
-                              currencySymbol: currencySymbol,
-                              currencyDecimalPlaces: currencyDecimalPlaces,
-                              onTap: () {
-                                ref
-                                    .read(
-                                        receivablesPaginatedProvider('PENDING')
+                          // Stats Row
+                          Row(
+                            children: [
+                              // Receivable Stats
+                              Expanded(
+                                child: _buildStatCard(
+                                  context,
+                                  title: l10n.receivable,
+                                  amount: stats.totalReceivable,
+                                  count: stats.receivablesCount,
+                                  color: AppColors.receivableColor,
+                                  icon: Icons.arrow_downward,
+                                  currencySymbol: currencySymbol,
+                                  currencyDecimalPlaces:
+                                      currencyDecimalPlaces,
+                                  onTap: () {
+                                    ref
+                                        .read(
+                                            receivablesPaginatedProvider(
+                                                    'PENDING')
+                                                .notifier)
+                                        .applyFilters(
+                                          ReceivableFilters(
+                                            contactUuids: [contactUuid],
+                                          ),
+                                        );
+
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            const ReceivablesListScreen(),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              // Payable Stats
+                              Expanded(
+                                child: _buildStatCard(
+                                  context,
+                                  title: l10n.payable,
+                                  amount: stats.totalPayable,
+                                  count: stats.payablesCount,
+                                  color: AppColors.payableColor,
+                                  icon: Icons.arrow_upward,
+                                  currencySymbol: currencySymbol,
+                                  currencyDecimalPlaces:
+                                      currencyDecimalPlaces,
+                                  onTap: () {
+                                    ref
+                                        .read(payablesPaginatedProvider(
+                                                'PENDING')
                                             .notifier)
-                                    .applyFilters(
-                                      ReceivableFilters(
-                                        contactUuids: [contactUuid],
+                                        .applyFilters(
+                                          PayableFilters(
+                                            contactUuids: [contactUuid],
+                                          ),
+                                        );
+
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            const PayablesListScreen(),
                                       ),
                                     );
-
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        const ReceivablesListScreen(),
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          // Payable Stats
-                          Expanded(
-                            child: _buildStatCard(
-                              context,
-                              title: l10n.payable,
-                              amount: stats.totalPayable,
-                              count: stats.payablesCount,
-                              color: AppColors.payableColor,
-                              icon: Icons.arrow_upward,
-                              currencySymbol: currencySymbol,
-                              currencyDecimalPlaces: currencyDecimalPlaces,
-                              onTap: () {
-                                ref
-                                    .read(payablesPaginatedProvider('PENDING')
-                                        .notifier)
-                                    .applyFilters(
-                                      PayableFilters(
-                                        contactUuids: [contactUuid],
-                                      ),
-                                    );
-
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        const PayablesListScreen(),
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Bulk settle button (pay/receive)
-                      if (stats.totalReceivable > 0 || stats.totalPayable > 0)
-                        ...[
-                          SizedBox(
-                            width: double.infinity,
-                            child: OutlinedButton.icon(
-                              icon: Icon(
-                                netBalance >= 0
-                                    ? Icons.download_done
-                                    : Icons.upload,
+                                  },
+                                ),
                               ),
-                              label: Text(
-                                // Dedicated key can be added, reuse summary for now
-                                l10n.summary,
-                              ),
-                              onPressed: () => _showBulkSettleSheet(
-                                context,
-                                ref,
-                                netBalance,
-                              ),
-                            ),
+                            ],
                           ),
                           const SizedBox(height: 24),
-                        ],
 
-                      // Info Section
-                      if (contact.email != null || contact.notes != null) ...[
+                          // Bulk process / pay / receive button
+                          ...() {
+                            final totalPendingCount =
+                                stats.receivablesCount + stats.payablesCount;
+                            if (totalPendingCount <= 0) {
+                              return const <Widget>[];
+                            }
+
+                            final bool isPremium = PremiumGate.isPremium(ref);
+                            final bool isNetReceivable = netBalance >= 0;
+                            final Color buttonColor = netBalance > 0
+                                ? AppColors.receivableColor
+                                : netBalance < 0
+                                    ? AppColors.payableColor
+                                    : theme.colorScheme.primary;
+
+                            String label;
+                            if (netBalance > 0) {
+                              // Net receivable
+                              label =
+                                  '${l10n.bulkReceiveInBulk} ($totalPendingCount)';
+                            } else if (netBalance < 0) {
+                              // Net payable
+                              label =
+                                  '${l10n.bulkPayInBulk} ($totalPendingCount)';
+                            } else {
+                              // Zero balance -> just process outstanding items
+                              label =
+                                  '${l10n.bulkProcessInBulk} ($totalPendingCount)';
+                            }
+
+                            final IconData icon = netBalance > 0
+                                ? Icons.download_done
+                                : netBalance < 0
+                                    ? Icons.upload
+                                    : Icons.auto_awesome;
+
+                            return <Widget>[
+                              SizedBox(
+                                width: double.infinity,
+                                child: FilledButton.icon(
+                                  icon: Icon(icon),
+                                  label: Text(label),
+                                  style: FilledButton.styleFrom(
+                                    backgroundColor: buttonColor,
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 14),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                  ),
+                                  onPressed: () async {
+                                    if (!isPremium) {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              const PremiumScreen(),
+                                        ),
+                                      );
+                                      return;
+                                    }
+
+                                    // If balance is zero, just confirm and process all
+                                    if (netBalance == 0) {
+                                      final confirmed =
+                                          await showDialog<bool>(
+                                                context: context,
+                                                builder: (dialogContext) =>
+                                                    AlertDialog(
+                                                  title:
+                                                      Text(l10n.bulkProcessInBulk),
+                                                  content: Text(
+                                                    l10n.premiumRequired
+                                                        .replaceFirst(
+                                                            'subscription',
+                                                            'processing'), // reuse text
+                                                  ),
+                                                  actions: [
+                                                    TextButton(
+                                                      onPressed: () =>
+                                                          Navigator.pop(
+                                                              dialogContext,
+                                                              false),
+                                                      child: Text(l10n.cancel),
+                                                    ),
+                                                    FilledButton(
+                                                      onPressed: () =>
+                                                          Navigator.pop(
+                                                              dialogContext,
+                                                              true),
+                                                      child: Text(l10n.ok),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ) ??
+                                              false;
+
+                                      if (!confirmed) return;
+
+                                      await ref
+                                          .read(
+                                              contactBulkSettlementServiceProvider)
+                                          .settleAll(contactUuid);
+                                      return;
+                                    }
+
+                                    _showBulkSettleSheet(
+                                      context,
+                                      ref,
+                                      netBalance,
+                                    );
+                                  },
+                                ),
+                              ),
+                              const SizedBox(height: 24),
+                            ];
+                          }(),
+
+                          // Info Section
+                          if (contact.email != null || contact.notes != null)
+                            ...[
                         Text(
                           l10n.information,
                           style: theme.textTheme.titleMedium?.copyWith(

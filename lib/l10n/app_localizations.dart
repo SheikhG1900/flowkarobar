@@ -4342,6 +4342,24 @@ abstract class AppLocalizations {
   /// **'Auto'**
   String get autoBadge;
 
+  /// No description provided for @bulkReceiveInBulk.
+  ///
+  /// In en, this message translates to:
+  /// **'Receive in bulk'**
+  String get bulkReceiveInBulk;
+
+  /// No description provided for @bulkPayInBulk.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay in bulk'**
+  String get bulkPayInBulk;
+
+  /// No description provided for @bulkProcessInBulk.
+  ///
+  /// In en, this message translates to:
+  /// **'Process in bulk'**
+  String get bulkProcessInBulk;
+
   /// No description provided for @uncategorized.
   ///
   /// In en, this message translates to:

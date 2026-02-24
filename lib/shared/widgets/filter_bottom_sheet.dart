@@ -35,6 +35,7 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
   late String? _transactionType;
   late List<String> _selectedCategoryUuids;
   late List<String> _selectedContactUuids;
+  late List<String> _selectedStatusCodes;
   late bool _filterByDueDate;
   late TextEditingController _minAmountController;
   late TextEditingController _maxAmountController;
@@ -61,9 +62,11 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
     if (widget.type == FilterType.transactions) {
       _transactionType = filters.type;
       _selectedCategoryUuids = List.from(filters.categoryUuids ?? []);
+      _selectedStatusCodes = List.from(filters.statusCodes ?? []);
     } else {
       _transactionType = null;
       _selectedCategoryUuids = [];
+      _selectedStatusCodes = [];
     }
   }
 
@@ -82,6 +85,7 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
       _transactionType = null;
       _selectedCategoryUuids = [];
       _selectedContactUuids = [];
+       _selectedStatusCodes = [];
       _minAmountController.text = '';
       _maxAmountController.text = '';
       _filterByDueDate = false;
@@ -223,6 +227,9 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
                       const SizedBox(height: 24),
                       _buildSectionTitle(l10n.categories),
                       _buildCategorySelector(),
+                      const SizedBox(height: 24),
+                      _buildSectionTitle(l10n.status),
+                      _buildTransactionStatusSelector(l10n, primaryFilterColor),
                     ],
                     const SizedBox(height: 24),
                     _buildSectionTitle(l10n.contacts),
@@ -294,6 +301,7 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
         clearMinAmount: minAmount == null,
         maxAmount: maxAmount,
         clearMaxAmount: maxAmount == null,
+        statusCodes: _selectedStatusCodes,
       );
     } else {
       return widget.initialFilters.copyWith(
@@ -359,6 +367,75 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
             _transactionType == 'EXPENSE',
             (val) => setState(() => _transactionType = 'EXPENSE'),
             primaryColor),
+      ],
+    );
+  }
+
+  Widget _buildTransactionStatusSelector(
+      AppLocalizations l10n, Color primaryColor) {
+    final theme = Theme.of(context);
+    final chipTextStyle = theme.textTheme.bodySmall;
+
+    Widget buildStatusChip({
+      required String code,
+      required String label,
+      required Color color,
+    }) {
+      final selected = _selectedStatusCodes.contains(code);
+      return FilterChip(
+        label: Text(label, style: chipTextStyle),
+        selected: selected,
+        onSelected: (isSelected) {
+          setState(() {
+            if (isSelected) {
+              if (!_selectedStatusCodes.contains(code)) {
+                _selectedStatusCodes.add(code);
+              }
+            } else {
+              _selectedStatusCodes.remove(code);
+            }
+          });
+        },
+        selectedColor: color.withValues(alpha: 0.2),
+        checkmarkColor: color,
+        backgroundColor: theme.colorScheme.surface,
+        side: BorderSide(
+          color: selected ? Colors.transparent : theme.dividerColor,
+          width: 1.5,
+        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      );
+    }
+
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        buildStatusChip(
+          code: 'PAID',
+          label: l10n.paidTag,
+          color: AppColors.payableColor,
+        ),
+        buildStatusChip(
+          code: 'RECEIVED',
+          label: l10n.receivedTag,
+          color: AppColors.receivableColor,
+        ),
+        buildStatusChip(
+          code: 'PAYABLE',
+          label: l10n.payableTag,
+          color: AppColors.payableColor,
+        ),
+        buildStatusChip(
+          code: 'RECEIVABLE',
+          label: l10n.receivableTag,
+          color: AppColors.receivableColor,
+        ),
+        buildStatusChip(
+          code: 'AUTO',
+          label: l10n.autoBadge,
+          color: theme.colorScheme.secondary,
+        ),
       ],
     );
   }

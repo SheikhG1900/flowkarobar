@@ -2351,6 +2351,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get autoBadge => 'Auto';
 
   @override
+  String get bulkReceiveInBulk => 'Receive in bulk';
+
+  @override
+  String get bulkPayInBulk => 'Pay in bulk';
+
+  @override
+  String get bulkProcessInBulk => 'Process in bulk';
+
+  @override
   String get uncategorized => 'Uncategorized';
 
   @override
