@@ -421,7 +421,9 @@ class CashbooksScreen extends ConsumerWidget {
           // Invalidate database if it was active
           final activeId = ref.read(activeCashbookIdProvider);
           if (activeId == cashbook.id) {
+            // Force a fresh AppDatabase instance and refresh any listeners
             ref.invalidate(databaseProvider);
+            ref.invalidate(activeCashbookProvider);
           }
 
           if (context.mounted) {

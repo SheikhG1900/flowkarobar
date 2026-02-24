@@ -36,7 +36,7 @@ class CashbookNotifier extends Notifier<List<Cashbook>> {
         name: 'Main Cashbook',
         colorCode: '#05DCF0',
         iconCodePoint: Symbols.water_drop.codePoint.toString(),
-        dbPath: 'flowpaisa.db',
+        dbPath: 'flowpaisa',
         createdAt: DateTime.now(),
       );
       _saveCashbooks([defaultCashbook]);
@@ -78,7 +78,7 @@ class CashbookNotifier extends Notifier<List<Cashbook>> {
       name: name,
       colorCode: colorCode,
       iconCodePoint: iconCodePoint,
-      dbPath: 'cashbook_$id.db',
+      dbPath: 'cashbook_$id',
       createdAt: DateTime.now(),
     );
 
@@ -100,7 +100,7 @@ class CashbookNotifier extends Notifier<List<Cashbook>> {
           profileEmail != null ||
           profilePhone != null ||
           profileAddress != null) {
-        final newDb = AppDatabase(fileName: newCashbook.dbPath);
+        final newDb = AppDatabase(fileName: '${newCashbook.dbPath}.db');
         try {
           final newRepo = UserPreferencesRepository(newDb);
           if (profileName != null) await newRepo.setUserName(profileName);
@@ -152,21 +152,24 @@ class CashbookNotifier extends Notifier<List<Cashbook>> {
     try {
       if (kIsWeb) {
         // On web, we just need to clear the data from the DB as we can't easily delete "files"
-        final db = AppDatabase(fileName: cashbookToDelete.dbPath);
+        final db = AppDatabase(fileName: '${cashbookToDelete.dbPath}.db');
         try {
           await db.clearAllData();
         } finally {
           await db.close();
         }
       } else {
+        // Physical database file is stored under the application documents directory.
         final dbFolder = await getApplicationDocumentsDirectory();
-        final file = File(p.join(dbFolder.path, cashbookToDelete.dbPath));
+        final logicalName =
+            cashbookToDelete.dbPath.replaceAll(RegExp(r'\.(db|sqlite)$'), '');
+        final file = File(p.join(dbFolder.path, '$logicalName.sqlite'));
         if (await file.exists()) {
           await file.delete();
         }
 
         // Also clear sync metadata for this cashbook
-        final db = AppDatabase(fileName: cashbookToDelete.dbPath);
+        final db = AppDatabase(fileName: '${cashbookToDelete.dbPath}.db');
         try {
           await (db.delete(db.syncMetadata)).go();
         } catch (e) {
@@ -204,8 +207,8 @@ class CashbookNotifier extends Notifier<List<Cashbook>> {
       // 2. Generate a new unique filename for this cashbook (Blue-Green Switch)
       final timestamp = DateTime.now().millisecondsSinceEpoch;
       final newDbPath = id == 'default'
-          ? 'flowpaisa_$timestamp.db'
-          : 'cashbook_${id}_$timestamp.db';
+          ? 'flowpaisa_$timestamp'
+          : 'cashbook_${id}_$timestamp';
       final oldDbPath = cashbook.dbPath;
 
       // 3. Update the cashbook model with the new path
@@ -231,7 +234,10 @@ class CashbookNotifier extends Notifier<List<Cashbook>> {
         unawaited(Future.delayed(const Duration(seconds: 5), () async {
           try {
             final dbFolder = await getApplicationDocumentsDirectory();
-            final oldFile = File(p.join(dbFolder.path, oldDbPath));
+            final logicalName =
+                oldDbPath.replaceAll(RegExp(r'\.(db|sqlite)$'), '');
+            final oldFile =
+                File(p.join(dbFolder.path, '$logicalName.sqlite'));
 
             final walFile = File('${oldFile.path}-wal');
             final shmFile = File('${oldFile.path}-shm');
@@ -260,9 +266,11 @@ class CashbookNotifier extends Notifier<List<Cashbook>> {
     final cashbook = state.firstWhere((c) => c.id == id);
     final isActive = ref.read(activeCashbookIdProvider) == id;
 
-    // Get the target path
+    // Get the target path in the application documents directory
     final dbFolder = await getApplicationDocumentsDirectory();
-    final targetPath = p.join(dbFolder.path, cashbook.dbPath);
+    final logicalName =
+        cashbook.dbPath.replaceAll(RegExp(r'\.(db|sqlite)$'), '');
+    final targetPath = p.join(dbFolder.path, '$logicalName.sqlite');
 
     // If active, we must ensure the database is closed before overwriting
     // In Riverpod, invalidating the provider will trigger its onDispose
@@ -270,6 +278,20 @@ class CashbookNotifier extends Notifier<List<Cashbook>> {
       // Importing databaseProvider here would cause circular dependency if not careful
       // But we can use ref.invalidate by name if we have access to it.
       // Instead of direct import, let's assume we can handle it in the UI or use a callback
+    }
+
+    // Before restoring, remove any existing DB + WAL/SHM files for this cashbook
+    final targetFile = File(targetPath);
+    final walFile = File('$targetPath-wal');
+    final shmFile = File('$targetPath-shm');
+    if (await targetFile.exists()) {
+      await targetFile.delete();
+    }
+    if (await walFile.exists()) {
+      await walFile.delete();
+    }
+    if (await shmFile.exists()) {
+      await shmFile.delete();
     }
 
     // Copy the backup file to the target location

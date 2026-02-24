@@ -320,8 +320,10 @@ class _CopyPreferencesSheetState extends ConsumerState<CopyPreferencesSheet> {
               cashbooks.firstWhere((c) => c.id == _selectedSourceCashbookId);
           final targetCashbook =
               cashbooks.firstWhere((c) => c.id == widget.targetCashbookId);
-          final sourceDb = AppDatabase(fileName: sourceCashbook.dbPath);
-          final targetDb = AppDatabase(fileName: targetCashbook.dbPath);
+          final sourceDb =
+              AppDatabase(fileName: '${sourceCashbook.dbPath}.db');
+          final targetDb =
+              AppDatabase(fileName: '${targetCashbook.dbPath}.db');
           try {
             final sourceRepo = UserPreferencesRepository(sourceDb);
             final targetRepo = UserPreferencesRepository(targetDb);

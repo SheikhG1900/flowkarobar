@@ -14,9 +14,9 @@ class PreferencesCopyService {
     final sourceCashbook = cashbooks.firstWhere((c) => c.id == sourceCashbookId);
     final targetCashbook = cashbooks.firstWhere((c) => c.id == targetCashbookId);
 
-    // Open source and target databases
-    final sourceDb = AppDatabase(fileName: sourceCashbook.dbPath);
-    final targetDb = AppDatabase(fileName: targetCashbook.dbPath);
+    // Open source and target databases (physical files use '.db' extension)
+    final sourceDb = AppDatabase(fileName: '${sourceCashbook.dbPath}.db');
+    final targetDb = AppDatabase(fileName: '${targetCashbook.dbPath}.db');
 
     try {
       final sourceRepo = UserPreferencesRepository(sourceDb);
@@ -101,8 +101,8 @@ class PreferencesCopyService {
     final sourceCashbook = cashbooks.firstWhere((c) => c.id == sourceCashbookId);
     final targetCashbook = cashbooks.firstWhere((c) => c.id == targetCashbookId);
 
-    final sourceDb = AppDatabase(fileName: sourceCashbook.dbPath);
-    final targetDb = AppDatabase(fileName: targetCashbook.dbPath);
+    final sourceDb = AppDatabase(fileName: '${sourceCashbook.dbPath}.db');
+    final targetDb = AppDatabase(fileName: '${targetCashbook.dbPath}.db');
 
     try {
       await copyMessageTemplates(sourceDb, targetDb);
@@ -121,8 +121,8 @@ class PreferencesCopyService {
     final sourceCashbook = cashbooks.firstWhere((c) => c.id == sourceCashbookId);
     final targetCashbook = cashbooks.firstWhere((c) => c.id == targetCashbookId);
 
-    final sourceDb = AppDatabase(fileName: sourceCashbook.dbPath);
-    final targetDb = AppDatabase(fileName: targetCashbook.dbPath);
+    final sourceDb = AppDatabase(fileName: '${sourceCashbook.dbPath}.db');
+    final targetDb = AppDatabase(fileName: '${targetCashbook.dbPath}.db');
 
     try {
       final sourceRepo = UserPreferencesRepository(sourceDb);

@@ -13,7 +13,15 @@ class BackupRepository {
   /// Get the path to the local database file
   Future<File> getDatabaseFile({String? fileName}) async {
     final dbFolder = await getApplicationDocumentsDirectory();
-    return File(p.join(dbFolder.path, fileName ?? 'flowpaisa.db'));
+    final rawName = fileName ?? 'flowpaisa';
+    // `rawName` may contain an extension; Drift stores as '<name>.sqlite'.
+    final logicalName =
+        rawName.replaceAll(RegExp(r'\.(db|sqlite)$'), '');
+    final file = File(p.join(dbFolder.path, '$logicalName.sqlite'));
+    // ignore: avoid_print
+    print(
+        '[BackupRepository] Resolved local DB file for backup/restore: ${file.path}');
+    return file;
   }
 
   /// Perform Backup
@@ -64,8 +72,21 @@ class BackupRepository {
     
     await _driveService.downloadBackup(fileId, tempFile);
     
-    // If download successful, overwrite the DB
-    // Note: The app should ideally be restarted immediately after this
+    // If download successful, overwrite the DB.
+    // To avoid mixing old WAL/SHM with the new main database, delete any
+    // existing files for this database first.
+    final walFile = File('${dbFile.path}-wal');
+    final shmFile = File('${dbFile.path}-shm');
+    if (await dbFile.exists()) {
+      await dbFile.delete();
+    }
+    if (await walFile.exists()) {
+      await walFile.delete();
+    }
+    if (await shmFile.exists()) {
+      await shmFile.delete();
+    }
+
     await tempFile.copy(dbFile.path);
     await tempFile.delete();
     

@@ -22,7 +22,7 @@ final databaseProvider = Provider<AppDatabase>((ref) {
     return _cachedDatabase!;
   }
 
-  _cachedDatabase = AppDatabase(fileName: activeCashbook.dbPath);
+  _cachedDatabase = AppDatabase(fileName: '${activeCashbook.dbPath}.db');
   _cachedDbPath = activeCashbook.dbPath;
 
   // Dispose when provider is destroyed or active cashbook changes

@@ -8,7 +8,9 @@ class Cashbook {
   final String name;
   final String colorCode; // Hex string e.g. #FF5252
   final String? iconCodePoint; // Icon codePoint string
-  final String dbPath; // Filename like 'flowpaisa.db' or 'travel.db'
+  /// Logical database name WITHOUT extension, e.g. 'flowpaisa' or 'cashbook_123'.
+  /// When accessing the physical file, append the appropriate extension ('.db').
+  final String dbPath;
   final DateTime createdAt;
   Color? _color;
   Cashbook({
@@ -54,12 +56,17 @@ class Cashbook {
   }
 
   factory Cashbook.fromMap(Map<String, dynamic> map) {
+    // Backwards compatibility: older entries may include a file extension.
+    final rawPath = map['dbPath'] ?? 'flowpaisa';
+    final sanitizedPath =
+        rawPath is String ? rawPath.replaceAll(RegExp(r'\.(db|sqlite)$'), '') : 'flowpaisa';
+
     return Cashbook(
       id: map['id'] ?? '',
       name: map['name'] ?? '',
       colorCode: map['colorCode'] ?? map['color'] ?? '#2196F3',
       iconCodePoint: map['iconCodePoint'] ?? map['icon'],
-      dbPath: map['dbPath'] ?? 'flowpaisa.db',
+      dbPath: sanitizedPath,
       createdAt:
           DateTime.parse(map['createdAt'] ?? DateTime.now().toIso8601String()),
     );

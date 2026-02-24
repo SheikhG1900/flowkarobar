@@ -103,7 +103,7 @@ Future<bool> handleSyncTask(String task, Map<String, dynamic>? inputData) async 
       // Force reload to ensure other isolates see the change
       await prefs.reload();
 
-      final db = AppDatabase(fileName: cashbook.dbPath);
+      final db = AppDatabase(fileName: '${cashbook.dbPath}.db');
 
       // Update progress in database and SharedPreferences
       final deviceId = await _getDeviceId();

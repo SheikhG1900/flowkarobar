@@ -936,7 +936,7 @@ class BackupNotifier extends Notifier<BackupState> {
       } else {
         // Create a NEW cashbook entry locally if it doesn't exist
         // This prevents overwriting the active cashbook with data from a different one
-        dbPath = 'cashbook_$cashbookId.db';
+        dbPath = 'cashbook_$cashbookId';
         final newCashbook = Cashbook(
           id: cashbookId,
           name: cloudName,

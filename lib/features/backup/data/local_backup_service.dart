@@ -10,8 +10,17 @@ import 'package:share_plus/share_plus.dart';
 class LocalBackupService {
   /// Prepares a database backup file in the temporary directory
   static Future<String> prepareBackupFile(Cashbook cashbook) async {
+    // `cashbook.dbPath` is a logical name; Drift stores as '<name>.sqlite'.
     final dbFolder = await getApplicationDocumentsDirectory();
-    final dbFile = File(p.join(dbFolder.path, cashbook.dbPath));
+    final logicalName =
+        cashbook.dbPath.replaceAll(RegExp(r'\.(db|sqlite)$'), '');
+    final dbFile = File(p.join(dbFolder.path, '$logicalName.sqlite'));
+
+    // Debug logging to help diagnose path issues
+    // (Will appear in debug console when running the app)
+    // ignore: avoid_print
+    print(
+        '[LocalBackupService] Preparing backup for "${cashbook.name}" at path: ${dbFile.path}');
 
     if (!await dbFile.exists()) {
       throw Exception('Database file not found for ${cashbook.name}');

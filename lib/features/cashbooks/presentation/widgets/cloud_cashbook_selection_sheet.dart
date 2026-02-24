@@ -149,7 +149,7 @@ class CloudCashbookSelectionSheet extends ConsumerWidget {
         name: cloudCb.name,
         colorCode: cloudCb.color,
         iconCodePoint: cloudCb.icon,
-        dbPath: 'cashbook_${cloudCb.id}.db',
+        dbPath: 'cashbook_${cloudCb.id}',
         createdAt: DateTime.now(),
       );
 

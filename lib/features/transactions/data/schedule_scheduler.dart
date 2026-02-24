@@ -40,7 +40,7 @@ Future<void> processSchedules() async {
           name: 'Main Cashbook',
           colorCode: '#2196F3',
           iconCodePoint: Symbols.water_drop.codePoint.toString(),
-          dbPath: 'flowpaisa.db',
+          dbPath: 'flowpaisa',
           createdAt: DateTime.now(),
         )
       ];
@@ -50,7 +50,7 @@ Future<void> processSchedules() async {
 
     for (final cashbook in cashbooks) {
       try {
-        final database = AppDatabase(fileName: cashbook.dbPath);
+        final database = AppDatabase(fileName: '${cashbook.dbPath}.db');
         final schedulesRepository = SchedulesRepository(database);
         final scheduleService = ScheduleService(
           database: database,
@@ -102,7 +102,7 @@ Future<void> processSchedulesFromContext(WidgetRef ref) async {
 
       final database = isActive
           ? ref.read(databaseProvider)
-          : AppDatabase(fileName: cashbook.dbPath);
+          : AppDatabase(fileName: '${cashbook.dbPath}.db');
       final schedulesRepository = SchedulesRepository(database);
       final scheduleService = ScheduleService(
         database: database,
