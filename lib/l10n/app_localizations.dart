@@ -4342,6 +4342,18 @@ abstract class AppLocalizations {
   /// **'Auto'**
   String get autoBadge;
 
+  /// No description provided for @remainingNetBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Remaining net balance'**
+  String get remainingNetBalance;
+
+  /// No description provided for @settleAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Settle all'**
+  String get settleAll;
+
   /// No description provided for @bulkReceiveInBulk.
   ///
   /// In en, this message translates to:

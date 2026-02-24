@@ -1222,6 +1222,8 @@
   },
   "scheduleDeleted": "Schedule deleted successfully",
   "autoBadge": "Auto",
+  "remainingNetBalance": "Remaining net balance",
+  "settleAll": "Settle all",
   "bulkReceiveInBulk": "Receive in bulk",
   "bulkPayInBulk": "Pay in bulk",
   "bulkProcessInBulk": "Process in bulk",

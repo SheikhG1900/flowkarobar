@@ -2363,6 +2363,12 @@ class AppLocalizationsUr extends AppLocalizations {
   String get autoBadge => 'خودکار';
 
   @override
+  String get remainingNetBalance => 'باقی خالص بیلنس';
+
+  @override
+  String get settleAll => 'تمام سیٹل کریں';
+
+  @override
   String get bulkReceiveInBulk => 'بلک میں وصول کریں';
 
   @override

@@ -2358,6 +2358,12 @@ class AppLocalizationsHi extends AppLocalizations {
   String get autoBadge => 'स्वचालित';
 
   @override
+  String get remainingNetBalance => 'शेष शुद्ध बैलेंस';
+
+  @override
+  String get settleAll => 'पूरा सेटल करें';
+
+  @override
   String get bulkReceiveInBulk => 'बल्क में प्राप्त करें';
 
   @override

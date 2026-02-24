@@ -777,6 +777,8 @@
   "errorDeletingTransaction": "لین دین حذف کرنے میں غلطی: {error}",
   "scheduleDeleted": "شیڈول کامیابی سے حذف ہو گیا",
   "autoBadge": "خودکار",
+  "remainingNetBalance": "باقی خالص بیلنس",
+  "settleAll": "تمام سیٹل کریں",
   "bulkReceiveInBulk": "بلک میں وصول کریں",
   "bulkPayInBulk": "بلک میں ادائیگی کریں",
   "bulkProcessInBulk": "بلک میں پروسیس کریں",

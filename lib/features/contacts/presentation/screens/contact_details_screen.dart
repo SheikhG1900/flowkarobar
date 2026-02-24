@@ -678,14 +678,18 @@ class _BulkSettleSheetContent extends StatefulWidget {
 
 class _BulkSettleSheetContentState extends State<_BulkSettleSheetContent> {
   late final TextEditingController _amountController;
-  bool _settleAll = false;
+  double _currentAmount = 0.0;
+
+  double get _remainingAmount {
+    final remaining = widget.absNet - _currentAmount;
+    return remaining < 0 ? 0 : remaining;
+  }
 
   @override
   void initState() {
     super.initState();
-    _amountController = TextEditingController(
-      text: widget.absNet.toStringAsFixed(2),
-    );
+    // Start with empty amount; user can enter or use "Settle All"
+    _amountController = TextEditingController();
   }
 
   @override
@@ -728,22 +732,44 @@ class _BulkSettleSheetContentState extends State<_BulkSettleSheetContent> {
               ),
             ],
           ),
-          const SizedBox(height: 8),
-          Text(
-            widget.isNetReceivable
-                ? widget.l10n.receivableShort
-                : widget.l10n.payableShort,
-            style: theme.textTheme.bodySmall,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            AmountFormatter.formatWithCurrency(
-              widget.absNet,
-              currencySymbol,
-              currencyDecimalPlaces,
+          const SizedBox(height: 12),
+          // Remaining net balance summary
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: widget.isNetReceivable
+                  ? AppColors.receivableGradient
+                  : AppColors.payableGradient,
+              borderRadius: BorderRadius.circular(16),
             ),
-            style: theme.textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.bold,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text(
+                  widget.l10n.remainingNetBalance,
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  AmountFormatter.formatWithCurrency(
+                    _remainingAmount,
+                    currencySymbol,
+                    currencyDecimalPlaces,
+                  ),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
             ),
           ),
           const SizedBox(height: 16),
@@ -755,17 +781,26 @@ class _BulkSettleSheetContentState extends State<_BulkSettleSheetContent> {
               labelText: widget.l10n.amount,
               border: const OutlineInputBorder(),
             ),
-          ),
-          const SizedBox(height: 8),
-          CheckboxListTile(
-            contentPadding: EdgeInsets.zero,
-            title: const Text('Settle all'),
-            value: _settleAll,
             onChanged: (value) {
+              final parsed = double.tryParse(value.trim()) ?? 0;
               setState(() {
-                _settleAll = value ?? false;
+                _currentAmount = parsed;
               });
             },
+          ),
+          const SizedBox(height: 8),
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton(
+              onPressed: () {
+                setState(() {
+                  _currentAmount = widget.absNet;
+                  _amountController.text =
+                      widget.absNet.toStringAsFixed(currencyDecimalPlaces);
+                });
+              },
+              child: Text(widget.l10n.settleAll),
+            ),
           ),
           const SizedBox(height: 12),
           SizedBox(
@@ -773,25 +808,21 @@ class _BulkSettleSheetContentState extends State<_BulkSettleSheetContent> {
             child: FilledButton(
               onPressed: () async {
                 try {
-                  if (_settleAll) {
-                    await widget.service.settleAll(widget.contactUuid);
-                  } else {
-                    final raw = _amountController.text.trim();
-                    final parsed = double.tryParse(raw) ?? 0;
-                    if (parsed <= 0) {
-                      ToastUtils.showErrorToast(
-                        context,
-                        widget.ref,
-                        widget.l10n.errorOccurred('Invalid amount'),
-                      );
-                      return;
-                    }
-                    await widget.service.settleAmount(
-                      widget.contactUuid,
-                      parsed,
-                      isNetReceivable: widget.isNetReceivable,
+                  final raw = _amountController.text.trim();
+                  final parsed = double.tryParse(raw) ?? 0;
+                  if (parsed <= 0) {
+                    ToastUtils.showErrorToast(
+                      context,
+                      widget.ref,
+                      widget.l10n.errorOccurred('Invalid amount'),
                     );
+                    return;
                   }
+                  await widget.service.settleAmount(
+                    widget.contactUuid,
+                    parsed,
+                    isNetReceivable: widget.isNetReceivable,
+                  );
                   if (mounted) {
                     Navigator.pop(context);
                   }
