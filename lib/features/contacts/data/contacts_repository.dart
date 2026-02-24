@@ -247,19 +247,21 @@ class ContactsRepository {
             .getSingle()
             .then((row) => row.read(_database.transactions.uuid.count()) ?? 0);
 
-    // Get receivables count
+    // Get receivables count (PENDING only)
     final receivablesCount = await (_database.selectOnly(_database.receivables)
           ..addColumns([_database.receivables.uuid.count()])
           ..where(_database.receivables.contactUuid.equals(contactUuid) &
-              _database.receivables.isDeleted.equals(false)))
+              _database.receivables.isDeleted.equals(false) &
+              _database.receivables.status.equals('PENDING')))
         .getSingle()
         .then((row) => row.read(_database.receivables.uuid.count()) ?? 0);
 
-    // Get payables count
+    // Get payables count (PENDING only)
     final payablesCount = await (_database.selectOnly(_database.payables)
           ..addColumns([_database.payables.uuid.count()])
           ..where(_database.payables.contactUuid.equals(contactUuid) &
-              _database.payables.isDeleted.equals(false)))
+              _database.payables.isDeleted.equals(false) &
+              _database.payables.status.equals('PENDING')))
         .getSingle()
         .then((row) => row.read(_database.payables.uuid.count()) ?? 0);
 
@@ -314,20 +316,22 @@ class ContactsRepository {
           .getSingle()
           .then((row) => row.read(_database.transactions.uuid.count()) ?? 0);
 
-      // Get receivables count
+      // Get receivables count (PENDING only)
       final receivablesCount =
           await (_database.selectOnly(_database.receivables)
                 ..addColumns([_database.receivables.uuid.count()])
                 ..where(_database.receivables.contactUuid.equals(contactUuid) &
-                    _database.receivables.isDeleted.equals(false)))
+                    _database.receivables.isDeleted.equals(false) &
+                    _database.receivables.status.equals('PENDING')))
               .getSingle()
               .then((row) => row.read(_database.receivables.uuid.count()) ?? 0);
 
-      // Get payables count
+      // Get payables count (PENDING only)
       final payablesCount = await (_database.selectOnly(_database.payables)
             ..addColumns([_database.payables.uuid.count()])
             ..where(_database.payables.contactUuid.equals(contactUuid) &
-                _database.payables.isDeleted.equals(false)))
+                _database.payables.isDeleted.equals(false) &
+                _database.payables.status.equals('PENDING')))
           .getSingle()
           .then((row) => row.read(_database.payables.uuid.count()) ?? 0);
 
