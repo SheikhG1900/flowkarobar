@@ -78,28 +78,37 @@ class TransactionsRepository {
       query.where(_database.transactions.date.isBiggerOrEqualValue(start));
     }
 
+    // Always join payables and receivables to exclude inactive (linked to PENDING payable/receivable)
+    query.join([
+      leftOuterJoin(
+        _database.payables,
+        _database.payables.uuid
+            .equalsExp(_database.transactions.linkedPayableUuid),
+      ),
+      leftOuterJoin(
+        _database.receivables,
+        _database.receivables.uuid
+            .equalsExp(_database.transactions.linkedReceivableUuid),
+      ),
+    ]);
+
+    // Exclude inactive: do not include expense/income linked to PENDING payable/receivable
+    if (type == 'EXPENSE') {
+      query.where(_database.transactions.linkedPayableUuid.isNull() |
+          _database.payables.status.equals('PAID'));
+    } else {
+      query.where(_database.transactions.linkedReceivableUuid.isNull() |
+          _database.receivables.status.equals('RECEIVED'));
+    }
+
     if (excludePaidRelationship != null) {
       if (excludePaidRelationship == 'WILL_RECEIVE') {
-        query.join([
-          leftOuterJoin(
-            _database.receivables,
-            _database.receivables.uuid
-                .equalsExp(_database.transactions.linkedReceivableUuid),
-          ),
-        ]);
         query.where(_database.transactions.paidRelationship.isNull() |
             _database.transactions.paidRelationship
                 .equals('WILL_RECEIVE')
                 .not() |
             _database.receivables.status.equals('RECEIVED'));
       } else if (excludePaidRelationship == 'PAID_BY') {
-        query.join([
-          leftOuterJoin(
-            _database.payables,
-            _database.payables.uuid
-                .equalsExp(_database.transactions.linkedPayableUuid),
-          ),
-        ]);
         query.where(_database.transactions.paidRelationship.isNull() |
             _database.transactions.paidRelationship.equals('PAID_BY').not() |
             _database.payables.status.equals('PAID'));

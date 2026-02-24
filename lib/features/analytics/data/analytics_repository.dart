@@ -57,11 +57,35 @@ class AnalyticsRepository {
 
   Future<double> _getTotalByType(
       String type, DateTime start, DateTime end) async {
+    // Exclude inactive: do not include expense/income linked to PENDING payable/receivable
+    Expression<bool> whereExpr = _database.transactions.type.equals(type) &
+        _database.transactions.date.isBetweenValues(start, end) &
+        _database.transactions.isDeleted.equals(false);
+    if (type == 'EXPENSE') {
+      whereExpr = whereExpr &
+          (_database.transactions.linkedPayableUuid.isNull() |
+              _database.payables.status.equals('PAID'));
+    }
+    if (type == 'INCOME') {
+      whereExpr = whereExpr &
+          (_database.transactions.linkedReceivableUuid.isNull() |
+              _database.receivables.status.equals('RECEIVED'));
+    }
     final result = await (_database.selectOnly(_database.transactions)
           ..addColumns([_database.transactions.amount.sum()])
-          ..where(_database.transactions.type.equals(type))
-          ..where(_database.transactions.date.isBetweenValues(start, end))
-          ..where(_database.transactions.isDeleted.equals(false)))
+          ..join([
+            leftOuterJoin(
+              _database.payables,
+              _database.payables.uuid
+                  .equalsExp(_database.transactions.linkedPayableUuid),
+            ),
+            leftOuterJoin(
+              _database.receivables,
+              _database.receivables.uuid
+                  .equalsExp(_database.transactions.linkedReceivableUuid),
+            ),
+          ])
+          ..where(whereExpr))
         .getSingle();
     return result.read(_database.transactions.amount.sum()) ?? 0.0;
   }
@@ -197,6 +221,7 @@ class AnalyticsRepository {
       contactUuids: filters.contactUuids,
       minAmount: filters.minAmount,
       maxAmount: filters.maxAmount,
+      statusCodes: filters.statusCodes,
     );
     final totalReceivable = await _getReceivableTotalForFilters(
       hasDateFilter: hasDateFilter,
@@ -206,6 +231,7 @@ class AnalyticsRepository {
       contactUuids: filters.contactUuids,
       minAmount: filters.minAmount,
       maxAmount: filters.maxAmount,
+      statusCodes: filters.statusCodes,
     );
 
     return FinancialSummary(
@@ -223,11 +249,28 @@ class AnalyticsRepository {
     List<String>? contactUuids,
     double? minAmount,
     double? maxAmount,
+    List<String>? statusCodes,
   }) async {
     final hasCategoryFilter =
         categoryUuids != null && categoryUuids.isNotEmpty;
     final hasContactFilter =
         contactUuids != null && contactUuids.isNotEmpty;
+
+    // Payable summary = outstanding only (PENDING). Never include PAID.
+    List<String> payableStatuses = [];
+    final hasStatusFilter =
+        statusCodes != null && statusCodes.isNotEmpty;
+    if (hasStatusFilter) {
+      if (statusCodes!.contains('PAYABLE')) {
+        payableStatuses.add('PENDING');
+      }
+      // If a status filter is active but PAYABLE not selected, summary is zero.
+      if (payableStatuses.isEmpty) {
+        return 0.0;
+      }
+    } else {
+      payableStatuses.add('PENDING');
+    }
 
     if (hasCategoryFilter) {
       final joinExpr =
@@ -235,6 +278,11 @@ class AnalyticsRepository {
               _database.transactions.uuid.equalsExp(_database.payables.linkedIncomeUuid);
       Expression<bool> whereExpr = _database.payables.isDeleted.equals(false) &
           _database.transactions.categoryUuid.isIn(categoryUuids);
+
+      if (payableStatuses.isNotEmpty) {
+        whereExpr =
+            whereExpr & _database.payables.status.isIn(payableStatuses);
+      }
       if (hasDateFilter) {
         whereExpr = whereExpr &
             _database.payables.date.isBetweenValues(startDate, endDate);
@@ -265,6 +313,10 @@ class AnalyticsRepository {
     }
 
     Expression<bool> whereExpr = _database.payables.isDeleted.equals(false);
+    if (payableStatuses.isNotEmpty) {
+      whereExpr =
+          whereExpr & _database.payables.status.isIn(payableStatuses);
+    }
     if (hasDateFilter) {
       whereExpr = whereExpr &
           _database.payables.date.isBetweenValues(startDate, endDate);
@@ -296,11 +348,28 @@ class AnalyticsRepository {
     List<String>? contactUuids,
     double? minAmount,
     double? maxAmount,
+    List<String>? statusCodes,
   }) async {
     final hasCategoryFilter =
         categoryUuids != null && categoryUuids.isNotEmpty;
     final hasContactFilter =
         contactUuids != null && contactUuids.isNotEmpty;
+
+    // Receivable summary = outstanding only (PENDING). Never include RECEIVED.
+    List<String> receivableStatuses = [];
+    final hasStatusFilter =
+        statusCodes != null && statusCodes.isNotEmpty;
+    if (hasStatusFilter) {
+      if (statusCodes!.contains('RECEIVABLE')) {
+        receivableStatuses.add('PENDING');
+      }
+      // If a status filter is active but RECEIVABLE not selected, summary is zero.
+      if (receivableStatuses.isEmpty) {
+        return 0.0;
+      }
+    } else {
+      receivableStatuses.add('PENDING');
+    }
 
     if (hasCategoryFilter) {
       final joinExpr =
@@ -308,6 +377,11 @@ class AnalyticsRepository {
               _database.transactions.uuid.equalsExp(_database.receivables.linkedIncomeUuid);
       Expression<bool> whereExpr = _database.receivables.isDeleted.equals(false) &
           _database.transactions.categoryUuid.isIn(categoryUuids);
+
+      if (receivableStatuses.isNotEmpty) {
+        whereExpr = whereExpr &
+            _database.receivables.status.isIn(receivableStatuses);
+      }
       if (hasDateFilter) {
         whereExpr = whereExpr &
             _database.receivables.date.isBetweenValues(startDate, endDate);
@@ -338,6 +412,10 @@ class AnalyticsRepository {
     }
 
     Expression<bool> whereExpr = _database.receivables.isDeleted.equals(false);
+    if (receivableStatuses.isNotEmpty) {
+      whereExpr = whereExpr &
+          _database.receivables.status.isIn(receivableStatuses);
+    }
     if (hasDateFilter) {
       whereExpr = whereExpr &
           _database.receivables.date.isBetweenValues(startDate, endDate);
@@ -396,8 +474,80 @@ class AnalyticsRepository {
           _database.transactions.amount
               .isSmallerOrEqualValue(filters.maxAmount!);
     }
+
+    // Status-based filters: PAID / RECEIVED / PAYABLE / RECEIVABLE / AUTO
+    if (filters.statusCodes != null && filters.statusCodes!.isNotEmpty) {
+      final statuses = filters.statusCodes!;
+      Expression<bool>? statusExpr;
+
+      bool has(String code) => statuses.contains(code);
+
+      // Auto-generated transactions
+      if (has('AUTO')) {
+        final expr = _database.transactions.isAutoGenerated.equals(true);
+        statusExpr = statusExpr == null ? expr : (statusExpr | expr);
+      }
+
+      // Join to payables/receivables to filter by their status
+      // PAID / PAYABLE relate to payables
+      if (has('PAID')) {
+        final expr = _database.transactions.paidRelationship
+                .isIn(['PAID_BY', 'RECEIVED_FROM']) &
+            _database.payables.status.equals('PAID');
+        statusExpr = statusExpr == null ? expr : (statusExpr | expr);
+      }
+      if (has('PAYABLE')) {
+        final expr = _database.transactions.paidRelationship
+                .isIn(['PAID_BY', 'RECEIVED_FROM']) &
+            _database.payables.status.equals('PENDING');
+        statusExpr = statusExpr == null ? expr : (statusExpr | expr);
+      }
+
+      // RECEIVED / RECEIVABLE relate to receivables
+      if (has('RECEIVED')) {
+        final expr = _database.transactions.paidRelationship
+                .isIn(['PAID_FOR', 'WILL_RECEIVE']) &
+            _database.receivables.status.equals('RECEIVED');
+        statusExpr = statusExpr == null ? expr : (statusExpr | expr);
+      }
+      if (has('RECEIVABLE')) {
+        final expr = _database.transactions.paidRelationship
+                .isIn(['PAID_FOR', 'WILL_RECEIVE']) &
+            _database.receivables.status.equals('PENDING');
+        statusExpr = statusExpr == null ? expr : (statusExpr | expr);
+      }
+
+      if (statusExpr != null) {
+        whereExpr = whereExpr & statusExpr;
+      }
+    }
+
+    // Exclude inactive: do not include expense/income linked to PENDING payable/receivable
+    if (type == 'EXPENSE') {
+      whereExpr = whereExpr &
+          (_database.transactions.linkedPayableUuid.isNull() |
+              _database.payables.status.equals('PAID'));
+    }
+    if (type == 'INCOME') {
+      whereExpr = whereExpr &
+          (_database.transactions.linkedReceivableUuid.isNull() |
+              _database.receivables.status.equals('RECEIVED'));
+    }
+
     final query = _database.selectOnly(_database.transactions)
       ..addColumns([_database.transactions.amount.sum()])
+      ..join([
+        leftOuterJoin(
+          _database.payables,
+          _database.payables.uuid
+              .equalsExp(_database.transactions.linkedPayableUuid),
+        ),
+        leftOuterJoin(
+          _database.receivables,
+          _database.receivables.uuid
+              .equalsExp(_database.transactions.linkedReceivableUuid),
+        ),
+      ])
       ..where(whereExpr);
     final row = await query.getSingle();
     return row.read(_database.transactions.amount.sum()) ?? 0.0;
@@ -437,16 +587,47 @@ class AnalyticsRepository {
           ..where(_database.receivables.isDeleted.equals(false)))
         .getSingle()
         .then((row) => row.read(_database.receivables.amount.sum()) ?? 0.0);
+    // Exclude inactive: do not include expense/income linked to PENDING payable/receivable
+    final expenseWhere = _database.transactions.type.equals('EXPENSE') &
+        _database.transactions.isDeleted.equals(false) &
+        (_database.transactions.linkedPayableUuid.isNull() |
+            _database.payables.status.equals('PAID'));
     final totalExpense = await (_database.selectOnly(_database.transactions)
           ..addColumns([_database.transactions.amount.sum()])
-          ..where(_database.transactions.type.equals('EXPENSE'))
-          ..where(_database.transactions.isDeleted.equals(false)))
+          ..join([
+            leftOuterJoin(
+              _database.payables,
+              _database.payables.uuid
+                  .equalsExp(_database.transactions.linkedPayableUuid),
+            ),
+            leftOuterJoin(
+              _database.receivables,
+              _database.receivables.uuid
+                  .equalsExp(_database.transactions.linkedReceivableUuid),
+            ),
+          ])
+          ..where(expenseWhere))
         .getSingle()
         .then((row) => row.read(_database.transactions.amount.sum()) ?? 0.0);
+    final incomeWhere = _database.transactions.type.equals('INCOME') &
+        _database.transactions.isDeleted.equals(false) &
+        (_database.transactions.linkedReceivableUuid.isNull() |
+            _database.receivables.status.equals('RECEIVED'));
     final totalIncome = await (_database.selectOnly(_database.transactions)
           ..addColumns([_database.transactions.amount.sum()])
-          ..where(_database.transactions.type.equals('INCOME'))
-          ..where(_database.transactions.isDeleted.equals(false)))
+          ..join([
+            leftOuterJoin(
+              _database.payables,
+              _database.payables.uuid
+                  .equalsExp(_database.transactions.linkedPayableUuid),
+            ),
+            leftOuterJoin(
+              _database.receivables,
+              _database.receivables.uuid
+                  .equalsExp(_database.transactions.linkedReceivableUuid),
+            ),
+          ])
+          ..where(incomeWhere))
         .getSingle()
         .then((row) => row.read(_database.transactions.amount.sum()) ?? 0.0);
     return FinancialSummary(
