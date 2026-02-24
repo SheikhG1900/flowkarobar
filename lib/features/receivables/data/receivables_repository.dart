@@ -292,6 +292,16 @@ class ReceivablesRepository {
       // Auto-create income if enabled (for PAID_FOR receivables and standalone receivables)
       // Skip if linkedIncomeUuid exists (WILL_RECEIVE case - already has linked income)
       if (receivable.autoCreateIncome && receivable.linkedIncomeUuid == null) {
+        // Try to reuse category from linked expense transaction if available
+        String? categoryUuid;
+        final linkedExpenseUuid = receivable.linkedExpenseUuid;
+        if (linkedExpenseUuid != null) {
+          final linkedTx = await (_database.select(_database.transactions)
+                ..where((t) => t.uuid.equals(linkedExpenseUuid)))
+              .getSingleOrNull();
+          categoryUuid = linkedTx?.categoryUuid;
+        }
+
         // Use a deterministic UUID based on receivable UUID to prevent duplicates during sync
         final incomeUuid = "${receivableUuid}_payment";
         await _database.into(_database.transactions).insert(
@@ -299,7 +309,7 @@ class ReceivablesRepository {
                 uuid: Value(incomeUuid),
                 amount: Value(receivable.amount),
                 type: const Value('INCOME'),
-                categoryUuid: Value(null),
+                categoryUuid: Value(categoryUuid),
                 contactUuid: Value(receivable.contactUuid),
                 description: Value(receivable.description),
                 date: Value(DateTime.now()),

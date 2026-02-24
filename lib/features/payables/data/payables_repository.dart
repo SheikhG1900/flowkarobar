@@ -290,6 +290,16 @@ class PayablesRepository {
 
       // Auto-create expense if enabled (for non-linked payables like PAID_FOR/RECEIVED_FROM)
       if (payable.autoCreateExpense && payable.linkedExpenseUuid == null) {
+        // Try to reuse category from linked income transaction if available
+        String? categoryUuid;
+        final linkedIncomeUuid = payable.linkedIncomeUuid;
+        if (linkedIncomeUuid != null) {
+          final linkedTx = await (_database.select(_database.transactions)
+                ..where((t) => t.uuid.equals(linkedIncomeUuid)))
+              .getSingleOrNull();
+          categoryUuid = linkedTx?.categoryUuid;
+        }
+
         // Use a deterministic UUID based on payable UUID to prevent duplicates during sync
         final expenseUuid = "${payableUuid}_payment";
         await _database.into(_database.transactions).insert(
@@ -297,7 +307,7 @@ class PayablesRepository {
                 uuid: Value(expenseUuid),
                 amount: Value(payable.amount),
                 type: const Value('EXPENSE'),
-                categoryUuid: Value(null),
+                categoryUuid: Value(categoryUuid),
                 contactUuid: Value(payable.contactUuid),
                 description: Value(payable.description),
                 date: Value(DateTime.now()),
