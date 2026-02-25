@@ -83,12 +83,16 @@ class NotificationNotifier extends Notifier<List<NotificationItem>> {
 
     // Check for duplicates in stored data
     final isDuplicate = currentData.any((itemJson) {
-      final item = json.decode(itemJson);
-      final itemTime = DateTime.parse(item['dateTime']);
-      return item['title'] == title &&
-          item['message'] == message &&
-          item['type'] == type.index &&
-          DateTime.now().difference(itemTime).inHours < 24;
+      try {
+        final item = json.decode(itemJson);
+        final itemTime = DateTime.parse(item['dateTime']);
+        return item['title'] == title &&
+            item['message'] == message &&
+            item['type'] == type.index &&
+            DateTime.now().difference(itemTime).inMinutes < 1; // Only skip if within 1 minute
+      } catch (e) {
+        return false;
+      }
     });
 
     if (isDuplicate) return;
@@ -134,7 +138,7 @@ class NotificationNotifier extends Notifier<List<NotificationItem>> {
         n.title == title &&
         n.message == message &&
         n.type == type &&
-        DateTime.now().difference(n.dateTime).inHours < 24);
+        DateTime.now().difference(n.dateTime).inMinutes < 1);
 
     if (isDuplicate) return;
 
@@ -166,6 +170,10 @@ class NotificationNotifier extends Notifier<List<NotificationItem>> {
   Future<void> clearAll() async {
     state = [];
     await _saveNotifications();
+  }
+
+  Future<void> refresh() async {
+    await _loadNotifications();
   }
 }
 

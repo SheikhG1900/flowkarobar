@@ -54,6 +54,7 @@ class CloudCashbookMetadata {
 /// State for Backup Screen
 class BackupState {
   final bool isLoading;
+  final bool isBackingUp;
   final GoogleSignInAccount? currentUser;
   final List<drive.File> backups;
   final DateTime? lastBackupTime;
@@ -76,8 +77,12 @@ class BackupState {
   final String syncStatus; // 'Idle', 'Syncing...', 'Success', 'Error: ...'
   final DateTime? syncStartedAt;
 
+  final String? lastSuccessMessage;
+  final String? lastErrorMessage;
+
   BackupState({
     this.isLoading = false,
+    this.isBackingUp = false,
     this.currentUser,
     this.backups = const [],
     this.lastBackupTime,
@@ -96,6 +101,8 @@ class BackupState {
     this.deltaFiles = const [],
     this.syncStatus = 'Idle',
     this.syncStartedAt,
+    this.lastSuccessMessage,
+    this.lastErrorMessage,
   });
 
   factory BackupState.initial() {
@@ -104,6 +111,7 @@ class BackupState {
 
   BackupState copyWith({
     bool? isLoading,
+    bool? isBackingUp,
     GoogleSignInAccount? currentUser,
     List<drive.File>? backups,
     DateTime? lastBackupTime,
@@ -122,9 +130,12 @@ class BackupState {
     List<drive.File>? deltaFiles,
     String? syncStatus,
     DateTime? syncStartedAt,
+    String? lastSuccessMessage,
+    String? lastErrorMessage,
   }) {
     return BackupState(
       isLoading: isLoading ?? this.isLoading,
+      isBackingUp: isBackingUp ?? this.isBackingUp,
       currentUser: currentUser ?? this.currentUser,
       backups: backups ?? this.backups,
       lastBackupTime: lastBackupTime ?? this.lastBackupTime,
@@ -144,6 +155,8 @@ class BackupState {
       deltaFiles: deltaFiles ?? this.deltaFiles,
       syncStatus: syncStatus ?? this.syncStatus,
       syncStartedAt: syncStartedAt ?? this.syncStartedAt,
+      lastSuccessMessage: lastSuccessMessage,
+      lastErrorMessage: lastErrorMessage,
     );
   }
 }
@@ -974,9 +987,11 @@ class BackupNotifier extends Notifier<BackupState> {
     }
   }
 
-  Future<void> backup(AppLocalizations l10n) async {
+  Future<void> backup(AppLocalizations l10n, {Cashbook? targetCashbook}) async {
+    if (state.isBackingUp) return; // Prevent concurrent backups
+
     try {
-      state = state.copyWith(isLoading: true, error: null);
+      state = state.copyWith(isBackingUp: true, error: null);
 
       // Ensure Drive API is initialized before proceeding
       if (!_driveService.isDriveApiInitialized) {
@@ -986,19 +1001,19 @@ class BackupNotifier extends Notifier<BackupState> {
         await _driveService.signIn(); // This triggers initialization
       }
 
-      final activeCashbook = ref.read(activeCashbookProvider);
+      final Cashbook cashbook = targetCashbook ?? ref.read(activeCashbookProvider);
       if (kDebugMode) {
         print(
-            'Starting backup for cashbook: ${activeCashbook.name}, path: ${activeCashbook.dbPath}');
+            'Starting backup for cashbook: ${cashbook.name}, path: ${cashbook.dbPath}');
       }
 
       try {
         await _repository.backup(
-          fileName: activeCashbook.dbPath,
-          cashbookId: activeCashbook.id,
-          cashbookName: activeCashbook.name,
-          color: activeCashbook.colorCode,
-          icon: activeCashbook.iconCodePoint,
+          fileName: cashbook.dbPath,
+          cashbookId: cashbook.id,
+          cashbookName: cashbook.name,
+          color: cashbook.colorCode,
+          icon: cashbook.iconCodePoint,
         );
       } catch (e) {
         // If access denied, try re-authenticating once
@@ -1010,11 +1025,11 @@ class BackupNotifier extends Notifier<BackupState> {
           await _driveService.reauthenticate();
           // Retry backup after re-auth
           await _repository.backup(
-            fileName: activeCashbook.dbPath,
-            cashbookId: activeCashbook.id,
-            cashbookName: activeCashbook.name,
-            color: activeCashbook.colorCode,
-            icon: activeCashbook.iconCodePoint,
+            fileName: cashbook.dbPath,
+            cashbookId: cashbook.id,
+            cashbookName: cashbook.name,
+            color: cashbook.colorCode,
+            icon: cashbook.iconCodePoint,
           );
         } else {
           rethrow;
@@ -1025,33 +1040,51 @@ class BackupNotifier extends Notifier<BackupState> {
         print('Backup upload successful');
       }
 
-      // Refresh list and time
-      final backups =
-          await _driveService.listBackups(cashbookId: activeCashbook.id);
-      final time =
-          await _repository.getLastBackupTime(cashbookId: activeCashbook.id);
+      // Refresh list and time for the target cashbook
+      final backups = await _driveService.listBackups(cashbookId: cashbook.id);
+      final time = await _repository.getLastBackupTime(cashbookId: cashbook.id);
 
-      state = state.copyWith(
-        isLoading: false,
-        backups: backups,
-        lastBackupTime: time,
-      );
+      // Only update state if the current view is for this cashbook
+      final activeCashbook = ref.read(activeCashbookProvider);
+      if (activeCashbook.id == cashbook.id) {
+        state = state.copyWith(
+          isBackingUp: false,
+          backups: backups,
+          lastBackupTime: time,
+          lastSuccessMessage: l10n.notificationBackupSuccessMessage(cashbook.name),
+        );
+      } else {
+        state = state.copyWith(
+          isBackingUp: false,
+          lastSuccessMessage: l10n.notificationBackupSuccessMessage(cashbook.name),
+        );
+      }
+
       if (kDebugMode) {
         print('Backup state updated. Backups found: ${backups.length}');
       }
 
       // Add local notification
-      ref.read(notificationProvider.notifier).addNotification(
-            title: l10n.notificationBackupSuccessTitle,
-            message: l10n.notificationBackupSuccessMessage(activeCashbook.name),
-            type: NotificationType.backup,
-          );
+      try {
+        // Use the static method to ensure it's saved even if the notifier isn't active
+        await NotificationNotifier.addNotificationStatic(
+          title: l10n.notificationBackupSuccessTitle,
+          message: l10n.notificationBackupSuccessMessage(cashbook.name),
+          type: NotificationType.backup,
+        );
+        // Also update the active notifier if it exists
+        ref.read(notificationProvider.notifier).refresh();
+      } catch (e) {
+        if (kDebugMode) {
+          print('BackupNotifier: Failed to add notification: $e');
+        }
+      }
     } catch (e, stack) {
       if (kDebugMode) {
         print('Backup failed with error: $e');
         print('Stack trace: $stack');
       }
-      state = state.copyWith(isLoading: false, error: e.toString());
+      state = state.copyWith(isBackingUp: false, lastErrorMessage: e.toString());
     }
   }
 
@@ -1297,9 +1330,12 @@ class BackupNotifier extends Notifier<BackupState> {
 
       await _loadAvailableCashbooks();
       await _refreshVersions();
-      state = state.copyWith(isLoading: false);
+      state = state.copyWith(
+        isLoading: false,
+        lastSuccessMessage: 'Cloud data cleared successfully',
+      );
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
+      state = state.copyWith(isLoading: false, lastErrorMessage: e.toString());
       rethrow;
     }
   }

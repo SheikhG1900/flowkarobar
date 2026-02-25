@@ -42,6 +42,18 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
     final activeCashbook = ref.watch(activeCashbookProvider);
     final isPremium = ref.watch(premiumProvider).isPremium;
 
+    // Listen for background operation messages
+    ref.listen(backupProvider, (previous, next) {
+      if (next.lastSuccessMessage != null &&
+          next.lastSuccessMessage != previous?.lastSuccessMessage) {
+        ToastUtils.showSuccessToast(context, ref, next.lastSuccessMessage!);
+      }
+      if (next.lastErrorMessage != null &&
+          next.lastErrorMessage != previous?.lastErrorMessage) {
+        ToastUtils.showErrorToast(context, ref, next.lastErrorMessage!);
+      }
+    });
+
     return ShowCaseWidget(
       enableAutoScroll: true,
       onFinish: () {
@@ -974,14 +986,28 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
               tooltipBackgroundColor: theme.colorScheme.primary,
               textColor: Colors.white,
               child: GradientButton(
-                label: l10n.backupNow,
+                label: state.isBackingUp ? l10n.processing : l10n.backupNow,
                 gradient:
                     AppColors.getSecondaryGradient(theme.colorScheme.primary)
-                        .withOpacity(0.8),
-                icon: Icons.backup,
-                onPressed: () async {
-                  await notifier.backup(l10n);
-                },
+                        .withOpacity(state.isBackingUp ? 0.5 : 0.8),
+                icon: state.isBackingUp ? Icons.sync : Icons.backup,
+                onPressed: state.isBackingUp
+                    ? null
+                    : () {
+                        if (context.mounted) {
+                          ToastUtils.showInfoToast(
+                              context, ref, l10n.backgroundBackupStarted);
+                        }
+                        
+                        // Use a separate async block to handle the completion and toast
+                        () async {
+                          try {
+                            await notifier.backup(l10n);
+                          } catch (e) {
+                            // Error is already handled in the provider state
+                          }
+                        }();
+                      },
               ),
             ),
           ),

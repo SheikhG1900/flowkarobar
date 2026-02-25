@@ -12,6 +12,16 @@ class AppLocalizationsHi extends AppLocalizations {
   String get appTitle => 'कैशबुक';
 
   @override
+  String get backgroundActivityStarted => 'गतिविधि बैकग्राउंड में शुरू हुई';
+
+  @override
+  String get backgroundBackupStarted => 'बैकअप बैकग्राउंड में शुरू हुआ';
+
+  @override
+  String get backgroundCloudClearStarted =>
+      'क्लाउड डेटा हटाना बैकग्राउंड में शुरू हुआ';
+
+  @override
   String get bulkImport => 'बल्क इंपोर्ट';
 
   @override
@@ -871,6 +881,19 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get markAllRead => 'सभी को पढ़ा गया चिह्नित करें';
+
+  @override
+  String get clearAll => 'सभी साफ़ करें';
+
+  @override
+  String get clearAllNotifications => 'सभी सूचनाएं साफ़ करें?';
+
+  @override
+  String get clearAllNotificationsMessage =>
+      'क्या आप वाकई सभी सूचनाएं हटाना चाहते हैं? यह क्रिया पूर्ववत नहीं की जा सकती।';
+
+  @override
+  String get notificationsCleared => 'सभी सूचनाएं साफ़ कर दी गईं';
 
   @override
   String get noNotifications => 'कोई सूचना नहीं';
@@ -2686,6 +2709,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get backup => 'बैकअप';
 
   @override
+  String get takeBackup => 'बैकअप लें';
+
+  @override
   String get premium => 'प्रीमियम';
 
   @override
@@ -2806,7 +2832,24 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
+  String get backupOptions => 'बैकअप विकल्प';
+
+  @override
+  String get backupToCloud => 'क्लाउड पर बैकअप लें';
+
+  @override
+  String get backupToCloudSubtitle =>
+      'Google ड्राइव पर अपना डेटाबेस सुरक्षित रूप से सहेजें';
+
+  @override
   String get backupToFile => 'फ़ाइल में बैकअप लें';
+
+  @override
+  String get backupToFileSubtitle =>
+      'अपने डिवाइस पर डेटाबेस फ़ाइल सहेजें या साझा करें';
+
+  @override
+  String get backupOptionsTitle => 'बैकअप विधि चुनें';
 
   @override
   String get restoreFromFile => 'फ़ाइल से बहाल करें';

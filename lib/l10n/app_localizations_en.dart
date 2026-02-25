@@ -12,6 +12,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appTitle => 'Cashbook';
 
   @override
+  String get backgroundActivityStarted => 'Activity started in background';
+
+  @override
+  String get backgroundBackupStarted => 'Backup started in background';
+
+  @override
+  String get backgroundCloudClearStarted => 'Cloud clear started in background';
+
+  @override
   String get bulkImport => 'Bulk Import';
 
   @override
@@ -868,6 +877,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get markAllRead => 'Mark all read';
+
+  @override
+  String get clearAll => 'Clear All';
+
+  @override
+  String get clearAllNotifications => 'Clear all notifications?';
+
+  @override
+  String get clearAllNotificationsMessage =>
+      'Are you sure you want to delete all notifications? This action cannot be undone.';
+
+  @override
+  String get notificationsCleared => 'All notifications cleared';
 
   @override
   String get noNotifications => 'No Notifications';
@@ -2679,6 +2701,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get backup => 'Backup';
 
   @override
+  String get takeBackup => 'Take Backup';
+
+  @override
   String get premium => 'Premium';
 
   @override
@@ -2798,7 +2823,24 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get backupOptions => 'Backup Options';
+
+  @override
+  String get backupToCloud => 'Backup to Cloud';
+
+  @override
+  String get backupToCloudSubtitle =>
+      'Securely store your database on Google Drive';
+
+  @override
   String get backupToFile => 'Backup to File';
+
+  @override
+  String get backupToFileSubtitle =>
+      'Save database file to your device or share it';
+
+  @override
+  String get backupOptionsTitle => 'Choose Backup Method';
 
   @override
   String get restoreFromFile => 'Restore from File';

@@ -12,6 +12,16 @@ class AppLocalizationsUr extends AppLocalizations {
   String get appTitle => 'کیش بک';
 
   @override
+  String get backgroundActivityStarted => 'سرگرمی پس منظر میں شروع ہوگئی';
+
+  @override
+  String get backgroundBackupStarted => 'بیک اپ پس منظر میں شروع ہو گیا';
+
+  @override
+  String get backgroundCloudClearStarted =>
+      'کلاؤڈ ڈیٹا کی صفائی پس منظر میں شروع ہوگئی';
+
+  @override
   String get bulkImport => 'بلک امپورٹ';
 
   @override
@@ -873,6 +883,19 @@ class AppLocalizationsUr extends AppLocalizations {
 
   @override
   String get markAllRead => 'سب کو پڑھا ہوا نشان زد کریں';
+
+  @override
+  String get clearAll => 'تمام صاف کریں';
+
+  @override
+  String get clearAllNotifications => 'تمام اطلاعات صاف کریں؟';
+
+  @override
+  String get clearAllNotificationsMessage =>
+      'کیا آپ واقعی تمام اطلاعات کو حذف کرنا چاہتے ہیں؟ یہ عمل واپس نہیں کیا جا سکتا۔';
+
+  @override
+  String get notificationsCleared => 'تمام اطلاعات صاف کر دی گئیں';
 
   @override
   String get noNotifications => 'کوئی اطلاع نہیں';
@@ -2695,6 +2718,9 @@ class AppLocalizationsUr extends AppLocalizations {
   String get backup => 'بیک اپ';
 
   @override
+  String get takeBackup => 'بیک اپ لیں';
+
+  @override
   String get premium => 'پریمیم';
 
   @override
@@ -2815,7 +2841,24 @@ class AppLocalizationsUr extends AppLocalizations {
   }
 
   @override
+  String get backupOptions => 'بیک اپ کے اختیارات';
+
+  @override
+  String get backupToCloud => 'کلاؤڈ پر بیک اپ لیں';
+
+  @override
+  String get backupToCloudSubtitle =>
+      'اپنا ڈیٹا بیس گوگل ڈرائیو پر محفوظ طریقے سے محفوظ کریں';
+
+  @override
   String get backupToFile => 'فائل میں بیک اپ لیں';
+
+  @override
+  String get backupToFileSubtitle =>
+      'ڈیٹا بیس فائل کو اپنے آلے پر محفوظ کریں یا شیئر کریں';
+
+  @override
+  String get backupOptionsTitle => 'بیک اپ کا طریقہ منتخب کریں';
 
   @override
   String get restoreFromFile => 'فائل سے بحال کریں';

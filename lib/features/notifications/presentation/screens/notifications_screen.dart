@@ -21,7 +21,7 @@ class NotificationsScreen extends ConsumerWidget {
         title: Text(l10n.notifications),
         centerTitle: true,
         actions: [
-          if (notifications.isNotEmpty)
+          if (notifications.isNotEmpty) ...[
             TextButton(
               onPressed: () {
                 notifier.markAllAsRead();
@@ -30,6 +30,12 @@ class NotificationsScreen extends ConsumerWidget {
               },
               child: Text(l10n.markAllRead),
             ),
+            IconButton(
+              onPressed: () => _showClearConfirmation(context, ref, l10n),
+              icon: const Icon(Icons.delete_sweep_outlined),
+              tooltip: l10n.clearAll,
+            ),
+          ],
         ],
       ),
       body: notifications.isEmpty
@@ -135,6 +141,35 @@ class NotificationsScreen extends ConsumerWidget {
           onTap: () => notifier.markAsRead(notification.id),
         );
       },
+    );
+  }
+
+  void _showClearConfirmation(
+      BuildContext context, WidgetRef ref, AppLocalizations l10n) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.clearAllNotifications),
+        content: Text(l10n.clearAllNotificationsMessage),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.pop(dialogContext);
+              ref.read(notificationProvider.notifier).clearAll();
+              ToastUtils.showSuccessToast(context, ref, l10n.notificationsCleared);
+            },
+            style: FilledButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: Text(l10n.clearAll),
+          ),
+        ],
+      ),
     );
   }
 }

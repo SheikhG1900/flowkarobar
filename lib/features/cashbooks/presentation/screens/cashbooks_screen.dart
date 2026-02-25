@@ -28,6 +28,18 @@ class CashbooksScreen extends ConsumerWidget {
     final isDark = theme.brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context)!;
 
+    // Listen for background operation messages
+    ref.listen(backupProvider, (previous, next) {
+      if (next.lastSuccessMessage != null &&
+          next.lastSuccessMessage != previous?.lastSuccessMessage) {
+        ToastUtils.showSuccessToast(context, ref, next.lastSuccessMessage!);
+      }
+      if (next.lastErrorMessage != null &&
+          next.lastErrorMessage != previous?.lastErrorMessage) {
+        ToastUtils.showErrorToast(context, ref, next.lastErrorMessage!);
+      }
+    });
+
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.myCashbooks),
@@ -121,13 +133,12 @@ class CashbooksScreen extends ConsumerWidget {
                               ),
                             ),
                             PopupMenuItem(
-                              value: 'backup_local',
+                              value: 'backup',
                               child: Row(
                                 children: [
-                                  const Icon(Icons.file_upload_outlined,
-                                      size: 20),
+                                  const Icon(Icons.backup_outlined, size: 20),
                                   const SizedBox(width: 8),
-                                  Text(l10n.backupToFile),
+                                  Text(l10n.takeBackup),
                                   const SizedBox(width: 8),
                                   const PremiumBadge(isSmall: true),
                                 ],
@@ -273,8 +284,8 @@ class CashbooksScreen extends ConsumerWidget {
         backgroundColor: Colors.transparent,
         builder: (context) => AddCashbookSheet(cashbook: cashbook),
       );
-    } else if (action == 'backup_local') {
-      _handleBackup(context, ref, cashbook);
+    } else if (action == 'backup') {
+      _showBackupOptions(context, ref, cashbook);
     } else if (action == 'restore_local') {
       _handleRestore(context, ref, cashbook);
     } else if (action == 'copy_preferences') {
@@ -297,6 +308,151 @@ class CashbooksScreen extends ConsumerWidget {
     } else if (action == 'delete') {
       _showDeleteConfirmation(context, ref, cashbook);
     }
+  }
+
+  void _showBackupOptions(
+      BuildContext context, WidgetRef ref, Cashbook cashbook) {
+    if (!PremiumGate.isPremium(ref)) {
+      PremiumGate.showPremiumDialog(context);
+      return;
+    }
+
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: theme.scaffoldBackgroundColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              l10n.backupOptionsTitle,
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            _buildBackupOption(
+              context,
+              icon: Icons.cloud_upload_outlined,
+              title: l10n.backupToCloud,
+              subtitle: l10n.backupToCloudSubtitle,
+              color: Colors.blue,
+              onTap: () async {
+                Navigator.pop(context);
+                final backupNotifier = ref.read(backupProvider.notifier);
+                final backupState = ref.read(backupProvider);
+                final screenContext = context; // Store screen context
+
+                if (backupState.isBackingUp) {
+                  ToastUtils.showInfoToast(
+                      screenContext, ref, l10n.processing);
+                  return;
+                }
+
+                // If not signed in, redirect to backup screen
+                if (backupState.currentUser == null) {
+                  Navigator.pushNamed(context, '/backup');
+                  return;
+                }
+
+                // Run backup in background without busy dialog
+                // Start the backup process without awaiting it here, 
+                // so the UI remains interactive immediately.
+                if (screenContext.mounted) {
+                  ToastUtils.showInfoToast(
+                      screenContext, ref, l10n.backgroundBackupStarted);
+                }
+
+                // Use a separate async block to handle the completion and toast
+                () async {
+                  try {
+                    await backupNotifier.backup(l10n, targetCashbook: cashbook);
+                  } catch (e) {
+                    // Error is already handled in the provider state
+                  }
+                }();
+              },
+            ),
+            const SizedBox(height: 12),
+            _buildBackupOption(
+              context,
+              icon: Icons.file_upload_outlined,
+              title: l10n.backupToFile,
+              subtitle: l10n.backupToFileSubtitle,
+              color: Colors.orange,
+              onTap: () {
+                Navigator.pop(context);
+                _handleBackup(context, ref, cashbook);
+              },
+            ),
+            const SizedBox(height: 24),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBackupOption(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    final theme = Theme.of(context);
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          border: Border.all(color: theme.dividerColor),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: color),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    subtitle,
+                    style: theme.textTheme.bodySmall,
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right, color: Colors.grey),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<void> _handleBackup(
@@ -587,24 +743,25 @@ class CashbooksScreen extends ConsumerWidget {
               FilledButton(
                 onPressed: (!clearBackups && !clearSync)
                     ? null
-                    : () async {
+                    : () {
                         Navigator.pop(dialogContext);
-                        try {
-                          await ref
-                              .read(backupProvider.notifier)
-                              .clearGranularCloudData(cashbook.id,
-                                  clearBackups: clearBackups,
-                                  clearSync: clearSync);
-                          if (screenContext.mounted) {
-                            ToastUtils.showSuccessToast(
-                                screenContext, ref, l10n.cloudDataCleared);
-                          }
-                        } catch (e) {
-                          if (screenContext.mounted) {
-                            ToastUtils.showErrorToast(screenContext, ref,
-                                l10n.errorOccurred(e.toString()));
-                          }
+                        if (screenContext.mounted) {
+                          ToastUtils.showInfoToast(screenContext, ref,
+                              l10n.backgroundCloudClearStarted);
                         }
+
+                        // Use a separate async block to handle the completion and toast
+                        () async {
+                          try {
+                            await ref
+                                .read(backupProvider.notifier)
+                                .clearGranularCloudData(cashbook.id,
+                                    clearBackups: clearBackups,
+                                    clearSync: clearSync);
+                          } catch (e) {
+                            // Error is already handled in the provider state
+                          }
+                        }();
                       },
                 style: FilledButton.styleFrom(
                     backgroundColor: Colors.orange,

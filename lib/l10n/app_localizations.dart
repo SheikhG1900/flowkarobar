@@ -106,6 +106,24 @@ abstract class AppLocalizations {
   /// **'Cashbook'**
   String get appTitle;
 
+  /// No description provided for @backgroundActivityStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity started in background'**
+  String get backgroundActivityStarted;
+
+  /// No description provided for @backgroundBackupStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup started in background'**
+  String get backgroundBackupStarted;
+
+  /// No description provided for @backgroundCloudClearStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud clear started in background'**
+  String get backgroundCloudClearStarted;
+
   /// No description provided for @bulkImport.
   ///
   /// In en, this message translates to:
@@ -1683,6 +1701,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Mark all read'**
   String get markAllRead;
+
+  /// No description provided for @clearAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear All'**
+  String get clearAll;
+
+  /// No description provided for @clearAllNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear all notifications?'**
+  String get clearAllNotifications;
+
+  /// No description provided for @clearAllNotificationsMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete all notifications? This action cannot be undone.'**
+  String get clearAllNotificationsMessage;
+
+  /// No description provided for @notificationsCleared.
+  ///
+  /// In en, this message translates to:
+  /// **'All notifications cleared'**
+  String get notificationsCleared;
 
   /// No description provided for @noNotifications.
   ///
@@ -4972,6 +5014,12 @@ abstract class AppLocalizations {
   /// **'Backup'**
   String get backup;
 
+  /// No description provided for @takeBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Take Backup'**
+  String get takeBackup;
+
   /// No description provided for @premium.
   ///
   /// In en, this message translates to:
@@ -5176,11 +5224,41 @@ abstract class AppLocalizations {
   /// **'Failed to reset sync: {error}'**
   String failedToResetSync(String error);
 
+  /// No description provided for @backupOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup Options'**
+  String get backupOptions;
+
+  /// No description provided for @backupToCloud.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup to Cloud'**
+  String get backupToCloud;
+
+  /// No description provided for @backupToCloudSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Securely store your database on Google Drive'**
+  String get backupToCloudSubtitle;
+
   /// No description provided for @backupToFile.
   ///
   /// In en, this message translates to:
   /// **'Backup to File'**
   String get backupToFile;
+
+  /// No description provided for @backupToFileSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Save database file to your device or share it'**
+  String get backupToFileSubtitle;
+
+  /// No description provided for @backupOptionsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose Backup Method'**
+  String get backupOptionsTitle;
 
   /// No description provided for @restoreFromFile.
   ///
