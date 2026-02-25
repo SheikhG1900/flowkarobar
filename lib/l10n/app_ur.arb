@@ -4,6 +4,15 @@
   "backgroundActivityStarted": "سرگرمی پس منظر میں شروع ہوگئی",
   "backgroundBackupStarted": "بیک اپ پس منظر میں شروع ہو گیا",
   "backgroundCloudClearStarted": "کلاؤڈ ڈیٹا کی صفائی پس منظر میں شروع ہوگئی",
+  "targetLabel": "ہدف",
+  "cloudBackupsFor": "{name} کے لیے کلاؤڈ بیک اپ",
+  "@cloudBackupsFor": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "bulkImport": "بلک امپورٹ",
   "pasteFromClipboard": "کلپ بورڈ سے پیسٹ کریں",
   "pickCsvFile": "CSV فائل منتخب کریں",

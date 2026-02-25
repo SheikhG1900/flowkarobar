@@ -21,6 +21,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get backgroundCloudClearStarted => 'Cloud clear started in background';
 
   @override
+  String get targetLabel => 'Target';
+
+  @override
+  String cloudBackupsFor(String name) {
+    return 'Backups for $name';
+  }
+
+  @override
   String get bulkImport => 'Bulk Import';
 
   @override
@@ -2729,11 +2737,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get selectCloudFolderSubtitle =>
       'Choose a cashbook folder to see its backups';
-
-  @override
-  String cloudBackupsFor(Object name) {
-    return 'Backups for $name';
-  }
 
   @override
   String get noCloudFoldersFound => 'No cloud folders found';

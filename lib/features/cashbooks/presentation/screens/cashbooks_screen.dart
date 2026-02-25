@@ -154,10 +154,10 @@ class CashbooksScreen extends ConsumerWidget {
                               value: 'restore_local',
                               child: Row(
                                 children: [
-                                  const Icon(Icons.file_download_outlined,
+                                  const Icon(Icons.restore,
                                       size: 20),
                                   const SizedBox(width: 8),
-                                  Text(l10n.restoreFromFile),
+                                  Text(l10n.restore),
                                   const SizedBox(width: 8),
                                   const PremiumBadge(isSmall: true),
                                 ],
@@ -504,7 +504,7 @@ class CashbooksScreen extends ConsumerWidget {
                                   title: Text(name),
                                   subtitle: Text(cloudId == 'default'
                                       ? 'Main Cashbook'
-                                      : 'ID: $cloudId'),
+                                      : 'Additional Cashbook'),
                                   trailing: trailingWidget,
                                   onTap: () {
                                     if (isExpanded) {
@@ -560,7 +560,7 @@ class CashbooksScreen extends ConsumerWidget {
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 8.0),
           child: Text(
-            'Target: ${targetCashbook.name}',
+            '${l10n.targetLabel}: ${targetCashbook.name}',
             style: theme.textTheme.bodySmall?.copyWith(
               color: Colors.blue,
               fontWeight: FontWeight.bold,
@@ -569,7 +569,7 @@ class CashbooksScreen extends ConsumerWidget {
         ),
         ...state.backups.map((backup) {
           final date = backup.createdTime != null
-              ? AppDateFormatter.formatDateTime(backup.createdTime!)
+              ? AppDateFormatter.formatDateTime(backup.createdTime!.toLocal())
               : 'Unknown Date';
           final size = backup.size != null
               ? '${(int.parse(backup.size!) / 1024 / 1024).toStringAsFixed(2)} MB'

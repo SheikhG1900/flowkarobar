@@ -4,6 +4,15 @@
   "backgroundActivityStarted": "गतिविधि बैकग्राउंड में शुरू हुई",
   "backgroundBackupStarted": "बैकअप बैकग्राउंड में शुरू हुआ",
   "backgroundCloudClearStarted": "क्लाउड डेटा हटाना बैकग्राउंड में शुरू हुआ",
+  "targetLabel": "लक्ष्य",
+  "cloudBackupsFor": "{name} के लिए क्लाउड बैकअप",
+  "@cloudBackupsFor": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "bulkImport": "बल्क इंपोर्ट",
   "pasteFromClipboard": "क्लिपबोर्ड से पेस्ट करें",
   "pickCsvFile": "CSV फ़ाइल चुनें",

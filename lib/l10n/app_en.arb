@@ -4,6 +4,15 @@
   "backgroundActivityStarted": "Activity started in background",
   "backgroundBackupStarted": "Backup started in background",
   "backgroundCloudClearStarted": "Cloud clear started in background",
+  "targetLabel": "Target",
+  "cloudBackupsFor": "Cloud Backups for {name}",
+  "@cloudBackupsFor": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "bulkImport": "Bulk Import",
   "pasteFromClipboard": "Paste from Clipboard",
   "pickCsvFile": "Pick CSV File",

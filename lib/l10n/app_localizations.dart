@@ -124,6 +124,18 @@ abstract class AppLocalizations {
   /// **'Cloud clear started in background'**
   String get backgroundCloudClearStarted;
 
+  /// No description provided for @targetLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Target'**
+  String get targetLabel;
+
+  /// No description provided for @cloudBackupsFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Backups for {name}'**
+  String cloudBackupsFor(String name);
+
   /// No description provided for @bulkImport.
   ///
   /// In en, this message translates to:
@@ -5067,12 +5079,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Choose a cashbook folder to see its backups'**
   String get selectCloudFolderSubtitle;
-
-  /// No description provided for @cloudBackupsFor.
-  ///
-  /// In en, this message translates to:
-  /// **'Backups for {name}'**
-  String cloudBackupsFor(Object name);
 
   /// No description provided for @noCloudFoldersFound.
   ///

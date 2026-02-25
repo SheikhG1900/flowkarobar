@@ -22,6 +22,14 @@ class AppLocalizationsHi extends AppLocalizations {
       'क्लाउड डेटा हटाना बैकग्राउंड में शुरू हुआ';
 
   @override
+  String get targetLabel => 'लक्ष्य';
+
+  @override
+  String cloudBackupsFor(String name) {
+    return '$name के लिए बैकअप';
+  }
+
+  @override
   String get bulkImport => 'बल्क इंपोर्ट';
 
   @override
@@ -2737,11 +2745,6 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get selectCloudFolderSubtitle =>
       'बैकअप देखने के लिए कैशबुक फ़ोल्डर चुनें';
-
-  @override
-  String cloudBackupsFor(Object name) {
-    return '$name के लिए बैकअप';
-  }
 
   @override
   String get noCloudFoldersFound => 'कोई क्लाउड फ़ोल्डर नहीं मिला';

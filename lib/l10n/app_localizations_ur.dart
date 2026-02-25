@@ -22,6 +22,14 @@ class AppLocalizationsUr extends AppLocalizations {
       'کلاؤڈ ڈیٹا کی صفائی پس منظر میں شروع ہوگئی';
 
   @override
+  String get targetLabel => 'ہدف';
+
+  @override
+  String cloudBackupsFor(String name) {
+    return '$name کے بیک اپ';
+  }
+
+  @override
   String get bulkImport => 'بلک امپورٹ';
 
   @override
@@ -2746,11 +2754,6 @@ class AppLocalizationsUr extends AppLocalizations {
   @override
   String get selectCloudFolderSubtitle =>
       'بیک اپ دیکھنے کے لیے کیش بک فولڈر منتخب کریں';
-
-  @override
-  String cloudBackupsFor(Object name) {
-    return '$name کے بیک اپ';
-  }
 
   @override
   String get noCloudFoldersFound => 'کوئی کلاؤڈ فولڈر نہیں ملا';
