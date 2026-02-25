@@ -5020,6 +5020,42 @@ abstract class AppLocalizations {
   /// **'Take Backup'**
   String get takeBackup;
 
+  /// No description provided for @restoreOptionsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore Options'**
+  String get restoreOptionsTitle;
+
+  /// No description provided for @restoreFromCloud.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore from Cloud'**
+  String get restoreFromCloud;
+
+  /// No description provided for @restoreFromCloudSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore from Google Drive'**
+  String get restoreFromCloudSubtitle;
+
+  /// No description provided for @restoreFromFileSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore from a local file'**
+  String get restoreFromFileSubtitle;
+
+  /// No description provided for @backgroundRestoreStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore started in background'**
+  String get backgroundRestoreStarted;
+
+  /// No description provided for @restoreSuccessfulFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore successful for {name}'**
+  String restoreSuccessfulFor(String name);
+
   /// No description provided for @premium.
   ///
   /// In en, this message translates to:

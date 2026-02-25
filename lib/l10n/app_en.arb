@@ -1381,6 +1381,19 @@
   "currencies": "Currencies",
   "backup": "Backup",
   "takeBackup": "Take Backup",
+  "restoreOptionsTitle": "Restore Options",
+  "restoreFromCloud": "Restore from Cloud",
+  "restoreFromCloudSubtitle": "Restore from Google Drive",
+  "restoreFromFileSubtitle": "Restore from a local file",
+  "backgroundRestoreStarted": "Restore started in background",
+  "restoreSuccessfulFor": "Restore successful for {name}",
+  "@restoreSuccessfulFor": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "premium": "Premium",
   "free": "Free",
   "transactionAlreadyImported": "Transaction already imported",

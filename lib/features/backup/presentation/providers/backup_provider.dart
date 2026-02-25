@@ -927,7 +927,8 @@ class BackupNotifier extends Notifier<BackupState> {
     }
   }
 
-  Future<void> restoreToCashbook(String fileId, String cashbookId) async {
+  Future<void> restoreToCashbook(String fileId, String cashbookId,
+      {AppLocalizations? l10n}) async {
     try {
       state = state.copyWith(isLoading: true, error: null);
 
@@ -980,9 +981,14 @@ class BackupNotifier extends Notifier<BackupState> {
         ref.invalidate(activeCashbookProvider);
       }
 
-      state = state.copyWith(isLoading: false);
+      state = state.copyWith(
+        isLoading: false,
+        lastSuccessMessage: l10n != null
+            ? l10n.restoreSuccessfulFor(cloudName)
+            : 'Restore successful for $cloudName',
+      );
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
+      state = state.copyWith(isLoading: false, lastErrorMessage: e.toString());
       rethrow;
     }
   }

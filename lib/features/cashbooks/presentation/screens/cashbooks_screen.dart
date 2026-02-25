@@ -1,4 +1,6 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/features/cashbooks/domain/models/cashbook.dart';
 import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
@@ -12,7 +14,8 @@ import 'package:flowpaisa/features/backup/presentation/providers/backup_provider
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/shared/widgets/premium_badge.dart';
 import 'package:flowpaisa/shared/providers/database_provider.dart';
-import 'package:file_selector/file_selector.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:file_selector/file_selector.dart' as selector;
 import 'dart:io';
 
 import 'package:flowpaisa/l10n/app_localizations.dart';
@@ -287,7 +290,7 @@ class CashbooksScreen extends ConsumerWidget {
     } else if (action == 'backup') {
       _showBackupOptions(context, ref, cashbook);
     } else if (action == 'restore_local') {
-      _handleRestore(context, ref, cashbook);
+      _showRestoreOptions(context, ref, cashbook);
     } else if (action == 'copy_preferences') {
       if (!PremiumGate.isPremium(ref)) {
         PremiumGate.showPremiumDialog(context);
@@ -308,6 +311,206 @@ class CashbooksScreen extends ConsumerWidget {
     } else if (action == 'delete') {
       _showDeleteConfirmation(context, ref, cashbook);
     }
+  }
+
+  void _showRestoreOptions(
+      BuildContext context, WidgetRef ref, Cashbook cashbook) {
+    if (!PremiumGate.isPremium(ref)) {
+      PremiumGate.showPremiumDialog(context);
+      return;
+    }
+
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: theme.scaffoldBackgroundColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              l10n.restoreOptionsTitle,
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            _buildBackupOption(
+              context,
+              icon: Icons.cloud_download_outlined,
+              title: l10n.restoreFromCloud,
+              subtitle: l10n.restoreFromCloudSubtitle,
+              color: Colors.blue,
+              onTap: () {
+                Navigator.pop(context);
+                final backupState = ref.read(backupProvider);
+                if (backupState.currentUser == null) {
+                  Navigator.pushNamed(context, '/backup');
+                } else {
+                  _showCloudRestoreSelection(context, ref, cashbook);
+                }
+              },
+            ),
+            const SizedBox(height: 12),
+            _buildBackupOption(
+              context,
+              icon: Icons.file_download_outlined,
+              title: l10n.restoreFromFile,
+              subtitle: l10n.restoreFromFileSubtitle,
+              color: Colors.orange,
+              onTap: () {
+                Navigator.pop(context);
+                _handleRestore(context, ref, cashbook);
+              },
+            ),
+            const SizedBox(height: 24),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showCloudRestoreSelection(
+      BuildContext context, WidgetRef ref, Cashbook cashbook) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final screenContext = context;
+
+    // Load backups for this specific cashbook
+    ref.read(backupProvider.notifier).loadBackupsForCashbook(cashbook.id);
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.6,
+        minChildSize: 0.4,
+        maxChildSize: 0.9,
+        builder: (context, scrollController) => Container(
+          decoration: BoxDecoration(
+            color: theme.scaffoldBackgroundColor,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: Column(
+            children: [
+              const SizedBox(height: 12),
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: theme.dividerColor,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(24),
+                child: Text(
+                  l10n.restoreFromCloud,
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Consumer(
+                  builder: (context, ref, child) {
+                    final state = ref.watch(backupProvider);
+                    if (state.isLoading) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    if (state.backups.isEmpty) {
+                      return Center(child: Text(l10n.noBackupsFound));
+                    }
+                    return ListView.builder(
+                      controller: scrollController,
+                      itemCount: state.backups.length,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      itemBuilder: (context, index) {
+                        final backup = state.backups[index];
+                        final date = backup.createdTime != null
+                            ? AppDateFormatter.formatDateTime(
+                                backup.createdTime!)
+                            : 'Unknown Date';
+                        final size = backup.size != null
+                            ? '${(int.parse(backup.size!) / 1024 / 1024).toStringAsFixed(2)} MB'
+                            : 'Unknown Size';
+
+                        return Card(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            side: BorderSide(color: theme.dividerColor),
+                          ),
+                          child: ListTile(
+                            leading: const CircleAvatar(
+                              backgroundColor: Colors.blue,
+                              child: Icon(Icons.cloud_download,
+                                  color: Colors.white),
+                            ),
+                            title: Text(date),
+                            subtitle: Text(size),
+                            onTap: () async {
+                              final confirmed = await showDialog<bool>(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: Text(l10n.restore),
+                                  content: Text(l10n.restoreBackupMessage),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.pop(context, false),
+                                      child: Text(l10n.cancel),
+                                    ),
+                                    FilledButton(
+                                      onPressed: () =>
+                                          Navigator.pop(context, true),
+                                      child: Text(l10n.restore),
+                                    ),
+                                  ],
+                                ),
+                              );
+
+                              if (confirmed == true && screenContext.mounted) {
+                                Navigator.pop(context); // Close sheet
+                                ToastUtils.showInfoToast(screenContext, ref,
+                                    l10n.backgroundRestoreStarted);
+
+                                // Fire and forget background restore
+                                () async {
+                                  try {
+                                    await ref
+                                        .read(backupProvider.notifier)
+                                        .restoreToCashbook(
+                                            backup.id!, cashbook.id,
+                                            l10n: l10n);
+                                  } catch (e) {
+                                    // Error handled by state listener
+                                  }
+                                }();
+                              }
+                            },
+                          ),
+                        );
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   void _showBackupOptions(
@@ -481,10 +684,10 @@ class CashbooksScreen extends ConsumerWidget {
 
         if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
           final fileName = filePath.split(Platform.pathSeparator).last;
-          final FileSaveLocation? result = await getSaveLocation(
+          final selector.FileSaveLocation? result = await selector.getSaveLocation(
             suggestedName: fileName,
             acceptedTypeGroups: [
-              const XTypeGroup(
+              const selector.XTypeGroup(
                 label: 'SQLite Database',
                 extensions: ['db'],
               ),
@@ -561,54 +764,86 @@ class CashbooksScreen extends ConsumerWidget {
       return;
     }
 
+    final l10n = AppLocalizations.of(context)!;
+    // We'll use the root navigator's context if the local context gets unmounted
+    final rootContext = Navigator.of(context, rootNavigator: true).context;
+
     try {
+      if (kDebugMode) print('[CashbooksScreen] Starting local restore process for: ${cashbook.name}');
       final file = await LocalBackupService.pickBackupFile();
-      if (file == null) return;
+      
+      if (file == null) {
+        if (kDebugMode) print('[CashbooksScreen] No file selected, aborting');
+        return;
+      }
 
-      if (context.mounted) {
-        final l10n = AppLocalizations.of(context)!;
-        final confirmed = await showDialog<bool>(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: Text(l10n.restore),
-            content: Text(l10n.restoreBackupMessage),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: Text(l10n.cancel),
-              ),
-              FilledButton(
-                style: FilledButton.styleFrom(foregroundColor: Colors.white),
-                onPressed: () => Navigator.pop(context, true),
-                child: Text(l10n.restore),
-              ),
-            ],
-          ),
-        );
+      if (kDebugMode) print('[CashbooksScreen] File selected: ${file.path}');
 
-        if (confirmed == true && context.mounted) {
-          await ref
-              .read(cashbooksProvider.notifier)
-              .restoreCashbookFromFile(cashbook.id, file);
+      // Use rootContext which is more likely to survive the file picker transition
+      if (!rootContext.mounted) {
+        if (kDebugMode) print('[CashbooksScreen] Error: Root context unmounted after file picking');
+        return;
+      }
 
-          // Invalidate database if it was active
-          final activeId = ref.read(activeCashbookIdProvider);
-          if (activeId == cashbook.id) {
-            // Force a fresh AppDatabase instance and refresh any listeners
-            ref.invalidate(databaseProvider);
-            ref.invalidate(activeCashbookProvider);
-          }
+      final confirmed = await showDialog<bool>(
+        context: rootContext,
+        barrierDismissible: false,
+        builder: (context) => AlertDialog(
+          title: Text(l10n.restore),
+          content: Text(l10n.restoreBackupMessage),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text(l10n.cancel),
+            ),
+            FilledButton(
+              style: FilledButton.styleFrom(foregroundColor: Colors.white),
+              onPressed: () => Navigator.pop(context, true),
+              child: Text(l10n.restore),
+            ),
+          ],
+        ),
+      );
 
-          if (context.mounted) {
-            ToastUtils.showSuccessToast(context, ref, l10n.restoreSuccessful);
-          }
+      if (kDebugMode) print('[CashbooksScreen] Restore confirmation: $confirmed');
+
+      if (confirmed == true) {
+        if (rootContext.mounted) {
+          if (kDebugMode) print('[CashbooksScreen] Showing background restore toast');
+          ToastUtils.showInfoToast(
+              rootContext, ref, l10n.backgroundRestoreStarted);
         }
+
+        // Capture everything needed for the background task
+        final notifier = ref.read(cashbooksProvider.notifier);
+        final targetId = cashbook.id;
+        final targetName = cashbook.name;
+        
+        // Use a separate async block to handle the completion and toast
+        unawaited(() async {
+          try {
+            if (kDebugMode) print('[CashbooksScreen] Calling restoreCashbookFromFile...');
+            await notifier.restoreCashbookFromFile(targetId, file);
+
+            if (kDebugMode) print('[CashbooksScreen] Restore logic completed successfully');
+            if (rootContext.mounted) {
+              ToastUtils.showSuccessToast(rootContext, ref,
+                  l10n.restoreSuccessfulFor(targetName));
+            }
+          } catch (e) {
+            if (kDebugMode) print('[CashbooksScreen] Error during background restore: $e');
+            if (rootContext.mounted) {
+              ToastUtils.showErrorToast(rootContext, ref,
+                  l10n.errorOccurred(e.toString()));
+            }
+          }
+        }());
       }
     } catch (e) {
-      if (context.mounted) {
-        final l10n = AppLocalizations.of(context)!;
+      if (kDebugMode) print('[CashbooksScreen] Exception in _handleRestore: $e');
+      if (rootContext.mounted) {
         ToastUtils.showErrorToast(
-            context, ref, l10n.errorOccurred(e.toString()));
+            rootContext, ref, l10n.errorOccurred(e.toString()));
       }
     }
   }

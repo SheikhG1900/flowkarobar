@@ -905,6 +905,19 @@
   "currencies": "کرنسیاں",
   "backup": "بیک اپ",
   "takeBackup": "بیک اپ لیں",
+  "restoreOptionsTitle": "ریسٹور کے اختیارات",
+  "restoreFromCloud": "کلاؤڈ سے ریسٹور کریں",
+  "restoreFromCloudSubtitle": "گوگل ڈرائیو سے ریسٹور کریں",
+  "restoreFromFileSubtitle": "مقامی فائل سے ریسٹور کریں",
+  "backgroundRestoreStarted": "ریسٹور پس منظر میں شروع ہو گیا",
+  "restoreSuccessfulFor": "{name} کے لیے ریسٹور کامیاب رہا",
+  "@restoreSuccessfulFor": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "premium": "پریمیم",
   "free": "مفت",
   "transactionAlreadyImported": "لین دین پہلے ہی درآمد کیا جا چکا ہے",

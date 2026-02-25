@@ -2721,6 +2721,26 @@ class AppLocalizationsUr extends AppLocalizations {
   String get takeBackup => 'بیک اپ لیں';
 
   @override
+  String get restoreOptionsTitle => 'ریسٹور کے اختیارات';
+
+  @override
+  String get restoreFromCloud => 'کلاؤڈ سے ریسٹور کریں';
+
+  @override
+  String get restoreFromCloudSubtitle => 'گوگل ڈرائیو سے ریسٹور کریں';
+
+  @override
+  String get restoreFromFileSubtitle => 'مقامی فائل سے ریسٹور کریں';
+
+  @override
+  String get backgroundRestoreStarted => 'ریسٹور پس منظر میں شروع ہو گیا';
+
+  @override
+  String restoreSuccessfulFor(String name) {
+    return '$name کے لیے ریسٹور کامیاب رہا';
+  }
+
+  @override
   String get premium => 'پریمیم';
 
   @override

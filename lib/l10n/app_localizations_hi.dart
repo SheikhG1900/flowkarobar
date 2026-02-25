@@ -2712,6 +2712,26 @@ class AppLocalizationsHi extends AppLocalizations {
   String get takeBackup => 'बैकअप लें';
 
   @override
+  String get restoreOptionsTitle => 'रिस्टोर विकल्प';
+
+  @override
+  String get restoreFromCloud => 'क्लाउड से रिस्टोर करें';
+
+  @override
+  String get restoreFromCloudSubtitle => 'गूगल ड्राइव से रिस्टोर करें';
+
+  @override
+  String get restoreFromFileSubtitle => 'स्थानीय फ़ाइल से रिस्टोर करें';
+
+  @override
+  String get backgroundRestoreStarted => 'रिस्टोर बैकग्राउंड में शुरू हुआ';
+
+  @override
+  String restoreSuccessfulFor(String name) {
+    return '$name के लिए रिस्टोर सफल रहा';
+  }
+
+  @override
   String get premium => 'प्रीमियम';
 
   @override

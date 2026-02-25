@@ -2704,6 +2704,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get takeBackup => 'Take Backup';
 
   @override
+  String get restoreOptionsTitle => 'Restore Options';
+
+  @override
+  String get restoreFromCloud => 'Restore from Cloud';
+
+  @override
+  String get restoreFromCloudSubtitle => 'Restore from Google Drive';
+
+  @override
+  String get restoreFromFileSubtitle => 'Restore from a local file';
+
+  @override
+  String get backgroundRestoreStarted => 'Restore started in background';
+
+  @override
+  String restoreSuccessfulFor(String name) {
+    return 'Restore successful for $name';
+  }
+
+  @override
   String get premium => 'Premium';
 
   @override

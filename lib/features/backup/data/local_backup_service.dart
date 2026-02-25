@@ -1,5 +1,6 @@
 import 'dart:io';
-import 'package:file_selector/file_selector.dart';
+import 'package:flutter/foundation.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flowpaisa/features/cashbooks/domain/models/cashbook.dart';
 import 'package:flowpaisa/core/utils/native_share.dart';
 import 'package:flowpaisa/core/utils/date_formatter.dart';
@@ -121,18 +122,39 @@ class LocalBackupService {
     }
   }
 
-  /// Picks a .db file from the local filesystem
+  /// Picks a .db or .sqlite file from the local filesystem
   static Future<File?> pickBackupFile() async {
-    const XTypeGroup typeGroup = XTypeGroup(
-      label: 'SQLite Database',
-      extensions: <String>['db'],
-    );
+    try {
+      if (kDebugMode) print('[LocalBackupService] Opening file picker...');
+      final FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.any,
+      );
 
-    final XFile? file = await openFile(
-      acceptedTypeGroups: <XTypeGroup>[typeGroup],
-    );
+      if (result == null) {
+        if (kDebugMode) print('[LocalBackupService] File picker cancelled by user');
+        return null;
+      }
 
-    if (file == null) return null;
-    return File(file.path);
+      if (result.files.isEmpty) {
+        if (kDebugMode) print('[LocalBackupService] File picker returned empty list');
+        return null;
+      }
+      
+      final path = result.files.single.path;
+      if (kDebugMode) print('[LocalBackupService] File picked: $path');
+      
+      if (path == null) return null;
+      
+      final file = File(path);
+      if (!await file.exists()) {
+        if (kDebugMode) print('[LocalBackupService] Error: Picked file does not exist on disk');
+        return null;
+      }
+
+      return file;
+    } catch (e) {
+      if (kDebugMode) print('[LocalBackupService] Exception during file picking: $e');
+      return null;
+    }
   }
 }

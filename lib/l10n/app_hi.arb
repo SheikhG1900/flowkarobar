@@ -905,6 +905,19 @@
   "currencies": "मुद्राएं",
   "backup": "बैकअप",
   "takeBackup": "बैकअप लें",
+  "restoreOptionsTitle": "रिस्टोर विकल्प",
+  "restoreFromCloud": "क्लाउड से रिस्टोर करें",
+  "restoreFromCloudSubtitle": "गूगल ड्राइव से रिस्टोर करें",
+  "restoreFromFileSubtitle": "स्थानीय फ़ाइल से रिस्टोर करें",
+  "backgroundRestoreStarted": "रिस्टोर बैकग्राउंड में शुरू हुआ",
+  "restoreSuccessfulFor": "{name} के लिए रिस्टोर सफल रहा",
+  "@restoreSuccessfulFor": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "premium": "प्रीमियम",
   "free": "मुफ्त",
   "transactionAlreadyImported": "लेन-देन पहले ही आयात किया जा चुका है",

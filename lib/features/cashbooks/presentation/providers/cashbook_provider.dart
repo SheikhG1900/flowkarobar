@@ -16,6 +16,8 @@ import 'package:flowpaisa/features/backup/presentation/providers/backup_provider
 import 'package:flowpaisa/shared/providers/database_provider.dart';
 import 'package:flowpaisa/features/settings/data/user_preferences_repository.dart';
 
+import 'package:flowpaisa/l10n/app_localizations.dart';
+
 class CashbookNotifier extends Notifier<List<Cashbook>> {
   static const String _storageKey = 'cashbooks_list';
 
@@ -262,9 +264,16 @@ class CashbookNotifier extends Notifier<List<Cashbook>> {
     }
   }
 
-  Future<void> restoreCashbookFromFile(String id, File backupFile) async {
+  Future<void> restoreCashbookFromFile(String id, File backupFile,
+      {AppLocalizations? l10n}) async {
     final cashbook = state.firstWhere((c) => c.id == id);
     final isActive = ref.read(activeCashbookIdProvider) == id;
+
+    if (kDebugMode) {
+      print('[CashbookNotifier] Starting restore for cashbook: ${cashbook.name} (ID: $id)');
+      print('[CashbookNotifier] Is active cashbook: $isActive');
+      print('[CashbookNotifier] Source backup file: ${backupFile.path}');
+    }
 
     // Get the target path in the application documents directory
     final dbFolder = await getApplicationDocumentsDirectory();
@@ -272,32 +281,54 @@ class CashbookNotifier extends Notifier<List<Cashbook>> {
         cashbook.dbPath.replaceAll(RegExp(r'\.(db|sqlite)$'), '');
     final targetPath = p.join(dbFolder.path, '$logicalName.sqlite');
 
+    if (kDebugMode) print('[CashbookNotifier] Target path: $targetPath');
+
     // If active, we must ensure the database is closed before overwriting
-    // In Riverpod, invalidating the provider will trigger its onDispose
     if (isActive) {
-      // Importing databaseProvider here would cause circular dependency if not careful
-      // But we can use ref.invalidate by name if we have access to it.
-      // Instead of direct import, let's assume we can handle it in the UI or use a callback
+      if (kDebugMode) print('[CashbookNotifier] Closing active database connection...');
+      try {
+        final db = ref.read(databaseProvider);
+        await db.close();
+        if (kDebugMode) print('[CashbookNotifier] Active database closed');
+      } catch (e) {
+        if (kDebugMode) print('[CashbookNotifier] Error closing database: $e');
+      }
+      clearDatabaseCache();
     }
 
     // Before restoring, remove any existing DB + WAL/SHM files for this cashbook
     final targetFile = File(targetPath);
     final walFile = File('$targetPath-wal');
     final shmFile = File('$targetPath-shm');
-    if (await targetFile.exists()) {
-      await targetFile.delete();
-    }
-    if (await walFile.exists()) {
-      await walFile.delete();
-    }
-    if (await shmFile.exists()) {
-      await shmFile.delete();
+
+    try {
+      if (await targetFile.exists()) {
+        if (kDebugMode) print('[CashbookNotifier] Deleting existing DB file...');
+        await targetFile.delete();
+      }
+      if (await walFile.exists()) {
+        if (kDebugMode) print('[CashbookNotifier] Deleting existing WAL file...');
+        await walFile.delete();
+      }
+      if (await shmFile.exists()) {
+        if (kDebugMode) print('[CashbookNotifier] Deleting existing SHM file...');
+        await shmFile.delete();
+      }
+    } catch (e) {
+      if (kDebugMode) print('[CashbookNotifier] Error deleting old files: $e');
     }
 
     // Copy the backup file to the target location
+    if (kDebugMode) print('[CashbookNotifier] Copying backup file to target...');
     await backupFile.copy(targetPath);
+    if (kDebugMode) print('[CashbookNotifier] File copy successful');
 
-    // If it was active, the UI should probably refresh or the provider should be invalidated
+    // If it was active, invalidate providers to refresh UI
+    if (isActive) {
+      if (kDebugMode) print('[CashbookNotifier] Invalidating providers for active cashbook...');
+      ref.invalidate(databaseProvider);
+      ref.invalidate(activeCashbookProvider);
+    }
   }
 }
 
