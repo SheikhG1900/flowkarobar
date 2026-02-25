@@ -5056,6 +5056,30 @@ abstract class AppLocalizations {
   /// **'Restore successful for {name}'**
   String restoreSuccessfulFor(String name);
 
+  /// No description provided for @selectCloudFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Cloud Folder'**
+  String get selectCloudFolder;
+
+  /// No description provided for @selectCloudFolderSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a cashbook folder to see its backups'**
+  String get selectCloudFolderSubtitle;
+
+  /// No description provided for @cloudBackupsFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Backups for {name}'**
+  String cloudBackupsFor(Object name);
+
+  /// No description provided for @noCloudFoldersFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No cloud folders found'**
+  String get noCloudFoldersFound;
+
   /// No description provided for @premium.
   ///
   /// In en, this message translates to:

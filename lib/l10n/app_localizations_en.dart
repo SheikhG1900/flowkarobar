@@ -2724,6 +2724,21 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get selectCloudFolder => 'Select Cloud Folder';
+
+  @override
+  String get selectCloudFolderSubtitle =>
+      'Choose a cashbook folder to see its backups';
+
+  @override
+  String cloudBackupsFor(Object name) {
+    return 'Backups for $name';
+  }
+
+  @override
+  String get noCloudFoldersFound => 'No cloud folders found';
+
+  @override
   String get premium => 'Premium';
 
   @override

@@ -2741,6 +2741,21 @@ class AppLocalizationsUr extends AppLocalizations {
   }
 
   @override
+  String get selectCloudFolder => 'کلاؤڈ فولڈر منتخب کریں';
+
+  @override
+  String get selectCloudFolderSubtitle =>
+      'بیک اپ دیکھنے کے لیے کیش بک فولڈر منتخب کریں';
+
+  @override
+  String cloudBackupsFor(Object name) {
+    return '$name کے بیک اپ';
+  }
+
+  @override
+  String get noCloudFoldersFound => 'کوئی کلاؤڈ فولڈر نہیں ملا';
+
+  @override
   String get premium => 'پریمیم';
 
   @override

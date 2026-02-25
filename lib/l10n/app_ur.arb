@@ -911,6 +911,10 @@
   "restoreFromFileSubtitle": "مقامی فائل سے ریسٹور کریں",
   "backgroundRestoreStarted": "ریسٹور پس منظر میں شروع ہو گیا",
   "restoreSuccessfulFor": "{name} کے لیے ریسٹور کامیاب رہا",
+  "selectCloudFolder": "کلاؤڈ فولڈر منتخب کریں",
+  "selectCloudFolderSubtitle": "بیک اپ دیکھنے کے لیے کیش بک فولڈر منتخب کریں",
+  "cloudBackupsFor": "{name} کے بیک اپ",
+  "noCloudFoldersFound": "کوئی کلاؤڈ فولڈر نہیں ملا",
   "@restoreSuccessfulFor": {
     "placeholders": {
       "name": {

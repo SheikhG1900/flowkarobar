@@ -2732,6 +2732,21 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
+  String get selectCloudFolder => 'क्लाउड फ़ोल्डर चुनें';
+
+  @override
+  String get selectCloudFolderSubtitle =>
+      'बैकअप देखने के लिए कैशबुक फ़ोल्डर चुनें';
+
+  @override
+  String cloudBackupsFor(Object name) {
+    return '$name के लिए बैकअप';
+  }
+
+  @override
+  String get noCloudFoldersFound => 'कोई क्लाउड फ़ोल्डर नहीं मिला';
+
+  @override
   String get premium => 'प्रीमियम';
 
   @override

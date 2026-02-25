@@ -1387,6 +1387,10 @@
   "restoreFromFileSubtitle": "Restore from a local file",
   "backgroundRestoreStarted": "Restore started in background",
   "restoreSuccessfulFor": "Restore successful for {name}",
+  "selectCloudFolder": "Select Cloud Folder",
+  "selectCloudFolderSubtitle": "Choose a cashbook folder to see its backups",
+  "cloudBackupsFor": "Backups for {name}",
+  "noCloudFoldersFound": "No cloud folders found",
   "@restoreSuccessfulFor": {
     "placeholders": {
       "name": {

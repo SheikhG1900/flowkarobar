@@ -911,6 +911,10 @@
   "restoreFromFileSubtitle": "स्थानीय फ़ाइल से रिस्टोर करें",
   "backgroundRestoreStarted": "रिस्टोर बैकग्राउंड में शुरू हुआ",
   "restoreSuccessfulFor": "{name} के लिए रिस्टोर सफल रहा",
+  "selectCloudFolder": "क्लाउड फ़ोल्डर चुनें",
+  "selectCloudFolderSubtitle": "बैकअप देखने के लिए कैशबुक फ़ोल्डर चुनें",
+  "cloudBackupsFor": "{name} के लिए बैकअप",
+  "noCloudFoldersFound": "कोई क्लाउड फ़ोल्डर नहीं मिला",
   "@restoreSuccessfulFor": {
     "placeholders": {
       "name": {

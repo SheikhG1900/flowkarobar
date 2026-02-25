@@ -1,3 +1,4 @@
+import 'package:flowpaisa/core/utils/icon_helper.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
@@ -13,6 +14,8 @@ import 'package:flowpaisa/features/backup/data/local_backup_service.dart';
 import 'package:flowpaisa/features/backup/presentation/providers/backup_provider.dart';
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/shared/widgets/premium_badge.dart';
+import 'package:flowpaisa/shared/widgets/app_loading_indicator.dart';
+import 'package:flowpaisa/features/backup/presentation/screens/backup_screen.dart';
 import 'package:flowpaisa/shared/providers/database_provider.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:file_selector/file_selector.dart' as selector;
@@ -354,7 +357,12 @@ class CashbooksScreen extends ConsumerWidget {
                 Navigator.pop(context);
                 final backupState = ref.read(backupProvider);
                 if (backupState.currentUser == null) {
-                  Navigator.pushNamed(context, '/backup');
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const BackupScreen(),
+                    ),
+                  );
                 } else {
                   _showCloudRestoreSelection(context, ref, cashbook);
                 }
@@ -383,133 +391,251 @@ class CashbooksScreen extends ConsumerWidget {
       BuildContext context, WidgetRef ref, Cashbook cashbook) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final screenContext = context;
 
-    // Load backups for this specific cashbook
-    ref.read(backupProvider.notifier).loadBackupsForCashbook(cashbook.id);
+    // 1. First, show a selection of all available cloud cashbooks
+    ref.read(backupProvider.notifier).loadAvailableCashbooks();
 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.6,
-        minChildSize: 0.4,
-        maxChildSize: 0.9,
-        builder: (context, scrollController) => Container(
-          decoration: BoxDecoration(
-            color: theme.scaffoldBackgroundColor,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          ),
-          child: Column(
-            children: [
-              const SizedBox(height: 12),
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: theme.dividerColor,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(24),
-                child: Text(
-                  l10n.restoreFromCloud,
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
+      builder: (context) {
+        String? expandedCloudId; // Local state for expansion
+
+        return DraggableScrollableSheet(
+          initialChildSize: 0.6,
+          minChildSize: 0.4,
+          maxChildSize: 0.9,
+          builder: (context, scrollController) => Container(
+            decoration: BoxDecoration(
+              color: theme.scaffoldBackgroundColor,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            ),
+            child: StatefulBuilder(builder: (context, setState) {
+              return Column(
+              children: [
+                const SizedBox(height: 12),
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: theme.dividerColor,
+                    borderRadius: BorderRadius.circular(2),
                   ),
                 ),
-              ),
-              Expanded(
-                child: Consumer(
-                  builder: (context, ref, child) {
-                    final state = ref.watch(backupProvider);
-                    if (state.isLoading) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
-                    if (state.backups.isEmpty) {
-                      return Center(child: Text(l10n.noBackupsFound));
-                    }
-                    return ListView.builder(
-                      controller: scrollController,
-                      itemCount: state.backups.length,
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      itemBuilder: (context, index) {
-                        final backup = state.backups[index];
-                        final date = backup.createdTime != null
-                            ? AppDateFormatter.formatDateTime(
-                                backup.createdTime!)
-                            : 'Unknown Date';
-                        final size = backup.size != null
-                            ? '${(int.parse(backup.size!) / 1024 / 1024).toStringAsFixed(2)} MB'
-                            : 'Unknown Size';
-
-                        return Card(
-                          margin: const EdgeInsets.only(bottom: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            side: BorderSide(color: theme.dividerColor),
-                          ),
-                          child: ListTile(
-                            leading: const CircleAvatar(
-                              backgroundColor: Colors.blue,
-                              child: Icon(Icons.cloud_download,
-                                  color: Colors.white),
-                            ),
-                            title: Text(date),
-                            subtitle: Text(size),
-                            onTap: () async {
-                              final confirmed = await showDialog<bool>(
-                                context: context,
-                                builder: (context) => AlertDialog(
-                                  title: Text(l10n.restore),
-                                  content: Text(l10n.restoreBackupMessage),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () =>
-                                          Navigator.pop(context, false),
-                                      child: Text(l10n.cancel),
-                                    ),
-                                    FilledButton(
-                                      onPressed: () =>
-                                          Navigator.pop(context, true),
-                                      child: Text(l10n.restore),
-                                    ),
-                                  ],
-                                ),
-                              );
-
-                              if (confirmed == true && screenContext.mounted) {
-                                Navigator.pop(context); // Close sheet
-                                ToastUtils.showInfoToast(screenContext, ref,
-                                    l10n.backgroundRestoreStarted);
-
-                                // Fire and forget background restore
-                                () async {
-                                  try {
-                                    await ref
-                                        .read(backupProvider.notifier)
-                                        .restoreToCashbook(
-                                            backup.id!, cashbook.id,
-                                            l10n: l10n);
-                                  } catch (e) {
-                                    // Error handled by state listener
-                                  }
-                                }();
-                              }
-                            },
-                          ),
-                        );
-                      },
-                    );
-                  },
+                Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    children: [
+                      Text(
+                        l10n.selectCloudFolder,
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        l10n.selectCloudFolderSubtitle,
+                        style: theme.textTheme.bodySmall,
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+                Expanded(
+                  child: Consumer(
+                    builder: (context, ref, child) {
+                      final state = ref.watch(backupProvider);
+                      if (state.isLoading && expandedCloudId == null) {
+                        return const Center(child: AppLoadingIndicator(size: 50));
+                      }
+                      if (state.availableCashbookIds.isEmpty) {
+                        return Center(child: Text(l10n.noCloudFoldersFound));
+                      }
+                      return ListView.builder(
+                        controller: scrollController,
+                        itemCount: state.availableCashbookIds.length,
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        itemBuilder: (context, index) {
+                          final cloudId = state.availableCashbookIds[index];
+                          final metadata = state.cashbookMetadata[cloudId];
+                          final name = metadata?.name ?? cloudId;
+                          final color = metadata != null
+                              ? Color(int.parse(
+                                  metadata.color.replaceFirst('#', '0xFF')))
+                              : Colors.grey;
+                          final icon = metadata != null
+                              ? IconHelper.getIconData(metadata.icon)
+                              : Icons.folder_outlined;
+
+                          final isExpanded = expandedCloudId == cloudId;
+                          
+                          // The trailing widget: if this folder is expanded and loading, show small loader.
+                          // Otherwise, show expand_less or expand_more icon.
+                          Widget trailingWidget;
+                          if (isExpanded && state.isLoading) {
+                            trailingWidget = const SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: AppLoadingIndicator(size: 24),
+                            );
+                          } else {
+                            trailingWidget = Icon(isExpanded
+                                ? Icons.expand_less
+                                : Icons.expand_more);
+                          }
+
+                          return Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Card(
+                                margin: const EdgeInsets.only(bottom: 8),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  side: BorderSide(
+                                      color: isExpanded
+                                          ? color
+                                          : theme.dividerColor),
+                                ),
+                                child: ListTile(
+                                  leading: CircleAvatar(
+                                    backgroundColor: color.withValues(alpha: 0.1),
+                                    child: Icon(icon, color: color),
+                                  ),
+                                  title: Text(name),
+                                  subtitle: Text(cloudId == 'default'
+                                      ? 'Main Cashbook'
+                                      : 'ID: $cloudId'),
+                                  trailing: trailingWidget,
+                                  onTap: () {
+                                    if (isExpanded) {
+                                      setState(() => expandedCloudId = null);
+                                    } else {
+                                      setState(() => expandedCloudId = cloudId);
+                                      ref
+                                          .read(backupProvider.notifier)
+                                          .loadBackupsForCashbook(cloudId);
+                                    }
+                                 },
+                                ),
+                              ),
+                              if (isExpanded && !state.isLoading)
+                                Padding(
+                                  padding: const EdgeInsets.only(
+                                      left: 16, bottom: 16),
+                                  child: _buildBackupListInline(
+                                      context, ref, cashbook, cloudId, name),
+                                ),
+                            ],
+                          );
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ],
+            );
+          }),
+        ),
+      );
+      },
+    );
+  }
+
+  Widget _buildBackupListInline(BuildContext context, WidgetRef ref,
+      Cashbook targetCashbook, String cloudCashbookId, String cloudName) {
+    final state = ref.watch(backupProvider);
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+
+    if (state.backups.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Text(l10n.noBackupsFound, style: theme.textTheme.bodySmall),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8.0),
+          child: Text(
+            'Target: ${targetCashbook.name}',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: Colors.blue,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
-      ),
+        ...state.backups.map((backup) {
+          final date = backup.createdTime != null
+              ? AppDateFormatter.formatDateTime(backup.createdTime!)
+              : 'Unknown Date';
+          final size = backup.size != null
+              ? '${(int.parse(backup.size!) / 1024 / 1024).toStringAsFixed(2)} MB'
+              : 'Unknown Size';
+
+          return Card(
+            margin: const EdgeInsets.only(bottom: 8, right: 8),
+            elevation: 0,
+            color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: ListTile(
+              dense: true,
+              leading: const Icon(Icons.cloud_download,
+                  color: Colors.blue, size: 20),
+              title: Text(date, style: const TextStyle(fontSize: 13)),
+              subtitle: Text(size, style: const TextStyle(fontSize: 11)),
+              onTap: () async {
+                final confirmed = await showDialog<bool>(
+                  context: context,
+                  builder: (dialogContext) => AlertDialog(
+                    title: Text(l10n.restore),
+                    content: Text(l10n.restoreBackupMessage),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(dialogContext, false),
+                        child: Text(l10n.cancel),
+                      ),
+                      FilledButton(
+                        onPressed: () => Navigator.pop(dialogContext, true),
+                        child: Text(l10n.restore),
+                      ),
+                    ],
+                  ),
+                );
+
+                if (confirmed == true) {
+                  final rootNavigator = Navigator.of(context, rootNavigator: true);
+                  final backupId = backup.id!;
+                  final targetId = targetCashbook.id;
+                  final backupNotifier = ref.read(backupProvider.notifier);
+
+                  // Close the single sheet
+                  Navigator.of(context).pop();
+
+                  final rootContext = rootNavigator.context;
+                  if (rootContext.mounted) {
+                    ToastUtils.showInfoToast(
+                        rootContext, ref, l10n.backgroundRestoreStarted);
+                  }
+
+                  unawaited(() async {
+                    try {
+                      await backupNotifier.restoreToCashbook(backupId, targetId,
+                          l10n: l10n);
+                    } catch (e) {
+                      if (kDebugMode) print('Cloud restore failed: \$e');
+                    }
+                  }());
+                }
+              },
+            ),
+          );
+        }),
+      ],
     );
   }
 
@@ -564,7 +690,12 @@ class CashbooksScreen extends ConsumerWidget {
 
                 // If not signed in, redirect to backup screen
                 if (backupState.currentUser == null) {
-                  Navigator.pushNamed(context, '/backup');
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const BackupScreen(),
+                    ),
+                  );
                   return;
                 }
 
@@ -671,7 +802,7 @@ class CashbooksScreen extends ConsumerWidget {
       context: context,
       barrierDismissible: false,
       builder: (context) => const Center(
-        child: CircularProgressIndicator(),
+        child: AppLoadingIndicator(size: 50),
       ),
     );
 
@@ -915,7 +1046,12 @@ class CashbooksScreen extends ConsumerWidget {
             FilledButton(
               onPressed: () {
                 Navigator.pop(dialogContext);
-                Navigator.pushNamed(screenContext, '/backup');
+                Navigator.push(
+                  screenContext,
+                  MaterialPageRoute(
+                    builder: (context) => const BackupScreen(),
+                  ),
+                );
               },
               child: Text(l10n.googleDriveBackup),
             ),

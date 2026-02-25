@@ -932,6 +932,11 @@ class BackupNotifier extends Notifier<BackupState> {
     try {
       state = state.copyWith(isLoading: true, error: null);
 
+      if (kDebugMode) {
+        print('[BackupNotifier] Starting cloud restore for cashbook ID: $cashbookId');
+        print('[BackupNotifier] Cloud file ID: $fileId');
+      }
+
       // 1. Get the metadata from our cloud metadata map
       final metadata = state.cashbookMetadata[cashbookId];
       final cloudName = metadata?.name ??
@@ -940,6 +945,10 @@ class BackupNotifier extends Notifier<BackupState> {
       final cloudIcon =
           metadata?.icon ?? Symbols.account_balance_wallet.codePoint.toString();
 
+      if (kDebugMode) {
+        print('[BackupNotifier] Resolved cloud metadata: name=$cloudName, color=$cloudColor');
+      }
+
       // 2. Find if we already have this cashbook locally
       final cashbooks = ref.read(cashbooksProvider);
       final existing = cashbooks.where((c) => c.id == cashbookId).toList();
@@ -947,9 +956,9 @@ class BackupNotifier extends Notifier<BackupState> {
       String dbPath;
       if (existing.isNotEmpty) {
         dbPath = existing.first.dbPath;
+        if (kDebugMode) print('[BackupNotifier] Existing local cashbook found. dbPath: $dbPath');
       } else {
         // Create a NEW cashbook entry locally if it doesn't exist
-        // This prevents overwriting the active cashbook with data from a different one
         dbPath = 'cashbook_$cashbookId';
         final newCashbook = Cashbook(
           id: cashbookId,
@@ -959,24 +968,35 @@ class BackupNotifier extends Notifier<BackupState> {
           dbPath: dbPath,
           createdAt: DateTime.now(),
         );
-        // Add to local list
         await ref
             .read(cashbooksProvider.notifier)
             .addCashbookFromCloud(newCashbook);
-        if (kDebugMode) {
-          print(
-              'Created new local cashbook entry for cloud ID: $cashbookId with name: $cloudName, color: $cloudColor, icon: $cloudIcon');
-        }
+        if (kDebugMode) print('[BackupNotifier] Created new local cashbook entry for ID: $cashbookId');
       }
 
-      // 3. Restore the data to the correct file path
+      // 3. If active, we MUST close the database before repository.restore overwrites it
+      final isActive = ref.read(activeCashbookIdProvider) == cashbookId;
+      if (isActive) {
+        if (kDebugMode) print('[BackupNotifier] Active cashbook. Closing database connection...');
+        try {
+          final db = ref.read(databaseProvider);
+          await db.close();
+          if (kDebugMode) print('[BackupNotifier] Database closed successfully');
+        } catch (e) {
+          if (kDebugMode) print('[BackupNotifier] Warning: Error closing database: $e');
+        }
+        clearDatabaseCache();
+      }
+
+      // 4. Restore the data to the correct file path
+      if (kDebugMode) print('[BackupNotifier] Calling repository.restore...');
       await _repository.restore(fileId,
           fileName: dbPath, cashbookId: cashbookId);
+      if (kDebugMode) print('[BackupNotifier] repository.restore completed');
 
-      // 4. Invalidate providers to refresh UI
-      // If we restored to a different cashbook, the user will need to switch to it
-      // if it was the active one, refresh it
-      if (ref.read(activeCashbookIdProvider) == cashbookId) {
+      // 5. Invalidate providers to refresh UI
+      if (isActive) {
+        if (kDebugMode) print('[BackupNotifier] Invalidating providers to refresh UI...');
         ref.invalidate(databaseProvider);
         ref.invalidate(activeCashbookProvider);
       }
@@ -987,7 +1007,11 @@ class BackupNotifier extends Notifier<BackupState> {
             ? l10n.restoreSuccessfulFor(cloudName)
             : 'Restore successful for $cloudName',
       );
-    } catch (e) {
+    } catch (e, stack) {
+      if (kDebugMode) {
+        print('[BackupNotifier] Error during cloud restore: $e');
+        print('[BackupNotifier] Stack trace: $stack');
+      }
       state = state.copyWith(isLoading: false, lastErrorMessage: e.toString());
       rethrow;
     }
