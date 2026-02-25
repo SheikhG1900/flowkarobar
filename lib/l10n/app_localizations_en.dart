@@ -3168,6 +3168,41 @@ class AppLocalizationsEn extends AppLocalizations {
   String get signInRequiredForSync => 'Sign in with Google to sync';
 
   @override
+  String get clearCloud => 'Clear Cloud';
+
+  @override
+  String get clearCloudTitle => 'Clear Cloud Data';
+
+  @override
+  String clearCloudMessage(Object name) {
+    return 'Choose which cloud data you want to clear for \"$name\".';
+  }
+
+  @override
+  String get clearBackups => 'Clear all backups';
+
+  @override
+  String get clearBackupsSubtitle =>
+      'Deletes full database snapshots from Google Drive';
+
+  @override
+  String get clearSyncHistory => 'Clear sync history';
+
+  @override
+  String get clearSyncHistorySubtitle =>
+      'Resets sync manifest and deletes delta files';
+
+  @override
+  String get clearSelectedCloudData => 'Clear Selected Data';
+
+  @override
+  String get cloudDataCleared => 'Selected cloud data cleared successfully';
+
+  @override
+  String get deleteLocalOnlyNote =>
+      'Note: Your cloud backups and sync data will remain safe on Google Drive.';
+
+  @override
   String get alsoClearCloud => 'Also clear cloud backup';
 
   @override

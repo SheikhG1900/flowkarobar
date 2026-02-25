@@ -54,6 +54,48 @@ class BackupRepository {
     await prefs.setString(key, DateTime.now().toIso8601String());
   }
 
+  /// Clear granular cloud data
+  Future<void> clearCloudData(String cashbookId,
+      {required bool clearBackups, required bool clearSync}) async {
+    if (!_driveService.isSignedIn) {
+      throw Exception('User not signed in');
+    }
+
+    if (clearBackups && clearSync) {
+      // If both are selected, we can just delete the entire cashbook folder structure
+      // This is more efficient.
+      await _driveService.deleteCashbookFromCloud(cashbookId);
+    } else {
+      if (clearBackups) {
+        final folderId = await _driveService.getOrCreateBackupFolder(cashbookId);
+        final backups = await _driveService.listBackups(cashbookId: cashbookId);
+        for (final file in backups) {
+          if (file.id != null) {
+            await _driveService.deleteFile(file.id!);
+          }
+        }
+      }
+
+      if (clearSync) {
+        final folderId =
+            await _driveService.getOrCreateCashbookFolder(cashbookId);
+        // 1. Delete manifest
+        final manifestId =
+            await _driveService.getFileIdByName('manifest.json', folderId);
+        if (manifestId != null) {
+          await _driveService.deleteFile(manifestId);
+        }
+        // 2. Delete all delta files
+        final syncFiles = await _driveService.listSyncFiles(folderId);
+        for (final file in syncFiles) {
+          if (file.id != null) {
+            await _driveService.deleteFile(file.id!);
+          }
+        }
+      }
+    }
+  }
+
   /// Restore from backup
   Future<void> restore(String fileId, {String? fileName, String? cashbookId}) async {
     if (!_driveService.isSignedIn) {

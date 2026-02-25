@@ -3188,6 +3188,41 @@ class AppLocalizationsUr extends AppLocalizations {
       'سنک کرنے کے لیے گوگل کے ساتھ سائن ان کریں';
 
   @override
+  String get clearCloud => 'کلاؤڈ صاف کریں';
+
+  @override
+  String get clearCloudTitle => 'کلاؤڈ ڈیٹا صاف کریں';
+
+  @override
+  String clearCloudMessage(Object name) {
+    return 'منتخب کریں کہ آپ \"$name\" کے لیے کون سا کلاؤڈ ڈیٹا صاف کرنا چاہتے ہیں۔';
+  }
+
+  @override
+  String get clearBackups => 'تمام بیک اپ صاف کریں';
+
+  @override
+  String get clearBackupsSubtitle =>
+      'گوگل ڈرائیو سے مکمل ڈیٹا بیس اسنیپ شاٹس حذف کرتا ہے';
+
+  @override
+  String get clearSyncHistory => 'سنک ہسٹری صاف کریں';
+
+  @override
+  String get clearSyncHistorySubtitle =>
+      'سنک مینی فیسٹ کو ری سیٹ کرتا ہے اور ڈیلٹا فائلیں حذف کرتا ہے';
+
+  @override
+  String get clearSelectedCloudData => 'منتخب ڈیٹا صاف کریں';
+
+  @override
+  String get cloudDataCleared => 'منتخب کردہ کلاؤڈ ڈیٹا کامیابی سے صاف ہو گیا';
+
+  @override
+  String get deleteLocalOnlyNote =>
+      'نوٹ: آپ کے کلاؤڈ بیک اپ اور سنک ڈیٹا گوگل ڈرائیو پر محفوظ رہیں گے۔';
+
+  @override
   String get alsoClearCloud => 'کلاؤڈ بیک اپ بھی صاف کریں';
 
   @override

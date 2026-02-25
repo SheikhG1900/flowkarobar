@@ -5819,6 +5819,66 @@ abstract class AppLocalizations {
   /// **'Sign in with Google to sync'**
   String get signInRequiredForSync;
 
+  /// No description provided for @clearCloud.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear Cloud'**
+  String get clearCloud;
+
+  /// No description provided for @clearCloudTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear Cloud Data'**
+  String get clearCloudTitle;
+
+  /// No description provided for @clearCloudMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose which cloud data you want to clear for \"{name}\".'**
+  String clearCloudMessage(Object name);
+
+  /// No description provided for @clearBackups.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear all backups'**
+  String get clearBackups;
+
+  /// No description provided for @clearBackupsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Deletes full database snapshots from Google Drive'**
+  String get clearBackupsSubtitle;
+
+  /// No description provided for @clearSyncHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear sync history'**
+  String get clearSyncHistory;
+
+  /// No description provided for @clearSyncHistorySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Resets sync manifest and deletes delta files'**
+  String get clearSyncHistorySubtitle;
+
+  /// No description provided for @clearSelectedCloudData.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear Selected Data'**
+  String get clearSelectedCloudData;
+
+  /// No description provided for @cloudDataCleared.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected cloud data cleared successfully'**
+  String get cloudDataCleared;
+
+  /// No description provided for @deleteLocalOnlyNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Note: Your cloud backups and sync data will remain safe on Google Drive.'**
+  String get deleteLocalOnlyNote;
+
   /// No description provided for @alsoClearCloud.
   ///
   /// In en, this message translates to:

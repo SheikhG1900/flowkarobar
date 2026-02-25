@@ -523,4 +523,38 @@ class GoogleDriveService {
     );
     return list.files ?? [];
   }
+
+  /// Delete all cloud data for a specific cashbook
+  Future<void> deleteCashbookFromCloud(String cashbookId) async {
+    if (_driveApi == null) throw Exception('Drive API not initialized');
+
+    final rootFolderId = await _getOrCreateFolder('Flowpaisa Backups');
+    final syncFolderId =
+        await _getOrCreateFolder('Sync Data', parentId: rootFolderId);
+    final backupFolderId =
+        await _getOrCreateFolder('Backups', parentId: rootFolderId);
+
+    for (final parentId in [syncFolderId, backupFolderId]) {
+      final query =
+          "mimeType = 'application/vnd.google-apps.folder' and '$parentId' in parents and name contains '$cashbookId' and trashed = false";
+      final list =
+          await _driveApi!.files.list(q: query, spaces: 'appDataFolder');
+
+      if (list.files != null) {
+        for (final folder in list.files!) {
+          if (folder.id != null) {
+            // Delete all files inside first (optional but safer)
+            final children = await listAllFilesInFolder(folder.id!);
+            for (final child in children) {
+              if (child.id != null) {
+                await deleteFile(child.id!);
+              }
+            }
+            // Delete the folder itself
+            await deleteFile(folder.id!);
+          }
+        }
+      }
+    }
+  }
 }

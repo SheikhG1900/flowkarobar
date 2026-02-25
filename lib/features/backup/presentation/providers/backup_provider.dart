@@ -1278,6 +1278,31 @@ class BackupNotifier extends Notifier<BackupState> {
       rethrow;
     }
   }
+
+  Future<void> clearGranularCloudData(String cashbookId,
+      {required bool clearBackups, required bool clearSync}) async {
+    try {
+      state = state.copyWith(isLoading: true, error: null);
+      await _repository.clearCloudData(cashbookId,
+          clearBackups: clearBackups, clearSync: clearSync);
+
+      // If we cleared sync history, we should also reset local sync state for this cashbook
+      // to avoid version mismatches next time we sync.
+      if (clearSync) {
+        final activeCashbook = ref.read(activeCashbookProvider);
+        if (activeCashbook.id == cashbookId) {
+          await resetLocalSyncState();
+        }
+      }
+
+      await _loadAvailableCashbooks();
+      await _refreshVersions();
+      state = state.copyWith(isLoading: false);
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+      rethrow;
+    }
+  }
 }
 
 final backupProvider =

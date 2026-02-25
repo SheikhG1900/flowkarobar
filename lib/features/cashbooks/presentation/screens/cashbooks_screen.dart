@@ -171,6 +171,21 @@ class CashbooksScreen extends ConsumerWidget {
                                 ],
                               ),
                             ),
+                            PopupMenuItem(
+                              value: 'clear_cloud',
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.cloud_off_outlined,
+                                      size: 20, color: Colors.orange),
+                                  const SizedBox(width: 8),
+                                  Text(l10n.clearCloud,
+                                      style: const TextStyle(
+                                          color: Colors.orange)),
+                                  const SizedBox(width: 8),
+                                  const PremiumBadge(isSmall: true),
+                                ],
+                              ),
+                            ),
                             if (cashbook.id != 'default')
                               PopupMenuItem(
                                 value: 'delete',
@@ -277,6 +292,8 @@ class CashbooksScreen extends ConsumerWidget {
       );
     } else if (action == 'clear') {
       _showClearConfirmation(context, ref, cashbook);
+    } else if (action == 'clear_cloud') {
+      _showClearCloudDialog(context, ref, cashbook);
     } else if (action == 'delete') {
       _showDeleteConfirmation(context, ref, cashbook);
     }
@@ -443,78 +460,156 @@ class CashbooksScreen extends ConsumerWidget {
   void _showClearConfirmation(
       BuildContext context, WidgetRef ref, Cashbook cashbook) {
     final l10n = AppLocalizations.of(context)!;
+    final screenContext = context; // Store screen context
     showDialog(
       context: context,
-      builder: (context) {
-        bool shouldClearCloud = false;
-        return StatefulBuilder(builder: (context, setState) {
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Row(
+            children: [
+              const Icon(Icons.warning_amber, color: Colors.orange),
+              const SizedBox(width: 12),
+              Text(l10n.clearData),
+            ],
+          ),
+          content: Text(l10n.confirmDelete(cashbook.name)),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text(l10n.cancel),
+            ),
+            FilledButton(
+              onPressed: () async {
+                Navigator.pop(dialogContext);
+
+                await ref.read(cashbooksProvider.notifier).clearCashbookData(
+                    cashbook.id,
+                    context: screenContext,
+                    shouldClearCloud: false);
+
+                if (screenContext.mounted) {
+                  ToastUtils.showSuccessToast(
+                      screenContext, ref, l10n.cashbookUpdated);
+                }
+              },
+              style: FilledButton.styleFrom(
+                  backgroundColor: Colors.orange,
+                  foregroundColor: Colors.white),
+              child: Text(l10n.clearData),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showClearCloudDialog(
+      BuildContext context, WidgetRef ref, Cashbook cashbook) {
+    final l10n = AppLocalizations.of(context)!;
+    final screenContext = context; // Store screen context
+    final backupState = ref.watch(backupProvider);
+
+    // If not signed in, redirect to backup screen
+    if (backupState.currentUser == null) {
+      showDialog(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: Text(l10n.clearCloudTitle),
+          content: Text(l10n.signInGoogleToBackup),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text(l10n.cancel),
+            ),
+            FilledButton(
+              onPressed: () {
+                Navigator.pop(dialogContext);
+                Navigator.pushNamed(screenContext, '/backup');
+              },
+              child: Text(l10n.googleDriveBackup),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    // Check premium
+    if (!PremiumGate.isPremium(ref)) {
+      PremiumGate.showPremiumDialog(context);
+      return;
+    }
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        bool clearBackups = false;
+        bool clearSync = false;
+
+        return StatefulBuilder(builder: (builderContext, setState) {
           return AlertDialog(
             title: Row(
               children: [
-                const Icon(Icons.warning_amber, color: Colors.orange),
+                const Icon(Icons.cloud_off, color: Colors.orange),
                 const SizedBox(width: 12),
-                Text(l10n.clearData),
+                Text(l10n.clearCloudTitle),
               ],
             ),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(l10n.confirmDelete(cashbook.name)),
-                const SizedBox(height: 20),
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.orange.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                    border:
-                        Border.all(color: Colors.orange.withValues(alpha: 0.3)),
-                  ),
-                  child: CheckboxListTile(
-                    title: Text(
-                      l10n.alsoClearCloud,
-                      style: const TextStyle(
-                          fontSize: 14, fontWeight: FontWeight.bold),
-                    ),
-                    subtitle: Text(
-                      l10n.clearCloudSubtitle,
-                      style: const TextStyle(fontSize: 12),
-                    ),
-                    value: shouldClearCloud,
-                    onChanged: (val) =>
-                        setState(() => shouldClearCloud = val ?? false),
-                    controlAffinity: ListTileControlAffinity.leading,
-                    activeColor: Colors.orange,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 8),
-                  ),
+                Text(l10n.clearCloudMessage(cashbook.name)),
+                const SizedBox(height: 16),
+                CheckboxListTile(
+                  title: Text(l10n.clearBackups),
+                  subtitle: Text(l10n.clearBackupsSubtitle),
+                  value: clearBackups,
+                  onChanged: (val) => setState(() => clearBackups = val ?? false),
+                  activeColor: Colors.orange,
+                  contentPadding: EdgeInsets.zero,
+                ),
+                CheckboxListTile(
+                  title: Text(l10n.clearSyncHistory),
+                  subtitle: Text(l10n.clearSyncHistorySubtitle),
+                  value: clearSync,
+                  onChanged: (val) => setState(() => clearSync = val ?? false),
+                  activeColor: Colors.orange,
+                  contentPadding: EdgeInsets.zero,
                 ),
               ],
             ),
             actions: [
               TextButton(
-                onPressed: () => Navigator.pop(context),
+                onPressed: () => Navigator.pop(dialogContext),
                 child: Text(l10n.cancel),
               ),
               FilledButton(
-                onPressed: () async {
-                  // Store context before async call
-                  final currentContext = context;
-                  Navigator.pop(context);
-
-                  await ref.read(cashbooksProvider.notifier).clearCashbookData(
-                      cashbook.id,
-                      context: currentContext,
-                      shouldClearCloud: shouldClearCloud);
-
-                  if (currentContext.mounted) {
-                    final l10nSuccess = AppLocalizations.of(currentContext)!;
-                    ToastUtils.showSuccessToast(
-                        currentContext, ref, l10nSuccess.cashbookUpdated);
-                  }
-                },
+                onPressed: (!clearBackups && !clearSync)
+                    ? null
+                    : () async {
+                        Navigator.pop(dialogContext);
+                        try {
+                          await ref
+                              .read(backupProvider.notifier)
+                              .clearGranularCloudData(cashbook.id,
+                                  clearBackups: clearBackups,
+                                  clearSync: clearSync);
+                          if (screenContext.mounted) {
+                            ToastUtils.showSuccessToast(
+                                screenContext, ref, l10n.cloudDataCleared);
+                          }
+                        } catch (e) {
+                          if (screenContext.mounted) {
+                            ToastUtils.showErrorToast(screenContext, ref,
+                                l10n.errorOccurred(e.toString()));
+                          }
+                        }
+                      },
                 style: FilledButton.styleFrom(
                     backgroundColor: Colors.orange,
                     foregroundColor: Colors.white),
-                child: Text(l10n.clearData),
+                child: Text(l10n.clearSelectedCloudData),
               ),
             ],
           );
@@ -526,6 +621,7 @@ class CashbooksScreen extends ConsumerWidget {
   void _showDeleteConfirmation(
       BuildContext context, WidgetRef ref, Cashbook cashbook) {
     final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -536,7 +632,21 @@ class CashbooksScreen extends ConsumerWidget {
             Text(l10n.deleteCashbookTitle),
           ],
         ),
-        content: Text(l10n.deleteCashbookMessage(cashbook.name)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(l10n.deleteCashbookMessage(cashbook.name)),
+            const SizedBox(height: 16),
+            Text(
+              l10n.deleteLocalOnlyNote,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ],
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),

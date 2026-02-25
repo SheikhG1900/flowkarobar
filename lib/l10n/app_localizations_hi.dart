@@ -3181,6 +3181,41 @@ class AppLocalizationsHi extends AppLocalizations {
       'सिंक करने के लिए Google के साथ साइन इन करें';
 
   @override
+  String get clearCloud => 'क्लाउड साफ़ करें';
+
+  @override
+  String get clearCloudTitle => 'क्लाउड डेटा साफ़ करें';
+
+  @override
+  String clearCloudMessage(Object name) {
+    return '\"$name\" के लिए कौन सा क्लाउड डेटा आप साफ़ करना चाहते हैं चुनें।';
+  }
+
+  @override
+  String get clearBackups => 'सभी बैकअप साफ़ करें';
+
+  @override
+  String get clearBackupsSubtitle =>
+      'Google ड्राइव से पूर्ण डेटाबेस स्नैपशॉट हटाता है';
+
+  @override
+  String get clearSyncHistory => 'सिंक इतिहास साफ़ करें';
+
+  @override
+  String get clearSyncHistorySubtitle =>
+      'सिंक मेनिफेस्ट को रीसेट करता है और डेल्टा फ़ाइलें हटाता है';
+
+  @override
+  String get clearSelectedCloudData => 'चयनित डेटा साफ़ करें';
+
+  @override
+  String get cloudDataCleared => 'चयनित क्लाउड डेटा सफलतापूर्वक साफ़ किया गया';
+
+  @override
+  String get deleteLocalOnlyNote =>
+      'नोट: आपके क्लाउड बैकअप और सिंक डेटा Google ड्राइव पर सुरक्षित रहेंगे।';
+
+  @override
   String get alsoClearCloud => 'क्लाउड बैकअप भी साफ़ करें';
 
   @override
