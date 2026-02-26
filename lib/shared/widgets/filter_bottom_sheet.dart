@@ -85,7 +85,7 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
       _transactionType = null;
       _selectedCategoryUuids = [];
       _selectedContactUuids = [];
-       _selectedStatusCodes = [];
+      _selectedStatusCodes = [];
       _minAmountController.text = '';
       _maxAmountController.text = '';
       _filterByDueDate = false;
@@ -435,6 +435,11 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
           code: 'AUTO',
           label: l10n.autoBadge,
           color: theme.colorScheme.secondary,
+        ),
+        buildStatusChip(
+          code: 'SCHEDULED',
+          label: l10n.schedules,
+          color: Colors.blue,
         ),
       ],
     );
