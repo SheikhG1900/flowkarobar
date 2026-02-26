@@ -6,6 +6,7 @@ import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/features/backup/presentation/screens/backup_screen.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/shared/widgets/app_loading_indicator.dart';
+import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 class SyncStatusSection extends ConsumerStatefulWidget {
@@ -76,6 +77,18 @@ class _SyncStatusSectionState extends ConsumerState<SyncStatusSection>
   @override
   Widget build(BuildContext context) {
     final backupState = ref.watch(backupProvider);
+    final activeCashbookId = ref.watch(activeCashbookIdProvider);
+    
+    // Ignore cross-cashbook status updates by returning early if the 
+    // sync state does not belong to the currently active cashbook.
+    if (backupState.selectedCloudCashbookId != null && 
+        backupState.selectedCloudCashbookId != activeCashbookId) {
+      if (_animationController.value != 0) {
+        _animationController.reset();
+      }
+      return const SizedBox.shrink();
+    }
+
     final isPremium = PremiumGate.isPremium(ref);
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
@@ -95,12 +108,14 @@ class _SyncStatusSectionState extends ConsumerState<SyncStatusSection>
     final bool hasCloudUpdates = updatesCount > 0;
 
     final bool isSignedIn = backupState.currentUser != null;
-    if (kDebugMode) {
-      print('AW: cloudVer: $cloudVer');
-      print('AW: localVer: $localVer');
-      print('AW: syncStatus: ${backupState.syncStatus}');
-      print('AW: unsyncedCount: ${backupState.unsyncedCount}');
+
+    if (kDebugMode && (isSyncing || isSuccess || hasUnsynced || hasCloudUpdates)) {
+      print('[SyncStatusSection] Active Cashbook: $activeCashbookId');
+      print('[SyncStatusSection] Sync Status: ${backupState.syncStatus}');
+      print('[SyncStatusSection] Local Ver: $localVer | Cloud Ver: $cloudVer');
+      print('[SyncStatusSection] Unsynced Count: ${backupState.unsyncedCount}');
     }
+    
     // Hide section if nothing to sync, no updates available, and not in success/syncing state
     if (!isSyncing && !isSuccess && !hasUnsynced && !hasCloudUpdates) {
       if (_animationController.value != 0) {

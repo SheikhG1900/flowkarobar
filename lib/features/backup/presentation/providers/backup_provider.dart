@@ -164,6 +164,8 @@ class BackupState {
 class BackupNotifier extends Notifier<BackupState> {
   late GoogleDriveService _driveService;
   late BackupRepository _repository;
+  StreamSubscription<List<SyncMetadataData>>? _dbWatcherSubscription;
+  final List<StreamSubscription> _unsyncedCountSubscriptions = [];
 
   @override
   BackupState build() {
@@ -469,6 +471,12 @@ class BackupNotifier extends Notifier<BackupState> {
 
     // 3. Listen to unsynced counts
     try {
+      // Cancel previous subscriptions to avoid leaks when cashbook changes
+      for (final sub in _unsyncedCountSubscriptions) {
+        sub.cancel();
+      }
+      _unsyncedCountSubscriptions.clear();
+
       // We watch the tables using their specific generated classes to satisfy Drift's type system.
       // This is the most reliable way to get updates whenever any row in the table changes.
       final streams = [
@@ -487,7 +495,7 @@ class BackupNotifier extends Notifier<BackupState> {
           if (!ref.mounted) return;
           _updateTotalUnsyncedCount();
         });
-        ref.onDispose(() => subscription.cancel());
+        _unsyncedCountSubscriptions.add(subscription);
       }
     } catch (e) {
       if (kDebugMode) {
@@ -615,6 +623,11 @@ class BackupNotifier extends Notifier<BackupState> {
   }
 
   void _startDatabaseStatusWatcher() async {
+    // Cancel any existing subscription first to prevent memory leaks and multiple listeners
+    // updating the state with data from old databases when the active cashbook changes.
+    await _dbWatcherSubscription?.cancel();
+    _dbWatcherSubscription = null;
+
     final db = ref.read(databaseProvider);
     final deviceId = await _getDeviceId();
 
@@ -623,7 +636,7 @@ class BackupNotifier extends Notifier<BackupState> {
     }
 
     // Use a stream that watches the entire table to be more resilient
-    final subscription = db.select(db.syncMetadata).watch().listen((list) {
+    _dbWatcherSubscription = db.select(db.syncMetadata).watch().listen((list) {
       if (!ref.mounted) return;
 
       // Find the metadata for OUR device in the list
@@ -707,7 +720,10 @@ class BackupNotifier extends Notifier<BackupState> {
     });
 
     ref.onDispose(() {
-      subscription.cancel();
+      _dbWatcherSubscription?.cancel();
+      for (final sub in _unsyncedCountSubscriptions) {
+        sub.cancel();
+      }
     });
   }
 

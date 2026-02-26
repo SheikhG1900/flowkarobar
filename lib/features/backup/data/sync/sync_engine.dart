@@ -308,6 +308,10 @@ class SyncEngine {
               'SyncEngine: Manifest updated (Version: $nextVersion, Lock: Released).');
         }
 
+        // Local Cleanup MUST happen before we update the sync metadata to Success
+        // so that the UI correctly sees unsyncedCount = 0 when it gets the Success status.
+        await _markLocalChangesSynced(localChanges);
+
         // Update status to Success in SharedPreferences
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('sync_status_${_cashbook.id}', 'Success');
@@ -322,9 +326,6 @@ class SyncEngine {
 
         // Force a small delay to ensure SharedPreferences is flushed
         await Future.delayed(const Duration(milliseconds: 500));
-
-        // Local Cleanup
-        await _markLocalChangesSynced(localChanges);
       } catch (e) {
         if (kDebugMode) {
           print('SyncEngine: Error during commit phase: $e');
@@ -805,6 +806,8 @@ class SyncEngine {
 
   Future<void> _markLocalChangesSynced(
       Map<String, List<Map<String, dynamic>>> changes) async {
+    final updatedTables = <String>{};
+
     await _db.transaction(() async {
       // Enable WAL mode for this connection
       try {
@@ -820,6 +823,9 @@ class SyncEngine {
         if (tableName.startsWith('_')) continue; // Skip metadata like _summary
 
         final rows = entry.value;
+        if (rows.isNotEmpty) {
+          updatedTables.add(tableName);
+        }
         for (final row in rows) {
           final uuid = row['uuid'];
           await _db.customStatement(
@@ -829,6 +835,39 @@ class SyncEngine {
         }
       }
     });
+
+    // Notify drift of the changes so stream listeners update
+    if (updatedTables.isNotEmpty) {
+      final tableInfos = updatedTables
+          .map((name) {
+            switch (name) {
+              case 'categories':
+                return _db.categories;
+              case 'contacts':
+                return _db.contacts;
+              case 'transactions':
+                return _db.transactions;
+              case 'receivables':
+                return _db.receivables;
+              case 'payables':
+                return _db.payables;
+              case 'reminders':
+                return _db.reminders;
+              case 'app_currencies':
+                return _db.appCurrencies;
+              case 'transaction_schedules':
+                return _db.transactionSchedules;
+              default:
+                return null;
+            }
+          })
+          .whereType<TableInfo>()
+          .toSet();
+
+      if (tableInfos.isNotEmpty) {
+        _db.markTablesUpdated(tableInfos);
+      }
+    }
   }
 
   Future<void> _upsertRow(String tableName, Map<String, dynamic> data) async {
