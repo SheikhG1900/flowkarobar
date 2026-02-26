@@ -314,6 +314,33 @@ class ContactDetailsScreen extends ConsumerWidget {
                           ),
                           const SizedBox(height: 24),
 
+                          // Progress Bars
+                          if (stats.totalReceivable + stats.totalReceived > 0) ...[
+                            _buildProgressBar(
+                              context,
+                              title: l10n.receivedTag,
+                              completedAmount: stats.totalReceived,
+                              totalAmount: stats.totalReceivable + stats.totalReceived,
+                              color: AppColors.receivableColor,
+                              currencySymbol: currencySymbol,
+                              currencyDecimalPlaces: currencyDecimalPlaces,
+                            ),
+                            const SizedBox(height: 16),
+                          ],
+                          
+                          if (stats.totalPayable + stats.totalPaid > 0) ...[
+                            _buildProgressBar(
+                              context,
+                              title: l10n.paidTag,
+                              completedAmount: stats.totalPaid,
+                              totalAmount: stats.totalPayable + stats.totalPaid,
+                              color: AppColors.payableColor,
+                              currencySymbol: currencySymbol,
+                              currencyDecimalPlaces: currencyDecimalPlaces,
+                            ),
+                            const SizedBox(height: 16),
+                          ],
+
                           // Bulk process / pay / receive button
                           ...() {
                             final totalPendingCount =
@@ -611,6 +638,81 @@ class ContactDetailsScreen extends ConsumerWidget {
     );
   }
 
+  Widget _buildProgressBar(
+    BuildContext context, {
+    required String title,
+    required double completedAmount,
+    required double totalAmount,
+    required Color color,
+    required String currencySymbol,
+    required int currencyDecimalPlaces,
+  }) {
+    final theme = Theme.of(context);
+    final percent = totalAmount > 0 ? (completedAmount / totalAmount) : 0.0;
+    final safePercent = percent.clamp(0.0, 1.0);
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              title,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            Text(
+              '${(safePercent * 100).toStringAsFixed(1)}%',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: LinearProgressIndicator(
+            value: safePercent,
+            backgroundColor: color.withValues(alpha: 0.1),
+            valueColor: AlwaysStoppedAnimation<Color>(color),
+            minHeight: 8,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              AmountFormatter.formatWithCurrency(
+                completedAmount,
+                currencySymbol,
+                currencyDecimalPlaces,
+              ),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: color,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            Text(
+              AmountFormatter.formatWithCurrency(
+                totalAmount,
+                currencySymbol,
+                currencyDecimalPlaces,
+              ),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
   void _showDeleteDialog(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     showDialog(
@@ -701,9 +803,9 @@ class _BulkSettleSheetContentState extends State<_BulkSettleSheetContent> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final currencySymbol = widget.ref.read(currencySymbolProvider);
+    final currencySymbol = widget.ref.watch(currencySymbolProvider);
     final currencyDecimalPlaces =
-        widget.ref.read(currencyDecimalPlacesProvider);
+        widget.ref.watch(currencyDecimalPlacesProvider);
 
     return Padding(
       padding: EdgeInsets.only(

@@ -283,6 +283,24 @@ class ContactsRepository {
         .getSingle()
         .then((row) => row.read(_database.payables.amount.sum()) ?? 0.0);
 
+    // Get total received amount
+    final totalReceived = await (_database.selectOnly(_database.receivables)
+          ..addColumns([_database.receivables.amount.sum()])
+          ..where(_database.receivables.contactUuid.equals(contactUuid) &
+              _database.receivables.isDeleted.equals(false))
+          ..where(_database.receivables.status.equals('RECEIVED')))
+        .getSingle()
+        .then((row) => row.read(_database.receivables.amount.sum()) ?? 0.0);
+
+    // Get total paid amount
+    final totalPaid = await (_database.selectOnly(_database.payables)
+          ..addColumns([_database.payables.amount.sum()])
+          ..where(_database.payables.contactUuid.equals(contactUuid) &
+              _database.payables.isDeleted.equals(false))
+          ..where(_database.payables.status.equals('PAID')))
+        .getSingle()
+        .then((row) => row.read(_database.payables.amount.sum()) ?? 0.0);
+
     return ContactStatistics(
       contact: contact,
       transactionsCount: transactionsCount,
@@ -290,6 +308,8 @@ class ContactsRepository {
       payablesCount: payablesCount,
       totalReceivable: totalReceivable,
       totalPayable: totalPayable,
+      totalReceived: totalReceived,
+      totalPaid: totalPaid,
     );
   }
 
@@ -307,7 +327,7 @@ class ContactsRepository {
         throw Exception('Contact not found');
       }
 
-      // Get transactions count
+        // Get transactions count
       final transactionsCount = await (_database
               .selectOnly(_database.transactions)
             ..addColumns([_database.transactions.uuid.count()])
@@ -353,6 +373,24 @@ class ContactsRepository {
           .getSingle()
           .then((row) => row.read(_database.payables.amount.sum()) ?? 0.0);
 
+      // Get total received amount
+      final totalReceived = await (_database.selectOnly(_database.receivables)
+            ..addColumns([_database.receivables.amount.sum()])
+            ..where(_database.receivables.contactUuid.equals(contactUuid) &
+                _database.receivables.isDeleted.equals(false))
+            ..where(_database.receivables.status.equals('RECEIVED')))
+          .getSingle()
+          .then((row) => row.read(_database.receivables.amount.sum()) ?? 0.0);
+
+      // Get total paid amount
+      final totalPaid = await (_database.selectOnly(_database.payables)
+            ..addColumns([_database.payables.amount.sum()])
+            ..where(_database.payables.contactUuid.equals(contactUuid) &
+                _database.payables.isDeleted.equals(false))
+            ..where(_database.payables.status.equals('PAID')))
+          .getSingle()
+          .then((row) => row.read(_database.payables.amount.sum()) ?? 0.0);
+
       return ContactStatistics(
         contact: contact,
         transactionsCount: transactionsCount,
@@ -360,6 +398,8 @@ class ContactsRepository {
         payablesCount: payablesCount,
         totalReceivable: totalReceivable,
         totalPayable: totalPayable,
+        totalReceived: totalReceived,
+        totalPaid: totalPaid,
       );
     });
   }
@@ -378,7 +418,7 @@ class ContactWithUsage {
   });
 }
 
-/// Data class for contact statistics
+  /// Data class for contact statistics
 class ContactStatistics {
   final Contact contact;
   final int transactionsCount;
@@ -386,6 +426,8 @@ class ContactStatistics {
   final int payablesCount;
   final double totalReceivable;
   final double totalPayable;
+  final double totalReceived;
+  final double totalPaid;
 
   ContactStatistics({
     required this.contact,
@@ -394,6 +436,8 @@ class ContactStatistics {
     required this.payablesCount,
     required this.totalReceivable,
     required this.totalPayable,
+    this.totalReceived = 0.0,
+    this.totalPaid = 0.0,
   });
 
   double get netBalance => totalReceivable - totalPayable;
