@@ -685,6 +685,15 @@ class AppLocalizationsUr extends AppLocalizations {
       'نئی زبان لاگو کرنے کے لیے ایپ ری فریش ہو جائے گی';
 
   @override
+  String get connectGoogleDrive => 'Google Drive منسلک کریں';
+
+  @override
+  String get cloudBackupAccount => 'کلاؤڈ بیک اپ اکاؤنٹ';
+
+  @override
+  String get autofillFromGoogle => 'گوگل سے خودکار پُر کریں';
+
+  @override
   String get profile => 'پروفائل';
 
   @override

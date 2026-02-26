@@ -683,6 +683,15 @@ class AppLocalizationsHi extends AppLocalizations {
   String get appRefreshLanguage => 'नई भाषा लागू करने के लिए ऐप रिफ्रेश होगा';
 
   @override
+  String get connectGoogleDrive => 'Google Drive कनेक्ट करें';
+
+  @override
+  String get cloudBackupAccount => 'क्लाउड बैकअप खाता';
+
+  @override
+  String get autofillFromGoogle => 'Google से ऑटोफिल करें';
+
+  @override
   String get profile => 'प्रोफ़ाइल';
 
   @override

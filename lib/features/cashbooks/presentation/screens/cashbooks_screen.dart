@@ -250,17 +250,24 @@ class CashbooksScreen extends ConsumerWidget {
             child: Icon(Icons.schedule, color: theme.colorScheme.onTertiaryContainer),
           ),
           const SizedBox(width: 16),
-          if (ref.watch(backupProvider).currentUser != null) ...[
-            FloatingActionButton(
-              heroTag: 'add_cloud_cashbook',
-              backgroundColor: theme.colorScheme.secondaryContainer,
-              onPressed: () => _showCloudSelectionSheet(context, ref),
-              tooltip: l10n.addFromCloud,
-              child: Icon(Icons.cloud_download,
-                  color: theme.colorScheme.onSecondaryContainer),
-            ),
-            const SizedBox(width: 16),
-          ],
+          FloatingActionButton(
+            heroTag: 'add_cloud_cashbook',
+            backgroundColor: theme.colorScheme.secondaryContainer,
+            onPressed: () async {
+              final notifier = ref.read(backupProvider.notifier);
+              if (ref.read(backupProvider).currentUser == null) {
+                await notifier.signIn();
+                if (ref.read(backupProvider).currentUser == null) return; // Sign in failed or cancelled
+              }
+              if (context.mounted) {
+                _showCloudSelectionSheet(context, ref);
+              }
+            },
+            tooltip: l10n.addFromCloud,
+            child: Icon(Icons.cloud_download,
+                color: theme.colorScheme.onSecondaryContainer),
+          ),
+          const SizedBox(width: 16),
           FloatingActionButton(
             heroTag: 'add_local_cashbook',
             backgroundColor: theme.colorScheme.primary,
@@ -438,17 +445,14 @@ class CashbooksScreen extends ConsumerWidget {
               title: l10n.restoreFromCloud,
               subtitle: l10n.restoreFromCloudSubtitle,
               color: Colors.blue,
-              onTap: () {
+              onTap: () async {
                 Navigator.pop(context);
-                final backupState = ref.read(backupProvider);
-                if (backupState.currentUser == null) {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const BackupScreen(),
-                    ),
-                  );
-                } else {
+                final notifier = ref.read(backupProvider.notifier);
+                if (ref.read(backupProvider).currentUser == null) {
+                  await notifier.signIn();
+                  if (ref.read(backupProvider).currentUser == null) return; // Sign in failed or cancelled
+                }
+                if (context.mounted) {
                   _showCloudRestoreSelection(context, ref, cashbook);
                 }
               },

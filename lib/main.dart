@@ -550,6 +550,7 @@ class _DashboardTab extends ConsumerWidget {
     final activeColor = activeCashbook.color;
     final activeIcon = activeCashbook.icon;
     final activeForeColor = activeCashbook.foreColor(context);
+    final backupState = ref.watch(backupProvider);
 
     // Watch dashboard statistics and filter
     final dashboardStatsAsync = ref.watch(dashboardStatsProvider);
@@ -682,14 +683,14 @@ class _DashboardTab extends ConsumerWidget {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Row(
-                                          textDirection: TextDirection.ltr,
-                                          children: [
-                                            SvgPicture.asset(
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Row(
+                                            textDirection: TextDirection.ltr,
+                                            children: [
+                                              SvgPicture.asset(
                                                 'assets/images/logo_square.svg',
                                                 fit: BoxFit.contain,
                                                 height: 40,
@@ -703,30 +704,60 @@ class _DashboardTab extends ConsumerWidget {
                                                         theme.colorScheme
                                                             .onSurface,
                                                     BlendMode.srcIn)),
-                                            Transform.translate(
-                                              offset: const Offset(-4, 0),
-                                              child: Text(
-                                                'lowpaisa',
-                                                style: theme
-                                                    .textTheme.displaySmall
-                                                    ?.copyWith(
-                                                  fontSize: 24,
-                                                  fontWeight: FontWeight.w800,
-                                                  color: Color.lerp(
-                                                          theme.colorScheme
-                                                              .onSurface,
-                                                          theme.colorScheme
-                                                              .primary,
-                                                          .5) ??
-                                                      theme.colorScheme
-                                                          .onSurface,
+                                              Transform.translate(
+                                                offset: const Offset(-4, 0),
+                                                child: Text(
+                                                  'lowpaisa',
+                                                  style: theme
+                                                      .textTheme.displaySmall
+                                                      ?.copyWith(
+                                                    fontSize: 24,
+                                                    fontWeight: FontWeight.w800,
+                                                    color: Color.lerp(
+                                                            theme.colorScheme
+                                                                .onSurface,
+                                                            theme.colorScheme
+                                                                .primary,
+                                                            .5) ??
+                                                        theme.colorScheme
+                                                            .onSurface,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          if (backupState.currentUser?.photoUrl != null &&
+                                              backupState.currentUser!.photoUrl!.isNotEmpty)
+                                            GestureDetector(
+                                              onTap: () {
+                                                Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                    builder: (context) => const ProfileScreen(),
+                                                  ),
+                                                );
+                                              },
+                                              child: Container(
+                                                width: 32,
+                                                height: 32,
+                                                decoration: BoxDecoration(
+                                                  shape: BoxShape.circle,
+                                                  border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.5), width: 1.5),
+                                                ),
+                                                child: ClipOval(
+                                                  child: Image.network(
+                                                    backupState.currentUser!.photoUrl!,
+                                                    fit: BoxFit.cover,
+                                                    width: 32,
+                                                    height: 32,
+                                                    errorBuilder: (context, error, stackTrace) =>
+                                                        const Icon(Icons.person, size: 20),
+                                                  ),
                                                 ),
                                               ),
                                             ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
+                                        ],
+                                      ),
                                     const SizedBox(height: 4),
                                     Row(
                                       children: [
@@ -2197,6 +2228,7 @@ class _SettingsTab extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final isPremium = PremiumGate.isPremium(ref);
+    final backupState = ref.watch(backupProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -2210,7 +2242,27 @@ class _SettingsTab extends ConsumerWidget {
             tooltipBackgroundColor: theme.colorScheme.primary,
             textColor: theme.colorScheme.onPrimary,
             child: IconButton(
-              icon: const Icon(Icons.person_outline),
+              icon: (backupState.currentUser?.photoUrl != null &&
+                      backupState.currentUser!.photoUrl!.isNotEmpty)
+                  ? Container(
+                      width: 24,
+                      height: 24,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.5), width: 1),
+                      ),
+                      child: ClipOval(
+                        child: Image.network(
+                          backupState.currentUser!.photoUrl!,
+                          fit: BoxFit.cover,
+                          width: 24,
+                          height: 24,
+                          errorBuilder: (context, error, stackTrace) =>
+                              const Icon(Icons.person, size: 16),
+                        ),
+                      ),
+                    )
+                  : const Icon(Icons.person_outline),
               onPressed: () {
                 Navigator.push(
                   context,

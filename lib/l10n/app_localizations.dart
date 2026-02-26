@@ -1306,6 +1306,24 @@ abstract class AppLocalizations {
   /// **'The app will refresh to apply the new language'**
   String get appRefreshLanguage;
 
+  /// No description provided for @connectGoogleDrive.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect Google Drive'**
+  String get connectGoogleDrive;
+
+  /// No description provided for @cloudBackupAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud Backup Account'**
+  String get cloudBackupAccount;
+
+  /// No description provided for @autofillFromGoogle.
+  ///
+  /// In en, this message translates to:
+  /// **'Autofill from Google'**
+  String get autofillFromGoogle;
+
   /// No description provided for @profile.
   ///
   /// In en, this message translates to:

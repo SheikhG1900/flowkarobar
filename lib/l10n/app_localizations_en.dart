@@ -681,6 +681,15 @@ class AppLocalizationsEn extends AppLocalizations {
       'The app will refresh to apply the new language';
 
   @override
+  String get connectGoogleDrive => 'Connect Google Drive';
+
+  @override
+  String get cloudBackupAccount => 'Cloud Backup Account';
+
+  @override
+  String get autofillFromGoogle => 'Autofill from Google';
+
+  @override
   String get profile => 'Profile';
 
   @override

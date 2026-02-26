@@ -420,6 +420,9 @@
     }
   },
   "appRefreshLanguage": "The app will refresh to apply the new language",
+  "connectGoogleDrive": "Connect Google Drive",
+  "cloudBackupAccount": "Cloud Backup Account",
+  "autofillFromGoogle": "Autofill from Google",
   "profile": "Profile",
   "changePhoto": "Change Photo",
   "photoUploadComingSoon": "Photo upload coming soon!",

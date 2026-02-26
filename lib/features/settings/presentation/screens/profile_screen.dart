@@ -8,6 +8,7 @@ import 'package:flowpaisa/core/utils/date_formatter.dart';
 import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 import 'package:flowpaisa/features/currencies/presentation/screens/currencies_list_screen.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
+import 'package:flowpaisa/features/backup/presentation/providers/backup_provider.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -230,7 +231,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final profile = ref.watch(userProfileProvider);
+    final backupState = ref.watch(backupProvider);
+    final backupNotifier = ref.read(backupProvider.notifier);
     final theme = Theme.of(context);
+
+    final bool isGoogleSignedIn = backupState.currentUser != null;
+    final String? photoUrl = backupState.currentUser?.photoUrl;
 
     return Scaffold(
       appBar: AppBar(
@@ -253,41 +259,147 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               Center(
                 child: Stack(
                   children: [
-                    Container(
-                      width: 100,
-                      height: 100,
-                      decoration: BoxDecoration(
-                        gradient: AppColors.getContactGradient(
-                            _nameController.text.isEmpty
+                    if (isGoogleSignedIn && photoUrl != null && photoUrl.isNotEmpty)
+                      Container(
+                        width: 100,
+                        height: 100,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: theme.colorScheme.primary, width: 3),
+                          boxShadow: [
+                            BoxShadow(
+                              color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                              blurRadius: 20,
+                              offset: const Offset(0, 8),
+                            ),
+                          ],
+                        ),
+                        child: ClipOval(
+                          child: Image.network(
+                            photoUrl,
+                            fit: BoxFit.cover,
+                            width: 100,
+                            height: 100,
+                            errorBuilder: (context, error, stackTrace) =>
+                                const Icon(Icons.person, size: 50),
+                          ),
+                        ),
+                      )
+                    else
+                      Container(
+                        width: 100,
+                        height: 100,
+                        decoration: BoxDecoration(
+                          gradient: AppColors.getContactGradient(
+                              _nameController.text.isEmpty
+                                  ? (profile.name ?? '')
+                                  : _nameController.text),
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.getContactColor(
+                                      _nameController.text.isEmpty
+                                          ? (profile.name ?? '')
+                                          : _nameController.text)
+                                  .withValues(alpha: 0.3),
+                              blurRadius: 20,
+                              offset: const Offset(0, 8),
+                            ),
+                          ],
+                        ),
+                        child: Center(
+                          child: Text(
+                            NameUtils.getInitials(_nameController.text.isEmpty
                                 ? (profile.name ?? '')
                                 : _nameController.text),
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.getContactColor(
-                                    _nameController.text.isEmpty
-                                        ? (profile.name ?? '')
-                                        : _nameController.text)
-                                .withValues(alpha: 0.3),
-                            blurRadius: 20,
-                            offset: const Offset(0, 8),
-                          ),
-                        ],
-                      ),
-                      child: Center(
-                        child: Text(
-                          NameUtils.getInitials(_nameController.text.isEmpty
-                              ? (profile.name ?? '')
-                              : _nameController.text),
-                          style: TextStyle(
-                            fontSize: 36,
-                            fontWeight: FontWeight.bold,
-                            color: theme.colorScheme.onPrimary,
+                            style: TextStyle(
+                              fontSize: 36,
+                              fontWeight: FontWeight.bold,
+                              color: theme.colorScheme.onPrimary,
+                            ),
                           ),
                         ),
                       ),
-                    ),
                   ],
+                ),
+              ),
+              const SizedBox(height: 24),
+              
+              // Google Connect Card
+              Card(
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  side: BorderSide(color: theme.dividerColor),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.cloudBackupAccount,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      if (isGoogleSignedIn) ...[
+                        Row(
+                          children: [
+                            const Icon(Icons.cloud_done, color: Colors.green),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                backupState.currentUser!.email,
+                                style: theme.textTheme.bodyMedium,
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: () => backupNotifier.signOut(),
+                              child: Text(l10n.signOut),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton.icon(
+                            onPressed: () {
+                              setState(() {
+                                _nameController.text = backupState.currentUser!.displayName ?? '';
+                                _emailController.text = backupState.currentUser!.email;
+                              });
+                            },
+                            icon: const Icon(Icons.auto_awesome),
+                            label: Text(l10n.autofillFromGoogle),
+                          ),
+                        ),
+                      ] else ...[
+                        Row(
+                          children: [
+                            const Icon(Icons.cloud_off, color: Colors.grey),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                l10n.signInGoogleToBackup,
+                                style: theme.textTheme.bodySmall,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            onPressed: () => backupNotifier.signIn(),
+                            icon: const Icon(Icons.login),
+                            label: Text(l10n.connectGoogleDrive),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
                 ),
               ),
               const SizedBox(height: 32),
