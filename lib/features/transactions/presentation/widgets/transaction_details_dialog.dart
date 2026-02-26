@@ -150,20 +150,21 @@ class TransactionDetailsDialog extends ConsumerWidget {
                     ref.read(messageTemplateServiceProvider);
                 final capturedLanguage = getCurrentLanguageCode(ref);
 
-                ShareHelper.shareTransaction(
-                  context,
-                  ref,
-                  transaction,
-                  contact,
-                  category,
-                  item.isLinkedEntryMarked,
-                  currencyOverride: capturedCurrency,
-                  userProfileOverride: capturedUserProfile,
-                  transactionServiceOverride: capturedTransactionService,
-                  whatsAppServiceOverride: capturedWhatsAppService,
-                  templateServiceOverride: capturedTemplateService,
-                  languageOverride: capturedLanguage,
-                );
+                  ShareHelper.shareTransaction(
+                    context,
+                    ref,
+                    transaction,
+                    contact,
+                    category,
+                    item.isLinkedEntryMarked,
+                    currencyOverride: capturedCurrency,
+                    userProfileOverride: capturedUserProfile,
+                    transactionServiceOverride: capturedTransactionService,
+                    whatsAppServiceOverride: capturedWhatsAppService,
+                    templateServiceOverride: capturedTemplateService,
+                    languageOverride: capturedLanguage,
+                    forceSystemShare: true,
+                  );
               },
             ),
           // Duplicate button
@@ -519,45 +520,48 @@ class TransactionDetailsDialog extends ConsumerWidget {
                 const SizedBox(height: 16),
               ],
               // Category Section
-              InkWell(
-                onTap: category != null
-                    ? () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => CategoryDetailsScreen(
-                              categoryUuid: category.uuid,
-                            ),
-                          ),
-                        );
-                      }
-                    : null,
-                borderRadius: BorderRadius.circular(16),
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
+              Container(
+                decoration: BoxDecoration(
+                  color: category != null
+                      ? Color(int.parse(
+                              category.color!.replaceAll('#', '0xFF')))
+                          .withValues(alpha: 0.1)
+                      : (isExpense
+                              ? AppColors.expenseColor
+                              : AppColors.incomeColor)
+                          .withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
                     color: category != null
                         ? Color(int.parse(
                                 category.color!.replaceAll('#', '0xFF')))
-                            .withValues(alpha: 0.1)
+                            .withValues(alpha: 0.3)
                         : (isExpense
                                 ? AppColors.expenseColor
                                 : AppColors.incomeColor)
-                            .withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: category != null
-                          ? Color(int.parse(
-                                  category.color!.replaceAll('#', '0xFF')))
-                              .withValues(alpha: 0.3)
-                          : (isExpense
-                                  ? AppColors.expenseColor
-                                  : AppColors.incomeColor)
-                              .withValues(alpha: 0.3),
-                      width: 1,
-                    ),
+                            .withValues(alpha: 0.3),
+                    width: 1,
                   ),
-                  child: Row(
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: category != null
+                        ? () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => CategoryDetailsScreen(
+                                  categoryUuid: category.uuid,
+                                ),
+                              ),
+                            );
+                          }
+                        : null,
+                    borderRadius: BorderRadius.circular(16),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Row(
                     children: [
                       Container(
                         width: 48,
@@ -620,6 +624,8 @@ class TransactionDetailsDialog extends ConsumerWidget {
                   ),
                 ),
               ),
+            ),
+          ),
               const SizedBox(height: 24),
               const Divider(),
               const SizedBox(height: 16),

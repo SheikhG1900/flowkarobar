@@ -29,6 +29,7 @@ class ShareHelper {
     dynamic whatsAppServiceOverride,
     dynamic templateServiceOverride,
     String? languageOverride,
+    bool forceSystemShare = false,
   }) async {
     final currency =
         currencyOverride ?? ref?.read(currentCurrencyProvider).value!;
@@ -38,7 +39,7 @@ class ShareHelper {
     final transactionService =
         transactionServiceOverride ?? ref?.read(transactionServiceProvider);
 
-    if (contact != null && contact.phone != null && contact.phone.isNotEmpty) {
+    if (!forceSystemShare && contact != null && contact.phone != null && contact.phone.isNotEmpty) {
       await _sendWhatsAppPayable(
         context,
         ref,
@@ -75,6 +76,7 @@ class ShareHelper {
     dynamic whatsAppServiceOverride,
     dynamic templateServiceOverride,
     String? languageOverride,
+    bool forceSystemShare = false,
   }) async {
     final currency =
         currencyOverride ?? ref?.read(currentCurrencyProvider).value!;
@@ -84,7 +86,7 @@ class ShareHelper {
     final transactionService =
         transactionServiceOverride ?? ref?.read(transactionServiceProvider);
 
-    if (contact != null && contact.phone != null && contact.phone.isNotEmpty) {
+    if (!forceSystemShare && contact != null && contact.phone != null && contact.phone.isNotEmpty) {
       await _sendWhatsAppReceivable(
         context,
         ref,
@@ -124,6 +126,7 @@ class ShareHelper {
     dynamic templateServiceOverride,
     String? languageOverride,
     ProviderContainer? container, // Add container for background sharing
+    bool forceSystemShare = false,
   }) async {
     final currency =
         currencyOverride ?? (container?.read(currentCurrencyProvider).value ?? ref?.read(currentCurrencyProvider).value!);
@@ -133,7 +136,7 @@ class ShareHelper {
     final transactionService =
         transactionServiceOverride ?? (container?.read(transactionServiceProvider) ?? ref?.read(transactionServiceProvider));
 
-    if (contact != null && contact.phone != null && contact.phone.isNotEmpty) {
+    if (!forceSystemShare && contact != null && contact.phone != null && contact.phone.isNotEmpty) {
       if (isMarked && context.mounted) {
         if (transaction.linkedReceivableUuid != null) {
           // It's a receivable that was marked as RECEIVED
@@ -152,6 +155,7 @@ class ShareHelper {
               whatsAppServiceOverride: whatsAppService,
               templateServiceOverride: templateServiceOverride,
               languageOverride: languageOverride,
+              forceSystemShare: forceSystemShare,
             );
           }
         } else if (transaction.linkedPayableUuid != null) {
@@ -171,6 +175,7 @@ class ShareHelper {
               whatsAppServiceOverride: whatsAppService,
               templateServiceOverride: templateServiceOverride,
               languageOverride: languageOverride,
+              forceSystemShare: forceSystemShare,
             );
           }
         }
