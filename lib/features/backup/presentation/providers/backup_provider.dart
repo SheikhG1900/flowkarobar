@@ -900,6 +900,39 @@ class BackupNotifier extends Notifier<BackupState> {
     }
   }
 
+  Future<bool> signInIfNeeded() async {
+    // Already signed in
+    if (state.currentUser != null) return true;
+
+    state = state.copyWith(isLoading: true);
+    try {
+      // First try to sign in silently
+      final account = await _driveService.init();
+      
+      if (account != null) {
+        state = state.copyWith(
+          isLoading: false,
+          currentUser: account,
+        );
+        return true;
+      }
+
+      // If silent sign in fails, trigger the explicit sign in popup
+      final explicitAccount = await _driveService.signIn();
+      state = state.copyWith(
+        isLoading: false,
+        currentUser: explicitAccount,
+      );
+      return explicitAccount != null;
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: e.toString(),
+      );
+      return false;
+    }
+  }
+
   Future<void> signOut() async {
     await _driveService.signOut();
     state = BackupState.initial(); // Reset
@@ -1065,6 +1098,8 @@ class BackupNotifier extends Notifier<BackupState> {
             color: cashbook.colorCode,
             icon: cashbook.iconCodePoint,
           );
+        } else if (e.toString().contains('storage quota has been exceeded') || e.toString().contains('quotaExceeded')) {
+          throw Exception("Google Drive storage is full. Please free up some space and try again.");
         } else {
           rethrow;
         }

@@ -30,17 +30,22 @@ class NotificationsScreen extends ConsumerWidget {
               },
               child: Text(l10n.markAllRead),
             ),
-            IconButton(
-              onPressed: () => _showClearConfirmation(context, ref, l10n),
-              icon: const Icon(Icons.delete_sweep_outlined),
-              tooltip: l10n.clearAll,
-            ),
           ],
         ],
       ),
       body: notifications.isEmpty
           ? _buildEmptyState(context, theme, l10n)
           : _buildNotificationsList(context, theme, notifications, notifier),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButton: notifications.isNotEmpty
+          ? FloatingActionButton(
+              onPressed: () => _showClearConfirmation(context, ref, l10n),
+              backgroundColor: Colors.red.withValues(alpha: 0.9),
+              foregroundColor: Colors.white,
+              tooltip: l10n.clearAll,
+              child: const Icon(Icons.delete_sweep_outlined),
+            )
+          : null,
     );
   }
 

@@ -22,7 +22,7 @@ class GoogleDriveService {
   bool get isDriveApiInitialized => _driveApi != null;
 
   /// Initialize and try to sign in silently
-  Future<void> init() async {
+  Future<GoogleSignInAccount?> init() async {
     _googleSignIn.onCurrentUserChanged.listen((account) {
       _currentUser = account;
     });
@@ -33,10 +33,12 @@ class GoogleDriveService {
         _currentUser = account;
         await _initializeDriveApi();
       }
+      return account;
     } catch (e) {
       if (kDebugMode) {
         print('Silent sign-in failed: $e');
       }
+      return null;
     }
   }
 
@@ -53,7 +55,8 @@ class GoogleDriveService {
       if (kDebugMode) {
         print('Sign in failed: $e');
       }
-      rethrow;
+      // rethrow; // Don't rethrow, just return null so the UI can handle it gracefully
+      return null;
     }
   }
 
@@ -285,6 +288,9 @@ class GoogleDriveService {
     } catch (e) {
       if (kDebugMode) {
         print('Upload failed in GoogleDriveService: $e');
+      }
+      if (e.toString().contains('storage quota has been exceeded') || e.toString().contains('quotaExceeded')) {
+        throw Exception('Google Drive storage is full. Please free up some space and try again.');
       }
       rethrow;
     }

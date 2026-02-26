@@ -243,16 +243,18 @@ class _SyncStatusSectionState extends ConsumerState<SyncStatusSection>
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: IconButton(
-                    onPressed: () {
-                      if (isPremium && isSignedIn) {
-                        ref.read(backupProvider.notifier).triggerSync(l10n);
+                    onPressed: () async {
+                      if (isPremium) {
+                        if (isSignedIn) {
+                          ref.read(backupProvider.notifier).triggerSync(l10n);
+                        } else {
+                          final success = await ref.read(backupProvider.notifier).signInIfNeeded();
+                          if (success) {
+                            ref.read(backupProvider.notifier).triggerSync(l10n);
+                          }
+                        }
                       } else {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const BackupScreen(),
-                          ),
-                        );
+                        PremiumGate.showPremiumDialog(context);
                       }
                     },
                     icon: Icon(

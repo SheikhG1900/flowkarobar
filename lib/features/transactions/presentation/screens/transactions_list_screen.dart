@@ -1066,11 +1066,23 @@ class _TransactionListSummaryContent extends ConsumerWidget {
     final isHigher = isReceivableHigher;
     final label = isHigher ? labelWhenHigher : labelWhenLower;
     final gradient = isHigher ? gradientWhenHigher : gradientWhenLower;
+
+    final transparentGradient = LinearGradient(
+      colors: gradient.colors.map((c) => c.withValues(alpha: 0.3)).toList(),
+      begin: gradient.begin,
+      end: gradient.end,
+      stops: gradient.stops,
+    );
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        gradient: gradient,
+        gradient: transparentGradient,
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: gradient.colors.first.withValues(alpha: 0.5),
+          width: 1,
+        ),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1078,7 +1090,6 @@ class _TransactionListSummaryContent extends ConsumerWidget {
           Text(
             label,
             style: theme.textTheme.labelMedium?.copyWith(
-              color: Colors.white,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -1086,7 +1097,6 @@ class _TransactionListSummaryContent extends ConsumerWidget {
             AmountFormatter.formatWithCurrency(
                 amount, currencySymbol, decimalPlaces),
             style: theme.textTheme.titleSmall?.copyWith(
-              color: Colors.white,
               fontWeight: FontWeight.bold,
             ),
           ),

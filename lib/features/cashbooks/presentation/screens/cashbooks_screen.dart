@@ -256,8 +256,8 @@ class CashbooksScreen extends ConsumerWidget {
             onPressed: () async {
               final notifier = ref.read(backupProvider.notifier);
               if (ref.read(backupProvider).currentUser == null) {
-                await notifier.signIn();
-                if (ref.read(backupProvider).currentUser == null) return; // Sign in failed or cancelled
+                final success = await notifier.signInIfNeeded();
+                if (!success) return; // Sign in failed or cancelled
               }
               if (context.mounted) {
                 _showCloudSelectionSheet(context, ref);
@@ -449,8 +449,8 @@ class CashbooksScreen extends ConsumerWidget {
                 Navigator.pop(context);
                 final notifier = ref.read(backupProvider.notifier);
                 if (ref.read(backupProvider).currentUser == null) {
-                  await notifier.signIn();
-                  if (ref.read(backupProvider).currentUser == null) return; // Sign in failed or cancelled
+                  final success = await notifier.signInIfNeeded();
+                  if (!success) return; // Sign in failed or cancelled
                 }
                 if (context.mounted) {
                   _showCloudRestoreSelection(context, ref, cashbook);
@@ -717,6 +717,9 @@ class CashbooksScreen extends ConsumerWidget {
                           l10n: l10n);
                     } catch (e) {
                       if (kDebugMode) print('Cloud restore failed: \$e');
+                      if (rootContext.mounted) {
+                        ToastUtils.showErrorToast(rootContext, ref, l10n.errorOccurred(e.toString().replaceAll('Exception: ', '')));
+                      }
                     }
                   }());
                 }
@@ -777,15 +780,12 @@ class CashbooksScreen extends ConsumerWidget {
                   return;
                 }
 
-                // If not signed in, redirect to backup screen
+                // If not signed in, attempt to sign in
                 if (backupState.currentUser == null) {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const BackupScreen(),
-                    ),
-                  );
-                  return;
+                  final success = await backupNotifier.signInIfNeeded();
+                  if (!success) {
+                    return; // Sign in failed or cancelled
+                  }
                 }
 
                 // Run backup in background without busy dialog
@@ -801,7 +801,9 @@ class CashbooksScreen extends ConsumerWidget {
                   try {
                     await backupNotifier.backup(l10n, targetCashbook: cashbook);
                   } catch (e) {
-                    // Error is already handled in the provider state
+                    if (screenContext.mounted) {
+                      ToastUtils.showErrorToast(screenContext, ref, l10n.errorOccurred(e.toString().replaceAll('Exception: ', '')));
+                    }
                   }
                 }();
               },
@@ -1115,39 +1117,18 @@ class CashbooksScreen extends ConsumerWidget {
   }
 
   void _showClearCloudDialog(
-      BuildContext context, WidgetRef ref, Cashbook cashbook) {
+      BuildContext context, WidgetRef ref, Cashbook cashbook) async {
     final l10n = AppLocalizations.of(context)!;
     final screenContext = context; // Store screen context
     final backupState = ref.watch(backupProvider);
+    final backupNotifier = ref.read(backupProvider.notifier);
 
-    // If not signed in, redirect to backup screen
+    // If not signed in, attempt to sign in
     if (backupState.currentUser == null) {
-      showDialog(
-        context: context,
-        builder: (dialogContext) => AlertDialog(
-          title: Text(l10n.clearCloudTitle),
-          content: Text(l10n.signInGoogleToBackup),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: Text(l10n.cancel),
-            ),
-            FilledButton(
-              onPressed: () {
-                Navigator.pop(dialogContext);
-                Navigator.push(
-                  screenContext,
-                  MaterialPageRoute(
-                    builder: (context) => const BackupScreen(),
-                  ),
-                );
-              },
-              child: Text(l10n.googleDriveBackup),
-            ),
-          ],
-        ),
-      );
-      return;
+      final success = await backupNotifier.signInIfNeeded();
+      if (!success) {
+        return; // Sign in failed or cancelled
+      }
     }
 
     // Check premium
