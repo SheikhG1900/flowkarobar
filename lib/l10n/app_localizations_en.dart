@@ -3311,4 +3311,8 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get addFromCloud => 'Add from Cloud';
+
+  @override
+  String get bulkProcessConfirmation =>
+      'Are you sure you want to process all outstanding items for this contact?';
 }

@@ -3325,4 +3325,8 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get addFromCloud => 'क्लाउड से जोड़ें';
+
+  @override
+  String get bulkProcessConfirmation =>
+      'क्या आप वाकई इस संपर्क के लिए सभी बकाया आइटम प्रोसेस करना चाहते हैं?';
 }

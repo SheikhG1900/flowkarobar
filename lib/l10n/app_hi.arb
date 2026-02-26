@@ -1268,5 +1268,6 @@
   "alsoClearCloud": "क्लाउड बैकअप भी साफ़ करें",
   "clearCloudSubtitle": "केवल इसी कैशबुक के लिए Google ड्राइव से इतिहास साफ़ करता है",
   "addCloudCashbook": "क्लाउड कैशबुक जोड़ें",
-  "addFromCloud": "क्लाउड से जोड़ें"
+  "addFromCloud": "क्लाउड से जोड़ें",
+  "bulkProcessConfirmation": "क्या आप वाकई इस संपर्क के लिए सभी बकाया आइटम प्रोसेस करना चाहते हैं?"
 }

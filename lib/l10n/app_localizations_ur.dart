@@ -3332,4 +3332,8 @@ class AppLocalizationsUr extends AppLocalizations {
 
   @override
   String get addFromCloud => 'کلاؤڈ سے شامل کریں';
+
+  @override
+  String get bulkProcessConfirmation =>
+      'کیا آپ واقعی اس رابطے کے لیے تمام بقایا آئٹمز پروسیس کرنا چاہتے ہیں؟';
 }

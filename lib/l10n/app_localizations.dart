@@ -6076,6 +6076,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add from Cloud'**
   String get addFromCloud;
+
+  /// No description provided for @bulkProcessConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to process all outstanding items for this contact?'**
+  String get bulkProcessConfirmation;
 }
 
 class _AppLocalizationsDelegate

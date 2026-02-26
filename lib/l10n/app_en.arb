@@ -1758,5 +1758,6 @@
   "alsoClearCloud": "Also clear cloud backup",
   "clearCloudSubtitle": "Wipes history from Google Drive for this cashbook only",
   "addCloudCashbook": "Add Cloud Cashbook",
-  "addFromCloud": "Add from Cloud"
+  "addFromCloud": "Add from Cloud",
+  "bulkProcessConfirmation": "Are you sure you want to process all outstanding items for this contact?"
 }

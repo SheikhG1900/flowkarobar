@@ -377,7 +377,7 @@ class ContactDetailsScreen extends ConsumerWidget {
                                 ? Icons.download_done
                                 : netBalance < 0
                                     ? Icons.upload
-                                    : Icons.auto_awesome;
+                                    : Icons.swap_horizontal_circle;
 
                             return <Widget>[
                               SizedBox(
@@ -411,11 +411,9 @@ class ContactDetailsScreen extends ConsumerWidget {
                                                 AlertDialog(
                                               title:
                                                   Text(l10n.bulkProcessInBulk),
-                                              content: Text(
-                                                l10n.premiumRequired.replaceFirst(
-                                                    'subscription',
-                                                    'processing'), // reuse text
-                                              ),
+                                                  content: Text(
+                                                    l10n.bulkProcessConfirmation,
+                                                  ),
                                               actions: [
                                                 TextButton(
                                                   onPressed: () =>
