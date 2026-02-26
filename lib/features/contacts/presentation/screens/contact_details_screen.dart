@@ -157,6 +157,7 @@ class ContactDetailsScreen extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    const SizedBox(height: 16),
                     // Net Balance Card: full width, amount and badge centered
                     Container(
                       width: double.infinity,
