@@ -666,41 +666,68 @@ class ContactDetailsScreen extends ConsumerWidget {
     // Create the text row that will be used for both the background and foreground
     Widget buildTextRow(Color completedColor, Color percentageColor, Color totalColor) {
       return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        child: Stack(
-          alignment: Alignment.center,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                // Completed amount (left)
-                Text(
-                  formattedCompleted,
-                  style: TextStyle(
-                    color: completedColor,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13,
+            // Title and Completed amount (left)
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      color: completedColor.withValues(alpha: 0.8),
+                      fontWeight: FontWeight.w600,
+                      fontSize: 11,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                ),
-                // Total amount (right)
-                Text(
-                  formattedTotal,
-                  style: TextStyle(
-                    color: totalColor,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 13,
+                  Text(
+                    formattedCompleted,
+                    style: TextStyle(
+                      color: completedColor,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-            // Percentage (middle)
-            Text(
-              '${(safePercent * 100).toStringAsFixed(1)}%',
-              style: TextStyle(
-                color: percentageColor,
-                fontWeight: FontWeight.bold,
-                fontSize: 12,
+            const SizedBox(width: 48), // Space for the center badge
+            // Total amount (right)
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Total',
+                    style: TextStyle(
+                      color: totalColor.withValues(alpha: 0.8),
+                      fontWeight: FontWeight.w500,
+                      fontSize: 11,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Text(
+                    formattedTotal,
+                    style: TextStyle(
+                      color: totalColor,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
               ),
             ),
           ],
@@ -708,61 +735,71 @@ class ContactDetailsScreen extends ConsumerWidget {
       );
     }
     
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: theme.textTheme.bodyMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-            color: theme.colorScheme.onSurface,
+    return Container(
+      height: 64, // Expanded vertically to accommodate title and amounts
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Stack(
+        children: [
+          // Base text (visible on the un-filled portion)
+          Align(
+            alignment: Alignment.center,
+            child: buildTextRow(
+              color, // Completed amount color
+              theme.colorScheme.onSurfaceVariant, // Percentage color
+              theme.colorScheme.onSurfaceVariant, // Total amount color
+            ),
           ),
-        ),
-        const SizedBox(height: 8),
-        Container(
-          height: 32,
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Stack(
-            children: [
-              // Base text (visible on the un-filled portion)
-              Align(
-                alignment: Alignment.center,
-                child: buildTextRow(
-                  color, // Completed amount color
-                  theme.colorScheme.onSurfaceVariant, // Percentage color
-                  theme.colorScheme.onSurfaceVariant, // Total amount color
+          // The progress fill with clipping for the text inside it
+          ClipRect(
+            child: Align(
+              alignment: Alignment.centerLeft,
+              widthFactor: safePercent,
+              child: Container(
+                width: double.infinity, // Ensure the container takes full width before clipping
+                decoration: BoxDecoration(
+                  color: color,
+                  borderRadius: BorderRadius.circular(20),
                 ),
-              ),
-              // The progress fill with clipping for the text inside it
-              ClipRect(
                 child: Align(
-                  alignment: Alignment.centerLeft,
-                  widthFactor: safePercent,
-                  child: Container(
-                    width: double.infinity, // Ensure the container takes full width before clipping
-                    decoration: BoxDecoration(
-                      color: color,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Align(
-                      alignment: Alignment.center,
-                      // The text inside the filled portion (always white)
-                      child: buildTextRow(
-                        Colors.white,
-                        Colors.white,
-                        Colors.white,
-                      ),
-                    ),
+                  alignment: Alignment.center,
+                  // The text inside the filled portion (always white)
+                  child: buildTextRow(
+                    Colors.white,
+                    Colors.white,
+                    Colors.white,
                   ),
                 ),
               ),
-            ],
+            ),
           ),
-        ),
-      ],
+          // Percentage badge floating in the middle
+          Align(
+            alignment: Alignment.center,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: theme.cardColor.withValues(alpha: 0.9),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: color.withValues(alpha: 0.3),
+                  width: 1,
+                ),
+              ),
+              child: Text(
+                '${(safePercent * 100).toStringAsFixed(1)}%',
+                style: TextStyle(
+                  color: color,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
