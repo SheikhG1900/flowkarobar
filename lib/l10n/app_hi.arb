@@ -57,6 +57,15 @@
   "cancel": "रद्द करें",
   "delete": "हटाएं",
   "payable": "देय",
+  "syncSchedule": "सिंक शेड्यूल",
+  "autoSyncBadge": "ऑटो: {interval}h",
+  "@autoSyncBadge": {
+    "placeholders": {
+      "interval": {
+        "type": "String"
+      }
+    }
+  },
   "createdLabel": "बनाया गया: {date}",
   "@createdLabel": {
     "placeholders": {

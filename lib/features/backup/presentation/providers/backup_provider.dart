@@ -63,7 +63,6 @@ class BackupState {
   // New settings and versioning fields
   final String
       syncInterval; // 'manual', '12', '24', '36', '48', '60', '72', '84', '96'
-  final String backupInterval; // 'manual', 'weekly', 'monthly'
   final int localVersion;
   final int cloudVersion;
   final String? lockedBy;
@@ -88,7 +87,6 @@ class BackupState {
     this.lastBackupTime,
     this.error,
     this.syncInterval = 'manual',
-    this.backupInterval = 'manual',
     this.localVersion = 0,
     this.cloudVersion = 0,
     this.lockedBy,
@@ -117,7 +115,6 @@ class BackupState {
     DateTime? lastBackupTime,
     String? error,
     String? syncInterval,
-    String? backupInterval,
     int? localVersion,
     int? cloudVersion,
     String? lockedBy,
@@ -141,7 +138,6 @@ class BackupState {
       lastBackupTime: lastBackupTime ?? this.lastBackupTime,
       error: error,
       syncInterval: syncInterval ?? this.syncInterval,
-      backupInterval: backupInterval ?? this.backupInterval,
       localVersion: localVersion ?? this.localVersion,
       cloudVersion: cloudVersion ?? this.cloudVersion,
       lockedBy: lockedBy ?? this.lockedBy,
@@ -210,7 +206,6 @@ class BackupNotifier extends Notifier<BackupState> {
     final syncInterval = prefs.getString('sync_interval') ?? 'manual';
     state = state.copyWith(
       syncInterval: syncInterval,
-      backupInterval: prefs.getString('backup_interval') ?? 'manual',
     );
 
     await _refreshVersions();
@@ -825,13 +820,6 @@ class BackupNotifier extends Notifier<BackupState> {
     await prefs.setString('sync_interval', interval);
     state = state.copyWith(syncInterval: interval);
     await SyncScheduler.scheduleDailySync();
-  }
-
-  Future<void> setBackupInterval(String interval) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('backup_interval', interval);
-    state = state.copyWith(backupInterval: interval);
-    // TODO: Implement auto backup scheduling if needed
   }
 
   Future<String> getDeltaFileContent(String fileId) async {

@@ -57,6 +57,15 @@
   "cancel": "Cancel",
   "delete": "Delete",
   "payable": "Payable",
+  "syncSchedule": "Sync Schedule",
+  "autoSyncBadge": "Auto: {interval}h",
+  "@autoSyncBadge": {
+    "placeholders": {
+      "interval": {
+        "type": "String"
+      }
+    }
+  },
   "createdLabel": "Created: {date}",
   "@createdLabel": {
     "placeholders": {

@@ -143,6 +143,14 @@ class AppLocalizationsHi extends AppLocalizations {
   String get payable => 'देय';
 
   @override
+  String get syncSchedule => 'सिंक शेड्यूल';
+
+  @override
+  String autoSyncBadge(String interval) {
+    return 'ऑटो: ${interval}h';
+  }
+
+  @override
   String createdLabel(String date) {
     return 'बनाया गया: $date';
   }

@@ -57,6 +57,15 @@
   "cancel": "منسوخ کریں",
   "delete": "حذف کریں",
   "payable": "قابل ادائیگی",
+  "syncSchedule": "سنک شیڈول",
+  "autoSyncBadge": "آٹو: {interval}h",
+  "@autoSyncBadge": {
+    "placeholders": {
+      "interval": {
+        "type": "String"
+      }
+    }
+  },
   "createdLabel": "تخلیق شدہ: {date}",
   "@createdLabel": {
     "placeholders": {

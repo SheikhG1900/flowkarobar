@@ -358,6 +358,18 @@ abstract class AppLocalizations {
   /// **'Payable'**
   String get payable;
 
+  /// No description provided for @syncSchedule.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync Schedule'**
+  String get syncSchedule;
+
+  /// No description provided for @autoSyncBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto: {interval}h'**
+  String autoSyncBadge(String interval);
+
   /// No description provided for @createdLabel.
   ///
   /// In en, this message translates to:

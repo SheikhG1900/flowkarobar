@@ -142,6 +142,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get payable => 'Payable';
 
   @override
+  String get syncSchedule => 'Sync Schedule';
+
+  @override
+  String autoSyncBadge(String interval) {
+    return 'Auto: ${interval}h';
+  }
+
+  @override
   String createdLabel(String date) {
     return 'Created: $date';
   }

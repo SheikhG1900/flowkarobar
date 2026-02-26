@@ -1011,28 +1011,6 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
               ),
             ),
           ),
-          const SizedBox(height: 12),
-          Container(
-            height: 56,
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: theme.dividerColor),
-            ),
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<String>(
-                isExpanded: true,
-                value: state.backupInterval,
-                items: [
-                  DropdownMenuItem(value: 'manual', child: Text(l10n.manual)),
-                  DropdownMenuItem(value: 'weekly', child: Text(l10n.weekly)),
-                  DropdownMenuItem(value: 'monthly', child: Text(l10n.monthly)),
-                ],
-                onChanged: (v) =>
-                    v != null ? notifier.setBackupInterval(v) : null,
-              ),
-            ),
-          ),
         ],
       ),
     );

@@ -48,12 +48,48 @@ class CashbooksScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.myCashbooks),
+        title: Row(
+          children: [
+            Text(l10n.myCashbooks),
+            if (ref.watch(backupProvider).syncInterval != 'manual') ...[
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primaryContainer.withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(4),
+                  border: Border.all(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.sync,
+                      size: 10,
+                      color: theme.colorScheme.primary,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      l10n.autoSyncBadge(ref.watch(backupProvider).syncInterval),
+                      style: TextStyle(
+                        color: theme.colorScheme.primary,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
+        ),
       ),
       body: cashbooks.isEmpty
           ? const Center(child: CircularProgressIndicator())
           : ListView.builder(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(16).copyWith(bottom: 80), // Added bottom padding to ensure FABs don't block
               itemCount: cashbooks.length,
               itemBuilder: (context, index) {
                 final cashbook = cashbooks[index];
@@ -103,122 +139,95 @@ class CashbooksScreen extends ConsumerWidget {
                           AppDateFormatter.formatDate(cashbook.createdAt)),
                       style: theme.textTheme.bodySmall,
                     ),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (isActive)
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: color,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              l10n.active,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                              ),
+                    trailing: PopupMenuButton<String>(
+                      onSelected: (value) =>
+                          _handleAction(context, ref, value, cashbook),
+                      itemBuilder: (context) => [
+                        PopupMenuItem(
+                          value: 'edit',
+                          child: Row(
+                            children: [
+                              const Icon(Icons.edit_outlined, size: 20),
+                              const SizedBox(width: 8),
+                              Text(l10n.edit),
+                            ],
+                          ),
+                        ),
+                        PopupMenuItem(
+                          value: 'backup',
+                          child: Row(
+                            children: [
+                              const Icon(Icons.backup_outlined, size: 20),
+                              const SizedBox(width: 8),
+                              Text(l10n.takeBackup),
+                              const SizedBox(width: 8),
+                              const PremiumBadge(isSmall: true),
+                            ],
+                          ),
+                        ),
+                        PopupMenuItem(
+                          value: 'restore_local',
+                          child: Row(
+                            children: [
+                              const Icon(Icons.restore, size: 20),
+                              const SizedBox(width: 8),
+                              Text(l10n.restore),
+                              const SizedBox(width: 8),
+                              const PremiumBadge(isSmall: true),
+                            ],
+                          ),
+                        ),
+                        PopupMenuItem(
+                          value: 'copy_preferences',
+                          child: Row(
+                            children: [
+                              const Icon(Icons.copy_outlined, size: 20),
+                              const SizedBox(width: 8),
+                              Text(l10n.copyPreferences),
+                              const SizedBox(width: 8),
+                              const PremiumBadge(isSmall: true),
+                            ],
+                          ),
+                        ),
+                        PopupMenuItem(
+                          value: 'clear',
+                          child: Row(
+                            children: [
+                              const Icon(Icons.cleaning_services_outlined,
+                                  size: 20, color: Colors.orange),
+                              const SizedBox(width: 8),
+                              Text(l10n.clearData,
+                                  style: const TextStyle(color: Colors.orange)),
+                            ],
+                          ),
+                        ),
+                        PopupMenuItem(
+                          value: 'clear_cloud',
+                          child: Row(
+                            children: [
+                              const Icon(Icons.cloud_off_outlined,
+                                  size: 20, color: Colors.orange),
+                              const SizedBox(width: 8),
+                              Text(l10n.clearCloud,
+                                  style: const TextStyle(color: Colors.orange)),
+                              const SizedBox(width: 8),
+                              const PremiumBadge(isSmall: true),
+                            ],
+                          ),
+                        ),
+                        if (cashbook.id != 'default')
+                          PopupMenuItem(
+                            value: 'delete',
+                            child: Row(
+                              children: [
+                                const Icon(Icons.delete_outline,
+                                    size: 20, color: Colors.red),
+                                const SizedBox(width: 8),
+                                Text(l10n.delete,
+                                    style: const TextStyle(color: Colors.red)),
+                              ],
                             ),
                           ),
-                        const SizedBox(width: 8),
-                        PopupMenuButton<String>(
-                          onSelected: (value) =>
-                              _handleAction(context, ref, value, cashbook),
-                          itemBuilder: (context) => [
-                            PopupMenuItem(
-                              value: 'edit',
-                              child: Row(
-                                children: [
-                                  const Icon(Icons.edit_outlined, size: 20),
-                                  const SizedBox(width: 8),
-                                  Text(l10n.edit),
-                                ],
-                              ),
-                            ),
-                            PopupMenuItem(
-                              value: 'backup',
-                              child: Row(
-                                children: [
-                                  const Icon(Icons.backup_outlined, size: 20),
-                                  const SizedBox(width: 8),
-                                  Text(l10n.takeBackup),
-                                  const SizedBox(width: 8),
-                                  const PremiumBadge(isSmall: true),
-                                ],
-                              ),
-                            ),
-                            PopupMenuItem(
-                              value: 'restore_local',
-                              child: Row(
-                                children: [
-                                  const Icon(Icons.restore,
-                                      size: 20),
-                                  const SizedBox(width: 8),
-                                  Text(l10n.restore),
-                                  const SizedBox(width: 8),
-                                  const PremiumBadge(isSmall: true),
-                                ],
-                              ),
-                            ),
-                            PopupMenuItem(
-                              value: 'copy_preferences',
-                              child: Row(
-                                children: [
-                                  const Icon(Icons.copy_outlined, size: 20),
-                                  const SizedBox(width: 8),
-                                  Text(l10n.copyPreferences),
-                                  const SizedBox(width: 8),
-                                  const PremiumBadge(isSmall: true),
-                                ],
-                              ),
-                            ),
-                            PopupMenuItem(
-                              value: 'clear',
-                              child: Row(
-                                children: [
-                                  const Icon(Icons.cleaning_services_outlined,
-                                      size: 20, color: Colors.orange),
-                                  const SizedBox(width: 8),
-                                  Text(l10n.clearData,
-                                      style: const TextStyle(
-                                          color: Colors.orange)),
-                                ],
-                              ),
-                            ),
-                            PopupMenuItem(
-                              value: 'clear_cloud',
-                              child: Row(
-                                children: [
-                                  const Icon(Icons.cloud_off_outlined,
-                                      size: 20, color: Colors.orange),
-                                  const SizedBox(width: 8),
-                                  Text(l10n.clearCloud,
-                                      style: const TextStyle(
-                                          color: Colors.orange)),
-                                  const SizedBox(width: 8),
-                                  const PremiumBadge(isSmall: true),
-                                ],
-                              ),
-                            ),
-                            if (cashbook.id != 'default')
-                              PopupMenuItem(
-                                value: 'delete',
-                                child: Row(
-                                  children: [
-                                    const Icon(Icons.delete_outline,
-                                        size: 20, color: Colors.red),
-                                    const SizedBox(width: 8),
-                                    Text(l10n.delete,
-                                        style:
-                                            const TextStyle(color: Colors.red)),
-                                  ],
-                                ),
-                              ),
-                          ],
-                        ),
                       ],
                     ),
                     onTap: isActive
@@ -228,9 +237,19 @@ class CashbooksScreen extends ConsumerWidget {
                 );
               },
             ),
-      floatingActionButton: Column(
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButton: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
         mainAxisSize: MainAxisSize.min,
         children: [
+          FloatingActionButton(
+            heroTag: 'set_sync_schedule',
+            backgroundColor: theme.colorScheme.tertiaryContainer,
+            onPressed: () => _showSyncScheduleDialog(context, ref),
+            tooltip: l10n.syncSchedule,
+            child: Icon(Icons.schedule, color: theme.colorScheme.onTertiaryContainer),
+          ),
+          const SizedBox(width: 16),
           if (ref.watch(backupProvider).currentUser != null) ...[
             FloatingActionButton(
               heroTag: 'add_cloud_cashbook',
@@ -240,7 +259,7 @@ class CashbooksScreen extends ConsumerWidget {
               child: Icon(Icons.cloud_download,
                   color: theme.colorScheme.onSecondaryContainer),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(width: 16),
           ],
           FloatingActionButton(
             heroTag: 'add_local_cashbook',
@@ -250,6 +269,72 @@ class CashbooksScreen extends ConsumerWidget {
             child: Icon(Icons.add, color: theme.colorScheme.onPrimary),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showSyncScheduleDialog(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final notifier = ref.read(backupProvider.notifier);
+    final currentState = ref.read(backupProvider).syncInterval;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: theme.scaffoldBackgroundColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.schedule, color: theme.colorScheme.primary),
+                const SizedBox(width: 12),
+                Text(
+                  l10n.syncSchedule,
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: theme.dividerColor),
+              ),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<String>(
+                  isExpanded: true,
+                  value: currentState,
+                  items: [
+                    DropdownMenuItem(value: 'manual', child: Text(l10n.manual)),
+                    ...['12', '24', '36', '48', '60', '72', '84', '96'].map((h) =>
+                        DropdownMenuItem(
+                          value: h,
+                          child: Text('$h ${l10n.hours}'),
+                        )),
+                  ],
+                  onChanged: (v) {
+                    if (v != null) {
+                      notifier.setSyncInterval(v);
+                      Navigator.pop(context);
+                    }
+                  },
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+          ],
+        ),
       ),
     );
   }
