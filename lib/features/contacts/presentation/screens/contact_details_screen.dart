@@ -411,9 +411,9 @@ class ContactDetailsScreen extends ConsumerWidget {
                                                 AlertDialog(
                                               title:
                                                   Text(l10n.bulkProcessInBulk),
-                                                  content: Text(
-                                                    l10n.bulkProcessConfirmation,
-                                                  ),
+                                              content: Text(
+                                                l10n.bulkProcessConfirmation,
+                                              ),
                                               actions: [
                                                 TextButton(
                                                   onPressed: () =>
@@ -734,7 +734,7 @@ class ContactDetailsScreen extends ConsumerWidget {
     return Container(
       height: 64, // Expanded vertically to accommodate title and amounts
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.15),
+        color: color.withValues(alpha: 0.07),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Stack(
@@ -759,7 +759,7 @@ class ContactDetailsScreen extends ConsumerWidget {
                 width: double
                     .infinity, // Ensure the container takes full width before clipping
                 decoration: BoxDecoration(
-                  color: color,
+                  color: color.withValues(alpha: 0.75),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Align(
