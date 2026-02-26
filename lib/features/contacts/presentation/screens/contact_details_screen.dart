@@ -1,3 +1,4 @@
+import 'package:flowpaisa/shared/widgets/gradient_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
@@ -253,14 +254,12 @@ class ContactDetailsScreen extends ConsumerWidget {
                                   color: AppColors.receivableColor,
                                   icon: Icons.arrow_downward,
                                   currencySymbol: currencySymbol,
-                                  currencyDecimalPlaces:
-                                      currencyDecimalPlaces,
+                                  currencyDecimalPlaces: currencyDecimalPlaces,
                                   onTap: () {
                                     ref
-                                        .read(
-                                            receivablesPaginatedProvider(
-                                                    'PENDING')
-                                                .notifier)
+                                        .read(receivablesPaginatedProvider(
+                                                'PENDING')
+                                            .notifier)
                                         .applyFilters(
                                           ReceivableFilters(
                                             contactUuids: [contactUuid],
@@ -288,13 +287,12 @@ class ContactDetailsScreen extends ConsumerWidget {
                                   color: AppColors.payableColor,
                                   icon: Icons.arrow_upward,
                                   currencySymbol: currencySymbol,
-                                  currencyDecimalPlaces:
-                                      currencyDecimalPlaces,
+                                  currencyDecimalPlaces: currencyDecimalPlaces,
                                   onTap: () {
                                     ref
-                                        .read(payablesPaginatedProvider(
-                                                'PENDING')
-                                            .notifier)
+                                        .read(
+                                            payablesPaginatedProvider('PENDING')
+                                                .notifier)
                                         .applyFilters(
                                           PayableFilters(
                                             contactUuids: [contactUuid],
@@ -316,19 +314,21 @@ class ContactDetailsScreen extends ConsumerWidget {
                           const SizedBox(height: 24),
 
                           // Progress Bars
-                          if (stats.totalReceivable + stats.totalReceived > 0) ...[
+                          if (stats.totalReceivable + stats.totalReceived >
+                              0) ...[
                             _buildProgressBar(
                               context,
                               title: l10n.receivedTag,
                               completedAmount: stats.totalReceived,
-                              totalAmount: stats.totalReceivable + stats.totalReceived,
+                              totalAmount:
+                                  stats.totalReceivable + stats.totalReceived,
                               color: AppColors.receivableColor,
                               currencySymbol: currencySymbol,
                               currencyDecimalPlaces: currencyDecimalPlaces,
                             ),
                             const SizedBox(height: 16),
                           ],
-                          
+
                           if (stats.totalPayable + stats.totalPaid > 0) ...[
                             _buildProgressBar(
                               context,
@@ -382,18 +382,15 @@ class ContactDetailsScreen extends ConsumerWidget {
                             return <Widget>[
                               SizedBox(
                                 width: double.infinity,
-                                child: FilledButton.icon(
-                                  icon: Icon(icon),
-                                  label: Text(label),
-                                  style: FilledButton.styleFrom(
-                                    backgroundColor: buttonColor,
-                                    foregroundColor: Colors.white,
-                                    padding: const EdgeInsets.symmetric(
-                                        vertical: 14),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(16),
-                                    ),
-                                  ),
+                                child: GradientButton(
+                                  foreColor: Colors.white,
+                                  label: label,
+                                  icon: icon,
+                                  gradient: netBalance > 0
+                                      ? AppColors.receivableGradient
+                                      : netBalance < 0
+                                          ? AppColors.payableGradient
+                                          : AppColors.primaryGradient,
                                   onPressed: () async {
                                     if (!isPremium) {
                                       Navigator.push(
@@ -408,38 +405,34 @@ class ContactDetailsScreen extends ConsumerWidget {
 
                                     // If balance is zero, just confirm and process all
                                     if (netBalance == 0) {
-                                      final confirmed =
-                                          await showDialog<bool>(
-                                                context: context,
-                                                builder: (dialogContext) =>
-                                                    AlertDialog(
-                                                  title:
-                                                      Text(l10n.bulkProcessInBulk),
-                                                  content: Text(
-                                                    l10n.premiumRequired
-                                                        .replaceFirst(
-                                                            'subscription',
-                                                            'processing'), // reuse text
-                                                  ),
-                                                  actions: [
-                                                    TextButton(
-                                                      onPressed: () =>
-                                                          Navigator.pop(
-                                                              dialogContext,
-                                                              false),
-                                                      child: Text(l10n.cancel),
-                                                    ),
-                                                    FilledButton(
-                                                      onPressed: () =>
-                                                          Navigator.pop(
-                                                              dialogContext,
-                                                              true),
-                                                      child: Text(l10n.ok),
-                                                    ),
-                                                  ],
+                                      final confirmed = await showDialog<bool>(
+                                            context: context,
+                                            builder: (dialogContext) =>
+                                                AlertDialog(
+                                              title:
+                                                  Text(l10n.bulkProcessInBulk),
+                                              content: Text(
+                                                l10n.premiumRequired.replaceFirst(
+                                                    'subscription',
+                                                    'processing'), // reuse text
+                                              ),
+                                              actions: [
+                                                TextButton(
+                                                  onPressed: () =>
+                                                      Navigator.pop(
+                                                          dialogContext, false),
+                                                  child: Text(l10n.cancel),
                                                 ),
-                                              ) ??
-                                              false;
+                                                FilledButton(
+                                                  onPressed: () =>
+                                                      Navigator.pop(
+                                                          dialogContext, true),
+                                                  child: Text(l10n.ok),
+                                                ),
+                                              ],
+                                            ),
+                                          ) ??
+                                          false;
 
                                       if (!confirmed) return;
 
@@ -463,62 +456,65 @@ class ContactDetailsScreen extends ConsumerWidget {
                           }(),
 
                           // Info Section
-                          if (contact.email != null || contact.notes != null)
-                            ...[
-                        Text(
-                          l10n.information,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        Container(
-                          decoration: BoxDecoration(
-                            color: theme.cardColor,
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                                color:
-                                    theme.dividerColor.withValues(alpha: 0.5)),
-                          ),
-                          child: Column(
-                            children: [
-                              if (contact.email != null &&
-                                  contact.email!.isNotEmpty)
-                                ListTile(
-                                  leading: Container(
-                                    padding: const EdgeInsets.all(8),
-                                    decoration: BoxDecoration(
-                                      color: theme
-                                          .colorScheme.surfaceContainerHighest,
-                                      borderRadius: BorderRadius.circular(8),
+                          if (contact.email != null ||
+                              contact.notes != null) ...[
+                            Text(
+                              l10n.information,
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Container(
+                              decoration: BoxDecoration(
+                                color: theme.cardColor,
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                    color: theme.dividerColor
+                                        .withValues(alpha: 0.5)),
+                              ),
+                              child: Column(
+                                children: [
+                                  if (contact.email != null &&
+                                      contact.email!.isNotEmpty)
+                                    ListTile(
+                                      leading: Container(
+                                        padding: const EdgeInsets.all(8),
+                                        decoration: BoxDecoration(
+                                          color: theme.colorScheme
+                                              .surfaceContainerHighest,
+                                          borderRadius:
+                                              BorderRadius.circular(8),
+                                        ),
+                                        child: const Icon(Icons.email_outlined,
+                                            size: 20),
+                                      ),
+                                      title: Text(contact.email!),
+                                      subtitle: Text(l10n.emailLabel),
                                     ),
-                                    child: const Icon(Icons.email_outlined,
-                                        size: 20),
-                                  ),
-                                  title: Text(contact.email!),
-                                  subtitle: Text(l10n.emailLabel),
-                                ),
-                              if (contact.notes != null &&
-                                  contact.notes!.isNotEmpty)
-                                ListTile(
-                                  leading: Container(
-                                    padding: const EdgeInsets.all(8),
-                                    decoration: BoxDecoration(
-                                      color: theme
-                                          .colorScheme.surfaceContainerHighest,
-                                      borderRadius: BorderRadius.circular(8),
+                                  if (contact.notes != null &&
+                                      contact.notes!.isNotEmpty)
+                                    ListTile(
+                                      leading: Container(
+                                        padding: const EdgeInsets.all(8),
+                                        decoration: BoxDecoration(
+                                          color: theme.colorScheme
+                                              .surfaceContainerHighest,
+                                          borderRadius:
+                                              BorderRadius.circular(8),
+                                        ),
+                                        child: const Icon(
+                                            Icons.note_alt_outlined,
+                                            size: 20),
+                                      ),
+                                      title: Text(contact.notes!),
+                                      subtitle: Text(l10n.notesLabel),
                                     ),
-                                    child: const Icon(Icons.note_alt_outlined,
-                                        size: 20),
-                                  ),
-                                  title: Text(contact.notes!),
-                                  subtitle: Text(l10n.notesLabel),
-                                ),
-                            ],
-                          ),
-                        ),
-                      ],
-                      const SizedBox(height: 80), // Bottom padding
+                                ],
+                              ),
+                            ),
+                          ],
+                          const SizedBox(height: 80), // Bottom padding
                         ],
                       ),
                     ),
@@ -652,7 +648,7 @@ class ContactDetailsScreen extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final percent = totalAmount > 0 ? (completedAmount / totalAmount) : 0.0;
     final safePercent = percent.clamp(0.0, 1.0);
-    
+
     final formattedCompleted = AmountFormatter.formatWithCurrency(
       completedAmount,
       currencySymbol,
@@ -663,9 +659,10 @@ class ContactDetailsScreen extends ConsumerWidget {
       currencySymbol,
       currencyDecimalPlaces,
     );
-    
+
     // Create the text row that will be used for both the background and foreground
-    Widget buildTextRow(Color completedColor, Color percentageColor, Color totalColor) {
+    Widget buildTextRow(
+        Color completedColor, Color percentageColor, Color totalColor) {
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
         child: Row(
@@ -735,7 +732,7 @@ class ContactDetailsScreen extends ConsumerWidget {
         ),
       );
     }
-    
+
     return Container(
       height: 64, // Expanded vertically to accommodate title and amounts
       decoration: BoxDecoration(
@@ -756,12 +753,13 @@ class ContactDetailsScreen extends ConsumerWidget {
           // The progress fill with clipping for the text inside it
           ClipRect(
             child: Align(
-              alignment: Directionality.of(context) == TextDirection.rtl 
-                  ? Alignment.centerRight 
+              alignment: Directionality.of(context) == TextDirection.rtl
+                  ? Alignment.centerRight
                   : Alignment.centerLeft,
               widthFactor: safePercent,
               child: Container(
-                width: double.infinity, // Ensure the container takes full width before clipping
+                width: double
+                    .infinity, // Ensure the container takes full width before clipping
                 decoration: BoxDecoration(
                   color: color,
                   borderRadius: BorderRadius.circular(20),
@@ -970,8 +968,7 @@ class _BulkSettleSheetContentState extends State<_BulkSettleSheetContent> {
           const SizedBox(height: 16),
           TextField(
             controller: _amountController,
-            keyboardType:
-                const TextInputType.numberWithOptions(decimal: true),
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
             decoration: InputDecoration(
               labelText: widget.l10n.amount,
               border: const OutlineInputBorder(),
