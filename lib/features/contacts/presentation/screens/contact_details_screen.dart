@@ -649,6 +649,7 @@ class ContactDetailsScreen extends ConsumerWidget {
     required int currencyDecimalPlaces,
   }) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final percent = totalAmount > 0 ? (completedAmount / totalAmount) : 0.0;
     final safePercent = percent.clamp(0.0, 1.0);
     
@@ -708,7 +709,7 @@ class ContactDetailsScreen extends ConsumerWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    'Total',
+                    l10n.totalAmount,
                     style: TextStyle(
                       color: totalColor.withValues(alpha: 0.8),
                       fontWeight: FontWeight.w500,
@@ -755,7 +756,9 @@ class ContactDetailsScreen extends ConsumerWidget {
           // The progress fill with clipping for the text inside it
           ClipRect(
             child: Align(
-              alignment: Alignment.centerLeft,
+              alignment: Directionality.of(context) == TextDirection.rtl 
+                  ? Alignment.centerRight 
+                  : Alignment.centerLeft,
               widthFactor: safePercent,
               child: Container(
                 width: double.infinity, // Ensure the container takes full width before clipping
