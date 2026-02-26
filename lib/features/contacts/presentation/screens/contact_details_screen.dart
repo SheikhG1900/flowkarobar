@@ -652,63 +652,115 @@ class ContactDetailsScreen extends ConsumerWidget {
     final percent = totalAmount > 0 ? (completedAmount / totalAmount) : 0.0;
     final safePercent = percent.clamp(0.0, 1.0);
     
+    final formattedCompleted = AmountFormatter.formatWithCurrency(
+      completedAmount,
+      currencySymbol,
+      currencyDecimalPlaces,
+    );
+    final formattedTotal = AmountFormatter.formatWithCurrency(
+      totalAmount,
+      currencySymbol,
+      currencyDecimalPlaces,
+    );
+    
+    // Create the text row that will be used for both the background and foreground
+    Widget buildTextRow(Color completedColor, Color percentageColor, Color totalColor) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // Completed amount (left)
+                Text(
+                  formattedCompleted,
+                  style: TextStyle(
+                    color: completedColor,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                  ),
+                ),
+                // Total amount (right)
+                Text(
+                  formattedTotal,
+                  style: TextStyle(
+                    color: totalColor,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                  ),
+                ),
+              ],
+            ),
+            // Percentage (middle)
+            Text(
+              '${(safePercent * 100).toStringAsFixed(1)}%',
+              style: TextStyle(
+                color: percentageColor,
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              title,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            Text(
-              '${(safePercent * 100).toStringAsFixed(1)}%',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(8),
-          child: LinearProgressIndicator(
-            value: safePercent,
-            backgroundColor: color.withValues(alpha: 0.1),
-            valueColor: AlwaysStoppedAnimation<Color>(color),
-            minHeight: 8,
+        Text(
+          title,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+            color: theme.colorScheme.onSurface,
           ),
         ),
-        const SizedBox(height: 4),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              AmountFormatter.formatWithCurrency(
-                completedAmount,
-                currencySymbol,
-                currencyDecimalPlaces,
+        const SizedBox(height: 8),
+        Container(
+          height: 32,
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Stack(
+            children: [
+              // Base text (visible on the un-filled portion)
+              Align(
+                alignment: Alignment.center,
+                child: buildTextRow(
+                  color, // Completed amount color
+                  theme.colorScheme.onSurfaceVariant, // Percentage color
+                  theme.colorScheme.onSurfaceVariant, // Total amount color
+                ),
               ),
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: color,
-                fontWeight: FontWeight.w600,
+              // The progress fill with clipping for the text inside it
+              ClipRect(
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  widthFactor: safePercent,
+                  child: Container(
+                    width: double.infinity, // Ensure the container takes full width before clipping
+                    decoration: BoxDecoration(
+                      color: color,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Align(
+                      alignment: Alignment.center,
+                      // The text inside the filled portion (always white)
+                      child: buildTextRow(
+                        Colors.white,
+                        Colors.white,
+                        Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
               ),
-            ),
-            Text(
-              AmountFormatter.formatWithCurrency(
-                totalAmount,
-                currencySymbol,
-                currencyDecimalPlaces,
-              ),
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ],
     );
