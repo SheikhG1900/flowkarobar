@@ -44,6 +44,7 @@ import 'package:flowpaisa/core/utils/deep_link_handler.dart';
 import 'package:flowpaisa/core/utils/date_formatter.dart';
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/shared/widgets/premium_badge.dart';
+import 'package:flowpaisa/shared/widgets/user_avatar.dart';
 import 'package:flowpaisa/features/cashbooks/presentation/screens/cashbooks_screen.dart';
 import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
 
@@ -726,36 +727,6 @@ class _DashboardTab extends ConsumerWidget {
                                               ),
                                             ],
                                           ),
-                                          if (backupState.currentUser?.photoUrl != null &&
-                                              backupState.currentUser!.photoUrl!.isNotEmpty)
-                                            GestureDetector(
-                                              onTap: () {
-                                                Navigator.push(
-                                                  context,
-                                                  MaterialPageRoute(
-                                                    builder: (context) => const ProfileScreen(),
-                                                  ),
-                                                );
-                                              },
-                                              child: Container(
-                                                width: 32,
-                                                height: 32,
-                                                decoration: BoxDecoration(
-                                                  shape: BoxShape.circle,
-                                                  border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.5), width: 1.5),
-                                                ),
-                                                child: ClipOval(
-                                                  child: Image.network(
-                                                    backupState.currentUser!.photoUrl!,
-                                                    fit: BoxFit.cover,
-                                                    width: 32,
-                                                    height: 32,
-                                                    errorBuilder: (context, error, stackTrace) =>
-                                                        const Icon(Icons.person, size: 20),
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
                                         ],
                                       ),
                                     const SizedBox(height: 4),
@@ -1330,9 +1301,9 @@ class _DashboardTab extends ConsumerWidget {
                   tooltip: 'Restart App',
                 ),
                 IconButton(
-                  icon: Icon(
-                    Icons.account_circle_outlined,
-                    color: theme.colorScheme.onSurface,
+                  icon: UserAvatar(
+                    user: backupState.currentUser,
+                    size: 24,
                   ),
                   onPressed: () {
                     Navigator.push(
@@ -2242,27 +2213,10 @@ class _SettingsTab extends ConsumerWidget {
             tooltipBackgroundColor: theme.colorScheme.primary,
             textColor: theme.colorScheme.onPrimary,
             child: IconButton(
-              icon: (backupState.currentUser?.photoUrl != null &&
-                      backupState.currentUser!.photoUrl!.isNotEmpty)
-                  ? Container(
-                      width: 24,
-                      height: 24,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.5), width: 1),
-                      ),
-                      child: ClipOval(
-                        child: Image.network(
-                          backupState.currentUser!.photoUrl!,
-                          fit: BoxFit.cover,
-                          width: 24,
-                          height: 24,
-                          errorBuilder: (context, error, stackTrace) =>
-                              const Icon(Icons.person, size: 16),
-                        ),
-                      ),
-                    )
-                  : const Icon(Icons.person_outline),
+              icon: UserAvatar(
+                user: backupState.currentUser,
+                size: 24,
+              ),
               onPressed: () {
                 Navigator.push(
                   context,

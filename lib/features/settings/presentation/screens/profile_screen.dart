@@ -281,7 +281,27 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             width: 100,
                             height: 100,
                             errorBuilder: (context, error, stackTrace) =>
-                                const Icon(Icons.person, size: 50),
+                                Container(
+                                  decoration: BoxDecoration(
+                                    gradient: AppColors.getContactGradient(
+                                        _nameController.text.isEmpty
+                                            ? (profile.name ?? '')
+                                            : _nameController.text),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      NameUtils.getInitials(_nameController.text.isEmpty
+                                          ? (profile.name ?? '')
+                                          : _nameController.text),
+                                      style: TextStyle(
+                                        fontSize: 36,
+                                        fontWeight: FontWeight.bold,
+                                        color: theme.colorScheme.onPrimary,
+                                      ),
+                                    ),
+                                  ),
+                                ),
                           ),
                         ),
                       )

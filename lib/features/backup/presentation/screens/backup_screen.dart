@@ -4,6 +4,7 @@ import 'package:flowpaisa/core/utils/icon_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/features/backup/presentation/providers/backup_provider.dart';
+import 'package:flowpaisa/shared/widgets/user_avatar.dart';
 import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/date_formatter.dart';
@@ -299,16 +300,9 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
               ] else ...[
                 Row(
                   children: [
-                    CircleAvatar(
-                      backgroundImage: (state.currentUser!.photoUrl != null &&
-                              state.currentUser!.photoUrl!.isNotEmpty)
-                          ? NetworkImage(state.currentUser!.photoUrl!)
-                          : null,
-                      radius: 20,
-                      child: (state.currentUser!.photoUrl == null ||
-                              state.currentUser!.photoUrl!.isEmpty)
-                          ? const Icon(Icons.person)
-                          : null,
+                    UserAvatar(
+                      user: state.currentUser,
+                      size: 40,
                     ),
                     const SizedBox(width: 12),
                     Expanded(
