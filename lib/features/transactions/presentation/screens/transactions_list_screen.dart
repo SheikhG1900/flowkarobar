@@ -1068,7 +1068,7 @@ class _TransactionListSummaryContent extends ConsumerWidget {
     final gradient = isHigher ? gradientWhenHigher : gradientWhenLower;
 
     final transparentGradient = LinearGradient(
-      colors: gradient.colors.map((c) => c.withValues(alpha: 0.3)).toList(),
+      colors: gradient.colors.map((c) => c.withValues(alpha: .8)).toList(),
       begin: gradient.begin,
       end: gradient.end,
       stops: gradient.stops,
@@ -1080,8 +1080,8 @@ class _TransactionListSummaryContent extends ConsumerWidget {
         gradient: transparentGradient,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: gradient.colors.first.withValues(alpha: 0.5),
-          width: 1,
+          color: gradient.colors.first.withValues(alpha: 9),
+          width: .5,
         ),
       ),
       child: Row(
@@ -1090,6 +1090,7 @@ class _TransactionListSummaryContent extends ConsumerWidget {
           Text(
             label,
             style: theme.textTheme.labelMedium?.copyWith(
+              color: Colors.white,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -1097,6 +1098,7 @@ class _TransactionListSummaryContent extends ConsumerWidget {
             AmountFormatter.formatWithCurrency(
                 amount, currencySymbol, decimalPlaces),
             style: theme.textTheme.titleSmall?.copyWith(
+              color: Colors.white,
               fontWeight: FontWeight.bold,
             ),
           ),

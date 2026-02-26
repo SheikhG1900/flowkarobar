@@ -44,12 +44,14 @@ class CloudCashbookSelectionSheet extends ConsumerWidget {
               Icon(Icons.cloud_download_outlined,
                   color: theme.colorScheme.primary),
               const SizedBox(width: 12),
-              Text(
-                l10n.addCloudCashbook,
-                style: theme.textTheme.titleLarge
-                    ?.copyWith(fontWeight: FontWeight.bold),
+              Expanded(
+                child: Text(
+                  l10n.addCloudCashbook,
+                  style: theme.textTheme.titleLarge
+                      ?.copyWith(fontWeight: FontWeight.bold),
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
-              const Spacer(),
               IconButton(
                 onPressed: () => Navigator.pop(context),
                 icon: const Icon(Icons.close),
