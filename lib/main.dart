@@ -299,10 +299,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final l10n = AppLocalizations.of(context)!;
 
     ref.listen<BackupState>(backupProvider, (previous, next) {
-      if (next.premiumExpiredLogout && !(previous?.premiumExpiredLogout ?? false)) {
+      if (next.premiumExpiredLogout &&
+          !(previous?.premiumExpiredLogout ?? false)) {
         // Clear flag
         ref.read(backupProvider.notifier).clearPremiumExpiredLogout();
-        
+
         // Show dialog
         showDialog(
           context: context,
@@ -722,14 +723,14 @@ class _DashboardTab extends ConsumerWidget {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Row(
-                                            textDirection: TextDirection.ltr,
-                                            children: [
-                                              SvgPicture.asset(
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Row(
+                                          textDirection: TextDirection.ltr,
+                                          children: [
+                                            SvgPicture.asset(
                                                 'assets/images/logo_square.svg',
                                                 fit: BoxFit.contain,
                                                 height: 40,
@@ -743,30 +744,30 @@ class _DashboardTab extends ConsumerWidget {
                                                         theme.colorScheme
                                                             .onSurface,
                                                     BlendMode.srcIn)),
-                                              Transform.translate(
-                                                offset: const Offset(-4, 0),
-                                                child: Text(
-                                                  'lowpaisa',
-                                                  style: theme
-                                                      .textTheme.displaySmall
-                                                      ?.copyWith(
-                                                    fontSize: 24,
-                                                    fontWeight: FontWeight.w800,
-                                                    color: Color.lerp(
-                                                            theme.colorScheme
-                                                                .onSurface,
-                                                            theme.colorScheme
-                                                                .primary,
-                                                            .5) ??
-                                                        theme.colorScheme
-                                                            .onSurface,
-                                                  ),
+                                            Transform.translate(
+                                              offset: const Offset(-4, 0),
+                                              child: Text(
+                                                'lowpaisa',
+                                                style: theme
+                                                    .textTheme.displaySmall
+                                                    ?.copyWith(
+                                                  fontSize: 24,
+                                                  fontWeight: FontWeight.w800,
+                                                  color: Color.lerp(
+                                                          theme.colorScheme
+                                                              .onSurface,
+                                                          theme.colorScheme
+                                                              .primary,
+                                                          .5) ??
+                                                      theme.colorScheme
+                                                          .onSurface,
                                                 ),
                                               ),
-                                            ],
-                                          ),
-                                        ],
-                                      ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
                                     const SizedBox(height: 4),
                                     Row(
                                       children: [
@@ -1742,38 +1743,9 @@ class _DashboardTab extends ConsumerWidget {
                   childAspectRatio: childAspectRatio,
                   children: [
                     _QuickActionButton(
-                      icon: Icons.people_outline_rounded,
-                      label: l10n.contacts,
-                      gradient: AppColors.getPrimaryGradient(
-                          theme.colorScheme.primary),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const ContactsListScreen(),
-                          ),
-                        );
-                      },
-                    ),
-                    _QuickActionButton(
-                      icon: Icons.category_outlined,
-                      label: l10n.categories,
-                      gradient: AppColors.getSecondaryGradient(
-                          theme.colorScheme.primary),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const CategoriesListScreen(),
-                          ),
-                        );
-                      },
-                    ),
-                    _QuickActionButton(
                       icon: Icons.mic_none_rounded,
                       label: l10n.voiceAdd,
-                      gradient: AppColors.getPrimaryGradient(
-                          theme.colorScheme.secondary),
+                      gradient: AppColors.transactionsSectionGradient,
                       onTap: () {
                         Navigator.push(
                           context,
@@ -1786,8 +1758,7 @@ class _DashboardTab extends ConsumerWidget {
                     _QuickActionButton(
                       icon: Icons.add,
                       label: l10n.add,
-                      gradient: AppColors.getPrimaryGradient(
-                          theme.colorScheme.primary),
+                      gradient: AppColors.transactionsSectionGradient,
                       onTap: () {
                         Navigator.push(
                           context,
@@ -1800,13 +1771,26 @@ class _DashboardTab extends ConsumerWidget {
                     _QuickActionButton(
                       icon: Icons.document_scanner_outlined,
                       label: l10n.scan,
-                      gradient: AppColors.getSecondaryGradient(
-                          theme.colorScheme.primary),
+                      gradient: AppColors.transactionsSectionGradient,
                       onTap: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (context) => const ScanReceiptScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                    _QuickActionButton(
+                      icon: Icons.people_outline_rounded,
+                      label: l10n.contacts,
+                      gradient: AppColors.getPrimaryGradient(
+                          theme.colorScheme.primary),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const ContactsListScreen(),
                           ),
                         );
                       },
@@ -1865,6 +1849,20 @@ class _DashboardTab extends ConsumerWidget {
                           context,
                           MaterialPageRoute(
                             builder: (context) => const PayablesListScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                    _QuickActionButton(
+                      icon: Icons.category_outlined,
+                      label: l10n.categories,
+                      gradient: AppColors.getSecondaryGradient(
+                          theme.colorScheme.primary),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const CategoriesListScreen(),
                           ),
                         );
                       },
