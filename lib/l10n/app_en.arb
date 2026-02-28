@@ -345,7 +345,7 @@
   "receivable": "Receivable",
   "addReceivable": "Add Receivable",
   "receivableIntentTitle": "How would you like to record this?",
-  "receivableIntentBoughtForContact": "Did you buy something for {contact}? You will receive it.",
+  "receivableIntentBoughtForContact": "You paid for something for {contact}. They'll pay you back.",
   "@receivableIntentBoughtForContact": {
     "placeholders": {
       "contact": {
@@ -353,7 +353,7 @@
       }
     }
   },
-  "receivableIntentServicesAmount": "You will receive {amount} for your services. {contact} will pay you.",
+  "receivableIntentServicesAmount": "{contact} will pay you {amount} for your services.",
   "@receivableIntentServicesAmount": {
     "placeholders": {
       "amount": {
@@ -364,7 +364,7 @@
       }
     }
   },
-  "receivableIntentJustRecord": "No, I just want to create the receivable",
+  "receivableIntentJustRecord": "Just create a receivable",
   "receivableAlreadyImported": "This receivable has already been imported.",
   "pleaseSelectContact": "Please select a contact",
   "receivableAdded": "Receivable added successfully",
@@ -418,7 +418,7 @@
   "payableAdded": "Payable added successfully",
   "addPayable": "Add Payable",
   "payableIntentTitle": "How would you like to record this?",
-  "payableIntentContactBoughtForYou": "{contact} bought something for you and you have to pay for it",
+  "payableIntentContactBoughtForYou": "{contact} paid for something on your behalf.",
   "@payableIntentContactBoughtForYou": {
     "placeholders": {
       "contact": {
@@ -426,7 +426,7 @@
       }
     }
   },
-  "payableIntentBorrowedFrom": "You borrowed {amount} from {contact} and you have to pay it",
+  "payableIntentBorrowedFrom": "You borrowed {amount} from {contact}.",
   "@payableIntentBorrowedFrom": {
     "placeholders": {
       "amount": {
@@ -437,7 +437,7 @@
       }
     }
   },
-  "payableIntentJustRecord": "No, I just want to create/record this payable",
+  "payableIntentJustRecord": "Just create a payable",
   "editPayable": "Edit Payable",
   "payableNotFound": "Payable not found",
   "payableDataNotLoaded": "Payable data not loaded",

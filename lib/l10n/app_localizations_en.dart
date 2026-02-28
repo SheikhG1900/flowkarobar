@@ -515,17 +515,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String receivableIntentBoughtForContact(String contact) {
-    return 'Did you buy something for $contact? You will receive it.';
+    return 'You paid for something for $contact. They\'ll pay you back.';
   }
 
   @override
   String receivableIntentServicesAmount(String amount, String contact) {
-    return 'You will receive $amount for your services. $contact will pay you.';
+    return '$contact will pay you $amount for your services.';
   }
 
   @override
-  String get receivableIntentJustRecord =>
-      'No, I just want to create the receivable';
+  String get receivableIntentJustRecord => 'Just create a receivable';
 
   @override
   String get receivableAlreadyImported =>
@@ -650,17 +649,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String payableIntentContactBoughtForYou(String contact) {
-    return '$contact bought something for you and you have to pay for it';
+    return '$contact paid for something on your behalf.';
   }
 
   @override
   String payableIntentBorrowedFrom(String amount, String contact) {
-    return 'You borrowed $amount from $contact and you have to pay it';
+    return 'You borrowed $amount from $contact.';
   }
 
   @override
-  String get payableIntentJustRecord =>
-      'No, I just want to create/record this payable';
+  String get payableIntentJustRecord => 'Just create a payable';
 
   @override
   String get editPayable => 'Edit Payable';
