@@ -143,7 +143,10 @@ class AppLocalizationsUr extends AppLocalizations {
   String get payable => 'قابل ادائیگی';
 
   @override
-  String get syncSchedule => 'سنک شیڈول';
+  String get syncSchedule => 'بے کار سنک';
+
+  @override
+  String get noIdleSync => 'بے کار سنک نہیں';
 
   @override
   String autoSyncBadge(String interval) {

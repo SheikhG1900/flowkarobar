@@ -361,8 +361,14 @@ abstract class AppLocalizations {
   /// No description provided for @syncSchedule.
   ///
   /// In en, this message translates to:
-  /// **'Sync Schedule'**
+  /// **'Idle sync'**
   String get syncSchedule;
+
+  /// No description provided for @noIdleSync.
+  ///
+  /// In en, this message translates to:
+  /// **'No Idle Sync'**
+  String get noIdleSync;
 
   /// No description provided for @autoSyncBadge.
   ///

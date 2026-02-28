@@ -57,7 +57,8 @@
   "cancel": "रद्द करें",
   "delete": "हटाएं",
   "payable": "देय",
-  "syncSchedule": "सिंक शेड्यूल",
+  "syncSchedule": "निष्क्रिय सिंक",
+  "noIdleSync": "निष्क्रिय सिंक नहीं",
   "autoSyncBadge": "ऑटो: {interval}h",
   "@autoSyncBadge": {
     "placeholders": {

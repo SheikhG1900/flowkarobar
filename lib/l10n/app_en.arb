@@ -57,7 +57,8 @@
   "cancel": "Cancel",
   "delete": "Delete",
   "payable": "Payable",
-  "syncSchedule": "Sync Schedule",
+  "syncSchedule": "Idle sync",
+  "noIdleSync": "No Idle Sync",
   "autoSyncBadge": "Auto: {interval}h",
   "@autoSyncBadge": {
     "placeholders": {

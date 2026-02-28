@@ -142,7 +142,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get payable => 'Payable';
 
   @override
-  String get syncSchedule => 'Sync Schedule';
+  String get syncSchedule => 'Idle sync';
+
+  @override
+  String get noIdleSync => 'No Idle Sync';
 
   @override
   String autoSyncBadge(String interval) {

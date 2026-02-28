@@ -57,7 +57,8 @@
   "cancel": "منسوخ کریں",
   "delete": "حذف کریں",
   "payable": "قابل ادائیگی",
-  "syncSchedule": "سنک شیڈول",
+  "syncSchedule": "بے کار سنک",
+  "noIdleSync": "بے کار سنک نہیں",
   "autoSyncBadge": "آٹو: {interval}h",
   "@autoSyncBadge": {
     "placeholders": {

@@ -797,7 +797,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                     isExpanded: true,
                     value: state.syncInterval,
                     items: [
-                      DropdownMenuItem(value: 'manual', child: Text(l10n.manual)),
+                      DropdownMenuItem(value: 'manual', child: Text(l10n.noIdleSync)),
                       ...['12', '24', '36', '48', '60', '72', '84', '96']
                           .map((h) => DropdownMenuItem(
                                 value: h,

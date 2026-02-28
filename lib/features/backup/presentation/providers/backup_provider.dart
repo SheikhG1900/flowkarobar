@@ -258,23 +258,15 @@ class BackupNotifier extends Notifier<BackupState> {
       await loadBackups();
       await _loadAvailableCashbooks();
 
-      // Auto-sync on startup if enabled
-      if (syncInterval != 'manual') {
-        if (kDebugMode) {
-          print(
-              'BackupNotifier: Auto-sync on startup triggered (interval: $syncInterval)');
-        }
-
-        // Process all cashbooks on startup instead of just the active one
-        final prefs = await SharedPreferences.getInstance();
-        final cashbooksJson = prefs.getStringList('cashbooks_list');
-        if (cashbooksJson != null && cashbooksJson.isNotEmpty) {
-          // We trigger the background task which already handles all cashbooks
-          await SyncScheduler.triggerOnDemandSync();
-        } else {
-          // Fallback to active cashbook if list is empty
-          triggerSync(null);
-        }
+      // Sync on startup so user gets updated data and keeps data saved when using the app
+      if (kDebugMode) {
+        print('BackupNotifier: Sync on startup triggered');
+      }
+      final cashbooksJson = prefs.getStringList('cashbooks_list');
+      if (cashbooksJson != null && cashbooksJson.isNotEmpty) {
+        await SyncScheduler.triggerOnDemandSync();
+      } else {
+        triggerSync(null);
       }
     }
   }
