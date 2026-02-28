@@ -1621,32 +1621,35 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _RelationshipButton(
-                        label: l10n.paidFor,
-                        subtitle: l10n.iWillReceiveBack,
-                        icon: Icons.account_balance_wallet,
-                        isSelected: _paidRelationship == 'PAID_FOR',
-                        gradient: AppColors.receivableGradient,
-                        color: AppColors.receivableColor,
-                        onTap: isSplitted ? () {} : () => _handleRelationshipChange('PAID_FOR'),
+                IntrinsicHeight(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(
+                        child: _RelationshipButton(
+                          label: l10n.paidFor,
+                          subtitle: l10n.iWillReceiveBack,
+                          icon: Icons.account_balance_wallet,
+                          isSelected: _paidRelationship == 'PAID_FOR',
+                          gradient: AppColors.receivableGradient,
+                          color: AppColors.receivableColor,
+                          onTap: isSplitted ? () {} : () => _handleRelationshipChange('PAID_FOR'),
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _RelationshipButton(
-                        label: l10n.paidBy,
-                        subtitle: l10n.someonePaidForMe,
-                        icon: Icons.person_outline,
-                        isSelected: _paidRelationship == 'PAID_BY',
-                        gradient: AppColors.payableGradient,
-                        color: AppColors.payableColor,
-                        onTap: isSplitted ? () {} : () => _handleRelationshipChange('PAID_BY'),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _RelationshipButton(
+                          label: l10n.paidBy,
+                          subtitle: l10n.someonePaidForMe,
+                          icon: Icons.person_outline,
+                          isSelected: _paidRelationship == 'PAID_BY',
+                          gradient: AppColors.payableGradient,
+                          color: AppColors.payableColor,
+                          onTap: isSplitted ? () {} : () => _handleRelationshipChange('PAID_BY'),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 16),
               ] else if (_selectedType == 'INCOME') ...[
@@ -1657,32 +1660,35 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _RelationshipButton(
-                        label: l10n.iOwe,
-                        subtitle: l10n.receivedLoan,
-                        icon: Icons.download,
-                        isSelected: _paidRelationship == 'RECEIVED_FROM',
-                        gradient: AppColors.payableGradient,
-                        color: AppColors.payableColor,
-                        onTap: isSplitted ? () {} : () => _handleRelationshipChange('RECEIVED_FROM'),
+                IntrinsicHeight(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(
+                        child: _RelationshipButton(
+                          label: l10n.iOwe,
+                          subtitle: l10n.receivedLoan,
+                          icon: Icons.download,
+                          isSelected: _paidRelationship == 'RECEIVED_FROM',
+                          gradient: AppColors.payableGradient,
+                          color: AppColors.payableColor,
+                          onTap: isSplitted ? () {} : () => _handleRelationshipChange('RECEIVED_FROM'),
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _RelationshipButton(
-                        label: l10n.willReceive,
-                        subtitle: l10n.receiveLater,
-                        icon: Icons.schedule,
-                        isSelected: _paidRelationship == 'WILL_RECEIVE',
-                        gradient: AppColors.receivableGradient,
-                        color: AppColors.receivableColor,
-                        onTap: isSplitted ? () {} : () => _handleRelationshipChange('WILL_RECEIVE'),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _RelationshipButton(
+                          label: l10n.willReceive,
+                          subtitle: l10n.receiveLater,
+                          icon: Icons.schedule,
+                          isSelected: _paidRelationship == 'WILL_RECEIVE',
+                          gradient: AppColors.receivableGradient,
+                          color: AppColors.receivableColor,
+                          onTap: isSplitted ? () {} : () => _handleRelationshipChange('WILL_RECEIVE'),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 16),
               ],
@@ -2079,35 +2085,39 @@ class _RelationshipButton extends StatelessWidget {
                 ]
               : null,
         ),
-        child: Column(
-          children: [
-            Icon(
-              icon,
-              color: isSelected
-                  ? Colors.white
-                  : theme.colorScheme.onSurfaceVariant,
-              size: 28,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              style: theme.textTheme.titleSmall?.copyWith(
-                color: isSelected ? Colors.white : theme.colorScheme.onSurface,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              subtitle,
-              style: theme.textTheme.bodySmall?.copyWith(
+        child: SizedBox.expand(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
                 color: isSelected
-                    ? Colors.white.withValues(alpha: 0.9 / 1.0)
+                    ? Colors.white
                     : theme.colorScheme.onSurfaceVariant,
-                fontSize: 11,
+                size: 28,
               ),
-              textAlign: TextAlign.center,
-            ),
-          ],
+              const SizedBox(height: 8),
+              Text(
+                label,
+                style: theme.textTheme.titleSmall?.copyWith(
+                  color: isSelected ? Colors.white : theme.colorScheme.onSurface,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                subtitle,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: isSelected
+                      ? Colors.white.withValues(alpha: 0.9 / 1.0)
+                      : theme.colorScheme.onSurfaceVariant,
+                  fontSize: 11,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
         ),
       ),
     );
