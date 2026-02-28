@@ -478,6 +478,12 @@ class SyncEngine {
       syncStartedAt: markAsSuccess ? const Value(null) : const Value.absent(),
     ));
 
+    // Mark that this device has ever had sync data (for account-mismatch check at sign-in)
+    if (version > 0) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('has_local_sync_data', true);
+    }
+
     // Verify the write
     final verify = await _getLocalMetadata(deviceId);
     if (kDebugMode) {

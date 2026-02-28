@@ -497,6 +497,10 @@ class BackupNotifier extends Notifier<BackupState> {
           lastSyncTime: metadata.lastSyncAt,
           syncStatus: metadata.syncStatus,
         );
+        if (metadata.version > 0) {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setBool('has_local_sync_data', true);
+        }
       }
     } catch (e) {
       if (kDebugMode) {
@@ -989,18 +993,25 @@ class BackupNotifier extends Notifier<BackupState> {
   Future<void> _checkAccountMismatch(String newEmail) async {
     final prefs = await SharedPreferences.getInstance();
     final oldEmail = prefs.getString('sync_account_email');
-    
+
     if (oldEmail != null && oldEmail != newEmail) {
-      // Check if there is local sync history
-      final db = ref.read(databaseProvider);
-      final deviceId = await _getDeviceId();
-      final metadata = await (db.select(db.syncMetadata)
-            ..where((t) => t.deviceId.equals(deviceId)))
-          .getSingleOrNull();
-          
-      if (metadata != null && metadata.version > 0) {
-        // We have a mismatch and local sync history.
-        // We should notify the UI.
+      // Check if there is local sync history (flag is set when any sync writes version > 0)
+      bool hasLocalSyncData = prefs.getBool('has_local_sync_data') ?? false;
+
+      if (!hasLocalSyncData) {
+        // Fallback: query active cashbook's DB (may be 0 if wrong cashbook or not yet written)
+        final db = ref.read(databaseProvider);
+        final deviceId = await _getDeviceId();
+        final metadata = await (db.select(db.syncMetadata)
+              ..where((t) => t.deviceId.equals(deviceId)))
+            .getSingleOrNull();
+        if (metadata != null && metadata.version > 0) {
+          hasLocalSyncData = true;
+          await prefs.setBool('has_local_sync_data', true);
+        }
+      }
+
+      if (hasLocalSyncData) {
         state = state.copyWith(
           accountMismatchWarning: AccountMismatchWarning(
             oldEmail: oldEmail,
@@ -1009,7 +1020,7 @@ class BackupNotifier extends Notifier<BackupState> {
         );
       }
     }
-    
+
     // Update the stored email
     await prefs.setString('sync_account_email', newEmail);
   }
