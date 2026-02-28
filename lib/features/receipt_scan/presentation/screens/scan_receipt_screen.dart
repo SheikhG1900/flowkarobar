@@ -68,10 +68,14 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
     _amountController = TextEditingController();
     _merchantController = TextEditingController();
     _dateController = TextEditingController();
-    _checkModelDownloaded();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        _dateController.text = AppDateFormatter.formatDate(_selectedDate);
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      await _checkModelDownloaded();
+      if (!mounted) return;
+      _dateController.text = AppDateFormatter.formatDate(_selectedDate);
+      // Start downloading the AI model immediately when screen opens (if not already present)
+      if (!_modelDownloaded && !_isDownloading) {
+        _startDownload();
       }
     });
   }
