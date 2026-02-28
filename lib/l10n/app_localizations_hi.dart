@@ -513,6 +513,23 @@ class AppLocalizationsHi extends AppLocalizations {
   String get addReceivable => 'प्राप्य जोड़ें';
 
   @override
+  String get receivableIntentTitle => 'आप इसे कैसे रिकॉर्ड करना चाहेंगे?';
+
+  @override
+  String receivableIntentBoughtForContact(String contact) {
+    return 'क्या आपने $contact के लिए कुछ खरीदा? आपको मिलेगा।';
+  }
+
+  @override
+  String receivableIntentServicesAmount(String amount, String contact) {
+    return 'आपको अपनी सेवाओं के लिए $amount मिलेंगे। $contact आपको भुगतान करेगा।';
+  }
+
+  @override
+  String get receivableIntentJustRecord =>
+      'नहीं, मैं बस प्राप्य रिकॉर्ड करना चाहता/चाहती हूँ';
+
+  @override
   String get receivableAlreadyImported =>
       'यह प्राप्य पहले ही आयात किया जा चुका है।';
 
@@ -630,6 +647,23 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get addPayable => 'देय जोड़ें';
+
+  @override
+  String get payableIntentTitle => 'आप इसे कैसे रिकॉर्ड करना चाहेंगे?';
+
+  @override
+  String payableIntentContactBoughtForYou(String contact) {
+    return '$contact ने आपके लिए कुछ खरीदा है और आपको भुगतान करना है';
+  }
+
+  @override
+  String payableIntentBorrowedFrom(String amount, String contact) {
+    return 'आपने $contact से $amount उधार लिया है और आपको चुकाना है';
+  }
+
+  @override
+  String get payableIntentJustRecord =>
+      'नहीं, मैं बस यह देय रिकॉर्ड करना चाहता/चाहती हूँ';
 
   @override
   String get editPayable => 'देय संपादित करें';

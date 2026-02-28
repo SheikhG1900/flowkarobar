@@ -344,6 +344,27 @@
   },
   "receivable": "Receivable",
   "addReceivable": "Add Receivable",
+  "receivableIntentTitle": "How would you like to record this?",
+  "receivableIntentBoughtForContact": "Did you buy something for {contact}? You will receive it.",
+  "@receivableIntentBoughtForContact": {
+    "placeholders": {
+      "contact": {
+        "type": "String"
+      }
+    }
+  },
+  "receivableIntentServicesAmount": "You will receive {amount} for your services. {contact} will pay you.",
+  "@receivableIntentServicesAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "contact": {
+        "type": "String"
+      }
+    }
+  },
+  "receivableIntentJustRecord": "No, I just want to create the receivable",
   "receivableAlreadyImported": "This receivable has already been imported.",
   "pleaseSelectContact": "Please select a contact",
   "receivableAdded": "Receivable added successfully",
@@ -396,6 +417,27 @@
   "payableAlreadyImported": "This payable has already been imported.",
   "payableAdded": "Payable added successfully",
   "addPayable": "Add Payable",
+  "payableIntentTitle": "How would you like to record this?",
+  "payableIntentContactBoughtForYou": "{contact} bought something for you and you have to pay for it",
+  "@payableIntentContactBoughtForYou": {
+    "placeholders": {
+      "contact": {
+        "type": "String"
+      }
+    }
+  },
+  "payableIntentBorrowedFrom": "You borrowed {amount} from {contact} and you have to pay it",
+  "@payableIntentBorrowedFrom": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "contact": {
+        "type": "String"
+      }
+    }
+  },
+  "payableIntentJustRecord": "No, I just want to create/record this payable",
   "editPayable": "Edit Payable",
   "payableNotFound": "Payable not found",
   "payableDataNotLoaded": "Payable data not loaded",

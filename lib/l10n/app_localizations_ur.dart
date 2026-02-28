@@ -513,6 +513,23 @@ class AppLocalizationsUr extends AppLocalizations {
   String get addReceivable => 'وصولی شامل کریں';
 
   @override
+  String get receivableIntentTitle => 'آپ اسے کیسے ریکارڈ کرنا چاہیں گے؟';
+
+  @override
+  String receivableIntentBoughtForContact(String contact) {
+    return 'کیا آپ نے $contact کے لیے کچھ خریدا؟ آپ کو ملے گا۔';
+  }
+
+  @override
+  String receivableIntentServicesAmount(String amount, String contact) {
+    return 'آپ کو اپنی خدمات کے بدلے $amount ملیں گے۔ $contact آپ کو ادا کرے گا۔';
+  }
+
+  @override
+  String get receivableIntentJustRecord =>
+      'نہیں، میں صرف وصولی ریکارڈ کرنا چاہتا/چاہتی ہوں';
+
+  @override
   String get receivableAlreadyImported =>
       'یہ وصولی پہلے ہی درآمد کی جا چکی ہے۔';
 
@@ -631,6 +648,23 @@ class AppLocalizationsUr extends AppLocalizations {
 
   @override
   String get addPayable => 'واجب الادا شامل کریں';
+
+  @override
+  String get payableIntentTitle => 'آپ اسے کیسے ریکارڈ کرنا چاہیں گے؟';
+
+  @override
+  String payableIntentContactBoughtForYou(String contact) {
+    return '$contact نے آپ کے لیے کچھ خریدا ہے اور آپ کو ادا کرنا ہے';
+  }
+
+  @override
+  String payableIntentBorrowedFrom(String amount, String contact) {
+    return 'آپ نے $contact سے $amount ادھار لیا ہے اور آپ کو واپس کرنا ہے';
+  }
+
+  @override
+  String get payableIntentJustRecord =>
+      'نہیں، میں صرف یہ واجب الادا ریکارڈ کرنا چاہتا/چاہتی ہوں';
 
   @override
   String get editPayable => 'واجب الادا میں ترمیم کریں';

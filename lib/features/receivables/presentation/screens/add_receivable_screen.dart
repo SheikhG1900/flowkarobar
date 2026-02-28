@@ -17,6 +17,7 @@ import 'package:flowpaisa/features/receivables/presentation/providers/receivable
 import 'package:flowpaisa/features/receivables/presentation/widgets/receivable_details_dialog.dart';
 import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
 import 'package:flowpaisa/features/contacts/presentation/screens/add_contact_screen.dart';
+import 'package:flowpaisa/features/transactions/presentation/screens/add_transaction_screen.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/shared/widgets/limit_countdown_badge.dart';
@@ -144,6 +145,182 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
     _amountController.dispose();
     _descriptionController.dispose();
     super.dispose();
+  }
+
+  Future<void> _onAddReceivablePressed() async {
+    final isPremium = PremiumGate.isPremium(ref);
+    if (!isPremium) {
+      final limits = await PremiumGate.getReceivableLimits(ref);
+      if (!limits.canAdd) {
+        if (mounted) PremiumGate.showPremiumDialog(context);
+        return;
+      }
+    }
+    if (!_formKey.currentState!.validate()) return;
+    final l10n = AppLocalizations.of(context)!;
+    if (_selectedContactUuid == null || _selectedContact == null) {
+      ToastUtils.showErrorToast(context, ref, l10n.pleaseSelectContact);
+      return;
+    }
+    if (!mounted) return;
+    _showReceivableIntentOptions();
+  }
+
+  void _showReceivableIntentOptions() {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final contactName = _selectedContact!.name;
+    final amount = double.tryParse(_amountController.text) ?? 0.0;
+    final currencySymbol = ref.read(currencySymbolProvider);
+    final decimalPlaces = ref.read(currencyDecimalPlacesProvider);
+    final formattedAmount =
+        AmountFormatter.formatWithCurrency(amount, currencySymbol, decimalPlaces);
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) => Container(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(ctx).size.height * 0.7,
+        ),
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: theme.scaffoldBackgroundColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+            Text(
+              l10n.receivableIntentTitle,
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            _buildIntentOption(
+              context: ctx,
+              icon: Icons.shopping_bag_outlined,
+              title: l10n.receivableIntentBoughtForContact(contactName),
+              color: AppColors.expenseColor,
+              onTap: () {
+                final navigator = Navigator.of(context);
+                Navigator.pop(ctx);
+                navigator.pop();
+                navigator.push(
+                  MaterialPageRoute(
+                    builder: (context) => AddTransactionScreen(
+                      initialAmount: amount,
+                      initialDate: _selectedDate,
+                      initialDescription: _descriptionController.text.isEmpty
+                          ? null
+                          : _descriptionController.text,
+                      initialType: 'EXPENSE',
+                      initialRelationship: 'PAID_FOR',
+                      initialContactName: _selectedContact!.name,
+                      initialContactPhone: _selectedContact!.phone,
+                      initialDueDate: _dueDate,
+                    ),
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 12),
+            _buildIntentOption(
+              context: ctx,
+              icon: Icons.handshake_outlined,
+              title: l10n.receivableIntentServicesAmount(formattedAmount, contactName),
+              color: AppColors.receivableColor,
+              onTap: () {
+                final navigator = Navigator.of(context);
+                Navigator.pop(ctx);
+                navigator.pop();
+                navigator.push(
+                  MaterialPageRoute(
+                    builder: (context) => AddTransactionScreen(
+                      initialAmount: amount,
+                      initialDate: _selectedDate,
+                      initialDescription: _descriptionController.text.isEmpty
+                          ? null
+                          : _descriptionController.text,
+                      initialType: 'INCOME',
+                      initialRelationship: 'WILL_RECEIVE',
+                      initialContactName: _selectedContact!.name,
+                      initialContactPhone: _selectedContact!.phone,
+                      initialDueDate: _dueDate,
+                    ),
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 12),
+            _buildIntentOption(
+              context: ctx,
+              icon: Icons.note_add_outlined,
+              title: l10n.receivableIntentJustRecord,
+              color: theme.colorScheme.primary,
+              onTap: () {
+                Navigator.pop(ctx);
+                _saveReceivable();
+              },
+            ),
+            const SizedBox(height: 24),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildIntentOption({
+    required BuildContext context,
+    required IconData icon,
+    required String title,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    final theme = Theme.of(context);
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          border: Border.all(color: theme.dividerColor),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: color),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                title,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+                softWrap: true,
+                maxLines: 4,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            Icon(Icons.chevron_right, color: theme.colorScheme.onSurfaceVariant),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<void> _saveReceivable() async {
@@ -863,7 +1040,7 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
                       children: [
                         GradientButton(
                           label: l10n.addReceivable,
-                          onPressed: _isDuplicate ? null : _saveReceivable,
+                          onPressed: _isDuplicate ? null : _onAddReceivablePressed,
                           gradient: AppColors.receivableGradient,
                           width: double.infinity,
                         ),

@@ -988,6 +988,30 @@ abstract class AppLocalizations {
   /// **'Add Receivable'**
   String get addReceivable;
 
+  /// No description provided for @receivableIntentTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'How would you like to record this?'**
+  String get receivableIntentTitle;
+
+  /// No description provided for @receivableIntentBoughtForContact.
+  ///
+  /// In en, this message translates to:
+  /// **'Did you buy something for {contact}? You will receive it.'**
+  String receivableIntentBoughtForContact(String contact);
+
+  /// No description provided for @receivableIntentServicesAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'You will receive {amount} for your services. {contact} will pay you.'**
+  String receivableIntentServicesAmount(String amount, String contact);
+
+  /// No description provided for @receivableIntentJustRecord.
+  ///
+  /// In en, this message translates to:
+  /// **'No, I just want to create the receivable'**
+  String get receivableIntentJustRecord;
+
   /// No description provided for @receivableAlreadyImported.
   ///
   /// In en, this message translates to:
@@ -1209,6 +1233,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add Payable'**
   String get addPayable;
+
+  /// No description provided for @payableIntentTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'How would you like to record this?'**
+  String get payableIntentTitle;
+
+  /// No description provided for @payableIntentContactBoughtForYou.
+  ///
+  /// In en, this message translates to:
+  /// **'{contact} bought something for you and you have to pay for it'**
+  String payableIntentContactBoughtForYou(String contact);
+
+  /// No description provided for @payableIntentBorrowedFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'You borrowed {amount} from {contact} and you have to pay it'**
+  String payableIntentBorrowedFrom(String amount, String contact);
+
+  /// No description provided for @payableIntentJustRecord.
+  ///
+  /// In en, this message translates to:
+  /// **'No, I just want to create/record this payable'**
+  String get payableIntentJustRecord;
 
   /// No description provided for @editPayable.
   ///
