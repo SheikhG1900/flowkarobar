@@ -31,6 +31,7 @@ import 'package:flowpaisa/features/settings/presentation/screens/language_select
 import 'package:flowpaisa/features/settings/presentation/screens/font_selector_screen.dart';
 import 'package:flowpaisa/features/settings/presentation/screens/theme_selector_screen.dart';
 import 'package:flowpaisa/features/settings/presentation/screens/about_screen.dart';
+import 'package:flowpaisa/features/settings/presentation/screens/dev_screen.dart';
 import 'package:flowpaisa/features/settings/presentation/screens/profile_screen.dart';
 import 'package:flowpaisa/features/notifications/presentation/screens/notifications_screen.dart';
 import 'package:flowpaisa/features/notifications/presentation/providers/notification_provider.dart';
@@ -2539,6 +2540,21 @@ class _SettingsTab extends ConsumerWidget {
                 context,
                 MaterialPageRoute(
                   builder: (context) => const AboutScreen(),
+                ),
+              );
+            },
+          ),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.bug_report_outlined),
+            title: const Text('Developer'),
+            subtitle: const Text('SharedPreferences & debug info'),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const DevScreen(),
                 ),
               );
             },

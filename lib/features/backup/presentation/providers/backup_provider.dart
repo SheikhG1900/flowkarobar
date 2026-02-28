@@ -992,7 +992,8 @@ class BackupNotifier extends Notifier<BackupState> {
 
   Future<void> _checkAccountMismatch(String newEmail) async {
     final prefs = await SharedPreferences.getInstance();
-    final oldEmail = prefs.getString('sync_account_email');
+    // Use last_sync_account_email (set on sign-out) so we detect account change even after user signed out
+    final oldEmail = prefs.getString('last_sync_account_email');
 
     if (oldEmail != null && oldEmail != newEmail) {
       // Check if there is local sync history (flag is set when any sync writes version > 0)
@@ -1035,13 +1036,18 @@ class BackupNotifier extends Notifier<BackupState> {
 
   Future<void> signOut() async {
     await _driveService.signOut();
-    
-    // Cancel background syncs and set to manual
+
+    // Preserve last synced account for mismatch check on next sign-in; then clear current
     final prefs = await SharedPreferences.getInstance();
+    final currentEmail = prefs.getString('sync_account_email');
+    if (currentEmail != null && currentEmail.isNotEmpty) {
+      await prefs.setString('last_sync_account_email', currentEmail);
+    }
     await prefs.remove('sync_account_email');
+
     await prefs.setString('sync_interval', 'manual');
     await SyncScheduler.cancelAllSyncTasks();
-    
+
     state = BackupState.initial(); // Reset
   }
 
