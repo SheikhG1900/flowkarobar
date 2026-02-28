@@ -297,6 +297,43 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
+    ref.listen<BackupState>(backupProvider, (previous, next) {
+      if (next.premiumExpiredLogout && !(previous?.premiumExpiredLogout ?? false)) {
+        // Clear flag
+        ref.read(backupProvider.notifier).clearPremiumExpiredLogout();
+        
+        // Show dialog
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(Icons.info_outline, color: Colors.orange),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    l10n.premiumRequired,
+                    softWrap: true,
+                    maxLines: 5,
+                  ),
+                ),
+              ],
+            ),
+            content: SingleChildScrollView(
+              child: Text(l10n.premiumExpiredSyncPaused),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(l10n.understood),
+              ),
+            ],
+          ),
+        );
+      }
+    });
+
     // Different screens for each tab
     final List<Widget> screens = [
       _DashboardTab(),

@@ -1,3 +1,4 @@
+import 'package:flowpaisa/features/premium/domain/premium_provider.dart';
 import 'package:flowpaisa/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'dart:convert';
@@ -51,6 +52,16 @@ class CloudCashbookMetadata {
   });
 }
 
+class AccountMismatchWarning {
+  final String oldEmail;
+  final String newEmail;
+
+  AccountMismatchWarning({
+    required this.oldEmail,
+    required this.newEmail,
+  });
+}
+
 /// State for Backup Screen
 class BackupState {
   final bool isLoading;
@@ -78,6 +89,9 @@ class BackupState {
 
   final String? lastSuccessMessage;
   final String? lastErrorMessage;
+  
+  final AccountMismatchWarning? accountMismatchWarning;
+  final bool premiumExpiredLogout;
 
   BackupState({
     this.isLoading = false,
@@ -101,6 +115,8 @@ class BackupState {
     this.syncStartedAt,
     this.lastSuccessMessage,
     this.lastErrorMessage,
+    this.accountMismatchWarning,
+    this.premiumExpiredLogout = false,
   });
 
   factory BackupState.initial() {
@@ -129,6 +145,10 @@ class BackupState {
     DateTime? syncStartedAt,
     String? lastSuccessMessage,
     String? lastErrorMessage,
+    AccountMismatchWarning? accountMismatchWarning,
+    bool? premiumExpiredLogout,
+    bool clearAccountMismatchWarning = false,
+    bool clearPremiumExpiredLogoutFlag = false,
   }) {
     return BackupState(
       isLoading: isLoading ?? this.isLoading,
@@ -153,6 +173,12 @@ class BackupState {
       syncStartedAt: syncStartedAt ?? this.syncStartedAt,
       lastSuccessMessage: lastSuccessMessage,
       lastErrorMessage: lastErrorMessage,
+      accountMismatchWarning: clearAccountMismatchWarning
+          ? null
+          : (accountMismatchWarning ?? this.accountMismatchWarning),
+      premiumExpiredLogout: clearPremiumExpiredLogoutFlag
+          ? false
+          : (premiumExpiredLogout ?? this.premiumExpiredLogout),
     );
   }
 }
@@ -212,6 +238,23 @@ class BackupNotifier extends Notifier<BackupState> {
     _startDatabaseStatusWatcher();
 
     if (_driveService.isSignedIn) {
+      // Check premium status (same logic as PremiumGate.isPremium but using Ref)
+      final premiumState = ref.read(premiumProvider);
+      bool isPremium = premiumState.isPremium;
+      if (isPremium &&
+          premiumState.subscriptionType != 'lifetime' &&
+          premiumState.expiryDate != null) {
+        isPremium = premiumState.expiryDate!.isAfter(DateTime.now());
+      }
+      if (!isPremium) {
+        if (kDebugMode) {
+          print('BackupNotifier: User is not premium but signed in. Signing out.');
+        }
+        await signOut();
+        state = state.copyWith(premiumExpiredLogout: true);
+        return;
+      }
+
       await loadBackups();
       await _loadAvailableCashbooks();
 
@@ -890,6 +933,11 @@ class BackupNotifier extends Notifier<BackupState> {
     try {
       state = state.copyWith(isLoading: true, error: null);
       final account = await _driveService.signIn();
+      
+      if (account != null) {
+        await _checkAccountMismatch(account.email);
+      }
+      
       state = state.copyWith(
         currentUser: account,
         isLoading: false,
@@ -910,6 +958,7 @@ class BackupNotifier extends Notifier<BackupState> {
       final account = await _driveService.init();
       
       if (account != null) {
+        await _checkAccountMismatch(account.email);
         state = state.copyWith(
           isLoading: false,
           currentUser: account,
@@ -919,6 +968,10 @@ class BackupNotifier extends Notifier<BackupState> {
 
       // If silent sign in fails, trigger the explicit sign in popup
       final explicitAccount = await _driveService.signIn();
+      if (explicitAccount != null) {
+        await _checkAccountMismatch(explicitAccount.email);
+      }
+      
       state = state.copyWith(
         isLoading: false,
         currentUser: explicitAccount,
@@ -933,8 +986,51 @@ class BackupNotifier extends Notifier<BackupState> {
     }
   }
 
+  Future<void> _checkAccountMismatch(String newEmail) async {
+    final prefs = await SharedPreferences.getInstance();
+    final oldEmail = prefs.getString('sync_account_email');
+    
+    if (oldEmail != null && oldEmail != newEmail) {
+      // Check if there is local sync history
+      final db = ref.read(databaseProvider);
+      final deviceId = await _getDeviceId();
+      final metadata = await (db.select(db.syncMetadata)
+            ..where((t) => t.deviceId.equals(deviceId)))
+          .getSingleOrNull();
+          
+      if (metadata != null && metadata.version > 0) {
+        // We have a mismatch and local sync history.
+        // We should notify the UI.
+        state = state.copyWith(
+          accountMismatchWarning: AccountMismatchWarning(
+            oldEmail: oldEmail,
+            newEmail: newEmail,
+          ),
+        );
+      }
+    }
+    
+    // Update the stored email
+    await prefs.setString('sync_account_email', newEmail);
+  }
+
+  Future<void> clearAccountMismatchWarning() async {
+    state = state.copyWith(clearAccountMismatchWarning: true);
+  }
+
+  void clearPremiumExpiredLogout() {
+    state = state.copyWith(clearPremiumExpiredLogoutFlag: true);
+  }
+
   Future<void> signOut() async {
     await _driveService.signOut();
+    
+    // Cancel background syncs and set to manual
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('sync_account_email');
+    await prefs.setString('sync_interval', 'manual');
+    await SyncScheduler.cancelAllSyncTasks();
+    
     state = BackupState.initial(); // Reset
   }
 

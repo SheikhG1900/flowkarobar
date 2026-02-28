@@ -6082,6 +6082,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Are you sure you want to process all outstanding items for this contact?'**
   String get bulkProcessConfirmation;
+
+  /// No description provided for @accountChangedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Google Drive Account Changed'**
+  String get accountChangedTitle;
+
+  /// No description provided for @accountChangedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'You previously synced with {oldEmail}, but are now logged into {newEmail}.\n\nTo prevent data conflicts, your data will not sync correctly with this new drive until you clear the existing cloud data.\n\nPlease go to the Cashbooks screen, tap the menu (⋮) on your cashbook, and select \'Clear Cloud\'.'**
+  String accountChangedMessage(String oldEmail, String newEmail);
+
+  /// No description provided for @understood.
+  ///
+  /// In en, this message translates to:
+  /// **'Understood'**
+  String get understood;
+
+  /// No description provided for @premiumExpiredSyncPaused.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Premium subscription has expired. Cloud sync has been paused and you have been logged out of Google Drive.'**
+  String get premiumExpiredSyncPaused;
+
+  /// No description provided for @loggedOutSyncPaused.
+  ///
+  /// In en, this message translates to:
+  /// **'Logged out. Background sync has been paused.'**
+  String get loggedOutSyncPaused;
+
+  /// No description provided for @signOutSyncConfirmMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Signing out will pause background sync. Continue?'**
+  String get signOutSyncConfirmMessage;
 }
 
 class _AppLocalizationsDelegate

@@ -9,6 +9,7 @@ import 'package:flowpaisa/features/settings/presentation/providers/settings_prov
 import 'package:flowpaisa/features/currencies/presentation/screens/currencies_list_screen.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
 import 'package:flowpaisa/features/backup/presentation/providers/backup_provider.dart';
+import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -235,6 +236,33 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final backupNotifier = ref.read(backupProvider.notifier);
     final theme = Theme.of(context);
 
+    ref.listen<BackupState>(backupProvider, (previous, next) {
+      if (next.accountMismatchWarning != null &&
+          (previous == null || previous.accountMismatchWarning == null)) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text(l10n.accountChangedTitle),
+            content: Text(l10n.accountChangedMessage(
+              next.accountMismatchWarning!.oldEmail,
+              next.accountMismatchWarning!.newEmail,
+            )),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  ref
+                      .read(backupProvider.notifier)
+                      .clearAccountMismatchWarning();
+                  Navigator.pop(context);
+                },
+                child: Text(l10n.understood),
+              ),
+            ],
+          ),
+        );
+      }
+    });
+
     final bool isGoogleSignedIn = backupState.currentUser != null;
     final String? photoUrl = backupState.currentUser?.photoUrl;
 
@@ -259,16 +287,20 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               Center(
                 child: Stack(
                   children: [
-                    if (isGoogleSignedIn && photoUrl != null && photoUrl.isNotEmpty)
+                    if (isGoogleSignedIn &&
+                        photoUrl != null &&
+                        photoUrl.isNotEmpty)
                       Container(
                         width: 100,
                         height: 100,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          border: Border.all(color: theme.colorScheme.primary, width: 3),
+                          border: Border.all(
+                              color: theme.colorScheme.primary, width: 3),
                           boxShadow: [
                             BoxShadow(
-                              color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                              color: theme.colorScheme.primary
+                                  .withValues(alpha: 0.3),
                               blurRadius: 20,
                               offset: const Offset(0, 8),
                             ),
@@ -282,26 +314,27 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             height: 100,
                             errorBuilder: (context, error, stackTrace) =>
                                 Container(
-                                  decoration: BoxDecoration(
-                                    gradient: AppColors.getContactGradient(
-                                        _nameController.text.isEmpty
-                                            ? (profile.name ?? '')
-                                            : _nameController.text),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Center(
-                                    child: Text(
-                                      NameUtils.getInitials(_nameController.text.isEmpty
+                              decoration: BoxDecoration(
+                                gradient: AppColors.getContactGradient(
+                                    _nameController.text.isEmpty
+                                        ? (profile.name ?? '')
+                                        : _nameController.text),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Center(
+                                child: Text(
+                                  NameUtils.getInitials(
+                                      _nameController.text.isEmpty
                                           ? (profile.name ?? '')
                                           : _nameController.text),
-                                      style: TextStyle(
-                                        fontSize: 36,
-                                        fontWeight: FontWeight.bold,
-                                        color: theme.colorScheme.onPrimary,
-                                      ),
-                                    ),
+                                  style: TextStyle(
+                                    fontSize: 36,
+                                    fontWeight: FontWeight.bold,
+                                    color: theme.colorScheme.onPrimary,
                                   ),
                                 ),
+                              ),
+                            ),
                           ),
                         ),
                       )
@@ -344,17 +377,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ),
               ),
               const SizedBox(height: 24),
-              
-              // Google Connect Card
+
+              // Google Connect Card (same width as name/email fields)
               Card(
+                margin: EdgeInsets.zero,
                 elevation: 0,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                   side: BorderSide(color: theme.dividerColor),
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
@@ -375,9 +409,37 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                 style: theme.textTheme.bodyMedium,
                               ),
                             ),
-                            TextButton(
-                              onPressed: () => backupNotifier.signOut(),
-                              child: Text(l10n.signOut),
+                            IconButton(
+                              onPressed: () async {
+                                if (backupState.syncInterval != 'manual') {
+                                  final confirm = await showDialog<bool>(
+                                    context: context,
+                                    builder: (ctx) => AlertDialog(
+                                      title: Text(l10n.signOut),
+                                      content: Text(
+                                        l10n.signOutSyncConfirmMessage,
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () =>
+                                              Navigator.pop(ctx, false),
+                                          child: Text(l10n.cancel),
+                                        ),
+                                        FilledButton(
+                                          onPressed: () =>
+                                              Navigator.pop(ctx, true),
+                                          child: Text(l10n.signOut),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                  if (confirm != true || !mounted) return;
+                                }
+                                await backupNotifier.signOut();
+                              },
+                              icon: const Icon(Icons.logout_outlined),
+                              color: theme.colorScheme.error,
+                              tooltip: l10n.signOut,
                             ),
                           ],
                         ),
@@ -387,8 +449,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           child: OutlinedButton.icon(
                             onPressed: () {
                               setState(() {
-                                _nameController.text = backupState.currentUser!.displayName ?? '';
-                                _emailController.text = backupState.currentUser!.email;
+                                _nameController.text =
+                                    backupState.currentUser!.displayName ?? '';
+                                _emailController.text =
+                                    backupState.currentUser!.email;
                               });
                             },
                             icon: const Icon(Icons.auto_awesome),
@@ -412,7 +476,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton.icon(
-                            onPressed: () => backupNotifier.signIn(),
+                            onPressed: () {
+                              if (PremiumGate.isPremium(ref)) {
+                                backupNotifier.signIn();
+                              } else {
+                                PremiumGate.showPremiumDialog(context);
+                              }
+                            },
                             icon: const Icon(Icons.login),
                             label: Text(l10n.connectGoogleDrive),
                           ),

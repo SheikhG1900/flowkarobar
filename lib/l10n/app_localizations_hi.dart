@@ -3329,4 +3329,27 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get bulkProcessConfirmation =>
       'क्या आप वाकई इस संपर्क के लिए सभी बकाया आइटम प्रोसेस करना चाहते हैं?';
+
+  @override
+  String get accountChangedTitle => 'Google Drive खाता बदल गया';
+
+  @override
+  String accountChangedMessage(String oldEmail, String newEmail) {
+    return 'आपने पहले $oldEmail के साथ सिंक किया था, लेकिन अब $newEmail में लॉग इन हैं।\n\nडेटा टकराव को रोकने के लिए, आपका डेटा इस नए ड्राइव के साथ तब तक सही ढंग से सिंक नहीं होगा जब तक आप मौजूदा क्लाउड डेटा साफ़ नहीं करते।\n\nकृपया Cashbooks स्क्रीन पर जाएं, अपने cashbook पर मेनू (⋮) टैप करें, और \'क्लाउड साफ़ करें\' चुनें।';
+  }
+
+  @override
+  String get understood => 'समझ गया';
+
+  @override
+  String get premiumExpiredSyncPaused =>
+      'आपकी प्रीमियम सदस्यता समाप्त हो गई है। क्लाउड सिंक रोक दिया गया है और आपको Google Drive से लॉग आउट कर दिया गया है।';
+
+  @override
+  String get loggedOutSyncPaused =>
+      'लॉग आउट हो गया। बैकग्राउंड सिंक रोक दिया गया है।';
+
+  @override
+  String get signOutSyncConfirmMessage =>
+      'साइन आउट करने पर बैकग्राउंड सिंक रुक जाएगा। जारी रखें?';
 }

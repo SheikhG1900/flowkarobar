@@ -1759,5 +1759,21 @@
   "clearCloudSubtitle": "Wipes history from Google Drive for this cashbook only",
   "addCloudCashbook": "Add Cloud Cashbook",
   "addFromCloud": "Add from Cloud",
-  "bulkProcessConfirmation": "Are you sure you want to process all outstanding items for this contact?"
+  "bulkProcessConfirmation": "Are you sure you want to process all outstanding items for this contact?",
+  "accountChangedTitle": "Google Drive Account Changed",
+  "accountChangedMessage": "You previously synced with {oldEmail}, but are now logged into {newEmail}.\n\nTo prevent data conflicts, your data will not sync correctly with this new drive until you clear the existing cloud data.\n\nPlease go to the Cashbooks screen, tap the menu (⋮) on your cashbook, and select 'Clear Cloud'.",
+  "@accountChangedMessage": {
+    "placeholders": {
+      "oldEmail": {
+        "type": "String"
+      },
+      "newEmail": {
+        "type": "String"
+      }
+    }
+  },
+  "understood": "Understood",
+  "premiumExpiredSyncPaused": "Your Premium subscription has expired. Cloud sync has been paused and you have been logged out of Google Drive.",
+  "loggedOutSyncPaused": "Logged out. Background sync has been paused.",
+  "signOutSyncConfirmMessage": "Signing out will pause background sync. Continue?"
 }

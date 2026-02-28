@@ -3315,4 +3315,27 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get bulkProcessConfirmation =>
       'Are you sure you want to process all outstanding items for this contact?';
+
+  @override
+  String get accountChangedTitle => 'Google Drive Account Changed';
+
+  @override
+  String accountChangedMessage(String oldEmail, String newEmail) {
+    return 'You previously synced with $oldEmail, but are now logged into $newEmail.\n\nTo prevent data conflicts, your data will not sync correctly with this new drive until you clear the existing cloud data.\n\nPlease go to the Cashbooks screen, tap the menu (⋮) on your cashbook, and select \'Clear Cloud\'.';
+  }
+
+  @override
+  String get understood => 'Understood';
+
+  @override
+  String get premiumExpiredSyncPaused =>
+      'Your Premium subscription has expired. Cloud sync has been paused and you have been logged out of Google Drive.';
+
+  @override
+  String get loggedOutSyncPaused =>
+      'Logged out. Background sync has been paused.';
+
+  @override
+  String get signOutSyncConfirmMessage =>
+      'Signing out will pause background sync. Continue?';
 }

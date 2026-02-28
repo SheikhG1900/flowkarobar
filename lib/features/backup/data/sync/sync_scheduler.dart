@@ -315,6 +315,11 @@ class SyncScheduler {
     );
   }
 
+  /// Cancels the periodic cloud sync task (e.g. on sign out).
+  static Future<void> cancelAllSyncTasks() async {
+    await Workmanager().cancelByUniqueName('daily-sync');
+  }
+
   static Future<void> scheduleDailySync() async {
     final prefs = await SharedPreferences.getInstance();
     final syncInterval = prefs.getString('sync_interval') ?? 'manual';

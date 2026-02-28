@@ -245,7 +245,13 @@ class CashbooksScreen extends ConsumerWidget {
           FloatingActionButton(
             heroTag: 'set_sync_schedule',
             backgroundColor: theme.colorScheme.tertiaryContainer,
-            onPressed: () => _showSyncScheduleDialog(context, ref),
+            onPressed: () {
+              if (!PremiumGate.isPremium(ref)) {
+                PremiumGate.showPremiumDialog(context);
+                return;
+              }
+              _showSyncScheduleDialog(context, ref);
+            },
             tooltip: l10n.syncSchedule,
             child: Icon(Icons.schedule, color: theme.colorScheme.onTertiaryContainer),
           ),
@@ -254,6 +260,10 @@ class CashbooksScreen extends ConsumerWidget {
             heroTag: 'add_cloud_cashbook',
             backgroundColor: theme.colorScheme.secondaryContainer,
             onPressed: () async {
+              if (!PremiumGate.isPremium(ref)) {
+                PremiumGate.showPremiumDialog(context);
+                return;
+              }
               final notifier = ref.read(backupProvider.notifier);
               if (ref.read(backupProvider).currentUser == null) {
                 final success = await notifier.signInIfNeeded();
@@ -1123,18 +1133,18 @@ class CashbooksScreen extends ConsumerWidget {
     final backupState = ref.watch(backupProvider);
     final backupNotifier = ref.read(backupProvider.notifier);
 
+    // Check premium first
+    if (!PremiumGate.isPremium(ref)) {
+      PremiumGate.showPremiumDialog(context);
+      return;
+    }
+
     // If not signed in, attempt to sign in
     if (backupState.currentUser == null) {
       final success = await backupNotifier.signInIfNeeded();
       if (!success) {
         return; // Sign in failed or cancelled
       }
-    }
-
-    // Check premium
-    if (!PremiumGate.isPremium(ref)) {
-      PremiumGate.showPremiumDialog(context);
-      return;
     }
 
     showDialog(

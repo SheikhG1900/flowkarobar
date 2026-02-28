@@ -3336,4 +3336,27 @@ class AppLocalizationsUr extends AppLocalizations {
   @override
   String get bulkProcessConfirmation =>
       'کیا آپ واقعی اس رابطے کے لیے تمام بقایا آئٹمز پروسیس کرنا چاہتے ہیں؟';
+
+  @override
+  String get accountChangedTitle => 'Google Drive اکاؤنٹ تبدیل ہو گیا';
+
+  @override
+  String accountChangedMessage(String oldEmail, String newEmail) {
+    return 'آپ نے پہلے $oldEmail کے ساتھ سنک کیا تھا، لیکن اب $newEmail میں لاگ ان ہیں۔\n\nڈیٹا کے تصادم کو روکنے کے لیے، آپ کا ڈیٹا اس نئی ڈرائیو کے ساتھ اس وقت تک درست طریقے سے سنک نہیں ہوگا جب تک آپ موجودہ کلاؤڈ ڈیٹا کو صاف نہیں کرتے۔\n\nبراہ کرم Cashbooks اسکرین پر جائیں، اپنے cashbook پر مینو (⋮) کو تھپتھپائیں، اور \'کلاؤڈ صاف کریں\' کو منتخب کریں۔';
+  }
+
+  @override
+  String get understood => 'سمجھ گیا';
+
+  @override
+  String get premiumExpiredSyncPaused =>
+      'آپ کی پریمیم سبسکرپشن ختم ہو گئی ہے۔ کلاؤڈ سنک روک دیا گیا ہے اور آپ کو Google Drive سے لاگ آؤٹ کر دیا گیا ہے۔';
+
+  @override
+  String get loggedOutSyncPaused =>
+      'لاگ آؤٹ ہو گیا۔ بیک گراؤنڈ سنک روک دیا گیا ہے۔';
+
+  @override
+  String get signOutSyncConfirmMessage =>
+      'سائن آؤٹ کرنے سے بیک گراؤنڈ سنک رک جائے گا۔ جاری رکھیں؟';
 }
