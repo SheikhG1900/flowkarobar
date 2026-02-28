@@ -997,19 +997,19 @@ abstract class AppLocalizations {
   /// No description provided for @receivableIntentBoughtForContact.
   ///
   /// In en, this message translates to:
-  /// **'Did you buy something for {contact}? You will receive it.'**
+  /// **'You paid for something for {contact}. They\'ll pay you back.'**
   String receivableIntentBoughtForContact(String contact);
 
   /// No description provided for @receivableIntentServicesAmount.
   ///
   /// In en, this message translates to:
-  /// **'You will receive {amount} for your services. {contact} will pay you.'**
+  /// **'{contact} will pay you {amount} for your services.'**
   String receivableIntentServicesAmount(String amount, String contact);
 
   /// No description provided for @receivableIntentJustRecord.
   ///
   /// In en, this message translates to:
-  /// **'No, I just want to create the receivable'**
+  /// **'Just create a receivable'**
   String get receivableIntentJustRecord;
 
   /// No description provided for @receivableAlreadyImported.
@@ -1243,19 +1243,19 @@ abstract class AppLocalizations {
   /// No description provided for @payableIntentContactBoughtForYou.
   ///
   /// In en, this message translates to:
-  /// **'{contact} bought something for you and you have to pay for it'**
+  /// **'{contact} paid for something on your behalf.'**
   String payableIntentContactBoughtForYou(String contact);
 
   /// No description provided for @payableIntentBorrowedFrom.
   ///
   /// In en, this message translates to:
-  /// **'You borrowed {amount} from {contact} and you have to pay it'**
+  /// **'You borrowed {amount} from {contact}.'**
   String payableIntentBorrowedFrom(String amount, String contact);
 
   /// No description provided for @payableIntentJustRecord.
   ///
   /// In en, this message translates to:
-  /// **'No, I just want to create/record this payable'**
+  /// **'Just create a payable'**
   String get payableIntentJustRecord;
 
   /// No description provided for @editPayable.
