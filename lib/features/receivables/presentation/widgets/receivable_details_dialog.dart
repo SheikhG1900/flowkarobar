@@ -46,7 +46,8 @@ class ReceivableDetailsDialog extends ConsumerWidget {
     final currencyAsync = ref.watch(currentCurrencyProvider);
     final currency = currencyAsync.value;
 
-    final itemAsync = ref.watch(receivableWithLinkedDataProvider(receivableUuid));
+    final itemAsync =
+        ref.watch(receivableWithLinkedDataProvider(receivableUuid));
 
     return itemAsync.when(
       data: (item) {
@@ -596,8 +597,8 @@ class ReceivableDetailsDialog extends ConsumerWidget {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
-                        color: theme.colorScheme.primary
-                            .withValues(alpha: 0.12),
+                        color:
+                            theme.colorScheme.primary.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Row(

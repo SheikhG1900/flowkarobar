@@ -174,8 +174,8 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
     final amount = double.tryParse(_amountController.text) ?? 0.0;
     final currencySymbol = ref.read(currencySymbolProvider);
     final decimalPlaces = ref.read(currencyDecimalPlacesProvider);
-    final formattedAmount =
-        AmountFormatter.formatWithCurrency(amount, currencySymbol, decimalPlaces);
+    final formattedAmount = AmountFormatter.formatWithCurrency(
+        amount, currencySymbol, decimalPlaces);
 
     showModalBottomSheet(
       context: context,
@@ -195,81 +195,82 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-            Text(
-              l10n.payableIntentTitle,
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
+              Text(
+                l10n.payableIntentTitle,
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
               ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            _buildIntentOption(
-              context: ctx,
-              icon: Icons.shopping_bag_outlined,
-              title: l10n.payableIntentContactBoughtForYou(contactName),
-              color: AppColors.payableColor,
-              onTap: () {
-                final navigator = Navigator.of(context);
-                Navigator.pop(ctx);
-                navigator.pop();
-                navigator.push(
-                  MaterialPageRoute(
-                    builder: (context) => AddTransactionScreen(
-                      initialAmount: amount,
-                      initialDate: _selectedDate,
-                      initialDescription: _descriptionController.text.isEmpty
-                          ? null
-                          : _descriptionController.text,
-                      initialType: 'EXPENSE',
-                      initialRelationship: 'PAID_BY',
-                      initialContactName: _selectedContact!.name,
-                      initialContactPhone: _selectedContact!.phone,
-                      initialDueDate: _dueDate,
+              const SizedBox(height: 24),
+              _buildIntentOption(
+                context: ctx,
+                icon: Icons.shopping_bag_outlined,
+                title: l10n.payableIntentContactBoughtForYou(contactName),
+                color: AppColors.payableColor,
+                onTap: () {
+                  final navigator = Navigator.of(context);
+                  Navigator.pop(ctx);
+                  navigator.pop();
+                  navigator.push(
+                    MaterialPageRoute(
+                      builder: (context) => AddTransactionScreen(
+                        initialAmount: amount,
+                        initialDate: _selectedDate,
+                        initialDescription: _descriptionController.text.isEmpty
+                            ? null
+                            : _descriptionController.text,
+                        initialType: 'EXPENSE',
+                        initialRelationship: 'PAID_BY',
+                        initialContactName: _selectedContact!.name,
+                        initialContactPhone: _selectedContact!.phone,
+                        initialDueDate: _dueDate,
+                      ),
                     ),
-                  ),
-                );
-              },
-            ),
-            const SizedBox(height: 12),
-            _buildIntentOption(
-              context: ctx,
-              icon: Icons.account_balance_wallet_outlined,
-              title: l10n.payableIntentBorrowedFrom(formattedAmount, contactName),
-              color: AppColors.incomeColor,
-              onTap: () {
-                final navigator = Navigator.of(context);
-                Navigator.pop(ctx);
-                navigator.pop();
-                navigator.push(
-                  MaterialPageRoute(
-                    builder: (context) => AddTransactionScreen(
-                      initialAmount: amount,
-                      initialDate: _selectedDate,
-                      initialDescription: _descriptionController.text.isEmpty
-                          ? null
-                          : _descriptionController.text,
-                      initialType: 'INCOME',
-                      initialRelationship: 'RECEIVED_FROM',
-                      initialContactName: _selectedContact!.name,
-                      initialContactPhone: _selectedContact!.phone,
-                      initialDueDate: _dueDate,
+                  );
+                },
+              ),
+              const SizedBox(height: 12),
+              _buildIntentOption(
+                context: ctx,
+                icon: Icons.account_balance_wallet_outlined,
+                title: l10n.payableIntentBorrowedFrom(
+                    formattedAmount, contactName),
+                color: AppColors.incomeColor,
+                onTap: () {
+                  final navigator = Navigator.of(context);
+                  Navigator.pop(ctx);
+                  navigator.pop();
+                  navigator.push(
+                    MaterialPageRoute(
+                      builder: (context) => AddTransactionScreen(
+                        initialAmount: amount,
+                        initialDate: _selectedDate,
+                        initialDescription: _descriptionController.text.isEmpty
+                            ? null
+                            : _descriptionController.text,
+                        initialType: 'INCOME',
+                        initialRelationship: 'RECEIVED_FROM',
+                        initialContactName: _selectedContact!.name,
+                        initialContactPhone: _selectedContact!.phone,
+                        initialDueDate: _dueDate,
+                      ),
                     ),
-                  ),
-                );
-              },
-            ),
-            const SizedBox(height: 12),
-            _buildIntentOption(
-              context: ctx,
-              icon: Icons.note_add_outlined,
-              title: l10n.payableIntentJustRecord,
-              color: theme.colorScheme.primary,
-              onTap: () {
-                Navigator.pop(ctx);
-                _savePayable();
-              },
-            ),
-            const SizedBox(height: 24),
+                  );
+                },
+              ),
+              const SizedBox(height: 12),
+              _buildIntentOption(
+                context: ctx,
+                icon: Icons.note_add_outlined,
+                title: l10n.payableIntentJustRecord,
+                color: theme.colorScheme.primary,
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _savePayable();
+                },
+              ),
+              const SizedBox(height: 24),
             ],
           ),
         ),
@@ -317,7 +318,8 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            Icon(Icons.chevron_right, color: theme.colorScheme.onSurfaceVariant),
+            Icon(Icons.chevron_right,
+                color: theme.colorScheme.onSurfaceVariant),
           ],
         ),
       ),
@@ -395,7 +397,8 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
           final capturedUserProfile = userProfile;
           final capturedTransactionService = transactionService;
           final capturedWhatsAppService = whatsAppService;
-          final capturedTemplateService = ref.read(messageTemplateServiceProvider);
+          final capturedTemplateService =
+              ref.read(messageTemplateServiceProvider);
           final capturedLanguage = getCurrentLanguageCode(ref);
 
           ToastUtils.showSuccessToast(
@@ -423,8 +426,8 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
           navigator.pop();
           navigator.push(
             MaterialPageRoute(
-              builder: (context) =>
-                  PayableDetailsDialog(payableUuid: payableWithLinkedData.payable.uuid),
+              builder: (context) => PayableDetailsDialog(
+                  payableUuid: payableWithLinkedData.payable.uuid),
             ),
           );
         } else {
@@ -581,8 +584,8 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
                     },
                     loading: () =>
                         const Center(child: CircularProgressIndicator()),
-                    error: (e, s) => Center(
-                        child: Text(l10n.errorOccurred(e.toString()))),
+                    error: (e, s) =>
+                        Center(child: Text(l10n.errorOccurred(e.toString()))),
                   ),
                 ),
               ],
@@ -695,7 +698,8 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
                       const SizedBox(height: 12),
                       IconButton.filled(
                         onPressed: () async {
-                          final amount = double.tryParse(_amountController.text) ?? 0.0;
+                          final amount =
+                              double.tryParse(_amountController.text) ?? 0.0;
                           await AmountCalculatorSheet.show(
                             context,
                             initialAmount: amount,
@@ -703,7 +707,8 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
                             decimalPlaces: decimalPlaces,
                             onDone: (result) {
                               setState(() {
-                                _amountController.text = result.toStringAsFixed(decimalPlaces);
+                                _amountController.text =
+                                    result.toStringAsFixed(decimalPlaces);
                               });
                             },
                           );
@@ -984,7 +989,7 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
               // Auto-create expense option
               SwitchListTile(
                 value: _autoCreateExpense,
-                activeColor: AppColors.payableColor,
+                activeThumbColor: AppColors.payableColor,
                 onChanged: (value) {
                   setState(() {
                     _autoCreateExpense = value;

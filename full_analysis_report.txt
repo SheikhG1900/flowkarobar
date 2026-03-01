@@ -1,0 +1,242 @@
+Analyzing cashbook...                                           
+
+warning - The operand can't be 'null', so the condition is always 'false' - lib\core\database\database.dart:382:17 - unnecessary_null_comparison
+   info - Unnecessary use of string interpolation - lib\core\utils\export_service.dart:1817:25 - unnecessary_string_interpolations
+   info - Unnecessary use of string interpolation - lib\core\utils\export_service.dart:1832:25 - unnecessary_string_interpolations
+   info - Unnecessary use of string interpolation - lib\core\utils\export_service.dart:1847:25 - unnecessary_string_interpolations
+   info - Unnecessary use of string interpolation - lib\core\utils\export_service.dart:1862:25 - unnecessary_string_interpolations
+   info - Unnecessary use of string interpolation - lib\core\utils\export_service.dart:1877:25 - unnecessary_string_interpolations
+warning - The receiver can't be null, so the null-aware operator '?.' is unnecessary - lib\core\utils\export_service.dart:2847:37 - invalid_null_aware_operator
+warning - The receiver can't be null, so the null-aware operator '?.' is unnecessary - lib\core\utils\export_service.dart:2901:37 - invalid_null_aware_operator
+warning - The receiver can't be null, so the null-aware operator '?.' is unnecessary - lib\core\utils\export_service.dart:3019:37 - invalid_null_aware_operator
+warning - The receiver can't be null, so the null-aware operator '?.' is unnecessary - lib\core\utils\export_service.dart:3073:37 - invalid_null_aware_operator
+   info - Dangling library doc comment - lib\core\utils\string_similarity.dart:2:1 - dangling_library_doc_comments
+warning - The value of the local variable 'hasCategoryFilter' isn't used - lib\features\analytics\data\analytics_repository.dart:204:16 - unused_local_variable
+warning - The value of the local variable 'hasContactFilter' isn't used - lib\features\analytics\data\analytics_repository.dart:206:16 - unused_local_variable
+warning - The '!' will have no effect because the receiver can't be null - lib\features\analytics\data\analytics_repository.dart:264:22 - unnecessary_non_null_assertion
+warning - The '!' will have no effect because the receiver can't be null - lib\features\analytics\data\analytics_repository.dart:326:71 - unnecessary_non_null_assertion
+warning - The '!' will have no effect because the receiver can't be null - lib\features\analytics\data\analytics_repository.dart:363:22 - unnecessary_non_null_assertion
+warning - The '!' will have no effect because the receiver can't be null - lib\features\analytics\data\analytics_repository.dart:425:74 - unnecessary_non_null_assertion
+warning - The operand must be 'null', so the condition is always 'true' - lib\features\analytics\data\analytics_repository.dart:488:22 - unnecessary_null_comparison
+   info - Statements in an if should be enclosed in a block - lib\features\analytics\presentation\screens\analytics_screen.dart:1470:25 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\analytics\presentation\screens\analytics_screen.dart:1603:25 - curly_braces_in_flow_control_structures
+warning - The value of the local variable 'folderId' isn't used - lib\features\backup\data\backup_repository.dart:70:15 - unused_local_variable
+   info - 'isInDebugMode' is deprecated and shouldn't be used. Use WorkmanagerDebug handlers instead. This parameter has no effect - lib\features\backup\data\sync\sync_scheduler.dart:302:7 - deprecated_member_use
+   info - Statements in an if should be enclosed in a block - lib\features\backup\presentation\providers\backup_provider.dart:282:7 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\backup\presentation\providers\backup_provider.dart:546:7 - curly_braces_in_flow_control_structures
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\backup\presentation\screens\backup_screen.dart:130:49 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\backup\presentation\screens\backup_screen.dart:348:41 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\backup\presentation\screens\backup_screen.dart:359:35 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\backup\presentation\screens\backup_screen.dart:377:41 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\backup\presentation\screens\backup_screen.dart:471:54 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\backup\presentation\screens\backup_screen.dart:474:58 - deprecated_member_use
+   info - Statements in an if should be enclosed in a block - lib\features\backup\presentation\screens\backup_screen.dart:485:39 - curly_braces_in_flow_control_structures
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\backup\presentation\screens\backup_screen.dart:664:26 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\backup\presentation\screens\backup_screen.dart:667:62 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\backup\presentation\screens\backup_screen.dart:825:58 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\backup\presentation\screens\backup_screen.dart:827:54 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\backup\presentation\screens\backup_screen.dart:1055:57 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\backup\presentation\screens\backup_screen.dart:1074:36 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\backup\presentation\screens\backup_screen.dart:1197:56 - deprecated_member_use
+   info - Don't invoke 'print' in production code - lib\features\cashbooks\presentation\providers\cashbook_provider.dart:119:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\cashbooks\presentation\providers\cashbook_provider.dart:185:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\cashbooks\presentation\providers\cashbook_provider.dart:258:7 - avoid_print
+   info - Don't use 'BuildContext's across async gaps - lib\features\cashbooks\presentation\screens\cashbooks_screen.dart:720:36 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\cashbooks\presentation\screens\cashbooks_screen.dart:726:32 - use_build_context_synchronously
+   info - Statements in an if should be enclosed in a block - lib\features\cashbooks\presentation\screens\cashbooks_screen.dart:1023:9 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\cashbooks\presentation\screens\cashbooks_screen.dart:1037:11 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\cashbooks\presentation\screens\cashbooks_screen.dart:1063:9 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\cashbooks\presentation\screens\cashbooks_screen.dart:1068:13 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\cashbooks\presentation\screens\cashbooks_screen.dart:1082:15 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\cashbooks\presentation\screens\cashbooks_screen.dart:1086:15 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\cashbooks\presentation\screens\cashbooks_screen.dart:1093:15 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\cashbooks\presentation\screens\cashbooks_screen.dart:1103:9 - curly_braces_in_flow_control_structures
+   info - Don't use 'BuildContext's across async gaps - lib\features\cashbooks\presentation\screens\cashbooks_screen.dart:1179:7 - use_build_context_synchronously
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\features\cashbooks\presentation\widgets\copy_preferences_dialog.dart:143:21 - deprecated_member_use
+warning - The value of the local variable 'isNetReceivable' isn't used - lib\features\contacts\presentation\screens\contact_details_screen.dart:354:40 - unused_local_variable
+warning - The value of the local variable 'buttonColor' isn't used - lib\features\contacts\presentation\screens\contact_details_screen.dart:355:41 - unused_local_variable
+   info - Unnecessary braces in a string interpolation - lib\features\contacts\presentation\screens\contact_details_screen.dart:625:16 - unnecessary_brace_in_string_interps
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\features\contacts\presentation\screens\contact_details_screen.dart:1017:35 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\features\contacts\presentation\screens\contact_details_screen.dart:1021:35 - use_build_context_synchronously
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\features\currencies\presentation\screens\add_currency_screen.dart:176:15 - deprecated_member_use
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\features\currencies\presentation\screens\edit_currency_screen.dart:181:15 - deprecated_member_use
+warning - Unused import: 'package:flowpaisa/features/backup/presentation/screens/backup_screen.dart' - lib\features\dashboard\presentation\widgets\sync_status_section.dart:6:8 - unused_import
+   info - Don't invoke 'print' in production code - lib\features\dashboard\presentation\widgets\sync_status_section.dart:113:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\dashboard\presentation\widgets\sync_status_section.dart:114:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\dashboard\presentation\widgets\sync_status_section.dart:115:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\dashboard\presentation\widgets\sync_status_section.dart:116:7 - avoid_print
+   info - Use interpolation to compose strings and values - lib\features\messages\domain\message_template_service.dart:116:13 - prefer_interpolation_to_compose_strings
+   info - Use interpolation to compose strings and values - lib\features\messages\domain\message_template_service.dart:136:13 - prefer_interpolation_to_compose_strings
+   info - Use interpolation to compose strings and values - lib\features\messages\domain\message_template_service.dart:160:13 - prefer_interpolation_to_compose_strings
+   info - Use interpolation to compose strings and values - lib\features\messages\domain\message_template_service.dart:188:13 - prefer_interpolation_to_compose_strings
+   info - Use interpolation to compose strings and values - lib\features\messages\domain\message_template_service.dart:211:13 - prefer_interpolation_to_compose_strings
+   info - Use interpolation to compose strings and values - lib\features\messages\domain\message_template_service.dart:234:13 - prefer_interpolation_to_compose_strings
+   info - Unnecessary use of string interpolation - lib\features\messages\presentation\screens\template_editor_screen.dart:75:27 - unnecessary_string_interpolations
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\features\messages\presentation\screens\template_editor_screen.dart:196:21 - deprecated_member_use
+   info - Don't use 'BuildContext's across async gaps - lib\features\payables\presentation\screens\add_payable_screen.dart:161:38 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\payables\presentation\screens\add_payable_screen.dart:163:33 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\payables\presentation\screens\add_payable_screen.dart:344:38 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\payables\presentation\screens\add_payable_screen.dart:346:33 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\payables\presentation\screens\add_payable_screen.dart:402:13 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\payables\presentation\screens\add_payable_screen.dart:421:42 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\payables\presentation\screens\add_payable_screen.dart:431:39 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\payables\presentation\screens\add_payable_screen.dart:432:25 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\features\payables\presentation\screens\add_payable_screen.dart:525:43 - use_build_context_synchronously
+   info - 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre - lib\features\payables\presentation\screens\add_payable_screen.dart:987:17 - deprecated_member_use
+warning - Unused import: 'package:flowpaisa/core/utils/amount_formatter.dart' - lib\features\payables\presentation\screens\edit_payable_screen.dart:16:8 - unused_import
+   info - 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre - lib\features\payables\presentation\screens\edit_payable_screen.dart:664:17 - deprecated_member_use
+warning - The operand can't be 'null', so the condition is always 'false' - lib\features\payables\presentation\screens\payables_list_screen.dart:507:16 - unnecessary_null_comparison
+warning - The operand can't be 'null', so the condition is always 'false' - lib\features\payables\presentation\screens\payables_list_screen.dart:507:40 - unnecessary_null_comparison
+warning - The left operand can't be null, so the right operand is never executed - lib\features\payables\presentation\screens\payables_list_screen.dart:511:49 - dead_null_aware_expression
+warning - The left operand can't be null, so the right operand is never executed - lib\features\payables\presentation\screens\payables_list_screen.dart:875:41 - dead_null_aware_expression
+warning - The value of the local variable 'linkedTransaction' isn't used - lib\features\payables\presentation\widgets\payable_details_dialog.dart:61:15 - unused_local_variable
+warning - The value of the local variable 'linkedCategory' isn't used - lib\features\payables\presentation\widgets\payable_details_dialog.dart:66:15 - unused_local_variable
+   info - Parameter 'key' could be a super parameter - lib\features\payables\presentation\widgets\payable_share_button.dart:20:9 - use_super_parameters
+   info - The imported package 'in_app_purchase_android' isn't a dependency of the importing package - lib\features\premium\data\premium_repository.dart:4:8 - depend_on_referenced_packages
+warning - Unused import: 'package:in_app_purchase_android/in_app_purchase_android.dart' - lib\features\premium\data\premium_repository.dart:4:8 - unused_import
+   info - The local variable '_kIds' starts with an underscore - lib\features\premium\data\premium_repository.dart:39:23 - no_leading_underscores_for_local_identifiers
+   info - Uses 'await' on an instance of 'int', which is not a subtype of 'Future' - lib\features\premium\domain\premium_gate.dart:29:21 - await_only_futures
+   info - Uses 'await' on an instance of 'int', which is not a subtype of 'Future' - lib\features\premium\domain\premium_gate.dart:30:23 - await_only_futures
+   info - Uses 'await' on an instance of 'int', which is not a subtype of 'Future' - lib\features\premium\domain\premium_gate.dart:42:21 - await_only_futures
+   info - Uses 'await' on an instance of 'int', which is not a subtype of 'Future' - lib\features\premium\domain\premium_gate.dart:43:23 - await_only_futures
+   info - Uses 'await' on an instance of 'int', which is not a subtype of 'Future' - lib\features\premium\domain\premium_gate.dart:55:21 - await_only_futures
+   info - Uses 'await' on an instance of 'int', which is not a subtype of 'Future' - lib\features\premium\domain\premium_gate.dart:56:23 - await_only_futures
+   info - Uses 'await' on an instance of 'int', which is not a subtype of 'Future' - lib\features\premium\domain\premium_gate.dart:185:23 - await_only_futures
+   info - Uses 'await' on an instance of 'int', which is not a subtype of 'Future' - lib\features\premium\domain\premium_gate.dart:186:25 - await_only_futures
+   info - Uses 'await' on an instance of 'int', which is not a subtype of 'Future' - lib\features\premium\domain\premium_gate.dart:198:23 - await_only_futures
+   info - Uses 'await' on an instance of 'int', which is not a subtype of 'Future' - lib\features\premium\domain\premium_gate.dart:199:25 - await_only_futures
+   info - Uses 'await' on an instance of 'int', which is not a subtype of 'Future' - lib\features\premium\domain\premium_gate.dart:211:23 - await_only_futures
+   info - Uses 'await' on an instance of 'int', which is not a subtype of 'Future' - lib\features\premium\domain\premium_gate.dart:212:25 - await_only_futures
+   info - The imported package 'in_app_purchase_android' isn't a dependency of the importing package - lib\features\premium\presentation\screens\premium_screen.dart:9:8 - depend_on_referenced_packages
+   info - Use 'isNotEmpty' instead of 'length' to test whether the collection is empty - lib\features\receipt_scan\presentation\screens\scan_receipt_screen.dart:630:37 - prefer_is_empty
+   info - Use interpolation to compose strings and values - lib\features\receipt_scan\presentation\screens\scan_receipt_screen.dart:910:31 - prefer_interpolation_to_compose_strings
+   info - Statements in an if should be enclosed in a block - lib\features\receipt_scan\presentation\screens\scan_receipt_screen.dart:920:9 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\receipt_scan\presentation\screens\scan_receipt_screen.dart:922:63 - curly_braces_in_flow_control_structures
+warning - The value of the local variable 'activeCashbookBackColor' isn't used - lib\features\receipt_scan\presentation\screens\scan_receipt_screen.dart:948:11 - unused_local_variable
+   info - Don't use 'BuildContext's across async gaps - lib\features\receivables\presentation\screens\add_receivable_screen.dart:160:38 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\receivables\presentation\screens\add_receivable_screen.dart:162:33 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\receivables\presentation\screens\add_receivable_screen.dart:345:33 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\receivables\presentation\screens\add_receivable_screen.dart:403:13 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\receivables\presentation\screens\add_receivable_screen.dart:422:42 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\receivables\presentation\screens\add_receivable_screen.dart:432:39 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\receivables\presentation\screens\add_receivable_screen.dart:433:25 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\features\receivables\presentation\screens\add_receivable_screen.dart:526:43 - use_build_context_synchronously
+   info - 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre - lib\features\receivables\presentation\screens\add_receivable_screen.dart:993:17 - deprecated_member_use
+warning - Unused import: 'package:flowpaisa/core/utils/amount_formatter.dart' - lib\features\receivables\presentation\screens\edit_receivable_screen.dart:16:8 - unused_import
+   info - 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre - lib\features\receivables\presentation\screens\edit_receivable_screen.dart:666:17 - deprecated_member_use
+warning - The operand can't be 'null', so the condition is always 'false' - lib\features\receivables\presentation\screens\receivables_list_screen.dart:533:16 - unnecessary_null_comparison
+warning - The operand can't be 'null', so the condition is always 'false' - lib\features\receivables\presentation\screens\receivables_list_screen.dart:534:27 - unnecessary_null_comparison
+warning - The operand can't be 'null', so the condition is always 'false' - lib\features\receivables\presentation\screens\receivables_list_screen.dart:535:32 - unnecessary_null_comparison
+   info - Statements in an if should be enclosed in a block - lib\features\receivables\presentation\screens\receivables_list_screen.dart:535:41 - curly_braces_in_flow_control_structures
+warning - The left operand can't be null, so the right operand is never executed - lib\features\receivables\presentation\screens\receivables_list_screen.dart:539:36 - dead_null_aware_expression
+warning - The left operand can't be null, so the right operand is never executed - lib\features\receivables\presentation\screens\receivables_list_screen.dart:904:41 - dead_null_aware_expression
+warning - The value of the local variable 'linkedTransaction' isn't used - lib\features\receivables\presentation\widgets\receivable_details_dialog.dart:62:15 - unused_local_variable
+warning - The value of the local variable 'linkedCategory' isn't used - lib\features\receivables\presentation\widgets\receivable_details_dialog.dart:67:15 - unused_local_variable
+   info - Parameter 'key' could be a super parameter - lib\features\receivables\presentation\widgets\receivable_share_button.dart:20:9 - use_super_parameters
+   info - Don't invoke 'print' in production code - lib\features\transactions\data\schedule_scheduler.dart:77:13 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\transactions\data\schedule_scheduler.dart:84:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\transactions\data\schedule_scheduler.dart:88:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\transactions\data\schedule_scheduler.dart:127:11 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\transactions\data\schedule_scheduler.dart:137:5 - avoid_print
+warning - The operand must be 'null', so the condition is always 'true' - lib\features\transactions\data\transactions_repository.dart:752:22 - unnecessary_null_comparison
+warning - The operand must be 'null', so the condition is always 'true' - lib\features\transactions\data\transactions_repository.dart:885:22 - unnecessary_null_comparison
+   info - Use interpolation to compose strings and values - lib\features\transactions\presentation\providers\transaction_service_provider.dart:1212:27 - prefer_interpolation_to_compose_strings
+warning - Unused import: 'package:flowpaisa/features/transactions/presentation/providers/transaction_service_provider.dart' - lib\features\transactions\presentation\providers\transactions_provider.dart:8:8 - unused_import
+   info - The private field _isSplitMode could be 'final' - lib\features\transactions\presentation\screens\add_transaction_screen.dart:100:8 - prefer_final_fields
+   info - Don't use 'BuildContext's across async gaps - lib\features\transactions\presentation\screens\add_transaction_screen.dart:246:7 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\transactions\presentation\screens\add_transaction_screen.dart:341:9 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\transactions\presentation\screens\add_transaction_screen.dart:598:43 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\transactions\presentation\screens\add_transaction_screen.dart:650:53 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\transactions\presentation\screens\add_transaction_screen.dart:710:49 - use_build_context_synchronously
+   info - Statements in an if should be enclosed in a block - lib\features\transactions\presentation\screens\add_transaction_screen.dart:1099:37 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\transactions\presentation\screens\add_transaction_screen.dart:1231:41 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\transactions\presentation\screens\add_transaction_screen.dart:1340:49 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\transactions\presentation\screens\bulk_import_screen.dart:144:25 - curly_braces_in_flow_control_structures
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\features\transactions\presentation\screens\bulk_import_screen.dart:145:29 - use_build_context_synchronously
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\features\transactions\presentation\screens\bulk_import_screen.dart:187:7 - deprecated_member_use
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\features\transactions\presentation\screens\bulk_import_screen.dart:211:7 - deprecated_member_use
+   info - Unnecessary braces in a string interpolation - lib\features\transactions\presentation\screens\bulk_import_screen.dart:288:60 - unnecessary_brace_in_string_interps
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\features\transactions\presentation\screens\bulk_import_screen.dart:289:21 - deprecated_member_use
+   info - Statements in an if should be enclosed in a block - lib\features\transactions\presentation\screens\bulk_import_screen.dart:309:27 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\transactions\presentation\screens\bulk_import_screen.dart:311:27 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\transactions\presentation\screens\bulk_import_screen.dart:313:27 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\transactions\presentation\screens\bulk_import_screen.dart:315:27 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\transactions\presentation\screens\bulk_import_screen.dart:317:27 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\transactions\presentation\screens\bulk_import_screen.dart:319:27 - curly_braces_in_flow_control_structures
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\features\transactions\presentation\screens\bulk_import_screen.dart:415:7 - deprecated_member_use
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\features\transactions\presentation\screens\bulk_import_screen.dart:461:7 - deprecated_member_use
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\features\transactions\presentation\screens\bulk_import_screen.dart:509:7 - deprecated_member_use
+   info - Statements in an if should be enclosed in a block - lib\features\transactions\presentation\screens\bulk_import_screen.dart:615:21 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\transactions\presentation\screens\bulk_import_screen.dart:617:21 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\transactions\presentation\screens\bulk_import_screen.dart:619:21 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\transactions\presentation\screens\bulk_import_screen.dart:621:21 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\transactions\presentation\screens\bulk_import_screen.dart:623:21 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\transactions\presentation\screens\bulk_import_screen.dart:624:48 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\transactions\presentation\screens\bulk_import_screen.dart:638:25 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\transactions\presentation\screens\bulk_import_screen.dart:640:25 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\transactions\presentation\screens\bulk_import_screen.dart:650:31 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\transactions\presentation\screens\bulk_import_screen.dart:652:31 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\transactions\presentation\screens\bulk_import_screen.dart:676:27 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\transactions\presentation\screens\bulk_import_screen.dart:678:27 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\transactions\presentation\screens\bulk_import_screen.dart:680:27 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\transactions\presentation\screens\bulk_import_screen.dart:682:27 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\transactions\presentation\screens\bulk_import_screen.dart:684:27 - curly_braces_in_flow_control_structures
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\transactions\presentation\screens\bulk_import_screen.dart:717:33 - deprecated_member_use
+   info - Statements in an if should be enclosed in a block - lib\features\transactions\presentation\screens\bulk_import_screen.dart:792:9 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\transactions\presentation\screens\bulk_import_screen.dart:796:9 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\transactions\presentation\screens\bulk_import_screen.dart:798:9 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\transactions\presentation\screens\bulk_import_screen.dart:800:9 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\transactions\presentation\screens\bulk_import_screen.dart:802:9 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\transactions\presentation\screens\bulk_import_screen.dart:805:38 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\transactions\presentation\screens\bulk_import_screen.dart:823:9 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\transactions\presentation\screens\bulk_import_screen.dart:825:9 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\transactions\presentation\screens\bulk_import_screen.dart:831:11 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\transactions\presentation\screens\bulk_import_screen.dart:833:11 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\transactions\presentation\screens\bulk_import_screen.dart:898:13 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\transactions\presentation\screens\bulk_import_screen.dart:899:39 - curly_braces_in_flow_control_structures
+   info - 'value' is deprecated and shouldn't be used. Use component accessors like .r or .g, or toARGB32 for an explicit conversion - lib\features\transactions\presentation\screens\bulk_import_screen.dart:924:46 - deprecated_member_use
+   info - 'value' is deprecated and shouldn't be used. Use component accessors like .r or .g, or toARGB32 for an explicit conversion - lib\features\transactions\presentation\screens\bulk_import_screen.dart:928:45 - deprecated_member_use
+   info - The import of 'package:flutter/services.dart' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' - lib\features\transactions\presentation\screens\edit_split_transaction_screen.dart:17:8 - unnecessary_import
+   info - Unnecessary braces in a string interpolation - lib\features\transactions\presentation\screens\edit_split_transaction_screen.dart:709:38 - unnecessary_brace_in_string_interps
+   info - Unnecessary braces in a string interpolation - lib\features\transactions\presentation\screens\edit_split_transaction_screen.dart:737:38 - unnecessary_brace_in_string_interps
+   info - Don't use 'BuildContext's across async gaps - lib\features\transactions\presentation\screens\edit_split_transaction_screen.dart:1142:43 - use_build_context_synchronously
+warning - Unused import: 'package:flowpaisa/core/utils/amount_formatter.dart' - lib\features\transactions\presentation\screens\edit_transaction_screen.dart:33:8 - unused_import
+   info - Don't use 'BuildContext's across async gaps - lib\features\transactions\presentation\screens\edit_transaction_screen.dart:143:7 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\transactions\presentation\screens\edit_transaction_screen.dart:278:13 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\transactions\presentation\screens\edit_transaction_screen.dart:302:39 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\transactions\presentation\screens\edit_transaction_screen.dart:535:43 - use_build_context_synchronously
+   info - Statements in an if should be enclosed in a block - lib\features\transactions\presentation\screens\edit_transaction_screen.dart:917:37 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\transactions\presentation\screens\edit_transaction_screen.dart:1042:41 - curly_braces_in_flow_control_structures
+   info - Don't use 'BuildContext's across async gaps - lib\features\transactions\presentation\screens\transactions_list_screen.dart:172:21 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\transactions\presentation\screens\transactions_list_screen.dart:179:44 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\transactions\presentation\screens\transactions_list_screen.dart:204:21 - use_build_context_synchronously
+warning - The operand can't be 'null', so the condition is always 'false' - lib\features\transactions\presentation\screens\transactions_list_screen.dart:495:16 - unnecessary_null_comparison
+warning - The operand can't be 'null', so the condition is always 'false' - lib\features\transactions\presentation\screens\transactions_list_screen.dart:496:28 - unnecessary_null_comparison
+warning - The operand can't be 'null', so the condition is always 'false' - lib\features\transactions\presentation\screens\transactions_list_screen.dart:497:33 - unnecessary_null_comparison
+   info - Statements in an if should be enclosed in a block - lib\features\transactions\presentation\screens\transactions_list_screen.dart:497:42 - curly_braces_in_flow_control_structures
+warning - The left operand can't be null, so the right operand is never executed - lib\features\transactions\presentation\screens\transactions_list_screen.dart:501:48 - dead_null_aware_expression
+   info - Statements in an if should be enclosed in a block - lib\features\transactions\presentation\screens\transactions_list_screen.dart:680:7 - curly_braces_in_flow_control_structures
+   info - Parameter 'key' could be a super parameter - lib\features\transactions\presentation\widgets\transaction_share_button.dart:20:9 - use_super_parameters
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\features\voice_command\presentation\screens\voice_add_screen.dart:794:47 - use_build_context_synchronously
+warning - The '!' will have no effect because the receiver can't be null - lib\features\voice_command\presentation\screens\voice_add_screen.dart:940:51 - unnecessary_non_null_assertion
+warning - The '!' will have no effect because the receiver can't be null - lib\features\voice_command\presentation\screens\voice_add_screen.dart:944:52 - unnecessary_non_null_assertion
+warning - The '!' will have no effect because the receiver can't be null - lib\features\voice_command\presentation\screens\voice_add_screen.dart:945:52 - unnecessary_non_null_assertion
+warning - The '!' will have no effect because the receiver can't be null - lib\features\voice_command\presentation\screens\voice_add_screen.dart:1049:51 - unnecessary_non_null_assertion
+warning - The '!' will have no effect because the receiver can't be null - lib\features\voice_command\presentation\screens\voice_add_screen.dart:1053:52 - unnecessary_non_null_assertion
+warning - The '!' will have no effect because the receiver can't be null - lib\features\voice_command\presentation\screens\voice_add_screen.dart:1054:52 - unnecessary_non_null_assertion
+   info - Parameters ''senderName', 'senderPhone', 'status', and 'externalLinkId'' could be super parameters - lib\features\whatsapp\domain\models\shared_data_models.dart:49:3 - use_super_parameters
+   info - Parameters ''senderName', 'senderPhone', 'status', and 'externalLinkId'' could be super parameters - lib\features\whatsapp\domain\models\shared_data_models.dart:125:3 - use_super_parameters
+   info - Parameters ''senderName', 'senderPhone', 'status', and 'externalLinkId'' could be super parameters - lib\features\whatsapp\domain\models\shared_data_models.dart:186:3 - use_super_parameters
+   info - 'isInDebugMode' is deprecated and shouldn't be used. Use WorkmanagerDebug handlers instead. This parameter has no effect - lib\main.dart:109:7 - deprecated_member_use
+warning - This default clause is covered by the previous cases - lib\main.dart:2339:25 - unreachable_switch_default
+   info - Don't invoke 'print' in production code - lib\shared\providers\currency_provider.dart:13:3 - avoid_print
+   info - Don't invoke 'print' in production code - lib\shared\providers\currency_provider.dart:16:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\shared\providers\currency_provider.dart:23:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\shared\providers\currency_provider.dart:28:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\shared\providers\currency_provider.dart:33:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\shared\providers\currency_provider.dart:37:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\shared\providers\currency_provider.dart:43:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\shared\providers\currency_provider.dart:45:5 - avoid_print
+   info - 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre - lib\shared\widgets\filter_bottom_sheet.dart:348:11 - deprecated_member_use
+   info - The private field _isImporting could be 'final' - lib\shared\widgets\import_dialog.dart:32:8 - prefer_final_fields
+

@@ -345,7 +345,7 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
         Switch(
           value: _filterByDueDate,
           onChanged: (value) => setState(() => _filterByDueDate = value),
-          activeColor: primaryColor,
+          activeThumbColor: primaryColor,
         ),
       ],
     );

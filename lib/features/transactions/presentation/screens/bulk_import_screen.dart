@@ -140,9 +140,10 @@ class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
                     if (data?.text != null) {
                       _processRawData(data!.text!);
                     } else {
-                      if (mounted)
+                      if (mounted) {
                         ToastUtils.showInfoToast(
                             context, ref, 'Clipboard is empty');
+                      }
                     }
                   },
                   icon: const Icon(Icons.content_paste, size: 18),
@@ -305,18 +306,19 @@ class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
                           value: null, child: Text(l10n.cancel)),
                       ...mappingFields.map((field) {
                         String localizedLabel = field;
-                        if (field == 'Date')
+                        if (field == 'Date') {
                           localizedLabel = l10n.date;
-                        else if (field == 'Amount')
+                        } else if (field == 'Amount') {
                           localizedLabel = l10n.amount;
-                        else if (field == 'Description')
+                        } else if (field == 'Description') {
                           localizedLabel = l10n.description;
-                        else if (field == 'Category')
+                        } else if (field == 'Category') {
                           localizedLabel = l10n.category;
-                        else if (field == 'Type')
+                        } else if (field == 'Type') {
                           localizedLabel = l10n.type;
-                        else if (field == 'Contact')
+                        } else if (field == 'Contact') {
                           localizedLabel = l10n.contact;
+                        }
 
                         return DropdownMenuItem<String>(
                           value: field,
@@ -611,17 +613,19 @@ class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
                   'Contact'
                 ].map((field) {
                   String localizedLabel = field;
-                  if (field == 'Date')
+                  if (field == 'Date') {
                     localizedLabel = l10n.date;
-                  else if (field == 'Amount')
+                  } else if (field == 'Amount') {
                     localizedLabel = l10n.amount;
-                  else if (field == 'Description')
+                  } else if (field == 'Description') {
                     localizedLabel = l10n.description;
-                  else if (field == 'Category')
+                  } else if (field == 'Category') {
                     localizedLabel = l10n.category;
-                  else if (field == 'Type')
+                  } else if (field == 'Type') {
                     localizedLabel = l10n.type;
-                  else if (field == 'Contact') localizedLabel = l10n.contact;
+                  } else if (field == 'Contact') {
+                    localizedLabel = l10n.contact;
+                  }
                   return DataColumn(label: Text(localizedLabel));
                 }),
               ],
@@ -634,10 +638,11 @@ class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
                   selected: isSelected,
                   onSelectChanged: (value) {
                     setState(() {
-                      if (value == true)
+                      if (value == true) {
                         _selectedRowIndices.add(rowIndex);
-                      else
+                      } else {
                         _selectedRowIndices.remove(rowIndex);
+                      }
                     });
                   },
                   cells: [
@@ -646,10 +651,11 @@ class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
                         value: isSelected,
                         onChanged: (value) {
                           setState(() {
-                            if (value == true)
+                            if (value == true) {
                               _selectedRowIndices.add(rowIndex);
-                            else
+                            } else {
                               _selectedRowIndices.remove(rowIndex);
+                            }
                           });
                         },
                       ),
@@ -672,16 +678,17 @@ class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
 
                       if (value.isEmpty) {
                         isDefault = true;
-                        if (field == 'Date')
+                        if (field == 'Date') {
                           value = AppDateFormatter.formatDate(_defaultDate);
-                        else if (field == 'Amount')
+                        } else if (field == 'Amount') {
                           value = '0.00';
-                        else if (field == 'Category')
+                        } else if (field == 'Category') {
                           value = _defaultCategory?.name ?? '-';
-                        else if (field == 'Type')
+                        } else if (field == 'Type') {
                           value = _defaultType;
-                        else if (field == 'Contact')
+                        } else if (field == 'Contact') {
                           value = _defaultContact?.name ?? '-';
+                        }
                       }
 
                       return DataCell(
@@ -714,7 +721,7 @@ class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
         color: Theme.of(context).cardColor,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, -5),
           ),
@@ -788,21 +795,23 @@ class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
     for (int i = 0; i < _headers.length; i++) {
       final header = _headers[i].toLowerCase();
 
-      if (header.contains('date'))
+      if (header.contains('date')) {
         mapping['Date'] = i;
-      else if (header.contains('amount') ||
+      } else if (header.contains('amount') ||
           header.contains('price') ||
-          header.contains('value'))
+          header.contains('value')) {
         mapping['Amount'] = i;
-      else if (header.contains('desc'))
+      } else if (header.contains('desc')) {
         mapping['Description'] = i;
-      else if (header.contains('cat'))
+      } else if (header.contains('cat')) {
         mapping['Category'] = i;
-      else if (header.contains('type'))
+      } else if (header.contains('type')) {
         mapping['Type'] = i;
-      else if (header.contains('contact') ||
+      } else if (header.contains('contact') ||
           header.contains('name') ||
-          header.contains('person')) mapping['Contact'] = i;
+          header.contains('person')) {
+        mapping['Contact'] = i;
+      }
     }
 
     if (mapping['Date'] != null && _rawRows.length > (_hasHeader ? 1 : 0)) {
@@ -819,18 +828,20 @@ class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
     if (sample.isEmpty) return;
 
     if (sample.contains('-')) {
-      if (sample.indexOf('-') == 4)
+      if (sample.indexOf('-') == 4) {
         _dateFormat = 'yyyy-MM-dd';
-      else
+      } else {
         _dateFormat = 'dd-MM-yyyy';
+      }
     } else if (sample.contains('/')) {
       final parts = sample.split('/');
       if (parts.isNotEmpty) {
         final first = int.tryParse(parts[0]);
-        if (first != null && first > 12)
+        if (first != null && first > 12) {
           _dateFormat = 'dd/MM/yyyy';
-        else
+        } else {
           _dateFormat = 'MM/dd/yyyy';
+        }
       }
     } else if (RegExp(r'[a-zA-Z]').hasMatch(sample)) {
       _dateFormat = 'MMM dd, yyyy';
@@ -894,9 +905,11 @@ class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
         String type = _defaultType;
         if (typeStr.isNotEmpty) {
           final t = typeStr.toUpperCase();
-          if (t.contains('INC'))
+          if (t.contains('INC')) {
             type = 'INCOME';
-          else if (t.contains('EXP')) type = 'EXPENSE';
+          } else if (t.contains('EXP')) {
+            type = 'EXPENSE';
+          }
         }
 
         String? categoryUuid = _defaultCategory?.uuid;

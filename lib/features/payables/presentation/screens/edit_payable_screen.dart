@@ -149,12 +149,12 @@ class _EditPayableScreenState extends ConsumerState<EditPayableScreen> {
 
       if (mounted) {
         Navigator.pop(context);
-        ToastUtils.showSuccessToast(
-            context, ref, l10n.payableUpdated);
+        ToastUtils.showSuccessToast(context, ref, l10n.payableUpdated);
       }
     } catch (e) {
       if (mounted) {
-        ToastUtils.showErrorToast(context, ref, l10n.errorOccurred(e.toString()));
+        ToastUtils.showErrorToast(
+            context, ref, l10n.errorOccurred(e.toString()));
       }
     } finally {
       if (mounted) {
@@ -300,7 +300,8 @@ class _EditPayableScreenState extends ConsumerState<EditPayableScreen> {
                     },
                     loading: () =>
                         const Center(child: CircularProgressIndicator()),
-                    error: (e, s) => Center(child: Text(l10n.errorOccurred(e.toString()))),
+                    error: (e, s) =>
+                        Center(child: Text(l10n.errorOccurred(e.toString()))),
                   ),
                 ),
               ],
@@ -424,7 +425,8 @@ class _EditPayableScreenState extends ConsumerState<EditPayableScreen> {
                       const SizedBox(height: 12),
                       IconButton.filled(
                         onPressed: () async {
-                          final amount = double.tryParse(_amountController.text) ?? 0.0;
+                          final amount =
+                              double.tryParse(_amountController.text) ?? 0.0;
                           await AmountCalculatorSheet.show(
                             context,
                             initialAmount: amount,
@@ -432,7 +434,8 @@ class _EditPayableScreenState extends ConsumerState<EditPayableScreen> {
                             decimalPlaces: decimalPlaces,
                             onDone: (result) {
                               setState(() {
-                                _amountController.text = result.toStringAsFixed(decimalPlaces);
+                                _amountController.text =
+                                    result.toStringAsFixed(decimalPlaces);
                               });
                             },
                           );
@@ -661,7 +664,7 @@ class _EditPayableScreenState extends ConsumerState<EditPayableScreen> {
               // Auto-create expense option
               SwitchListTile(
                 value: _autoCreateExpense ?? false,
-                activeColor: AppColors.payableColor,
+                activeThumbColor: AppColors.payableColor,
                 onChanged: (value) {
                   setState(() {
                     _autoCreateExpense = value;

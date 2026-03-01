@@ -24,7 +24,7 @@ import 'package:flowpaisa/features/premium/domain/premium_provider.dart';
 
 class BackupScreen extends ConsumerStatefulWidget {
   final bool startTour;
-  
+
   const BackupScreen({super.key, this.startTour = false});
 
   @override
@@ -90,16 +90,17 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                 const SizedBox(width: 12),
               ],
             ),
-          body: LayoutBuilder(
-            builder: (context, constraints) {
-              return Stack(
-                children: [
-                  SafeArea(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.all(16),
+            body: LayoutBuilder(
+              builder: (context, constraints) {
+                return Stack(
+                  children: [
+                    SafeArea(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.all(16),
                         child: ConstrainedBox(
                           constraints: BoxConstraints(
-                            minHeight: constraints.maxHeight - 32, // Subtract padding
+                            minHeight:
+                                constraints.maxHeight - 32, // Subtract padding
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -111,9 +112,11 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                                 const SizedBox(height: 24),
                                 _buildCashbookHeader(context, theme),
                                 const SizedBox(height: 24),
-                                _buildSyncSection(context, state, notifier, l10n),
+                                _buildSyncSection(
+                                    context, state, notifier, l10n),
                                 const SizedBox(height: 24),
-                                _buildBackupSection(context, state, notifier, l10n),
+                                _buildBackupSection(
+                                    context, state, notifier, l10n),
                               ],
                             ],
                           ),
@@ -127,7 +130,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                         child: BackdropFilter(
                           filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
                           child: Container(
-                            color: Colors.black.withOpacity(0.1),
+                            color: Colors.black.withValues(alpha: 0.1),
                             child: Center(
                               child: Column(
                                 mainAxisSize: MainAxisSize.min,
@@ -168,7 +171,8 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                                     borderRadius: BorderRadius.circular(20),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.black.withValues(alpha: 0.2),
+                                        color:
+                                            Colors.black.withValues(alpha: 0.2),
                                         blurRadius: 20,
                                         offset: const Offset(0, 10),
                                       ),
@@ -197,8 +201,8 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                                       const SizedBox(height: 16),
                                       Text(
                                         l10n.premiumFeature,
-                                        style:
-                                            theme.textTheme.headlineSmall?.copyWith(
+                                        style: theme.textTheme.headlineSmall
+                                            ?.copyWith(
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
@@ -206,8 +210,10 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                                       Text(
                                         l10n.cloudBackupPremiumDesc,
                                         textAlign: TextAlign.center,
-                                        style: theme.textTheme.bodyMedium?.copyWith(
-                                          color: theme.colorScheme.onSurfaceVariant,
+                                        style: theme.textTheme.bodyMedium
+                                            ?.copyWith(
+                                          color: theme
+                                              .colorScheme.onSurfaceVariant,
                                         ),
                                       ),
                                       const SizedBox(height: 24),
@@ -345,7 +351,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: activeCashbook.color.withOpacity(0.3),
+            color: activeCashbook.color.withValues(alpha: 0.3),
             blurRadius: 12,
             offset: const Offset(0, 6),
           ),
@@ -356,7 +362,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha: 0.2),
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -374,7 +380,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                 Text(
                   l10n.activeCashbook,
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: Colors.white.withOpacity(0.8),
+                    color: Colors.white.withValues(alpha: 0.8),
                   ),
                 ),
                 Text(
@@ -438,8 +444,10 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                         if (state.lockedBy != null)
                           GestureDetector(
                             onTap: () async {
-                              final notifier = ref.read(backupProvider.notifier);
-                              final content = await notifier.getManifestContent();
+                              final notifier =
+                                  ref.read(backupProvider.notifier);
+                              final content =
+                                  await notifier.getManifestContent();
                               if (context.mounted) {
                                 showDialog(
                                   context: context,
@@ -468,10 +476,11 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 8, vertical: 4),
                               decoration: BoxDecoration(
-                                color: Colors.orange.withOpacity(0.1),
+                                color: Colors.orange.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(8),
                                 border: Border.all(
-                                    color: Colors.orange.withOpacity(0.5)),
+                                    color:
+                                        Colors.orange.withValues(alpha: 0.5)),
                               ),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
@@ -481,12 +490,13 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                                   const SizedBox(width: 6),
                                   Builder(builder: (context) {
                                     final lockTime = state.lockedAt;
-                                    if (lockTime == null)
+                                    if (lockTime == null) {
                                       return Text(l10n.locked,
                                           style: const TextStyle(
                                               color: Colors.orange,
                                               fontSize: 12,
                                               fontWeight: FontWeight.bold));
+                                    }
 
                                     final diff = DateTime.now()
                                         .toUtc()
@@ -495,7 +505,8 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                                     return Text(
                                       l10n.lockedWithTime(
                                           remaining > 0 ? remaining : 0),
-                                      style: theme.textTheme.labelSmall?.copyWith(
+                                      style:
+                                          theme.textTheme.labelSmall?.copyWith(
                                         color: Colors.orange,
                                         fontWeight: FontWeight.bold,
                                       ),
@@ -644,9 +655,10 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
               if (state.deltaFiles.isNotEmpty) ...[
                 Text(
                   state.deltaFiles.any((f) {
-                    final ver = int.tryParse(
-                            f.name?.replaceAll('v', '').replaceAll('.json', '') ??
-                                '0') ??
+                    final ver = int.tryParse(f.name
+                                ?.replaceAll('v', '')
+                                .replaceAll('.json', '') ??
+                            '0') ??
                         0;
                     return ver > state.localVersion;
                   })
@@ -661,14 +673,15 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                 Container(
                   decoration: BoxDecoration(
                     color: theme.colorScheme.surfaceContainerHighest
-                        .withOpacity(0.2),
+                        .withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(12),
-                    border:
-                        Border.all(color: theme.dividerColor.withOpacity(0.5)),
+                    border: Border.all(
+                        color: theme.dividerColor.withValues(alpha: 0.5)),
                   ),
                   child: Column(
                     children: state.deltaFiles.map((file) {
-                      final sizeKb = (int.tryParse(file.size ?? '0') ?? 0) / 1024;
+                      final sizeKb =
+                          (int.tryParse(file.size ?? '0') ?? 0) / 1024;
                       final ver = int.tryParse(file.name
                                   ?.replaceAll('v', '')
                                   .replaceAll('.json', '') ??
@@ -797,7 +810,8 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                     isExpanded: true,
                     value: state.syncInterval,
                     items: [
-                      DropdownMenuItem(value: 'manual', child: Text(l10n.noIdleSync)),
+                      DropdownMenuItem(
+                          value: 'manual', child: Text(l10n.noIdleSync)),
                       ...['12', '24', '36', '48', '60', '72', '84', '96']
                           .map((h) => DropdownMenuItem(
                                 value: h,
@@ -822,9 +836,9 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: theme.dividerColor.withOpacity(0.5)),
+        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.5)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -920,37 +934,37 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-              Row(
-                children: [
-                  const Icon(Icons.info_outline, size: 20, color: Colors.grey),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      l10n.backupDescription,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
+          Row(
+            children: [
+              const Icon(Icons.info_outline, size: 20, color: Colors.grey),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  l10n.backupDescription,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
                   ),
-                ],
+                ),
               ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  const Icon(Icons.security, size: 20, color: Colors.green),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      l10n.privacyHighlightDesc,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: Colors.green.withValues(alpha: 0.8),
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              const Icon(Icons.security, size: 20, color: Colors.green),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  l10n.privacyHighlightDesc,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: Colors.green.withValues(alpha: 0.8),
+                    fontWeight: FontWeight.w500,
                   ),
-                ],
+                ),
               ),
-              const SizedBox(height: 16),
+            ],
+          ),
+          const SizedBox(height: 16),
           if (state.lastBackupTime != null)
             Padding(
               padding: const EdgeInsets.only(bottom: 16),
@@ -982,8 +996,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
               child: GradientButton(
                 label: state.isBackingUp ? l10n.processing : l10n.backupNow,
                 gradient:
-                    AppColors.getSecondaryGradient(theme.colorScheme.primary)
-                        .withOpacity(state.isBackingUp ? 0.5 : 0.8),
+                    AppColors.getSecondaryGradient(theme.colorScheme.primary),
                 icon: state.isBackingUp ? Icons.sync : Icons.backup,
                 onPressed: state.isBackingUp
                     ? null
@@ -992,7 +1005,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                           ToastUtils.showInfoToast(
                               context, ref, l10n.backgroundBackupStarted);
                         }
-                        
+
                         // Use a separate async block to handle the completion and toast
                         () async {
                           try {
@@ -1016,7 +1029,9 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
     BackupNotifier notifier,
     AppLocalizations l10n,
   ) {
-    if (state.availableCashbookIds.isEmpty) return const SizedBox.shrink();
+    if (state.availableCashbookIds.isEmpty) {
+      return const SizedBox.shrink();
+    }
 
     final theme = Theme.of(context);
     final activeCashbook = ref.watch(activeCashbookProvider);
@@ -1052,7 +1067,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
                         color: isSelected
-                            ? theme.colorScheme.primary.withOpacity(0.1)
+                            ? theme.colorScheme.primary.withValues(alpha: 0.1)
                             : theme.cardColor,
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
@@ -1071,7 +1086,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                                       ? Color(int.parse(metadata.color
                                           .replaceAll('#', '0xFF')))
                                       : Colors.grey)
-                                  .withOpacity(0.1),
+                                  .withValues(alpha: 0.1),
                               shape: BoxShape.circle,
                             ),
                             child: Icon(
@@ -1194,7 +1209,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                   leading: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.primary.withOpacity(0.1),
+                      color: theme.colorScheme.primary.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(

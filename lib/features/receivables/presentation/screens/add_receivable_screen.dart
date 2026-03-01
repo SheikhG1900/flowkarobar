@@ -173,8 +173,8 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
     final amount = double.tryParse(_amountController.text) ?? 0.0;
     final currencySymbol = ref.read(currencySymbolProvider);
     final decimalPlaces = ref.read(currencyDecimalPlacesProvider);
-    final formattedAmount =
-        AmountFormatter.formatWithCurrency(amount, currencySymbol, decimalPlaces);
+    final formattedAmount = AmountFormatter.formatWithCurrency(
+        amount, currencySymbol, decimalPlaces);
 
     showModalBottomSheet(
       context: context,
@@ -194,81 +194,82 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-            Text(
-              l10n.receivableIntentTitle,
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
+              Text(
+                l10n.receivableIntentTitle,
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
               ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            _buildIntentOption(
-              context: ctx,
-              icon: Icons.shopping_bag_outlined,
-              title: l10n.receivableIntentBoughtForContact(contactName),
-              color: AppColors.expenseColor,
-              onTap: () {
-                final navigator = Navigator.of(context);
-                Navigator.pop(ctx);
-                navigator.pop();
-                navigator.push(
-                  MaterialPageRoute(
-                    builder: (context) => AddTransactionScreen(
-                      initialAmount: amount,
-                      initialDate: _selectedDate,
-                      initialDescription: _descriptionController.text.isEmpty
-                          ? null
-                          : _descriptionController.text,
-                      initialType: 'EXPENSE',
-                      initialRelationship: 'PAID_FOR',
-                      initialContactName: _selectedContact!.name,
-                      initialContactPhone: _selectedContact!.phone,
-                      initialDueDate: _dueDate,
+              const SizedBox(height: 24),
+              _buildIntentOption(
+                context: ctx,
+                icon: Icons.shopping_bag_outlined,
+                title: l10n.receivableIntentBoughtForContact(contactName),
+                color: AppColors.expenseColor,
+                onTap: () {
+                  final navigator = Navigator.of(context);
+                  Navigator.pop(ctx);
+                  navigator.pop();
+                  navigator.push(
+                    MaterialPageRoute(
+                      builder: (context) => AddTransactionScreen(
+                        initialAmount: amount,
+                        initialDate: _selectedDate,
+                        initialDescription: _descriptionController.text.isEmpty
+                            ? null
+                            : _descriptionController.text,
+                        initialType: 'EXPENSE',
+                        initialRelationship: 'PAID_FOR',
+                        initialContactName: _selectedContact!.name,
+                        initialContactPhone: _selectedContact!.phone,
+                        initialDueDate: _dueDate,
+                      ),
                     ),
-                  ),
-                );
-              },
-            ),
-            const SizedBox(height: 12),
-            _buildIntentOption(
-              context: ctx,
-              icon: Icons.handshake_outlined,
-              title: l10n.receivableIntentServicesAmount(formattedAmount, contactName),
-              color: AppColors.receivableColor,
-              onTap: () {
-                final navigator = Navigator.of(context);
-                Navigator.pop(ctx);
-                navigator.pop();
-                navigator.push(
-                  MaterialPageRoute(
-                    builder: (context) => AddTransactionScreen(
-                      initialAmount: amount,
-                      initialDate: _selectedDate,
-                      initialDescription: _descriptionController.text.isEmpty
-                          ? null
-                          : _descriptionController.text,
-                      initialType: 'INCOME',
-                      initialRelationship: 'WILL_RECEIVE',
-                      initialContactName: _selectedContact!.name,
-                      initialContactPhone: _selectedContact!.phone,
-                      initialDueDate: _dueDate,
+                  );
+                },
+              ),
+              const SizedBox(height: 12),
+              _buildIntentOption(
+                context: ctx,
+                icon: Icons.handshake_outlined,
+                title: l10n.receivableIntentServicesAmount(
+                    formattedAmount, contactName),
+                color: AppColors.receivableColor,
+                onTap: () {
+                  final navigator = Navigator.of(context);
+                  Navigator.pop(ctx);
+                  navigator.pop();
+                  navigator.push(
+                    MaterialPageRoute(
+                      builder: (context) => AddTransactionScreen(
+                        initialAmount: amount,
+                        initialDate: _selectedDate,
+                        initialDescription: _descriptionController.text.isEmpty
+                            ? null
+                            : _descriptionController.text,
+                        initialType: 'INCOME',
+                        initialRelationship: 'WILL_RECEIVE',
+                        initialContactName: _selectedContact!.name,
+                        initialContactPhone: _selectedContact!.phone,
+                        initialDueDate: _dueDate,
+                      ),
                     ),
-                  ),
-                );
-              },
-            ),
-            const SizedBox(height: 12),
-            _buildIntentOption(
-              context: ctx,
-              icon: Icons.note_add_outlined,
-              title: l10n.receivableIntentJustRecord,
-              color: theme.colorScheme.primary,
-              onTap: () {
-                Navigator.pop(ctx);
-                _saveReceivable();
-              },
-            ),
-            const SizedBox(height: 24),
+                  );
+                },
+              ),
+              const SizedBox(height: 12),
+              _buildIntentOption(
+                context: ctx,
+                icon: Icons.note_add_outlined,
+                title: l10n.receivableIntentJustRecord,
+                color: theme.colorScheme.primary,
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _saveReceivable();
+                },
+              ),
+              const SizedBox(height: 24),
             ],
           ),
         ),
@@ -316,7 +317,8 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            Icon(Icons.chevron_right, color: theme.colorScheme.onSurfaceVariant),
+            Icon(Icons.chevron_right,
+                color: theme.colorScheme.onSurfaceVariant),
           ],
         ),
       ),
@@ -396,7 +398,8 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
           final capturedUserProfile = userProfile;
           final capturedTransactionService = transactionService;
           final capturedWhatsAppService = whatsAppService;
-          final capturedTemplateService = ref.read(messageTemplateServiceProvider);
+          final capturedTemplateService =
+              ref.read(messageTemplateServiceProvider);
           final capturedLanguage = getCurrentLanguageCode(ref);
 
           ToastUtils.showSuccessToast(
@@ -424,8 +427,8 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
           navigator.pop();
           navigator.push(
             MaterialPageRoute(
-              builder: (context) =>
-                  ReceivableDetailsDialog(receivableUuid: receivableWithLinkedData.receivable.uuid),
+              builder: (context) => ReceivableDetailsDialog(
+                  receivableUuid: receivableWithLinkedData.receivable.uuid),
             ),
           );
         } else {
@@ -696,7 +699,8 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
                       const SizedBox(height: 12),
                       IconButton.filled(
                         onPressed: () async {
-                          final amount = double.tryParse(_amountController.text) ?? 0.0;
+                          final amount =
+                              double.tryParse(_amountController.text) ?? 0.0;
                           await AmountCalculatorSheet.show(
                             context,
                             initialAmount: amount,
@@ -704,7 +708,8 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
                             decimalPlaces: decimalPlaces,
                             onDone: (result) {
                               setState(() {
-                                _amountController.text = result.toStringAsFixed(decimalPlaces);
+                                _amountController.text =
+                                    result.toStringAsFixed(decimalPlaces);
                               });
                             },
                           );
@@ -990,7 +995,7 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
               // Auto-create income option
               SwitchListTile(
                 value: _autoCreateIncome,
-                activeColor: AppColors.receivableColor,
+                activeThumbColor: AppColors.receivableColor,
                 onChanged: (value) {
                   setState(() {
                     _autoCreateIncome = value;
@@ -1040,7 +1045,8 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
                       children: [
                         GradientButton(
                           label: l10n.addReceivable,
-                          onPressed: _isDuplicate ? null : _onAddReceivablePressed,
+                          onPressed:
+                              _isDuplicate ? null : _onAddReceivablePressed,
                           gradient: AppColors.receivableGradient,
                           width: double.infinity,
                         ),

@@ -71,7 +71,8 @@ class _EditReceivableScreenState extends ConsumerState<EditReceivableScreen> {
 
       // Load contact data
       final contactsRepo = ref.read(contactsRepositoryProvider);
-      final contact = await contactsRepo.getContactByUuid(receivable.contactUuid);
+      final contact =
+          await contactsRepo.getContactByUuid(receivable.contactUuid);
 
       if (mounted) {
         setState(() {
@@ -151,12 +152,12 @@ class _EditReceivableScreenState extends ConsumerState<EditReceivableScreen> {
 
       if (mounted) {
         Navigator.pop(context);
-        ToastUtils.showSuccessToast(
-            context, ref, l10n.receivableUpdated);
+        ToastUtils.showSuccessToast(context, ref, l10n.receivableUpdated);
       }
     } catch (e) {
       if (mounted) {
-        ToastUtils.showErrorToast(context, ref, l10n.errorOccurred(e.toString()));
+        ToastUtils.showErrorToast(
+            context, ref, l10n.errorOccurred(e.toString()));
       }
     } finally {
       if (mounted) {
@@ -302,7 +303,8 @@ class _EditReceivableScreenState extends ConsumerState<EditReceivableScreen> {
                     },
                     loading: () =>
                         const Center(child: CircularProgressIndicator()),
-                    error: (e, s) => Center(child: Text(l10n.errorOccurred(e.toString()))),
+                    error: (e, s) =>
+                        Center(child: Text(l10n.errorOccurred(e.toString()))),
                   ),
                 ),
               ],
@@ -426,7 +428,8 @@ class _EditReceivableScreenState extends ConsumerState<EditReceivableScreen> {
                       const SizedBox(height: 12),
                       IconButton.filled(
                         onPressed: () async {
-                          final amount = double.tryParse(_amountController.text) ?? 0.0;
+                          final amount =
+                              double.tryParse(_amountController.text) ?? 0.0;
                           await AmountCalculatorSheet.show(
                             context,
                             initialAmount: amount,
@@ -434,7 +437,8 @@ class _EditReceivableScreenState extends ConsumerState<EditReceivableScreen> {
                             decimalPlaces: decimalPlaces,
                             onDone: (result) {
                               setState(() {
-                                _amountController.text = result.toStringAsFixed(decimalPlaces);
+                                _amountController.text =
+                                    result.toStringAsFixed(decimalPlaces);
                               });
                             },
                           );
@@ -663,7 +667,7 @@ class _EditReceivableScreenState extends ConsumerState<EditReceivableScreen> {
               // Auto-create income option
               SwitchListTile(
                 value: _autoCreateIncome ?? false,
-                activeColor: AppColors.receivableColor,
+                activeThumbColor: AppColors.receivableColor,
                 onChanged: (value) {
                   setState(() {
                     _autoCreateIncome = value;
