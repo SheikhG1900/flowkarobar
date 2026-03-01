@@ -166,12 +166,16 @@ class ScheduleListItem extends ConsumerWidget {
             ],
           ],
         ),
-        trailing: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            // Frequency badge above amount
-            Container(
+        trailing: IntrinsicWidth(
+          child: Align(
+            alignment: Alignment.centerRight,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // Frequency badge above amount
+                Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
                 color: theme.colorScheme.primary.withValues(alpha: 0.1),
@@ -253,8 +257,10 @@ class ScheduleListItem extends ConsumerWidget {
                   fontWeight: FontWeight.bold,
                 ),
               ),
+              ],
             ],
-          ],
+          ),
+        ),
         ),
         onTap: () {
           Navigator.push(
