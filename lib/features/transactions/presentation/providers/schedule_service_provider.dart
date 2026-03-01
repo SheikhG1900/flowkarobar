@@ -360,14 +360,11 @@ class ScheduleService {
       TransactionSchedulesCompanion(
         amount: amount != null ? Value(amount) : const Value.absent(),
         type: type != null ? Value(type) : const Value.absent(),
-        description:
-            description != null ? Value(description) : const Value.absent(),
-        categoryUuid:
-            categoryUuid != null ? Value(categoryUuid) : const Value.absent(),
-        contactUuid: contactUuid != null ? Value(contactUuid) : const Value.absent(),
-        paidRelationship: paidRelationship != null
-            ? Value(paidRelationship)
-            : const Value.absent(),
+        // Use Value(description) so clearing the field (null) updates DB to null
+        description: Value(description),
+        categoryUuid: Value(categoryUuid),
+        contactUuid: Value(contactUuid),
+        paidRelationship: Value(paidRelationship),
         dueDate: dueDate != null ? Value(dueDate) : const Value.absent(),
         dueDateOffset: dueDateOffset != null
             ? Value(dueDateOffset)
@@ -380,8 +377,9 @@ class ScheduleService {
         selectedDaysOfMonth: daysOfMonthJson != null
             ? Value(daysOfMonthJson)
             : const Value.absent(),
-        startDate: startDate != null ? Value(startDate) : const Value.absent(),
-        endDate: endDate != null ? Value(endDate) : const Value.absent(),
+        // Use Value() so clearing date range (null) updates DB to null
+        startDate: Value(startDate),
+        endDate: Value(endDate),
         updatedAt: Value(DateTime.now()),
       ),
     );

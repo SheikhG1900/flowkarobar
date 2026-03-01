@@ -112,6 +112,23 @@ class LocalizationHelper {
         return relationship;
     }
   }
+
+  /// Short form for schedule/transaction details: Receivable or Payable.
+  /// PAID_FOR, WILL_RECEIVE → Receivable; PAID_BY, RECEIVED_FROM → Payable.
+  static String localizeRelationshipShort(
+      AppLocalizations l10n, String? relationship) {
+    if (relationship == null) return '';
+    switch (relationship.toUpperCase()) {
+      case 'PAID_FOR':
+      case 'WILL_RECEIVE':
+        return l10n.receivable;
+      case 'PAID_BY':
+      case 'RECEIVED_FROM':
+        return l10n.payable;
+      default:
+        return relationship;
+    }
+  }
 }
 
 extension LocalizationExtension on String {

@@ -16,7 +16,7 @@ import 'package:flowpaisa/features/transactions/presentation/providers/transacti
 import 'package:flowpaisa/features/transactions/presentation/screens/edit_schedule_screen.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart' hide Category;
 import 'dart:convert';
 
 class ScheduleDetailsDialog extends ConsumerWidget {
@@ -207,283 +207,67 @@ class ScheduleDetailsDialog extends ConsumerWidget {
 
             const SizedBox(height: 24),
 
-            // Contact & Category Header Section
-            if (contact != null || category != null) ...[
-              if (contact != null) ...[
-                InkWell(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => ContactDetailsScreen(
-                          contactUuid: contact.uuid,
-                        ),
-                      ),
-                    );
-                  },
-                  borderRadius: BorderRadius.circular(12),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: Row(
-                      children: [
-                        // Contact Section
-                        Container(
-                          width: 60,
-                          height: 60,
-                          decoration: BoxDecoration(
-                            gradient:
-                                AppColors.getContactGradient(contact.name),
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppColors.getContactColor(contact.name)
-                                    .withValues(alpha: 0.3),
-                                blurRadius: 12,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          alignment: Alignment.center,
-                          child: Text(
-                            contact.name.isNotEmpty
-                                ? contact.name[0].toUpperCase()
-                                : '?',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 28,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                contact.name,
-                                style: theme.textTheme.titleLarge?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              if (contact.phone != null) ...[
-                                const SizedBox(height: 4),
-                                Row(
-                                  children: [
-                                    Icon(
-                                      Icons.phone,
-                                      size: 16,
-                                      color: theme.colorScheme.onSurfaceVariant,
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      contact.phone!,
-                                      style:
-                                          theme.textTheme.bodyMedium?.copyWith(
-                                        color:
-                                            theme.colorScheme.onSurfaceVariant,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-              ],
-              // Category Section
-              Container(
-                decoration: BoxDecoration(
-                  color: category != null
-                      ? Color(int.parse(
-                              category.color!.replaceAll('#', '0xFF')))
-                          .withValues(alpha: 0.1)
-                      : (isExpense
-                              ? AppColors.expenseColor
-                              : AppColors.incomeColor)
-                          .withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: category != null
-                        ? Color(int.parse(
-                                category.color!.replaceAll('#', '0xFF')))
-                            .withValues(alpha: 0.3)
-                        : (isExpense
-                                ? AppColors.expenseColor
-                                : AppColors.incomeColor)
-                            .withValues(alpha: 0.3),
-                    width: 1,
-                  ),
-                ),
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: category != null
-                        ? () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => CategoryDetailsScreen(
-                                  categoryUuid: category.uuid,
-                                ),
-                              ),
-                            );
-                          }
-                        : null,
-                    borderRadius: BorderRadius.circular(16),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 48,
-                            height: 48,
-                            decoration: BoxDecoration(
-                              color: category != null
-                                  ? Color(int.parse(category.color!
-                                          .replaceAll('#', '0xFF')))
-                                      .withValues(alpha: 0.2)
-                                  : (isExpense
-                                          ? AppColors.expenseColor
-                                          : AppColors.incomeColor)
-                                      .withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Icon(
-                              category != null && category.icon != null
-                                  ? IconHelper.getIconData(category.icon!)
-                                  : (isExpense
-                                      ? Icons.arrow_circle_down
-                                      : Icons.arrow_circle_up),
-                              color: category != null
-                                  ? Color(int.parse(
-                                      category.color!.replaceAll('#', '0xFF')))
-                                  : (isExpense
-                                      ? AppColors.expenseColor
-                                      : AppColors.incomeColor),
-                              size: 28,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  l10n.category,
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: theme.colorScheme.onSurfaceVariant,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  category != null
-                                      ? LocalizationHelper
-                                          .getLocalizedCategoryName(
-                                              context, category.name)
-                                      : (isExpense
-                                          ? l10n.expense
-                                          : l10n.income),
-                                  style: theme.textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: category != null
-                                        ? Color(int.parse(category.color!
-                                            .replaceAll('#', '0xFF')))
-                                        : null,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
+            // Schedule Pattern Card
+            _buildSchedulePatternCard(
+              context,
+              ref,
+              theme,
+              l10n,
+              schedule,
+            ),
+
+            const SizedBox(height: 16),
+
+            // Receivable card (PAID_FOR, WILL_RECEIVE)
+            if (schedule.paidRelationship != null &&
+                (schedule.paidRelationship == 'PAID_FOR' ||
+                    schedule.paidRelationship == 'WILL_RECEIVE'))
+              _buildRelationshipCard(
+                context,
+                theme,
+                l10n,
+                isReceivable: true,
+                contact: contact,
               ),
-              const SizedBox(height: 24),
-              const Divider(),
+
+            // Payable card (PAID_BY, RECEIVED_FROM)
+            if (schedule.paidRelationship != null &&
+                (schedule.paidRelationship == 'PAID_BY' ||
+                    schedule.paidRelationship == 'RECEIVED_FROM'))
+              _buildRelationshipCard(
+                context,
+                theme,
+                l10n,
+                isReceivable: false,
+                contact: contact,
+              ),
+
+            // Contact card when relationship is not defined but contact is provided
+            if (contact != null && schedule.paidRelationship == null) ...[
+              const SizedBox(height: 16),
+              _buildContactCard(context, theme, l10n, contact!),
+            ],
+
+            if (schedule.paidRelationship != null || contact != null)
+              const SizedBox(height: 16),
+
+            // Category Card
+            if (category != null) ...[
+              _buildCategoryCard(
+                context,
+                theme,
+                l10n,
+                category: category!,
+                isExpense: isExpense,
+              ),
               const SizedBox(height: 16),
             ],
 
-            // Schedule Pattern Section
-            Text(
-              l10n.schedulePattern,
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 12),
-            _buildDetailRow(
-              context,
-              icon: Icons.repeat,
-              label: l10n.frequency,
-              value: _getFrequencyLabel(l10n, schedule.scheduleType),
-            ),
-            if (schedule.paidRelationship != null)
-              _buildDetailRow(
-                context,
-                icon: Icons.people,
-                label: l10n.relationship,
-                value: LocalizationHelper.localizeRelationship(
-                    l10n, schedule.paidRelationship),
-              ),
-            if (schedule.scheduleType == 'WEEKLY' &&
-                schedule.selectedDaysOfWeek != null)
-              _buildDetailRow(
-                context,
-                icon: Icons.calendar_view_week,
-                label: l10n.days,
-                value: _getDaysOfWeekLabels(l10n, schedule.selectedDaysOfWeek!),
-              ),
-            if (schedule.scheduleType == 'MONTHLY' &&
-                schedule.selectedDaysOfMonth != null)
-              _buildDetailRow(
-                context,
-                icon: Icons.calendar_month,
-                label: l10n.days,
-                value: _getDaysOfMonthLabels(schedule.selectedDaysOfMonth!),
-              ),
-            if (schedule.startDate != null)
-              _buildDetailRow(
-                context,
-                icon: Icons.start,
-                label: l10n.startDate,
-                value: AppDateFormatter.formatDate(schedule.startDate!,
-                    pattern: ref.watch(userProfileProvider).dateFormat),
-              ),
-            if (schedule.endDate != null)
-              _buildDetailRow(
-                context,
-                icon: Icons.event_available,
-                label: l10n.endDate,
-                value: AppDateFormatter.formatDate(schedule.endDate!,
-                    pattern: ref.watch(userProfileProvider).dateFormat),
-              ),
-
-            if (schedule.lastGeneratedDate != null)
-              _buildDetailRow(
-                context,
-                icon: Icons.history,
-                label: l10n.lastGenerated,
-                value: AppDateFormatter.formatDate(schedule.lastGeneratedDate!,
-                    pattern: ref.watch(userProfileProvider).dateFormat),
-              ),
-
+            // Description card
             if (schedule.description != null &&
                 schedule.description!.isNotEmpty) ...[
+              _buildDescriptionCard(context, theme, l10n, schedule.description!),
               const SizedBox(height: 16),
-              _buildDetailRow(
-                context,
-                icon: Icons.description,
-                label: l10n.description,
-                value: schedule.description!,
-              ),
             ],
 
             if (kDebugMode) ...[
@@ -533,6 +317,634 @@ class ScheduleDetailsDialog extends ConsumerWidget {
             const SizedBox(height: 40),
           ],
         ),
+      ),
+    );
+  }
+
+  static Widget _buildSchedulePatternCard(
+    BuildContext context,
+    WidgetRef ref,
+    ThemeData theme,
+    AppLocalizations l10n,
+    TransactionSchedule schedule,
+  ) {
+    final dateFormat = ref.watch(userProfileProvider).dateFormat;
+    final hasStart = schedule.startDate != null;
+    final hasEnd = schedule.endDate != null;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: theme.colorScheme.shadow.withValues(alpha: 0.06),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  Icons.schedule,
+                  size: 24,
+                  color: theme.colorScheme.onPrimaryContainer,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  l10n.schedulePattern,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.onSurface,
+                  ),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primaryContainer.withValues(alpha: 0.8),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.5),
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      _getFrequencyIcon(schedule.scheduleType),
+                      size: 18,
+                      color: theme.colorScheme.onPrimaryContainer,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      _getFrequencyLabel(l10n, schedule.scheduleType),
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: theme.colorScheme.onPrimaryContainer,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          if (hasStart || hasEnd) ...[
+            const SizedBox(height: 20),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    theme.colorScheme.primaryContainer.withValues(alpha: 0.6),
+                    theme.colorScheme.secondaryContainer.withValues(alpha: 0.4),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (hasStart)
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          l10n.startDate,
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          AppDateFormatter.formatDate(
+                              schedule.startDate!, pattern: dateFormat),
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: theme.colorScheme.primary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  if (hasStart && hasEnd) const SizedBox(height: 12),
+                  if (hasEnd)
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          l10n.endDate,
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          AppDateFormatter.formatDate(
+                              schedule.endDate!, pattern: dateFormat),
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: theme.colorScheme.primary,
+                          ),
+                        ),
+                      ],
+                    ),
+                ],
+              ),
+            ),
+          ],
+          const SizedBox(height: 16),
+          if (schedule.scheduleType == 'WEEKLY' &&
+              schedule.selectedDaysOfWeek != null)
+            _buildDetailRow(
+              context,
+              icon: Icons.calendar_view_week,
+              label: l10n.days,
+              value: _getDaysOfWeekLabels(l10n, schedule.selectedDaysOfWeek!),
+            ),
+          if (schedule.scheduleType == 'MONTHLY' &&
+              schedule.selectedDaysOfMonth != null)
+            _buildDetailRow(
+              context,
+              icon: Icons.calendar_month,
+              label: l10n.days,
+              value: _getDaysOfMonthLabels(schedule.selectedDaysOfMonth!),
+            ),
+          if (schedule.lastGeneratedDate != null)
+            _buildDetailRow(
+              context,
+              icon: Icons.history,
+              label: l10n.lastGenerated,
+              value: AppDateFormatter.formatDate(schedule.lastGeneratedDate!,
+                  pattern: dateFormat),
+            ),
+        ],
+      ),
+    );
+  }
+
+  static Widget _buildRelationshipCard(
+    BuildContext context,
+    ThemeData theme,
+    AppLocalizations l10n, {
+    required bool isReceivable,
+    required Contact? contact,
+  }) {
+    final color = isReceivable
+        ? AppColors.receivableColor
+        : AppColors.payableColor;
+    final label =
+        isReceivable ? l10n.receivable : l10n.payable;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            color.withValues(alpha: 0.15),
+            color.withValues(alpha: 0.06),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withValues(alpha: 0.4), width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.12),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.25),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  isReceivable ? Icons.call_received : Icons.call_made,
+                  size: 24,
+                  color: color,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                label,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                ),
+              ),
+            ],
+          ),
+          if (contact != null) ...[
+            const SizedBox(height: 16),
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ContactDetailsScreen(
+                        contactUuid: contact.uuid,
+                      ),
+                    ),
+                  );
+                },
+                borderRadius: BorderRadius.circular(12),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          gradient:
+                              AppColors.getContactGradient(contact.name),
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.getContactColor(contact.name)
+                                  .withValues(alpha: 0.3),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          contact.name.isNotEmpty
+                              ? contact.name[0].toUpperCase()
+                              : '?',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              contact.name,
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            if (contact.phone != null) ...[
+                              const SizedBox(height: 2),
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.phone,
+                                    size: 14,
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    contact.phone!,
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                      Icon(
+                        Icons.chevron_right,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  static Widget _buildContactCard(
+    BuildContext context,
+    ThemeData theme,
+    AppLocalizations l10n,
+    Contact contact,
+  ) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: theme.colorScheme.shadow.withValues(alpha: 0.06),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  Icons.person,
+                  size: 24,
+                  color: theme.colorScheme.onPrimaryContainer,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                l10n.contact,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: theme.colorScheme.onSurface,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ContactDetailsScreen(
+                      contactUuid: contact.uuid,
+                    ),
+                  ),
+                );
+              },
+              borderRadius: BorderRadius.circular(12),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        gradient:
+                            AppColors.getContactGradient(contact.name),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.getContactColor(contact.name)
+                                .withValues(alpha: 0.3),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        contact.name.isNotEmpty
+                            ? contact.name[0].toUpperCase()
+                            : '?',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            contact.name,
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          if (contact.phone != null) ...[
+                            const SizedBox(height: 2),
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.phone,
+                                  size: 14,
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  contact.phone!,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    Icon(
+                      Icons.chevron_right,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static Widget _buildCategoryCard(
+    BuildContext context,
+    ThemeData theme,
+    AppLocalizations l10n, {
+    required Category category,
+    required bool isExpense,
+  }) {
+    final color = category.color != null
+        ? Color(int.parse(category.color!.replaceAll('#', '0xFF')))
+        : (isExpense ? AppColors.expenseColor : AppColors.incomeColor);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.08),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => CategoryDetailsScreen(
+                  categoryUuid: category.uuid,
+                ),
+              ),
+            );
+          },
+          borderRadius: BorderRadius.circular(20),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Row(
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      category.icon != null
+                          ? IconHelper.getIconData(category.icon!)
+                          : (isExpense
+                              ? Icons.arrow_circle_down
+                              : Icons.arrow_circle_up),
+                      color: color,
+                      size: 28,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          l10n.category,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          LocalizationHelper.getLocalizedCategoryName(
+                              context, category.name),
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: color,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(
+                    Icons.chevron_right,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+    );
+  }
+
+  static Widget _buildDescriptionCard(
+    BuildContext context,
+    ThemeData theme,
+    AppLocalizations l10n,
+    String description,
+  ) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.description,
+                size: 20,
+                color: theme.colorScheme.primary,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                l10n.description,
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            description,
+            style: theme.textTheme.bodyMedium,
+          ),
+        ],
       ),
     );
   }
@@ -598,6 +1010,19 @@ class ScheduleDetailsDialog extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  static IconData _getFrequencyIcon(String type) {
+    switch (type) {
+      case 'DAILY':
+        return Icons.today;
+      case 'WEEKLY':
+        return Icons.date_range;
+      case 'MONTHLY':
+        return Icons.calendar_month;
+      default:
+        return Icons.repeat;
+    }
   }
 
   static String _getFrequencyLabel(AppLocalizations l10n, String type) {
