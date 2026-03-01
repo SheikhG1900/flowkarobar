@@ -176,91 +176,93 @@ class ScheduleListItem extends ConsumerWidget {
               children: [
                 // Frequency badge above amount
                 Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(4),
-                border: Border.all(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.3),
-                  width: 1,
-                ),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    _getFrequencyIcon(schedule.scheduleType),
-                    size: 10,
-                    color: theme.colorScheme.primary,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(4),
+                    border: Border.all(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                      width: 1,
+                    ),
                   ),
-                  const SizedBox(width: 4),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        _getFrequencyIcon(schedule.scheduleType),
+                        size: 10,
+                        color: theme.colorScheme.primary,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        _getFrequencyLabel(l10n, schedule.scheduleType),
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: theme.colorScheme.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '${isExpense ? '\u200E-' : '\u200E+'} ${AmountFormatter.formatWithCurrency(schedule.amount, currency.symbol, currency.decimalPlaces)}',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    color: isExpense
+                        ? (isInactive
+                            ? AppColors.expenseColor.withValues(alpha: 0.5)
+                            : AppColors.expenseColor)
+                        : (isInactive
+                            ? AppColors.incomeColor.withValues(alpha: 0.5)
+                            : AppColors.incomeColor),
+                    fontWeight: FontWeight.bold,
+                    fontSize: AmountFormatter.getFontSize(schedule.amount),
+                  ),
+                ),
+                if (schedule.paidRelationship != null) ...[
+                  const SizedBox(height: 4),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: AppColors.getRelationshipColor(
+                              schedule.paidRelationship)
+                          .withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(4),
+                      border: Border.all(
+                        color: AppColors.getRelationshipColor(
+                                schedule.paidRelationship)
+                            .withValues(alpha: 0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: Text(
+                      LocalizationHelper.localizeRelationshipShort(
+                          l10n, schedule.paidRelationship),
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: AppColors.getRelationshipColor(
+                            schedule.paidRelationship),
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+                if (isInactive) ...[
+                  const SizedBox(height: 4),
                   Text(
-                    _getFrequencyLabel(l10n, schedule.scheduleType),
-                    style: TextStyle(
-                      fontSize: 10,
-                      color: theme.colorScheme.primary,
+                    l10n.inactive,
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: theme.colorScheme.error.withValues(alpha: 0.7),
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                 ],
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              '${isExpense ? '\u200E-' : '\u200E+'} ${AmountFormatter.formatWithCurrency(schedule.amount, currency.symbol, currency.decimalPlaces)}',
-              style: theme.textTheme.titleLarge?.copyWith(
-                color: isExpense
-                    ? (isInactive
-                        ? AppColors.expenseColor.withValues(alpha: 0.5)
-                        : AppColors.expenseColor)
-                    : (isInactive
-                        ? AppColors.incomeColor.withValues(alpha: 0.5)
-                        : AppColors.incomeColor),
-                fontWeight: FontWeight.bold,
-                fontSize: AmountFormatter.getFontSize(schedule.amount),
-              ),
-            ),
-            if (schedule.paidRelationship != null) ...[
-              const SizedBox(height: 4),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color:
-                      AppColors.getRelationshipColor(schedule.paidRelationship)
-                          .withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(4),
-                  border: Border.all(
-                    color: AppColors.getRelationshipColor(
-                            schedule.paidRelationship)
-                        .withValues(alpha: 0.3),
-                    width: 1,
-                  ),
-                ),
-                child: Text(
-                  LocalizationHelper.localizeRelationshipShort(
-                      l10n, schedule.paidRelationship),
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: AppColors.getRelationshipColor(
-                        schedule.paidRelationship),
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
-            if (isInactive) ...[
-              const SizedBox(height: 4),
-              Text(
-                l10n.inactive,
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: theme.colorScheme.error.withValues(alpha: 0.7),
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
               ],
-            ],
+            ),
           ),
-        ),
         ),
         onTap: () {
           Navigator.push(
