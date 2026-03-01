@@ -292,4 +292,19 @@ class AppColors {
       end: Alignment.bottomRight,
     );
   }
+
+  // Get color for a relationship
+  static Color getRelationshipColor(String? relationship) {
+    if (relationship == null) return Colors.grey;
+    switch (relationship.toUpperCase()) {
+      case 'PAID_FOR':
+      case 'WILL_RECEIVE':
+        return receivableColor;
+      case 'PAID_BY':
+      case 'RECEIVED_FROM':
+        return payableColor;
+      default:
+        return Colors.grey;
+    }
+  }
 }

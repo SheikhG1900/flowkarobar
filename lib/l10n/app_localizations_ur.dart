@@ -119,6 +119,9 @@ class AppLocalizationsUr extends AppLocalizations {
   String get frequency => 'تعدد';
 
   @override
+  String get relationship => 'تعلق';
+
+  @override
   String get days => 'دن';
 
   @override
@@ -2329,9 +2332,6 @@ class AppLocalizationsUr extends AppLocalizations {
 
   @override
   String get proceed => 'آگے بڑھیں';
-
-  @override
-  String get relationship => 'تعلق';
 
   @override
   String get hints => 'ہنٹس';

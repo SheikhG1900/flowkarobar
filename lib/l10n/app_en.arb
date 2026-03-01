@@ -49,6 +49,7 @@
   "scheduleCreated": "Schedule created successfully",
   "scheduleDetails": "Schedule Details",
   "frequency": "Frequency",
+  "relationship": "Relationship",
   "days": "Days",
   "lastGenerated": "Last Generated",
   "editSchedule": "Edit Schedule",

@@ -310,6 +310,12 @@ abstract class AppLocalizations {
   /// **'Frequency'**
   String get frequency;
 
+  /// No description provided for @relationship.
+  ///
+  /// In en, this message translates to:
+  /// **'Relationship'**
+  String get relationship;
+
   /// No description provided for @days.
   ///
   /// In en, this message translates to:
@@ -4269,12 +4275,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Proceed'**
   String get proceed;
-
-  /// No description provided for @relationship.
-  ///
-  /// In en, this message translates to:
-  /// **'Relationship'**
-  String get relationship;
 
   /// No description provided for @hints.
   ///

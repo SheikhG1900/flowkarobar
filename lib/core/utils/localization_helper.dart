@@ -48,11 +48,13 @@ class LocalizationHelper {
     }
   }
 
-  static String getLocalizedCategoryName(BuildContext context, String categoryName) {
+  static String getLocalizedCategoryName(
+      BuildContext context, String categoryName) {
     return localizeCategory(context, categoryName);
   }
 
-  static String localizeCategoryName(BuildContext context, String categoryName) {
+  static String localizeCategoryName(
+      BuildContext context, String categoryName) {
     return localizeCategory(context, categoryName);
   }
 
@@ -91,6 +93,23 @@ class LocalizationHelper {
         return l10n.currencyPKR;
       default:
         return currencyName;
+    }
+  }
+
+  static String localizeRelationship(
+      AppLocalizations l10n, String? relationship) {
+    if (relationship == null) return '';
+    switch (relationship.toUpperCase()) {
+      case 'PAID_FOR':
+        return l10n.paidFor;
+      case 'PAID_BY':
+        return l10n.paidBy;
+      case 'RECEIVED_FROM':
+        return l10n.iOwe;
+      case 'WILL_RECEIVE':
+        return l10n.willReceive;
+      default:
+        return relationship;
     }
   }
 }

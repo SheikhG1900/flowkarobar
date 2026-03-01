@@ -118,6 +118,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get frequency => 'Frequency';
 
   @override
+  String get relationship => 'Relationship';
+
+  @override
   String get days => 'Days';
 
   @override
@@ -2315,9 +2318,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get proceed => 'Proceed';
-
-  @override
-  String get relationship => 'Relationship';
 
   @override
   String get hints => 'Hints';

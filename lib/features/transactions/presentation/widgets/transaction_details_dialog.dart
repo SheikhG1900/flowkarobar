@@ -1166,18 +1166,17 @@ class TransactionDetailsDialog extends ConsumerWidget {
   static String _getStatusLabel(
       BuildContext context, String relationship, bool isMarked) {
     final l10n = AppLocalizations.of(context)!;
-    switch (relationship.toLowerCase()) {
-      case 'paid_for':
-        return isMarked ? l10n.receivedTag : l10n.receivableTag;
-      case 'paid_by':
-        return isMarked ? l10n.paidTag : l10n.payableTag;
-      case 'received_from':
-        return isMarked ? l10n.paidTag : l10n.payableTag;
-      case 'will_receive':
-        return isMarked ? l10n.receivedTag : l10n.receivableTag;
-      default:
-        return '';
+    if (isMarked) {
+      switch (relationship.toUpperCase()) {
+        case 'PAID_FOR':
+        case 'WILL_RECEIVE':
+          return l10n.receivedTag;
+        case 'PAID_BY':
+        case 'RECEIVED_FROM':
+          return l10n.paidTag;
+      }
     }
+    return LocalizationHelper.localizeRelationship(l10n, relationship);
   }
 
   static Future<void> _markAsReviewed(

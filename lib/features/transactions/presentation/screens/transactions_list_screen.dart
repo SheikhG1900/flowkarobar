@@ -1013,34 +1013,22 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
   }
 
   Color _getStatusColor(String relationship) {
-    switch (relationship) {
-      case 'PAID_FOR':
-        return AppColors.receivableColor;
-      case 'PAID_BY':
-        return AppColors.payableColor;
-      case 'RECEIVED_FROM':
-        return AppColors.payableColor;
-      case 'WILL_RECEIVE':
-        return AppColors.receivableColor;
-      default:
-        return Colors.grey;
-    }
+    return AppColors.getRelationshipColor(relationship);
   }
 
   String _getStatusLabel(
       AppLocalizations l10n, String relationship, bool isMarked) {
-    switch (relationship) {
-      case 'PAID_FOR':
-        return isMarked ? l10n.receivedTag : l10n.receivableTag;
-      case 'PAID_BY':
-        return isMarked ? l10n.paidTag : l10n.payableTag;
-      case 'RECEIVED_FROM':
-        return isMarked ? l10n.paidTag : l10n.payableTag;
-      case 'WILL_RECEIVE':
-        return isMarked ? l10n.receivedTag : l10n.receivableTag;
-      default:
-        return '';
+    if (isMarked) {
+      switch (relationship.toUpperCase()) {
+        case 'PAID_FOR':
+        case 'WILL_RECEIVE':
+          return l10n.receivedTag;
+        case 'PAID_BY':
+        case 'RECEIVED_FROM':
+          return l10n.paidTag;
+      }
     }
+    return LocalizationHelper.localizeRelationship(l10n, relationship);
   }
 }
 

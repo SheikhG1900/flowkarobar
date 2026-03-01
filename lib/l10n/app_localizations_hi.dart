@@ -119,6 +119,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get frequency => 'आवृत्ति';
 
   @override
+  String get relationship => 'संबंध';
+
+  @override
   String get days => 'दिन';
 
   @override
@@ -2324,9 +2327,6 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get proceed => 'आगे बढ़ें';
-
-  @override
-  String get relationship => 'संबंध';
 
   @override
   String get hints => 'संकेत';

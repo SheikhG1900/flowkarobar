@@ -425,6 +425,14 @@ class ScheduleDetailsDialog extends ConsumerWidget {
               label: l10n.frequency,
               value: _getFrequencyLabel(l10n, schedule.scheduleType),
             ),
+            if (schedule.paidRelationship != null)
+              _buildDetailRow(
+                context,
+                icon: Icons.people,
+                label: l10n.relationship,
+                value: LocalizationHelper.localizeRelationship(
+                    l10n, schedule.paidRelationship),
+              ),
             if (schedule.scheduleType == 'WEEKLY' &&
                 schedule.selectedDaysOfWeek != null)
               _buildDetailRow(
