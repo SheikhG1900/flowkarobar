@@ -142,34 +142,6 @@ class ScheduleListItem extends ConsumerWidget {
                 ],
               ),
             ),
-            if (schedule.paidRelationship != null) ...[
-              const SizedBox(height: 6),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color:
-                      AppColors.getRelationshipColor(schedule.paidRelationship)
-                          .withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(4),
-                  border: Border.all(
-                    color: AppColors.getRelationshipColor(
-                            schedule.paidRelationship)
-                        .withValues(alpha: 0.3),
-                    width: 1,
-                  ),
-                ),
-                child: Text(
-                  LocalizationHelper.localizeRelationship(
-                      l10n, schedule.paidRelationship),
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: AppColors.getRelationshipColor(
-                        schedule.paidRelationship),
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
             if (contact != null) ...[
               const SizedBox(height: 4),
               // Contact tag
@@ -243,6 +215,34 @@ class ScheduleListItem extends ConsumerWidget {
                 fontSize: AmountFormatter.getFontSize(schedule.amount),
               ),
             ),
+            if (schedule.paidRelationship != null) ...[
+              const SizedBox(height: 4),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color:
+                      AppColors.getRelationshipColor(schedule.paidRelationship)
+                          .withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(4),
+                  border: Border.all(
+                    color: AppColors.getRelationshipColor(
+                            schedule.paidRelationship)
+                        .withValues(alpha: 0.3),
+                    width: 1,
+                  ),
+                ),
+                child: Text(
+                  LocalizationHelper.localizeRelationshipShort(
+                      l10n, schedule.paidRelationship),
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: AppColors.getRelationshipColor(
+                        schedule.paidRelationship),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
             if (isInactive) ...[
               const SizedBox(height: 4),
               Text(
