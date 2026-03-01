@@ -113,6 +113,28 @@ class AppLocalizationsHi extends AppLocalizations {
   String get scheduleCreated => 'शेड्यूल सफलतापूर्वक बनाया गया';
 
   @override
+  String get scheduleDetails => 'शेड्यूल विवरण';
+
+  @override
+  String get frequency => 'आवृत्ति';
+
+  @override
+  String get days => 'दिन';
+
+  @override
+  String get lastGenerated => 'पिछली बार उत्पन्न';
+
+  @override
+  String get editSchedule => 'शेड्यूल संपादित करें';
+
+  @override
+  String get deleteSchedule => 'शेड्यूल हटाएं';
+
+  @override
+  String get deleteScheduleConfirmation =>
+      'क्या आप वाकई इस शेड्यूल को हटाना चाहते हैं? यह इस शेड्यूल के लिए भविष्य के सभी स्वचालित लेनदेन बंद कर देगा।';
+
+  @override
   String get transactionUpdated => 'लेनदेन सफलतापूर्वक अपडेट किया गया';
 
   @override
@@ -2467,9 +2489,6 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get uncategorized => 'बिना श्रेणी';
-
-  @override
-  String get editSchedule => 'शेड्यूल संपादित करें';
 
   @override
   String get schedule => 'शेड्यूल';

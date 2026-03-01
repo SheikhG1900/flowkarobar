@@ -34,6 +34,24 @@ class TransactionWithDetails {
   }
 }
 
+/// Enhanced schedule model with pre-fetched related data
+class ScheduleWithDetails {
+  final TransactionSchedule schedule;
+  final Category? category;
+  final Contact? contact;
+
+  ScheduleWithDetails({
+    required this.schedule,
+    this.category,
+    this.contact,
+  });
+
+  @override
+  String toString() {
+    return 'ScheduleWithDetails(schedule: ${schedule.uuid}, category: ${category?.name}, contact: ${contact?.name})';
+  }
+}
+
 class TransactionFilters {
   final DateTime? startDate;
   final DateTime? endDate;
@@ -42,6 +60,7 @@ class TransactionFilters {
   final List<String>? contactUuids;
   final double? minAmount;
   final double? maxAmount;
+
   /// Optional transaction status filters:
   /// 'PAID', 'RECEIVED', 'PAYABLE', 'RECEIVABLE', 'AUTO'
   final List<String>? statusCodes;

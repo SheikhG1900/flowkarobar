@@ -112,6 +112,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get scheduleCreated => 'Schedule created successfully';
 
   @override
+  String get scheduleDetails => 'Schedule Details';
+
+  @override
+  String get frequency => 'Frequency';
+
+  @override
+  String get days => 'Days';
+
+  @override
+  String get lastGenerated => 'Last Generated';
+
+  @override
+  String get editSchedule => 'Edit Schedule';
+
+  @override
+  String get deleteSchedule => 'Delete Schedule';
+
+  @override
+  String get deleteScheduleConfirmation =>
+      'Are you sure you want to delete this schedule? This will stop all future automatic transactions for this schedule.';
+
+  @override
   String get transactionUpdated => 'Transaction updated successfully';
 
   @override
@@ -2458,9 +2480,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get uncategorized => 'Uncategorized';
-
-  @override
-  String get editSchedule => 'Edit Schedule';
 
   @override
   String get schedule => 'Schedule';

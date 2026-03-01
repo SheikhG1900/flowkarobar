@@ -298,6 +298,48 @@ abstract class AppLocalizations {
   /// **'Schedule created successfully'**
   String get scheduleCreated;
 
+  /// No description provided for @scheduleDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Schedule Details'**
+  String get scheduleDetails;
+
+  /// No description provided for @frequency.
+  ///
+  /// In en, this message translates to:
+  /// **'Frequency'**
+  String get frequency;
+
+  /// No description provided for @days.
+  ///
+  /// In en, this message translates to:
+  /// **'Days'**
+  String get days;
+
+  /// No description provided for @lastGenerated.
+  ///
+  /// In en, this message translates to:
+  /// **'Last Generated'**
+  String get lastGenerated;
+
+  /// No description provided for @editSchedule.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Schedule'**
+  String get editSchedule;
+
+  /// No description provided for @deleteSchedule.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Schedule'**
+  String get deleteSchedule;
+
+  /// No description provided for @deleteScheduleConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this schedule? This will stop all future automatic transactions for this schedule.'**
+  String get deleteScheduleConfirmation;
+
   /// No description provided for @transactionUpdated.
   ///
   /// In en, this message translates to:
@@ -4533,12 +4575,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Uncategorized'**
   String get uncategorized;
-
-  /// No description provided for @editSchedule.
-  ///
-  /// In en, this message translates to:
-  /// **'Edit Schedule'**
-  String get editSchedule;
 
   /// No description provided for @schedule.
   ///

@@ -30,6 +30,20 @@ final allSchedulesProvider = StreamProvider<List<TransactionSchedule>>((ref) {
   return repository.watchAllSchedules();
 });
 
+// Watch all schedules with category and contact details
+final allSchedulesWithDetailsProvider =
+    StreamProvider<List<ScheduleWithDetails>>((ref) {
+  final repository = ref.watch(schedulesRepositoryProvider);
+  return repository.watchAllSchedulesWithDetails();
+});
+
+// Watch a single schedule with details by UUID
+final scheduleWithDetailsProvider =
+    StreamProvider.family<ScheduleWithDetails?, String>((ref, uuid) {
+  final repository = ref.watch(schedulesRepositoryProvider);
+  return repository.watchScheduleWithDetailsByUuid(uuid);
+});
+
 // Watch all transactions
 final allTransactionsProvider = StreamProvider<List<Transaction>>((ref) {
   final repository = ref.watch(transactionsRepositoryProvider);
@@ -59,37 +73,42 @@ final transactionsWithDetailsProvider =
 final transactionWithDetailsProvider =
     StreamProvider.family<TransactionWithDetails?, String>((ref, uuid) {
   final repository = ref.watch(transactionsRepositoryProvider);
-  
-  // Also watch all transactions, payables, and receivables to ensure we refresh 
+
+  // Also watch all transactions, payables, and receivables to ensure we refresh
   // when any related data changes (e.g. when a linked entry is marked as paid)
   ref.watch(allTransactionsProvider);
   ref.watch(allPayablesProvider);
   ref.watch(allReceivablesProvider);
-  
+
   return repository.watchTransactionWithDetailsByUuid(uuid);
 });
 
 /// All transactions in the same split group as the given transaction (for group edit / sibling list).
 final transactionGroupProvider =
-    StreamProvider.family<List<TransactionWithDetails>, String>((ref, transactionUuid) {
+    StreamProvider.family<List<TransactionWithDetails>, String>(
+        (ref, transactionUuid) {
   final repository = ref.watch(transactionsRepositoryProvider);
-  
-  // Watch all transactions, payables, and receivables to ensure we refresh 
+
+  // Watch all transactions, payables, and receivables to ensure we refresh
   // when any transaction in the group or its linked entries change
   ref.watch(allTransactionsProvider);
   ref.watch(allPayablesProvider);
   ref.watch(allReceivablesProvider);
-  
+
   // First get the transaction to find its linkedGroupId
   // We use watchTransactionWithDetailsByUuid to get the initial item and its groupId
-  return repository.watchTransactionWithDetailsByUuid(transactionUuid).switchMap((item) {
+  return repository
+      .watchTransactionWithDetailsByUuid(transactionUuid)
+      .switchMap((item) {
     if (item == null) return Stream.value(<TransactionWithDetails>[]);
     final linkedGroupId = item.transaction.linkedGroupId;
-    if (linkedGroupId == null || linkedGroupId.isEmpty) return Stream.value([item]);
-    
-    // Watch the entire group. This stream will emit whenever any transaction, 
+    if (linkedGroupId == null || linkedGroupId.isEmpty)
+      return Stream.value([item]);
+
+    // Watch the entire group. This stream will emit whenever any transaction,
     // payable, or receivable in the group changes because of the JOIN in the repository method.
-    return repository.watchTransactionsWithDetailsByLinkedGroupId(linkedGroupId);
+    return repository
+        .watchTransactionsWithDetailsByLinkedGroupId(linkedGroupId);
   });
 });
 

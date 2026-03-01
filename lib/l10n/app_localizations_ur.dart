@@ -113,6 +113,28 @@ class AppLocalizationsUr extends AppLocalizations {
   String get scheduleCreated => 'شیڈول کامیابی سے تیار ہو گیا';
 
   @override
+  String get scheduleDetails => 'شیڈول کی تفصیلات';
+
+  @override
+  String get frequency => 'تعدد';
+
+  @override
+  String get days => 'دن';
+
+  @override
+  String get lastGenerated => 'آخری بار تیار کیا گیا';
+
+  @override
+  String get editSchedule => 'شیڈول میں ترمیم کریں';
+
+  @override
+  String get deleteSchedule => 'شیڈول حذف کریں';
+
+  @override
+  String get deleteScheduleConfirmation =>
+      'کیا آپ واقعی اس شیڈول کو حذف کرنا چاہتے ہیں؟ اس سے اس شیڈول کے تمام مستقبل کے خودکار لین دین بند ہو جائیں گے۔';
+
+  @override
   String get transactionUpdated => 'لین دین کامیابی سے اپ ڈیٹ ہو گیا';
 
   @override
@@ -2471,9 +2493,6 @@ class AppLocalizationsUr extends AppLocalizations {
 
   @override
   String get uncategorized => 'بغیر زمرہ';
-
-  @override
-  String get editSchedule => 'شیڈول میں ترمیم کریں';
 
   @override
   String get schedule => 'شیڈول';

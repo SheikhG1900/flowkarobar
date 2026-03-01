@@ -30,7 +30,6 @@ import 'package:flowpaisa/features/transactions/presentation/screens/bulk_import
 import 'package:flowpaisa/features/premium/domain/premium_provider.dart';
 import 'package:flowpaisa/features/premium/presentation/screens/premium_screen.dart';
 import 'package:flowpaisa/features/transactions/presentation/screens/edit_schedule_screen.dart';
-import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/shared/widgets/filter_bottom_sheet.dart';
 import 'package:flowpaisa/shared/widgets/app_loading_indicator.dart';
 import 'package:flowpaisa/shared/widgets/collapsible_list_summary.dart';
@@ -64,6 +63,9 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
     _scrollController = ScrollController();
     _scrollController.addListener(_onScroll);
     _tabController = TabController(length: 2, vsync: this);
+    _tabController.addListener(() {
+      if (mounted) setState(() {});
+    });
     _searchController = TextEditingController();
 
     // Auto-start tour on first visit to this screen
@@ -223,7 +225,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
     // Use the paginated provider
     final paginatedState = ref.watch(transactionsPaginatedProvider);
     final theme = Theme.of(context);
-    final schedulesAsync = ref.watch(allSchedulesProvider);
+    final schedulesAsync = ref.watch(allSchedulesWithDetailsProvider);
     final hasSchedules = schedulesAsync.value?.isNotEmpty ?? false;
     final currentFilters =
         ref.watch(transactionsPaginatedProvider.notifier).currentFilters;
@@ -411,7 +413,8 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
               },
               backgroundColor: AppColors.transactionsSectionColor,
               foregroundColor: Colors.white,
-              child: const Icon(Icons.add),
+              child:
+                  Icon(_tabController.index == 1 ? Icons.more_time : Icons.add),
             ),
           ),
         );
@@ -958,7 +961,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
     );
   }
 
-  Widget _buildSchedulesTab(List<TransactionSchedule> schedules) {
+  Widget _buildSchedulesTab(List<ScheduleWithDetails> schedules) {
     final l10n = AppLocalizations.of(context)!;
     if (schedules.isEmpty) {
       return Center(
@@ -970,7 +973,8 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
       padding: const EdgeInsets.all(16),
       itemCount: schedules.length,
       itemBuilder: (context, index) {
-        final schedule = schedules[index];
+        final item = schedules[index];
+        final schedule = item.schedule;
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 6),
           child: SwipeableListItem(
@@ -987,7 +991,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                 ),
               ).then((updated) {
                 if (updated == true) {
-                  ref.invalidate(allSchedulesProvider);
+                  ref.invalidate(allSchedulesWithDetailsProvider);
                 }
               });
             },
@@ -997,19 +1001,10 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
               if (context.mounted) {
                 ToastUtils.showSuccessToast(context, ref, l10n.scheduleDeleted);
               }
-              ref.invalidate(allSchedulesProvider);
+              ref.invalidate(allSchedulesWithDetailsProvider);
             },
             child: ScheduleListItem(
-              schedule: schedule,
-              onToggle: () async {
-                final service = ref.read(scheduleServiceProvider);
-                if (schedule.isPaused) {
-                  await service.resumeSchedule(schedule.uuid, DateTime.now());
-                } else {
-                  await service.pauseSchedule(schedule.uuid);
-                }
-                ref.invalidate(allSchedulesProvider);
-              },
+              item: item,
             ),
           ),
         );

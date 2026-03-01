@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:flowpaisa/core/database/database.dart';
+import 'package:flowpaisa/features/transactions/domain/models.dart';
 import 'package:uuid/uuid.dart';
 
 class SchedulesRepository {
@@ -12,6 +13,64 @@ class SchedulesRepository {
     return (_database.select(_database.transactionSchedules)
           ..where((s) => s.isDeleted.equals(false)))
         .watch();
+  }
+
+  // Watch all schedules with category and contact details
+  Stream<List<ScheduleWithDetails>> watchAllSchedulesWithDetails() {
+    final query = _database.select(_database.transactionSchedules).join([
+      leftOuterJoin(
+        _database.categories,
+        _database.categories.uuid
+            .equalsExp(_database.transactionSchedules.categoryUuid),
+      ),
+      leftOuterJoin(
+        _database.contacts,
+        _database.contacts.uuid
+            .equalsExp(_database.transactionSchedules.contactUuid),
+      ),
+    ]);
+
+    query.where(_database.transactionSchedules.isDeleted.equals(false));
+    query
+        .orderBy([OrderingTerm.desc(_database.transactionSchedules.createdAt)]);
+
+    return query.watch().map((rows) {
+      return rows.map((row) {
+        return ScheduleWithDetails(
+          schedule: row.readTable(_database.transactionSchedules),
+          category: row.readTableOrNull(_database.categories),
+          contact: row.readTableOrNull(_database.contacts),
+        );
+      }).toList();
+    });
+  }
+
+  // Watch schedule with details by UUID
+  Stream<ScheduleWithDetails?> watchScheduleWithDetailsByUuid(String uuid) {
+    final query = _database.select(_database.transactionSchedules).join([
+      leftOuterJoin(
+        _database.categories,
+        _database.categories.uuid
+            .equalsExp(_database.transactionSchedules.categoryUuid),
+      ),
+      leftOuterJoin(
+        _database.contacts,
+        _database.contacts.uuid
+            .equalsExp(_database.transactionSchedules.contactUuid),
+      ),
+    ]);
+
+    query.where(_database.transactionSchedules.uuid.equals(uuid) &
+        _database.transactionSchedules.isDeleted.equals(false));
+
+    return query.watchSingleOrNull().map((row) {
+      if (row == null) return null;
+      return ScheduleWithDetails(
+        schedule: row.readTable(_database.transactionSchedules),
+        category: row.readTableOrNull(_database.categories),
+        contact: row.readTableOrNull(_database.contacts),
+      );
+    });
   }
 
   // Get all schedules (Future)

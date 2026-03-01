@@ -1,51 +1,71 @@
-import 'package:flowpaisa/l10n/app_localizations.dart';
+import 'package:flowpaisa/core/utils/category_helper.dart';
+import 'package:flowpaisa/core/utils/localization_helper.dart';
+import 'package:flowpaisa/features/transactions/domain/models.dart';
 import 'package:flutter/material.dart';
-import 'package:flowpaisa/core/database/database.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
-import 'package:flowpaisa/core/utils/date_formatter.dart';
+import 'package:flowpaisa/features/transactions/presentation/widgets/schedule_details_dialog.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
-import 'package:flowpaisa/features/transactions/presentation/providers/schedule_service_provider.dart';
-import 'package:flowpaisa/core/utils/toast_utils.dart';
-import 'package:flutter/foundation.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'dart:convert';
+import 'package:flowpaisa/l10n/app_localizations.dart';
 
 class ScheduleListItem extends ConsumerWidget {
-  final TransactionSchedule schedule;
-  final VoidCallback onToggle;
+  final ScheduleWithDetails item;
 
   const ScheduleListItem({
     super.key,
-    required this.schedule,
-    required this.onToggle,
+    required this.item,
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
+    final schedule = item.schedule;
+    final category = item.category;
+    final contact = item.contact;
     final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
     final currency = ref.watch(currentCurrencyProvider).value;
+    final isDark = theme.brightness == Brightness.dark;
     final isExpense = schedule.type == 'EXPENSE';
 
-    if (currency == null) {
-      return const SizedBox.shrink();
+    if (currency == null) return const SizedBox.shrink();
+
+    final isInactive = schedule.isPaused;
+
+    // Resolve category color
+    Color categoryColor;
+    if (category?.color != null) {
+      try {
+        categoryColor =
+            Color(int.parse(category!.color!.replaceAll('#', '0xFF')));
+      } catch (_) {
+        categoryColor =
+            isExpense ? AppColors.expenseColor : AppColors.incomeColor;
+      }
+    } else {
+      categoryColor =
+          isExpense ? AppColors.expenseColor : AppColors.incomeColor;
     }
+
+    // Apply dull effect if inactive
+    final displayColor =
+        isInactive ? categoryColor.withValues(alpha: 0.5) : categoryColor;
+    final textColor = isInactive
+        ? theme.colorScheme.onSurface.withValues(alpha: 0.6)
+        : theme.colorScheme.onSurface;
 
     return Container(
       decoration: BoxDecoration(
-        color: theme.cardColor,
+        color: theme.cardColor.withValues(alpha: isInactive ? 0.6 : 1.0),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: (isExpense ? AppColors.expenseColor : AppColors.incomeColor)
-              .withValues(alpha: 0.2),
+          color: displayColor.withValues(alpha: isDark ? 0.2 : 0.1),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: (isExpense ? AppColors.expenseColor : AppColors.incomeColor)
-                .withValues(alpha: 0.05),
-            blurRadius: 12,
+            color: displayColor.withValues(alpha: isDark ? 0.05 : 0.08),
+            blurRadius: isInactive ? 4 : 12,
             offset: const Offset(0, 4),
           ),
         ],
@@ -56,346 +76,181 @@ class ScheduleListItem extends ConsumerWidget {
           width: 50,
           height: 50,
           decoration: BoxDecoration(
-            gradient: isExpense
-                ? AppColors.expenseGradient
-                : AppColors.incomeGradient,
+            color: displayColor.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: displayColor.withValues(alpha: 0.3),
+              width: 1,
+            ),
           ),
           alignment: Alignment.center,
-          child: const Icon(
-            Icons.schedule,
-            color: Colors.white,
-            size: 24,
-          ),
+          child: CategoryHelper.buildCategoryIcon(
+              category?.icon, displayColor, isExpense),
         ),
         title: Text(
-          schedule.description ?? (isExpense ? l10n.expense : l10n.income),
+          category != null
+              ? LocalizationHelper.getLocalizedCategoryName(
+                  context, category.name)
+              : l10n.uncategorized,
           style: theme.textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.w600,
+            color: textColor,
           ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 4),
-            _buildSchedulePatternDisplay(theme, l10n),
-            if (schedule.startDate != null || schedule.endDate != null) ...[
-              const SizedBox(height: 4),
-              Text(
-                _getDateRangeText(ref, l10n, context),
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                  fontSize: 11,
+            Text(
+              schedule.description ?? (isExpense ? l10n.expense : l10n.income),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant
+                    .withValues(alpha: isInactive ? 0.5 : 1.0),
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 6),
+            // Frequency Badge
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(
+                  color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                  width: 1,
                 ),
               ),
-            ],
-          ],
-        ),
-        trailing: SizedBox(
-          height: 56,
-          child: FittedBox(
-            fit: BoxFit.scaleDown,
-            alignment: Alignment.centerRight,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(right: 10),
-                  child: Text(
-                    '${isExpense ? '\u200E-' : '\u200E+'} ${AmountFormatter.formatWithCurrency(schedule.amount, currency.symbol, currency.decimalPlaces)}',
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      color: isExpense
-                          ? AppColors.expenseColor
-                          : AppColors.incomeColor,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.repeat,
+                    size: 10,
+                    color: theme.colorScheme.primary,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    _getFrequencyLabel(l10n, schedule.scheduleType),
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: theme.colorScheme.primary,
                       fontWeight: FontWeight.bold,
-                      fontSize: AmountFormatter.getFontSize(schedule.amount,
-                          baseSize: theme.textTheme.titleSmall?.fontSize ?? 14.0,
-                          decimalPlaces: currency.decimalPlaces),
                     ),
                   ),
-                ),
-                const SizedBox(height: 2),
-                // Chip-style toggle for active/inactive
-                ActionChip(
-                  label: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        schedule.isPaused
-                            ? Icons.pause_circle
-                            : Icons.check_circle,
-                        size: 14,
-                        color: schedule.isPaused
-                            ? theme.colorScheme.onSurfaceVariant
-                            : theme.colorScheme.primary,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        schedule.isPaused ? l10n.inactive : l10n.active,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                  onPressed: () => onToggle(),
-                  backgroundColor: !schedule.isPaused
-                      ? theme.colorScheme.primary.withValues(alpha: 0.2)
-                      : null,
-                  visualDensity: VisualDensity.compact,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 6, vertical: -4),
-                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  labelStyle: TextStyle(
-                    color: schedule.isPaused
-                        ? theme.colorScheme.onSurfaceVariant
-                        : theme.colorScheme.primary,
-                    fontWeight: FontWeight.normal,
-                    fontSize: 10,
-                  ),
-                  side: BorderSide(
-                    color: !schedule.isPaused
-                        ? theme.colorScheme.primary
-                        : theme.dividerColor,
+                ],
+              ),
+            ),
+            if (contact != null) ...[
+              const SizedBox(height: 4),
+              // Contact tag
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: AppColors.getContactColor(contact.name)
+                      .withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(4),
+                  border: Border.all(
+                    color: AppColors.getContactColor(contact.name)
+                        .withValues(alpha: 0.3),
                     width: 1,
                   ),
                 ),
-                if (kDebugMode) ...[
-                  const SizedBox(height: 4),
-                  IconButton(
-                    icon: const Icon(Icons.bug_report, size: 18, color: Colors.red),
-                    onPressed: () => _showTestExecuteDialog(context, ref),
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                    visualDensity: VisualDensity.compact,
-                    tooltip: "Test Execute",
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _showTestExecuteDialog(BuildContext context, WidgetRef ref) async {
-    DateTime selectedDate = DateTime.now();
-    final l10n = AppLocalizations.of(context)!;
-
-    showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: const Text("Debug: Execute Schedule"),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text("Select a date to simulate transaction generation:"),
-              const SizedBox(height: 16),
-              ListTile(
-                leading: const Icon(Icons.calendar_today),
-                title: Text(AppDateFormatter.formatDate(selectedDate)),
-                onTap: () async {
-                  final picked = await showDatePicker(
-                    context: context,
-                    initialDate: selectedDate,
-                    firstDate: DateTime(2000),
-                    lastDate: DateTime(2101),
-                  );
-                  if (picked != null) {
-                    setDialogState(() => selectedDate = picked);
-                  }
-                },
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(l10n.cancel),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                Navigator.pop(context);
-                try {
-                  final scheduleService = ref.read(scheduleServiceProvider);
-                  
-                  // Use the official service method to ensure identical logic
-                  await scheduleService.generateTransactionsFromSchedule(
-                    schedule.uuid,
-                    customDate: selectedDate,
-                  );
-
-                  if (context.mounted) {
-                    ToastUtils.showSuccessToast(context, ref, "Debug: Official generation process executed for ${AppDateFormatter.formatDate(selectedDate)}");
-                  }
-                } catch (e) {
-                  if (context.mounted) {
-                    ToastUtils.showErrorToast(context, ref, "Debug Error: $e");
-                  }
-                }
-              },
-              child: const Text("Execute"),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSchedulePatternDisplay(ThemeData theme, AppLocalizations l10n) {
-    switch (schedule.scheduleType) {
-      case 'DAILY':
-        return Text(
-          l10n.daily,
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
-        );
-      case 'WEEKLY':
-        if (schedule.selectedDaysOfWeek != null) {
-          final days = _parseDaysOfWeek(schedule.selectedDaysOfWeek!);
-          if (days.isEmpty) {
-            return Text(
-              l10n.weekly,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            );
-          }
-          final dayLabels = [
-            l10n.sundayShort,
-            l10n.mondayShort,
-            l10n.tuesdayShort,
-            l10n.wednesdayShort,
-            l10n.thursdayShort,
-            l10n.fridayShort,
-            l10n.saturdayShort
-          ];
-          return Row(
-            children: [
-              ...List.generate(7, (index) {
-                final isSelected = days.contains(index);
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 2),
-                  child: Text(
-                    dayLabels[index],
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: isSelected
-                          ? theme.colorScheme.primary
-                          : theme.colorScheme.onSurfaceVariant
-                              .withValues(alpha: 0.5),
-                      fontWeight:
-                          isSelected ? FontWeight.bold : FontWeight.normal,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 12,
+                      height: 12,
+                      decoration: BoxDecoration(
+                        gradient: AppColors.getContactGradient(contact.name),
+                        shape: BoxShape.circle,
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        contact.name.isNotEmpty
+                            ? contact.name[0].toUpperCase()
+                            : '?',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 6,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
-                  ),
-                );
-              }),
-            ],
-          );
-        }
-        return Text(
-          l10n.weekly,
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
-        );
-      case 'MONTHLY':
-        if (schedule.selectedDaysOfMonth != null) {
-          final days = _parseDaysOfMonth(schedule.selectedDaysOfMonth!);
-          if (days.isEmpty) {
-            return Row(
-              children: [
-                Icon(
-                  Icons.calendar_today,
-                  size: 14,
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  l10n.monthly,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            );
-          }
-          return Row(
-            children: [
-              Icon(
-                Icons.calendar_today,
-                size: 14,
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-              const SizedBox(width: 4),
-              Text(
-                days.join(', '),
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
+                    const SizedBox(width: 4),
+                    Flexible(
+                      child: Text(
+                        contact.name,
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: theme.colorScheme.onSurfaceVariant,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
-          );
-        }
-        return Row(
-          children: [
-            Icon(
-              Icons.calendar_today,
-              size: 14,
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-            const SizedBox(width: 4),
-            Text(
-              l10n.monthly,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
           ],
-        );
+        ),
+        trailing: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Text(
+              '${isExpense ? '\u200E-' : '\u200E+'} ${AmountFormatter.formatWithCurrency(schedule.amount, currency.symbol, currency.decimalPlaces)}',
+              style: theme.textTheme.titleLarge?.copyWith(
+                color: isExpense
+                    ? (isInactive
+                        ? AppColors.expenseColor.withValues(alpha: 0.5)
+                        : AppColors.expenseColor)
+                    : (isInactive
+                        ? AppColors.incomeColor.withValues(alpha: 0.5)
+                        : AppColors.incomeColor),
+                fontWeight: FontWeight.bold,
+                fontSize: AmountFormatter.getFontSize(schedule.amount),
+              ),
+            ),
+            if (isInactive) ...[
+              const SizedBox(height: 4),
+              Text(
+                l10n.inactive,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: theme.colorScheme.error.withValues(alpha: 0.7),
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ],
+        ),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ScheduleDetailsDialog(
+                scheduleUuid: schedule.uuid,
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  String _getFrequencyLabel(AppLocalizations l10n, String type) {
+    switch (type) {
+      case 'DAILY':
+        return l10n.daily;
+      case 'WEEKLY':
+        return l10n.weekly;
+      case 'MONTHLY':
+        return l10n.monthly;
       default:
-        return Text(
-          l10n.unknown,
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
-        );
-    }
-  }
-
-  String _getDateRangeText(WidgetRef ref, AppLocalizations l10n, BuildContext context) {
-    final parts = <String>[];
-    if (schedule.startDate != null) {
-      parts.add(
-          '${l10n.from}: ${AppDateFormatter.formatDate(schedule.startDate!)}');
-    }
-    if (schedule.endDate != null) {
-      parts.add(
-          '${l10n.to}: ${AppDateFormatter.formatDate(schedule.endDate!)}');
-    }
-    return parts.join(' | ');
-  }
-
-  List<int> _parseDaysOfWeek(String jsonString) {
-    try {
-      final List<dynamic> decoded = jsonDecode(jsonString);
-      return decoded.map((e) => e as int).toList();
-    } catch (e) {
-      return [];
-    }
-  }
-
-  List<int> _parseDaysOfMonth(String jsonString) {
-    try {
-      final List<dynamic> decoded = jsonDecode(jsonString);
-      return decoded.map((e) => e as int).toList();
-    } catch (e) {
-      return [];
+        return type;
     }
   }
 }
