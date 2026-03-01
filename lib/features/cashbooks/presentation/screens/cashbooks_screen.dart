@@ -15,13 +15,11 @@ import 'package:flowpaisa/features/backup/presentation/providers/backup_provider
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/shared/widgets/premium_badge.dart';
 import 'package:flowpaisa/shared/widgets/app_loading_indicator.dart';
-import 'package:flowpaisa/features/backup/presentation/screens/backup_screen.dart';
-import 'package:flowpaisa/shared/providers/database_provider.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:file_selector/file_selector.dart' as selector;
 import 'dart:io';
 
 import 'package:flowpaisa/l10n/app_localizations.dart';
+import 'package:flowpaisa/shared/widgets/app_floating_action_button.dart';
 
 class CashbooksScreen extends ConsumerWidget {
   const CashbooksScreen({super.key});
@@ -56,7 +54,8 @@ class CashbooksScreen extends ConsumerWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.primaryContainer.withValues(alpha: 0.5),
+                  color:
+                      theme.colorScheme.primaryContainer.withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(4),
                   border: Border.all(
                     color: theme.colorScheme.primary.withValues(alpha: 0.3),
@@ -72,7 +71,8 @@ class CashbooksScreen extends ConsumerWidget {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      l10n.autoSyncBadge(ref.watch(backupProvider).syncInterval),
+                      l10n.autoSyncBadge(
+                          ref.watch(backupProvider).syncInterval),
                       style: TextStyle(
                         color: theme.colorScheme.primary,
                         fontSize: 10,
@@ -89,7 +89,9 @@ class CashbooksScreen extends ConsumerWidget {
       body: cashbooks.isEmpty
           ? const Center(child: CircularProgressIndicator())
           : ListView.builder(
-              padding: const EdgeInsets.all(16).copyWith(bottom: 80), // Added bottom padding to ensure FABs don't block
+              padding: const EdgeInsets.all(16).copyWith(
+                  bottom:
+                      80), // Added bottom padding to ensure FABs don't block
               itemCount: cashbooks.length,
               itemBuilder: (context, index) {
                 final cashbook = cashbooks[index];
@@ -242,7 +244,7 @@ class CashbooksScreen extends ConsumerWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         mainAxisSize: MainAxisSize.min,
         children: [
-          FloatingActionButton(
+          AppFloatingActionButton(
             heroTag: 'set_sync_schedule',
             backgroundColor: theme.colorScheme.tertiaryContainer,
             onPressed: () {
@@ -253,10 +255,11 @@ class CashbooksScreen extends ConsumerWidget {
               _showSyncScheduleDialog(context, ref);
             },
             tooltip: l10n.syncSchedule,
-            child: Icon(Icons.schedule, color: theme.colorScheme.onTertiaryContainer),
+            child: Icon(Icons.schedule,
+                color: theme.colorScheme.onTertiaryContainer),
           ),
           const SizedBox(width: 16),
-          FloatingActionButton(
+          AppFloatingActionButton(
             heroTag: 'add_cloud_cashbook',
             backgroundColor: theme.colorScheme.secondaryContainer,
             onPressed: () async {
@@ -278,7 +281,7 @@ class CashbooksScreen extends ConsumerWidget {
                 color: theme.colorScheme.onSecondaryContainer),
           ),
           const SizedBox(width: 16),
-          FloatingActionButton(
+          AppFloatingActionButton(
             heroTag: 'add_local_cashbook',
             backgroundColor: theme.colorScheme.primary,
             onPressed: () => _showAddSheet(context),
@@ -333,12 +336,13 @@ class CashbooksScreen extends ConsumerWidget {
                   isExpanded: true,
                   value: currentState,
                   items: [
-                    DropdownMenuItem(value: 'manual', child: Text(l10n.noIdleSync)),
-                    ...['12', '24', '36', '48', '60', '72', '84', '96'].map((h) =>
-                        DropdownMenuItem(
-                          value: h,
-                          child: Text('$h ${l10n.hours}'),
-                        )),
+                    DropdownMenuItem(
+                        value: 'manual', child: Text(l10n.noIdleSync)),
+                    ...['12', '24', '36', '48', '60', '72', '84', '96']
+                        .map((h) => DropdownMenuItem(
+                              value: h,
+                              child: Text('$h ${l10n.hours}'),
+                            )),
                   ],
                   onChanged: (v) {
                     if (v != null) {
@@ -508,134 +512,138 @@ class CashbooksScreen extends ConsumerWidget {
           builder: (context, scrollController) => Container(
             decoration: BoxDecoration(
               color: theme.scaffoldBackgroundColor,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(24)),
             ),
             child: StatefulBuilder(builder: (context, setState) {
               return Column(
-              children: [
-                const SizedBox(height: 12),
-                Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: theme.dividerColor,
-                    borderRadius: BorderRadius.circular(2),
+                children: [
+                  const SizedBox(height: 12),
+                  Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: theme.dividerColor,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
                   ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    children: [
-                      Text(
-                        l10n.selectCloudFolder,
-                        style: theme.textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
+                  Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      children: [
+                        Text(
+                          l10n.selectCloudFolder,
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        l10n.selectCloudFolderSubtitle,
-                        style: theme.textTheme.bodySmall,
-                      ),
-                    ],
+                        const SizedBox(height: 4),
+                        Text(
+                          l10n.selectCloudFolderSubtitle,
+                          style: theme.textTheme.bodySmall,
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                Expanded(
-                  child: Consumer(
-                    builder: (context, ref, child) {
-                      final state = ref.watch(backupProvider);
-                      if (state.isLoading && expandedCloudId == null) {
-                        return const Center(child: AppLoadingIndicator(size: 50));
-                      }
-                      if (state.availableCashbookIds.isEmpty) {
-                        return Center(child: Text(l10n.noCloudFoldersFound));
-                      }
-                      return ListView.builder(
-                        controller: scrollController,
-                        itemCount: state.availableCashbookIds.length,
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        itemBuilder: (context, index) {
-                          final cloudId = state.availableCashbookIds[index];
-                          final metadata = state.cashbookMetadata[cloudId];
-                          final name = metadata?.name ?? cloudId;
-                          final color = metadata != null
-                              ? Color(int.parse(
-                                  metadata.color.replaceFirst('#', '0xFF')))
-                              : Colors.grey;
-                          final icon = metadata != null
-                              ? IconHelper.getIconData(metadata.icon)
-                              : Icons.folder_outlined;
+                  Expanded(
+                    child: Consumer(
+                      builder: (context, ref, child) {
+                        final state = ref.watch(backupProvider);
+                        if (state.isLoading && expandedCloudId == null) {
+                          return const Center(
+                              child: AppLoadingIndicator(size: 50));
+                        }
+                        if (state.availableCashbookIds.isEmpty) {
+                          return Center(child: Text(l10n.noCloudFoldersFound));
+                        }
+                        return ListView.builder(
+                          controller: scrollController,
+                          itemCount: state.availableCashbookIds.length,
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          itemBuilder: (context, index) {
+                            final cloudId = state.availableCashbookIds[index];
+                            final metadata = state.cashbookMetadata[cloudId];
+                            final name = metadata?.name ?? cloudId;
+                            final color = metadata != null
+                                ? Color(int.parse(
+                                    metadata.color.replaceFirst('#', '0xFF')))
+                                : Colors.grey;
+                            final icon = metadata != null
+                                ? IconHelper.getIconData(metadata.icon)
+                                : Icons.folder_outlined;
 
-                          final isExpanded = expandedCloudId == cloudId;
-                          
-                          // The trailing widget: if this folder is expanded and loading, show small loader.
-                          // Otherwise, show expand_less or expand_more icon.
-                          Widget trailingWidget;
-                          if (isExpanded && state.isLoading) {
-                            trailingWidget = const SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: AppLoadingIndicator(size: 24),
-                            );
-                          } else {
-                            trailingWidget = Icon(isExpanded
-                                ? Icons.expand_less
-                                : Icons.expand_more);
-                          }
+                            final isExpanded = expandedCloudId == cloudId;
 
-                          return Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Card(
-                                margin: const EdgeInsets.only(bottom: 8),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  side: BorderSide(
-                                      color: isExpanded
-                                          ? color
-                                          : theme.dividerColor),
-                                ),
-                                child: ListTile(
-                                  leading: CircleAvatar(
-                                    backgroundColor: color.withValues(alpha: 0.1),
-                                    child: Icon(icon, color: color),
+                            // The trailing widget: if this folder is expanded and loading, show small loader.
+                            // Otherwise, show expand_less or expand_more icon.
+                            Widget trailingWidget;
+                            if (isExpanded && state.isLoading) {
+                              trailingWidget = const SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: AppLoadingIndicator(size: 24),
+                              );
+                            } else {
+                              trailingWidget = Icon(isExpanded
+                                  ? Icons.expand_less
+                                  : Icons.expand_more);
+                            }
+
+                            return Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Card(
+                                  margin: const EdgeInsets.only(bottom: 8),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    side: BorderSide(
+                                        color: isExpanded
+                                            ? color
+                                            : theme.dividerColor),
                                   ),
-                                  title: Text(name),
-                                  subtitle: Text(cloudId == 'default'
-                                      ? 'Main Cashbook'
-                                      : 'Additional Cashbook'),
-                                  trailing: trailingWidget,
-                                  onTap: () {
-                                    if (isExpanded) {
-                                      setState(() => expandedCloudId = null);
-                                    } else {
-                                      setState(() => expandedCloudId = cloudId);
-                                      ref
-                                          .read(backupProvider.notifier)
-                                          .loadBackupsForCashbook(cloudId);
-                                    }
-                                 },
+                                  child: ListTile(
+                                    leading: CircleAvatar(
+                                      backgroundColor:
+                                          color.withValues(alpha: 0.1),
+                                      child: Icon(icon, color: color),
+                                    ),
+                                    title: Text(name),
+                                    subtitle: Text(cloudId == 'default'
+                                        ? 'Main Cashbook'
+                                        : 'Additional Cashbook'),
+                                    trailing: trailingWidget,
+                                    onTap: () {
+                                      if (isExpanded) {
+                                        setState(() => expandedCloudId = null);
+                                      } else {
+                                        setState(
+                                            () => expandedCloudId = cloudId);
+                                        ref
+                                            .read(backupProvider.notifier)
+                                            .loadBackupsForCashbook(cloudId);
+                                      }
+                                    },
+                                  ),
                                 ),
-                              ),
-                              if (isExpanded && !state.isLoading)
-                                Padding(
-                                  padding: const EdgeInsets.only(
-                                      left: 16, bottom: 16),
-                                  child: _buildBackupListInline(
-                                      context, ref, cashbook, cloudId, name),
-                                ),
-                            ],
-                          );
-                        },
-                      );
-                    },
+                                if (isExpanded && !state.isLoading)
+                                  Padding(
+                                    padding: const EdgeInsets.only(
+                                        left: 16, bottom: 16),
+                                    child: _buildBackupListInline(
+                                        context, ref, cashbook, cloudId, name),
+                                  ),
+                              ],
+                            );
+                          },
+                        );
+                      },
+                    ),
                   ),
-                ),
-              ],
-            );
-          }),
-        ),
-      );
+                ],
+              );
+            }),
+          ),
+        );
       },
     );
   }
@@ -677,7 +685,8 @@ class CashbooksScreen extends ConsumerWidget {
           return Card(
             margin: const EdgeInsets.only(bottom: 8, right: 8),
             elevation: 0,
-            color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+            color: theme.colorScheme.surfaceContainerHighest
+                .withValues(alpha: 0.3),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8),
             ),
@@ -707,7 +716,8 @@ class CashbooksScreen extends ConsumerWidget {
                 );
 
                 if (confirmed == true) {
-                  final rootNavigator = Navigator.of(context, rootNavigator: true);
+                  final rootNavigator =
+                      Navigator.of(context, rootNavigator: true);
                   final backupId = backup.id!;
                   final targetId = targetCashbook.id;
                   final backupNotifier = ref.read(backupProvider.notifier);
@@ -728,7 +738,11 @@ class CashbooksScreen extends ConsumerWidget {
                     } catch (e) {
                       if (kDebugMode) print('Cloud restore failed: \$e');
                       if (rootContext.mounted) {
-                        ToastUtils.showErrorToast(rootContext, ref, l10n.errorOccurred(e.toString().replaceAll('Exception: ', '')));
+                        ToastUtils.showErrorToast(
+                            rootContext,
+                            ref,
+                            l10n.errorOccurred(
+                                e.toString().replaceAll('Exception: ', '')));
                       }
                     }
                   }());
@@ -785,8 +799,7 @@ class CashbooksScreen extends ConsumerWidget {
                 final screenContext = context; // Store screen context
 
                 if (backupState.isBackingUp) {
-                  ToastUtils.showInfoToast(
-                      screenContext, ref, l10n.processing);
+                  ToastUtils.showInfoToast(screenContext, ref, l10n.processing);
                   return;
                 }
 
@@ -799,7 +812,7 @@ class CashbooksScreen extends ConsumerWidget {
                 }
 
                 // Run backup in background without busy dialog
-                // Start the backup process without awaiting it here, 
+                // Start the backup process without awaiting it here,
                 // so the UI remains interactive immediately.
                 if (screenContext.mounted) {
                   ToastUtils.showInfoToast(
@@ -812,7 +825,11 @@ class CashbooksScreen extends ConsumerWidget {
                     await backupNotifier.backup(l10n, targetCashbook: cashbook);
                   } catch (e) {
                     if (screenContext.mounted) {
-                      ToastUtils.showErrorToast(screenContext, ref, l10n.errorOccurred(e.toString().replaceAll('Exception: ', '')));
+                      ToastUtils.showErrorToast(
+                          screenContext,
+                          ref,
+                          l10n.errorOccurred(
+                              e.toString().replaceAll('Exception: ', '')));
                     }
                   }
                 }();
@@ -916,7 +933,8 @@ class CashbooksScreen extends ConsumerWidget {
 
         if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
           final fileName = filePath.split(Platform.pathSeparator).last;
-          final selector.FileSaveLocation? result = await selector.getSaveLocation(
+          final selector.FileSaveLocation? result =
+              await selector.getSaveLocation(
             suggestedName: fileName,
             acceptedTypeGroups: [
               const selector.XTypeGroup(
@@ -1001,9 +1019,11 @@ class CashbooksScreen extends ConsumerWidget {
     final rootContext = Navigator.of(context, rootNavigator: true).context;
 
     try {
-      if (kDebugMode) print('[CashbooksScreen] Starting local restore process for: ${cashbook.name}');
+      if (kDebugMode)
+        print(
+            '[CashbooksScreen] Starting local restore process for: ${cashbook.name}');
       final file = await LocalBackupService.pickBackupFile();
-      
+
       if (file == null) {
         if (kDebugMode) print('[CashbooksScreen] No file selected, aborting');
         return;
@@ -1013,7 +1033,9 @@ class CashbooksScreen extends ConsumerWidget {
 
       // Use rootContext which is more likely to survive the file picker transition
       if (!rootContext.mounted) {
-        if (kDebugMode) print('[CashbooksScreen] Error: Root context unmounted after file picking');
+        if (kDebugMode)
+          print(
+              '[CashbooksScreen] Error: Root context unmounted after file picking');
         return;
       }
 
@@ -1037,11 +1059,13 @@ class CashbooksScreen extends ConsumerWidget {
         ),
       );
 
-      if (kDebugMode) print('[CashbooksScreen] Restore confirmation: $confirmed');
+      if (kDebugMode)
+        print('[CashbooksScreen] Restore confirmation: $confirmed');
 
       if (confirmed == true) {
         if (rootContext.mounted) {
-          if (kDebugMode) print('[CashbooksScreen] Showing background restore toast');
+          if (kDebugMode)
+            print('[CashbooksScreen] Showing background restore toast');
           ToastUtils.showInfoToast(
               rootContext, ref, l10n.backgroundRestoreStarted);
         }
@@ -1050,29 +1074,33 @@ class CashbooksScreen extends ConsumerWidget {
         final notifier = ref.read(cashbooksProvider.notifier);
         final targetId = cashbook.id;
         final targetName = cashbook.name;
-        
+
         // Use a separate async block to handle the completion and toast
         unawaited(() async {
           try {
-            if (kDebugMode) print('[CashbooksScreen] Calling restoreCashbookFromFile...');
+            if (kDebugMode)
+              print('[CashbooksScreen] Calling restoreCashbookFromFile...');
             await notifier.restoreCashbookFromFile(targetId, file);
 
-            if (kDebugMode) print('[CashbooksScreen] Restore logic completed successfully');
+            if (kDebugMode)
+              print('[CashbooksScreen] Restore logic completed successfully');
             if (rootContext.mounted) {
-              ToastUtils.showSuccessToast(rootContext, ref,
-                  l10n.restoreSuccessfulFor(targetName));
+              ToastUtils.showSuccessToast(
+                  rootContext, ref, l10n.restoreSuccessfulFor(targetName));
             }
           } catch (e) {
-            if (kDebugMode) print('[CashbooksScreen] Error during background restore: $e');
+            if (kDebugMode)
+              print('[CashbooksScreen] Error during background restore: $e');
             if (rootContext.mounted) {
-              ToastUtils.showErrorToast(rootContext, ref,
-                  l10n.errorOccurred(e.toString()));
+              ToastUtils.showErrorToast(
+                  rootContext, ref, l10n.errorOccurred(e.toString()));
             }
           }
         }());
       }
     } catch (e) {
-      if (kDebugMode) print('[CashbooksScreen] Exception in _handleRestore: $e');
+      if (kDebugMode)
+        print('[CashbooksScreen] Exception in _handleRestore: $e');
       if (rootContext.mounted) {
         ToastUtils.showErrorToast(
             rootContext, ref, l10n.errorOccurred(e.toString()));
@@ -1172,7 +1200,8 @@ class CashbooksScreen extends ConsumerWidget {
                   title: Text(l10n.clearBackups),
                   subtitle: Text(l10n.clearBackupsSubtitle),
                   value: clearBackups,
-                  onChanged: (val) => setState(() => clearBackups = val ?? false),
+                  onChanged: (val) =>
+                      setState(() => clearBackups = val ?? false),
                   activeColor: Colors.orange,
                   contentPadding: EdgeInsets.zero,
                 ),

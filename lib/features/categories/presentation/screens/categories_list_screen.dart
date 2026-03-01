@@ -12,6 +12,7 @@ import 'package:flowpaisa/core/utils/category_helper.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/core/utils/localization_helper.dart';
+import 'package:flowpaisa/shared/widgets/app_floating_action_button.dart';
 
 class CategoriesListScreen extends ConsumerStatefulWidget {
   const CategoriesListScreen({super.key});
@@ -64,7 +65,7 @@ class _CategoriesListScreenState extends ConsumerState<CategoriesListScreen>
           _CategoryList(type: 'INCOME'),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: AppFloatingActionButton(
         onPressed: () {
           Navigator.push(
             context,

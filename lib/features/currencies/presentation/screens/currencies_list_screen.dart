@@ -10,6 +10,7 @@ import 'package:flowpaisa/features/currencies/presentation/screens/edit_currency
 import 'package:flowpaisa/shared/widgets/glass_card.dart';
 import 'package:flowpaisa/shared/widgets/swipeable_list_item.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
+import 'package:flowpaisa/shared/widgets/app_floating_action_button.dart';
 
 class CurrenciesListScreen extends ConsumerWidget {
   const CurrenciesListScreen({super.key});
@@ -70,7 +71,7 @@ class CurrenciesListScreen extends ConsumerWidget {
         error: (error, stack) =>
             Center(child: Text(l10n.errorOccurred(error.toString()))),
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: AppFloatingActionButton(
         backgroundColor: theme.colorScheme.primary,
         onPressed: () {
           Navigator.push(

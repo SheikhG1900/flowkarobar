@@ -128,19 +128,19 @@ class AppColors {
 
   // Section Gradients
   static const dashboardSectionGradient = LinearGradient(
-    colors: [Color(0xFF00D4FF), Color(0xFF0088CC)], // Primary gradient
+    colors: [Color(0xFF0088CC), Color(0xFF00D4FF)], // Primary gradient
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   static const transactionsSectionGradient = LinearGradient(
-    colors: [Color(0xFF00D4FF), Color(0xFF0088CC)], // Primary gradient
+    colors: [Color(0xFF0088CC), Color(0xFF00D4FF)], // Primary gradient
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   static const receivablesSectionGradient = LinearGradient(
-    colors: [Color(0xFF22D3EE), Color(0xFF0EA5E9)], // Cyan gradient
+    colors: [Color(0xFF0EA5E9), Color(0xFF22D3EE)], // Cyan gradient
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );

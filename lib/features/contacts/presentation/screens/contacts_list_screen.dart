@@ -9,6 +9,7 @@ import 'package:flowpaisa/features/contacts/presentation/screens/contact_details
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
 import 'package:flowpaisa/shared/widgets/swipeable_list_item.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
+import 'package:flowpaisa/shared/widgets/app_floating_action_button.dart';
 
 class ContactsListScreen extends ConsumerStatefulWidget {
   const ContactsListScreen({super.key});
@@ -151,7 +152,7 @@ class _ContactsListScreenState extends ConsumerState<ContactsListScreen> {
           child: Text(l10n.errorOccurred(error.toString())),
         ),
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: AppFloatingActionButton(
         backgroundColor: theme.colorScheme.primary,
         onPressed: () {
           Navigator.push(

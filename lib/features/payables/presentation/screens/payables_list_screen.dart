@@ -26,6 +26,7 @@ import 'package:flowpaisa/core/utils/localization_helper.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:flowpaisa/shared/widgets/app_loading_indicator.dart';
 import 'package:flowpaisa/shared/widgets/collapsible_list_summary.dart';
+import 'package:flowpaisa/shared/widgets/app_floating_action_button.dart';
 
 class PayablesListScreen extends ConsumerStatefulWidget {
   final bool startTour;
@@ -220,190 +221,192 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
           });
         }
         return Scaffold(
-        appBar: AppBar(
-        title: _isSearching
-            ? TextField(
-                autofocus: true,
-                decoration: InputDecoration(
-                  hintText: '${l10n.search}...',
-                  border: InputBorder.none,
-                  hintStyle: const TextStyle(color: Colors.white70),
-                ),
-                style: const TextStyle(color: Colors.white),
-                onChanged: (value) {
-                  ref
-                      .read(payablesPaginatedProvider(status).notifier)
-                      .updateSearchQuery(value);
+          appBar: AppBar(
+            title: _isSearching
+                ? TextField(
+                    autofocus: true,
+                    decoration: InputDecoration(
+                      hintText: '${l10n.search}...',
+                      border: InputBorder.none,
+                      hintStyle: const TextStyle(color: Colors.white70),
+                    ),
+                    style: const TextStyle(color: Colors.white),
+                    onChanged: (value) {
+                      ref
+                          .read(payablesPaginatedProvider(status).notifier)
+                          .updateSearchQuery(value);
+                    },
+                  )
+                : Text(l10n.payables),
+            actions: [
+              IconButton(
+                icon: Icon(_isSearching ? Icons.close : Icons.search),
+                onPressed: () {
+                  setState(() {
+                    if (_isSearching) {
+                      ref
+                          .read(payablesPaginatedProvider(status).notifier)
+                          .updateSearchQuery('');
+                    }
+                    _isSearching = !_isSearching;
+                  });
                 },
-              )
-            : Text(l10n.payables),
-        actions: [
-          IconButton(
-            icon: Icon(_isSearching ? Icons.close : Icons.search),
-            onPressed: () {
-              setState(() {
-                if (_isSearching) {
-                  ref
-                      .read(payablesPaginatedProvider(status).notifier)
-                      .updateSearchQuery('');
-                }
-                _isSearching = !_isSearching;
-              });
-            },
-          ),
-          IconButton(
-            icon: Stack(
-              children: [
-                const Icon(Icons.filter_list),
-                if (hasActiveFilters)
-                  Positioned(
-                    right: 0,
-                    top: 0,
-                    child: Container(
-                      padding: const EdgeInsets.all(2),
-                      decoration: const BoxDecoration(
-                        color: Colors.red,
-                        shape: BoxShape.circle,
+              ),
+              IconButton(
+                icon: Stack(
+                  children: [
+                    const Icon(Icons.filter_list),
+                    if (hasActiveFilters)
+                      Positioned(
+                        right: 0,
+                        top: 0,
+                        child: Container(
+                          padding: const EdgeInsets.all(2),
+                          decoration: const BoxDecoration(
+                            color: Colors.red,
+                            shape: BoxShape.circle,
+                          ),
+                          constraints: const BoxConstraints(
+                            minWidth: 8,
+                            minHeight: 8,
+                          ),
+                        ),
                       ),
-                      constraints: const BoxConstraints(
-                        minWidth: 8,
-                        minHeight: 8,
+                  ],
+                ),
+                onPressed: _showFilterBottomSheet,
+              ),
+              // Debug button to generate dummy payables (only in debug mode)
+              if (kDebugMode)
+                PopupMenuButton<String>(
+                  icon: const Icon(Icons.bug_report),
+                  onSelected: (value) async {
+                    if (value == 'generate_dummy') {
+                      final repository = ref.read(payablesRepositoryProvider);
+                      final contactsRepo = ref.read(contactsRepositoryProvider);
+                      try {
+                        final contacts =
+                            await contactsRepo.watchAllContacts().first;
+                        String defaultContactUuid;
+                        if (contacts.isNotEmpty) {
+                          defaultContactUuid = contacts[0].uuid;
+                        } else {
+                          // Create a default contact if none exists
+                          defaultContactUuid = await contactsRepo.createContact(
+                            ContactsCompanion(
+                              name: const Value('Default Contact'),
+                              createdAt: Value(DateTime.now()),
+                              updatedAt: Value(DateTime.now()),
+                            ),
+                          );
+                        }
+
+                        for (int i = 0; i < 100; i++) {
+                          final daysAgo = i ~/ 2;
+                          final date =
+                              DateTime.now().subtract(Duration(days: daysAgo));
+                          final amount =
+                              (50.0 + (i * 15.3) % 2000).roundToDouble();
+                          final contactUuid = contacts.isNotEmpty
+                              ? contacts[i % contacts.length].uuid
+                              : defaultContactUuid;
+
+                          await repository.createPayable(
+                            PayablesCompanion(
+                              contactUuid: Value(contactUuid),
+                              amount: Value(amount),
+                              description: Value('Dummy Payable #${i + 1}'),
+                              date: Value(date),
+                              status: Value(i % 3 == 0 ? 'PAID' : 'PENDING'),
+                              createdAt: Value(DateTime.now()),
+                              updatedAt: Value(DateTime.now()),
+                            ),
+                          );
+                        }
+                        if (context.mounted) {
+                          ToastUtils.showSuccessToast(
+                              context, ref, l10n.dummyPayablesGenerated);
+                          // Refresh pagination
+                          ref
+                              .read(
+                                  payablesPaginatedProvider('PENDING').notifier)
+                              .refresh();
+                          ref
+                              .read(payablesPaginatedProvider('PAID').notifier)
+                              .refresh();
+                        }
+                      } catch (e) {
+                        if (context.mounted) {
+                          ToastUtils.showErrorToast(
+                              context, ref, l10n.errorOccurred(e.toString()));
+                        }
+                      }
+                    }
+                  },
+                  itemBuilder: (context) => [
+                    PopupMenuItem(
+                      value: 'generate_dummy',
+                      child: Row(
+                        children: [
+                          const Icon(Icons.add_circle_outline),
+                          const SizedBox(width: 8),
+                          Text(l10n.generateDummyPayables),
+                        ],
                       ),
                     ),
-                  ),
-              ],
-            ),
-            onPressed: _showFilterBottomSheet,
-          ),
-          // Debug button to generate dummy payables (only in debug mode)
-          if (kDebugMode)
-            PopupMenuButton<String>(
-              icon: const Icon(Icons.bug_report),
-              onSelected: (value) async {
-                if (value == 'generate_dummy') {
-                  final repository = ref.read(payablesRepositoryProvider);
-                  final contactsRepo = ref.read(contactsRepositoryProvider);
-                  try {
-                    final contacts =
-                        await contactsRepo.watchAllContacts().first;
-                    String defaultContactUuid;
-                    if (contacts.isNotEmpty) {
-                      defaultContactUuid = contacts[0].uuid;
-                    } else {
-                      // Create a default contact if none exists
-                      defaultContactUuid = await contactsRepo.createContact(
-                        ContactsCompanion(
-                          name: const Value('Default Contact'),
-                          createdAt: Value(DateTime.now()),
-                          updatedAt: Value(DateTime.now()),
-                        ),
-                      );
-                    }
-
-                    for (int i = 0; i < 100; i++) {
-                      final daysAgo = i ~/ 2;
-                      final date =
-                          DateTime.now().subtract(Duration(days: daysAgo));
-                      final amount = (50.0 + (i * 15.3) % 2000).roundToDouble();
-                      final contactUuid = contacts.isNotEmpty
-                          ? contacts[i % contacts.length].uuid
-                          : defaultContactUuid;
-
-                      await repository.createPayable(
-                        PayablesCompanion(
-                          contactUuid: Value(contactUuid),
-                          amount: Value(amount),
-                          description: Value('Dummy Payable #${i + 1}'),
-                          date: Value(date),
-                          status: Value(i % 3 == 0 ? 'PAID' : 'PENDING'),
-                          createdAt: Value(DateTime.now()),
-                          updatedAt: Value(DateTime.now()),
-                        ),
-                      );
-                    }
-                    if (context.mounted) {
-                      ToastUtils.showSuccessToast(
-                          context, ref, l10n.dummyPayablesGenerated);
-                      // Refresh pagination
-                      ref
-                          .read(payablesPaginatedProvider('PENDING').notifier)
-                          .refresh();
-                      ref
-                          .read(payablesPaginatedProvider('PAID').notifier)
-                          .refresh();
-                    }
-                  } catch (e) {
-                    if (context.mounted) {
-                      ToastUtils.showErrorToast(
-                          context, ref, l10n.errorOccurred(e.toString()));
-                    }
-                  }
-                }
-              },
-              itemBuilder: (context) => [
-                PopupMenuItem(
-                  value: 'generate_dummy',
-                  child: Row(
-                    children: [
-                      const Icon(Icons.add_circle_outline),
-                      const SizedBox(width: 8),
-                      Text(l10n.generateDummyPayables),
+                  ],
+                ),
+            ],
+            bottom: _tabController == null
+                ? null
+                : TabBar(
+                    controller: _tabController,
+                    indicatorColor: AppColors.payableColor,
+                    labelColor: AppColors.payableColor,
+                    unselectedLabelColor:
+                        Theme.of(context).colorScheme.onSurfaceVariant,
+                    tabs: [
+                      _buildTabWithCount(l10n.pending, pendingCount),
+                      if (hasOverdueTab)
+                        _buildTabWithCount(l10n.overdue, overdueCount,
+                            isOverdue: true),
+                      Tab(text: l10n.paid),
                     ],
                   ),
+          ),
+          body: Showcase(
+            key: TourService.payablesListKey,
+            title: l10n.tourPayablesListTitle,
+            description: l10n.tourPayablesListDesc,
+            targetShapeBorder: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            tooltipBackgroundColor: AppColors.payableColor,
+            textColor: Colors.white,
+            child: _tabController == null
+                ? const AppLoadingIndicator(size: 60)
+                : TabBarView(
+                    controller: _tabController,
+                    children: [
+                      _buildPayablesList('PENDING'),
+                      if (hasOverdueTab) _buildPayablesList('OVERDUE'),
+                      _buildPayablesList('PAID'),
+                    ],
+                  ),
+          ),
+          floatingActionButton: AppFloatingActionButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const AddPayableScreen(),
                 ),
-              ],
-            ),
-        ],
-        bottom: _tabController == null
-            ? null
-            : TabBar(
-                controller: _tabController,
-                indicatorColor: AppColors.payableColor,
-                labelColor: AppColors.payableColor,
-                unselectedLabelColor:
-                    Theme.of(context).colorScheme.onSurfaceVariant,
-                tabs: [
-                  _buildTabWithCount(l10n.pending, pendingCount),
-                  if (hasOverdueTab)
-                    _buildTabWithCount(l10n.overdue, overdueCount,
-                        isOverdue: true),
-                  Tab(text: l10n.paid),
-                ],
-              ),
-      ),
-      body: Showcase(
-        key: TourService.payablesListKey,
-        title: l10n.tourPayablesListTitle,
-        description: l10n.tourPayablesListDesc,
-        targetShapeBorder: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        tooltipBackgroundColor: AppColors.payableColor,
-        textColor: Colors.white,
-        child: _tabController == null
-            ? const AppLoadingIndicator(size: 60)
-            : TabBarView(
-                controller: _tabController,
-                children: [
-                  _buildPayablesList('PENDING'),
-                  if (hasOverdueTab) _buildPayablesList('OVERDUE'),
-                  _buildPayablesList('PAID'),
-                ],
-              ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const AddPayableScreen(),
-            ),
-          );
-        },
-        backgroundColor: AppColors.payablesSectionColor,
-        foregroundColor: Colors.white,
-        child: const Icon(Icons.add),
-      ),
+              );
+            },
+            backgroundColor: AppColors.payablesSectionColor,
+            foregroundColor: Colors.white,
+            child: const Icon(Icons.add),
+          ),
         );
       },
     );
@@ -969,8 +972,8 @@ class _PayablesListSummaryContent extends ConsumerWidget {
         decoration: BoxDecoration(
           color: AppColors.payableColor.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-              color: AppColors.payableColor.withValues(alpha: 0.25)),
+          border:
+              Border.all(color: AppColors.payableColor.withValues(alpha: 0.25)),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,

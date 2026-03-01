@@ -35,6 +35,7 @@ import 'package:flowpaisa/shared/widgets/filter_bottom_sheet.dart';
 import 'package:flowpaisa/shared/widgets/app_loading_indicator.dart';
 import 'package:flowpaisa/shared/widgets/collapsible_list_summary.dart';
 import 'package:flowpaisa/features/analytics/presentation/providers/analytics_provider.dart';
+import 'package:flowpaisa/shared/widgets/app_floating_action_button.dart';
 
 import 'package:flowpaisa/features/tour/domain/tour_service.dart';
 import 'package:flowpaisa/features/tour/presentation/providers/tour_provider.dart';
@@ -400,7 +401,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
             tooltipBackgroundColor: AppColors.transactionsSectionColor,
             textColor: Colors.white,
             tooltipPosition: TooltipPosition.top,
-            child: FloatingActionButton(
+            child: AppFloatingActionButton(
               onPressed: () {
                 Navigator.push(
                   context,

@@ -26,6 +26,7 @@ import 'package:flowpaisa/core/utils/icon_helper.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:flowpaisa/shared/widgets/app_loading_indicator.dart';
 import 'package:flowpaisa/shared/widgets/collapsible_list_summary.dart';
+import 'package:flowpaisa/shared/widgets/app_floating_action_button.dart';
 
 class ReceivablesListScreen extends ConsumerStatefulWidget {
   final bool startTour;
@@ -241,193 +242,196 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
           });
         }
         return Scaffold(
-        appBar: AppBar(
-        title: _isSearching
-            ? TextField(
-                autofocus: true,
-                decoration: InputDecoration(
-                  hintText: '${l10n.search}...',
-                  border: InputBorder.none,
-                  hintStyle: const TextStyle(color: Colors.white70),
-                ),
-                style: const TextStyle(color: Colors.white),
-                onChanged: (value) {
-                  paginatedNotifier.updateSearchQuery(value);
+          appBar: AppBar(
+            title: _isSearching
+                ? TextField(
+                    autofocus: true,
+                    decoration: InputDecoration(
+                      hintText: '${l10n.search}...',
+                      border: InputBorder.none,
+                      hintStyle: const TextStyle(color: Colors.white70),
+                    ),
+                    style: const TextStyle(color: Colors.white),
+                    onChanged: (value) {
+                      paginatedNotifier.updateSearchQuery(value);
+                    },
+                  )
+                : Text(l10n.receivables),
+            actions: [
+              IconButton(
+                icon: Icon(_isSearching ? Icons.close : Icons.search),
+                onPressed: () {
+                  setState(() {
+                    if (_isSearching) {
+                      ref
+                          .read(receivablesPaginatedProvider(status).notifier)
+                          .updateSearchQuery('');
+                    }
+                    _isSearching = !_isSearching;
+                  });
                 },
-              )
-            : Text(l10n.receivables),
-        actions: [
-          IconButton(
-            icon: Icon(_isSearching ? Icons.close : Icons.search),
-            onPressed: () {
-              setState(() {
-                if (_isSearching) {
-                  ref
-                      .read(receivablesPaginatedProvider(status).notifier)
-                      .updateSearchQuery('');
-                }
-                _isSearching = !_isSearching;
-              });
-            },
-          ),
-          IconButton(
-            icon: Stack(
-              children: [
-                const Icon(Icons.filter_list),
-                if (hasActiveFilters)
-                  Positioned(
-                    right: 0,
-                    top: 0,
-                    child: Container(
-                      padding: const EdgeInsets.all(2),
-                      decoration: const BoxDecoration(
-                        color: Colors.red,
-                        shape: BoxShape.circle,
+              ),
+              IconButton(
+                icon: Stack(
+                  children: [
+                    const Icon(Icons.filter_list),
+                    if (hasActiveFilters)
+                      Positioned(
+                        right: 0,
+                        top: 0,
+                        child: Container(
+                          padding: const EdgeInsets.all(2),
+                          decoration: const BoxDecoration(
+                            color: Colors.red,
+                            shape: BoxShape.circle,
+                          ),
+                          constraints: const BoxConstraints(
+                            minWidth: 8,
+                            minHeight: 8,
+                          ),
+                        ),
                       ),
-                      constraints: const BoxConstraints(
-                        minWidth: 8,
-                        minHeight: 8,
+                  ],
+                ),
+                onPressed: _showFilterBottomSheet,
+              ),
+              // Debug button to generate dummy receivables (only in debug mode)
+              if (kDebugMode)
+                PopupMenuButton<String>(
+                  icon: const Icon(Icons.bug_report),
+                  onSelected: (value) async {
+                    if (value == 'generate_dummy') {
+                      final repository =
+                          ref.read(receivablesRepositoryProvider);
+                      final contactsRepo = ref.read(contactsRepositoryProvider);
+                      try {
+                        final contacts =
+                            await contactsRepo.watchAllContacts().first;
+                        String defaultContactUuid;
+                        if (contacts.isNotEmpty) {
+                          defaultContactUuid = contacts[0].uuid;
+                        } else {
+                          // Create a default contact if none exists
+                          defaultContactUuid = await contactsRepo.createContact(
+                            ContactsCompanion(
+                              name: const Value('Default Contact'),
+                              createdAt: Value(DateTime.now()),
+                              updatedAt: Value(DateTime.now()),
+                            ),
+                          );
+                        }
+
+                        for (int i = 0; i < 100; i++) {
+                          final daysAgo = i ~/ 2;
+                          final date =
+                              DateTime.now().subtract(Duration(days: daysAgo));
+                          final amount =
+                              (50.0 + (i * 15.3) % 2000).roundToDouble();
+                          final contactUuid = contacts.isNotEmpty
+                              ? contacts[i % contacts.length].uuid
+                              : defaultContactUuid;
+
+                          await repository.createReceivable(
+                            ReceivablesCompanion(
+                              contactUuid: Value(contactUuid),
+                              amount: Value(amount),
+                              description: Value('Dummy Receivable #${i + 1}'),
+                              date: Value(date),
+                              status:
+                                  Value(i % 3 == 0 ? 'RECEIVED' : 'PENDING'),
+                              createdAt: Value(DateTime.now()),
+                              updatedAt: Value(DateTime.now()),
+                            ),
+                          );
+                        }
+                        if (context.mounted) {
+                          ToastUtils.showSuccessToast(
+                              context, ref, l10n.dummyGenerated(100));
+                          // Refresh pagination
+                          ref
+                              .read(receivablesPaginatedProvider('PENDING')
+                                  .notifier)
+                              .refresh();
+                          ref
+                              .read(receivablesPaginatedProvider('RECEIVED')
+                                  .notifier)
+                              .refresh();
+                        }
+                      } catch (e) {
+                        if (context.mounted) {
+                          ToastUtils.showErrorToast(
+                              context, ref, l10n.errorOccurred(e.toString()));
+                        }
+                      }
+                    }
+                  },
+                  itemBuilder: (context) => [
+                    PopupMenuItem(
+                      value: 'generate_dummy',
+                      child: Row(
+                        children: [
+                          const Icon(Icons.add_circle_outline),
+                          const SizedBox(width: 8),
+                          Text(l10n.dummyGenerated(100)),
+                        ],
                       ),
                     ),
-                  ),
-              ],
-            ),
-            onPressed: _showFilterBottomSheet,
-          ),
-          // Debug button to generate dummy receivables (only in debug mode)
-          if (kDebugMode)
-            PopupMenuButton<String>(
-              icon: const Icon(Icons.bug_report),
-              onSelected: (value) async {
-                if (value == 'generate_dummy') {
-                  final repository = ref.read(receivablesRepositoryProvider);
-                  final contactsRepo = ref.read(contactsRepositoryProvider);
-                  try {
-                    final contacts =
-                        await contactsRepo.watchAllContacts().first;
-                    String defaultContactUuid;
-                    if (contacts.isNotEmpty) {
-                      defaultContactUuid = contacts[0].uuid;
-                    } else {
-                      // Create a default contact if none exists
-                      defaultContactUuid = await contactsRepo.createContact(
-                        ContactsCompanion(
-                          name: const Value('Default Contact'),
-                          createdAt: Value(DateTime.now()),
-                          updatedAt: Value(DateTime.now()),
-                        ),
-                      );
-                    }
-
-                    for (int i = 0; i < 100; i++) {
-                      final daysAgo = i ~/ 2;
-                      final date =
-                          DateTime.now().subtract(Duration(days: daysAgo));
-                      final amount = (50.0 + (i * 15.3) % 2000).roundToDouble();
-                      final contactUuid = contacts.isNotEmpty
-                          ? contacts[i % contacts.length].uuid
-                          : defaultContactUuid;
-
-                      await repository.createReceivable(
-                        ReceivablesCompanion(
-                          contactUuid: Value(contactUuid),
-                          amount: Value(amount),
-                          description: Value('Dummy Receivable #${i + 1}'),
-                          date: Value(date),
-                          status: Value(i % 3 == 0 ? 'RECEIVED' : 'PENDING'),
-                          createdAt: Value(DateTime.now()),
-                          updatedAt: Value(DateTime.now()),
-                        ),
-                      );
-                    }
-                    if (context.mounted) {
-                      ToastUtils.showSuccessToast(
-                          context, ref, l10n.dummyGenerated(100));
-                      // Refresh pagination
-                      ref
-                          .read(
-                              receivablesPaginatedProvider('PENDING').notifier)
-                          .refresh();
-                      ref
-                          .read(
-                              receivablesPaginatedProvider('RECEIVED').notifier)
-                          .refresh();
-                    }
-                  } catch (e) {
-                    if (context.mounted) {
-                      ToastUtils.showErrorToast(
-                          context, ref, l10n.errorOccurred(e.toString()));
-                    }
-                  }
-                }
-              },
-              itemBuilder: (context) => [
-                PopupMenuItem(
-                  value: 'generate_dummy',
-                  child: Row(
-                    children: [
-                      const Icon(Icons.add_circle_outline),
-                      const SizedBox(width: 8),
-                      Text(l10n.dummyGenerated(100)),
+                  ],
+                ),
+            ],
+            bottom: _tabController == null || _tabController!.length != tabCount
+                ? null
+                : TabBar(
+                    controller: _tabController,
+                    indicatorColor: AppColors.receivableColor,
+                    labelColor: AppColors.receivableColor,
+                    unselectedLabelColor:
+                        Theme.of(context).colorScheme.onSurfaceVariant,
+                    tabs: [
+                      _buildTabWithCount(l10n.pending, pendingCount),
+                      if (hasOverdueTab)
+                        _buildTabWithCount(l10n.overdue, overdueCount,
+                            isOverdue: true),
+                      Tab(text: l10n.receivedLabel),
                     ],
                   ),
+          ),
+          body: Showcase(
+            key: TourService.receivablesListKey,
+            title: l10n.tourReceivablesListTitle,
+            description: l10n.tourReceivablesListDesc,
+            targetShapeBorder: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            tooltipBackgroundColor: AppColors.receivableColor,
+            textColor: Colors.white,
+            child: _tabController == null ||
+                    _tabController!.length != tabCount ||
+                    _tabController!.index >= tabCount
+                ? const AppLoadingIndicator(size: 60)
+                : TabBarView(
+                    controller: _tabController,
+                    children: [
+                      _buildReceivablesList('PENDING'),
+                      if (hasOverdueTab) _buildReceivablesList('OVERDUE'),
+                      _buildReceivablesList('RECEIVED'),
+                    ],
+                  ),
+          ),
+          floatingActionButton: AppFloatingActionButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const AddReceivableScreen(),
                 ),
-              ],
-            ),
-        ],
-        bottom: _tabController == null || _tabController!.length != tabCount
-            ? null
-            : TabBar(
-                controller: _tabController,
-                indicatorColor: AppColors.receivableColor,
-                labelColor: AppColors.receivableColor,
-                unselectedLabelColor:
-                    Theme.of(context).colorScheme.onSurfaceVariant,
-                tabs: [
-                  _buildTabWithCount(l10n.pending, pendingCount),
-                  if (hasOverdueTab)
-                    _buildTabWithCount(l10n.overdue, overdueCount,
-                        isOverdue: true),
-                  Tab(text: l10n.receivedLabel),
-                ],
-              ),
-      ),
-      body: Showcase(
-        key: TourService.receivablesListKey,
-        title: l10n.tourReceivablesListTitle,
-        description: l10n.tourReceivablesListDesc,
-        targetShapeBorder: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        tooltipBackgroundColor: AppColors.receivableColor,
-        textColor: Colors.white,
-        child: _tabController == null ||
-                _tabController!.length != tabCount ||
-                _tabController!.index >= tabCount
-            ? const AppLoadingIndicator(size: 60)
-            : TabBarView(
-                controller: _tabController,
-                children: [
-                  _buildReceivablesList('PENDING'),
-                  if (hasOverdueTab) _buildReceivablesList('OVERDUE'),
-                  _buildReceivablesList('RECEIVED'),
-                ],
-              ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const AddReceivableScreen(),
-            ),
-          );
-        },
-        backgroundColor: AppColors.receivablesSectionColor,
-        foregroundColor: Colors.white,
-        child: const Icon(Icons.add),
-      ),
-    );
+              );
+            },
+            backgroundColor: AppColors.receivablesSectionColor,
+            foregroundColor: Colors.white,
+            child: const Icon(Icons.add),
+          ),
+        );
       },
     );
   }

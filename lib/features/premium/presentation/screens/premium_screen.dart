@@ -9,6 +9,7 @@ import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:in_app_purchase_android/in_app_purchase_android.dart';
 import 'package:flowpaisa/shared/widgets/premium_badge.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
+import 'package:flowpaisa/shared/widgets/app_floating_action_button.dart';
 
 class PremiumScreen extends ConsumerStatefulWidget {
   const PremiumScreen({super.key});
@@ -61,7 +62,7 @@ class _PremiumScreenState extends ConsumerState<PremiumScreen> {
 
     return Scaffold(
       floatingActionButton: kDebugMode
-          ? FloatingActionButton.extended(
+          ? AppFloatingActionButton(
               onPressed: () {
                 ref.read(premiumProvider.notifier).togglePremium();
                 ToastUtils.showInfoToast(context, ref, l10n.toggledDebugMode);
