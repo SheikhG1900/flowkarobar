@@ -1176,7 +1176,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
           return l10n.paidTag;
       }
     }
-    return LocalizationHelper.localizeRelationship(l10n, relationship);
+    return LocalizationHelper.localizeRelationshipShort(l10n, relationship);
   }
 
   static Future<void> _markAsReviewed(

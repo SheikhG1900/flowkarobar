@@ -1028,7 +1028,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
           return l10n.paidTag;
       }
     }
-    return LocalizationHelper.localizeRelationship(l10n, relationship);
+    return LocalizationHelper.localizeRelationshipShort(l10n, relationship);
   }
 }
 
