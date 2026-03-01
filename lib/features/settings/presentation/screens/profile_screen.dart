@@ -387,8 +387,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   side: BorderSide(color: theme.dividerColor),
                 ),
                 child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
@@ -437,7 +437,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                 }
                                 await backupNotifier.signOut();
                               },
-                              icon: const Icon(Icons.logout_outlined),
+                              icon: Transform.scale(
+                                scaleX: Directionality.of(context) ==
+                                        TextDirection.rtl
+                                    ? -1
+                                    : 1,
+                                child: const Icon(Icons.logout_outlined),
+                              ),
                               color: theme.colorScheme.error,
                               tooltip: l10n.signOut,
                             ),
@@ -483,7 +489,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                 PremiumGate.showPremiumDialog(context);
                               }
                             },
-                            icon: const Icon(Icons.login),
+                            icon: Transform.scale(
+                              scaleX: Directionality.of(context) ==
+                                      TextDirection.rtl
+                                  ? -1
+                                  : 1,
+                              child: const Icon(Icons.login),
+                            ),
                             label: Text(l10n.connectGoogleDrive),
                           ),
                         ),
@@ -606,7 +618,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         ),
                         title: Text(l10n.currency),
                         subtitle: Text('${currency.name} (${currency.symbol})'),
-                        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                        trailing: Transform.scale(
+                          scaleX:
+                              Directionality.of(context) == TextDirection.rtl
+                                  ? -1
+                                  : 1,
+                          child: const Icon(Icons.arrow_forward_ios, size: 16),
+                        ),
                         onTap: () {
                           Navigator.push(
                             context,

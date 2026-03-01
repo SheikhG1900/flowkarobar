@@ -341,10 +341,10 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
               ),
               if (!_isSearching)
                 IconButton(
-                  icon: const Icon(Icons.upload_file),
+                  icon: const Icon(Icons.backup_table),
                   onPressed: () => _showImportOptions(context),
                 ),
-              if (!_isSearching)
+              if (!_isSearching && kDebugMode)
                 PopupMenuButton<String>(
                   icon: const Icon(Icons.more_vert),
                   onSelected: (value) async {
@@ -369,17 +369,16 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                     }
                   },
                   itemBuilder: (context) => [
-                    if (kDebugMode)
-                      PopupMenuItem(
-                        value: 'generate_dummy',
-                        child: Row(
-                          children: [
-                            const Icon(Icons.add_circle_outline),
-                            const SizedBox(width: 8),
-                            Text(l10n.generate100DummyTransactions),
-                          ],
-                        ),
+                    PopupMenuItem(
+                      value: 'generate_dummy',
+                      child: Row(
+                        children: [
+                          const Icon(Icons.add_circle_outline),
+                          const SizedBox(width: 8),
+                          Text(l10n.generate100DummyTransactions),
+                        ],
                       ),
+                    ),
                   ],
                 ),
             ],
