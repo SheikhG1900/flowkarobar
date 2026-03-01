@@ -201,44 +201,79 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
                 ),
               ],
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 12),
             Flexible(
-              child: SingleChildScrollView(
-                controller: widget.scrollController,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildSectionTitle(l10n.dateRange),
-                    DateRangeSelector(
-                      selectedDateRange: _dateRangeState,
-                      onDateRangeChanged: _onDateRangeChanged,
-                      onNextPeriod: _onNextPeriod,
-                      onPreviousPeriod: _onPreviousPeriod,
-                      accentColor: primaryFilterColor,
-                    ),
-                    if (widget.type != FilterType.transactions) ...[
+              child: Theme(
+                data: theme.copyWith(dividerColor: Colors.transparent),
+                child: SingleChildScrollView(
+                  controller: widget.scrollController,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildCollapsibleSection(
+                        title: l10n.dateRange,
+                        initiallyExpanded: true,
+                        icon: Icons.calendar_today,
+                        primaryColor: primaryFilterColor,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            DateRangeSelector(
+                              selectedDateRange: _dateRangeState,
+                              onDateRangeChanged: _onDateRangeChanged,
+                              onNextPeriod: _onNextPeriod,
+                              onPreviousPeriod: _onPreviousPeriod,
+                              accentColor: primaryFilterColor,
+                            ),
+                            if (widget.type != FilterType.transactions) ...[
+                              const SizedBox(height: 16),
+                              _buildDueDateSwitch(l10n, primaryFilterColor),
+                            ],
+                          ],
+                        ),
+                      ),
+                      if (widget.type == FilterType.transactions) ...[
+                        _buildCollapsibleSection(
+                          title: l10n.transactionType,
+                          initiallyExpanded: false,
+                          icon: Icons.swap_horiz,
+                          primaryColor: primaryFilterColor,
+                          child: _buildTransactionTypeSelector(
+                              l10n, primaryFilterColor),
+                        ),
+                        _buildCollapsibleSection(
+                          title: l10n.categories,
+                          initiallyExpanded: false,
+                          icon: Icons.category,
+                          primaryColor: primaryFilterColor,
+                          child: _buildCategorySelector(),
+                        ),
+                        _buildCollapsibleSection(
+                          title: l10n.status,
+                          initiallyExpanded: false,
+                          icon: Icons.label,
+                          primaryColor: primaryFilterColor,
+                          child: _buildTransactionStatusSelector(
+                              l10n, primaryFilterColor),
+                        ),
+                      ],
+                      _buildCollapsibleSection(
+                        title: l10n.contacts,
+                        initiallyExpanded: false,
+                        icon: Icons.people,
+                        primaryColor: primaryFilterColor,
+                        child: _buildContactSelector(),
+                      ),
+                      _buildCollapsibleSection(
+                        title: l10n.amountRange,
+                        initiallyExpanded: false,
+                        icon: Icons.attach_money,
+                        primaryColor: primaryFilterColor,
+                        child: _buildAmountRangeInputs(l10n, primaryFilterColor),
+                      ),
                       const SizedBox(height: 16),
-                      _buildDueDateSwitch(l10n, primaryFilterColor),
                     ],
-                    if (widget.type == FilterType.transactions) ...[
-                      const SizedBox(height: 24),
-                      _buildSectionTitle(l10n.transactionType),
-                      _buildTransactionTypeSelector(l10n, primaryFilterColor),
-                      const SizedBox(height: 24),
-                      _buildSectionTitle(l10n.categories),
-                      _buildCategorySelector(),
-                      const SizedBox(height: 24),
-                      _buildSectionTitle(l10n.status),
-                      _buildTransactionStatusSelector(l10n, primaryFilterColor),
-                    ],
-                    const SizedBox(height: 24),
-                    _buildSectionTitle(l10n.contacts),
-                    _buildContactSelector(),
-                    const SizedBox(height: 24),
-                    _buildSectionTitle(l10n.amountRange),
-                    _buildAmountRangeInputs(l10n, primaryFilterColor),
-                    const SizedBox(height: 32),
-                  ],
+                  ),
                 ),
               ),
             ),
@@ -328,6 +363,42 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
           fontSize: 16,
           fontWeight: FontWeight.bold,
           color: Theme.of(context).colorScheme.primary,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCollapsibleSection({
+    required String title,
+    required bool initiallyExpanded,
+    required IconData icon,
+    required Color primaryColor,
+    required Widget child,
+  }) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Container(
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surfaceContainerLow.withValues(alpha: 0.5),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+            width: 1,
+          ),
+        ),
+        child: ExpansionTile(
+          initiallyExpanded: initiallyExpanded,
+          leading: Icon(icon, size: 22, color: primaryColor),
+          title: Text(
+            title,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: theme.colorScheme.primary,
+            ),
+          ),
+          childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          children: [child],
         ),
       ),
     );
