@@ -45,7 +45,7 @@ class AppFloatingActionButton extends StatelessWidget {
     // Use the FAB's background color as the shadow color in dark mode
     // with a slight transparency for a better glow effect.
     final shadowColor = isDark
-        ? Color.lerp(Colors.white, resolvedBgColor, 0.3)
+        ? Color.lerp(Colors.white, resolvedBgColor, 0.7)
         : resolvedBgColor;
 
     return Theme(
