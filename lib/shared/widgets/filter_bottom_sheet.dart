@@ -235,7 +235,7 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
                       if (widget.type == FilterType.transactions) ...[
                         _buildCollapsibleSection(
                           title: l10n.transactionType,
-                          initiallyExpanded: false,
+                          initiallyExpanded: true,
                           icon: Icons.swap_horiz,
                           primaryColor: primaryFilterColor,
                           child: _buildTransactionTypeSelector(
@@ -243,14 +243,14 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
                         ),
                         _buildCollapsibleSection(
                           title: l10n.categories,
-                          initiallyExpanded: false,
+                          initiallyExpanded: _selectedCategoryUuids.isNotEmpty,
                           icon: Icons.category,
                           primaryColor: primaryFilterColor,
                           child: _buildCategorySelector(),
                         ),
                         _buildCollapsibleSection(
                           title: l10n.status,
-                          initiallyExpanded: false,
+                          initiallyExpanded: true,
                           icon: Icons.label,
                           primaryColor: primaryFilterColor,
                           child: _buildTransactionStatusSelector(
@@ -259,17 +259,18 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
                       ],
                       _buildCollapsibleSection(
                         title: l10n.contacts,
-                        initiallyExpanded: false,
+                        initiallyExpanded: _selectedContactUuids.isNotEmpty,
                         icon: Icons.people,
                         primaryColor: primaryFilterColor,
                         child: _buildContactSelector(),
                       ),
                       _buildCollapsibleSection(
                         title: l10n.amountRange,
-                        initiallyExpanded: false,
+                        initiallyExpanded: true,
                         icon: Icons.attach_money,
                         primaryColor: primaryFilterColor,
-                        child: _buildAmountRangeInputs(l10n, primaryFilterColor),
+                        child:
+                            _buildAmountRangeInputs(l10n, primaryFilterColor),
                       ),
                       const SizedBox(height: 16),
                     ],
@@ -376,29 +377,41 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
     required Widget child,
   }) {
     final theme = Theme.of(context);
+    final sectionColor = Color.lerp(
+          theme.colorScheme.surfaceContainerLow,
+          primaryColor.withValues(alpha: 0.12),
+          0.1,
+        ) ??
+        theme.colorScheme.surfaceContainerLow;
     return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
-      child: Container(
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerLow.withValues(alpha: 0.5),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
-            width: 1,
-          ),
-        ),
-        child: ExpansionTile(
-          initiallyExpanded: initiallyExpanded,
-          leading: Icon(icon, size: 22, color: primaryColor),
-          title: Text(
-            title,
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: theme.colorScheme.primary,
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Material(
+        elevation: 2,
+        shadowColor: theme.colorScheme.shadow.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(12),
+        color: sectionColor,
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: primaryColor.withValues(alpha: 0.25),
+              width: 1,
             ),
           ),
-          childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-          children: [child],
+          child: ExpansionTile(
+            initiallyExpanded: initiallyExpanded,
+            leading: Icon(icon, size: 22, color: primaryColor),
+            title: Text(
+              title,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: theme.colorScheme.primary,
+              ),
+            ),
+            childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            children: [child],
+          ),
         ),
       ),
     );
