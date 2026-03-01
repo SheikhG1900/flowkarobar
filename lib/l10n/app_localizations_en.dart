@@ -2072,6 +2072,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get amountCalculatorOriginal => 'Original';
 
   @override
+  String get amountCalculatorResult => 'Result';
+
+  @override
   String get startDate => 'Start Date';
 
   @override

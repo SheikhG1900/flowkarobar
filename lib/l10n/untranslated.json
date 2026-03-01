@@ -1,9 +1,11 @@
 {
   "hi": [
-    "searchTransactions"
+    "searchTransactions",
+    "amountCalculatorResult"
   ],
 
   "ur": [
-    "searchTransactions"
+    "searchTransactions",
+    "amountCalculatorResult"
   ]
 }

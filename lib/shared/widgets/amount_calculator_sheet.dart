@@ -4,7 +4,7 @@ import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 
 /// Operation applied to the amount (stacked, undoable in order).
-enum _CalcOpType { multiply, divide, percent }
+enum _CalcOpType { multiply, divide, percent, add, subtract }
 
 class _CalcOp {
   final _CalcOpType type;
@@ -74,6 +74,12 @@ class _AmountCalculatorSheetState extends State<AmountCalculatorSheet> {
         case _CalcOpType.percent:
           v = v * (op.operand / 100);
           break;
+        case _CalcOpType.add:
+          v = v + op.operand;
+          break;
+        case _CalcOpType.subtract:
+          v = v - op.operand;
+          break;
       }
     }
     return v;
@@ -97,6 +103,12 @@ class _AmountCalculatorSheetState extends State<AmountCalculatorSheet> {
           break;
         case _CalcOpType.percent:
           v = v * (op.operand / 100);
+          break;
+        case _CalcOpType.add:
+          v = v + op.operand;
+          break;
+        case _CalcOpType.subtract:
+          v = v - op.operand;
           break;
       }
     }
@@ -122,6 +134,10 @@ class _AmountCalculatorSheetState extends State<AmountCalculatorSheet> {
         return AppColors.expenseColor;
       case _CalcOpType.percent:
         return AppColors.receivableColor;
+      case _CalcOpType.add:
+        return AppColors.incomeColor;
+      case _CalcOpType.subtract:
+        return AppColors.expenseColor;
     }
   }
 
@@ -133,18 +149,28 @@ class _AmountCalculatorSheetState extends State<AmountCalculatorSheet> {
         return '/${op.operand.toInt()}';
       case _CalcOpType.percent:
         return '${op.operand.toStringAsFixed(0)}%';
+      case _CalcOpType.add:
+        return '+${AmountFormatter.formatAmount(op.operand, widget.decimalPlaces)}';
+      case _CalcOpType.subtract:
+        return '-${AmountFormatter.formatAmount(op.operand, widget.decimalPlaces)}';
     }
   }
 
-  void _applyMultiply(int n) {
-    setState(() =>
-        _stack.add(_CalcOp(type: _CalcOpType.multiply, operand: n.toDouble())));
+  void _applyMultiply(double n) {
+    setState(() => _stack.add(_CalcOp(type: _CalcOpType.multiply, operand: n)));
   }
 
-  void _applyDivide(int n) {
+  void _applyDivide(double n) {
     if (n == 0) return;
-    setState(() =>
-        _stack.add(_CalcOp(type: _CalcOpType.divide, operand: n.toDouble())));
+    setState(() => _stack.add(_CalcOp(type: _CalcOpType.divide, operand: n)));
+  }
+
+  void _applyAdd(double n) {
+    setState(() => _stack.add(_CalcOp(type: _CalcOpType.add, operand: n)));
+  }
+
+  void _applySubtract(double n) {
+    setState(() => _stack.add(_CalcOp(type: _CalcOpType.subtract, operand: n)));
   }
 
   void _openPercentDrawer() {
@@ -159,6 +185,38 @@ class _AmountCalculatorSheetState extends State<AmountCalculatorSheet> {
           Navigator.pop(ctx);
           setState(() =>
               _stack.add(_CalcOp(type: _CalcOpType.percent, operand: percent)));
+        },
+      ),
+    );
+  }
+
+  void _openOperandDrawer(_CalcOpType type) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) => _OperandInputSheet(
+        amount: _currentValue,
+        type: type,
+        currencySymbol: widget.currencySymbol,
+        decimalPlaces: widget.decimalPlaces,
+        onApply: (value) {
+          Navigator.pop(ctx);
+          switch (type) {
+            case _CalcOpType.add:
+              _applyAdd(value);
+              break;
+            case _CalcOpType.subtract:
+              _applySubtract(value);
+              break;
+            case _CalcOpType.multiply:
+              _applyMultiply(value);
+              break;
+            case _CalcOpType.divide:
+              _applyDivide(value);
+              break;
+            default:
+              break;
+          }
         },
       ),
     );
@@ -264,7 +322,62 @@ class _AmountCalculatorSheetState extends State<AmountCalculatorSheet> {
                   ),
                 ),
                 const SizedBox(height: 24),
-                // All operations in one wrap: ×2..×9, /2../9, %. LTR so order is consistent.
+                // Main Operations
+                Directionality(
+                  textDirection: TextDirection.ltr,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      Expanded(
+                        child: SizedBox(
+                          height: _kOpButtonSize,
+                          child: _OpChip(
+                            label: '+',
+                            color: AppColors.incomeColor,
+                            onTap: () => _openOperandDrawer(_CalcOpType.add),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: SizedBox(
+                          height: _kOpButtonSize,
+                          child: _OpChip(
+                            label: '-',
+                            color: AppColors.expenseColor,
+                            onTap: () =>
+                                _openOperandDrawer(_CalcOpType.subtract),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: SizedBox(
+                          height: _kOpButtonSize,
+                          child: _OpChip(
+                            label: '×',
+                            color: AppColors.incomeColor,
+                            onTap: () =>
+                                _openOperandDrawer(_CalcOpType.multiply),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: SizedBox(
+                          height: _kOpButtonSize,
+                          child: _OpChip(
+                            label: '/',
+                            color: AppColors.expenseColor,
+                            onTap: () => _openOperandDrawer(_CalcOpType.divide),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                // Quick Operations Wrap: ×2..×9, /2../9, %. LTR so order is consistent.
                 Directionality(
                   textDirection: TextDirection.ltr,
                   child: Wrap(
@@ -277,7 +390,7 @@ class _AmountCalculatorSheetState extends State<AmountCalculatorSheet> {
                             child: _OpChip(
                               label: '×$n',
                               color: AppColors.incomeColor,
-                              onTap: () => _applyMultiply(n),
+                              onTap: () => _applyMultiply(n.toDouble()),
                             ),
                           )),
                       ...[2, 3, 4, 5, 6, 7, 8, 9].map((n) => SizedBox(
@@ -286,7 +399,7 @@ class _AmountCalculatorSheetState extends State<AmountCalculatorSheet> {
                             child: _OpChip(
                               label: '/$n',
                               color: AppColors.expenseColor,
-                              onTap: () => _applyDivide(n),
+                              onTap: () => _applyDivide(n.toDouble()),
                             ),
                           )),
                       SizedBox(
@@ -490,6 +603,174 @@ class _PercentSliderSheetState extends State<_PercentSliderSheet> {
             const SizedBox(height: 8),
             FilledButton(
               onPressed: () => widget.onApply(_percent),
+              child: Text(l10n.done),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _OperandInputSheet extends StatefulWidget {
+  final double amount;
+  final _CalcOpType type;
+  final String currencySymbol;
+  final int decimalPlaces;
+  final void Function(double value) onApply;
+
+  const _OperandInputSheet({
+    required this.amount,
+    required this.type,
+    required this.currencySymbol,
+    required this.decimalPlaces,
+    required this.onApply,
+  });
+
+  @override
+  State<_OperandInputSheet> createState() => _OperandInputSheetState();
+}
+
+class _OperandInputSheetState extends State<_OperandInputSheet> {
+  final _controller = TextEditingController();
+  double _inputValue = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller.addListener(() {
+      setState(() {
+        _inputValue = double.tryParse(_controller.text) ?? 0;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  String get _opLabel {
+    switch (widget.type) {
+      case _CalcOpType.add:
+        return '+';
+      case _CalcOpType.subtract:
+        return '-';
+      case _CalcOpType.multiply:
+        return '×';
+      case _CalcOpType.divide:
+        return '/';
+      default:
+        return '';
+    }
+  }
+
+  double get _result {
+    switch (widget.type) {
+      case _CalcOpType.add:
+        return widget.amount + _inputValue;
+      case _CalcOpType.subtract:
+        return widget.amount - _inputValue;
+      case _CalcOpType.multiply:
+        return widget.amount * _inputValue;
+      case _CalcOpType.divide:
+        return _inputValue != 0 ? widget.amount / _inputValue : widget.amount;
+      default:
+        return widget.amount;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
+    final color =
+        (widget.type == _CalcOpType.add || widget.type == _CalcOpType.multiply)
+            ? AppColors.incomeColor
+            : AppColors.expenseColor;
+
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: theme.scaffoldBackgroundColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  AmountFormatter.formatWithCurrency(
+                    widget.amount,
+                    widget.currencySymbol,
+                    widget.decimalPlaces,
+                  ),
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    color: theme.textTheme.bodySmall?.color,
+                  ),
+                ),
+                Text(
+                  _opLabel,
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    color: color,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _controller,
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
+              autofocus: true,
+              style: theme.textTheme.headlineMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+              decoration: InputDecoration(
+                hintText: '0',
+                border: InputBorder.none,
+                suffixText: widget.currencySymbol,
+              ),
+            ),
+            const Divider(),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  l10n.amountCalculatorResult,
+                  style: theme.textTheme.titleMedium,
+                ),
+                Text(
+                  AmountFormatter.formatWithCurrency(
+                    _result,
+                    widget.currencySymbol,
+                    widget.decimalPlaces,
+                  ),
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    color: color,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            FilledButton(
+              onPressed:
+                  _inputValue > 0 ? () => widget.onApply(_inputValue) : null,
+              style: FilledButton.styleFrom(
+                backgroundColor: color,
+              ),
               child: Text(l10n.done),
             ),
           ],

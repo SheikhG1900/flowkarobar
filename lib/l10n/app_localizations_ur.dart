@@ -2086,6 +2086,9 @@ class AppLocalizationsUr extends AppLocalizations {
   String get amountCalculatorOriginal => 'اصل';
 
   @override
+  String get amountCalculatorResult => 'Result';
+
+  @override
   String get startDate => 'شروع کی تاریخ';
 
   @override

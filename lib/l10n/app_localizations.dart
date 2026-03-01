@@ -3832,6 +3832,12 @@ abstract class AppLocalizations {
   /// **'Original'**
   String get amountCalculatorOriginal;
 
+  /// No description provided for @amountCalculatorResult.
+  ///
+  /// In en, this message translates to:
+  /// **'Result'**
+  String get amountCalculatorResult;
+
   /// No description provided for @startDate.
   ///
   /// In en, this message translates to:

@@ -1042,6 +1042,7 @@
   "amountCalculatorPercent": "Percent (%)",
   "amountCalculatorButtonTooltip": "Open calculator",
   "amountCalculatorOriginal": "Original",
+  "amountCalculatorResult": "Result",
   "startDate": "Start Date",
   "endDate": "End Date",
   "selectDate": "Select date",

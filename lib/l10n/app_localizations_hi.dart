@@ -2080,6 +2080,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get amountCalculatorOriginal => 'मूल';
 
   @override
+  String get amountCalculatorResult => 'Result';
+
+  @override
   String get startDate => 'शुरू होने की तारीख';
 
   @override
