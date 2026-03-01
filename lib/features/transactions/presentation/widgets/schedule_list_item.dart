@@ -110,39 +110,8 @@ class ScheduleListItem extends ConsumerWidget {
               ),
               overflow: TextOverflow.ellipsis,
             ),
-            const SizedBox(height: 6),
-            // Frequency Badge
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(4),
-                border: Border.all(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.3),
-                  width: 1,
-                ),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.repeat,
-                    size: 10,
-                    color: theme.colorScheme.primary,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    _getFrequencyLabel(l10n, schedule.scheduleType),
-                    style: TextStyle(
-                      fontSize: 10,
-                      color: theme.colorScheme.primary,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-            ),
             if (contact != null) ...[
+              const SizedBox(height: 6),
               const SizedBox(height: 4),
               // Contact tag
               Container(
@@ -201,6 +170,38 @@ class ScheduleListItem extends ConsumerWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
+            // Frequency badge above amount
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(
+                  color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    _getFrequencyIcon(schedule.scheduleType),
+                    size: 10,
+                    color: theme.colorScheme.primary,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    _getFrequencyLabel(l10n, schedule.scheduleType),
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: theme.colorScheme.primary,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 4),
             Text(
               '${isExpense ? '\u200E-' : '\u200E+'} ${AmountFormatter.formatWithCurrency(schedule.amount, currency.symbol, currency.decimalPlaces)}',
               style: theme.textTheme.titleLarge?.copyWith(
@@ -267,6 +268,19 @@ class ScheduleListItem extends ConsumerWidget {
         },
       ),
     );
+  }
+
+  static IconData _getFrequencyIcon(String type) {
+    switch (type) {
+      case 'DAILY':
+        return Icons.today;
+      case 'WEEKLY':
+        return Icons.date_range;
+      case 'MONTHLY':
+        return Icons.calendar_month;
+      default:
+        return Icons.repeat;
+    }
   }
 
   String _getFrequencyLabel(AppLocalizations l10n, String type) {
