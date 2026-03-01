@@ -48,6 +48,8 @@
   "editTransaction": "لین دین میں ترمیم کریں",
   "scheduleCreated": "شیڈول کامیابی سے تیار ہو گیا",
   "transactionUpdated": "لین دین کامیابی سے اپ ڈیٹ ہو گیا",
+  "markAsReviewed": "بطور جائزہ نشان زد کریں",
+  "transactionMarkedAsReviewed": "لین دین کا جائزہ مکمل ہو گیا",
   "updateTransaction": "لین دین اپ ڈیٹ کریں",
   "amount": "رقم",
   "category": "زمرہ",

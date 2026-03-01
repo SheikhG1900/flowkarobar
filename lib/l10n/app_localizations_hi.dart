@@ -113,10 +113,17 @@ class AppLocalizationsHi extends AppLocalizations {
   String get scheduleCreated => 'शेड्यूल सफलतापूर्वक बनाया गया';
 
   @override
-  String get transactionUpdated => 'लेन-देन सफलतापूर्वक अपडेट किया गया';
+  String get transactionUpdated => 'लेनदेन सफलतापूर्वक अपडेट किया गया';
 
   @override
-  String get updateTransaction => 'लेन-देन अपडेट करें';
+  String get markAsReviewed => 'समीक्षित के रूप में चिह्नित करें';
+
+  @override
+  String get transactionMarkedAsReviewed =>
+      'लेन-देन को समीक्षित के रूप में चिह्नित किया गया है';
+
+  @override
+  String get updateTransaction => 'लेनदेन अपडेट करें';
 
   @override
   String get amount => 'राशि';

@@ -150,21 +150,21 @@ class TransactionDetailsDialog extends ConsumerWidget {
                     ref.read(messageTemplateServiceProvider);
                 final capturedLanguage = getCurrentLanguageCode(ref);
 
-                  ShareHelper.shareTransaction(
-                    context,
-                    ref,
-                    transaction,
-                    contact,
-                    category,
-                    item.isLinkedEntryMarked,
-                    currencyOverride: capturedCurrency,
-                    userProfileOverride: capturedUserProfile,
-                    transactionServiceOverride: capturedTransactionService,
-                    whatsAppServiceOverride: capturedWhatsAppService,
-                    templateServiceOverride: capturedTemplateService,
-                    languageOverride: capturedLanguage,
-                    forceSystemShare: true,
-                  );
+                ShareHelper.shareTransaction(
+                  context,
+                  ref,
+                  transaction,
+                  contact,
+                  category,
+                  item.isLinkedEntryMarked,
+                  currencyOverride: capturedCurrency,
+                  userProfileOverride: capturedUserProfile,
+                  transactionServiceOverride: capturedTransactionService,
+                  whatsAppServiceOverride: capturedWhatsAppService,
+                  templateServiceOverride: capturedTemplateService,
+                  languageOverride: capturedLanguage,
+                  forceSystemShare: true,
+                );
               },
             ),
           // Duplicate button
@@ -357,32 +357,25 @@ class TransactionDetailsDialog extends ConsumerWidget {
                     ),
                   ],
                   if (transaction.isScheduled == true) ...[
-                    const SizedBox(height: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.schedule,
-                            size: 14,
-                            color: Colors.white,
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: () =>
+                            _markAsReviewed(context, ref, transaction.uuid),
+                        icon: const Icon(Icons.check_circle_outline, size: 18),
+                        label: Text(l10n.markAsReviewed),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white.withValues(alpha: 0.2),
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            side: const BorderSide(
+                                color: Colors.white30, width: 1),
                           ),
-                          const SizedBox(width: 6),
-                          Text(
-                            l10n.scheduled,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
                     ),
                   ],
@@ -562,70 +555,73 @@ class TransactionDetailsDialog extends ConsumerWidget {
                     child: Padding(
                       padding: const EdgeInsets.all(16),
                       child: Row(
-                    children: [
-                      Container(
-                        width: 48,
-                        height: 48,
-                        decoration: BoxDecoration(
-                          color: category != null
-                              ? Color(int.parse(
+                        children: [
+                          Container(
+                            width: 48,
+                            height: 48,
+                            decoration: BoxDecoration(
+                              color: category != null
+                                  ? Color(int.parse(category.color!
+                                          .replaceAll('#', '0xFF')))
+                                      .withValues(alpha: 0.2)
+                                  : (isExpense
+                                          ? AppColors.expenseColor
+                                          : AppColors.incomeColor)
+                                      .withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(
+                              category != null && category.icon != null
+                                  ? IconHelper.getIconData(category.icon!)
+                                  : (isExpense
+                                      ? Icons.arrow_circle_down
+                                      : Icons.arrow_circle_up),
+                              color: category != null
+                                  ? Color(int.parse(
                                       category.color!.replaceAll('#', '0xFF')))
-                                  .withValues(alpha: 0.2)
-                              : (isExpense
+                                  : (isExpense
                                       ? AppColors.expenseColor
-                                      : AppColors.incomeColor)
-                                  .withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Icon(
-                          category != null && category.icon != null
-                              ? IconHelper.getIconData(category.icon!)
-                              : (isExpense
-                                  ? Icons.arrow_circle_down
-                                  : Icons.arrow_circle_up),
-                          color: category != null
-                              ? Color(int.parse(
-                                  category.color!.replaceAll('#', '0xFF')))
-                              : (isExpense
-                                  ? AppColors.expenseColor
-                                  : AppColors.incomeColor),
-                          size: 28,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              l10n.category,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
-                              ),
+                                      : AppColors.incomeColor),
+                              size: 28,
                             ),
-                            const SizedBox(height: 2),
-                            Text(
-                              category != null
-                                  ? LocalizationHelper.getLocalizedCategoryName(
-                                      context, category.name)
-                                  : (isExpense ? l10n.expense : l10n.income),
-                              style: theme.textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: category != null
-                                    ? Color(int.parse(category.color!
-                                        .replaceAll('#', '0xFF')))
-                                    : null,
-                              ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  l10n.category,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  category != null
+                                      ? LocalizationHelper
+                                          .getLocalizedCategoryName(
+                                              context, category.name)
+                                      : (isExpense
+                                          ? l10n.expense
+                                          : l10n.income),
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: category != null
+                                        ? Color(int.parse(category.color!
+                                            .replaceAll('#', '0xFF')))
+                                        : null,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
               ),
-            ),
-          ),
               const SizedBox(height: 24),
               const Divider(),
               const SizedBox(height: 16),
@@ -1181,6 +1177,25 @@ class TransactionDetailsDialog extends ConsumerWidget {
         return isMarked ? l10n.receivedTag : l10n.receivableTag;
       default:
         return '';
+    }
+  }
+
+  static Future<void> _markAsReviewed(
+      BuildContext context, WidgetRef ref, String uuid) async {
+    try {
+      final service = ref.read(transactionServiceProvider);
+      await service.markTransactionAsReviewed(uuid);
+      if (context.mounted) {
+        final l10n = AppLocalizations.of(context)!;
+        ToastUtils.showSuccessToast(
+            context, ref, l10n.transactionMarkedAsReviewed);
+      }
+    } catch (e) {
+      if (context.mounted) {
+        final l10n = AppLocalizations.of(context)!;
+        ToastUtils.showErrorToast(
+            context, ref, l10n.errorOccurred(e.toString()));
+      }
     }
   }
 

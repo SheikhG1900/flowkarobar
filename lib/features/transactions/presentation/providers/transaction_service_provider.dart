@@ -889,6 +889,10 @@ class TransactionService {
     });
   }
 
+  Future<void> markTransactionAsReviewed(String uuid) async {
+    await transactionsRepository.markAsReviewed(uuid);
+  }
+
   /// Update a transaction and sync the amount/description with linked entries
   /// If type or relationship changes significantly, linked entries are recreated
   Future<void> updateTransaction({
@@ -962,6 +966,7 @@ class TransactionService {
           paidRelationship: drift.Value(paidRelationship),
           linkedPayableUuid: drift.Value(oldLinkedPayableUuid),
           linkedReceivableUuid: drift.Value(oldLinkedReceivableUuid),
+          isScheduled: const drift.Value(false),
           updatedAt: drift.Value(DateTime.now()),
         ),
       );

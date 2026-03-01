@@ -48,6 +48,8 @@
   "editTransaction": "Edit Transaction",
   "scheduleCreated": "Schedule created successfully",
   "transactionUpdated": "Transaction updated successfully",
+  "markAsReviewed": "Mark as Reviewed",
+  "transactionMarkedAsReviewed": "Transaction marked as reviewed",
   "updateTransaction": "Update Transaction",
   "amount": "Amount",
   "category": "Category",

@@ -304,6 +304,18 @@ abstract class AppLocalizations {
   /// **'Transaction updated successfully'**
   String get transactionUpdated;
 
+  /// No description provided for @markAsReviewed.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark as Reviewed'**
+  String get markAsReviewed;
+
+  /// No description provided for @transactionMarkedAsReviewed.
+  ///
+  /// In en, this message translates to:
+  /// **'Transaction marked as reviewed'**
+  String get transactionMarkedAsReviewed;
+
   /// No description provided for @updateTransaction.
   ///
   /// In en, this message translates to:
