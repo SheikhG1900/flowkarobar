@@ -1129,7 +1129,7 @@ abstract class AppLocalizations {
   /// No description provided for @markAsReceived.
   ///
   /// In en, this message translates to:
-  /// **'Mark as Received'**
+  /// **'Receive'**
   String get markAsReceived;
 
   /// No description provided for @deleteReceivableTitle.
@@ -1327,7 +1327,7 @@ abstract class AppLocalizations {
   /// No description provided for @markAsPaid.
   ///
   /// In en, this message translates to:
-  /// **'Mark as Paid'**
+  /// **'Pay'**
   String get markAsPaid;
 
   /// No description provided for @deletePayableTitle.
@@ -1807,7 +1807,7 @@ abstract class AppLocalizations {
   /// No description provided for @markAllRead.
   ///
   /// In en, this message translates to:
-  /// **'Mark all read'**
+  /// **'All Read'**
   String get markAllRead;
 
   /// No description provided for @clearAll.

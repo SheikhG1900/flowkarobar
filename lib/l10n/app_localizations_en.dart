@@ -586,7 +586,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get linkedTransaction => 'Linked Transaction';
 
   @override
-  String get markAsReceived => 'Mark as Received';
+  String get markAsReceived => 'Receive';
 
   @override
   String get deleteReceivableTitle => 'Delete Receivable';
@@ -694,7 +694,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get paid => 'Paid';
 
   @override
-  String get markAsPaid => 'Mark as Paid';
+  String get markAsPaid => 'Pay';
 
   @override
   String get deletePayableTitle => 'Delete Payable';
@@ -942,7 +942,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get allNotificationsMarkedRead => 'All notifications marked as read';
 
   @override
-  String get markAllRead => 'Mark all read';
+  String get markAllRead => 'All Read';
 
   @override
   String get clearAll => 'Clear All';

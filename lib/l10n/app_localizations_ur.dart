@@ -588,7 +588,7 @@ class AppLocalizationsUr extends AppLocalizations {
   String get linkedTransaction => 'منسلک لین دین';
 
   @override
-  String get markAsReceived => 'وصول شدہ کے طور پر نشان زد کریں';
+  String get markAsReceived => 'وصول کریں';
 
   @override
   String get deleteReceivableTitle => 'وصولی حذف کریں';
@@ -698,7 +698,7 @@ class AppLocalizationsUr extends AppLocalizations {
   String get paid => 'ادا کیا گیا';
 
   @override
-  String get markAsPaid => 'ادا شدہ کے طور پر نشان زد کریں';
+  String get markAsPaid => 'ادا کریں';
 
   @override
   String get deletePayableTitle => 'واجب الادا حذف کریں';
@@ -948,7 +948,7 @@ class AppLocalizationsUr extends AppLocalizations {
       'تمام اطلاعات کو پڑھا ہوا نشان زد کر دیا گیا';
 
   @override
-  String get markAllRead => 'سب کو پڑھا ہوا نشان زد کریں';
+  String get markAllRead => 'سب پڑھا';
 
   @override
   String get clearAll => 'تمام صاف کریں';
