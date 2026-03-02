@@ -3422,4 +3422,94 @@ class AppLocalizationsUr extends AppLocalizations {
   @override
   String get signOutSyncConfirmMessage =>
       'سائن آؤٹ کرنے سے بیک گراؤنڈ سنک رک جائے گا۔ جاری رکھیں؟';
+
+  @override
+  String get scenarioHelpTitle => 'کس قسم کا لین دین؟';
+
+  @override
+  String get scenarioPaidForMeal => 'دوست کے لنچ/کھانے کی ادائیگی کی';
+
+  @override
+  String get scenarioBoughtForSomeone =>
+      'کسی کے لیے کچھ خریدا (وہ واپس دیں گے)';
+
+  @override
+  String get scenarioLentMoney => 'ساتھی/خاندان کو پیسے ادھار دیے';
+
+  @override
+  String get scenarioPaidBillForSomeone => 'کسی کی طرف سے بل کی ادائیگی کی';
+
+  @override
+  String get scenarioSplitYouPaid => 'بانٹ – آپ نے پورا دیا، دوسرے واپس دیں گے';
+
+  @override
+  String get scenarioFriendPaidMeal => 'دوست نے آپ کے لنچ کی ادائیگی کی';
+
+  @override
+  String get scenarioSomeonePaidBill => 'کسی اور نے بل دیا (آپ واپس دیں گے)';
+
+  @override
+  String get scenarioColleaguePaidForYou =>
+      'ساتھی/خاندان نے آپ کے لیے دیا (آپ واپس دیں گے)';
+
+  @override
+  String get scenarioSplitTheyPaid => 'بانٹ – دوسروں نے آپ کا حصہ دیا';
+
+  @override
+  String get scenarioPaySomeoneForServices =>
+      'کسی کو خدمات کے لیے ادائیگی کرنی ہے';
+
+  @override
+  String get scenarioBorrowedCash => 'کسی سے نقد ادھار لیا';
+
+  @override
+  String get scenarioLoanReceived => 'قرض وصول ہوا (واپس دینا ہے)';
+
+  @override
+  String get scenarioBorrowedFromContact => 'دوست/خاندان سے پیسے ادھار لیے';
+
+  @override
+  String get scenarioSalaryAdvance => 'آجر سے ایڈوانس ملا (کٹے گا)';
+
+  @override
+  String get scenarioReceivedToRepay => 'پیسے ملے جو واپس دیں گے';
+
+  @override
+  String get scenarioSalaryPending => 'تنخواہ وصول ہونا باقی';
+
+  @override
+  String get scenarioClientPaymentPending => 'کلائنٹ سے ادائیگی (زیر التوا)';
+
+  @override
+  String get scenarioPaymentPending => 'دوست/خاندان واپس دیں گے';
+
+  @override
+  String get scenarioRentPending => 'کرایہ وصول ہونا باقی';
+
+  @override
+  String get scenarioSalePending => 'کچھ بیچا – ادائیگی زیر التوا';
+
+  @override
+  String get scenarioInvoicePending => 'انوائس ابھی ادا نہیں ہوئی';
+
+  @override
+  String get scenarioPersonalExpense => 'ذاتی خرچ / خریداری';
+
+  @override
+  String get scenarioBillPaid => 'بل / یٹیلیٹی ادائیگی';
+
+  @override
+  String get scenarioSubscription => 'سبسکرپشن / رکنیت';
+
+  @override
+  String get scenarioSalaryReceived => 'تنخواہ وصول ہوئی';
+
+  @override
+  String get scenarioFreelanceIncome => 'فری لانس / اضافی آمدنی';
+
+  @override
+  String get scenarioGiftReceived => 'تحفہ / بونس وصول ہوا';
+
+  @override
+  String get scenarioRefundReceived => 'واپسی وصول ہوئی';
 }

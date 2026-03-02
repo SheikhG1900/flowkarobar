@@ -3416,4 +3416,94 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get signOutSyncConfirmMessage =>
       'साइन आउट करने पर बैकग्राउंड सिंक रुक जाएगा। जारी रखें?';
+
+  @override
+  String get scenarioHelpTitle => 'किस प्रकार का लेन-देन?';
+
+  @override
+  String get scenarioPaidForMeal => 'दोस्त के लंच/भोजन का भुगतान किया';
+
+  @override
+  String get scenarioBoughtForSomeone =>
+      'किसी के लिए कुछ खरीदा (वे वापस देंगे)';
+
+  @override
+  String get scenarioLentMoney => 'साथी/परिवार को पैसे उधार दिए';
+
+  @override
+  String get scenarioPaidBillForSomeone => 'किसी की ओर से बिल का भुगतान किया';
+
+  @override
+  String get scenarioSplitYouPaid => 'बंटवारा – आपने पूरा दिया, बाकी लौटाएंगे';
+
+  @override
+  String get scenarioFriendPaidMeal => 'दोस्त ने आपके लंच का भुगतान किया';
+
+  @override
+  String get scenarioSomeonePaidBill => 'किसी और ने बिल दिया (आप लौटाएंगे)';
+
+  @override
+  String get scenarioColleaguePaidForYou =>
+      'साथी/परिवार ने आपके लिए दिया (आप लौटाएंगे)';
+
+  @override
+  String get scenarioSplitTheyPaid => 'बंटवारा – दूसरों ने आपका हिस्सा दिया';
+
+  @override
+  String get scenarioPaySomeoneForServices =>
+      'किसी को सेवाओं के लिए भुगतान करना है';
+
+  @override
+  String get scenarioBorrowedCash => 'किसी से नकद उधार लिया';
+
+  @override
+  String get scenarioLoanReceived => 'ऋण प्राप्त (वापस देना है)';
+
+  @override
+  String get scenarioBorrowedFromContact => 'दोस्त/परिवार से पैसे उधार लिए';
+
+  @override
+  String get scenarioSalaryAdvance => 'नियोक्ता से अग्रिम मिला (काटा जाएगा)';
+
+  @override
+  String get scenarioReceivedToRepay => 'पैसे मिले जो वापस देंगे';
+
+  @override
+  String get scenarioSalaryPending => 'वेतन प्राप्त होना बाकी';
+
+  @override
+  String get scenarioClientPaymentPending => 'ग्राहक से भुगतान (लंबित)';
+
+  @override
+  String get scenarioPaymentPending => 'दोस्त/परिवार वापस देंगे';
+
+  @override
+  String get scenarioRentPending => 'किराया प्राप्त होना बाकी';
+
+  @override
+  String get scenarioSalePending => 'कुछ बेचा – भुगतान लंबित';
+
+  @override
+  String get scenarioInvoicePending => 'इनवॉइस अभी भुगतान नहीं हुआ';
+
+  @override
+  String get scenarioPersonalExpense => 'निजी खर्च / खरीदारी';
+
+  @override
+  String get scenarioBillPaid => 'बिल / उपयोगिता भुगतान';
+
+  @override
+  String get scenarioSubscription => 'सदस्यता / मेम्बरशिप';
+
+  @override
+  String get scenarioSalaryReceived => 'वेतन प्राप्त';
+
+  @override
+  String get scenarioFreelanceIncome => 'फ्रीलांस / अतिरिक्त आय';
+
+  @override
+  String get scenarioGiftReceived => 'उपहार / बोनस प्राप्त';
+
+  @override
+  String get scenarioRefundReceived => 'रिफंड प्राप्त';
 }

@@ -5,6 +5,7 @@ import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/schedule_service_provider.dart';
 import 'package:flowpaisa/features/transactions/presentation/widgets/schedule_selection_drawer.dart';
+import 'package:flowpaisa/features/transactions/presentation/widgets/transaction_scenario_picker.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
 import 'package:flowpaisa/features/categories/presentation/providers/categories_provider.dart';
 import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
@@ -555,6 +556,21 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
           icon: const Icon(Icons.close),
           onPressed: () => Navigator.pop(context),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.help_outline),
+            tooltip: l10n.scenarioHelpTitle,
+            onPressed: () {
+              showTransactionScenarioPicker(context,
+                  onScenarioSelected: (type, relationship) {
+                setState(() {
+                  _selectedType = type;
+                  _paidRelationship = relationship;
+                });
+              });
+            },
+          ),
+        ],
       ),
       body: Container(
         decoration: BoxDecoration(

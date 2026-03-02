@@ -31,6 +31,7 @@ import 'package:flowpaisa/shared/providers/currency_provider.dart';
 import 'package:flowpaisa/core/utils/icon_helper.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:flowpaisa/features/transactions/presentation/widgets/schedule_selection_drawer.dart';
+import 'package:flowpaisa/features/transactions/presentation/widgets/transaction_scenario_picker.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/schedule_service_provider.dart';
 import 'package:flowpaisa/shared/widgets/amount_calculator_sheet.dart';
 
@@ -1507,6 +1508,22 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
               icon: const Icon(Icons.close),
               onPressed: () => Navigator.pop(context),
             ),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.help_outline),
+                tooltip: l10n.scenarioHelpTitle,
+                onPressed: () {
+                  showTransactionScenarioPicker(context,
+                      onScenarioSelected: (type, relationship) {
+                    setState(() {
+                      _selectedType = type;
+                      _paidRelationship = relationship;
+                      _createLinkedEntry = relationship != null;
+                    });
+                  });
+                },
+              ),
+            ],
           ),
           body: Container(
             decoration: BoxDecoration(

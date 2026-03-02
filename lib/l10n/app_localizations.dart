@@ -6226,6 +6226,180 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Signing out will pause background sync. Continue?'**
   String get signOutSyncConfirmMessage;
+
+  /// No description provided for @scenarioHelpTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What type of transaction?'**
+  String get scenarioHelpTitle;
+
+  /// No description provided for @scenarioPaidForMeal.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid for friend\'s lunch / meal'**
+  String get scenarioPaidForMeal;
+
+  /// No description provided for @scenarioBoughtForSomeone.
+  ///
+  /// In en, this message translates to:
+  /// **'Bought something for someone (they\'ll pay back)'**
+  String get scenarioBoughtForSomeone;
+
+  /// No description provided for @scenarioLentMoney.
+  ///
+  /// In en, this message translates to:
+  /// **'Lent money to colleague/family'**
+  String get scenarioLentMoney;
+
+  /// No description provided for @scenarioPaidBillForSomeone.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid a bill on behalf of someone'**
+  String get scenarioPaidBillForSomeone;
+
+  /// No description provided for @scenarioSplitYouPaid.
+  ///
+  /// In en, this message translates to:
+  /// **'Split expense – you paid full, others will reimburse'**
+  String get scenarioSplitYouPaid;
+
+  /// No description provided for @scenarioFriendPaidMeal.
+  ///
+  /// In en, this message translates to:
+  /// **'Friend paid for your lunch'**
+  String get scenarioFriendPaidMeal;
+
+  /// No description provided for @scenarioSomeonePaidBill.
+  ///
+  /// In en, this message translates to:
+  /// **'Someone else paid the bill (you\'ll pay them back)'**
+  String get scenarioSomeonePaidBill;
+
+  /// No description provided for @scenarioColleaguePaidForYou.
+  ///
+  /// In en, this message translates to:
+  /// **'Colleague/family paid for you (you\'ll reimburse)'**
+  String get scenarioColleaguePaidForYou;
+
+  /// No description provided for @scenarioSplitTheyPaid.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared expense – others paid your share'**
+  String get scenarioSplitTheyPaid;
+
+  /// No description provided for @scenarioPaySomeoneForServices.
+  ///
+  /// In en, this message translates to:
+  /// **'You have to pay someone for services'**
+  String get scenarioPaySomeoneForServices;
+
+  /// No description provided for @scenarioBorrowedCash.
+  ///
+  /// In en, this message translates to:
+  /// **'Borrowed cash from someone'**
+  String get scenarioBorrowedCash;
+
+  /// No description provided for @scenarioLoanReceived.
+  ///
+  /// In en, this message translates to:
+  /// **'Received a loan (to be repaid)'**
+  String get scenarioLoanReceived;
+
+  /// No description provided for @scenarioBorrowedFromContact.
+  ///
+  /// In en, this message translates to:
+  /// **'Borrowed money from friend/family'**
+  String get scenarioBorrowedFromContact;
+
+  /// No description provided for @scenarioSalaryAdvance.
+  ///
+  /// In en, this message translates to:
+  /// **'Got advance from employer (to be deducted)'**
+  String get scenarioSalaryAdvance;
+
+  /// No description provided for @scenarioReceivedToRepay.
+  ///
+  /// In en, this message translates to:
+  /// **'Received money you\'ll return'**
+  String get scenarioReceivedToRepay;
+
+  /// No description provided for @scenarioSalaryPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Salary to be received'**
+  String get scenarioSalaryPending;
+
+  /// No description provided for @scenarioClientPaymentPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment from client (pending)'**
+  String get scenarioClientPaymentPending;
+
+  /// No description provided for @scenarioPaymentPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Friend/family will pay you back'**
+  String get scenarioPaymentPending;
+
+  /// No description provided for @scenarioRentPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Rent to be received'**
+  String get scenarioRentPending;
+
+  /// No description provided for @scenarioSalePending.
+  ///
+  /// In en, this message translates to:
+  /// **'Sold something – payment pending'**
+  String get scenarioSalePending;
+
+  /// No description provided for @scenarioInvoicePending.
+  ///
+  /// In en, this message translates to:
+  /// **'Invoice not yet paid'**
+  String get scenarioInvoicePending;
+
+  /// No description provided for @scenarioPersonalExpense.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal expense / shopping'**
+  String get scenarioPersonalExpense;
+
+  /// No description provided for @scenarioBillPaid.
+  ///
+  /// In en, this message translates to:
+  /// **'Bill / utility payment'**
+  String get scenarioBillPaid;
+
+  /// No description provided for @scenarioSubscription.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscription / membership'**
+  String get scenarioSubscription;
+
+  /// No description provided for @scenarioSalaryReceived.
+  ///
+  /// In en, this message translates to:
+  /// **'Salary received'**
+  String get scenarioSalaryReceived;
+
+  /// No description provided for @scenarioFreelanceIncome.
+  ///
+  /// In en, this message translates to:
+  /// **'Freelance / side income'**
+  String get scenarioFreelanceIncome;
+
+  /// No description provided for @scenarioGiftReceived.
+  ///
+  /// In en, this message translates to:
+  /// **'Gift / bonus received'**
+  String get scenarioGiftReceived;
+
+  /// No description provided for @scenarioRefundReceived.
+  ///
+  /// In en, this message translates to:
+  /// **'Refund received'**
+  String get scenarioRefundReceived;
 }
 
 class _AppLocalizationsDelegate

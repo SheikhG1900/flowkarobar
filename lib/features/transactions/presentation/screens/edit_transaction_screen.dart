@@ -29,6 +29,7 @@ import 'package:flowpaisa/features/transactions/presentation/widgets/schedule_se
 import 'package:flowpaisa/features/transactions/presentation/providers/schedule_service_provider.dart';
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/features/transactions/presentation/screens/edit_split_transaction_screen.dart';
+import 'package:flowpaisa/features/transactions/presentation/widgets/transaction_scenario_picker.dart';
 import 'package:flowpaisa/shared/widgets/amount_calculator_sheet.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
 
@@ -1245,6 +1246,19 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.help_outline),
+            tooltip: l10n.scenarioHelpTitle,
+            onPressed: () {
+              showTransactionScenarioPicker(context,
+                  onScenarioSelected: (type, relationship) {
+                setState(() {
+                  _selectedType = type;
+                  _paidRelationship = relationship;
+                });
+              });
+            },
+          ),
           if (isSplitted)
             TextButton.icon(
               onPressed: () {

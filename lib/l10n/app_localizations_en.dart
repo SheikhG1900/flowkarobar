@@ -3401,4 +3401,97 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get signOutSyncConfirmMessage =>
       'Signing out will pause background sync. Continue?';
+
+  @override
+  String get scenarioHelpTitle => 'What type of transaction?';
+
+  @override
+  String get scenarioPaidForMeal => 'Paid for friend\'s lunch / meal';
+
+  @override
+  String get scenarioBoughtForSomeone =>
+      'Bought something for someone (they\'ll pay back)';
+
+  @override
+  String get scenarioLentMoney => 'Lent money to colleague/family';
+
+  @override
+  String get scenarioPaidBillForSomeone => 'Paid a bill on behalf of someone';
+
+  @override
+  String get scenarioSplitYouPaid =>
+      'Split expense – you paid full, others will reimburse';
+
+  @override
+  String get scenarioFriendPaidMeal => 'Friend paid for your lunch';
+
+  @override
+  String get scenarioSomeonePaidBill =>
+      'Someone else paid the bill (you\'ll pay them back)';
+
+  @override
+  String get scenarioColleaguePaidForYou =>
+      'Colleague/family paid for you (you\'ll reimburse)';
+
+  @override
+  String get scenarioSplitTheyPaid => 'Shared expense – others paid your share';
+
+  @override
+  String get scenarioPaySomeoneForServices =>
+      'You have to pay someone for services';
+
+  @override
+  String get scenarioBorrowedCash => 'Borrowed cash from someone';
+
+  @override
+  String get scenarioLoanReceived => 'Received a loan (to be repaid)';
+
+  @override
+  String get scenarioBorrowedFromContact => 'Borrowed money from friend/family';
+
+  @override
+  String get scenarioSalaryAdvance =>
+      'Got advance from employer (to be deducted)';
+
+  @override
+  String get scenarioReceivedToRepay => 'Received money you\'ll return';
+
+  @override
+  String get scenarioSalaryPending => 'Salary to be received';
+
+  @override
+  String get scenarioClientPaymentPending => 'Payment from client (pending)';
+
+  @override
+  String get scenarioPaymentPending => 'Friend/family will pay you back';
+
+  @override
+  String get scenarioRentPending => 'Rent to be received';
+
+  @override
+  String get scenarioSalePending => 'Sold something – payment pending';
+
+  @override
+  String get scenarioInvoicePending => 'Invoice not yet paid';
+
+  @override
+  String get scenarioPersonalExpense => 'Personal expense / shopping';
+
+  @override
+  String get scenarioBillPaid => 'Bill / utility payment';
+
+  @override
+  String get scenarioSubscription => 'Subscription / membership';
+
+  @override
+  String get scenarioSalaryReceived => 'Salary received';
+
+  @override
+  String get scenarioFreelanceIncome => 'Freelance / side income';
+
+  @override
+  String get scenarioGiftReceived => 'Gift / bonus received';
+
+  @override
+  String get scenarioRefundReceived => 'Refund received';
 }
