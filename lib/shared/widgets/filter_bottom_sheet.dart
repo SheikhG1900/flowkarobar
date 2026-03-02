@@ -172,13 +172,20 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
             ? AppColors.payableColor
             : AppColors.receivableColor;
 
+    final categoryCount = ref.watch(categoriesListProvider).value?.length ?? 0;
+    final contactCount = ref.watch(contactsListProvider).value?.length ?? 0;
+    final categoriesExpanded =
+        _selectedCategoryUuids.isNotEmpty || categoryCount <= 20;
+    final contactsExpanded =
+        _selectedContactUuids.isNotEmpty || contactCount <= 20;
+
     return Padding(
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom +
             MediaQuery.of(context).padding.bottom,
       ),
       child: Container(
-        padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
+        padding: const EdgeInsets.fromLTRB(12, 24, 12, 12),
         decoration: BoxDecoration(
           color: theme.colorScheme.surface,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
@@ -243,7 +250,7 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
                         ),
                         _buildCollapsibleSection(
                           title: l10n.categories,
-                          initiallyExpanded: _selectedCategoryUuids.isNotEmpty,
+                          initiallyExpanded: categoriesExpanded,
                           icon: Icons.category,
                           primaryColor: primaryFilterColor,
                           child: _buildCategorySelector(),
@@ -259,7 +266,7 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
                       ],
                       _buildCollapsibleSection(
                         title: l10n.contacts,
-                        initiallyExpanded: _selectedContactUuids.isNotEmpty,
+                        initiallyExpanded: contactsExpanded,
                         icon: Icons.people,
                         primaryColor: primaryFilterColor,
                         child: _buildContactSelector(),
@@ -379,8 +386,8 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
     final theme = Theme.of(context);
     final sectionColor = Color.lerp(
           theme.colorScheme.surfaceContainerLow,
-          primaryColor.withValues(alpha: 0.12),
-          0.1,
+          primaryColor.withValues(alpha: 0.01),
+          0.03,
         ) ??
         theme.colorScheme.surfaceContainerLow;
     return Padding(
@@ -409,7 +416,7 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
                 color: theme.colorScheme.primary,
               ),
             ),
-            childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            childrenPadding: const EdgeInsets.fromLTRB(8, 0, 8, 12),
             children: [child],
           ),
         ),
@@ -696,12 +703,12 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
                 borderSide: BorderSide(color: primaryColor, width: 1.5),
               ),
               contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
             ),
             onChanged: (_) => setState(() {}),
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: 8),
         Expanded(
           child: TextField(
             controller: _maxAmountController,
@@ -726,7 +733,7 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
                 borderSide: BorderSide(color: primaryColor, width: 1.5),
               ),
               contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
             ),
             onChanged: (_) => setState(() {}),
           ),
