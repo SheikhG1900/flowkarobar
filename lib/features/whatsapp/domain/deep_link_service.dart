@@ -198,13 +198,28 @@ class DeepLinkService {
   }
 
   /// Parse open link. Returns null if not an open link or invalid.
+  /// Accepts both flowpaisa://open/entityType/uuid and https://tamatasoft.github.io/flowpaisa/open/entityType/uuid.
   OpenLinkResult? parseOpenLink(String uriString) {
     try {
       final uri = Uri.parse(uriString);
-      if (uri.scheme != _scheme || uri.host != _openHost) return null;
-      final path = uri.path;
-      if (path.isEmpty || path == '/') return null;
-      final segments = path.split('/').where((s) => s.isNotEmpty).toList();
+      List<String> segments;
+      if (uri.scheme == _scheme && uri.host == _openHost) {
+        // flowpaisa://open/transaction/uuid
+        final path = uri.path;
+        if (path.isEmpty || path == '/') return null;
+        segments = path.split('/').where((s) => s.isNotEmpty).toList();
+      } else if (uri.scheme == 'https' &&
+          uri.host == 'tamatasoft.github.io' &&
+          uri.path.startsWith('/flowpaisa/open/')) {
+        // https://tamatasoft.github.io/flowpaisa/open/transaction/uuid
+        final path = uri.path;
+        segments = path.split('/').where((s) => s.isNotEmpty).toList();
+        // ['flowpaisa', 'open', 'transaction', 'uuid'] -> take last two
+        if (segments.length < 4) return null;
+        segments = segments.sublist(2);
+      } else {
+        return null;
+      }
       if (segments.length != 2) return null;
       final entityType = segments[0];
       final uuid = segments[1];

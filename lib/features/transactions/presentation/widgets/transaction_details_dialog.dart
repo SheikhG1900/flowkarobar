@@ -443,37 +443,6 @@ class TransactionDetailsDialog extends ConsumerWidget {
               ),
             ),
 
-            const SizedBox(height: 12),
-            InkWell(
-              onTap: () {
-                final link = DeepLinkService().generateEntityOpenLinkHttps(
-                    'transaction', transaction.uuid);
-                Clipboard.setData(ClipboardData(text: link));
-                ToastUtils.showSuccessToast(context, ref, l10n.linkCopied);
-              },
-              borderRadius: BorderRadius.circular(8),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Row(
-                  children: [
-                    Icon(Icons.link, size: 18, color: theme.colorScheme.primary),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        DeepLinkService().generateEntityOpenLinkHttps(
-                            'transaction', transaction.uuid),
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.primary,
-                          decoration: TextDecoration.underline,
-                          decorationColor: theme.colorScheme.primary,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
             const SizedBox(height: 24),
 
             // Contact & Category Header Section
