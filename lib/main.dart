@@ -399,6 +399,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         notifier.search('');
                         notifier.applyFilters(TransactionFilters());
                       }
+                      // Unfocus and dismiss overlay before tab switch to avoid FocusScope assertion
+                      FocusManager.instance.primaryFocus?.unfocus();
+                      try {
+                        ShowCaseWidget.of(context).dismiss();
+                      } catch (_) {}
                       setState(() {
                         _selectedIndex = index;
                       });
@@ -543,6 +548,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               }
                             });
                           }
+                          // Unfocus and dismiss overlay before tab switch to avoid FocusScope assertion
+                          FocusManager.instance.primaryFocus?.unfocus();
+                          try {
+                            ShowCaseWidget.of(context).dismiss();
+                          } catch (_) {}
                           setState(() {
                             _selectedIndex = index;
                           });

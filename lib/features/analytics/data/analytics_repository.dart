@@ -92,10 +92,12 @@ class AnalyticsRepository {
 
   Future<List<ContactSummary>> getContactSummaries(
       DateTime start, DateTime end) async {
+    // Contact summary: only outstanding (PENDING). Exclude PAID and RECEIVED.
     final contactsWithPayables = await (_database.selectOnly(_database.payables)
           ..addColumns([_database.payables.contactUuid])
           ..where(_database.payables.date.isBetweenValues(start, end))
           ..where(_database.payables.isDeleted.equals(false))
+          ..where(_database.payables.status.equals('PENDING'))
           ..groupBy([_database.payables.contactUuid]))
         .get()
         .then((rows) =>
@@ -105,6 +107,7 @@ class AnalyticsRepository {
               ..addColumns([_database.receivables.contactUuid])
               ..where(_database.receivables.date.isBetweenValues(start, end))
               ..where(_database.receivables.isDeleted.equals(false))
+              ..where(_database.receivables.status.equals('PENDING'))
               ..groupBy([_database.receivables.contactUuid]))
             .get()
             .then((rows) => rows
@@ -125,14 +128,16 @@ class AnalyticsRepository {
             ..addColumns([_database.payables.amount.sum()])
             ..where(_database.payables.contactUuid.equals(contactUuid))
             ..where(_database.payables.date.isBetweenValues(start, end))
-            ..where(_database.payables.isDeleted.equals(false)))
+            ..where(_database.payables.isDeleted.equals(false))
+            ..where(_database.payables.status.equals('PENDING')))
           .getSingle()
           .then((row) => row.read(_database.payables.amount.sum()) ?? 0.0);
       final totalReceivable = await (_database.selectOnly(_database.receivables)
             ..addColumns([_database.receivables.amount.sum()])
             ..where(_database.receivables.contactUuid.equals(contactUuid))
             ..where(_database.receivables.date.isBetweenValues(start, end))
-            ..where(_database.receivables.isDeleted.equals(false)))
+            ..where(_database.receivables.isDeleted.equals(false))
+            ..where(_database.receivables.status.equals('PENDING')))
           .getSingle()
           .then((row) => row.read(_database.receivables.amount.sum()) ?? 0.0);
       summaries.add(ContactSummary(
@@ -145,9 +150,11 @@ class AnalyticsRepository {
   }
 
   Future<List<ContactSummary>> getAllTimeContactSummaries() async {
+    // Contact summary: only outstanding (PENDING). Exclude PAID and RECEIVED.
     final contactsWithPayables = await (_database.selectOnly(_database.payables)
           ..addColumns([_database.payables.contactUuid])
           ..where(_database.payables.isDeleted.equals(false))
+          ..where(_database.payables.status.equals('PENDING'))
           ..groupBy([_database.payables.contactUuid]))
         .get()
         .then((rows) =>
@@ -156,6 +163,7 @@ class AnalyticsRepository {
         await (_database.selectOnly(_database.receivables)
               ..addColumns([_database.receivables.contactUuid])
               ..where(_database.receivables.isDeleted.equals(false))
+              ..where(_database.receivables.status.equals('PENDING'))
               ..groupBy([_database.receivables.contactUuid]))
             .get()
             .then((rows) => rows
@@ -175,13 +183,15 @@ class AnalyticsRepository {
       final totalPayable = await (_database.selectOnly(_database.payables)
             ..addColumns([_database.payables.amount.sum()])
             ..where(_database.payables.contactUuid.equals(contactUuid))
-            ..where(_database.payables.isDeleted.equals(false)))
+            ..where(_database.payables.isDeleted.equals(false))
+            ..where(_database.payables.status.equals('PENDING')))
           .getSingle()
           .then((row) => row.read(_database.payables.amount.sum()) ?? 0.0);
       final totalReceivable = await (_database.selectOnly(_database.receivables)
             ..addColumns([_database.receivables.amount.sum()])
             ..where(_database.receivables.contactUuid.equals(contactUuid))
-            ..where(_database.receivables.isDeleted.equals(false)))
+            ..where(_database.receivables.isDeleted.equals(false))
+            ..where(_database.receivables.status.equals('PENDING')))
           .getSingle()
           .then((row) => row.read(_database.receivables.amount.sum()) ?? 0.0);
       summaries.add(ContactSummary(
@@ -561,16 +571,19 @@ class AnalyticsRepository {
 
   Future<FinancialSummary> getFinancialSummary(
       DateTime start, DateTime end) async {
+    // Financial balance: only outstanding (PENDING). Exclude PAID and RECEIVED.
     final totalPayable = await (_database.selectOnly(_database.payables)
           ..addColumns([_database.payables.amount.sum()])
           ..where(_database.payables.date.isBetweenValues(start, end))
-          ..where(_database.payables.isDeleted.equals(false)))
+          ..where(_database.payables.isDeleted.equals(false))
+          ..where(_database.payables.status.equals('PENDING')))
         .getSingle()
         .then((row) => row.read(_database.payables.amount.sum()) ?? 0.0);
     final totalReceivable = await (_database.selectOnly(_database.receivables)
           ..addColumns([_database.receivables.amount.sum()])
           ..where(_database.receivables.date.isBetweenValues(start, end))
-          ..where(_database.receivables.isDeleted.equals(false)))
+          ..where(_database.receivables.isDeleted.equals(false))
+          ..where(_database.receivables.status.equals('PENDING')))
         .getSingle()
         .then((row) => row.read(_database.receivables.amount.sum()) ?? 0.0);
     final totalExpense = await _getTotalByType('EXPENSE', start, end);
@@ -583,14 +596,17 @@ class AnalyticsRepository {
   }
 
   Future<FinancialSummary> getAllTimeFinancialSummary() async {
+    // Financial balance: only outstanding (PENDING). Exclude PAID and RECEIVED.
     final totalPayable = await (_database.selectOnly(_database.payables)
           ..addColumns([_database.payables.amount.sum()])
-          ..where(_database.payables.isDeleted.equals(false)))
+          ..where(_database.payables.isDeleted.equals(false))
+          ..where(_database.payables.status.equals('PENDING')))
         .getSingle()
         .then((row) => row.read(_database.payables.amount.sum()) ?? 0.0);
     final totalReceivable = await (_database.selectOnly(_database.receivables)
           ..addColumns([_database.receivables.amount.sum()])
-          ..where(_database.receivables.isDeleted.equals(false)))
+          ..where(_database.receivables.isDeleted.equals(false))
+          ..where(_database.receivables.status.equals('PENDING')))
         .getSingle()
         .then((row) => row.read(_database.receivables.amount.sum()) ?? 0.0);
     // Exclude inactive: do not include expense/income linked to PENDING payable/receivable
@@ -651,22 +667,51 @@ class AnalyticsRepository {
       final month = DateTime(now.year, now.month - i, 1);
       final start = DateTime(month.year, month.month, 1);
       final end = DateTime(month.year, month.month + 1, 0, 23, 59, 59);
-      final totalPayable = await (_database.selectOnly(_database.payables)
+
+      final pendingPayable = await (_database.selectOnly(_database.payables)
             ..addColumns([_database.payables.amount.sum()])
             ..where(_database.payables.date.isBetweenValues(start, end))
-            ..where(_database.payables.isDeleted.equals(false)))
+            ..where(_database.payables.isDeleted.equals(false))
+            ..where(_database.payables.status.equals('PENDING')))
           .getSingle()
           .then((row) => row.read(_database.payables.amount.sum()) ?? 0.0);
-      final totalReceivable = await (_database.selectOnly(_database.receivables)
-            ..addColumns([_database.receivables.amount.sum()])
-            ..where(_database.receivables.date.isBetweenValues(start, end))
-            ..where(_database.receivables.isDeleted.equals(false)))
+      final paidPayable = await (_database.selectOnly(_database.payables)
+            ..addColumns([_database.payables.amount.sum()])
+            ..where(_database.payables.date.isBetweenValues(start, end))
+            ..where(_database.payables.isDeleted.equals(false))
+            ..where(_database.payables.status.equals('PAID')))
           .getSingle()
-          .then((row) => row.read(_database.receivables.amount.sum()) ?? 0.0);
+          .then((row) => row.read(_database.payables.amount.sum()) ?? 0.0);
+      final totalPayable = pendingPayable + paidPayable;
+
+      final pendingReceivable =
+          await (_database.selectOnly(_database.receivables)
+                ..addColumns([_database.receivables.amount.sum()])
+                ..where(_database.receivables.date.isBetweenValues(start, end))
+                ..where(_database.receivables.isDeleted.equals(false))
+                ..where(_database.receivables.status.equals('PENDING')))
+              .getSingle()
+              .then((row) =>
+                  row.read(_database.receivables.amount.sum()) ?? 0.0);
+      final receivedReceivable =
+          await (_database.selectOnly(_database.receivables)
+                ..addColumns([_database.receivables.amount.sum()])
+                ..where(_database.receivables.date.isBetweenValues(start, end))
+                ..where(_database.receivables.isDeleted.equals(false))
+                ..where(_database.receivables.status.equals('RECEIVED')))
+              .getSingle()
+              .then((row) =>
+                  row.read(_database.receivables.amount.sum()) ?? 0.0);
+      final totalReceivable = pendingReceivable + receivedReceivable;
+
       trends.add(PayableReceivableTrend(
           month: start,
           totalPayable: totalPayable,
-          totalReceivable: totalReceivable));
+          totalReceivable: totalReceivable,
+          pendingPayable: pendingPayable,
+          paidPayable: paidPayable,
+          pendingReceivable: pendingReceivable,
+          receivedReceivable: receivedReceivable));
     }
     return trends;
   }
@@ -838,10 +883,19 @@ class PayableReceivableTrend {
   final DateTime month;
   final double totalPayable;
   final double totalReceivable;
-  PayableReceivableTrend(
-      {required this.month,
-      required this.totalPayable,
-      required this.totalReceivable});
+  final double pendingPayable;
+  final double paidPayable;
+  final double pendingReceivable;
+  final double receivedReceivable;
+  PayableReceivableTrend({
+    required this.month,
+    required this.totalPayable,
+    required this.totalReceivable,
+    required this.pendingPayable,
+    required this.paidPayable,
+    required this.pendingReceivable,
+    required this.receivedReceivable,
+  });
 }
 
 class StatusDistribution {

@@ -75,6 +75,34 @@ class DateRangeNotifier extends Notifier<DateRangeState> {
   }
 }
 
+// Selected section index for expenses-by-category pie chart (tap highlight)
+class SelectedExpenseCategoryIndexNotifier extends Notifier<int?> {
+  @override
+  int? build() => null;
+
+  void setIndex(int? index) {
+    state = index;
+  }
+}
+
+final selectedExpenseCategoryIndexProvider =
+    NotifierProvider<SelectedExpenseCategoryIndexNotifier, int?>(
+        SelectedExpenseCategoryIndexNotifier.new);
+
+// Selected section index for income-by-category pie chart (tap highlight)
+class SelectedIncomeCategoryIndexNotifier extends Notifier<int?> {
+  @override
+  int? build() => null;
+
+  void setIndex(int? index) {
+    state = index;
+  }
+}
+
+final selectedIncomeCategoryIndexProvider =
+    NotifierProvider<SelectedIncomeCategoryIndexNotifier, int?>(
+        SelectedIncomeCategoryIndexNotifier.new);
+
 // Expenses by Category Provider (uses full selected date range)
 final expensesByCategoryProvider =
     FutureProvider.autoDispose<List<CategoryExpense>>((ref) async {

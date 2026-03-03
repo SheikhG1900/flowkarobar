@@ -22,6 +22,7 @@ import 'package:flowpaisa/features/receivables/domain/models.dart';
 import 'package:flowpaisa/features/receivables/presentation/providers/receivables_provider.dart';
 import 'package:flowpaisa/features/receivables/presentation/screens/receivables_list_screen.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
+import 'package:flowpaisa/core/utils/icon_helper.dart';
 import 'package:flowpaisa/core/utils/localization_helper.dart';
 import 'package:flowpaisa/core/utils/export_service.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
@@ -669,6 +670,7 @@ class _FinancialSummaryCard extends ConsumerWidget {
     final allTimeAsync = ref.watch(allTimeFinancialSummaryProvider);
     final l10n = AppLocalizations.of(context)!;
     final currencySymbol = ref.watch(currencySymbolProvider);
+    final decimalPlaces = ref.watch(currencyDecimalPlacesProvider);
 
     return selectedAsync.when(
       data: (selectedSummary) {
@@ -801,7 +803,7 @@ class _FinancialSummaryCard extends ConsumerWidget {
                   ],
                 ),
                 const SizedBox(height: 16),
-                // Net Balance
+                // Net Balance (receivable - payable)
                 InkWell(
                   onTap: () {
                     final dateRange = ref.read(selectedDateRangeProvider);
@@ -846,7 +848,7 @@ class _FinancialSummaryCard extends ConsumerWidget {
                               AmountFormatter.formatWithCurrency(
                                   selectedSummary.netBalance.abs(),
                                   currencySymbol,
-                                  2),
+                                  decimalPlaces),
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 24,
@@ -860,7 +862,86 @@ class _FinancialSummaryCard extends ConsumerWidget {
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: [
                             Text(
-                              '${l10n.allTime} ${AmountFormatter.formatWithCurrency(allTimeSummary.netBalance.abs(), currencySymbol, 2)}',
+                              '${l10n.allTime} ${AmountFormatter.formatWithCurrency(allTimeSummary.netBalance.abs(), currencySymbol, decimalPlaces)}',
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.7),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                // Income / Expense balance (same as transaction list summary)
+                InkWell(
+                  onTap: () {
+                    final dateRange = ref.read(selectedDateRangeProvider);
+                    ref
+                        .read(transactionsPaginatedProvider.notifier)
+                        .applyFilters(
+                          TransactionFilters(
+                            startDate: dateRange.startDate,
+                            endDate: dateRange.endDate,
+                          ),
+                        );
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const TransactionsListScreen(),
+                      ),
+                    );
+                  },
+                  borderRadius: BorderRadius.circular(16),
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      gradient: selectedSummary.totalIncome >=
+                              selectedSummary.totalExpense
+                          ? AppColors.incomeGradient
+                          : AppColors.expenseGradient,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              selectedSummary.totalIncome >=
+                                      selectedSummary.totalExpense
+                                  ? l10n.netIncome
+                                  : l10n.netExpenses,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            Text(
+                              AmountFormatter.formatWithCurrency(
+                                  (selectedSummary.totalIncome -
+                                          selectedSummary.totalExpense)
+                                      .abs(),
+                                  currencySymbol,
+                                  decimalPlaces),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            Text(
+                              '${l10n.allTime} ${AmountFormatter.formatWithCurrency((allTimeSummary.totalIncome - allTimeSummary.totalExpense).abs(), currencySymbol, decimalPlaces)}',
                               style: TextStyle(
                                 color: Colors.white.withValues(alpha: 0.7),
                                 fontSize: 12,
@@ -1062,7 +1143,9 @@ class _ContactSummariesSection extends ConsumerWidget {
                               ),
                             ),
                             const SizedBox(height: 4),
-                            Row(
+                            // Payable and receivable stacked to save horizontal space for balance
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 InkWell(
                                   onTap: () {
@@ -1091,6 +1174,7 @@ class _ContactSummariesSection extends ConsumerWidget {
                                   },
                                   borderRadius: BorderRadius.circular(4),
                                   child: Row(
+                                    mainAxisSize: MainAxisSize.min,
                                     children: [
                                       Icon(
                                         Symbols.call_made,
@@ -1112,7 +1196,7 @@ class _ContactSummariesSection extends ConsumerWidget {
                                     ],
                                   ),
                                 ),
-                                const SizedBox(width: 16),
+                                const SizedBox(height: 2),
                                 InkWell(
                                   onTap: () {
                                     final dateRange =
@@ -1140,6 +1224,7 @@ class _ContactSummariesSection extends ConsumerWidget {
                                   },
                                   borderRadius: BorderRadius.circular(4),
                                   child: Row(
+                                    mainAxisSize: MainAxisSize.min,
                                     children: [
                                       Icon(
                                         Symbols.call_received,
@@ -1263,9 +1348,15 @@ class _ContactSummariesSection extends ConsumerWidget {
 class _ExpensesPieChart extends ConsumerWidget {
   const _ExpensesPieChart();
 
+  static const double _centerSpaceRadius = 35;
+  static const double _baseSectionRadius = 28;
+  static const double _radiusRangeByPercent = 45;
+  static const double _chartHeight = 280;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final expensesAsync = ref.watch(expensesByCategoryProvider);
+    final selectedIndex = ref.watch(selectedExpenseCategoryIndexProvider);
     final currencySymbol = ref.watch(currencySymbolProvider);
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
@@ -1289,94 +1380,247 @@ class _ExpensesPieChart extends ConsumerWidget {
           );
         }
 
-        double total = expenses.fold(0, (sum, e) => sum + e.totalAmount);
+        final total = expenses.fold(0.0, (sum, e) => sum + e.totalAmount);
+        double maxExpensePct = 0.0;
+        if (total > 0) {
+          for (final e in expenses) {
+            final p = (e.totalAmount / total) * 100;
+            if (p > maxExpensePct) maxExpensePct = p;
+          }
+        }
 
         return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             SizedBox(
-              height: 250,
+              height: _chartHeight,
               child: PieChart(
                 PieChartData(
                   sectionsSpace: 2,
-                  centerSpaceRadius: 40,
-                  sections: expenses.map((e) {
-                    final percentage = (e.totalAmount / total) * 100;
+                  centerSpaceRadius: _centerSpaceRadius,
+                  pieTouchData: PieTouchData(
+                    enabled: true,
+                    touchCallback:
+                        (FlTouchEvent event, PieTouchResponse? response) {
+                      final section = response?.touchedSection;
+                      final index = section?.touchedSectionIndex;
+                      if (event is FlTapUpEvent) {
+                        ref
+                            .read(selectedExpenseCategoryIndexProvider.notifier)
+                            .setIndex(index != null
+                                ? (selectedIndex == index ? null : index)
+                                : null);
+                      }
+                    },
+                  ),
+                  sections: List.generate(expenses.length, (index) {
+                    final e = expenses[index];
+                    final percentage =
+                        total > 0 ? (e.totalAmount / total) * 100 : 0.0;
                     final color = e.category.color != null
                         ? Color(int.parse(
                             e.category.color!.replaceAll('#', '0xFF')))
                         : AppColors.expenseColor;
+                    final isSelected = selectedIndex == index;
+                    // Radius by share: scale relative to max category %
+                    final radius = _centerSpaceRadius +
+                        _baseSectionRadius +
+                        (maxExpensePct > 0
+                            ? (percentage / maxExpensePct) *
+                                _radiusRangeByPercent
+                            : 0.0);
+
+                    // Always show percent; scale font size by share
+                    final bool showPercent = true;
+                    final String title = percentage >= 5
+                        ? '${percentage.toStringAsFixed(0)}%'
+                        : percentage >= 1
+                            ? '${percentage.toStringAsFixed(0)}%'
+                            : percentage > 0
+                                ? '<1%'
+                                : '';
+                    final double fontSize = percentage >= 10
+                        ? 12
+                        : percentage >= 5
+                            ? 10
+                            : percentage >= 1
+                                ? 8
+                                : 7;
+                    final TextStyle titleStyle = TextStyle(
+                      fontSize: fontSize,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    );
+                    Widget? badgeWidget;
+                    if (percentage >= 10) {
+                      final iconData = IconHelper.getIconData(e.category.icon);
+                      badgeWidget = iconData != null
+                          ? Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                color: color,
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: theme.colorScheme.surface,
+                                  width: 2,
+                                ),
+                              ),
+                              child:
+                                  Icon(iconData, size: 18, color: Colors.white),
+                            )
+                          : null;
+                    }
 
                     return PieChartSectionData(
-                      color: color,
+                      color: isSelected ? color.withValues(alpha: 0.85) : color,
                       value: e.totalAmount,
-                      title: '${percentage.toStringAsFixed(0)}%',
-                      radius: 50,
-                      titleStyle: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
+                      title: title,
+                      showTitle: showPercent && title.isNotEmpty,
+                      titleStyle: titleStyle,
+                      radius: radius,
+                      badgeWidget: badgeWidget,
+                      badgePositionPercentageOffset: 0.98,
+                      titlePositionPercentageOffset:
+                          badgeWidget != null ? 0.55 : 0.98,
+                      borderSide: isSelected
+                          ? BorderSide(
+                              color: theme.colorScheme.surface,
+                              width: 3,
+                            )
+                          : BorderSide(
+                              color: color.withValues(alpha: 0.3), width: 1),
                     );
-                  }).toList(),
+                  }),
                 ),
               ),
             ),
             const SizedBox(height: 16),
-            // Legend
-            ...expenses.take(5).map((e) {
+            // Category list as cards (same style as contacts above)
+            ...List.generate(expenses.length, (index) {
+              final e = expenses[index];
+              final percentage =
+                  total > 0 ? (e.totalAmount / total) * 100 : 0.0;
               final color = e.category.color != null
                   ? Color(int.parse(e.category.color!.replaceAll('#', '0xFF')))
                   : AppColors.expenseColor;
-              final percentage = (e.totalAmount / total) * 100;
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 12,
-                      height: 12,
-                      decoration: BoxDecoration(
-                        color: color,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
+              final isSelected = selectedIndex == index;
+              final iconData = IconHelper.getIconData(e.category.icon);
+
+              return Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                decoration: BoxDecoration(
+                  color: theme.cardColor,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: isSelected
+                        ? color
+                        : theme.dividerColor.withValues(alpha: 0.5),
+                    width: isSelected ? 2.5 : 1,
+                  ),
+                ),
+                child: GestureDetector(
+                  onDoubleTap: () {
+                    final dateRange = ref.read(selectedDateRangeProvider);
+                    ref
+                        .read(transactionsPaginatedProvider.notifier)
+                        .applyFilters(TransactionFilters(
+                          type: 'EXPENSE',
+                          categoryUuids: [e.category.uuid],
+                          startDate: dateRange.startDate,
+                          endDate: dateRange.endDate,
+                        ));
+                    if (context.mounted) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              const TransactionsListScreen(),
+                        ),
+                      );
+                    }
+                  },
+                  child: InkWell(
+                    onTap: () {
+                      ref
+                          .read(selectedExpenseCategoryIndexProvider.notifier)
+                          .setIndex(selectedIndex == index ? null : index);
+                    },
+                    borderRadius: BorderRadius.circular(16),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
                       child: Row(
                         children: [
-                          Text(
-                            LocalizationHelper.getLocalizedCategoryName(
-                                context, e.category.name),
-                          ),
-                          const SizedBox(width: 8),
                           Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 2),
+                            width: 50,
+                            height: 50,
                             decoration: BoxDecoration(
                               color: color.withValues(alpha: 0.15),
-                              borderRadius: BorderRadius.circular(12),
+                              shape: BoxShape.circle,
                               border: Border.all(
-                                color: color.withValues(alpha: 0.3),
-                                width: 1,
+                                color: color.withValues(alpha: 0.4),
                               ),
                             ),
-                            child: Text(
-                              '${percentage.toStringAsFixed(1)}%',
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                                color: color,
-                              ),
+                            alignment: Alignment.center,
+                            child: iconData != null
+                                ? Icon(iconData, size: 26, color: color)
+                                : Text(
+                                    e.category.name.isNotEmpty
+                                        ? e.category.name[0].toUpperCase()
+                                        : '?',
+                                    style: TextStyle(
+                                      color: color,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 20,
+                                    ),
+                                  ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  LocalizationHelper.getLocalizedCategoryName(
+                                      context, e.category.name),
+                                  style: theme.textTheme.titleSmall?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 8, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: color.withValues(alpha: 0.15),
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: color.withValues(alpha: 0.3),
+                                      width: 1,
+                                    ),
+                                  ),
+                                  child: Text(
+                                    '${percentage.toStringAsFixed(1)}%',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                      color: color,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Text(
+                            AmountFormatter.formatWithCurrency(
+                                e.totalAmount, currencySymbol, 2),
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
                         ],
                       ),
                     ),
-                    Text(
-                        AmountFormatter.formatWithCurrency(
-                            e.totalAmount, currencySymbol, 2),
-                        style: const TextStyle(fontWeight: FontWeight.bold)),
-                  ],
+                  ),
                 ),
               );
             }),
@@ -1553,11 +1797,24 @@ class _PayableReceivableTrendsChart extends ConsumerWidget {
 
         double maxY = 0;
         for (var t in trends) {
-          if (t.totalPayable > maxY) maxY = t.totalPayable;
-          if (t.totalReceivable > maxY) maxY = t.totalReceivable;
+          final tp = (t.totalPayable ?? 0).toDouble();
+          final tr = (t.totalReceivable ?? 0).toDouble();
+          if (tp > maxY) maxY = tp;
+          if (tr > maxY) maxY = tr;
         }
         maxY = maxY * 1.2; // Add 20% buffer
         if (maxY == 0) maxY = 100;
+
+        // Dull colors depend on brightness: light mode = lerp with white, dark mode = lerp with black
+        final isDark = theme.brightness == Brightness.dark;
+        final dullBlend = isDark ? Colors.black : Colors.white;
+        const dullAmount = 0.6;
+        final payableDullColor =
+            Color.lerp(AppColors.payableColor, dullBlend, dullAmount)!;
+        final payableDarkColor = AppColors.payableColor;
+        final receivableDullColor =
+            Color.lerp(AppColors.receivableColor, dullBlend, dullAmount)!;
+        final receivableReceivedColor = AppColors.receivableColor;
 
         return AspectRatio(
           aspectRatio: 1.5,
@@ -1569,24 +1826,45 @@ class _PayableReceivableTrendsChart extends ConsumerWidget {
                 touchTooltipData: BarTouchTooltipData(
                   getTooltipColor: (_) => theme.cardColor,
                   getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                    final data = trends[group.x.toInt()];
                     final type =
                         rodIndex == 0 ? l10n.payableTag : l10n.receivableTag;
+                    final pending = (rodIndex == 0
+                            ? (data.pendingPayable ?? 0)
+                            : (data.pendingReceivable ?? 0))
+                        .toDouble();
+                    final settled = (rodIndex == 0
+                            ? (data.paidPayable ?? 0)
+                            : (data.receivedReceivable ?? 0))
+                        .toDouble();
                     return BarTooltipItem(
                       '$type\n',
                       TextStyle(
                           color: theme.colorScheme.onSurface,
                           fontWeight: FontWeight.bold),
                       children: [
-                        TextSpan(
-                          text: AmountFormatter.formatWithCurrency(
-                              rod.toY, currencySymbol, 0),
-                          style: TextStyle(
-                            color: rodIndex == 0
-                                ? AppColors.payableColor
-                                : AppColors.receivableColor,
-                            fontWeight: FontWeight.w500,
+                        if (pending > 0)
+                          TextSpan(
+                            text:
+                                '${l10n.pending ?? 'Pending'}: ${AmountFormatter.formatWithCurrency(pending, currencySymbol, 0)}\n',
+                            style: TextStyle(
+                              color: rodIndex == 0
+                                  ? payableDullColor
+                                  : receivableDullColor,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
-                        ),
+                        if (settled > 0)
+                          TextSpan(
+                            text:
+                                '${rodIndex == 0 ? (l10n.paid ?? 'Paid') : (l10n.received ?? 'Received')}: ${AmountFormatter.formatWithCurrency(settled, currencySymbol, 0)}',
+                            style: TextStyle(
+                              color: rodIndex == 0
+                                  ? payableDarkColor
+                                  : receivableReceivedColor,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
                       ],
                     );
                   },
@@ -1624,21 +1902,68 @@ class _PayableReceivableTrendsChart extends ConsumerWidget {
               barGroups: trends.asMap().entries.map((entry) {
                 final index = entry.key;
                 final data = entry.value;
+                final totalP = (data.totalPayable ?? 0).toDouble();
+                final pendingP = (data.pendingPayable ?? 0).toDouble();
+                final paidP = (data.paidPayable ?? 0).toDouble();
+                final totalR = (data.totalReceivable ?? 0).toDouble();
+                final pendingR = (data.pendingReceivable ?? 0).toDouble();
+                final receivedR = (data.receivedReceivable ?? 0).toDouble();
+
+                // Payable bar: paid (dark) at bottom, payable/pending (dull) at top
+                List<BarChartRodStackItem> payableStack = [
+                  if (paidP > 0)
+                    BarChartRodStackItem(0, paidP, payableDarkColor),
+                  if (pendingP > 0)
+                    BarChartRodStackItem(
+                      paidP,
+                      totalP,
+                      payableDullColor,
+                    ),
+                ];
+                if (payableStack.isEmpty && totalP >= 0) {
+                  payableStack = [
+                    BarChartRodStackItem(0, totalP, payableDullColor),
+                  ];
+                }
+
+                // Receivable bar: pending (dull) at bottom, received (dark) at top
+                List<BarChartRodStackItem> receivableStack = [
+                  if (pendingR > 0)
+                    BarChartRodStackItem(
+                      0,
+                      pendingR,
+                      receivableDullColor,
+                    ),
+                  if (receivedR > 0)
+                    BarChartRodStackItem(
+                      pendingR,
+                      totalR,
+                      receivableReceivedColor,
+                    ),
+                ];
+                if (receivableStack.isEmpty && totalR >= 0) {
+                  receivableStack = [
+                    BarChartRodStackItem(0, totalR, receivableDullColor),
+                  ];
+                }
+
                 return BarChartGroupData(
                   x: index,
                   barRods: [
                     BarChartRodData(
-                        toY: data.totalPayable,
-                        color: AppColors.payableColor,
-                        width: 12,
-                        borderRadius: const BorderRadius.vertical(
-                            top: Radius.circular(4))),
+                      toY: totalP,
+                      width: 12,
+                      borderRadius:
+                          const BorderRadius.vertical(top: Radius.circular(4)),
+                      rodStackItems: payableStack,
+                    ),
                     BarChartRodData(
-                        toY: data.totalReceivable,
-                        color: AppColors.receivableColor,
-                        width: 12,
-                        borderRadius: const BorderRadius.vertical(
-                            top: Radius.circular(4))),
+                      toY: totalR,
+                      width: 12,
+                      borderRadius:
+                          const BorderRadius.vertical(top: Radius.circular(4)),
+                      rodStackItems: receivableStack,
+                    ),
                   ],
                 );
               }).toList(),
@@ -1757,6 +2082,17 @@ class _PaymentStatusDistributionChart extends ConsumerWidget {
             status.receivedReceivables +
             status.cancelledReceivables;
 
+        // Same colors as Payable vs Receivable trends: dull (pending) and dark (paid/received)
+        final isDark = theme.brightness == Brightness.dark;
+        final dullBlend = isDark ? Colors.black : Colors.white;
+        const dullAmount = 0.5;
+        final payableDullColor =
+            Color.lerp(AppColors.payableColor, dullBlend, dullAmount)!;
+        final payableDarkColor = AppColors.payableColor;
+        final receivableDullColor =
+            Color.lerp(AppColors.receivableColor, dullBlend, dullAmount)!;
+        final receivableDarkColor = AppColors.receivableColor;
+
         if (payableTotal == 0 && receivableTotal == 0) {
           return Center(
             child: Padding(
@@ -1792,7 +2128,7 @@ class _PaymentStatusDistributionChart extends ConsumerWidget {
                           sections: [
                             if (status.pendingPayables > 0)
                               PieChartSectionData(
-                                color: Colors.orange,
+                                color: payableDullColor,
                                 value: status.pendingPayables,
                                 title:
                                     '${((status.pendingPayables / payableTotal) * 100).toStringAsFixed(0)}%',
@@ -1804,7 +2140,7 @@ class _PaymentStatusDistributionChart extends ConsumerWidget {
                               ),
                             if (status.paidPayables > 0)
                               PieChartSectionData(
-                                color: Colors.green,
+                                color: payableDarkColor,
                                 value: status.paidPayables,
                                 title:
                                     '${((status.paidPayables / payableTotal) * 100).toStringAsFixed(0)}%',
@@ -1832,9 +2168,9 @@ class _PaymentStatusDistributionChart extends ConsumerWidget {
                     ),
                     const SizedBox(height: 8),
                     _buildStatusLegend(l10n.pending, status.pendingPayables,
-                        Colors.orange, currencySymbol),
+                        payableDullColor, currencySymbol),
                     _buildStatusLegend(l10n.paid, status.paidPayables,
-                        Colors.green, currencySymbol),
+                        payableDarkColor, currencySymbol),
                     _buildStatusLegend(l10n.statusCancelled,
                         status.cancelledPayables, Colors.grey, currencySymbol),
                   ],
@@ -1859,7 +2195,7 @@ class _PaymentStatusDistributionChart extends ConsumerWidget {
                           sections: [
                             if (status.pendingReceivables > 0)
                               PieChartSectionData(
-                                color: Colors.orange,
+                                color: receivableDullColor,
                                 value: status.pendingReceivables,
                                 title:
                                     '${((status.pendingReceivables / receivableTotal) * 100).toStringAsFixed(0)}%',
@@ -1871,7 +2207,7 @@ class _PaymentStatusDistributionChart extends ConsumerWidget {
                               ),
                             if (status.receivedReceivables > 0)
                               PieChartSectionData(
-                                color: Colors.green,
+                                color: receivableDarkColor,
                                 value: status.receivedReceivables,
                                 title:
                                     '${((status.receivedReceivables / receivableTotal) * 100).toStringAsFixed(0)}%',
@@ -1899,11 +2235,11 @@ class _PaymentStatusDistributionChart extends ConsumerWidget {
                     ),
                     const SizedBox(height: 8),
                     _buildStatusLegend(l10n.pending, status.pendingReceivables,
-                        Colors.orange, currencySymbol),
+                        receivableDullColor, currencySymbol),
                     _buildStatusLegend(
                         l10n.receivedLabel,
                         status.receivedReceivables,
-                        Colors.green,
+                        receivableDarkColor,
                         currencySymbol),
                     _buildStatusLegend(
                         l10n.statusCancelled,
@@ -1948,9 +2284,15 @@ class _PaymentStatusDistributionChart extends ConsumerWidget {
 class _IncomePieChart extends ConsumerWidget {
   const _IncomePieChart();
 
+  static const double _centerSpaceRadius = 35;
+  static const double _baseSectionRadius = 30;
+  static const double _radiusRangeByPercent = 45;
+  static const double _chartHeight = 280;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final incomesAsync = ref.watch(incomeByCategoryProvider);
+    final selectedIndex = ref.watch(selectedIncomeCategoryIndexProvider);
     final currencySymbol = ref.watch(currencySymbolProvider);
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
@@ -1974,87 +2316,244 @@ class _IncomePieChart extends ConsumerWidget {
           );
         }
 
-        double total = incomes.fold(0, (sum, e) => sum + e.totalAmount);
+        final total = incomes.fold(0.0, (sum, e) => sum + e.totalAmount);
+        double maxIncomePct = 0.0;
+        if (total > 0) {
+          for (final e in incomes) {
+            final p = (e.totalAmount / total) * 100;
+            if (p > maxIncomePct) maxIncomePct = p;
+          }
+        }
 
         return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             SizedBox(
-              height: 250,
+              height: _chartHeight,
               child: PieChart(
                 PieChartData(
                   sectionsSpace: 2,
-                  centerSpaceRadius: 40,
-                  sections: incomes.map((e) {
-                    final percentage = (e.totalAmount / total) * 100;
+                  centerSpaceRadius: _centerSpaceRadius,
+                  pieTouchData: PieTouchData(
+                    enabled: true,
+                    touchCallback:
+                        (FlTouchEvent event, PieTouchResponse? response) {
+                      final section = response?.touchedSection;
+                      final index = section?.touchedSectionIndex;
+                      if (event is FlTapUpEvent) {
+                        ref
+                            .read(selectedIncomeCategoryIndexProvider.notifier)
+                            .setIndex(index != null
+                                ? (selectedIndex == index ? null : index)
+                                : null);
+                      }
+                    },
+                  ),
+                  sections: List.generate(incomes.length, (index) {
+                    final e = incomes[index];
+                    final percentage =
+                        total > 0 ? (e.totalAmount / total) * 100 : 0.0;
                     final color = e.category.color != null
                         ? Color(int.parse(
                             e.category.color!.replaceAll('#', '0xFF')))
                         : AppColors.incomeColor;
+                    final isSelected = selectedIndex == index;
+                    // Radius by share: scale relative to max category %
+                    final radius = _centerSpaceRadius +
+                        _baseSectionRadius +
+                        (maxIncomePct > 0
+                            ? (percentage / maxIncomePct) *
+                                _radiusRangeByPercent
+                            : 0.0);
+
+                    final String title = percentage >= 5
+                        ? '${percentage.toStringAsFixed(0)}%'
+                        : percentage >= 1
+                            ? '${percentage.toStringAsFixed(0)}%'
+                            : percentage > 0
+                                ? '<1%'
+                                : '';
+                    final double fontSize = percentage >= 10
+                        ? 12
+                        : percentage >= 5
+                            ? 10
+                            : percentage >= 1
+                                ? 8
+                                : 7;
+                    final TextStyle titleStyle = TextStyle(
+                      fontSize: fontSize,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    );
+                    Widget? badgeWidget;
+                    if (percentage >= 10) {
+                      final iconData = IconHelper.getIconData(e.category.icon);
+                      badgeWidget = iconData != null
+                          ? Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                color: color,
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: theme.colorScheme.surface,
+                                  width: 2,
+                                ),
+                              ),
+                              child:
+                                  Icon(iconData, size: 18, color: Colors.white),
+                            )
+                          : null;
+                    }
 
                     return PieChartSectionData(
-                      color: color,
+                      color: isSelected ? color.withValues(alpha: 0.85) : color,
                       value: e.totalAmount,
-                      title: '${percentage.toStringAsFixed(0)}%',
-                      radius: 50,
-                      titleStyle: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white),
+                      title: title,
+                      showTitle: title.isNotEmpty,
+                      titleStyle: titleStyle,
+                      radius: radius,
+                      badgeWidget: badgeWidget,
+                      badgePositionPercentageOffset: 0.98,
+                      titlePositionPercentageOffset:
+                          badgeWidget != null ? 0.55 : 0.98,
+                      borderSide: isSelected
+                          ? BorderSide(
+                              color: theme.colorScheme.surface,
+                              width: 3,
+                            )
+                          : BorderSide(
+                              color: color.withValues(alpha: 0.3), width: 1),
                     );
-                  }).toList(),
+                  }),
                 ),
               ),
             ),
             const SizedBox(height: 16),
-            ...incomes.take(5).map((e) {
+            ...List.generate(incomes.length, (index) {
+              final e = incomes[index];
+              final percentage =
+                  total > 0 ? (e.totalAmount / total) * 100 : 0.0;
               final color = e.category.color != null
                   ? Color(int.parse(e.category.color!.replaceAll('#', '0xFF')))
                   : AppColors.incomeColor;
-              final percentage = (e.totalAmount / total) * 100;
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Row(
-                  children: [
-                    Container(
-                        width: 12,
-                        height: 12,
-                        decoration: BoxDecoration(
-                            color: color, shape: BoxShape.circle)),
-                    const SizedBox(width: 8),
-                    Expanded(
+              final isSelected = selectedIndex == index;
+              final iconData = IconHelper.getIconData(e.category.icon);
+
+              return Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                decoration: BoxDecoration(
+                  color: theme.cardColor,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: isSelected
+                        ? color
+                        : theme.dividerColor.withValues(alpha: 0.5),
+                    width: isSelected ? 2.5 : 1,
+                  ),
+                ),
+                child: GestureDetector(
+                  onDoubleTap: () {
+                    final dateRange = ref.read(selectedDateRangeProvider);
+                    ref
+                        .read(transactionsPaginatedProvider.notifier)
+                        .applyFilters(TransactionFilters(
+                          type: 'INCOME',
+                          categoryUuids: [e.category.uuid],
+                          startDate: dateRange.startDate,
+                          endDate: dateRange.endDate,
+                        ));
+                    if (context.mounted) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              const TransactionsListScreen(),
+                        ),
+                      );
+                    }
+                  },
+                  child: InkWell(
+                    onTap: () {
+                      ref
+                          .read(selectedIncomeCategoryIndexProvider.notifier)
+                          .setIndex(selectedIndex == index ? null : index);
+                    },
+                    borderRadius: BorderRadius.circular(16),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
                       child: Row(
                         children: [
-                          Text(
-                            LocalizationHelper.getLocalizedCategoryName(
-                                context, e.category.name),
-                          ),
-                          const SizedBox(width: 8),
                           Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 2),
+                            width: 50,
+                            height: 50,
                             decoration: BoxDecoration(
                               color: color.withValues(alpha: 0.15),
-                              borderRadius: BorderRadius.circular(12),
+                              shape: BoxShape.circle,
                               border: Border.all(
-                                  color: color.withValues(alpha: 0.3),
-                                  width: 1),
+                                color: color.withValues(alpha: 0.4),
+                              ),
                             ),
-                            child: Text(
-                              '${percentage.toStringAsFixed(1)}%',
-                              style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                  color: color),
+                            alignment: Alignment.center,
+                            child: iconData != null
+                                ? Icon(iconData, size: 26, color: color)
+                                : Text(
+                                    e.category.name.isNotEmpty
+                                        ? e.category.name[0].toUpperCase()
+                                        : '?',
+                                    style: TextStyle(
+                                      color: color,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 20,
+                                    ),
+                                  ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  LocalizationHelper.getLocalizedCategoryName(
+                                      context, e.category.name),
+                                  style: theme.textTheme.titleSmall?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 8, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: color.withValues(alpha: 0.15),
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: color.withValues(alpha: 0.3),
+                                      width: 1,
+                                    ),
+                                  ),
+                                  child: Text(
+                                    '${percentage.toStringAsFixed(1)}%',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                      color: color,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Text(
+                            AmountFormatter.formatWithCurrency(
+                                e.totalAmount, currencySymbol, 2),
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
                         ],
                       ),
                     ),
-                    Text(
-                        AmountFormatter.formatWithCurrency(
-                            e.totalAmount, currencySymbol, 2),
-                        style: const TextStyle(fontWeight: FontWeight.bold)),
-                  ],
+                  ),
                 ),
               );
             }),
