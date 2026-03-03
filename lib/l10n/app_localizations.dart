@@ -4738,6 +4738,66 @@ abstract class AppLocalizations {
   /// **'Link copied to clipboard!'**
   String get linkCopied;
 
+  /// No description provided for @addToDashboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to dashboard'**
+  String get addToDashboard;
+
+  /// No description provided for @addedToDashboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Added to dashboard'**
+  String get addedToDashboard;
+
+  /// No description provided for @removeFromDashboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from dashboard'**
+  String get removeFromDashboard;
+
+  /// No description provided for @onDashboard.
+  ///
+  /// In en, this message translates to:
+  /// **'On dashboard'**
+  String get onDashboard;
+
+  /// No description provided for @pinToDashboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Pin to dashboard'**
+  String get pinToDashboard;
+
+  /// No description provided for @unpinFromDashboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Unpin from dashboard'**
+  String get unpinFromDashboard;
+
+  /// No description provided for @pinnedToDashboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Pinned to dashboard'**
+  String get pinnedToDashboard;
+
+  /// No description provided for @unpinnedFromDashboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Unpinned from dashboard'**
+  String get unpinnedFromDashboard;
+
+  /// No description provided for @reorderWidgetsOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Reorder widgets'**
+  String get reorderWidgetsOn;
+
+  /// No description provided for @reorderWidgetsOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Done reordering'**
+  String get reorderWidgetsOff;
+
   /// No description provided for @failedToShare.
   ///
   /// In en, this message translates to:

@@ -3,9 +3,18 @@ import 'package:flowpaisa/core/constants/app_constants.dart';
 import 'package:flowpaisa/features/whatsapp/domain/models/shared_data_models.dart';
 import 'package:uuid/uuid.dart';
 
+/// Result of parsing an entity open link (flowpaisa://open/transaction/uuid etc).
+class OpenLinkResult {
+  final String entityType; // 'transaction', 'category', 'contact', 'payable', 'receivable'
+  final String uuid;
+
+  const OpenLinkResult({required this.entityType, required this.uuid});
+}
+
 class DeepLinkService {
   static const String _scheme = AppConstants.deepLinkScheme;
   static const String _host = 'share';
+  static const String _openHost = 'open';
   static const String _webBaseUrl =
       'https://tamatasoft.github.io/flowpaisa/share';
 
@@ -169,6 +178,32 @@ class DeepLinkService {
       return SharedData.fromJson(jsonData);
     } catch (e) {
       // Invalid link format
+      return null;
+    }
+  }
+
+  /// Generate entity open link (for copy link on detail screens).
+  /// Format: flowpaisa://open/<entityType>/<uuid>
+  String generateEntityOpenLink(String entityType, String uuid) {
+    return '$_scheme://$_openHost/$entityType/$uuid';
+  }
+
+  /// Parse open link. Returns null if not an open link or invalid.
+  OpenLinkResult? parseOpenLink(String uriString) {
+    try {
+      final uri = Uri.parse(uriString);
+      if (uri.scheme != _scheme || uri.host != _openHost) return null;
+      final path = uri.path;
+      if (path.isEmpty || path == '/') return null;
+      final segments = path.split('/').where((s) => s.isNotEmpty).toList();
+      if (segments.length != 2) return null;
+      final entityType = segments[0];
+      final uuid = segments[1];
+      if (uuid.isEmpty) return null;
+      const allowed = ['transaction', 'category', 'contact', 'payable', 'receivable'];
+      if (!allowed.contains(entityType)) return null;
+      return OpenLinkResult(entityType: entityType, uuid: uuid);
+    } catch (_) {
       return null;
     }
   }

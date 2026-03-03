@@ -17,6 +17,10 @@ import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/features/premium/presentation/screens/premium_screen.dart';
+import 'package:flutter/services.dart';
+import 'package:flowpaisa/features/whatsapp/domain/deep_link_service.dart';
+import 'package:flowpaisa/features/dashboard/domain/dashboard_widget_models.dart';
+import 'package:flowpaisa/features/dashboard/presentation/providers/dashboard_widget_provider.dart';
 
 // Provider to get transactions for a contact
 // Note: We'll fetch this from the database directly in a future iteration
@@ -133,6 +137,66 @@ class ContactDetailsScreen extends ConsumerWidget {
                   ),
                 ),
                 actions: [
+                  IconButton(
+                    icon: const Icon(Icons.link),
+                    tooltip: l10n.copyLink,
+                    onPressed: () {
+                      final link = DeepLinkService()
+                          .generateEntityOpenLink('contact', contact.uuid);
+                      Clipboard.setData(ClipboardData(text: link));
+                      ToastUtils.showSuccessToast(context, ref, l10n.linkCopied);
+                    },
+                  ),
+                  Builder(
+                    builder: (context) {
+                      ref.watch(dashboardWidgetLayoutProvider);
+                      final notifier =
+                          ref.read(dashboardWidgetLayoutProvider.notifier);
+                      final isPinned = notifier.isPinned(
+                          DashboardWidgetKind.contact, contact.uuid);
+                      return IconButton(
+                        icon: Icon(
+                          isPinned ? Icons.push_pin : Icons.push_pin_outlined,
+                          color: isPinned
+                              ? Theme.of(context).colorScheme.primary
+                              : null,
+                        ),
+                        tooltip: isPinned
+                            ? l10n.unpinFromDashboard
+                            : l10n.pinToDashboard,
+                        onPressed: () async {
+                          if (isPinned) {
+                            final layout = ref
+                                    .read(dashboardWidgetLayoutProvider)
+                                    .value ??
+                                [];
+                            final idx = layout.indexWhere((c) =>
+                                c.kind == DashboardWidgetKind.contact &&
+                                c.contactUuid == contact.uuid);
+                            if (idx >= 0) {
+                              await ref
+                                  .read(dashboardWidgetLayoutProvider.notifier)
+                                  .removeAt(idx);
+                              if (context.mounted) {
+                                ToastUtils.showSuccessToast(context, ref,
+                                    l10n.unpinnedFromDashboard);
+                              }
+                            }
+                          } else {
+                            await ref
+                                .read(dashboardWidgetLayoutProvider.notifier)
+                                .addWidget(DashboardWidgetConfig(
+                                    kind: DashboardWidgetKind.contact,
+                                    contactUuid: contact.uuid));
+                            if (context.mounted) {
+                              ToastUtils.showSuccessToast(
+                                  context, ref, l10n.pinnedToDashboard);
+                            }
+                          }
+                        },
+                      );
+                    },
+                  ),
                   IconButton(
                     icon: const Icon(Icons.edit),
                     onPressed: () {

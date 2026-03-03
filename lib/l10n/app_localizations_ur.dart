@@ -2581,6 +2581,36 @@ class AppLocalizationsUr extends AppLocalizations {
   String get linkCopied => 'لنک کلپ بورڈ پر کاپی ہو گیا!';
 
   @override
+  String get addToDashboard => 'ڈیش بورڈ میں شامل کریں';
+
+  @override
+  String get addedToDashboard => 'ڈیش بورڈ میں شامل کر دیا گیا';
+
+  @override
+  String get removeFromDashboard => 'ڈیش بورڈ سے ہٹائیں';
+
+  @override
+  String get onDashboard => 'ڈیش بورڈ پر';
+
+  @override
+  String get pinToDashboard => 'ڈیش بورڈ پر پن کریں';
+
+  @override
+  String get unpinFromDashboard => 'ڈیش بورڈ سے ان پن کریں';
+
+  @override
+  String get pinnedToDashboard => 'ڈیش بورڈ پر پن ہو گیا';
+
+  @override
+  String get unpinnedFromDashboard => 'ڈیش بورڈ سے ان پن ہو گیا';
+
+  @override
+  String get reorderWidgetsOn => 'ویجٹ ترتیب دیں';
+
+  @override
+  String get reorderWidgetsOff => 'ترتیب ختم';
+
+  @override
   String failedToShare(String error) {
     return 'شیئر کرنے میں ناکامی: $error';
   }

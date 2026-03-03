@@ -1341,6 +1341,16 @@
   "sharePaymentAcknowledgment": "Share Payment Acknowledgment",
   "openingWhatsApp": "Opening WhatsApp...",
   "linkCopied": "Link copied to clipboard!",
+  "addToDashboard": "Add to dashboard",
+  "addedToDashboard": "Added to dashboard",
+  "removeFromDashboard": "Remove from dashboard",
+  "onDashboard": "On dashboard",
+  "pinToDashboard": "Pin to dashboard",
+  "unpinFromDashboard": "Unpin from dashboard",
+  "pinnedToDashboard": "Pinned to dashboard",
+  "unpinnedFromDashboard": "Unpinned from dashboard",
+  "reorderWidgetsOn": "Reorder widgets",
+  "reorderWidgetsOff": "Done reordering",
   "failedToShare": "Failed to share: {error}",
   "@failedToShare": {
     "placeholders": {

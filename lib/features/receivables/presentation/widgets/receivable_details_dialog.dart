@@ -23,6 +23,10 @@ import 'package:flowpaisa/features/receivables/presentation/screens/edit_receiva
 import 'package:flowpaisa/features/messages/presentation/providers/message_template_provider.dart';
 import 'package:flowpaisa/features/whatsapp/presentation/providers/whatsapp_provider.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
+import 'package:flutter/services.dart';
+import 'package:flowpaisa/features/whatsapp/domain/deep_link_service.dart';
+import 'package:flowpaisa/features/dashboard/domain/dashboard_widget_models.dart';
+import 'package:flowpaisa/features/dashboard/presentation/providers/dashboard_widget_provider.dart';
 
 class ReceivableDetailsDialog extends ConsumerWidget {
   final String receivableUuid;
@@ -72,86 +76,55 @@ class ReceivableDetailsDialog extends ConsumerWidget {
           appBar: AppBar(
             title: Text(l10n.receivableDetails),
             actions: [
-              // Share button
-              IconButton(
-                icon: const Icon(Icons.share),
-                onPressed: () {
-                  final capturedCurrency = currency;
-                  final capturedUserProfile = ref.read(userProfileProvider);
-                  final capturedTransactionService =
-                      ref.read(transactionServiceProvider);
-                  final capturedWhatsAppService =
-                      ref.read(whatsAppServiceProvider);
-                  final capturedTemplateService =
-                      ref.read(messageTemplateServiceProvider);
-                  final capturedLanguage = getCurrentLanguageCode(ref);
-
-                  ShareHelper.shareReceivable(
-                    context,
-                    ref,
-                    receivable,
-                    contact,
-                    currencyOverride: capturedCurrency,
-                    userProfileOverride: capturedUserProfile,
-                    transactionServiceOverride: capturedTransactionService,
-                    whatsAppServiceOverride: capturedWhatsAppService,
-                    templateServiceOverride: capturedTemplateService,
-                    languageOverride: capturedLanguage,
-                  );
-                },
-              ),
-              // Duplicate button
-              IconButton(
-                icon: const Icon(Icons.copy),
-                tooltip: l10n.duplicate,
-                onPressed: () {
-                  int dueDateOffset = 0;
-                  if (receivable.dueDate != null) {
-                    dueDateOffset =
-                        receivable.dueDate!.difference(receivable.date).inDays;
-                  }
-
-                  final now = DateTime.now();
-                  final initialDueDate = dueDateOffset != 0
-                      ? now.add(Duration(days: dueDateOffset))
-                      : null;
-
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => AddReceivableScreen(
-                        initialAmount: receivable.amount,
-                        initialDate: now,
-                        initialDescription: receivable.description,
-                        initialContactName: contact?.name,
-                        initialContactPhone: contact?.phone,
-                        initialDueDate: initialDueDate,
-                      ),
+              Builder(
+                builder: (context) {
+                  ref.watch(dashboardWidgetLayoutProvider);
+                  final notifier =
+                      ref.read(dashboardWidgetLayoutProvider.notifier);
+                  final isPinned = notifier.isPinned(
+                      DashboardWidgetKind.receivable, receivable.uuid);
+                  return IconButton(
+                    icon: Icon(
+                      isPinned ? Icons.push_pin : Icons.push_pin_outlined,
+                      color: isPinned
+                          ? Theme.of(context).colorScheme.primary
+                          : null,
                     ),
+                    tooltip:
+                        isPinned ? l10n.unpinFromDashboard : l10n.pinToDashboard,
+                    onPressed: () async {
+                      if (isPinned) {
+                        final layout = ref
+                                .read(dashboardWidgetLayoutProvider)
+                                .value ??
+                            [];
+                        final idx = layout.indexWhere((c) =>
+                            c.kind == DashboardWidgetKind.receivable &&
+                            c.receivableUuid == receivable.uuid);
+                        if (idx >= 0) {
+                          await ref
+                              .read(dashboardWidgetLayoutProvider.notifier)
+                              .removeAt(idx);
+                          if (context.mounted) {
+                            ToastUtils.showSuccessToast(context, ref,
+                                l10n.unpinnedFromDashboard);
+                          }
+                        }
+                      } else {
+                        await ref
+                            .read(dashboardWidgetLayoutProvider.notifier)
+                            .addWidget(DashboardWidgetConfig(
+                                kind: DashboardWidgetKind.receivable,
+                                receivableUuid: receivable.uuid));
+                        if (context.mounted) {
+                          ToastUtils.showSuccessToast(
+                              context, ref, l10n.pinnedToDashboard);
+                        }
+                      }
+                    },
                   );
                 },
               ),
-              // Edit button (hide if received or linked)
-              if (_canEditReceivable(receivable))
-                IconButton(
-                  icon: const Icon(Icons.edit),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => EditReceivableScreen(
-                            receivableUuid: receivable.uuid),
-                      ),
-                    );
-                  },
-                ),
-              // Delete button (hide if received)
-              if (receivable.status != 'RECEIVED')
-                IconButton(
-                  icon: const Icon(Icons.delete),
-                  onPressed: () =>
-                      _deleteReceivable(context, ref, receivable.uuid),
-                ),
             ],
           ),
           body: SingleChildScrollView(
@@ -235,6 +208,98 @@ class ReceivableDetailsDialog extends ConsumerWidget {
                           ),
                         ),
                       ],
+                      const SizedBox(height: 16),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.link, color: Colors.white, size: 22),
+                            tooltip: l10n.copyLink,
+                            onPressed: () {
+                              final link = DeepLinkService().generateEntityOpenLink(
+                                  'receivable', receivable.uuid);
+                              Clipboard.setData(ClipboardData(text: link));
+                              ToastUtils.showSuccessToast(context, ref, l10n.linkCopied);
+                            },
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.share, color: Colors.white, size: 22),
+                            tooltip: l10n.share,
+                            onPressed: () {
+                              final capturedCurrency = currency;
+                              final capturedUserProfile = ref.read(userProfileProvider);
+                              final capturedTransactionService =
+                                  ref.read(transactionServiceProvider);
+                              final capturedWhatsAppService =
+                                  ref.read(whatsAppServiceProvider);
+                              final capturedTemplateService =
+                                  ref.read(messageTemplateServiceProvider);
+                              final capturedLanguage = getCurrentLanguageCode(ref);
+                              ShareHelper.shareReceivable(
+                                context,
+                                ref,
+                                receivable,
+                                contact,
+                                currencyOverride: capturedCurrency,
+                                userProfileOverride: capturedUserProfile,
+                                transactionServiceOverride: capturedTransactionService,
+                                whatsAppServiceOverride: capturedWhatsAppService,
+                                templateServiceOverride: capturedTemplateService,
+                                languageOverride: capturedLanguage,
+                              );
+                            },
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.copy, color: Colors.white, size: 22),
+                            tooltip: l10n.duplicate,
+                            onPressed: () {
+                              int dueDateOffset = 0;
+                              if (receivable.dueDate != null) {
+                                dueDateOffset =
+                                    receivable.dueDate!.difference(receivable.date).inDays;
+                              }
+                              final now = DateTime.now();
+                              final initialDueDate = dueDateOffset != 0
+                                  ? now.add(Duration(days: dueDateOffset))
+                                  : null;
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => AddReceivableScreen(
+                                    initialAmount: receivable.amount,
+                                    initialDate: now,
+                                    initialDescription: receivable.description,
+                                    initialContactName: contact?.name,
+                                    initialContactPhone: contact?.phone,
+                                    initialDueDate: initialDueDate,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                          if (_canEditReceivable(receivable))
+                            IconButton(
+                              icon: const Icon(Icons.edit, color: Colors.white, size: 22),
+                              tooltip: l10n.editReceivable,
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => EditReceivableScreen(
+                                        receivableUuid: receivable.uuid),
+                                  ),
+                                );
+                              },
+                            ),
+                          if (receivable.status != 'RECEIVED')
+                            IconButton(
+                              icon: const Icon(Icons.delete, color: Colors.white, size: 22),
+                              tooltip: l10n.delete,
+                              onPressed: () =>
+                                  _deleteReceivable(context, ref, receivable.uuid),
+                            ),
+                        ],
+                      ),
                     ],
                   ),
                 ),

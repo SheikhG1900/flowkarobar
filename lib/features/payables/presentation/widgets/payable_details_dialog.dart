@@ -22,6 +22,10 @@ import 'package:flowpaisa/features/payables/presentation/screens/edit_payable_sc
 import 'package:flowpaisa/features/messages/presentation/providers/message_template_provider.dart';
 import 'package:flowpaisa/features/whatsapp/presentation/providers/whatsapp_provider.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
+import 'package:flutter/services.dart';
+import 'package:flowpaisa/features/whatsapp/domain/deep_link_service.dart';
+import 'package:flowpaisa/features/dashboard/domain/dashboard_widget_models.dart';
+import 'package:flowpaisa/features/dashboard/presentation/providers/dashboard_widget_provider.dart';
 
 class PayableDetailsDialog extends ConsumerWidget {
   final String payableUuid;
@@ -70,85 +74,55 @@ class PayableDetailsDialog extends ConsumerWidget {
           appBar: AppBar(
             title: Text(l10n.payableDetails),
             actions: [
-              // Share button
-              IconButton(
-                icon: const Icon(Icons.share),
-                onPressed: () {
-                  final capturedCurrency = currency;
-                  final capturedUserProfile = ref.read(userProfileProvider);
-                  final capturedTransactionService =
-                      ref.read(transactionServiceProvider);
-                  final capturedWhatsAppService =
-                      ref.read(whatsAppServiceProvider);
-                  final capturedTemplateService =
-                      ref.read(messageTemplateServiceProvider);
-                  final capturedLanguage = getCurrentLanguageCode(ref);
-
-                  ShareHelper.sharePayable(
-                    context,
-                    ref,
-                    payable,
-                    contact,
-                    currencyOverride: capturedCurrency,
-                    userProfileOverride: capturedUserProfile,
-                    transactionServiceOverride: capturedTransactionService,
-                    whatsAppServiceOverride: capturedWhatsAppService,
-                    templateServiceOverride: capturedTemplateService,
-                    languageOverride: capturedLanguage,
-                  );
-                },
-              ),
-              // Duplicate button
-              IconButton(
-                icon: const Icon(Icons.copy),
-                tooltip: l10n.duplicate,
-                onPressed: () {
-                  int dueDateOffset = 0;
-                  if (payable.dueDate != null) {
-                    dueDateOffset =
-                        payable.dueDate!.difference(payable.date).inDays;
-                  }
-
-                  final now = DateTime.now();
-                  final initialDueDate = dueDateOffset != 0
-                      ? now.add(Duration(days: dueDateOffset))
-                      : null;
-
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => AddPayableScreen(
-                        initialAmount: payable.amount,
-                        initialDate: now,
-                        initialDescription: payable.description,
-                        initialContactName: contact?.name,
-                        initialContactPhone: contact?.phone,
-                        initialDueDate: initialDueDate,
-                      ),
+              Builder(
+                builder: (context) {
+                  ref.watch(dashboardWidgetLayoutProvider);
+                  final notifier =
+                      ref.read(dashboardWidgetLayoutProvider.notifier);
+                  final isPinned = notifier.isPinned(
+                      DashboardWidgetKind.payable, payable.uuid);
+                  return IconButton(
+                    icon: Icon(
+                      isPinned ? Icons.push_pin : Icons.push_pin_outlined,
+                      color: isPinned
+                          ? Theme.of(context).colorScheme.primary
+                          : null,
                     ),
+                    tooltip:
+                        isPinned ? l10n.unpinFromDashboard : l10n.pinToDashboard,
+                    onPressed: () async {
+                      if (isPinned) {
+                        final layout = ref
+                                .read(dashboardWidgetLayoutProvider)
+                                .value ??
+                            [];
+                        final idx = layout.indexWhere((c) =>
+                            c.kind == DashboardWidgetKind.payable &&
+                            c.payableUuid == payable.uuid);
+                        if (idx >= 0) {
+                          await ref
+                              .read(dashboardWidgetLayoutProvider.notifier)
+                              .removeAt(idx);
+                          if (context.mounted) {
+                            ToastUtils.showSuccessToast(context, ref,
+                                l10n.unpinnedFromDashboard);
+                          }
+                        }
+                      } else {
+                        await ref
+                            .read(dashboardWidgetLayoutProvider.notifier)
+                            .addWidget(DashboardWidgetConfig(
+                                kind: DashboardWidgetKind.payable,
+                                payableUuid: payable.uuid));
+                        if (context.mounted) {
+                          ToastUtils.showSuccessToast(
+                              context, ref, l10n.pinnedToDashboard);
+                        }
+                      }
+                    },
                   );
                 },
               ),
-              // Edit button (hide if paid or linked)
-              if (_canEditPayable(payable))
-                IconButton(
-                  icon: const Icon(Icons.edit),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            EditPayableScreen(payableUuid: payable.uuid),
-                      ),
-                    );
-                  },
-                ),
-              // Delete button (hide if paid)
-              if (payable.status != 'PAID')
-                IconButton(
-                  icon: const Icon(Icons.delete),
-                  onPressed: () => _deletePayable(context, ref, payable.uuid),
-                ),
             ],
           ),
           body: SingleChildScrollView(
@@ -229,6 +203,97 @@ class PayableDetailsDialog extends ConsumerWidget {
                           ),
                         ),
                       ],
+                      const SizedBox(height: 16),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.link, color: Colors.white, size: 22),
+                            tooltip: l10n.copyLink,
+                            onPressed: () {
+                              final link = DeepLinkService()
+                                  .generateEntityOpenLink('payable', payable.uuid);
+                              Clipboard.setData(ClipboardData(text: link));
+                              ToastUtils.showSuccessToast(context, ref, l10n.linkCopied);
+                            },
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.share, color: Colors.white, size: 22),
+                            tooltip: l10n.share,
+                            onPressed: () {
+                              final capturedCurrency = currency;
+                              final capturedUserProfile = ref.read(userProfileProvider);
+                              final capturedTransactionService =
+                                  ref.read(transactionServiceProvider);
+                              final capturedWhatsAppService =
+                                  ref.read(whatsAppServiceProvider);
+                              final capturedTemplateService =
+                                  ref.read(messageTemplateServiceProvider);
+                              final capturedLanguage = getCurrentLanguageCode(ref);
+                              ShareHelper.sharePayable(
+                                context,
+                                ref,
+                                payable,
+                                contact,
+                                currencyOverride: capturedCurrency,
+                                userProfileOverride: capturedUserProfile,
+                                transactionServiceOverride: capturedTransactionService,
+                                whatsAppServiceOverride: capturedWhatsAppService,
+                                templateServiceOverride: capturedTemplateService,
+                                languageOverride: capturedLanguage,
+                              );
+                            },
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.copy, color: Colors.white, size: 22),
+                            tooltip: l10n.duplicate,
+                            onPressed: () {
+                              int dueDateOffset = 0;
+                              if (payable.dueDate != null) {
+                                dueDateOffset =
+                                    payable.dueDate!.difference(payable.date).inDays;
+                              }
+                              final now = DateTime.now();
+                              final initialDueDate = dueDateOffset != 0
+                                  ? now.add(Duration(days: dueDateOffset))
+                                  : null;
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => AddPayableScreen(
+                                    initialAmount: payable.amount,
+                                    initialDate: now,
+                                    initialDescription: payable.description,
+                                    initialContactName: contact?.name,
+                                    initialContactPhone: contact?.phone,
+                                    initialDueDate: initialDueDate,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                          if (_canEditPayable(payable))
+                            IconButton(
+                              icon: const Icon(Icons.edit, color: Colors.white, size: 22),
+                              tooltip: l10n.editPayable,
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        EditPayableScreen(payableUuid: payable.uuid),
+                                  ),
+                                );
+                              },
+                            ),
+                          if (payable.status != 'PAID')
+                            IconButton(
+                              icon: const Icon(Icons.delete, color: Colors.white, size: 22),
+                              tooltip: l10n.delete,
+                              onPressed: () => _deletePayable(context, ref, payable.uuid),
+                            ),
+                        ],
+                      ),
                     ],
                   ),
                 ),

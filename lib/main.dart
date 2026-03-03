@@ -50,6 +50,10 @@ import 'package:flowpaisa/features/cashbooks/presentation/screens/cashbooks_scre
 import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
 
 import 'package:flowpaisa/features/dashboard/presentation/widgets/sync_status_section.dart';
+import 'package:flowpaisa/features/dashboard/domain/dashboard_widget_models.dart';
+import 'package:flowpaisa/features/dashboard/presentation/providers/dashboard_widget_provider.dart';
+import 'package:flowpaisa/features/dashboard/presentation/widgets/dashboard_entity_widget_card.dart';
+import 'package:flowpaisa/features/dashboard/presentation/widgets/dashboard_summary_widget_card.dart';
 import 'package:flowpaisa/shared/providers/shared_preferences_provider.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
@@ -1398,6 +1402,33 @@ class _DashboardTab extends ConsumerWidget {
               ),
             ),
 
+            // Dashboard widgets (summary + entity) with reorder and add
+            SliverToBoxAdapter(
+              child: Consumer(
+                builder: (context, ref, _) {
+                  final layoutAsync =
+                      ref.watch(effectiveDashboardWidgetLayoutProvider);
+                  final reorderMode = ref.watch(dashboardReorderModeProvider);
+                  return layoutAsync.when(
+                    data: (configs) =>
+                        _buildDashboardWidgetsSection(
+                            context, ref, theme, l10n, configs, reorderMode),
+                    loading: () {
+                      final configs = ref
+                          .read(dashboardWidgetLayoutProvider)
+                          .value;
+                      if (configs == null || configs.isEmpty) {
+                        return const SizedBox.shrink();
+                      }
+                      return _buildDashboardWidgetsSection(
+                          context, ref, theme, l10n, configs, reorderMode);
+                    },
+                    error: (_, __) => const SizedBox.shrink(),
+                  );
+                },
+              ),
+            ),
+
             // Recent Transactions Header
             SliverToBoxAdapter(
               child: EntranceAnimation(
@@ -1452,6 +1483,172 @@ class _DashboardTab extends ConsumerWidget {
               hasScrollBody: false,
               child: SizedBox.shrink(),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  static Widget _buildDashboardWidgetsSection(
+    BuildContext context,
+    WidgetRef ref,
+    ThemeData theme,
+    AppLocalizations l10n,
+    List<DashboardWidgetConfig> configs,
+    bool reorderMode,
+  ) {
+    if (configs.isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 24, 16, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                l10n.onDashboard,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    icon: Icon(
+                      Icons.reorder,
+                      color: reorderMode
+                          ? theme.colorScheme.primary
+                          : theme.iconTheme.color?.withValues(alpha: 0.7),
+                    ),
+                    tooltip: reorderMode
+                        ? l10n.reorderWidgetsOff
+                        : l10n.reorderWidgetsOn,
+                    onPressed: () {
+                      ref.read(dashboardReorderModeProvider.notifier).toggle();
+                    },
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.add_circle_outline),
+                    tooltip: l10n.addToDashboard,
+                    onPressed: () => _showAddWidgetSheet(
+                        context, ref, theme, l10n),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          reorderMode
+              ? ReorderableListView(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  buildDefaultDragHandles: false,
+                  onReorder: (oldIndex, newIndex) {
+                    if (newIndex > oldIndex) newIndex--;
+                    ref
+                        .read(dashboardWidgetLayoutProvider.notifier)
+                        .reorder(oldIndex, newIndex);
+                  },
+                  children: [
+                    for (var i = 0; i < configs.length; i++)
+                      KeyedSubtree(
+                        key: configs[i].kind.isEntity
+                            ? ValueKey(
+                                'entity-$i-${configs[i].entityUuid}')
+                            : ValueKey(
+                                'summary-$i-${configs[i].kind.name}'),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            ReorderableDragStartListener(
+                              index: i,
+                              child: Padding(
+                                padding: const EdgeInsets.only(
+                                    right: 8, top: 16),
+                                child: Icon(
+                                  Icons.drag_handle,
+                                  color: theme.iconTheme.color
+                                      ?.withValues(alpha: 0.7),
+                                  size: 24,
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              child: configs[i].kind.isEntity
+                                  ? DashboardEntityWidgetCard(
+                                      config: configs[i],
+                                      layoutIndex: i,
+                                    )
+                                  : DashboardSummaryWidgetCard(
+                                      config: configs[i],
+                                      layoutIndex: i,
+                                      reorderKey: ValueKey(
+                                          'summary-$i-${configs[i].kind.name}'),
+                                    ),
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
+                )
+              : Column(
+                  children: [
+                    for (var i = 0; i < configs.length; i++)
+                      configs[i].kind.isEntity
+                          ? DashboardEntityWidgetCard(
+                              config: configs[i],
+                              layoutIndex: i,
+                            )
+                          : DashboardSummaryWidgetCard(
+                              config: configs[i],
+                              layoutIndex: i,
+                              reorderKey: ValueKey(
+                                  'summary-$i-${configs[i].kind.name}'),
+                            ),
+                  ],
+                ),
+        ],
+      ),
+    );
+  }
+
+  static void _showAddWidgetSheet(
+      BuildContext context, WidgetRef ref, ThemeData theme, AppLocalizations l10n) {
+    final summaryKinds = [
+      (DashboardWidgetKind.balance, l10n.availableCash, Icons.account_balance_wallet_outlined),
+      (DashboardWidgetKind.cashFlow, l10n.cashFlow, Icons.trending_up),
+      (DashboardWidgetKind.receivablesSummary, l10n.receivableTag, Icons.call_received),
+      (DashboardWidgetKind.payablesSummary, l10n.payableTag, Icons.call_made),
+      (DashboardWidgetKind.contactsSummary, l10n.contacts, Icons.people_outline),
+      (DashboardWidgetKind.categoriesSummary, l10n.categories, Icons.category_outlined),
+    ];
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(
+                l10n.addToDashboard,
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            ...summaryKinds.map((e) => ListTile(
+                  leading: Icon(e.$3),
+                  title: Text(e.$2),
+                  onTap: () async {
+                    await ref
+                        .read(dashboardWidgetLayoutProvider.notifier)
+                        .addWidget(DashboardWidgetConfig(kind: e.$1));
+                    if (ctx.mounted) Navigator.pop(ctx);
+                  },
+                )),
           ],
         ),
       ),

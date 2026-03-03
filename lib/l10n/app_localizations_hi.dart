@@ -2573,6 +2573,36 @@ class AppLocalizationsHi extends AppLocalizations {
   String get linkCopied => 'लिंक क्लिपबोर्ड पर कॉपी किया गया!';
 
   @override
+  String get addToDashboard => 'डैशबोर्ड में जोड़ें';
+
+  @override
+  String get addedToDashboard => 'डैशबोर्ड में जोड़ दिया गया';
+
+  @override
+  String get removeFromDashboard => 'डैशबोर्ड से हटाएं';
+
+  @override
+  String get onDashboard => 'डैशबोर्ड पर';
+
+  @override
+  String get pinToDashboard => 'डैशबोर्ड पर पिन करें';
+
+  @override
+  String get unpinFromDashboard => 'डैशबोर्ड से अनपिन करें';
+
+  @override
+  String get pinnedToDashboard => 'डैशबोर्ड पर पिन किया गया';
+
+  @override
+  String get unpinnedFromDashboard => 'डैशबोर्ड से अनपिन किया गया';
+
+  @override
+  String get reorderWidgetsOn => 'विजेट क्रम बदलें';
+
+  @override
+  String get reorderWidgetsOff => 'क्रम बदलना समाप्त';
+
+  @override
   String failedToShare(String error) {
     return 'साझा करने में विफल: $error';
   }

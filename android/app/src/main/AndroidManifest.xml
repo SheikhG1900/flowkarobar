@@ -60,12 +60,19 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
-            <!-- Deep Link Handler for flowpaisa:// URLs -->
+            <!-- Deep Link Handler for flowpaisa://share (import dialog) -->
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="flowpaisa" android:host="share" />
+            </intent-filter>
+            <!-- Open entity links: flowpaisa://open/transaction/uuid etc -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="flowpaisa" android:host="open" android:pathPrefix="/" />
             </intent-filter>
 
             <!-- App Link Handler for https://tamatasoft.github.io URLs -->

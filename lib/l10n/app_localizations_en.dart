@@ -2565,6 +2565,36 @@ class AppLocalizationsEn extends AppLocalizations {
   String get linkCopied => 'Link copied to clipboard!';
 
   @override
+  String get addToDashboard => 'Add to dashboard';
+
+  @override
+  String get addedToDashboard => 'Added to dashboard';
+
+  @override
+  String get removeFromDashboard => 'Remove from dashboard';
+
+  @override
+  String get onDashboard => 'On dashboard';
+
+  @override
+  String get pinToDashboard => 'Pin to dashboard';
+
+  @override
+  String get unpinFromDashboard => 'Unpin from dashboard';
+
+  @override
+  String get pinnedToDashboard => 'Pinned to dashboard';
+
+  @override
+  String get unpinnedFromDashboard => 'Unpinned from dashboard';
+
+  @override
+  String get reorderWidgetsOn => 'Reorder widgets';
+
+  @override
+  String get reorderWidgetsOff => 'Done reordering';
+
+  @override
   String failedToShare(String error) {
     return 'Failed to share: $error';
   }

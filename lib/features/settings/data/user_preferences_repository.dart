@@ -19,6 +19,7 @@ class UserPreferencesRepository {
   static const String keyFontEn = 'font_en';
   static const String keyFontHi = 'font_hi';
   static const String keyFontUr = 'font_ur';
+  static const String keyDashboardWidgetLayout = 'dashboard_widget_layout';
 
   // Get a preference value by key
   Future<String?> getPreference(String key) async {
@@ -166,6 +167,15 @@ class UserPreferencesRepository {
       default:
         return keyFontEn;
     }
+  }
+
+  // Dashboard widget layout (JSON list of DashboardWidgetConfig)
+  Future<String?> getDashboardWidgetLayout() async {
+    return getPreference(keyDashboardWidgetLayout);
+  }
+
+  Future<void> setDashboardWidgetLayout(String jsonValue) async {
+    await setPreference(keyDashboardWidgetLayout, jsonValue);
   }
 
   // Get all preferences as a map

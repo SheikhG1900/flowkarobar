@@ -6,6 +6,11 @@ import 'package:flowpaisa/features/whatsapp/domain/deep_link_service.dart';
 import 'package:flowpaisa/features/whatsapp/domain/models/shared_data_models.dart';
 import 'package:flowpaisa/shared/widgets/import_dialog.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
+import 'package:flowpaisa/features/transactions/presentation/widgets/transaction_details_dialog.dart';
+import 'package:flowpaisa/features/payables/presentation/widgets/payable_details_dialog.dart';
+import 'package:flowpaisa/features/receivables/presentation/widgets/receivable_details_dialog.dart';
+import 'package:flowpaisa/features/contacts/presentation/screens/contact_details_screen.dart';
+import 'package:flowpaisa/features/categories/presentation/screens/category_details_screen.dart';
 
 class DeepLinkHandler {
   final DeepLinkService _deepLinkService;
@@ -51,16 +56,81 @@ class DeepLinkHandler {
       return;
     }
 
+    // Entity open links (flowpaisa://open/transaction/uuid etc) — navigate to detail
+    final openResult = _deepLinkService.parseOpenLink(uriString);
+    if (openResult != null) {
+      await _navigateToEntity(openResult);
+      return;
+    }
+
+    // Share links (flowpaisa://share?type=...&data=...) — decode and show import dialog
     final sharedData = _deepLinkService.decodeLink(uriString);
 
     if (sharedData == null) {
-      // Invalid link - show error
       _showErrorSnackBar('Invalid link format');
       return;
     }
 
-    // Show import dialog based on the data type
     await _showImportDialog(sharedData);
+  }
+
+  Future<void> _navigateToEntity(OpenLinkResult result) async {
+    if (_context == null || !_context!.mounted) return;
+    final context = _context!;
+    switch (result.entityType) {
+      case 'transaction':
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => TransactionDetailsDialog(
+              transactionUuid: result.uuid,
+            ),
+          ),
+        );
+        break;
+      case 'category':
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => CategoryDetailsScreen(
+              categoryUuid: result.uuid,
+            ),
+          ),
+        );
+        break;
+      case 'contact':
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ContactDetailsScreen(
+              contactUuid: result.uuid,
+            ),
+          ),
+        );
+        break;
+      case 'payable':
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => PayableDetailsDialog(
+              payableUuid: result.uuid,
+            ),
+          ),
+        );
+        break;
+      case 'receivable':
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ReceivableDetailsDialog(
+              receivableUuid: result.uuid,
+            ),
+          ),
+        );
+        break;
+      default:
+        _showErrorSnackBar('Unknown link type');
+    }
   }
 
   /// Show the import dialog for the shared data
