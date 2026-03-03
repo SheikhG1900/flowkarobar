@@ -142,7 +142,7 @@ class ContactDetailsScreen extends ConsumerWidget {
                     tooltip: l10n.copyLink,
                     onPressed: () {
                       final link = DeepLinkService()
-                          .generateEntityOpenLink('contact', contact.uuid);
+                          .generateEntityOpenLinkHttps('contact', contact.uuid);
                       Clipboard.setData(ClipboardData(text: link));
                       ToastUtils.showSuccessToast(context, ref, l10n.linkCopied);
                     },

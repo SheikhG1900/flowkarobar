@@ -17,6 +17,9 @@ class DeepLinkService {
   static const String _openHost = 'open';
   static const String _webBaseUrl =
       'https://tamatasoft.github.io/flowpaisa/share';
+  /// HTTPS URL for entity open (display / share). Same path as deep link.
+  static const String _webOpenBaseUrl =
+      'https://tamatasoft.github.io/flowpaisa/open';
 
   /// Shorten a UUID by removing dashes and taking a stable prefix
   static String shortenUuid(String uuid) {
@@ -186,6 +189,12 @@ class DeepLinkService {
   /// Format: flowpaisa://open/<entityType>/<uuid>
   String generateEntityOpenLink(String entityType, String uuid) {
     return '$_scheme://$_openHost/$entityType/$uuid';
+  }
+
+  /// HTTPS version of entity open link for display (clickable in chats, etc.).
+  /// Keeps same path so web can redirect to app. Copy still uses deep link.
+  String generateEntityOpenLinkHttps(String entityType, String uuid) {
+    return '$_webOpenBaseUrl/$entityType/$uuid';
   }
 
   /// Parse open link. Returns null if not an open link or invalid.

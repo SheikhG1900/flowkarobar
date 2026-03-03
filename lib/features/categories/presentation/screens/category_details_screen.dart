@@ -51,7 +51,7 @@ class CategoryDetailsScreen extends ConsumerWidget {
                   tooltip: l10n.copyLink,
                   onPressed: () {
                     final link = DeepLinkService()
-                        .generateEntityOpenLink('category', category.uuid);
+                        .generateEntityOpenLinkHttps('category', category.uuid);
                     Clipboard.setData(ClipboardData(text: link));
                     ToastUtils.showSuccessToast(context, ref, l10n.linkCopied);
                   },
