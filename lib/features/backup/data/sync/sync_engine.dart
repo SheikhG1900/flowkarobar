@@ -623,7 +623,7 @@ class SyncEngine {
 
     // CRITICAL: Use a transaction for the entire batch of changes
     await _db.transaction(() async {
-      // Contacts and Categories should be first, then Transactions, then linked tables
+      // Contacts and Categories should be first, then Transactions, then linked tables, then preferences
       final tableOrder = [
         'categories',
         'contacts',
@@ -632,7 +632,8 @@ class SyncEngine {
         'receivables',
         'payables',
         'reminders',
-        'transaction_schedules'
+        'transaction_schedules',
+        'user_preferences',
       ];
 
       // CRITICAL: Filter out metadata keys like '_summary' BEFORE processing
@@ -713,6 +714,8 @@ class SyncEngine {
                 return _db.appCurrencies;
               case 'transaction_schedules':
                 return _db.transactionSchedules;
+              case 'user_preferences':
+                return _db.userPreferences;
               default:
                 return null;
             }
@@ -754,7 +757,8 @@ class SyncEngine {
       'payables',
       'reminders',
       'app_currencies',
-      'transaction_schedules'
+      'transaction_schedules',
+      'user_preferences',
     ];
 
     if (kDebugMode) {
@@ -833,10 +837,13 @@ class SyncEngine {
           updatedTables.add(tableName);
         }
         for (final row in rows) {
-          final uuid = row['uuid'];
+          final idColumn = tableName == 'user_preferences' ? 'key' : 'uuid';
+          final idValue = tableName == 'user_preferences'
+              ? row['key']
+              : row['uuid'];
           await _db.customStatement(
-            'UPDATE $tableName SET is_not_synced = 0 WHERE uuid = ?',
-            [uuid],
+            'UPDATE $tableName SET is_not_synced = 0 WHERE $idColumn = ?',
+            [idValue],
           );
         }
       }
@@ -863,6 +870,8 @@ class SyncEngine {
                 return _db.appCurrencies;
               case 'transaction_schedules':
                 return _db.transactionSchedules;
+              case 'user_preferences':
+                return _db.userPreferences;
               default:
                 return null;
             }
@@ -935,11 +944,13 @@ class SyncEngine {
     final columns = sqlData.keys.join(', ');
     final placeholders = List.filled(sqlData.length, '?').join(', ');
     final updates = sqlData.keys.map((k) => '$k = EXCLUDED.$k').join(', ');
+    final conflictColumn =
+        tableName == 'user_preferences' ? 'key' : 'uuid';
 
     try {
       await _db.customStatement(
         'INSERT INTO $tableName ($columns) VALUES ($placeholders) '
-        'ON CONFLICT(uuid) DO UPDATE SET $updates',
+        'ON CONFLICT($conflictColumn) DO UPDATE SET $updates',
         sqlData.values.toList(),
       );
     } catch (e) {

@@ -28,7 +28,8 @@ final currencyInitializerProvider = FutureProvider<void>((ref) async {
       print(
           '💵 Currency Initializer: Found currency: ${currency.name} (${currency.symbol})');
       await prefsRepository.setPreference(
-          'selected_currency_id', currency.uuid);
+          'selected_currency_id', currency.uuid,
+          markUnsynced: false);
     } else {
       print(
           '💵 Currency Initializer: Currency code $currencyCode not found, using default');
@@ -37,9 +38,11 @@ final currencyInitializerProvider = FutureProvider<void>((ref) async {
       print(
           '💵 Currency Initializer: Using default: ${defaultCurrency.name} (${defaultCurrency.symbol})');
       await prefsRepository.setPreference(
-          'selected_currency_id', defaultCurrency.uuid);
+          'selected_currency_id', defaultCurrency.uuid,
+          markUnsynced: false);
     }
-    await prefsRepository.setPreference('currency_initialized', 'true');
+    await prefsRepository.setPreference('currency_initialized', 'true',
+        markUnsynced: false);
     print('💵 Currency Initializer: Initialization complete');
   } else {
     print('💵 Currency Initializer: Already initialized');

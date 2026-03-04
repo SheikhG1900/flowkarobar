@@ -190,6 +190,9 @@ class UserPreferences extends Table {
   TextColumn get key => text().unique()();
   TextColumn get value => text()();
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+  BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
+  /// Default false so first-install / default data stays clean; set true when user changes a preference.
+  BoolColumn get isNotSynced => boolean().withDefault(const Constant(false))();
 }
 
 class SyncLog extends Table {
@@ -291,7 +294,7 @@ class AppDatabase extends _$AppDatabase {
       : super(executor ?? openConnection(fileName));
 
   @override
-  int get schemaVersion => 15;
+  int get schemaVersion => 17;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -363,6 +366,30 @@ class AppDatabase extends _$AppDatabase {
               if (kDebugMode) {
                 print(
                     'Migration: Column linked_group_id might already exist on Transactions: $e');
+              }
+            }
+          }
+
+          // Migration from version 15 to 16: Add is_not_synced to UserPreferences (for sync)
+          if (from <= 15) {
+            try {
+              await m.addColumn(userPreferences, userPreferences.isNotSynced);
+            } catch (e) {
+              if (kDebugMode) {
+                print(
+                    'Migration: Column is_not_synced might already exist on user_preferences: $e');
+              }
+            }
+          }
+
+          // Migration from version 16 to 17: Add is_deleted to UserPreferences (soft delete for sync)
+          if (from <= 16) {
+            try {
+              await m.addColumn(userPreferences, userPreferences.isDeleted);
+            } catch (e) {
+              if (kDebugMode) {
+                print(
+                    'Migration: Column is_deleted might already exist on user_preferences: $e');
               }
             }
           }

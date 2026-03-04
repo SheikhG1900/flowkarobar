@@ -522,6 +522,7 @@ class BackupNotifier extends Notifier<BackupState> {
         db.select(db.reminders).watch(),
         db.select(db.appCurrencies).watch(),
         db.select(db.transactionSchedules).watch(),
+        db.select(db.userPreferences).watch(),
       ];
 
       for (final stream in streams) {
@@ -563,6 +564,29 @@ class BackupNotifier extends Notifier<BackupState> {
         final manifest = SyncManifest.fromJson(result.content);
         cloudVersion = manifest.version;
       }
+
+      // Load list of sync delta files (v*.json) for the "review content" list on backup screen
+      List<drive.File> deltaFiles = [];
+      try {
+        deltaFiles = await _driveService.listSyncFiles(folderId);
+        // Sort by version number (v1.json, v2.json, ...) descending so newest first
+        deltaFiles.sort((a, b) {
+          final va = int.tryParse(
+                  a.name?.replaceAll('v', '').replaceAll('.json', '') ?? '0') ??
+              0;
+          final vb = int.tryParse(
+                  b.name?.replaceAll('v', '').replaceAll('.json', '') ?? '0') ??
+              0;
+          return vb.compareTo(va);
+        });
+      } catch (e) {
+        if (kDebugMode) {
+          print('BackupNotifier: Failed to list sync files: $e');
+        }
+      }
+
+      if (!ref.mounted) return;
+      state = state.copyWith(deltaFiles: deltaFiles);
 
       // CRITICAL: Ensure the row exists and update the cloud version.
       final deviceId = await _getDeviceId();
@@ -614,7 +638,8 @@ class BackupNotifier extends Notifier<BackupState> {
       'payables',
       'reminders',
       'app_currencies',
-      'transaction_schedules'
+      'transaction_schedules',
+      'user_preferences',
     ];
     for (final table in tables) {
       try {

@@ -21,27 +21,36 @@ class UserPreferencesRepository {
   static const String keyFontUr = 'font_ur';
   static const String keyDashboardWidgetLayout = 'dashboard_widget_layout';
 
-  // Get a preference value by key
+  // Get a preference value by key (excludes soft-deleted rows so they sync correctly)
   Future<String?> getPreference(String key) async {
     final result = await (_db.select(_db.userPreferences)
-          ..where((tbl) => tbl.key.equals(key)))
+          ..where((tbl) =>
+              tbl.key.equals(key) & tbl.isDeleted.equals(false)))
         .getSingleOrNull();
     return result?.value;
   }
 
-  // Set a preference value
-  Future<void> setPreference(String key, String value) async {
-    // Check if preference exists
-    final existing = await getPreference(key);
+  /// [markUnsynced] when true (default), the row is marked for sync (dirty).
+  /// Pass false for initial/default data (e.g. first-install defaults) so it stays clean.
+  Future<void> setPreference(String key, String value,
+      {bool markUnsynced = true}) async {
+    // Check if preference exists (including soft-deleted, so we can resurrect)
+    final row = await (_db.select(_db.userPreferences)
+          ..where((tbl) => tbl.key.equals(key)))
+        .getSingleOrNull();
 
-    if (existing != null) {
-      // Update existing preference
+    final isDirty = Value(markUnsynced);
+
+    if (row != null) {
+      // Update existing row (resurrect if soft-deleted)
       await (_db.update(_db.userPreferences)
             ..where((tbl) => tbl.key.equals(key)))
           .write(
         UserPreferencesCompanion(
           value: Value(value),
           updatedAt: Value(DateTime.now()),
+          isDeleted: const Value(false),
+          isNotSynced: isDirty,
         ),
       );
     } else {
@@ -51,15 +60,22 @@ class UserPreferencesRepository {
               key: Value(key),
               value: Value(value),
               updatedAt: Value(DateTime.now()),
+              isNotSynced: isDirty,
             ),
           );
     }
   }
 
-  // Delete a preference
+  // Delete a preference (soft delete so sync can propagate to other devices)
   Future<void> deletePreference(String key) async {
-    await (_db.delete(_db.userPreferences)..where((tbl) => tbl.key.equals(key)))
-        .go();
+    await (_db.update(_db.userPreferences)
+          ..where((tbl) => tbl.key.equals(key)))
+        .write(
+      UserPreferencesCompanion(
+        isDeleted: const Value(true),
+        isNotSynced: const Value(true),
+      ),
+    );
   }
 
   // Language Preference
@@ -178,9 +194,11 @@ class UserPreferencesRepository {
     await setPreference(keyDashboardWidgetLayout, jsonValue);
   }
 
-  // Get all preferences as a map
+  // Get all preferences as a map (excludes soft-deleted)
   Future<Map<String, String>> getAllPreferences() async {
-    final allPrefs = await _db.select(_db.userPreferences).get();
+    final allPrefs = await (_db.select(_db.userPreferences)
+          ..where((tbl) => tbl.isDeleted.equals(false)))
+        .get();
     return {for (var pref in allPrefs) pref.key: pref.value};
   }
 
