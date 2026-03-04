@@ -61,6 +61,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
     final theme = Theme.of(context);
     final selectedDateRange = ref.read(selectedDateRangeProvider);
     final currencySymbol = ref.read(currencySymbolProvider);
+    final decimalPlaces = ref.read(currencyDecimalPlacesProvider);
 
     // Show loading
     showDialog(
@@ -79,6 +80,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
         startDate: selectedDateRange.startDate,
         endDate: selectedDateRange.endDate,
         currencySymbol: currencySymbol,
+        decimalPlaces: decimalPlaces,
         l10n: l10n,
       );
 

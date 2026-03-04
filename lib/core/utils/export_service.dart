@@ -13,6 +13,7 @@ import 'package:flowpaisa/features/analytics/data/analytics_repository.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/date_formatter.dart';
+import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:csv/csv.dart';
 import 'package:share_plus/share_plus.dart';
@@ -103,6 +104,25 @@ class ExportService {
     }
   }
 
+  /// Payment status label for export (Receivable/Payable/Paid/Received).
+  /// When l10n is null, returns English fallbacks.
+  String _getPaymentStatusLabel(
+      {Payable? linkedPayable,
+      Receivable? linkedReceivable,
+      AppLocalizations? l10n}) {
+    if (linkedPayable != null) {
+      return linkedPayable.status == 'PAID'
+          ? (l10n?.paidPayable ?? 'Paid')
+          : (l10n?.pendingPayable ?? 'Payable (Pending)');
+    }
+    if (linkedReceivable != null) {
+      return linkedReceivable.status == 'RECEIVED'
+          ? (l10n?.receivedPayment ?? 'Received')
+          : (l10n?.pendingReceivable ?? 'Receivable (Pending)');
+    }
+    return '—';
+  }
+
   // Helper to translate months
   String _getLocalizedMonth(DateTime date, AppLocalizations? l10n) {
     if (l10n == null) return DateFormat('MMM yyyy').format(date);
@@ -178,16 +198,27 @@ class ExportService {
   Future<String> generateCSVContent({
     required DateTime startDate,
     required DateTime endDate,
+    AppLocalizations? l10n,
   }) async {
     try {
       // Get transactions in date range with details
       final transactionsWithDetails = await _transactionsRepository
           .getTransactionsWithDetailsByDateRange(startDate, endDate);
 
+      final statusHeader = l10n?.status ?? 'Status';
+
       // Create CSV data
       List<List<dynamic>> csvData = [
         // Header row
-        ['Date', 'Type', 'Amount', 'Category', 'Contact', 'Description'],
+        [
+          'Date',
+          'Type',
+          'Amount',
+          'Category',
+          'Contact',
+          'Description',
+          statusHeader,
+        ],
       ];
 
       // Add transaction rows
@@ -214,6 +245,11 @@ class ExportService {
         if (!include) {
           continue;
         }
+        final paymentStatus = _getPaymentStatusLabel(
+          linkedPayable: item.linkedPayable,
+          linkedReceivable: item.linkedReceivable,
+          l10n: l10n,
+        );
         csvData.add([
           AppDateFormatter.formatDate(t.date, pattern: _dateFormat),
           t.type,
@@ -221,6 +257,7 @@ class ExportService {
           item.category?.name ?? '', // Use name instead of ID
           item.contact?.name ?? '', // Use name instead of ID
           t.description ?? '',
+          paymentStatus,
         ]);
       }
 
@@ -351,25 +388,40 @@ class ExportService {
     }
   }
 
-  // Generate export summary
+  // Generate export summary (same logic as PDF/CSV: only include settled
+  // linked transactions and count/sum from that filtered set)
   Future<ExportSummary> getExportSummary({
     required DateTime startDate,
     required DateTime endDate,
   }) async {
-    final transactions = await _transactionsRepository
-        .getTransactionsByDateRange(startDate, endDate);
+    final transactionsWithDetails = await _transactionsRepository
+        .getTransactionsWithDetailsByDateRange(startDate, endDate);
+
+    // Same filter as PDF and CSV: exclude expense linked to non-PAID payable,
+    // and income linked to non-RECEIVED receivable
+    final filtered = transactionsWithDetails.where((item) {
+      final t = item.transaction;
+      if (t.type == 'EXPENSE' && t.linkedPayableUuid != null) {
+        if (item.linkedPayable?.status != 'PAID') return false;
+      }
+      if (t.type == 'INCOME' && t.linkedReceivableUuid != null) {
+        if (item.linkedReceivable?.status != 'RECEIVED') return false;
+      }
+      return true;
+    }).toList();
 
     double totalIncome = 0;
     double totalExpense = 0;
     int incomeCount = 0;
     int expenseCount = 0;
 
-    for (var transaction in transactions) {
-      if (transaction.type == 'INCOME') {
-        totalIncome += transaction.amount;
+    for (var item in filtered) {
+      final t = item.transaction;
+      if (t.type == 'INCOME') {
+        totalIncome += t.amount;
         incomeCount++;
       } else {
-        totalExpense += transaction.amount;
+        totalExpense += t.amount;
         expenseCount++;
       }
     }
@@ -377,7 +429,7 @@ class ExportService {
     return ExportSummary(
       startDate: startDate,
       endDate: endDate,
-      totalTransactions: transactions.length,
+      totalTransactions: filtered.length,
       totalIncome: totalIncome,
       totalExpense: totalExpense,
       incomeCount: incomeCount,
@@ -412,6 +464,7 @@ class ExportService {
     required DateTime startDate,
     required DateTime endDate,
     String? currencySymbol,
+    int decimalPlaces = 2,
     pw.Font? materialIconsFont,
     pw.Font? unicodeFont,
     pw.Font? hindiFont,
@@ -478,6 +531,8 @@ class ExportService {
     }
 
     final currency = currencySymbol ?? '₹';
+    String fmt(num amount) =>
+        AmountFormatter.formatWithCurrency(amount.toDouble(), currency, decimalPlaces);
     final dateFormat = AppDateFormatter.getFormatter(_dateFormat);
     final dateTimeFormat = AppDateFormatter.getFormatter('dd MMM yyyy, HH:mm');
 
@@ -644,7 +699,7 @@ class ExportService {
                         l10n),
                     _buildTableCell(
                         l10n?.income ?? 'Total Income',
-                        '$currency ${totalIncome.toStringAsFixed(2)}',
+                        fmt(totalIncome),
                         ExportService.getIncomePdfColor(),
                         l10n),
                   ],
@@ -654,12 +709,12 @@ class ExportService {
                   [
                     _buildTableCell(
                         l10n?.expense ?? 'Total Expense',
-                        '$currency ${totalExpense.toStringAsFixed(2)}',
+                        fmt(totalExpense),
                         ExportService.getExpensePdfColor(),
                         l10n),
                     _buildTableCell(
                         l10n?.netBalance ?? 'Net Balance',
-                        '$currency ${(totalIncome - totalExpense).toStringAsFixed(2)}',
+                        fmt(totalIncome - totalExpense),
                         (totalIncome - totalExpense) == 0
                             ? PdfColors.black
                             : (totalIncome - totalExpense) >= 0
@@ -673,12 +728,12 @@ class ExportService {
                   [
                     _buildTableCell(
                         '${l10n?.payables ?? 'Payables'} (${l10n?.pending ?? 'Pending'})',
-                        '$currency ${totalPayablePending.toStringAsFixed(2)}',
+                        fmt(totalPayablePending),
                         ExportService.getPayablePdfColor(),
                         l10n),
                     _buildTableCell(
                         '${l10n?.payables ?? 'Payables'} (${l10n?.paid ?? 'Paid'})',
-                        '$currency ${totalPayablePaid.toStringAsFixed(2)}',
+                        fmt(totalPayablePaid),
                         ExportService.getPayablePdfColor(),
                         l10n),
                   ],
@@ -688,12 +743,12 @@ class ExportService {
                   [
                     _buildTableCell(
                         '${l10n?.receivables ?? 'Receivables'} (${l10n?.pending ?? 'Pending'})',
-                        '$currency ${totalReceivablePending.toStringAsFixed(2)}',
+                        fmt(totalReceivablePending),
                         ExportService.getReceivablePdfColor(),
                         l10n),
                     _buildTableCell(
                         '${l10n?.receivables ?? 'Receivables'} (${l10n?.receivedLabel ?? 'Received'})',
-                        '$currency ${totalReceivableReceived.toStringAsFixed(2)}',
+                        fmt(totalReceivableReceived),
                         ExportService.getReceivablePdfColor(),
                         l10n),
                   ],
@@ -706,7 +761,7 @@ class ExportService {
                         totalPayablePending >= totalReceivablePending
                             ? '${l10n?.netBalance ?? 'Net'} ${l10n?.payable ?? 'Payable'} (${l10n?.pending ?? 'Pending'})'
                             : '${l10n?.netBalance ?? 'Net'} ${l10n?.receivable ?? 'Receivable'} (${l10n?.pending ?? 'Pending'})',
-                        '$currency ${(totalPayablePending - totalReceivablePending).abs().toStringAsFixed(2)}',
+                        fmt((totalPayablePending - totalReceivablePending).abs()),
                         (totalPayablePending - totalReceivablePending).abs() ==
                                 0
                             ? PdfColors.black
@@ -742,6 +797,7 @@ class ExportService {
                   3: const pw.FlexColumnWidth(2),
                   4: const pw.FlexColumnWidth(2),
                   5: const pw.FlexColumnWidth(3),
+                  6: const pw.FixedColumnWidth(90),
                 },
                 children: [
                   _buildLocalizedTableRow(
@@ -755,6 +811,8 @@ class ExportService {
                       _buildTableHeaderCell(l10n?.contact ?? 'Contact',
                           l10n: l10n),
                       _buildTableHeaderCell(l10n?.description ?? 'Description',
+                          l10n: l10n),
+                      _buildTableHeaderCell(l10n?.status ?? 'Status',
                           l10n: l10n),
                     ],
                     l10n: l10n,
@@ -808,7 +866,7 @@ class ExportService {
                                 ? pw.Alignment.centerRight
                                 : pw.Alignment.centerLeft,
                             child: _buildText(
-                                '$currency ${t.amount.toStringAsFixed(2)}',
+                                fmt(t.amount),
                                 style: pw.TextStyle(
                                     fontSize: 9, color: amountColor),
                                 align: isRtl
@@ -892,6 +950,25 @@ class ExportService {
                                 : pw.Alignment.centerLeft,
                             child: _buildText(
                               t.description ?? '-',
+                              style: const pw.TextStyle(fontSize: 9),
+                              align: isRtl
+                                  ? pw.TextAlign.right
+                                  : pw.TextAlign.left,
+                            ),
+                          ),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(4),
+                          child: pw.Container(
+                            alignment: isRtl
+                                ? pw.Alignment.centerRight
+                                : pw.Alignment.centerLeft,
+                            child: _buildText(
+                              _getPaymentStatusLabel(
+                                linkedPayable: item.linkedPayable,
+                                linkedReceivable: item.linkedReceivable,
+                                l10n: l10n,
+                              ),
                               style: const pw.TextStyle(fontSize: 9),
                               align: isRtl
                                   ? pw.TextAlign.right
@@ -992,7 +1069,7 @@ class ExportService {
                           child: pw.Container(
                             alignment: pw.Alignment.centerLeft,
                             child: _buildText(
-                                '$currency ${p.amount.toStringAsFixed(2)}',
+                                fmt(p.amount),
                                 style: pw.TextStyle(
                                     fontSize: 9,
                                     color: ExportService.getPayablePdfColor())),
@@ -1134,7 +1211,7 @@ class ExportService {
                           child: pw.Container(
                             alignment: pw.Alignment.centerLeft,
                             child: _buildText(
-                                '$currency ${r.amount.toStringAsFixed(2)}',
+                                fmt(r.amount),
                                 style: pw.TextStyle(
                                     fontSize: 9,
                                     color:
@@ -1362,6 +1439,7 @@ class ExportService {
     required DateTime startDate,
     required DateTime endDate,
     String? currencySymbol,
+    int decimalPlaces = 2,
     AppLocalizations? l10n,
   }) async {
     try {
@@ -1375,6 +1453,7 @@ class ExportService {
         startDate: startDate,
         endDate: endDate,
         currencySymbol: currencySymbol,
+        decimalPlaces: decimalPlaces,
         materialIconsFont: materialIconsFont,
         unicodeFont: unicodeFont,
         hindiFont: hindiFont,
@@ -1392,6 +1471,7 @@ class ExportService {
     required DateTime startDate,
     required DateTime endDate,
     String? currencySymbol,
+    int decimalPlaces = 2,
     bool useCache = false,
     AppLocalizations? l10n,
   }) async {
@@ -1400,6 +1480,7 @@ class ExportService {
         startDate: startDate,
         endDate: endDate,
         currencySymbol: currencySymbol,
+        decimalPlaces: decimalPlaces,
         l10n: l10n,
       );
 
@@ -1601,6 +1682,7 @@ class ExportService {
     required DateTime startDate,
     required DateTime endDate,
     String? currencySymbol,
+    int decimalPlaces = 2,
     AppLocalizations? l10n,
   }) async {
     try {
@@ -1614,6 +1696,7 @@ class ExportService {
         startDate: startDate,
         endDate: endDate,
         currencySymbol: currencySymbol,
+        decimalPlaces: decimalPlaces,
         materialIconsFont: materialIconsFont,
         unicodeFont: unicodeFont,
         hindiFont: hindiFont,
@@ -1631,6 +1714,7 @@ class ExportService {
     required DateTime startDate,
     required DateTime endDate,
     String? currencySymbol,
+    int decimalPlaces = 2,
     pw.Font? materialIconsFont,
     pw.Font? unicodeFont,
     pw.Font? hindiFont,
@@ -1657,6 +1741,8 @@ class ExportService {
         .getPaymentStatusDistribution(startDate, endDate);
 
     final currency = currencySymbol ?? '₹';
+    String fmt(num amount) => AmountFormatter.formatWithCurrency(
+        amount.toDouble(), currency, decimalPlaces);
     final dateFormat = AppDateFormatter.getFormatter(_dateFormat);
     final dateTimeFormat = AppDateFormatter.getFormatter('dd MMM yyyy, HH:mm');
 
@@ -1815,12 +1901,12 @@ class ExportService {
                   [
                     _buildTableCell(
                         '${l10n?.payable ?? 'Payable'}',
-                        '$currency ${financialSummary.totalPayable.toStringAsFixed(2)}',
+                        fmt(financialSummary.totalPayable),
                         ExportService.getPayablePdfColor(),
                         l10n),
                     _buildTableCell(
                         '${l10n?.payable ?? 'Payable'} (${l10n?.allTime.replaceAll(':', '').trim() ?? 'All Time'})',
-                        '$currency ${allTimeFinancialSummary.totalPayable.toStringAsFixed(2)}',
+                        fmt(allTimeFinancialSummary.totalPayable),
                         ExportService.getPayablePdfColor(),
                         l10n),
                   ],
@@ -1830,12 +1916,12 @@ class ExportService {
                   [
                     _buildTableCell(
                         '${l10n?.receivable ?? 'Receivable'}',
-                        '$currency ${financialSummary.totalReceivable.toStringAsFixed(2)}',
+                        fmt(financialSummary.totalReceivable),
                         ExportService.getReceivablePdfColor(),
                         l10n),
                     _buildTableCell(
                         '${l10n?.receivable ?? 'Receivable'} (${l10n?.allTime.replaceAll(':', '').trim() ?? 'All Time'})',
-                        '$currency ${allTimeFinancialSummary.totalReceivable.toStringAsFixed(2)}',
+                        fmt(allTimeFinancialSummary.totalReceivable),
                         ExportService.getReceivablePdfColor(),
                         l10n),
                   ],
@@ -1845,12 +1931,12 @@ class ExportService {
                   [
                     _buildTableCell(
                         '${l10n?.expense ?? 'Expenses'}',
-                        '$currency ${financialSummary.totalExpense.toStringAsFixed(2)}',
+                        fmt(financialSummary.totalExpense),
                         ExportService.getExpensePdfColor(),
                         l10n),
                     _buildTableCell(
                         '${l10n?.expense ?? 'Expenses'} (${l10n?.allTime.replaceAll(':', '').trim() ?? 'All Time'})',
-                        '$currency ${allTimeFinancialSummary.totalExpense.toStringAsFixed(2)}',
+                        fmt(allTimeFinancialSummary.totalExpense),
                         ExportService.getExpensePdfColor(),
                         l10n),
                   ],
@@ -1860,12 +1946,12 @@ class ExportService {
                   [
                     _buildTableCell(
                         '${l10n?.income ?? 'Income'}',
-                        '$currency ${financialSummary.totalIncome.toStringAsFixed(2)}',
+                        fmt(financialSummary.totalIncome),
                         ExportService.getIncomePdfColor(),
                         l10n),
                     _buildTableCell(
                         '${l10n?.income ?? 'Income'} (${l10n?.allTime.replaceAll(':', '').trim() ?? 'All Time'})',
-                        '$currency ${allTimeFinancialSummary.totalIncome.toStringAsFixed(2)}',
+                        fmt(allTimeFinancialSummary.totalIncome),
                         ExportService.getIncomePdfColor(),
                         l10n),
                   ],
@@ -1875,7 +1961,7 @@ class ExportService {
                   [
                     _buildTableCell(
                         '${l10n?.netBalance ?? 'Net Balance'}',
-                        '$currency ${financialSummary.netBalance.toStringAsFixed(2)}',
+                        fmt(financialSummary.netBalance),
                         financialSummary.netBalance == 0
                             ? PdfColors.black
                             : financialSummary.netBalance >= 0
@@ -1884,7 +1970,7 @@ class ExportService {
                         l10n),
                     _buildTableCell(
                         '${l10n?.netBalance ?? 'Net Balance'} (${l10n?.allTime.replaceAll(':', '').trim() ?? 'All Time'})',
-                        '$currency ${allTimeFinancialSummary.netBalance.toStringAsFixed(2)}',
+                        fmt(allTimeFinancialSummary.netBalance),
                         allTimeFinancialSummary.netBalance == 0
                             ? PdfColors.black
                             : allTimeFinancialSummary.netBalance >= 0
@@ -2017,7 +2103,7 @@ class ExportService {
                                 ? pw.Alignment.centerRight
                                 : pw.Alignment.centerLeft,
                             child: _buildText(
-                                '$currency ${summary.totalPayable.toStringAsFixed(2)}',
+                                fmt(summary.totalPayable),
                                 style: pw.TextStyle(
                                     fontSize: 9,
                                     color: ExportService.getPayablePdfColor()),
@@ -2033,7 +2119,7 @@ class ExportService {
                                 ? pw.Alignment.centerRight
                                 : pw.Alignment.centerLeft,
                             child: _buildText(
-                                '$currency ${summary.totalReceivable.toStringAsFixed(2)}',
+                                fmt(summary.totalReceivable),
                                 style: pw.TextStyle(
                                     fontSize: 9,
                                     color:
@@ -2050,7 +2136,7 @@ class ExportService {
                                 ? pw.Alignment.centerRight
                                 : pw.Alignment.centerLeft,
                             child: _buildText(
-                                '$currency ${summary.balance.abs().toStringAsFixed(2)}',
+                                fmt(summary.balance.abs()),
                                 style: pw.TextStyle(
                                     fontSize: 9, color: balanceColor),
                                 align: isRtl
@@ -2083,6 +2169,7 @@ class ExportService {
               self._buildCategoryTable(
                   expensesByCategory,
                   currency,
+                  decimalPlaces,
                   hexToPdfColor,
                   materialIconsFont,
                   ExportService.getExpensePdfColor(),
@@ -2107,6 +2194,7 @@ class ExportService {
               self._buildCategoryTable(
                   incomeByCategory,
                   currency,
+                  decimalPlaces,
                   hexToPdfColor,
                   materialIconsFont,
                   ExportService.getIncomePdfColor(),
@@ -2124,7 +2212,8 @@ class ExportService {
                   l10n: l10n),
               pw.SizedBox(height: 10),
               // Visual bar chart representation
-              self._buildVisualBarChart(monthlyTrends, currency,
+              self._buildVisualBarChart(
+                  monthlyTrends, currency, decimalPlaces,
                   self: self, l10n: l10n),
               pw.SizedBox(height: 10),
               pw.Table(
@@ -2171,7 +2260,7 @@ class ExportService {
                                 ? pw.Alignment.centerRight
                                 : pw.Alignment.centerLeft,
                             child: _buildText(
-                                '$currency ${trend.income.toStringAsFixed(2)}',
+                                fmt(trend.income),
                                 style: pw.TextStyle(
                                     fontSize: 9,
                                     color: ExportService.getIncomePdfColor()),
@@ -2187,7 +2276,7 @@ class ExportService {
                                 ? pw.Alignment.centerRight
                                 : pw.Alignment.centerLeft,
                             child: _buildText(
-                                '$currency ${trend.expense.toStringAsFixed(2)}',
+                                fmt(trend.expense),
                                 style: pw.TextStyle(
                                     fontSize: 9,
                                     color: ExportService.getExpensePdfColor()),
@@ -2215,7 +2304,7 @@ class ExportService {
               pw.SizedBox(height: 10),
               // Visual bar chart representation
               self._buildVisualPayableReceivableChart(
-                  payableReceivableTrends, currency,
+                  payableReceivableTrends, currency, decimalPlaces,
                   self: self, l10n: l10n),
               pw.SizedBox(height: 10),
               pw.Table(
@@ -2262,7 +2351,7 @@ class ExportService {
                                 ? pw.Alignment.centerRight
                                 : pw.Alignment.centerLeft,
                             child: _buildText(
-                                '$currency ${trend.totalPayable.toStringAsFixed(2)}',
+                                fmt(trend.totalPayable),
                                 style: pw.TextStyle(
                                     fontSize: 9,
                                     color: ExportService.getPayablePdfColor()),
@@ -2278,7 +2367,7 @@ class ExportService {
                                 ? pw.Alignment.centerRight
                                 : pw.Alignment.centerLeft,
                             child: _buildText(
-                                '$currency ${trend.totalReceivable.toStringAsFixed(2)}',
+                                fmt(trend.totalReceivable),
                                 style: pw.TextStyle(
                                     fontSize: 9,
                                     color:
@@ -2409,7 +2498,7 @@ class ExportService {
                                 ? pw.Alignment.centerRight
                                 : pw.Alignment.centerLeft,
                             child: _buildText(
-                                '$currency ${contact.balance.abs().toStringAsFixed(2)}',
+                                fmt(contact.balance.abs()),
                                 style: pw.TextStyle(
                                     fontSize: 9, color: balanceColor),
                                 align: isRtl
@@ -2454,6 +2543,7 @@ class ExportService {
                       statusDistribution.pendingPayables,
                       Colors.orange,
                       currency,
+                      decimalPlaces,
                       l10n: l10n),
                 if (statusDistribution.paidPayables > 0)
                   _buildStatusRow(
@@ -2461,6 +2551,7 @@ class ExportService {
                       statusDistribution.paidPayables,
                       Colors.green,
                       currency,
+                      decimalPlaces,
                       l10n: l10n),
                 if (statusDistribution.cancelledPayables > 0)
                   _buildStatusRow(
@@ -2468,6 +2559,7 @@ class ExportService {
                       statusDistribution.cancelledPayables,
                       Colors.grey,
                       currency,
+                      decimalPlaces,
                       l10n: l10n),
                 if (statusDistribution.pendingReceivables > 0)
                   _buildStatusRow(
@@ -2475,6 +2567,7 @@ class ExportService {
                       statusDistribution.pendingReceivables,
                       Colors.orange,
                       currency,
+                      decimalPlaces,
                       l10n: l10n),
                 if (statusDistribution.receivedReceivables > 0)
                   _buildStatusRow(
@@ -2482,6 +2575,7 @@ class ExportService {
                       statusDistribution.receivedReceivables,
                       Colors.green,
                       currency,
+                      decimalPlaces,
                       l10n: l10n),
                 if (statusDistribution.cancelledReceivables > 0)
                   _buildStatusRow(
@@ -2489,6 +2583,7 @@ class ExportService {
                       statusDistribution.cancelledReceivables,
                       Colors.grey,
                       currency,
+                      decimalPlaces,
                       l10n: l10n),
               ],
             ),
@@ -2504,6 +2599,7 @@ class ExportService {
   pw.Widget _buildCategoryTable(
       List<dynamic> categories,
       String currency,
+      int decimalPlaces,
       PdfColor Function(String) hexToPdfColor,
       pw.Font? materialIconsFont,
       PdfColor defaultColor,
@@ -2591,7 +2687,8 @@ class ExportService {
                 child: pw.Container(
                   alignment: pw.Alignment.centerLeft,
                   child: service._buildText(
-                    '$currency ${amount.toStringAsFixed(2)}',
+                    AmountFormatter.formatWithCurrency(
+                        amount, currency, decimalPlaces),
                     style: pw.TextStyle(fontSize: 9, color: categoryColor),
                   ),
                 ),
@@ -2607,6 +2704,7 @@ class ExportService {
   // Helper method to build status row
   pw.TableRow _buildStatusRow(
       String label, double amount, Color color, String currency,
+      int decimalPlaces,
       {AppLocalizations? l10n}) {
     final pdfColor = PdfColor(color.r, color.g, color.b);
     final isRtl = l10n != null && Bidi.isRtlLanguage(l10n.localeName);
@@ -2627,7 +2725,9 @@ class ExportService {
           child: pw.Container(
             alignment:
                 isRtl ? pw.Alignment.centerRight : pw.Alignment.centerLeft,
-            child: _buildText('$currency ${amount.toStringAsFixed(2)}',
+            child: _buildText(
+                AmountFormatter.formatWithCurrency(
+                    amount, currency, decimalPlaces),
                 style: pw.TextStyle(fontSize: 9, color: pdfColor),
                 align: isRtl ? pw.TextAlign.right : pw.TextAlign.left),
           ),
@@ -2766,7 +2866,7 @@ class ExportService {
 
   // Helper method to build visual bar chart for monthly trends
   pw.Widget _buildVisualBarChart(
-      List<MonthlyFinancials> trends, String currency,
+      List<MonthlyFinancials> trends, String currency, int decimalPlaces,
       {ExportService? self, AppLocalizations? l10n}) {
     if (trends.isEmpty) {
       return pw.SizedBox(height: 0);
@@ -2827,7 +2927,8 @@ class ExportService {
                     children: isRtl
                         ? [
                             _buildText(
-                              '$currency ${trend.income.toStringAsFixed(0)}',
+                              AmountFormatter.formatWithCurrency(
+                                  trend.income, currency, decimalPlaces),
                               style: pw.TextStyle(
                                 fontSize: 7,
                                 color: ExportService.getIncomePdfColor(),
@@ -2864,7 +2965,8 @@ class ExportService {
                             ),
                             pw.SizedBox(width: 4),
                             _buildText(
-                              '$currency ${trend.income.toStringAsFixed(0)}',
+                              AmountFormatter.formatWithCurrency(
+                                  trend.income, currency, decimalPlaces),
                               style: pw.TextStyle(
                                 fontSize: 7,
                                 color: ExportService.getIncomePdfColor(),
@@ -2881,7 +2983,8 @@ class ExportService {
                     children: isRtl
                         ? [
                             _buildText(
-                              '$currency ${trend.expense.toStringAsFixed(0)}',
+                              AmountFormatter.formatWithCurrency(
+                                  trend.expense, currency, decimalPlaces),
                               style: pw.TextStyle(
                                 fontSize: 7,
                                 color: ExportService.getExpensePdfColor(),
@@ -2918,7 +3021,8 @@ class ExportService {
                             ),
                             pw.SizedBox(width: 4),
                             _buildText(
-                              '$currency ${trend.expense.toStringAsFixed(0)}',
+                              AmountFormatter.formatWithCurrency(
+                                  trend.expense, currency, decimalPlaces),
                               style: pw.TextStyle(
                                 fontSize: 7,
                                 color: ExportService.getExpensePdfColor(),
@@ -2937,7 +3041,7 @@ class ExportService {
 
   // Helper method to build visual bar chart for payable/receivable trends
   pw.Widget _buildVisualPayableReceivableChart(
-      List<PayableReceivableTrend> trends, String currency,
+      List<PayableReceivableTrend> trends, String currency, int decimalPlaces,
       {ExportService? self, AppLocalizations? l10n}) {
     if (trends.isEmpty) {
       return pw.SizedBox(height: 0);
@@ -2999,7 +3103,8 @@ class ExportService {
                     children: isRtl
                         ? [
                             _buildText(
-                              '$currency ${trend.totalPayable.toStringAsFixed(0)}',
+                              AmountFormatter.formatWithCurrency(
+                                  trend.totalPayable, currency, decimalPlaces),
                               style: pw.TextStyle(
                                 fontSize: 7,
                                 color: ExportService.getPayablePdfColor(),
@@ -3036,7 +3141,8 @@ class ExportService {
                             ),
                             pw.SizedBox(width: 4),
                             _buildText(
-                              '$currency ${trend.totalPayable.toStringAsFixed(0)}',
+                              AmountFormatter.formatWithCurrency(
+                                  trend.totalPayable, currency, decimalPlaces),
                               style: pw.TextStyle(
                                 fontSize: 7,
                                 color: ExportService.getPayablePdfColor(),
@@ -3053,7 +3159,9 @@ class ExportService {
                     children: isRtl
                         ? [
                             _buildText(
-                              '$currency ${trend.totalReceivable.toStringAsFixed(0)}',
+                              AmountFormatter.formatWithCurrency(
+                                  trend.totalReceivable, currency,
+                                  decimalPlaces),
                               style: pw.TextStyle(
                                 fontSize: 7,
                                 color: ExportService.getReceivablePdfColor(),
@@ -3094,7 +3202,9 @@ class ExportService {
                             ),
                             pw.SizedBox(width: 4),
                             _buildText(
-                              '$currency ${trend.totalReceivable.toStringAsFixed(0)}',
+                              AmountFormatter.formatWithCurrency(
+                                  trend.totalReceivable, currency,
+                                  decimalPlaces),
                               style: pw.TextStyle(
                                 fontSize: 7,
                                 color: ExportService.getReceivablePdfColor(),

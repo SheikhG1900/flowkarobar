@@ -105,6 +105,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
         final csvContent = await exportService.generateCSVContent(
           startDate: _startDate!,
           endDate: _endDate!,
+          l10n: l10n,
         );
 
         if (mounted) {
@@ -230,6 +231,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
         startDate: _startDate!,
         endDate: _endDate!,
         currencySymbol: currencySymbol,
+        decimalPlaces: decimalPlaces,
         l10n: l10n,
       );
 
