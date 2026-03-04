@@ -7,6 +7,7 @@ import 'package:flowpaisa/features/contacts/presentation/providers/contacts_prov
 import 'package:flowpaisa/features/payables/presentation/providers/payables_provider.dart';
 import 'package:flowpaisa/features/receivables/presentation/providers/receivables_provider.dart';
 import 'package:flowpaisa/features/settings/data/user_preferences_repository.dart';
+import 'package:flowpaisa/shared/providers/database_provider.dart';
 
 /// Default widget layout when none is saved.
 List<DashboardWidgetConfig> get defaultDashboardWidgetLayout => [
@@ -20,6 +21,11 @@ class DashboardWidgetLayoutNotifier
     extends AsyncNotifier<List<DashboardWidgetConfig>> {
   @override
   Future<List<DashboardWidgetConfig>> build() async {
+    // Depend on active cashbook so layout is reloaded when switching cashbooks.
+    // Without this, the notifier would keep in-memory state and overwrite
+    // the other cashbook's layout when adding/removing widgets.
+    ref.watch(databaseProvider);
+
     final repo = ref.read(userPreferencesRepositoryProvider);
     final json = await repo.getDashboardWidgetLayout();
     final list = DashboardWidgetConfig.listFromJson(json);
