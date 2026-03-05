@@ -25,14 +25,16 @@ if (flutterVersionName == null) {
     flutterVersionName = '1.0'
 }
 
-// Load keystore properties from key.properties file
+// Load keystore from project's private folder (../private from android/)
+def privateDir = rootProject.file('../private')
+def keystorePropertiesFile = new File(privateDir, 'key.properties')
 def keystoreProperties = new Properties()
-def keystorePropertiesFile = rootProject.file('../../private/key.properties')
 if (keystorePropertiesFile.exists()) {
     keystorePropertiesFile.withReader('UTF-8') { reader ->
         keystoreProperties.load(reader)
     }
 }
+def releaseKeystoreFile = new File(privateDir, 'upload-keystore.jks')
 
 android {
     namespace "com.tamatasoft.flowpaisa"
@@ -55,7 +57,7 @@ android {
 
     defaultConfig {
         applicationId "com.tamatasoft.flowpaisa"
-        minSdkVersion 26
+        minSdkVersion flutter.minSdkVersion
         targetSdkVersion flutter.targetSdkVersion
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
@@ -63,13 +65,10 @@ android {
 
     signingConfigs {
         release {
-            if (keystorePropertiesFile.exists()) {
+            if (keystorePropertiesFile.exists() && releaseKeystoreFile.exists()) {
                 keyAlias keystoreProperties['keyAlias']
                 keyPassword keystoreProperties['keyPassword']
-                def storeFileProp = keystoreProperties['storeFile']
-                if (storeFileProp) {
-                    storeFile file(storeFileProp)
-                }
+                storeFile releaseKeystoreFile
                 storePassword keystoreProperties['storePassword']
             }
         }
@@ -77,8 +76,8 @@ android {
 
     buildTypes {
         release {
-            // Use release signing config if available, otherwise fall back to debug for development
-            if (keystorePropertiesFile.exists()) {
+            // Use release signing config if private/ keystore exists, otherwise fall back to debug
+            if (keystorePropertiesFile.exists() && releaseKeystoreFile.exists()) {
                 signingConfig signingConfigs.release
             } else {
                 signingConfig signingConfigs.debug
