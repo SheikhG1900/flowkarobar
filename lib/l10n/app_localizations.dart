@@ -5152,6 +5152,30 @@ abstract class AppLocalizations {
   /// **'WhatsApp message templates'**
   String get messageTemplatesDescription;
 
+  /// No description provided for @copyContacts.
+  ///
+  /// In en, this message translates to:
+  /// **'Contacts'**
+  String get copyContacts;
+
+  /// No description provided for @copyContactsDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact names, phone numbers, and emails'**
+  String get copyContactsDescription;
+
+  /// No description provided for @copyCategories.
+  ///
+  /// In en, this message translates to:
+  /// **'Categories'**
+  String get copyCategories;
+
+  /// No description provided for @copyCategoriesDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Expense and income categories with icons and colors'**
+  String get copyCategoriesDescription;
+
   /// No description provided for @copy.
   ///
   /// In en, this message translates to:

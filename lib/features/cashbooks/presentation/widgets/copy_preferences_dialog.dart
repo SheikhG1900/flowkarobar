@@ -26,6 +26,8 @@ class _CopyPreferencesSheetState extends ConsumerState<CopyPreferencesSheet> {
   bool _copyProfile = true;
   bool _copyPreferences = true;
   bool _copyTemplates = true;
+  bool _copyContacts = false;
+  bool _copyCategories = false;
   bool _isLoading = false;
 
   @override
@@ -241,6 +243,28 @@ class _CopyPreferencesSheetState extends ConsumerState<CopyPreferencesSheet> {
                             });
                           },
                         ),
+                        const Divider(height: 1),
+                        CheckboxListTile(
+                          title: Text(l10n.copyContacts),
+                          subtitle: Text(l10n.copyContactsDescription),
+                          value: _copyContacts,
+                          onChanged: (value) {
+                            setState(() {
+                              _copyContacts = value ?? false;
+                            });
+                          },
+                        ),
+                        const Divider(height: 1),
+                        CheckboxListTile(
+                          title: Text(l10n.copyCategories),
+                          subtitle: Text(l10n.copyCategoriesDescription),
+                          value: _copyCategories,
+                          onChanged: (value) {
+                            setState(() {
+                              _copyCategories = value ?? false;
+                            });
+                          },
+                        ),
                       ],
                     ),
                   ),
@@ -287,7 +311,11 @@ class _CopyPreferencesSheetState extends ConsumerState<CopyPreferencesSheet> {
       return;
     }
 
-    if (!_copyProfile && !_copyPreferences && !_copyTemplates) {
+    if (!_copyProfile &&
+        !_copyPreferences &&
+        !_copyTemplates &&
+        !_copyContacts &&
+        !_copyCategories) {
       ToastUtils.showErrorToast(context, ref, l10n.pleaseSelectAtLeastOne);
       return;
     }
@@ -299,8 +327,12 @@ class _CopyPreferencesSheetState extends ConsumerState<CopyPreferencesSheet> {
     try {
       final cashbooks = ref.read(cashbooksProvider);
 
-      if (_copyProfile && _copyPreferences && _copyTemplates) {
-        // Copy all
+      if (_copyProfile &&
+          _copyPreferences &&
+          _copyTemplates &&
+          !_copyContacts &&
+          !_copyCategories) {
+        // Copy all preferences (profile, prefs, templates only)
         await PreferencesCopyService.copyPreferences(
           _selectedSourceCashbookId!,
           widget.targetCashbookId,
@@ -345,6 +377,20 @@ class _CopyPreferencesSheetState extends ConsumerState<CopyPreferencesSheet> {
         }
         if (_copyTemplates) {
           await PreferencesCopyService.copyMessageTemplatesOnly(
+            _selectedSourceCashbookId!,
+            widget.targetCashbookId,
+            cashbooks,
+          );
+        }
+        if (_copyContacts) {
+          await PreferencesCopyService.copyContactsOnly(
+            _selectedSourceCashbookId!,
+            widget.targetCashbookId,
+            cashbooks,
+          );
+        }
+        if (_copyCategories) {
+          await PreferencesCopyService.copyCategoriesOnly(
             _selectedSourceCashbookId!,
             widget.targetCashbookId,
             cashbooks,

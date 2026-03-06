@@ -2797,6 +2797,19 @@ class AppLocalizationsUr extends AppLocalizations {
   String get messageTemplatesDescription => 'واٹس ایپ میسج ٹیمپلیٹس';
 
   @override
+  String get copyContacts => 'رابطے';
+
+  @override
+  String get copyContactsDescription => 'رابطے کے نام، فون نمبر اور ای میل';
+
+  @override
+  String get copyCategories => 'زمرے';
+
+  @override
+  String get copyCategoriesDescription =>
+      'آمدنی اور اخراجات کے زمرے آئیکن اور رنگوں کے ساتھ';
+
+  @override
   String get copy => 'کاپی کریں';
 
   @override

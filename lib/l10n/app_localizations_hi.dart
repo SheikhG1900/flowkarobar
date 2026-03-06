@@ -2789,6 +2789,19 @@ class AppLocalizationsHi extends AppLocalizations {
   String get messageTemplatesDescription => 'व्हाट्सएप संदेश टेम्पलेट्स';
 
   @override
+  String get copyContacts => 'संपर्क';
+
+  @override
+  String get copyContactsDescription => 'संपर्क नाम, फ़ोन नंबर और ईमेल';
+
+  @override
+  String get copyCategories => 'श्रेणियाँ';
+
+  @override
+  String get copyCategoriesDescription =>
+      'आय और व्यय श्रेणियाँ आइकन और रंगों के साथ';
+
+  @override
   String get copy => 'कॉपी करें';
 
   @override

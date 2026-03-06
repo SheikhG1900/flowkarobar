@@ -1,6 +1,8 @@
+import 'package:drift/drift.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/features/settings/data/user_preferences_repository.dart';
 import 'package:flowpaisa/features/cashbooks/domain/models/cashbook.dart';
+import 'package:uuid/uuid.dart';
 
 /// Service for copying preferences between cashbooks
 class PreferencesCopyService {
@@ -128,6 +130,104 @@ class PreferencesCopyService {
       final sourceRepo = UserPreferencesRepository(sourceDb);
       final targetRepo = UserPreferencesRepository(targetDb);
       await copyUserProfile(sourceRepo, targetRepo);
+    } finally {
+      await sourceDb.close();
+      await targetDb.close();
+    }
+  }
+
+  /// Copy all non-deleted contacts from source to target (with new UUIDs).
+  static Future<void> copyContacts(
+    AppDatabase sourceDb,
+    AppDatabase targetDb,
+  ) async {
+    final sourceContacts = await (sourceDb.select(sourceDb.contacts)
+          ..where((c) => c.isDeleted.equals(false)))
+        .get();
+
+    for (final c in sourceContacts) {
+      await targetDb.into(targetDb.contacts).insert(
+            ContactsCompanion.insert(
+              uuid: const Uuid().v4(),
+              name: c.name,
+              phone: Value(c.phone),
+              email: Value(c.email),
+              notes: Value(c.notes),
+              createdAt: Value(c.createdAt),
+              updatedAt: Value(c.updatedAt),
+              isDeleted: const Value(false),
+              isNotSynced: const Value(true),
+            ),
+          );
+    }
+  }
+
+  /// Copy all non-deleted categories from source to target.
+  /// Default categories keep the same UUID and use insertOrIgnore to avoid duplicates.
+  /// Non-default categories get new UUIDs.
+  static Future<void> copyCategories(
+    AppDatabase sourceDb,
+    AppDatabase targetDb,
+  ) async {
+    final sourceCategories = await (sourceDb.select(sourceDb.categories)
+          ..where((c) => c.isDeleted.equals(false)))
+        .get();
+
+    for (final c in sourceCategories) {
+      final useSameUuid = c.isDefault;
+      final uuid = useSameUuid ? c.uuid : const Uuid().v4();
+      await targetDb.into(targetDb.categories).insert(
+            CategoriesCompanion.insert(
+              uuid: uuid,
+              name: c.name,
+              icon: Value(c.icon),
+              color: Value(c.color),
+              type: c.type,
+              isDefault: Value(c.isDefault),
+              isDeleted: const Value(false),
+              createdAt: Value(c.createdAt),
+              updatedAt: Value(c.updatedAt),
+              isNotSynced: const Value(true),
+            ),
+          mode: useSameUuid ? InsertMode.insertOrIgnore : InsertMode.insert,
+          );
+    }
+  }
+
+  /// Copy only contacts from source cashbook to target cashbook.
+  static Future<void> copyContactsOnly(
+    String sourceCashbookId,
+    String targetCashbookId,
+    List<Cashbook> cashbooks,
+  ) async {
+    final sourceCashbook = cashbooks.firstWhere((c) => c.id == sourceCashbookId);
+    final targetCashbook = cashbooks.firstWhere((c) => c.id == targetCashbookId);
+
+    final sourceDb = AppDatabase(fileName: '${sourceCashbook.dbPath}.db');
+    final targetDb = AppDatabase(fileName: '${targetCashbook.dbPath}.db');
+
+    try {
+      await copyContacts(sourceDb, targetDb);
+    } finally {
+      await sourceDb.close();
+      await targetDb.close();
+    }
+  }
+
+  /// Copy only categories from source cashbook to target cashbook.
+  static Future<void> copyCategoriesOnly(
+    String sourceCashbookId,
+    String targetCashbookId,
+    List<Cashbook> cashbooks,
+  ) async {
+    final sourceCashbook = cashbooks.firstWhere((c) => c.id == sourceCashbookId);
+    final targetCashbook = cashbooks.firstWhere((c) => c.id == targetCashbookId);
+
+    final sourceDb = AppDatabase(fileName: '${sourceCashbook.dbPath}.db');
+    final targetDb = AppDatabase(fileName: '${targetCashbook.dbPath}.db');
+
+    try {
+      await copyCategories(sourceDb, targetDb);
     } finally {
       await sourceDb.close();
       await targetDb.close();

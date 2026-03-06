@@ -2780,6 +2780,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get messageTemplatesDescription => 'WhatsApp message templates';
 
   @override
+  String get copyContacts => 'Contacts';
+
+  @override
+  String get copyContactsDescription =>
+      'Contact names, phone numbers, and emails';
+
+  @override
+  String get copyCategories => 'Categories';
+
+  @override
+  String get copyCategoriesDescription =>
+      'Expense and income categories with icons and colors';
+
+  @override
   String get copy => 'Copy';
 
   @override
