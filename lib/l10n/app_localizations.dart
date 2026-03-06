@@ -2602,6 +2602,12 @@ abstract class AppLocalizations {
   /// **'About'**
   String get about;
 
+  /// No description provided for @rateUs.
+  ///
+  /// In en, this message translates to:
+  /// **'Rate Flowpaisa'**
+  String get rateUs;
+
   /// No description provided for @tagline.
   ///
   /// In en, this message translates to:

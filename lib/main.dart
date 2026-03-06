@@ -41,6 +41,7 @@ import 'package:flowpaisa/features/transactions/presentation/screens/export_scre
 import 'package:flowpaisa/features/settings/presentation/screens/user_guide_screen.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flowpaisa/core/services/in_app_review_service.dart';
 import 'package:flowpaisa/core/utils/deep_link_handler.dart';
 import 'package:flowpaisa/core/utils/date_formatter.dart';
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
@@ -2734,6 +2735,14 @@ class _SettingsTab extends ConsumerWidget {
                   builder: (context) => const ExportScreen(),
                 ),
               );
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.star_outline),
+            title: Text(l10n.rateUs),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () {
+              ref.read(inAppReviewServiceProvider).requestReview();
             },
           ),
           ListTile(

@@ -1,6 +1,7 @@
 import 'package:flowpaisa/features/tour/domain/tour_service.dart';
 import 'package:flowpaisa/features/tour/presentation/providers/tour_provider.dart';
 import 'package:showcaseview/showcaseview.dart';
+import 'package:flowpaisa/core/services/in_app_review_service.dart';
 import 'package:flowpaisa/core/utils/category_helper.dart';
 import 'package:flowpaisa/core/utils/localization_helper.dart';
 import 'package:flowpaisa/features/messages/presentation/providers/message_template_provider.dart';
@@ -430,6 +431,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
             },
             color: activeColor,
           );
+          ref.read(inAppReviewServiceProvider).maybeRequestReview();
         }
       }
 

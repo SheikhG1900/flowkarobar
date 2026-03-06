@@ -11,6 +11,7 @@ import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/transactions/data/transactions_repository.dart';
 import 'package:flowpaisa/shared/providers/database_provider.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
+import 'package:flowpaisa/core/services/in_app_review_service.dart';
 import 'package:flowpaisa/core/utils/date_formatter.dart';
 import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
@@ -132,6 +133,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
             if (mounted) {
               ToastUtils.showSuccessToast(
                   context, ref, l10n.exportSavedTo(result.path));
+              ref.read(inAppReviewServiceProvider).maybeRequestReview();
             }
           }
         }
@@ -147,6 +149,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
         if (mounted) {
           Navigator.pop(context); // Close loading
           isLoadingDialogOpen = false;
+          ref.read(inAppReviewServiceProvider).maybeRequestReview();
 
           // Ask to share
           await showDialog<void>(
@@ -245,6 +248,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
 
       if (mounted) {
         Navigator.pop(context); // Close loading
+        ref.read(inAppReviewServiceProvider).maybeRequestReview();
 
         // Show action dialog with three options
         await showDialog<void>(

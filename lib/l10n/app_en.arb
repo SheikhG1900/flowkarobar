@@ -789,6 +789,7 @@
   "downloadDataCsvPdf": "Download your data as CSV or PDF",
   "premiumActive": "Premium Active",
   "about": "About",
+  "rateUs": "Rate Flowpaisa",
   "tagline": "Track every paisa",
   "versionInfo": "Version {version} (Build {buildNumber})",
   "@versionInfo": {

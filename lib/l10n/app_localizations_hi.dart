@@ -1383,6 +1383,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get about => 'ऐप के बारे में';
 
   @override
+  String get rateUs => 'Flowpaisa को रेट करें';
+
+  @override
   String get tagline => 'हर पैसे का हिसाब रखें';
 
   @override

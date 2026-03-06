@@ -19,6 +19,7 @@ import 'package:flowpaisa/shared/providers/database_provider.dart';
 import 'package:flowpaisa/features/categories/presentation/screens/add_category_screen.dart';
 import 'package:flowpaisa/features/contacts/presentation/screens/add_contact_screen.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
+import 'package:flowpaisa/core/services/in_app_review_service.dart';
 import 'package:flowpaisa/core/utils/category_helper.dart';
 import 'package:flowpaisa/core/utils/date_formatter.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
@@ -302,6 +303,7 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
         } else {
           ToastUtils.showSuccessToast(context, ref, l10n.transactionUpdated);
         }
+        ref.read(inAppReviewServiceProvider).maybeRequestReview();
       }
     } catch (e) {
       if (mounted) {

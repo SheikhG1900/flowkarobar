@@ -1385,6 +1385,9 @@ class AppLocalizationsUr extends AppLocalizations {
   String get about => 'ایپ کے بارے میں';
 
   @override
+  String get rateUs => 'Flowpaisa کو ریٹ کریں';
+
+  @override
   String get tagline => 'ہر پیسے کا حساب رکھیں';
 
   @override

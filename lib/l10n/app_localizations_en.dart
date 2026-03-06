@@ -1375,6 +1375,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get about => 'About';
 
   @override
+  String get rateUs => 'Rate Flowpaisa';
+
+  @override
   String get tagline => 'Track every paisa';
 
   @override
