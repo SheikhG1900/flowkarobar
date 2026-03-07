@@ -392,6 +392,8 @@
   "featureUnlimitedReceiptExtractionDesc": "مہینہ وار حد بندی کے بغیر رسید اسکیننگ کے لیے AI سے چلنے والے اسمارٹ اخراج کا استعمال کریں۔ رسیدوں سے رقم، تاجر اور زمرہ خودکار طور پر نکالیں۔",
   "featureBulkImportTitle": "بلک امپورٹ",
   "featureBulkImportDesc": "CSV فائلوں یا اپنے کلپ بورڈ (Google Sheets) سے سینکڑوں لین دین فوری طور پر امپورٹ کریں۔",
+  "featureBulkSettlementTitle": "بلک سیٹلمنٹ (وصولی اور ادائیگی)",
+  "featureBulkSettlementDesc": "ایک ہی بار میں متعدد وصولی یا ادائیگی کو سیٹل کریں۔ بہت سی انٹریوں کو ایک بار میں ادا شدہ یا وصول شدہ کے طور پر نشان زد کریں۔",
   "premiumPlan": "پریمیم پلان",
   "lifetime": "تاحیات",
   "monthly": "ماہانہ",

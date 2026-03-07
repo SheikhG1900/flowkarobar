@@ -1108,6 +1108,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'Import hundreds of transactions instantly from CSV files or your clipboard (Google Sheets).';
 
   @override
+  String get featureBulkSettlementTitle =>
+      'Bulk Settlement (Receivables & Payables)';
+
+  @override
+  String get featureBulkSettlementDesc =>
+      'Settle multiple receivables or payables in one go. Mark many entries as paid or received at once.';
+
+  @override
   String get premiumPlan => 'Premium Plan';
 
   @override

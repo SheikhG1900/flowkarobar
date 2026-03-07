@@ -2098,6 +2098,18 @@ abstract class AppLocalizations {
   /// **'Import hundreds of transactions instantly from CSV files or your clipboard (Google Sheets).'**
   String get featureBulkImportDesc;
 
+  /// No description provided for @featureBulkSettlementTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Bulk Settlement (Receivables & Payables)'**
+  String get featureBulkSettlementTitle;
+
+  /// No description provided for @featureBulkSettlementDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Settle multiple receivables or payables in one go. Mark many entries as paid or received at once.'**
+  String get featureBulkSettlementDesc;
+
   /// No description provided for @premiumPlan.
   ///
   /// In en, this message translates to:

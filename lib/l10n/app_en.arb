@@ -660,6 +660,8 @@
   "featureUnlimitedReceiptExtractionDesc": "Use AI-powered smart extraction for receipt scanning without monthly limits. Extract amount, merchant, and category from receipts automatically.",
   "featureBulkImportTitle": "Bulk Import",
   "featureBulkImportDesc": "Import hundreds of transactions instantly from CSV files or your clipboard (Google Sheets).",
+  "featureBulkSettlementTitle": "Bulk Settlement (Receivables & Payables)",
+  "featureBulkSettlementDesc": "Settle multiple receivables or payables in one go. Mark many entries as paid or received at once.",
   "premiumPlan": "Premium Plan",
   "lifetime": "Lifetime",
   "monthly": "Monthly",

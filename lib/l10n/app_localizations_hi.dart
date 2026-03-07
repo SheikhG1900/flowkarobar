@@ -1113,6 +1113,13 @@ class AppLocalizationsHi extends AppLocalizations {
       'CSV फ़ाइलों या अपने क्लिपबोर्ड (Google शीट्स) से सैकड़ों लेन-देन तुरंत इंपोर्ट करें।';
 
   @override
+  String get featureBulkSettlementTitle => 'बल्क सेटलमेंट (प्राप्य और देय)';
+
+  @override
+  String get featureBulkSettlementDesc =>
+      'एक साथ कई प्राप्य या देय राशि सेटल करें। कई एंट्री को एक बार में भुगतान या प्राप्त के रूप में चिह्नित करें।';
+
+  @override
   String get premiumPlan => 'प्रीमियम प्लान';
 
   @override

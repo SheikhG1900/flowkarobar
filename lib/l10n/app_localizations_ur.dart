@@ -1114,6 +1114,13 @@ class AppLocalizationsUr extends AppLocalizations {
       'CSV فائلوں یا اپنے کلپ بورڈ (Google Sheets) سے سینکڑوں لین دین فوری طور پر امپورٹ کریں۔';
 
   @override
+  String get featureBulkSettlementTitle => 'بلک سیٹلمنٹ (وصولی اور ادائیگی)';
+
+  @override
+  String get featureBulkSettlementDesc =>
+      'ایک ہی بار میں متعدد وصولی یا ادائیگی کو سیٹل کریں۔ بہت سی انٹریوں کو ایک بار میں ادا شدہ یا وصول شدہ کے طور پر نشان زد کریں۔';
+
+  @override
   String get premiumPlan => 'پریمیم پلان';
 
   @override
