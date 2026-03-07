@@ -1116,6 +1116,26 @@
   "itemAlreadyImported": "This item has already been imported.",
   "importDetails": "Import Details",
   "viewDetails": "View Details",
+  "importClassificationReceivableQuestion": "How would you like to record this receivable?",
+  "importClassificationReceivableOptionPaidFor": "I covered this expense — {contact} will reimburse me.",
+  "@importClassificationReceivableOptionPaidFor": {
+    "placeholders": {
+      "contact": {
+        "type": "String"
+      }
+    }
+  },
+  "importClassificationReceivableOptionWillReceive": "This is for my services, a gift I am owed, or another income.",
+  "importClassificationPayableQuestion": "How would you like to record this payable?",
+  "importClassificationPayableOptionPaidBy": "{contact} covered this expense on my behalf.",
+  "@importClassificationPayableOptionPaidBy": {
+    "placeholders": {
+      "contact": {
+        "type": "String"
+      }
+    }
+  },
+  "importClassificationPayableOptionReceivedFrom": "I received this as a loan, advance, or borrowed amount.",
   "type": "Type",
   "remaining": "remaining",
   "daily": "daily",

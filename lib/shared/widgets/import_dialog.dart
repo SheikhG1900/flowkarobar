@@ -5,6 +5,7 @@ import "package:flowpaisa/core/utils/date_formatter.dart";
 import "package:flowpaisa/core/utils/amount_formatter.dart";
 import "package:flowpaisa/features/whatsapp/domain/models/shared_data_models.dart";
 import "package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart";
+import "package:flowpaisa/features/transactions/presentation/widgets/transaction_details_dialog.dart";
 import "package:flowpaisa/features/receivables/domain/models.dart";
 import "package:flowpaisa/features/payables/domain/models.dart";
 import "package:flowpaisa/features/receivables/presentation/providers/receivables_provider.dart";
@@ -33,6 +34,7 @@ class _ImportDialogState extends ConsumerState<ImportDialog> {
   bool _alreadyImported = false;
   bool _isSettledUpdate = false;
   dynamic _existingItemWithLinkedData;
+  String? _existingTransactionUuid;
 
   @override
   void initState() {
@@ -67,11 +69,14 @@ class _ImportDialogState extends ConsumerState<ImportDialog> {
               .getReceivableWithLinkedDataByUuid(receivable.uuid);
           debugPrint("ImportDialog: Found matching Receivable.");
         } else {
-          exists = await ref
-              .read(transactionsRepositoryProvider)
-              .checkIfExternalLinkExists(externalId);
-          debugPrint(
-              "ImportDialog: Checked Transactions table. Exists: $exists");
+          final txRepo = ref.read(transactionsRepositoryProvider);
+          final transaction =
+              await txRepo.getTransactionByExternalLinkId(externalId);
+          if (transaction != null) {
+            exists = true;
+            _existingTransactionUuid = transaction.uuid;
+            debugPrint("ImportDialog: Found matching Transaction.");
+          }
         }
       }
 
@@ -93,16 +98,24 @@ class _ImportDialogState extends ConsumerState<ImportDialog> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) =>
-              ReceivableDetailsDialog(receivableUuid: _existingItemWithLinkedData.receivable.uuid),
+          builder: (context) => ReceivableDetailsDialog(
+              receivableUuid: _existingItemWithLinkedData.receivable.uuid),
         ),
       );
     } else if (_existingItemWithLinkedData is PayableWithLinkedData) {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) =>
-              PayableDetailsDialog(payableUuid: _existingItemWithLinkedData.payable.uuid),
+          builder: (context) => PayableDetailsDialog(
+              payableUuid: _existingItemWithLinkedData.payable.uuid),
+        ),
+      );
+    } else if (_existingTransactionUuid != null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => TransactionDetailsDialog(
+              transactionUuid: _existingTransactionUuid!),
         ),
       );
     }
@@ -240,9 +253,7 @@ class _ImportDialogState extends ConsumerState<ImportDialog> {
           )
         else
           ElevatedButton(
-            onPressed: _isImporting
-                ? null
-                : (_isSettledUpdate ? _navigateToDetails : _navigateToCreate),
+            onPressed: _isImporting ? null : _navigateToDetails,
             style: ElevatedButton.styleFrom(
               backgroundColor:
                   _isSettledUpdate ? Colors.green : Colors.grey.shade400,

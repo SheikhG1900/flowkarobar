@@ -203,144 +203,144 @@ Flowpaisa 💰 के साथ जेनरेट किया गया''',
 
 Flowpaisa 💰 کے ساتھ تیار کیا گیا''',
 
-    // Transaction Share - PAID_FOR - English
-    'transaction_share_paid_for_en': '''💰 {type} Recorded
+    // Transaction Share - PAID_FOR - English (contact has to pay)
+    'transaction_share_paid_for_en': '''I have recorded that you have to pay *{amount}*.
 
-I have recorded that I paid on your behalf *{amount}* on *{date}*{description}.
-
-{categoryName}
+*Date*: {date}
+*Description*: {description}
+*Category*: {categoryName}
 
 View this transaction in Flowpaisa:
 {link}
 
 Manage your finances better with Flowpaisa! 💰''',
 
-    // Transaction Share - PAID_FOR - Hindi
-    'transaction_share_paid_for_hi': '''💰 {type} दर्ज किया गया
+    // Transaction Share - PAID_FOR - Hindi (contact has to pay)
+    'transaction_share_paid_for_hi': '''मैंने दर्ज किया है कि आपको *{amount}* का भुगतान करना है।
 
-मैंने दर्ज किया है कि मैंने आपकी ओर से *{date}* को *{amount}* का भुगतान किया{description}।
-
-{categoryName}
+*तारीख*: {date}
+*विवरण*: {description}
+*श्रेणी*: {categoryName}
 
 Flowpaisa में इस लेन-देन को देखें:
 {link}
 
 Flowpaisa के साथ अपने वित्त को बेहतर तरीके से प्रबंधित करें! 💰''',
 
-    // Transaction Share - PAID_FOR - Urdu
-    'transaction_share_paid_for_ur': '''💰 {type} ریکارڈ کیا گیا
+    // Transaction Share - PAID_FOR - Urdu (contact has to pay)
+    'transaction_share_paid_for_ur': '''میں نے ریکارڈ کیا ہے کہ آپ کو *{amount}* ادا کرنا ہے۔
 
-میں نے ریکارڈ کیا ہے کہ میں نے آپ کی طرف سے *{date}* کو *{amount}* ادا کیا{description}۔
-
-{categoryName}
+*تاریخ*: {date}
+*تفصیل*: {description}
+*زمرہ*: {categoryName}
 
 Flowpaisa میں اس لین دین کو دیکھیں:
 {link}
 
 Flowpaisa کے ساتھ اپنے مالیات کو بہتر طریقے سے منظم کریں! 💰''',
 
-    // Transaction Share - PAID_BY - English
-    'transaction_share_paid_by_en': '''💰 {type} Recorded
+    // Transaction Share - PAID_BY - English (user has to pay contact)
+    'transaction_share_paid_by_en': '''I have recorded that I have to pay you *{amount}*.
 
-I have recorded that you paid for me *{amount}* on *{date}*{description}.
-
-{categoryName}
+*Date*: {date}
+*Description*: {description}
+*Category*: {categoryName}
 
 View this transaction in Flowpaisa:
 {link}
 
 Manage your finances better with Flowpaisa! 💰''',
 
-    // Transaction Share - PAID_BY - Hindi
-    'transaction_share_paid_by_hi': '''💰 {type} दर्ज किया गया
+    // Transaction Share - PAID_BY - Hindi (user has to pay contact)
+    'transaction_share_paid_by_hi': '''मैंने दर्ज किया है कि मुझे आपको *{amount}* का भुगतान करना है।
 
-मैंने दर्ज किया है कि आपने मेरे लिए *{date}* को *{amount}* का भुगतान किया{description}।
-
-{categoryName}
+*तारीख*: {date}
+*विवरण*: {description}
+*श्रेणी*: {categoryName}
 
 Flowpaisa में इस लेन-देन को देखें:
 {link}
 
 Flowpaisa के साथ अपने वित्त को बेहतर तरीके से प्रबंधित करें! 💰''',
 
-    // Transaction Share - PAID_BY - Urdu
-    'transaction_share_paid_by_ur': '''💰 {type} ریکارڈ کیا گیا
+    // Transaction Share - PAID_BY - Urdu (user has to pay contact)
+    'transaction_share_paid_by_ur': '''میں نے ریکارڈ کیا ہے کہ مجھے آپ کو *{amount}* ادا کرنا ہے۔
 
-میں نے ریکارڈ کیا ہے کہ آپ نے میرے لیے *{date}* کو *{amount}* ادا کیا{description}۔
-
-{categoryName}
+*تاریخ*: {date}
+*تفصیل*: {description}
+*زمرہ*: {categoryName}
 
 Flowpaisa میں اس لین دین کو دیکھیں:
 {link}
 
 Flowpaisa کے ساتھ اپنے مالیات کو بہتر طریقے سے منظم کریں! 💰''',
 
-    // Transaction Share - WILL_RECEIVE - English
-    'transaction_share_will_receive_en': '''💰 {type} Recorded
+    // Transaction Share - WILL_RECEIVE - English (same as PAID_FOR: contact has to pay)
+    'transaction_share_will_receive_en': '''I have recorded that you have to pay *{amount}*.
 
-I have recorded that I am expecting a payment of *{amount}* on *{date}*{description}.
-
-{categoryName}
+*Date*: {date}
+*Description*: {description}
+*Category*: {categoryName}
 
 View this transaction in Flowpaisa:
 {link}
 
 Manage your finances better with Flowpaisa! 💰''',
 
-    // Transaction Share - WILL_RECEIVE - Hindi
-    'transaction_share_will_receive_hi': '''💰 {type} दर्ज किया गया
+    // Transaction Share - WILL_RECEIVE - Hindi (contact has to pay)
+    'transaction_share_will_receive_hi': '''मैंने दर्ज किया है कि आपको *{amount}* का भुगतान करना है।
 
-मैंने दर्ज किया है कि मैं *{date}* को *{amount}* के भुगतान की अपेक्षा कर रहा हूं{description}।
-
-{categoryName}
+*तारीख*: {date}
+*विवरण*: {description}
+*श्रेणी*: {categoryName}
 
 Flowpaisa में इस लेन-देन को देखें:
 {link}
 
 Flowpaisa के साथ अपने वित्त को बेहतर तरीके से प्रबंधित करें! 💰''',
 
-    // Transaction Share - WILL_RECEIVE - Urdu
-    'transaction_share_will_receive_ur': '''💰 {type} ریکارڈ کیا گیا
+    // Transaction Share - WILL_RECEIVE - Urdu (contact has to pay)
+    'transaction_share_will_receive_ur': '''میں نے ریکارڈ کیا ہے کہ آپ کو *{amount}* ادا کرنا ہے۔
 
-میں نے ریکارڈ کیا ہے کہ میں *{date}* کو *{amount}* کی ادائیگی کی توقع کر رہا ہوں{description}۔
-
-{categoryName}
+*تاریخ*: {date}
+*تفصیل*: {description}
+*زمرہ*: {categoryName}
 
 Flowpaisa میں اس لین دین کو دیکھیں:
 {link}
 
 Flowpaisa کے ساتھ اپنے مالیات کو بہتر طریقے سے منظم کریں! 💰''',
 
-    // Transaction Share - RECEIVED_FROM - English
-    'transaction_share_received_from_en': '''💰 {type} Recorded
+    // Transaction Share - RECEIVED_FROM - English (same as PAID_BY: user has to pay contact)
+    'transaction_share_received_from_en': '''I have recorded that I have to pay you *{amount}*.
 
-I have recorded that I received *{amount}* from you on *{date}*{description}.
-
-{categoryName}
+*Date*: {date}
+*Description*: {description}
+*Category*: {categoryName}
 
 View this transaction in Flowpaisa:
 {link}
 
 Manage your finances better with Flowpaisa! 💰''',
 
-    // Transaction Share - RECEIVED_FROM - Hindi
-    'transaction_share_received_from_hi': '''💰 {type} दर्ज किया गया
+    // Transaction Share - RECEIVED_FROM - Hindi (user has to pay contact)
+    'transaction_share_received_from_hi': '''मैंने दर्ज किया है कि मुझे आपको *{amount}* का भुगतान करना है।
 
-मैंने दर्ज किया है कि मैंने आपसे *{date}* को *{amount}* प्राप्त किया{description}।
-
-{categoryName}
+*तारीख*: {date}
+*विवरण*: {description}
+*श्रेणी*: {categoryName}
 
 Flowpaisa में इस लेन-देन को देखें:
 {link}
 
 Flowpaisa के साथ अपने वित्त को बेहतर तरीके से प्रबंधित करें! 💰''',
 
-    // Transaction Share - RECEIVED_FROM - Urdu
-    'transaction_share_received_from_ur': '''💰 {type} ریکارڈ کیا گیا
+    // Transaction Share - RECEIVED_FROM - Urdu (user has to pay contact)
+    'transaction_share_received_from_ur': '''میں نے ریکارڈ کیا ہے کہ مجھے آپ کو *{amount}* ادا کرنا ہے۔
 
-میں نے ریکارڈ کیا ہے کہ میں نے آپ سے *{date}* کو *{amount}* وصول کیا{description}۔
-
-{categoryName}
+*تاریخ*: {date}
+*تفصیل*: {description}
+*زمرہ*: {categoryName}
 
 Flowpaisa میں اس لین دین کو دیکھیں:
 {link}

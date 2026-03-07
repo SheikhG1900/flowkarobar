@@ -2212,6 +2212,32 @@ class AppLocalizationsEn extends AppLocalizations {
   String get viewDetails => 'View Details';
 
   @override
+  String get importClassificationReceivableQuestion =>
+      'How would you like to record this receivable?';
+
+  @override
+  String importClassificationReceivableOptionPaidFor(String contact) {
+    return 'I covered this expense — $contact will reimburse me.';
+  }
+
+  @override
+  String get importClassificationReceivableOptionWillReceive =>
+      'This is for my services, a gift I am owed, or another income.';
+
+  @override
+  String get importClassificationPayableQuestion =>
+      'How would you like to record this payable?';
+
+  @override
+  String importClassificationPayableOptionPaidBy(String contact) {
+    return '$contact covered this expense on my behalf.';
+  }
+
+  @override
+  String get importClassificationPayableOptionReceivedFrom =>
+      'I received this as a loan, advance, or borrowed amount.';
+
+  @override
   String get type => 'Type';
 
   @override

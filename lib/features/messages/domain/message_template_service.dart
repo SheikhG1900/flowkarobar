@@ -168,7 +168,7 @@ class MessageTemplateService {
     };
   }
 
-  /// Build variables map for transaction share
+  /// Build variables map for transaction share (contact-centric; use "-" for empty)
   Map<String, String> buildTransactionShareVariables({
     required String type,
     required String amount,
@@ -185,11 +185,11 @@ class MessageTemplateService {
       'amount': amount,
       'date': date,
       'description': description != null && description.isNotEmpty
-          ? ' for _' + description + '_'
-          : '',
+          ? description
+          : '-',
       'categoryName': categoryName != null && categoryName.isNotEmpty
-          ? 'This was recorded under the *$categoryName* category.\n'
-          : '',
+          ? categoryName
+          : '-',
       'link': link ?? '',
       'relationship': relationship ?? '',
     };

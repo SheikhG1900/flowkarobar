@@ -2221,6 +2221,32 @@ class AppLocalizationsHi extends AppLocalizations {
   String get viewDetails => 'विवरण देखें';
 
   @override
+  String get importClassificationReceivableQuestion =>
+      'आप इस प्राप्य को कैसे दर्ज करना चाहेंगे?';
+
+  @override
+  String importClassificationReceivableOptionPaidFor(String contact) {
+    return 'मैंने यह खर्च उठाया — $contact मुझे चुकाएगा।';
+  }
+
+  @override
+  String get importClassificationReceivableOptionWillReceive =>
+      'यह मेरी सेवाओं, उपहार या अन्य आय के लिए है।';
+
+  @override
+  String get importClassificationPayableQuestion =>
+      'आप इस देय को कैसे दर्ज करना चाहेंगे?';
+
+  @override
+  String importClassificationPayableOptionPaidBy(String contact) {
+    return '$contact ने मेरी ओर से यह खर्च उठाया।';
+  }
+
+  @override
+  String get importClassificationPayableOptionReceivedFrom =>
+      'मैंने इसे ऋण, अग्रिम या उधार के रूप में प्राप्त किया।';
+
+  @override
   String get type => 'प्रकार';
 
   @override

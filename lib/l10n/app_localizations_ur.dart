@@ -2226,6 +2226,32 @@ class AppLocalizationsUr extends AppLocalizations {
   String get viewDetails => 'تفصیلات دیکھیں';
 
   @override
+  String get importClassificationReceivableQuestion =>
+      'آپ اس وصولی کو کیسے ریکارڈ کرنا چاہیں گے؟';
+
+  @override
+  String importClassificationReceivableOptionPaidFor(String contact) {
+    return 'میں نے یہ خرچ اٹھایا — $contact مجھے واپس دے گا۔';
+  }
+
+  @override
+  String get importClassificationReceivableOptionWillReceive =>
+      'یہ میری خدمات، تحفہ یا دوسری آمدنی کے لیے ہے۔';
+
+  @override
+  String get importClassificationPayableQuestion =>
+      'آپ اس قابل ادائیگی کو کیسے ریکارڈ کرنا چاہیں گے؟';
+
+  @override
+  String importClassificationPayableOptionPaidBy(String contact) {
+    return '$contact نے میری طرف سے یہ خرچ اٹھایا۔';
+  }
+
+  @override
+  String get importClassificationPayableOptionReceivedFrom =>
+      'میں نے اسے قرض، ادھار یا پیشگی کے طور پر وصول کیا۔';
+
+  @override
   String get type => 'قسم';
 
   @override

@@ -4090,6 +4090,42 @@ abstract class AppLocalizations {
   /// **'View Details'**
   String get viewDetails;
 
+  /// No description provided for @importClassificationReceivableQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'How would you like to record this receivable?'**
+  String get importClassificationReceivableQuestion;
+
+  /// No description provided for @importClassificationReceivableOptionPaidFor.
+  ///
+  /// In en, this message translates to:
+  /// **'I covered this expense — {contact} will reimburse me.'**
+  String importClassificationReceivableOptionPaidFor(String contact);
+
+  /// No description provided for @importClassificationReceivableOptionWillReceive.
+  ///
+  /// In en, this message translates to:
+  /// **'This is for my services, a gift I am owed, or another income.'**
+  String get importClassificationReceivableOptionWillReceive;
+
+  /// No description provided for @importClassificationPayableQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'How would you like to record this payable?'**
+  String get importClassificationPayableQuestion;
+
+  /// No description provided for @importClassificationPayableOptionPaidBy.
+  ///
+  /// In en, this message translates to:
+  /// **'{contact} covered this expense on my behalf.'**
+  String importClassificationPayableOptionPaidBy(String contact);
+
+  /// No description provided for @importClassificationPayableOptionReceivedFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'I received this as a loan, advance, or borrowed amount.'**
+  String get importClassificationPayableOptionReceivedFrom;
+
   /// No description provided for @type.
   ///
   /// In en, this message translates to:

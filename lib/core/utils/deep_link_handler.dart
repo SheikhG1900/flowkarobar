@@ -5,8 +5,12 @@ import 'package:app_links/app_links.dart';
 import 'package:flowpaisa/features/whatsapp/domain/deep_link_service.dart';
 import 'package:flowpaisa/features/whatsapp/domain/models/shared_data_models.dart';
 import 'package:flowpaisa/shared/widgets/import_dialog.dart';
+import 'package:flowpaisa/shared/widgets/import_classification_sheet.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/transactions/presentation/widgets/transaction_details_dialog.dart';
+import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
+import 'package:flowpaisa/features/payables/presentation/providers/payables_provider.dart';
+import 'package:flowpaisa/features/receivables/presentation/providers/receivables_provider.dart';
 import 'package:flowpaisa/features/payables/presentation/widgets/payable_details_dialog.dart';
 import 'package:flowpaisa/features/receivables/presentation/widgets/receivable_details_dialog.dart';
 import 'package:flowpaisa/features/contacts/presentation/screens/contact_details_screen.dart';
@@ -133,17 +137,59 @@ class DeepLinkHandler {
     }
   }
 
-  /// Show the import dialog for the shared data
+  /// Show the import dialog or classification sheet for the shared data
   Future<void> _showImportDialog(SharedData sharedData) async {
     if (_context == null || !_context!.mounted || _ref == null) {
       return;
     }
+    final ref = _ref!;
+    final context = _context!;
+
+    bool alreadyImported = false;
+    try {
+      final payable = await ref
+          .read(payablesRepositoryProvider)
+          .getPayableByExternalLinkId(sharedData.externalLinkId);
+      if (payable != null) alreadyImported = true;
+      if (!alreadyImported) {
+        final receivable = await ref
+            .read(receivablesRepositoryProvider)
+            .getReceivableByExternalLinkId(sharedData.externalLinkId);
+        if (receivable != null) alreadyImported = true;
+      }
+      if (!alreadyImported) {
+        alreadyImported = await ref
+            .read(transactionsRepositoryProvider)
+            .checkIfExternalLinkExists(sharedData.externalLinkId);
+      }
+    } catch (e) {
+      debugPrint('DeepLinkHandler: Error checking if already imported: $e');
+    }
+
+    if (!context.mounted) return;
+
+    if (alreadyImported) {
+      await showDialog(
+        context: context,
+        builder: (ctx) => ImportDialog(sharedData: sharedData),
+      );
+      return;
+    }
+
+    if (sharedData is TransactionShareData &&
+        ImportClassificationSheet.needsClassification(sharedData)) {
+      await showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (ctx) => ImportClassificationSheet(data: sharedData),
+      );
+      return;
+    }
 
     await showDialog(
-      context: _context!,
-      builder: (context) => ImportDialog(
-        sharedData: sharedData,
-      ),
+      context: context,
+      builder: (ctx) => ImportDialog(sharedData: sharedData),
     );
   }
 

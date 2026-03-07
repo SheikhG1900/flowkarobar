@@ -743,6 +743,26 @@
   "itemAlreadyImported": "यह आइटम पहले ही आयात किया जा चुका है।",
   "importDetails": "विवरण आयात करें",
   "viewDetails": "विवरण देखें",
+  "importClassificationReceivableQuestion": "आप इस प्राप्य को कैसे दर्ज करना चाहेंगे?",
+  "importClassificationReceivableOptionPaidFor": "मैंने यह खर्च उठाया — {contact} मुझे चुकाएगा।",
+  "@importClassificationReceivableOptionPaidFor": {
+    "placeholders": {
+      "contact": {
+        "type": "String"
+      }
+    }
+  },
+  "importClassificationReceivableOptionWillReceive": "यह मेरी सेवाओं, उपहार या अन्य आय के लिए है।",
+  "importClassificationPayableQuestion": "आप इस देय को कैसे दर्ज करना चाहेंगे?",
+  "importClassificationPayableOptionPaidBy": "{contact} ने मेरी ओर से यह खर्च उठाया।",
+  "@importClassificationPayableOptionPaidBy": {
+    "placeholders": {
+      "contact": {
+        "type": "String"
+      }
+    }
+  },
+  "importClassificationPayableOptionReceivedFrom": "मैंने इसे ऋण, अग्रिम या उधार के रूप में प्राप्त किया।",
   "type": "प्रकार",
   "remaining": "शेष",
   "daily": "दैनिक",

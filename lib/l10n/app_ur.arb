@@ -743,6 +743,26 @@
   "itemAlreadyImported": "یہ چیز پہلے ہی درآمد کی جا چکی ہے۔",
   "importDetails": "تفصیلات درآمد کریں",
   "viewDetails": "تفصیلات دیکھیں",
+  "importClassificationReceivableQuestion": "آپ اس وصولی کو کیسے ریکارڈ کرنا چاہیں گے؟",
+  "importClassificationReceivableOptionPaidFor": "میں نے یہ خرچ اٹھایا — {contact} مجھے واپس دے گا۔",
+  "@importClassificationReceivableOptionPaidFor": {
+    "placeholders": {
+      "contact": {
+        "type": "String"
+      }
+    }
+  },
+  "importClassificationReceivableOptionWillReceive": "یہ میری خدمات، تحفہ یا دوسری آمدنی کے لیے ہے۔",
+  "importClassificationPayableQuestion": "آپ اس قابل ادائیگی کو کیسے ریکارڈ کرنا چاہیں گے؟",
+  "importClassificationPayableOptionPaidBy": "{contact} نے میری طرف سے یہ خرچ اٹھایا۔",
+  "@importClassificationPayableOptionPaidBy": {
+    "placeholders": {
+      "contact": {
+        "type": "String"
+      }
+    }
+  },
+  "importClassificationPayableOptionReceivedFrom": "میں نے اسے قرض، ادھار یا پیشگی کے طور پر وصول کیا۔",
   "type": "قسم",
   "remaining": "باقی",
   "daily": "روزانہ",
