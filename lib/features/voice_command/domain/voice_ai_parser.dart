@@ -313,6 +313,7 @@ class VoiceAiParser extends BaseTransactionAiParser {
       relationship = 'PAID_BY';
     } else if (lowerText.containsAny(_willReceiveKeywords)) {
       relationship = 'WILL_RECEIVE';
+      type = "INCOME";
     }
 
     if (contact == null || contact.isEmpty) {
@@ -320,9 +321,8 @@ class VoiceAiParser extends BaseTransactionAiParser {
     }
 
     final seen = <double>{};
-    final uniqueCandidates = amountCandidates
-        .where((c) => seen.add(c.value))
-        .toList();
+    final uniqueCandidates =
+        amountCandidates.where((c) => seen.add(c.value)).toList();
 
     return ParsedTransactionInput(
       amount: amount,

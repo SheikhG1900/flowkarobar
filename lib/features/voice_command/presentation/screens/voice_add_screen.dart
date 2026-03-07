@@ -3,6 +3,7 @@ import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
 import 'package:flowpaisa/features/categories/presentation/providers/categories_provider.dart';
 import 'package:flowpaisa/core/database/database.dart' as db;
+import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/icon_helper.dart';
 import 'package:flowpaisa/core/utils/string_similarity.dart';
 import 'package:flutter/foundation.dart';
@@ -749,16 +750,34 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
                                         },
                                       ),
 
+                                      // Receivable/Payable badge centered below quota (when relationship present)
+                                      if (_parsedResult?.paidRelationship !=
+                                          null) ...[
+                                        Center(
+                                          child: _buildRelationshipBadge(
+                                              theme, l10n),
+                                        ),
+                                        const SizedBox(height: 12),
+                                      ],
+
                                       _buildDetailRow(
                                           l10n.amount,
                                           "${_parsedResult?.amount ?? 0}",
-                                          theme),
+                                          theme,
+                                          valueColor: (_parsedResult?.type ==
+                                                  'INCOME')
+                                              ? AppColors.incomeColor
+                                              : AppColors.expenseColor),
                                       _buildDetailRow(
                                           l10n.type,
                                           _parsedResult?.type == "INCOME"
                                               ? l10n.income
                                               : l10n.expense,
-                                          theme),
+                                          theme,
+                                          valueColor: (_parsedResult?.type ==
+                                                  'INCOME')
+                                              ? AppColors.incomeColor
+                                              : AppColors.expenseColor),
 
                                       // Category selection
                                       _buildCategorySuggestions(
@@ -767,16 +786,6 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
                                       // Contact selection
                                       _buildContactSuggestions(
                                           theme, activeCashbook, l10n),
-
-                                      if (_parsedResult?.paidRelationship !=
-                                          null)
-                                        _buildDetailRow(
-                                            l10n.relationship,
-                                            _getLocalizedRelationship(
-                                                _parsedResult!
-                                                    .paidRelationship!,
-                                                l10n),
-                                            theme),
 
                                       const SizedBox(height: 24),
                                       SizedBox(
@@ -884,22 +893,33 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
     );
   }
 
-  String _getLocalizedRelationship(String relationship, AppLocalizations l10n) {
-    switch (relationship) {
-      case 'PAID_FOR':
-        return l10n.paidFor;
-      case 'PAID_BY':
-        return l10n.paidBy;
-      case 'RECEIVED_FROM':
-        return l10n.receivedLabel;
-      case 'WILL_RECEIVE':
-        return l10n.willReceive;
-      default:
-        return relationship;
-    }
+  Widget _buildRelationshipBadge(ThemeData theme, AppLocalizations l10n) {
+    final rel = _parsedResult?.paidRelationship;
+    if (rel == null) return const SizedBox.shrink();
+    final isReceivable =
+        rel == 'PAID_FOR' || rel == 'WILL_RECEIVE';
+    final color = isReceivable
+        ? AppColors.receivableColor
+        : AppColors.payableColor;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withValues(alpha: 0.5)),
+      ),
+      child: Text(
+        isReceivable ? l10n.receivable : l10n.payable,
+        style: theme.textTheme.labelLarge?.copyWith(
+          fontWeight: FontWeight.w600,
+          color: color,
+        ),
+      ),
+    );
   }
 
-  Widget _buildDetailRow(String label, String value, ThemeData theme) {
+  Widget _buildDetailRow(String label, String value, ThemeData theme,
+      {Color? valueColor}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Column(
@@ -914,6 +934,7 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
             value,
             style: theme.textTheme.bodyLarge?.copyWith(
               fontWeight: FontWeight.bold,
+              color: valueColor,
             ),
           ),
         ],
