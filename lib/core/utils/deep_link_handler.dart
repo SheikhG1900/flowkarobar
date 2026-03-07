@@ -23,6 +23,10 @@ class DeepLinkHandler {
   BuildContext? _context;
   WidgetRef? _ref;
 
+  /// Process initial link only once per process. After restart/rebirth the OS
+  /// often returns the same (last) link again; we avoid handling it twice.
+  static bool _initialLinkProcessed = false;
+
   DeepLinkHandler(this._deepLinkService);
 
   /// Initialize deep link handling
@@ -31,15 +35,24 @@ class DeepLinkHandler {
     _context = context;
     _ref = ref;
 
-    // Handle initial link if app was opened via deep link
-    try {
-      final initialUri = await _appLinks.getInitialLink();
-      if (initialUri != null) {
-        await _handleDeepLink(initialUri.toString());
+    // Handle initial link only once per process. After Phoenix.rebirth or
+    // similar, initialize() runs again but getInitialLink() still returns
+    // the previous link; we skip so the "last" deep link is not re-executed.
+    if (!_initialLinkProcessed) {
+      _initialLinkProcessed = true;
+      try {
+        final initialUri = await _appLinks.getInitialLink();
+        if (initialUri != null) {
+          await _handleDeepLink(initialUri.toString());
+        }
+      } catch (e) {
+        debugPrint('Error getting initial URI: $e');
       }
-    } catch (e) {
-      debugPrint('Error getting initial URI: $e');
     }
+
+    // Cancel previous subscription if initialize() was called again (e.g. rebirth)
+    await _linkSubscription?.cancel();
+    _linkSubscription = null;
 
     // Listen for deep links while app is running
     _linkSubscription = _appLinks.uriLinkStream.listen(
