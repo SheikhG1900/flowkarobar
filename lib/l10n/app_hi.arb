@@ -1333,6 +1333,7 @@
   "loggedOutSyncPaused": "लॉग आउट हो गया। बैकग्राउंड सिंक रोक दिया गया है।",
   "signOutSyncConfirmMessage": "साइन आउट करने पर बैकग्राउंड सिंक रुक जाएगा। जारी रखें?",
   "scenarioHelpTitle": "किस प्रकार का लेन-देन?",
+  "autoSuggest": "स्वतः सुझाव",
   "scenarioPaidForMeal": "दोस्त के लंच/भोजन का भुगतान किया",
   "scenarioBoughtForSomeone": "किसी के लिए कुछ खरीदा (वे वापस देंगे)",
   "scenarioLentMoney": "साथी/परिवार को पैसे उधार दिए",

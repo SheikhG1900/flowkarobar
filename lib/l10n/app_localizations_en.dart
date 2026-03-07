@@ -3487,6 +3487,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get scenarioHelpTitle => 'What type of transaction?';
 
   @override
+  String get autoSuggest => 'Auto suggest';
+
+  @override
   String get scenarioPaidForMeal => 'Paid for friend\'s lunch / meal';
 
   @override

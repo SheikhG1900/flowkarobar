@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
+import 'package:flowpaisa/features/settings/data/user_preferences_repository.dart';
+import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 import 'package:flowpaisa/features/transactions/data/transaction_scenarios.dart';
 import 'package:flowpaisa/features/transactions/domain/transaction_scenario.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
@@ -70,6 +73,7 @@ String getScenarioLabel(AppLocalizations l10n, String id) {
 
 /// Shows a bottom sheet listing transaction scenarios. On tap, [onScenarioSelected]
 /// is called with the scenario's type and relationship, then the sheet is closed.
+/// Includes an "Auto suggest" toggle at the top to control auto-show on manual add.
 void showTransactionScenarioPicker(
   BuildContext context, {
   required void Function(String type, String? relationship) onScenarioSelected,
@@ -90,7 +94,7 @@ void showTransactionScenarioPicker(
   );
 }
 
-class _TransactionScenarioPicker extends StatelessWidget {
+class _TransactionScenarioPicker extends ConsumerStatefulWidget {
   final ScrollController scrollController;
   final void Function(String type, String? relationship) onScenarioSelected;
 
@@ -98,6 +102,33 @@ class _TransactionScenarioPicker extends StatelessWidget {
     required this.scrollController,
     required this.onScenarioSelected,
   });
+
+  @override
+  ConsumerState<_TransactionScenarioPicker> createState() =>
+      _TransactionScenarioPickerState();
+}
+
+class _TransactionScenarioPickerState
+    extends ConsumerState<_TransactionScenarioPicker> {
+  bool _autoSuggest = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAutoSuggest();
+  }
+
+  Future<void> _loadAutoSuggest() async {
+    final repo = ref.read(userPreferencesRepositoryProvider);
+    final value = await repo.getAutoSuggestTransactionScenario();
+    if (mounted) setState(() => _autoSuggest = value);
+  }
+
+  Future<void> _onAutoSuggestChanged(bool value) async {
+    setState(() => _autoSuggest = value);
+    final repo = ref.read(userPreferencesRepositoryProvider);
+    await repo.setAutoSuggestTransactionScenario(value);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -129,9 +160,26 @@ class _TransactionScenarioPicker extends StatelessWidget {
               ),
             ),
           ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    l10n.autoSuggest,
+                    style: theme.textTheme.titleMedium,
+                  ),
+                ),
+                Switch(
+                  value: _autoSuggest,
+                  onChanged: _onAutoSuggestChanged,
+                ),
+              ],
+            ),
+          ),
           Expanded(
             child: ListView.builder(
-              controller: scrollController,
+              controller: widget.scrollController,
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
               itemCount: TransactionScenarios.all.length,
               itemBuilder: (context, index) {
@@ -140,7 +188,7 @@ class _TransactionScenarioPicker extends StatelessWidget {
                   scenario: scenario,
                   label: getScenarioLabel(l10n, scenario.id),
                   onTap: () {
-                    onScenarioSelected(scenario.type, scenario.relationship);
+                    widget.onScenarioSelected(scenario.type, scenario.relationship);
                     Navigator.of(context).pop();
                   },
                 );

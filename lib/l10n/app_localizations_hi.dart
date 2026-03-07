@@ -3500,6 +3500,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get scenarioHelpTitle => 'किस प्रकार का लेन-देन?';
 
   @override
+  String get autoSuggest => 'स्वतः सुझाव';
+
+  @override
   String get scenarioPaidForMeal => 'दोस्त के लंच/भोजन का भुगतान किया';
 
   @override

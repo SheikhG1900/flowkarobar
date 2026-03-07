@@ -6371,6 +6371,12 @@ abstract class AppLocalizations {
   /// **'What type of transaction?'**
   String get scenarioHelpTitle;
 
+  /// No description provided for @autoSuggest.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto suggest'**
+  String get autoSuggest;
+
   /// No description provided for @scenarioPaidForMeal.
   ///
   /// In en, this message translates to:

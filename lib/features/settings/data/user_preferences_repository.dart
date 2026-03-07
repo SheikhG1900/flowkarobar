@@ -20,6 +20,8 @@ class UserPreferencesRepository {
   static const String keyFontHi = 'font_hi';
   static const String keyFontUr = 'font_ur';
   static const String keyDashboardWidgetLayout = 'dashboard_widget_layout';
+  static const String keyAutoSuggestTransactionScenario =
+      'auto_suggest_transaction_scenario';
 
   // Get a preference value by key (excludes soft-deleted rows so they sync correctly)
   Future<String?> getPreference(String key) async {
@@ -117,6 +119,19 @@ class UserPreferencesRepository {
 
   Future<void> setDateFormat(String format) async {
     await setPreference(keyDateFormat, format);
+  }
+
+  /// Auto-show transaction scenario picker when user opens Add Transaction
+  /// manually. Default true for new users.
+  Future<bool> getAutoSuggestTransactionScenario() async {
+    final value =
+        await getPreference(keyAutoSuggestTransactionScenario);
+    return value != 'false';
+  }
+
+  Future<void> setAutoSuggestTransactionScenario(bool value) async {
+    await setPreference(
+        keyAutoSuggestTransactionScenario, value ? 'true' : 'false');
   }
 
   // User Profile Information

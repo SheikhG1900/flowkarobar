@@ -3506,6 +3506,9 @@ class AppLocalizationsUr extends AppLocalizations {
   String get scenarioHelpTitle => 'کس قسم کا لین دین؟';
 
   @override
+  String get autoSuggest => 'خود کار تجویز';
+
+  @override
   String get scenarioPaidForMeal => 'دوست کے لنچ/کھانے کی ادائیگی کی';
 
   @override

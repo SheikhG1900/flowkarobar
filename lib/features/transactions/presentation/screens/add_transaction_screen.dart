@@ -107,6 +107,21 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
 
   void _onAmountChanged() => setState(() {});
 
+  /// True when user opened Add Transaction without any initial data (no import, voice, receipt, etc.).
+  bool get _isManualEntry =>
+      widget.initialAmount == null &&
+      widget.initialDate == null &&
+      widget.initialDescription == null &&
+      widget.initialType == null &&
+      widget.initialRelationship == null &&
+      widget.initialCategoryName == null &&
+      widget.initialCategoryColor == null &&
+      widget.initialCategoryIcon == null &&
+      widget.initialContactName == null &&
+      widget.initialContactPhone == null &&
+      widget.initialExternalLinkId == null &&
+      widget.initialDueDate == null;
+
   @override
   void initState() {
     super.initState();
@@ -139,6 +154,25 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initializeEntities();
     });
+
+    // Auto-show scenario picker when user opens Add Transaction manually and preference is on
+    if (_isManualEntry) {
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        if (!mounted) return;
+        final repo = ref.read(userPreferencesRepositoryProvider);
+        final autoSuggest = await repo.getAutoSuggestTransactionScenario();
+        if (!mounted) return;
+        if (!autoSuggest) return;
+        showTransactionScenarioPicker(context,
+            onScenarioSelected: (type, relationship) {
+          setState(() {
+            _selectedType = type;
+            _paidRelationship = relationship;
+            _createLinkedEntry = relationship != null;
+          });
+        });
+      });
+    }
   }
 
   Future<void> _initializeEntities() async {

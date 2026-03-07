@@ -1868,6 +1868,7 @@
   "loggedOutSyncPaused": "Logged out. Background sync has been paused.",
   "signOutSyncConfirmMessage": "Signing out will pause background sync. Continue?",
   "scenarioHelpTitle": "What type of transaction?",
+  "autoSuggest": "Auto suggest",
   "scenarioPaidForMeal": "Paid for friend's lunch / meal",
   "scenarioBoughtForSomeone": "Bought something for someone (they'll pay back)",
   "scenarioLentMoney": "Lent money to colleague/family",
