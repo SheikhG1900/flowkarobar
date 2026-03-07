@@ -874,32 +874,35 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _RelationshipButton(
-                        label: l10n.paidFor,
-                        subtitle: l10n.iWillReceiveBack,
-                        icon: Icons.account_balance_wallet,
-                        isSelected: _paidRelationship == 'PAID_FOR',
-                        gradient: AppColors.receivableGradient,
-                        color: AppColors.receivableColor,
-                        onTap: () => _handleRelationshipChange('PAID_FOR'),
+                IntrinsicHeight(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(
+                        child: _RelationshipButton(
+                          label: l10n.paidFor,
+                          subtitle: l10n.iWillReceiveBack,
+                          icon: Icons.account_balance_wallet,
+                          isSelected: _paidRelationship == 'PAID_FOR',
+                          gradient: AppColors.receivableGradient,
+                          color: AppColors.receivableColor,
+                          onTap: () => _handleRelationshipChange('PAID_FOR'),
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _RelationshipButton(
-                        label: l10n.paidBy,
-                        subtitle: l10n.someonePaidForMe,
-                        icon: Icons.person_outline,
-                        isSelected: _paidRelationship == 'PAID_BY',
-                        gradient: AppColors.payableGradient,
-                        color: AppColors.payableColor,
-                        onTap: () => _handleRelationshipChange('PAID_BY'),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _RelationshipButton(
+                          label: l10n.paidBy,
+                          subtitle: l10n.someonePaidForMe,
+                          icon: Icons.person_outline,
+                          isSelected: _paidRelationship == 'PAID_BY',
+                          gradient: AppColors.payableGradient,
+                          color: AppColors.payableColor,
+                          onTap: () => _handleRelationshipChange('PAID_BY'),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 16),
               ] else if (_selectedType == 'INCOME') ...[
@@ -910,32 +913,35 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _RelationshipButton(
-                        label: l10n.iOwe,
-                        subtitle: l10n.receivedLoan,
-                        icon: Icons.download,
-                        isSelected: _paidRelationship == 'RECEIVED_FROM',
-                        gradient: AppColors.payableGradient,
-                        color: AppColors.payableColor,
-                        onTap: () => _handleRelationshipChange('RECEIVED_FROM'),
+                IntrinsicHeight(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(
+                        child: _RelationshipButton(
+                          label: l10n.iOwe,
+                          subtitle: l10n.receivedLoan,
+                          icon: Icons.download,
+                          isSelected: _paidRelationship == 'RECEIVED_FROM',
+                          gradient: AppColors.payableGradient,
+                          color: AppColors.payableColor,
+                          onTap: () => _handleRelationshipChange('RECEIVED_FROM'),
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _RelationshipButton(
-                        label: l10n.willReceive,
-                        subtitle: l10n.receiveLater,
-                        icon: Icons.schedule,
-                        isSelected: _paidRelationship == 'WILL_RECEIVE',
-                        gradient: AppColors.receivableGradient,
-                        color: AppColors.receivableColor,
-                        onTap: () => _handleRelationshipChange('WILL_RECEIVE'),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _RelationshipButton(
+                          label: l10n.willReceive,
+                          subtitle: l10n.receiveLater,
+                          icon: Icons.schedule,
+                          isSelected: _paidRelationship == 'WILL_RECEIVE',
+                          gradient: AppColors.receivableGradient,
+                          color: AppColors.receivableColor,
+                          onTap: () => _handleRelationshipChange('WILL_RECEIVE'),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 16),
               ],
@@ -1386,6 +1392,8 @@ class _RelationshipButton extends StatelessWidget {
               : null,
         ),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
               icon,
