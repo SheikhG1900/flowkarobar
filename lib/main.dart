@@ -61,6 +61,7 @@ import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/core/utils/category_helper.dart';
 import 'package:flowpaisa/shared/widgets/entrance_animation.dart';
 import 'package:flowpaisa/shared/widgets/animated_amount.dart';
+import 'package:flowpaisa/shared/widgets/rolling_amount.dart';
 import 'package:flowpaisa/shared/widgets/app_loading_indicator.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -605,11 +606,21 @@ class _DashboardTab extends ConsumerWidget {
     final activeColor = activeCashbook.color;
     final activeIcon = activeCashbook.icon;
     final activeForeColor = activeCashbook.foreColor(context);
-    final backupState = ref.watch(backupProvider);
+    // Only watch currentUser so sync-status polling does not rebuild the whole dashboard
+    final currentUser = ref.watch(backupProvider.select((s) => s.currentUser));
 
     // Watch dashboard statistics and filter
     final dashboardStatsAsync = ref.watch(dashboardStatsProvider);
     final filter = ref.watch(dashboardFilterProvider);
+
+    // Cache last stats so we can show them while loading (e.g. after invalidation)
+    ref.listen(dashboardStatsProvider, (prev, next) {
+      if (next.hasValue) {
+        ref.read(lastDashboardStatsProvider.notifier).setLast(next.value);
+      }
+    });
+
+    final lastStats = ref.watch(lastDashboardStatsProvider);
 
     // Show loading if currency is not yet loaded
     if (currency == null) {
@@ -821,6 +832,12 @@ class _DashboardTab extends ConsumerWidget {
                           ),
                           const SizedBox(height: 12),
 
+                          // Balance + Stats: RepaintBoundary to limit sliver repaint flicker
+                          RepaintBoundary(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
                           // Balance Section
                           Showcase(
                             key: TourService.balanceKey,
@@ -857,7 +874,7 @@ class _DashboardTab extends ConsumerWidget {
                                         MainAxisAlignment.spaceBetween,
                                     children: [
                                       dashboardStatsAsync.when(
-                                        data: (stats) => AnimatedAmount(
+                                        data: (stats) => RollingAmount(
                                           amount: stats.totalBalance,
                                           currencySymbol: currency.symbol,
                                           decimalPlaces: currency.decimalPlaces,
@@ -880,10 +897,34 @@ class _DashboardTab extends ConsumerWidget {
                                                 : null,
                                           ),
                                         ),
-                                        loading: () => const SizedBox(
-                                            height: 32,
-                                            child:
-                                                AppLoadingIndicator(size: 24)),
+                                        loading: () => lastStats != null
+                                            ? RollingAmount(
+                                                amount: lastStats.totalBalance,
+                                                currencySymbol: currency.symbol,
+                                                decimalPlaces:
+                                                    currency.decimalPlaces,
+                                                style: theme.textTheme
+                                                    .displaySmall
+                                                    ?.copyWith(
+                                                  color: isDark
+                                                      ? Colors.white
+                                                      : AppColors.lightText,
+                                                  fontWeight: FontWeight.bold,
+                                                  height: 1.1,
+                                                  fontSize: AmountFormatter
+                                                      .getFontSize(
+                                                    lastStats.totalBalance,
+                                                    baseSize: 32,
+                                                    decimalPlaces:
+                                                        currency.decimalPlaces,
+                                                  ),
+                                                  shadows: isDark
+                                                      ? AppTheme.textShadow(
+                                                          blurMultiplier: 4.0)
+                                                      : null,
+                                                ),
+                                              )
+                                            : const SizedBox(height: 32),
                                         error: (_, __) => Text(l10n.error,
                                             style: TextStyle(
                                                 color: isDark
@@ -900,265 +941,385 @@ class _DashboardTab extends ConsumerWidget {
                           ),
                           const SizedBox(height: 16),
 
-                          // Stats Grid
-                          dashboardStatsAsync.when(
-                            data: (stats) => Column(
-                              children: [
-                                Showcase(
-                                  key: TourService.cashFlowStatsKey,
-                                  title: l10n.tourCashFlowTitle,
-                                  description: l10n.tourCashFlowDesc,
-                                  targetShapeBorder:
-                                      const RoundedRectangleBorder(
-                                    borderRadius:
-                                        BorderRadius.all(Radius.circular(12)),
-                                  ),
-                                  tooltipBackgroundColor: activeColor,
-                                  textColor: Colors.white,
-                                  targetBorderRadius: BorderRadius.circular(12),
-                                  child: EntranceAnimation(
-                                    index: 1,
-                                    child: _buildSummaryRow(
-                                      context,
-                                      isDark: isDark,
-                                      title: l10n.cashFlow,
-                                      items: [
-                                        _SummaryItem(
-                                          label: l10n.income,
-                                          amount: stats.income(filter),
-                                          color: AppColors.incomeColor,
-                                          icon: Icons.south_west,
-                                          onTap: () {
-                                            final isMonthly = filter ==
-                                                DashboardFilter.monthly;
-                                            final now = DateTime.now();
-                                            final startDate = isMonthly
-                                                ? DateTime(
-                                                    now.year, now.month, 1)
-                                                : null;
-                                            final endDate = isMonthly
-                                                ? DateTime(
-                                                    now.year, now.month + 1, 0)
-                                                : null;
-
-                                            ref
-                                                .read(
-                                                    transactionsPaginatedProvider
-                                                        .notifier)
-                                                .applyFilters(
-                                                  TransactionFilters(
-                                                    type: 'INCOME',
-                                                    startDate: startDate,
-                                                    endDate: endDate,
-                                                  ),
-                                                );
-
-                                            Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (context) =>
-                                                    const TransactionsListScreen(),
-                                              ),
-                                            );
-                                          },
-                                        ),
-                                        _SummaryItem(
-                                          label: l10n.expense,
-                                          amount: stats.expense(filter),
-                                          color: AppColors.expenseColor,
-                                          icon: Icons.north_east,
-                                          onTap: () {
-                                            final isMonthly = filter ==
-                                                DashboardFilter.monthly;
-                                            final now = DateTime.now();
-                                            final startDate = isMonthly
-                                                ? DateTime(
-                                                    now.year, now.month, 1)
-                                                : null;
-                                            final endDate = isMonthly
-                                                ? DateTime(
-                                                    now.year, now.month + 1, 0)
-                                                : null;
-
-                                            ref
-                                                .read(
-                                                    transactionsPaginatedProvider
-                                                        .notifier)
-                                                .applyFilters(
-                                                  TransactionFilters(
-                                                    type: 'EXPENSE',
-                                                    startDate: startDate,
-                                                    endDate: endDate,
-                                                  ),
-                                                );
-
-                                            Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (context) =>
-                                                    const TransactionsListScreen(),
-                                              ),
-                                            );
-                                          },
-                                        ),
-                                        _SummaryItem(
-                                          label: l10n.netCash,
-                                          amount: stats.netCash(filter),
-                                          color: activeForeColor,
-                                          icon: Icons.account_balance_wallet,
-                                          onTap: () {
-                                            final isMonthly = filter ==
-                                                DashboardFilter.monthly;
-                                            final now = DateTime.now();
-                                            final startDate = isMonthly
-                                                ? DateTime(
-                                                    now.year, now.month, 1)
-                                                : null;
-                                            final endDate = isMonthly
-                                                ? DateTime(
-                                                    now.year, now.month + 1, 0)
-                                                : null;
-
-                                            ref
-                                                .read(
-                                                    transactionsPaginatedProvider
-                                                        .notifier)
-                                                .applyFilters(
-                                                  TransactionFilters(
-                                                    startDate: startDate,
-                                                    endDate: endDate,
-                                                  ),
-                                                );
-
-                                            Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (context) =>
-                                                    const TransactionsListScreen(),
-                                              ),
-                                            );
-                                          },
-                                        ),
-                                      ],
-                                      currency: currency,
-                                    ),
-                                  ),
+                          // Stats Grid: stable layout; .when() per value so only amounts update
+                          Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Showcase(
+                                key: TourService.cashFlowStatsKey,
+                                title: l10n.tourCashFlowTitle,
+                                description: l10n.tourCashFlowDesc,
+                                targetShapeBorder:
+                                    const RoundedRectangleBorder(
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(12)),
                                 ),
-                                const SizedBox(height: 12),
-                                Showcase(
-                                  key: TourService.lendingStatsKey,
-                                  title: l10n.tourLendingTitle,
-                                  description: l10n.tourLendingDesc,
-                                  targetShapeBorder:
-                                      const RoundedRectangleBorder(
-                                    borderRadius:
-                                        BorderRadius.all(Radius.circular(12)),
+                                tooltipBackgroundColor: activeColor,
+                                textColor: Colors.white,
+                                targetBorderRadius: BorderRadius.circular(12),
+                                child: _buildSummaryRow(
+                                    context,
+                                    isDark: isDark,
+                                    title: l10n.cashFlow,
+                                    items: [
+                                      _SummaryItem(
+                                        label: l10n.income,
+                                        amountContent:
+                                            dashboardStatsAsync.when(
+                                          data: (s) =>
+                                              _buildSummaryAmountContent(
+                                            context,
+                                            amount: s.income(filter),
+                                            currency: currency,
+                                            isDark: isDark,
+                                          ),
+                                          loading: () => lastStats != null
+                                              ? _buildSummaryAmountContent(
+                                                context,
+                                                amount:
+                                                    lastStats.income(filter),
+                                                currency: currency,
+                                                isDark: isDark,
+                                              )
+                                              : _buildAmountPlaceholder(
+                                                  context, currency, isDark),
+                                          error: (_, __) =>
+                                              _buildAmountPlaceholder(
+                                                  context, currency, isDark),
+                                        ),
+                                        color: AppColors.incomeColor,
+                                        icon: Icons.south_west,
+                                        onTap: () {
+                                          final isMonthly = filter ==
+                                              DashboardFilter.monthly;
+                                          final now = DateTime.now();
+                                          final startDate = isMonthly
+                                              ? DateTime(
+                                                  now.year, now.month, 1)
+                                              : null;
+                                          final endDate = isMonthly
+                                              ? DateTime(now.year,
+                                                  now.month + 1, 0)
+                                              : null;
+                                          ref
+                                              .read(
+                                                  transactionsPaginatedProvider
+                                                      .notifier)
+                                              .applyFilters(
+                                                TransactionFilters(
+                                                  type: 'INCOME',
+                                                  startDate: startDate,
+                                                  endDate: endDate,
+                                                ),
+                                              );
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  const TransactionsListScreen(),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                      _SummaryItem(
+                                        label: l10n.expense,
+                                        amountContent:
+                                            dashboardStatsAsync.when(
+                                          data: (s) =>
+                                              _buildSummaryAmountContent(
+                                            context,
+                                            amount: s.expense(filter),
+                                            currency: currency,
+                                            isDark: isDark,
+                                          ),
+                                          loading: () => lastStats != null
+                                              ? _buildSummaryAmountContent(
+                                                context,
+                                                amount:
+                                                    lastStats.expense(filter),
+                                                currency: currency,
+                                                isDark: isDark,
+                                              )
+                                              : _buildAmountPlaceholder(
+                                                  context, currency, isDark),
+                                          error: (_, __) =>
+                                              _buildAmountPlaceholder(
+                                                  context, currency, isDark),
+                                        ),
+                                        color: AppColors.expenseColor,
+                                        icon: Icons.north_east,
+                                        onTap: () {
+                                          final isMonthly = filter ==
+                                              DashboardFilter.monthly;
+                                          final now = DateTime.now();
+                                          final startDate = isMonthly
+                                              ? DateTime(
+                                                  now.year, now.month, 1)
+                                              : null;
+                                          final endDate = isMonthly
+                                              ? DateTime(now.year,
+                                                  now.month + 1, 0)
+                                              : null;
+                                          ref
+                                              .read(
+                                                  transactionsPaginatedProvider
+                                                      .notifier)
+                                              .applyFilters(
+                                                TransactionFilters(
+                                                  type: 'EXPENSE',
+                                                  startDate: startDate,
+                                                  endDate: endDate,
+                                                ),
+                                              );
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  const TransactionsListScreen(),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                      _SummaryItem(
+                                        label: l10n.netCash,
+                                        amountContent:
+                                            dashboardStatsAsync.when(
+                                          data: (s) =>
+                                              _buildSummaryAmountContent(
+                                            context,
+                                            amount: s.netCash(filter),
+                                            currency: currency,
+                                            isDark: isDark,
+                                          ),
+                                          loading: () => lastStats != null
+                                              ? _buildSummaryAmountContent(
+                                                context,
+                                                amount:
+                                                    lastStats.netCash(filter),
+                                                currency: currency,
+                                                isDark: isDark,
+                                              )
+                                              : _buildAmountPlaceholder(
+                                                  context, currency, isDark),
+                                          error: (_, __) =>
+                                              _buildAmountPlaceholder(
+                                                  context, currency, isDark),
+                                        ),
+                                        color: activeForeColor,
+                                        icon: Icons.account_balance_wallet,
+                                        onTap: () {
+                                          final isMonthly = filter ==
+                                              DashboardFilter.monthly;
+                                          final now = DateTime.now();
+                                          final startDate = isMonthly
+                                              ? DateTime(
+                                                  now.year, now.month, 1)
+                                              : null;
+                                          final endDate = isMonthly
+                                              ? DateTime(now.year,
+                                                  now.month + 1, 0)
+                                              : null;
+                                          ref
+                                              .read(
+                                                  transactionsPaginatedProvider
+                                                      .notifier)
+                                              .applyFilters(
+                                                TransactionFilters(
+                                                  startDate: startDate,
+                                                  endDate: endDate,
+                                                ),
+                                              );
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  const TransactionsListScreen(),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ],
+                                    currency: currency,
                                   ),
-                                  tooltipBackgroundColor: activeColor,
-                                  textColor: Colors.white,
-                                  targetBorderRadius: BorderRadius.circular(12),
-                                  child: EntranceAnimation(
-                                    index: 2,
-                                    child: _buildSummaryRow(
-                                      context,
-                                      isDark: isDark,
-                                      title: l10n.lendingCredit,
-                                      items: [
-                                        _SummaryItem(
-                                          label: l10n.receivableTag,
-                                          amount: stats.receivable(filter),
-                                          color: AppColors.receivableColor,
-                                          icon: Icons.call_received,
-                                          overdue: stats.overdueReceivable,
-                                          onTap: () {
-                                            final isMonthly = filter ==
-                                                DashboardFilter.monthly;
-                                            final now = DateTime.now();
-                                            final startDate = isMonthly
-                                                ? DateTime(
-                                                    now.year, now.month, 1)
-                                                : null;
-                                            final endDate = isMonthly
-                                                ? DateTime(
-                                                    now.year, now.month + 1, 0)
-                                                : null;
-
-                                            ref
-                                                .read(
-                                                    receivablesPaginatedProvider(
-                                                            'PENDING')
-                                                        .notifier)
-                                                .applyFilters(
-                                                  ReceivableFilters(
-                                                    startDate: startDate,
-                                                    endDate: endDate,
-                                                  ),
-                                                );
-
-                                            Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (context) =>
-                                                    const ReceivablesListScreen(),
-                                              ),
-                                            );
-                                          },
-                                        ),
-                                        _SummaryItem(
-                                          label: l10n.payableTag,
-                                          amount: stats.payable(filter),
-                                          color: AppColors.payableColor,
-                                          icon: Icons.call_made,
-                                          overdue: stats.overduePayable,
-                                          onTap: () {
-                                            final isMonthly = filter ==
-                                                DashboardFilter.monthly;
-                                            final now = DateTime.now();
-                                            final startDate = isMonthly
-                                                ? DateTime(
-                                                    now.year, now.month, 1)
-                                                : null;
-                                            final endDate = isMonthly
-                                                ? DateTime(
-                                                    now.year, now.month + 1, 0)
-                                                : null;
-
-                                            ref
-                                                .read(payablesPaginatedProvider(
-                                                        'PENDING')
-                                                    .notifier)
-                                                .applyFilters(
-                                                  PayableFilters(
-                                                    startDate: startDate,
-                                                    endDate: endDate,
-                                                  ),
-                                                );
-
-                                            Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (context) =>
-                                                    const PayablesListScreen(),
-                                              ),
-                                            );
-                                          },
-                                        ),
-                                        _SummaryItem(
-                                          label: l10n.netCredit,
-                                          amount: stats.netCredit(filter),
-                                          color: activeForeColor,
-                                          icon: Icons.swap_horiz,
-                                        ),
-                                      ],
-                                      currency: currency,
-                                    ),
-                                  ),
+                              ),
+                              const SizedBox(height: 12),
+                              Showcase(
+                                key: TourService.lendingStatsKey,
+                                title: l10n.tourLendingTitle,
+                                description: l10n.tourLendingDesc,
+                                targetShapeBorder:
+                                    const RoundedRectangleBorder(
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(12)),
                                 ),
-                                const SizedBox(height: 12),
+                                tooltipBackgroundColor: activeColor,
+                                textColor: Colors.white,
+                                targetBorderRadius: BorderRadius.circular(12),
+                                child: _buildSummaryRow(
+                                    context,
+                                    isDark: isDark,
+                                    title: l10n.lendingCredit,
+                                    items: [
+                                      _SummaryItem(
+                                        label: l10n.receivableTag,
+                                        amountContent:
+                                            dashboardStatsAsync.when(
+                                          data: (s) =>
+                                              _buildSummaryAmountContent(
+                                            context,
+                                            amount: s.receivable(filter),
+                                            currency: currency,
+                                            isDark: isDark,
+                                            overdue: s.overdueReceivable,
+                                          ),
+                                          loading: () => lastStats != null
+                                              ? _buildSummaryAmountContent(
+                                                context,
+                                                amount: lastStats
+                                                    .receivable(filter),
+                                                currency: currency,
+                                                isDark: isDark,
+                                                overdue:
+                                                    lastStats.overdueReceivable,
+                                              )
+                                              : _buildAmountPlaceholder(
+                                                  context, currency, isDark),
+                                          error: (_, __) =>
+                                              _buildAmountPlaceholder(
+                                                  context, currency, isDark),
+                                        ),
+                                        color: AppColors.receivableColor,
+                                        icon: Icons.call_received,
+                                        onTap: () {
+                                          final isMonthly = filter ==
+                                              DashboardFilter.monthly;
+                                          final now = DateTime.now();
+                                          final startDate = isMonthly
+                                              ? DateTime(
+                                                  now.year, now.month, 1)
+                                              : null;
+                                          final endDate = isMonthly
+                                              ? DateTime(now.year,
+                                                  now.month + 1, 0)
+                                              : null;
+                                          ref
+                                              .read(
+                                                  receivablesPaginatedProvider(
+                                                          'PENDING')
+                                                      .notifier)
+                                              .applyFilters(
+                                                ReceivableFilters(
+                                                  startDate: startDate,
+                                                  endDate: endDate,
+                                                ),
+                                              );
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  const ReceivablesListScreen(),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                      _SummaryItem(
+                                        label: l10n.payableTag,
+                                        amountContent:
+                                            dashboardStatsAsync.when(
+                                          data: (s) =>
+                                              _buildSummaryAmountContent(
+                                            context,
+                                            amount: s.payable(filter),
+                                            currency: currency,
+                                            isDark: isDark,
+                                            overdue: s.overduePayable,
+                                          ),
+                                          loading: () => lastStats != null
+                                              ? _buildSummaryAmountContent(
+                                                context,
+                                                amount:
+                                                    lastStats.payable(filter),
+                                                currency: currency,
+                                                isDark: isDark,
+                                                overdue:
+                                                    lastStats.overduePayable,
+                                              )
+                                              : _buildAmountPlaceholder(
+                                                  context, currency, isDark),
+                                          error: (_, __) =>
+                                              _buildAmountPlaceholder(
+                                                  context, currency, isDark),
+                                        ),
+                                        color: AppColors.payableColor,
+                                        icon: Icons.call_made,
+                                        onTap: () {
+                                          final isMonthly = filter ==
+                                              DashboardFilter.monthly;
+                                          final now = DateTime.now();
+                                          final startDate = isMonthly
+                                              ? DateTime(
+                                                  now.year, now.month, 1)
+                                              : null;
+                                          final endDate = isMonthly
+                                              ? DateTime(now.year,
+                                                  now.month + 1, 0)
+                                              : null;
+                                          ref
+                                              .read(payablesPaginatedProvider(
+                                                      'PENDING')
+                                                  .notifier)
+                                              .applyFilters(
+                                                PayableFilters(
+                                                  startDate: startDate,
+                                                  endDate: endDate,
+                                                ),
+                                              );
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  const PayablesListScreen(),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                      _SummaryItem(
+                                        label: l10n.netCredit,
+                                        amountContent:
+                                            dashboardStatsAsync.when(
+                                          data: (s) =>
+                                              _buildSummaryAmountContent(
+                                            context,
+                                            amount: s.netCredit(filter),
+                                            currency: currency,
+                                            isDark: isDark,
+                                          ),
+                                          loading: () => lastStats != null
+                                              ? _buildSummaryAmountContent(
+                                                context,
+                                                amount:
+                                                    lastStats.netCredit(filter),
+                                                currency: currency,
+                                                isDark: isDark,
+                                              )
+                                              : _buildAmountPlaceholder(
+                                                  context, currency, isDark),
+                                          error: (_, __) =>
+                                              _buildAmountPlaceholder(
+                                                  context, currency, isDark),
+                                        ),
+                                        color: activeForeColor,
+                                        icon: Icons.swap_horiz,
+                                      ),
+                                    ],
+                                    currency: currency,
+                                  ),
+                              ),
+                              const SizedBox(height: 12),
+                            ],
+                          ),
                               ],
                             ),
-                            loading: () => const SizedBox(height: 100),
-                            error: (_, __) => const SizedBox.shrink(),
                           ),
                           const SizedBox(height: 25),
                           // App Logo in Rounded Circle
@@ -1356,7 +1517,7 @@ class _DashboardTab extends ConsumerWidget {
                 ),
                 IconButton(
                   icon: UserAvatar(
-                    user: backupState.currentUser,
+                    user: currentUser,
                     size: 24,
                   ),
                   onPressed: () {
@@ -1699,6 +1860,81 @@ class _DashboardTab extends ConsumerWidget {
     );
   }
 
+  /// Placeholder for summary amount when loading; keeps layout stable.
+  Widget _buildAmountPlaceholder(
+      BuildContext context, dynamic currency, bool isDark) {
+    return Text(
+      '—',
+      style: TextStyle(
+        color: isDark
+            ? Colors.white.withValues(alpha: 0.5)
+            : AppColors.lightTextSecondary,
+        fontSize: 16,
+        fontWeight: FontWeight.bold,
+      ),
+    );
+  }
+
+  /// Builds amount (and optional overdue) content for a summary card.
+  Widget _buildSummaryAmountContent(
+    BuildContext context, {
+    required double amount,
+    required dynamic currency,
+    required bool isDark,
+    double? overdue,
+  }) {
+    final style = TextStyle(
+      color: isDark ? Colors.white : AppColors.lightText,
+      fontSize: 16,
+      fontWeight: FontWeight.bold,
+    );
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.centerLeft,
+          child: RollingAmount(
+            amount: amount,
+            currencySymbol: currency.symbol,
+            decimalPlaces: currency.decimalPlaces,
+            style: style,
+          ),
+        ),
+        if (overdue != null && overdue > 0) ...[
+          const SizedBox(height: 2),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+              decoration: BoxDecoration(
+                color: AppColors.error.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.calendar_today, size: 12, color: AppColors.error),
+                  const SizedBox(width: 4),
+                  Text(
+                    AmountFormatter.formatWithCurrency(
+                        overdue, currency.symbol, currency.decimalPlaces),
+                    style: TextStyle(
+                      color: isDark ? Colors.redAccent : AppColors.error,
+                      fontSize: 9,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
   Widget _buildSummaryRow(
     BuildContext context, {
     required String title,
@@ -1777,57 +2013,7 @@ class _DashboardTab extends ConsumerWidget {
                         ],
                       ),
                       const SizedBox(height: 4),
-                      FittedBox(
-                        fit: BoxFit.scaleDown,
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          AmountFormatter.formatWithCurrency(
-                            item.amount,
-                            currency.symbol,
-                            currency.decimalPlaces,
-                          ),
-                          style: TextStyle(
-                            color: isDark ? Colors.white : AppColors.lightText,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                      if (item.overdue != null && item.overdue! > 0) ...[
-                        const SizedBox(height: 2),
-                        FittedBox(
-                          fit: BoxFit.scaleDown,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 4, vertical: 1),
-                            decoration: BoxDecoration(
-                              color: AppColors.error.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Icon(Icons.calendar_today,
-                                    size: 12, color: AppColors.error),
-                                const SizedBox(width: 4),
-                                Text(
-                                  AmountFormatter.formatWithCurrency(
-                                      item.overdue!,
-                                      currency.symbol,
-                                      currency.decimalPlaces),
-                                  style: TextStyle(
-                                    color: isDark
-                                        ? Colors.redAccent
-                                        : AppColors.error,
-                                    fontSize: 9,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
+                      item.amountContent,
                     ],
                   ),
                 ),
@@ -2781,18 +2967,16 @@ class _SettingsTab extends ConsumerWidget {
 
 class _SummaryItem {
   final String label;
-  final double amount;
+  final Widget amountContent;
   final Color color;
   final IconData icon;
-  final double? overdue;
   final VoidCallback? onTap;
 
   _SummaryItem({
     required this.label,
-    required this.amount,
+    required this.amountContent,
     required this.color,
     required this.icon,
-    this.overdue,
     this.onTap,
   });
 }

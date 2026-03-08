@@ -18,6 +18,20 @@ final dashboardFilterProvider =
     NotifierProvider<DashboardFilterNotifier, DashboardFilter>(
         DashboardFilterNotifier.new);
 
+/// Notifier that caches the last dashboard stats for showing while loading.
+class LastDashboardStatsNotifier extends Notifier<DashboardStats?> {
+  @override
+  DashboardStats? build() => null;
+
+  void setLast(DashboardStats? value) => state = value;
+}
+
+/// Last known dashboard stats; used to show previous values while loading
+/// (e.g. after invalidation) instead of placeholders.
+final lastDashboardStatsProvider =
+    NotifierProvider<LastDashboardStatsNotifier, DashboardStats?>(
+        LastDashboardStatsNotifier.new);
+
 /// Provider for dashboard statistics
 final dashboardStatsProvider = StreamProvider<DashboardStats>((ref) {
   final txRepo = ref.watch(transactionsRepositoryProvider);

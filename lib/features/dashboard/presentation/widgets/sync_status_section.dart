@@ -83,6 +83,8 @@ class _SyncStatusSectionState extends ConsumerState<SyncStatusSection>
 
   @override
   Widget build(BuildContext context) {
+    // Keep sync status polling active while this section is visible (reactive approach).
+    ref.watch(syncStatusPollingProvider);
     final backupState = ref.watch(backupProvider);
     final activeCashbookId = ref.watch(activeCashbookIdProvider);
     

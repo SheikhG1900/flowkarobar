@@ -19,6 +19,7 @@ import 'dart:async';
 import 'package:flowpaisa/features/payables/presentation/providers/payables_provider.dart';
 import 'package:flowpaisa/features/receivables/presentation/providers/receivables_provider.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
+import 'package:flowpaisa/shared/providers/currency_provider.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:device_info_plus/device_info_plus.dart' as import_device_info;
@@ -378,6 +379,24 @@ class BackupNotifier extends Notifier<BackupState> {
   }
 
   Timer? _syncProgressTimer;
+  Timer? _syncStatusPollTimer;
+
+  /// Start polling sync status from SharedPreferences so background task updates
+  /// (e.g. "Pulling...") are reflected. Call stopSyncStatusPolling when no longer needed.
+  void startSyncStatusPolling() {
+    if (_syncStatusPollTimer != null) return;
+    _syncStatusPollTimer =
+        Timer.periodic(const Duration(seconds: 2), (_) async {
+      if (!ref.mounted) return;
+      await refreshSyncStatusFromPrefs();
+    });
+  }
+
+  /// Stop polling sync status. Called when no widget needs live sync status (e.g. left dashboard).
+  void stopSyncStatusPolling() {
+    _syncStatusPollTimer?.cancel();
+    _syncStatusPollTimer = null;
+  }
 
   void _startSyncProgressTimer() {
     _syncProgressTimer?.cancel();
@@ -418,10 +437,23 @@ class BackupNotifier extends Notifier<BackupState> {
             state.cloudVersion != metadata.cloudVersion;
         final bool timeChanged = state.lastSyncTime != metadata.lastSyncAt;
 
-        if (statusChanged ||
+        // When already Success with same versions, ignore time wobble to avoid
+        // repeated state updates and _handleSyncSuccess every 2s (stops refresh flicker).
+        final alreadySuccessSameVersions = state.syncStatus == 'Success' &&
+            status == 'Success' &&
+            state.localVersion == metadata.version &&
+            state.cloudVersion == metadata.cloudVersion;
+        final meaningfulChange = statusChanged ||
             localVerChanged ||
             cloudVerChanged ||
-            timeChanged) {
+            (timeChanged && !alreadySuccessSameVersions);
+
+        if (meaningfulChange) {
+          final wasSyncing = state.isLoading ||
+              state.syncStatus.contains('Syncing') ||
+              state.syncStatus.contains('Pulling') ||
+              state.syncStatus.contains('Pushing');
+
           if (kDebugMode) {
             print(
                 'BackupNotifier: Periodic Refresh - Status: $status, LocalVer: ${metadata.version}, CloudVer: ${metadata.cloudVersion}');
@@ -440,9 +472,13 @@ class BackupNotifier extends Notifier<BackupState> {
           // Force refresh unsynced count during sync progress
           _updateTotalUnsyncedCount();
 
+          // Only run full success handler when we actually transition from syncing to Success.
+          // Avoids repeated markTablesUpdated + invalidations when polling re-reads same Success.
           if (status == 'Success') {
             _syncProgressTimer?.cancel();
-            _handleSyncSuccess();
+            if (wasSyncing) {
+              _handleSyncSuccess();
+            }
           }
         }
       }
@@ -456,6 +492,12 @@ class BackupNotifier extends Notifier<BackupState> {
   /// Public method to refresh cloud state (e.g., when app comes to foreground)
   Future<void> refreshCloudState() async {
     await _fetchCloudState();
+  }
+
+  /// Refreshes sync status from SharedPreferences (and DB). Used by sync status
+  /// polling so background task updates (e.g. "Pulling...") are reflected.
+  Future<void> refreshSyncStatusFromPrefs() async {
+    await _refreshSyncProgress();
   }
 
   Future<void> _checkFinalStatus() async {
@@ -755,8 +797,9 @@ class BackupNotifier extends Notifier<BackupState> {
           // Force refresh unsynced count when DB metadata changes
           _updateTotalUnsyncedCount();
 
-          // CRITICAL: Also notify Drift that tables might have changed in the background
-          // This ensures the UI isolate's stream listeners (like the dashboard) re-query.
+          // CRITICAL: Notify Drift that tables might have changed in the background.
+          // Stream-based providers (dashboard, recent transactions) will re-query and
+          // emit new data without invalidating Riverpod state, avoiding dashboard flicker.
           db.markTablesUpdated({
             db.categories,
             db.contacts,
@@ -768,12 +811,7 @@ class BackupNotifier extends Notifier<BackupState> {
             db.transactionSchedules,
           });
 
-          // FORCE INVALIDATION: Explicitly tell Riverpod to discard the cached state
-          // for these specific providers. This is the most aggressive way to refresh.
-          ref.invalidate(dashboardStatsProvider);
-          ref.invalidate(recentTransactionsProvider);
-
-    // If we just finished a sync (transitioned from syncing to success), trigger refreshes
+          // If we just finished a sync (transitioned from syncing to success), trigger full refresh
           if (wasSyncing && isNowSuccess) {
             _handleSyncSuccess();
           } else if (isNowSuccess) {
@@ -864,6 +902,10 @@ class BackupNotifier extends Notifier<BackupState> {
     ref.invalidate(overdueReceivablesCountProvider);
     ref.invalidate(totalPendingPayablesProvider);
     ref.invalidate(totalPendingReceivablesProvider);
+
+    // Re-fetch currency so symbol/decimal places from synced DB are applied
+    ref.invalidate(selectedCurrencyIdProvider);
+    ref.invalidate(currentCurrencyProvider);
 
     // Reset status to Idle after a delay in the database
     _resetSuccessStatus();
@@ -1554,3 +1596,12 @@ class BackupNotifier extends Notifier<BackupState> {
 
 final backupProvider =
     NotifierProvider<BackupNotifier, BackupState>(BackupNotifier.new);
+
+/// Keeps sync status polling active while any listener exists (e.g. dashboard sync section).
+/// When the last listener disposes, polling stops. Watch this provider where you need
+/// live sync status from the background task (e.g. "Pulling...").
+final syncStatusPollingProvider = Provider.autoDispose<void>((ref) {
+  final notifier = ref.read(backupProvider.notifier);
+  notifier.startSyncStatusPolling();
+  ref.onDispose(() => notifier.stopSyncStatusPolling());
+});

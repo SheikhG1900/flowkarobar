@@ -67,6 +67,8 @@ class _DevScreenState extends ConsumerState<DevScreen> {
     });
     try {
       final prefs = await SharedPreferences.getInstance();
+      // Reload from disk so we see latest values written by background isolate (e.g. sync task).
+      await prefs.reload();
       final keys = prefs.getKeys();
       final Map<String, String> entries = {};
       for (final key in keys) {
