@@ -6227,6 +6227,18 @@ abstract class AppLocalizations {
   /// **'Data is synced'**
   String get dataSynced;
 
+  /// No description provided for @syncAlreadyInProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync already in progress'**
+  String get syncAlreadyInProgress;
+
+  /// No description provided for @syncDelayedRetryShortly.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync delayed – will retry shortly'**
+  String get syncDelayedRetryShortly;
+
   /// No description provided for @premiumRequiredForSync.
   ///
   /// In en, this message translates to:

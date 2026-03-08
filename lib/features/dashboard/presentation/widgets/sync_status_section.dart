@@ -9,6 +9,13 @@ import 'package:flowpaisa/shared/widgets/app_loading_indicator.dart';
 import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
+bool _isDatabaseLockedError(String status) {
+  return status.contains('database is locked') ||
+      status.contains('1555') ||
+      status.contains('code 5') ||
+      status.contains('SQLITE_BUSY');
+}
+
 class SyncStatusSection extends ConsumerStatefulWidget {
   const SyncStatusSection({super.key});
 
@@ -116,8 +123,18 @@ class _SyncStatusSectionState extends ConsumerState<SyncStatusSection>
       print('[SyncStatusSection] Unsynced Count: ${backupState.unsyncedCount}');
     }
     
-    // Hide section if nothing to sync, no updates available, and not in success/syncing state
-    if (!isSyncing && !isSuccess && !hasUnsynced && !hasCloudUpdates) {
+    final bool isSyncAlreadyInProgress =
+        backupState.syncStatus == 'Sync already in progress';
+    final bool isLockError = backupState.syncStatus.contains('Error') &&
+        _isDatabaseLockedError(backupState.syncStatus);
+
+    // Hide section if nothing to sync, no updates, not success/syncing, and no special status
+    if (!isSyncing &&
+        !isSuccess &&
+        !hasUnsynced &&
+        !hasCloudUpdates &&
+        !isSyncAlreadyInProgress &&
+        !isLockError) {
       if (_animationController.value != 0) {
         _animationController.reset();
       }
@@ -133,7 +150,15 @@ class _SyncStatusSectionState extends ConsumerState<SyncStatusSection>
     IconData statusIcon;
     Color statusColor;
 
-    if (isSyncing) {
+    if (isSyncAlreadyInProgress) {
+      statusText = l10n.syncAlreadyInProgress;
+      statusIcon = Symbols.sync;
+      statusColor = Colors.orange;
+    } else if (isLockError) {
+      statusText = l10n.syncDelayedRetryShortly;
+      statusIcon = Symbols.sync;
+      statusColor = Colors.orange;
+    } else if (isSyncing) {
       statusText = l10n.processing;
       statusIcon = Symbols.sync;
       statusColor = theme.colorScheme.primary;

@@ -1308,6 +1308,8 @@
     }
   },
   "dataSynced": "डेटा सिंक हो गया है",
+  "syncAlreadyInProgress": "सिंक पहले से चल रहा है",
+  "syncDelayedRetryShortly": "सिंक विलंबित – जल्द ही पुनः प्रयास करेगा",
   "syncNow": "अभी सिंक करें",
   "premiumRequiredForSync": "क्लाउड सिंक के लिए प्रीमियम आवश्यक है",
   "signInRequiredForSync": "सिंक करने के लिए Google के साथ साइन इन करें",

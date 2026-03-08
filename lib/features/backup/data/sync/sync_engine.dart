@@ -8,6 +8,40 @@ import 'package:flowpaisa/features/cashbooks/domain/models/cashbook.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:io';
+import 'dart:async';
+
+/// SQLite busy/lock: code 5 or 1555, or message "database is locked".
+bool _isDatabaseLockedException(Object e) {
+  final s = e.toString();
+  return s.contains('database is locked') ||
+      s.contains('1555') ||
+      s.contains('code 5') ||
+      s.contains('SQLITE_BUSY');
+}
+
+const int _kSyncRetryMaxAttempts = 3;
+const Duration _kSyncRetryDelay = Duration(milliseconds: 300);
+
+/// Runs [fn] and retries on database locked (SQLITE_BUSY) up to [_kSyncRetryMaxAttempts].
+Future<void> _runWithRetryOnBusy(Future<void> Function() fn) async {
+  int attempt = 0;
+  while (true) {
+    try {
+      await fn();
+      return;
+    } catch (e) {
+      if (!_isDatabaseLockedException(e) || attempt >= _kSyncRetryMaxAttempts) {
+        rethrow;
+      }
+      attempt++;
+      if (kDebugMode) {
+        print(
+            'SyncEngine: Database locked, retry $attempt/$_kSyncRetryMaxAttempts in ${_kSyncRetryDelay.inMilliseconds}ms');
+      }
+      await Future<void>.delayed(_kSyncRetryDelay);
+    }
+  }
+}
 
 class SyncEngine {
   final AppDatabase _db;
@@ -396,17 +430,19 @@ class SyncEngine {
       // Force a reload to ensure other isolates see the change
       await prefs.reload();
 
-      await (_db.update(_db.syncMetadata)
-            ..where((t) => t.deviceId.equals(deviceId)))
-          .write(SyncMetadataCompanion(
-        syncStatus: Value(status),
-        syncStartedAt: isStarting
-            ? Value(DateTime.now().toUtc())
-            : (isEnding ? const Value(null) : const Value.absent()),
-        // When updating status, we MUST NOT touch version or cloudVersion
-        version: const Value.absent(),
-        cloudVersion: const Value.absent(),
-      ));
+      await _runWithRetryOnBusy(() async {
+        await (_db.update(_db.syncMetadata)
+              ..where((t) => t.deviceId.equals(deviceId)))
+            .write(SyncMetadataCompanion(
+          syncStatus: Value(status),
+          syncStartedAt: isStarting
+              ? Value(DateTime.now().toUtc())
+              : (isEnding ? const Value(null) : const Value.absent()),
+          // When updating status, we MUST NOT touch version or cloudVersion
+          version: const Value.absent(),
+          cloudVersion: const Value.absent(),
+        ));
+      });
     } catch (e) {
       if (kDebugMode) {
         print('SyncEngine: Failed to update sync status in DB: $e');
@@ -522,14 +558,16 @@ class SyncEngine {
 
     // CRITICAL: We only update the version number here.
     // We MUST NOT touch sync_status or sync_started_at during incremental progress.
-    await (_db.update(_db.syncMetadata)
-          ..where((t) => t.deviceId.equals(deviceId)))
-        .write(SyncMetadataCompanion(
-      version: Value(version),
-      syncStatus: const Value.absent(),
-      syncStartedAt: const Value.absent(),
-      cloudVersion: const Value.absent(),
-    ));
+    await _runWithRetryOnBusy(() async {
+      await (_db.update(_db.syncMetadata)
+            ..where((t) => t.deviceId.equals(deviceId)))
+          .write(SyncMetadataCompanion(
+        version: Value(version),
+        syncStatus: const Value.absent(),
+        syncStartedAt: const Value.absent(),
+        cloudVersion: const Value.absent(),
+      ));
+    });
 
     // Verify the write immediately
     final verify = await _getLocalMetadata(deviceId);
@@ -953,19 +991,21 @@ class SyncEngine {
     final conflictColumn =
         tableName == 'user_preferences' ? 'key' : 'uuid';
 
-    try {
-      await _db.customStatement(
-        'INSERT INTO $tableName ($columns) VALUES ($placeholders) '
-        'ON CONFLICT($conflictColumn) DO UPDATE SET $updates',
-        sqlData.values.toList(),
-      );
-    } catch (e) {
-      if (kDebugMode) {
-        print('SyncEngine: Error upserting row into $tableName: $e');
-        print('SyncEngine: Row data: $sqlData');
+    await _runWithRetryOnBusy(() async {
+      try {
+        await _db.customStatement(
+          'INSERT INTO $tableName ($columns) VALUES ($placeholders) '
+          'ON CONFLICT($conflictColumn) DO UPDATE SET $updates',
+          sqlData.values.toList(),
+        );
+      } catch (e) {
+        if (kDebugMode) {
+          print('SyncEngine: Error upserting row into $tableName: $e');
+          print('SyncEngine: Row data: $sqlData');
+        }
+        rethrow;
       }
-      rethrow;
-    }
+    });
   }
 
   Future<String> _getDeviceId() async {

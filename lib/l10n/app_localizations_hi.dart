@@ -3415,6 +3415,13 @@ class AppLocalizationsHi extends AppLocalizations {
   String get dataSynced => 'डेटा सिंक हो गया है';
 
   @override
+  String get syncAlreadyInProgress => 'सिंक पहले से चल रहा है';
+
+  @override
+  String get syncDelayedRetryShortly =>
+      'सिंक विलंबित – जल्द ही पुनः प्रयास करेगा';
+
+  @override
   String get premiumRequiredForSync => 'क्लाउड सिंक के लिए प्रीमियम आवश्यक है';
 
   @override

@@ -22,13 +22,20 @@ import 'dart:io';
 
 const String syncTaskName = 'com.flowpaisa.app.sync_task';
 
+/// SharedPreferences keys for sync-in-progress guard (avoid duplicate tasks).
+const String _syncInProgressKey = 'sync_in_progress';
+const String _syncStartedAtKey = 'sync_started_at_ms';
+/// Timeout in seconds after which the flag is considered stale (e.g. task crashed).
+const int _syncInProgressTimeoutSeconds = 300; // 5 minutes
+
 @pragma('vm:entry-point')
 Future<bool> handleSyncTask(String task, Map<String, dynamic>? inputData) async {
   if (kDebugMode) {
     print('SyncScheduler: handleSyncTask started for task: $task');
   }
+  SharedPreferences? prefs;
   try {
-    final prefs = await SharedPreferences.getInstance();
+    prefs = await SharedPreferences.getInstance();
 
     // Try to get localization for background task
     AppLocalizations? l10n;
@@ -90,6 +97,12 @@ Future<bool> handleSyncTask(String task, Map<String, dynamic>? inputData) async 
         rethrow;
       }
     }).toList();
+
+    // Guard: set flag so other triggers (e.g. on restart) don't start a second task.
+    await prefs.setBool(_syncInProgressKey, true);
+    await prefs.setInt(
+        _syncStartedAtKey, DateTime.now().millisecondsSinceEpoch);
+    await prefs.reload();
 
     int syncedCount = 0;
 
@@ -248,6 +261,18 @@ Future<bool> handleSyncTask(String task, Map<String, dynamic>? inputData) async 
       print('SyncScheduler: Stack trace: $stack');
     }
     return false;
+  } finally {
+    // Always release the flag so a new sync can be scheduled (or timeout will allow it).
+    try {
+      final p = await SharedPreferences.getInstance();
+      await p.setBool(_syncInProgressKey, false);
+      await p.remove(_syncStartedAtKey);
+      await p.reload();
+    } catch (e) {
+      if (kDebugMode) {
+        print('SyncScheduler: Failed to clear sync-in-progress flag: $e');
+      }
+    }
   }
 }
 
@@ -296,6 +321,20 @@ void callbackDispatcher() {
 }
 
 class SyncScheduler {
+  /// Returns true if a sync task is currently considered in progress (flag set and not timed out).
+  static Future<bool> isSyncInProgress() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.reload();
+    final startedAt = prefs.getInt(_syncStartedAtKey);
+    if (startedAt == null) return false;
+    final elapsedMs =
+        DateTime.now().millisecondsSinceEpoch - startedAt;
+    if (elapsedMs > _syncInProgressTimeoutSeconds * 1000) {
+      return false; // Stale, consider released (e.g. task crashed).
+    }
+    return prefs.getBool(_syncInProgressKey) == true;
+  }
+
   static Future<void> init() async {
     await Workmanager().initialize(
       callbackDispatcher,
@@ -322,6 +361,13 @@ class SyncScheduler {
 
   static Future<void> scheduleDailySync() async {
     final prefs = await SharedPreferences.getInstance();
+    if (await isSyncInProgress()) {
+      if (kDebugMode) {
+        print(
+            'SyncScheduler: Skipping scheduleDailySync – sync already in progress');
+      }
+      return;
+    }
     final syncInterval = prefs.getString('sync_interval') ?? 'manual';
 
     if (syncInterval == 'manual') {
@@ -344,6 +390,13 @@ class SyncScheduler {
   }
 
   static Future<void> triggerOnDemandSync() async {
+    if (await isSyncInProgress()) {
+      if (kDebugMode) {
+        print(
+            'SyncScheduler: Skipping on-demand sync – sync already in progress');
+      }
+      return;
+    }
     if (kDebugMode) {
       print('Triggering on-demand sync task...');
     }

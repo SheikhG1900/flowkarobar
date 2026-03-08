@@ -339,6 +339,18 @@ class BackupNotifier extends Notifier<BackupState> {
 
   Future<void> triggerSync(AppLocalizations? l10n) async {
     try {
+      // Avoid starting a second sync if one is already in progress (or recently started).
+      if (await SyncScheduler.isSyncInProgress()) {
+        state = state.copyWith(
+            isLoading: false,
+            error: null,
+            syncStatus: 'Sync already in progress');
+        Future.delayed(const Duration(seconds: 3), () {
+          if (ref.mounted) _checkFinalStatus();
+        });
+        return;
+      }
+
       // Set isLoading to true ONLY if we are not already syncing
       if (state.syncStatus != 'Syncing...') {
         state = state.copyWith(

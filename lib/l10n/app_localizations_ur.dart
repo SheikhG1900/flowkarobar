@@ -3421,6 +3421,12 @@ class AppLocalizationsUr extends AppLocalizations {
   String get dataSynced => 'ڈیٹا سنک ہو گیا ہے';
 
   @override
+  String get syncAlreadyInProgress => 'سنک پہلے سے جاری ہے';
+
+  @override
+  String get syncDelayedRetryShortly => 'سنک مؤخر – جلد دوبارہ کوشش ہوگی';
+
+  @override
   String get premiumRequiredForSync => 'کلاؤڈ سنک کے لیے پریمیم درکار ہے';
 
   @override

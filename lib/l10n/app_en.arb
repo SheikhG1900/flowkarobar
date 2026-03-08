@@ -1833,6 +1833,8 @@
     }
   },
   "dataSynced": "Data is synced",
+  "syncAlreadyInProgress": "Sync already in progress",
+  "syncDelayedRetryShortly": "Sync delayed – will retry shortly",
   "syncNow": "Sync Now",
   "premiumRequiredForSync": "Premium required for cloud sync",
   "signInRequiredForSync": "Sign in with Google to sync",

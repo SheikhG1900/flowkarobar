@@ -22,6 +22,13 @@ import 'package:material_symbols_icons/symbols.dart';
 import 'package:flowpaisa/features/premium/presentation/screens/premium_screen.dart';
 import 'package:flowpaisa/features/premium/domain/premium_provider.dart';
 
+bool _isDatabaseLockedError(String status) {
+  return status.contains('database is locked') ||
+      status.contains('1555') ||
+      status.contains('code 5') ||
+      status.contains('SQLITE_BUSY');
+}
+
 class BackupScreen extends ConsumerStatefulWidget {
   final bool startTour;
 
@@ -530,55 +537,65 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                 ],
               ),
               if (state.syncStatus != 'Idle')
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 12, top: 12),
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: state.syncStatus.contains('Error')
-                          ? Colors.red.withValues(alpha: 0.1)
-                          : Colors.blue.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
+                Builder(builder: (context) {
+                  final isLockError = state.syncStatus.contains('Error') &&
+                      _isDatabaseLockedError(state.syncStatus);
+                  final syncStatusDisplay =
+                      state.syncStatus == 'Sync already in progress'
+                          ? l10n.syncAlreadyInProgress
+                          : isLockError
+                              ? l10n.syncDelayedRetryShortly
+                              : state.syncStatus;
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12, top: 12),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
                         color: state.syncStatus.contains('Error')
-                            ? Colors.red.withValues(alpha: 0.3)
-                            : Colors.blue.withValues(alpha: 0.3),
+                            ? Colors.red.withValues(alpha: 0.1)
+                            : Colors.blue.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: state.syncStatus.contains('Error')
+                              ? Colors.red.withValues(alpha: 0.3)
+                              : Colors.blue.withValues(alpha: 0.3),
+                        ),
                       ),
-                    ),
-                    child: Row(
-                      children: [
-                        if (state.isLoading)
-                          const SizedBox(
-                            width: 12,
-                            height: 12,
-                            child: AppLoadingIndicator(size: 12),
-                          )
-                        else if (state.syncStatus.contains('Error'))
-                          const Icon(Icons.error_outline,
-                              size: 16, color: Colors.red)
-                        else if (state.syncStatus == 'Success')
-                          const Icon(Icons.check_circle_outline,
-                              size: 16, color: Colors.green)
-                        else
-                          const Icon(Icons.info_outline,
-                              size: 16, color: Colors.blue),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            state.syncStatus,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: state.syncStatus.contains('Error')
-                                  ? Colors.red
-                                  : Colors.blue,
-                              fontWeight: FontWeight.bold,
+                      child: Row(
+                        children: [
+                          if (state.isLoading)
+                            const SizedBox(
+                              width: 12,
+                              height: 12,
+                              child: AppLoadingIndicator(size: 12),
+                            )
+                          else if (state.syncStatus.contains('Error'))
+                            const Icon(Icons.error_outline,
+                                size: 16, color: Colors.red)
+                          else if (state.syncStatus == 'Success')
+                            const Icon(Icons.check_circle_outline,
+                                size: 16, color: Colors.green)
+                          else
+                            const Icon(Icons.info_outline,
+                                size: 16, color: Colors.blue),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              syncStatusDisplay,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: state.syncStatus.contains('Error')
+                                    ? Colors.red
+                                    : Colors.blue,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                ),
+                  );
+                }),
               const SizedBox(height: 16),
               // Version and Count Boxes
               IntrinsicHeight(

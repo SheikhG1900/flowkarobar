@@ -1308,6 +1308,8 @@
     }
   },
   "dataSynced": "ڈیٹا سنک ہو گیا ہے",
+  "syncAlreadyInProgress": "سنک پہلے سے جاری ہے",
+  "syncDelayedRetryShortly": "سنک مؤخر – جلد دوبارہ کوشش ہوگی",
   "syncNow": "ابھی سنک کریں",
   "premiumRequiredForSync": "کلاؤڈ سنک کے لیے پریمیم درکار ہے",
   "signInRequiredForSync": "سنک کرنے کے لیے گوگل کے ساتھ سائن ان کریں",

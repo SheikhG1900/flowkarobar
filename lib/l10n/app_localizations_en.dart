@@ -3403,6 +3403,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dataSynced => 'Data is synced';
 
   @override
+  String get syncAlreadyInProgress => 'Sync already in progress';
+
+  @override
+  String get syncDelayedRetryShortly => 'Sync delayed – will retry shortly';
+
+  @override
   String get premiumRequiredForSync => 'Premium required for cloud sync';
 
   @override
