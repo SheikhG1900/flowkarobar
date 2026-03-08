@@ -803,6 +803,25 @@ class ReceivableDetailsDialog extends ConsumerWidget {
   Future<void> _markAsReceived(
       BuildContext context, WidgetRef ref, String receivableUuid) async {
     final l10n = AppLocalizations.of(context)!;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.markAsReceived),
+        content: Text(l10n.markReceivedSubtitle),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(l10n.markAsReceived),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
     try {
       final repository = ref.read(receivablesRepositoryProvider);
       await repository.markAsReceived(receivableUuid);
