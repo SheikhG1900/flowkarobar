@@ -941,6 +941,12 @@ class SyncEngine {
       sqlData[snakeKey] = value;
     });
 
+    // user_preferences uses key as sync identity; id is auto-increment and differs per device.
+    // Excluding id avoids UNIQUE constraint on id when applying remote rows.
+    if (tableName == 'user_preferences') {
+      sqlData.remove('id');
+    }
+
     final columns = sqlData.keys.join(', ');
     final placeholders = List.filled(sqlData.length, '?').join(', ');
     final updates = sqlData.keys.map((k) => '$k = EXCLUDED.$k').join(', ');
