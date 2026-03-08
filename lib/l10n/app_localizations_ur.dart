@@ -2424,6 +2424,9 @@ class AppLocalizationsUr extends AppLocalizations {
   String get noCategoriesFound => 'کوئی زمرہ نہیں ملا';
 
   @override
+  String get allContactsAddedToSplit => 'تمام رابطے پہلے سے تقسیم میں ہیں';
+
+  @override
   String get paidRelationship => 'ادائیگی کا تعلق';
 
   @override

@@ -4426,6 +4426,12 @@ abstract class AppLocalizations {
   /// **'No categories found'**
   String get noCategoriesFound;
 
+  /// No description provided for @allContactsAddedToSplit.
+  ///
+  /// In en, this message translates to:
+  /// **'All contacts are already in the split'**
+  String get allContactsAddedToSplit;
+
   /// No description provided for @paidRelationship.
   ///
   /// In en, this message translates to:

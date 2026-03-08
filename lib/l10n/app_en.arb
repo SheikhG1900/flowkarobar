@@ -1275,6 +1275,7 @@
   },
   "noCategoriesFound": "No categories found",
   "noContactsFound": "No contacts found",
+  "allContactsAddedToSplit": "All contacts are already in the split",
   "paidRelationship": "Paid Relationship",
   "paidFor": "Paid FOR",
   "paidBy": "Paid BY",

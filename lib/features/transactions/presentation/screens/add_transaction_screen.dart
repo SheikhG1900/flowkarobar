@@ -837,7 +837,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     );
   }
 
-  Future<Contact?> _showContactPicker() async {
+  Future<Contact?> _showContactPicker({Set<String>? excludeContactUuids}) async {
     return await showModalBottomSheet<Contact>(
       context: context,
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -892,11 +892,23 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                 Expanded(
                   child: contactsAsync.when(
                     data: (contactsWithUsage) {
+                      final filtered = excludeContactUuids != null
+                          ? contactsWithUsage
+                              .where((item) =>
+                                  !excludeContactUuids.contains(item.contact.uuid))
+                              .toList()
+                          : contactsWithUsage;
+                      if (filtered.isEmpty) {
+                        return Center(
+                            child: Text(contactsWithUsage.isEmpty
+                                ? l10n.noContactsFound
+                                : l10n.allContactsAddedToSplit));
+                      }
                       return ListView.builder(
                         controller: scrollController,
-                        itemCount: contactsWithUsage.length,
+                        itemCount: filtered.length,
                         itemBuilder: (context, index) {
-                          final item = contactsWithUsage[index];
+                          final item = filtered[index];
                           final contact = item.contact;
                           final usage = item.usageCount;
 
@@ -1177,15 +1189,16 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                           // Add Contact Action
                           IconButton(
                             onPressed: () async {
-                              final contact = await _showContactPicker();
+                              final excludeUuids = _groupShares
+                                  .where((s) => s.contact != null)
+                                  .map((s) => s.contact!.uuid)
+                                  .toSet();
+                              final contact = await _showContactPicker(
+                                  excludeContactUuids: excludeUuids);
                               if (contact != null) {
                                 setModalState(() {
-                                  if (!_groupShares.any(
-                                      (s) => s.contact?.uuid == contact.uuid)) {
-                                    _groupShares
-                                        .add(SplitShare(contact: contact));
-                                    recalculateShares(_groupShares.length - 1);
-                                  }
+                                  _groupShares.add(SplitShare(contact: contact));
+                                  recalculateShares(_groupShares.length - 1);
                                 });
                               }
                             },

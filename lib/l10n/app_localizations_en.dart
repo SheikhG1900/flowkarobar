@@ -2411,6 +2411,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noCategoriesFound => 'No categories found';
 
   @override
+  String get allContactsAddedToSplit => 'All contacts are already in the split';
+
+  @override
   String get paidRelationship => 'Paid Relationship';
 
   @override

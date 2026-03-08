@@ -2420,6 +2420,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get noCategoriesFound => 'कोई श्रेणी नहीं मिली';
 
   @override
+  String get allContactsAddedToSplit => 'सभी संपर्क पहले से विभाजन में हैं';
+
+  @override
   String get paidRelationship => 'भुगतान संबंध';
 
   @override

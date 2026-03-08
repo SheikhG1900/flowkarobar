@@ -816,6 +816,7 @@
   "errorScanningReceipt": "رسید اسکین کرنے میں غلطی: {error}",
   "noCategoriesFound": "کوئی زمرہ نہیں ملا",
   "noContactsFound": "کوئی رابطہ نہیں ملا",
+  "allContactsAddedToSplit": "تمام رابطے پہلے سے تقسیم میں ہیں",
   "paidRelationship": "ادائیگی کا تعلق",
   "paidFor": "کے لیے ادا کیا",
   "paidBy": "کی طرف سے ادا کیا گیا",

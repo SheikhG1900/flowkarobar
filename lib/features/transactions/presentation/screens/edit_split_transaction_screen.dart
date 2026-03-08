@@ -1036,14 +1036,25 @@ class _EditSplitTransactionScreenState
                 Expanded(
                   child: contactsAsync.when(
                     data: (contactsWithUsage) {
-                      if (contactsWithUsage.isEmpty) {
-                        return Center(child: Text(l10n.noContactsFound));
+                      final excludedUuids = _rows
+                          .where((r) => r.contactUuid != null)
+                          .map((r) => r.contactUuid!)
+                          .toSet();
+                      final filtered = contactsWithUsage
+                          .where((item) =>
+                              !excludedUuids.contains(item.contact.uuid))
+                          .toList();
+                      if (filtered.isEmpty) {
+                        return Center(
+                            child: Text(contactsWithUsage.isEmpty
+                                ? l10n.noContactsFound
+                                : l10n.allContactsAddedToSplit));
                       }
                       return ListView.builder(
                         controller: scrollController,
-                        itemCount: contactsWithUsage.length,
+                        itemCount: filtered.length,
                         itemBuilder: (context, index) {
-                          final item = contactsWithUsage[index];
+                          final item = filtered[index];
                           final contact = item.contact;
 
                           return ListTile(

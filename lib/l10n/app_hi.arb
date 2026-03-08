@@ -816,6 +816,7 @@
   "errorScanningReceipt": "रसीद स्कैन करने में त्रुटि: {error}",
   "noCategoriesFound": "कोई श्रेणी नहीं मिली",
   "noContactsFound": "कोई संपर्क नहीं मिला",
+  "allContactsAddedToSplit": "सभी संपर्क पहले से विभाजन में हैं",
   "paidRelationship": "भुगतान संबंध",
   "paidFor": "के लिए भुगतान किया",
   "paidBy": "द्वारा भुगतान किया गया",
