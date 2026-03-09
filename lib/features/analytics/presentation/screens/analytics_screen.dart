@@ -190,6 +190,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                       await ref.read(financialSummaryProvider.future);
                     },
                     child: CustomScrollView(
+                      cacheExtent: 400,
                       physics: const AlwaysScrollableScrollPhysics(
                         parent: BouncingScrollPhysics(),
                       ),
@@ -292,90 +293,106 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 // Financial Summary (Combined)
-                                Showcase(
-                                  key: TourService.analyticsFinancialSummaryKey,
-                                  title:
-                                      l10n.tourAnalyticsFinancialSummaryTitle,
-                                  description:
-                                      l10n.tourAnalyticsFinancialSummaryDesc,
-                                  targetShapeBorder:
-                                      const RoundedRectangleBorder(
-                                    borderRadius:
-                                        BorderRadius.all(Radius.circular(12)),
-                                  ),
-                                  tooltipBackgroundColor:
-                                      theme.colorScheme.primary,
-                                  textColor: theme.colorScheme.onPrimary,
-                                  tooltipPosition: TooltipPosition.bottom,
-                                  child: _CollapsibleSection(
-                                    title: l10n.financialSummary,
-                                    sectionIndex: 0,
-                                    child: const _FinancialSummaryCard(),
+                                RepaintBoundary(
+                                  child: Showcase(
+                                    key: TourService.analyticsFinancialSummaryKey,
+                                    title:
+                                        l10n.tourAnalyticsFinancialSummaryTitle,
+                                    description:
+                                        l10n.tourAnalyticsFinancialSummaryDesc,
+                                    targetShapeBorder:
+                                        const RoundedRectangleBorder(
+                                      borderRadius:
+                                          BorderRadius.all(Radius.circular(12)),
+                                    ),
+                                    tooltipBackgroundColor:
+                                        theme.colorScheme.primary,
+                                    textColor: theme.colorScheme.onPrimary,
+                                    tooltipPosition: TooltipPosition.bottom,
+                                    child: _CollapsibleSection(
+                                      title: l10n.financialSummary,
+                                      sectionIndex: 0,
+                                      child: const _FinancialSummaryCard(),
+                                    ),
                                   ),
                                 ),
 
                                 // Contact Summaries
-                                _CollapsibleSection(
-                                  title: l10n.contactSummaries,
-                                  sectionIndex: 1,
-                                  child: const _ContactSummariesSection(),
+                                RepaintBoundary(
+                                  child: _CollapsibleSection(
+                                    title: l10n.contactSummaries,
+                                    sectionIndex: 1,
+                                    child: const _ContactSummariesSection(),
+                                  ),
                                 ),
 
                                 // Pie Chart Section
-                                Showcase(
-                                  key: TourService.analyticsChartsKey,
-                                  title: l10n.tourAnalyticsChartsTitle,
-                                  description: l10n.tourAnalyticsChartsDesc,
-                                  targetShapeBorder:
-                                      const RoundedRectangleBorder(
-                                    borderRadius:
-                                        BorderRadius.all(Radius.circular(12)),
-                                  ),
-                                  tooltipBackgroundColor:
-                                      theme.colorScheme.primary,
-                                  textColor: theme.colorScheme.onPrimary,
-                                  tooltipPosition: TooltipPosition.bottom,
-                                  child: _CollapsibleSection(
-                                    title: l10n.expensesByCategory,
-                                    sectionIndex: 2,
-                                    child: const _ExpensesPieChart(),
+                                RepaintBoundary(
+                                  child: Showcase(
+                                    key: TourService.analyticsChartsKey,
+                                    title: l10n.tourAnalyticsChartsTitle,
+                                    description: l10n.tourAnalyticsChartsDesc,
+                                    targetShapeBorder:
+                                        const RoundedRectangleBorder(
+                                      borderRadius:
+                                          BorderRadius.all(Radius.circular(12)),
+                                    ),
+                                    tooltipBackgroundColor:
+                                        theme.colorScheme.primary,
+                                    textColor: theme.colorScheme.onPrimary,
+                                    tooltipPosition: TooltipPosition.bottom,
+                                    child: _CollapsibleSection(
+                                      title: l10n.expensesByCategory,
+                                      sectionIndex: 2,
+                                      child: const _ExpensesPieChart(),
+                                    ),
                                   ),
                                 ),
 
                                 // Trend Chart Section
-                                _CollapsibleSection(
-                                  title: l10n.incomeVsExpenseTrend,
-                                  sectionIndex: 3,
-                                  child: const _TrendsBarChart(),
+                                RepaintBoundary(
+                                  child: _CollapsibleSection(
+                                    title: l10n.incomeVsExpenseTrend,
+                                    sectionIndex: 3,
+                                    child: const _TrendsBarChart(),
+                                  ),
                                 ),
 
                                 // Payables vs Receivables Trend
-                                _CollapsibleSection(
-                                  title: l10n.payablesVsReceivablesTrend,
-                                  sectionIndex: 4,
-                                  child: const _PayableReceivableTrendsChart(),
+                                RepaintBoundary(
+                                  child: _CollapsibleSection(
+                                    title: l10n.payablesVsReceivablesTrend,
+                                    sectionIndex: 4,
+                                    child: const _PayableReceivableTrendsChart(),
+                                  ),
                                 ),
 
                                 // Top Contacts by Balance
-                                _CollapsibleSection(
-                                  title: l10n.topContactsByBalance,
-                                  sectionIndex: 5,
-                                  child: const _TopContactsChart(),
+                                RepaintBoundary(
+                                  child: _CollapsibleSection(
+                                    title: l10n.topContactsByBalance,
+                                    sectionIndex: 5,
+                                    child: const _TopContactsChart(),
+                                  ),
                                 ),
 
                                 // Payment Status Distribution
-                                _CollapsibleSection(
-                                  title: l10n.paymentStatusDistribution,
-                                  sectionIndex: 6,
-                                  child:
-                                      const _PaymentStatusDistributionChart(),
+                                RepaintBoundary(
+                                  child: _CollapsibleSection(
+                                    title: l10n.paymentStatusDistribution,
+                                    sectionIndex: 6,
+                                    child:
+                                        const _PaymentStatusDistributionChart(),
+                                  ),
                                 ),
 
                                 // Income by Category
-                                _CollapsibleSection(
-                                  title: l10n.incomeByCategory,
-                                  sectionIndex: 7,
-                                  child: const _IncomePieChart(),
+                                RepaintBoundary(
+                                  child: _CollapsibleSection(
+                                    title: l10n.incomeByCategory,
+                                    sectionIndex: 7,
+                                    child: const _IncomePieChart(),
+                                  ),
                                 ),
 
                                 const SizedBox(height: 40),
