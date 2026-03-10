@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/constants/app_constants.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
@@ -12,15 +13,42 @@ class AboutScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
-    const version = '1.0.0';
-    const buildNumber = '1';
 
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.about),
         centerTitle: true,
       ),
-      body: SingleChildScrollView(
+      body: FutureBuilder<PackageInfo>(
+        future: PackageInfo.fromPlatform(),
+        builder: (context, snapshot) {
+          final version = snapshot.data?.version ?? '1.0.0';
+          final buildNumber = snapshot.data?.buildNumber ?? '1';
+          return _AboutBody(
+            version: version,
+            buildNumber: buildNumber,
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _AboutBody extends StatelessWidget {
+  const _AboutBody({
+    required this.version,
+    required this.buildNumber,
+  });
+
+  final String version;
+  final String buildNumber;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
+
+    return SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
@@ -184,8 +212,7 @@ class AboutScreen extends StatelessWidget {
             const SizedBox(height: 40),
           ],
         ),
-      ),
-    );
+      );
   }
 
   Widget _buildFeatureGrid(BuildContext context) {
