@@ -282,16 +282,18 @@ class VoiceAiParser extends BaseTransactionAiParser {
     } else if ((tokens.contains('ko') &&
             tokens.containsAny(['diye', 'diya'])) ||
         (tokens.contains('ne') && tokens.containsAny(['liye', 'liya'])) ||
-        lowerText.startsWithAny(['give', 'gave', 'i give', 'i gave'])) {
+        lowerText.startsWithAny(
+            ['give', 'gave', 'i give', 'i gave', 'i paid', 'i pay'])) {
       relationship = 'PAID_FOR';
     } else if (lowerText
             .containsAny(['paid by', 'someone paid', 'for me', 'mere liye']) ||
         (lowerText.contains('mere') && category != null) ||
         (contact != null &&
-            lowerText.contains('gave') &&
+            lowerText.containsAny(['gave', 'give', 'paid', 'pay']) &&
             lowerText.contains('for'))) {
       relationship = 'PAID_BY';
     } else if (type == "INCOME" &&
+        !lowerText.containsAny(_willReceiveKeywords) &&
         (contact != null ||
             lowerText.containsAny(['from', 'se', 'by']) ||
             tokens.contains('ne'))) {

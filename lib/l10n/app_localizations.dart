@@ -2071,7 +2071,7 @@ abstract class AppLocalizations {
   /// No description provided for @featureUnlimitedVoiceExtractionDesc.
   ///
   /// In en, this message translates to:
-  /// **'Use AI-powered smart extraction for voice commands without monthly limits. Add transactions by speaking in natural language.'**
+  /// **'Use smart extraction for voice commands without monthly limits. Add transactions by speaking in natural language.'**
   String get featureUnlimitedVoiceExtractionDesc;
 
   /// No description provided for @featureUnlimitedReceiptExtractionTitle.
@@ -2083,7 +2083,7 @@ abstract class AppLocalizations {
   /// No description provided for @featureUnlimitedReceiptExtractionDesc.
   ///
   /// In en, this message translates to:
-  /// **'Use AI-powered smart extraction for receipt scanning without monthly limits. Extract amount, merchant, and category from receipts automatically.'**
+  /// **'Use smart extraction for receipt scanning without monthly limits. Extract amount, merchant, and category from receipts automatically.'**
   String get featureUnlimitedReceiptExtractionDesc;
 
   /// No description provided for @featureBulkImportTitle.
@@ -4279,7 +4279,7 @@ abstract class AppLocalizations {
   /// No description provided for @smartExtraction.
   ///
   /// In en, this message translates to:
-  /// **'Smart extraction (AI)'**
+  /// **'Smart extraction'**
   String get smartExtraction;
 
   /// No description provided for @basicExtraction.
@@ -4309,7 +4309,7 @@ abstract class AppLocalizations {
   /// No description provided for @smartAiDownloadMessage.
   ///
   /// In en, this message translates to:
-  /// **'Smart AI features require a one-time download (~100MB). Would you like to download now for better accuracy?'**
+  /// **'Smart features require a one-time download (~100MB). Would you like to download now for better accuracy?'**
   String get smartAiDownloadMessage;
 
   /// No description provided for @smartParsingLimitReached.
@@ -4351,7 +4351,7 @@ abstract class AppLocalizations {
   /// No description provided for @voiceInstructionSmart.
   ///
   /// In en, this message translates to:
-  /// **'You\'re using Smart AI extraction. Tap here for more tips.'**
+  /// **'You\'re using Smart extraction. Tap here for more tips.'**
   String get voiceInstructionSmart;
 
   /// No description provided for @includeTextAsDescription.

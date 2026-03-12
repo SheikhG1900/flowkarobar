@@ -1090,7 +1090,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get featureUnlimitedVoiceExtractionDesc =>
-      'Use AI-powered smart extraction for voice commands without monthly limits. Add transactions by speaking in natural language.';
+      'Use smart extraction for voice commands without monthly limits. Add transactions by speaking in natural language.';
 
   @override
   String get featureUnlimitedReceiptExtractionTitle =>
@@ -1098,7 +1098,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get featureUnlimitedReceiptExtractionDesc =>
-      'Use AI-powered smart extraction for receipt scanning without monthly limits. Extract amount, merchant, and category from receipts automatically.';
+      'Use smart extraction for receipt scanning without monthly limits. Extract amount, merchant, and category from receipts automatically.';
 
   @override
   String get featureBulkImportTitle => 'Bulk Import';
@@ -2327,7 +2327,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reParse => 'Re-parse';
 
   @override
-  String get smartExtraction => 'Smart extraction (AI)';
+  String get smartExtraction => 'Smart extraction';
 
   @override
   String get basicExtraction => 'Basic extraction';
@@ -2343,7 +2343,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get smartAiDownloadMessage =>
-      'Smart AI features require a one-time download (~100MB). Would you like to download now for better accuracy?';
+      'Smart features require a one-time download (~100MB). Would you like to download now for better accuracy?';
 
   @override
   String get smartParsingLimitReached =>
@@ -2368,7 +2368,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get voiceInstructionSmart =>
-      'You\'re using Smart AI extraction. Tap here for more tips.';
+      'You\'re using Smart extraction. Tap here for more tips.';
 
   @override
   String get includeTextAsDescription => 'Include text as description';

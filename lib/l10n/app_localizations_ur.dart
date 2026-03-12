@@ -1096,7 +1096,7 @@ class AppLocalizationsUr extends AppLocalizations {
 
   @override
   String get featureUnlimitedVoiceExtractionDesc =>
-      'مہینہ وار حد بندی کے بغیر آواز کمانڈز کے لیے AI سے چلنے والے اسمارٹ اخراج کا استعمال کریں۔ قدرتی زبان میں بول کر لین دین شامل کریں۔';
+      'مہینہ وار حد بندی کے بغیر آواز کمانڈز کے لیے اسمارٹ اخراج کا استعمال کریں۔ قدرتی زبان میں بول کر لین دین شامل کریں۔';
 
   @override
   String get featureUnlimitedReceiptExtractionTitle =>
@@ -1104,7 +1104,7 @@ class AppLocalizationsUr extends AppLocalizations {
 
   @override
   String get featureUnlimitedReceiptExtractionDesc =>
-      'مہینہ وار حد بندی کے بغیر رسید اسکیننگ کے لیے AI سے چلنے والے اسمارٹ اخراج کا استعمال کریں۔ رسیدوں سے رقم، تاجر اور زمرہ خودکار طور پر نکالیں۔';
+      'مہینہ وار حد بندی کے بغیر رسید اسکیننگ کے لیے اسمارٹ اخراج کا استعمال کریں۔ رسیدوں سے رقم، تاجر اور زمرہ خودکار طور پر نکالیں۔';
 
   @override
   String get featureBulkImportTitle => 'بلک امپورٹ';
@@ -2340,7 +2340,7 @@ class AppLocalizationsUr extends AppLocalizations {
   String get reParse => 'دوبارہ پارس کریں';
 
   @override
-  String get smartExtraction => 'اسمارٹ نکالنا (AI)';
+  String get smartExtraction => 'اسمارٹ نکالنا';
 
   @override
   String get basicExtraction => 'بنیادی نکالنا';
@@ -2356,7 +2356,7 @@ class AppLocalizationsUr extends AppLocalizations {
 
   @override
   String get smartAiDownloadMessage =>
-      'اسمارٹ AI خصوصیات کے لیے ایک بار ڈاؤن لوڈ (~100MB) کی ضرورت ہے۔ کیا آپ بہتر درستگی کے لیے ابھی ڈاؤن لوڈ کرنا چاہیں گے؟';
+      'اسمارٹ خصوصیات کے لیے ایک بار ڈاؤن لوڈ (~100MB) کی ضرورت ہے۔ کیا آپ بہتر درستگی کے لیے ابھی ڈاؤن لوڈ کرنا چاہیں گے؟';
 
   @override
   String get smartParsingLimitReached =>
@@ -2381,7 +2381,7 @@ class AppLocalizationsUr extends AppLocalizations {
 
   @override
   String get voiceInstructionSmart =>
-      'آپ سمارٹ AI اخراج استعمال کر رہے ہیں۔ مزید تجاویز کے لیے یہاں ٹیپ کریں۔';
+      'آپ سمارٹ اخراج استعمال کر رہے ہیں۔ مزید تجاویز کے لیے یہاں ٹیپ کریں۔';
 
   @override
   String get includeTextAsDescription => 'ٹیکسٹ کو تفصیل کے طور پر شامل کریں';

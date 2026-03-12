@@ -1095,7 +1095,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get featureUnlimitedVoiceExtractionDesc =>
-      'मासिक सीमा के बिना आवाज़ कमांड के लिए AI-संचालित स्मार्ट एक्सट्रैक्शन का उपयोग करें। प्राकृतिक भाषा में बोलकर लेन-देन जोड़ें।';
+      'मासिक सीमा के बिना आवाज़ कमांड के लिए स्मार्ट एक्सट्रैक्शन का उपयोग करें। प्राकृतिक भाषा में बोलकर लेन-देन जोड़ें।';
 
   @override
   String get featureUnlimitedReceiptExtractionTitle =>
@@ -1103,7 +1103,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get featureUnlimitedReceiptExtractionDesc =>
-      'मासिक सीमा के बिना रसीद स्कैनिंग के लिए AI-संचालित स्मार्ट एक्सट्रैक्शन का उपयोग करें। रसीदों से राशि, व्यापारी और श्रेणी स्वचालित रूप से निकालें।';
+      'मासिक सीमा के बिना रसीद स्कैनिंग के लिए स्मार्ट एक्सट्रैक्शन का उपयोग करें। रसीदों से राशि, व्यापारी और श्रेणी स्वचालित रूप से निकालें।';
 
   @override
   String get featureBulkImportTitle => 'बल्क इंपोर्ट';
@@ -2335,7 +2335,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get reParse => 'फिर से पार्स करें';
 
   @override
-  String get smartExtraction => 'स्मार्ट निष्कर्षण (AI)';
+  String get smartExtraction => 'स्मार्ट निष्कर्षण';
 
   @override
   String get basicExtraction => 'बुनियादी निष्कर्षण';
@@ -2351,7 +2351,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get smartAiDownloadMessage =>
-      'स्मार्ट AI सुविधाओं के लिए एक बार डाउनलोड (~100MB) की आवश्यकता होती है। क्या आप बेहतर सटीकता के लिए अभी डाउनलोड करना चाहेंगे?';
+      'स्मार्ट सुविधाओं के लिए एक बार डाउनलोड (~100MB) की आवश्यकता होती है। क्या आप बेहतर सटीकता के लिए अभी डाउनलोड करना चाहेंगे?';
 
   @override
   String get smartParsingLimitReached =>
@@ -2376,7 +2376,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get voiceInstructionSmart =>
-      'आप स्मार्ट AI एक्सट्रैक्शन का उपयोग कर रहे हैं। अधिक टिप्स के लिए यहां टैप करें।';
+      'आप स्मार्ट एक्सट्रैक्शन का उपयोग कर रहे हैं। अधिक टिप्स के लिए यहां टैप करें।';
 
   @override
   String get includeTextAsDescription =>
