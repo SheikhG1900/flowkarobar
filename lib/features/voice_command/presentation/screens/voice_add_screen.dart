@@ -214,140 +214,188 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (context) => DraggableScrollableSheet(
+      builder: (sheetContext) => DraggableScrollableSheet(
         initialChildSize: 0.7,
         maxChildSize: 0.9,
         minChildSize: 0.5,
         expand: false,
-        builder: (context, scrollController) => SingleChildScrollView(
-          controller: scrollController,
-          padding: EdgeInsets.only(
-            left: 24,
-            right: 24,
-            top: 24,
-            bottom: MediaQuery.of(context).padding.bottom + 24,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  margin: const EdgeInsets.only(bottom: 24),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[300],
-                    borderRadius: BorderRadius.circular(2),
+        builder: (sheetContext, scrollController) {
+          void testExample(String example) {
+            Navigator.pop(sheetContext);
+            setState(() {
+              _text = example;
+              _transcriptController.text = example;
+            });
+            _processText(example);
+          }
+
+          return SingleChildScrollView(
+            controller: scrollController,
+            padding: EdgeInsets.only(
+              left: 24,
+              right: 24,
+              top: 24,
+              bottom: MediaQuery.of(sheetContext).padding.bottom + 24,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: 24),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(2),
+                    ),
                   ),
                 ),
-              ),
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      l10n.voiceGuideTitle,
-                      style: Theme.of(context)
-                          .textTheme
-                          .headlineSmall
-                          ?.copyWith(fontWeight: FontWeight.bold),
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: (isSmart ? Colors.blue : Colors.grey)
-                          .withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                          color: (isSmart ? Colors.blue : Colors.grey)
-                              .withValues(alpha: 0.2)),
-                    ),
-                    child: Text(
-                      isSmart ? l10n.smartExtraction : l10n.basicExtraction,
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        color: isSmart ? Colors.blue : Colors.grey,
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        l10n.voiceGuideTitle,
+                        style: Theme.of(sheetContext)
+                            .textTheme
+                            .headlineSmall
+                            ?.copyWith(fontWeight: FontWeight.bold),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
                       ),
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
                     ),
-                  ),
+                    const SizedBox(width: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: (isSmart ? Colors.blue : Colors.grey)
+                            .withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                            color: (isSmart ? Colors.blue : Colors.grey)
+                                .withValues(alpha: 0.2)),
+                      ),
+                      child: Text(
+                        isSmart ? l10n.smartExtraction : l10n.basicExtraction,
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: isSmart ? Colors.blue : Colors.grey,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                    isSmart
+                        ? "Smart extraction understands natural phrasing in English, Hindi, and Urdu."
+                        : "Basic mode works best with structured phrases like 'Paid [Amount] for [Category]'.",
+                    style: Theme.of(sheetContext).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(sheetContext)
+                            .textTheme
+                            .bodySmall
+                            ?.color
+                            ?.withValues(alpha: 0.7))),
+                const SizedBox(height: 24),
+                if (isSmart) ...[
+                  _buildHintSection(
+                      sheetContext,
+                      "Simple Expenses",
+                      [
+                        "Spent 500 on fuel",
+                        "Dinner per 1000 kharch kiye",
+                      ],
+                      onTest: (ex) => () => testExample(ex)),
+                  _buildHintSection(
+                      sheetContext,
+                      "Giving Money (Receivable)",
+                      [
+                        "I gave 1000 to Ashfaq for dinner",
+                        "Ashfaq ko 500 dinner ke liye diye",
+                        "Kashif ne 500 dinner ke liye",
+                      ],
+                      onTest: (ex) => () => testExample(ex)),
+                  _buildHintSection(
+                      sheetContext,
+                      "Other Paid (Payable)",
+                      [
+                        "Kashif gave 1000 for dinner",
+                        "Ashfaq ne 500 dinner ke liye diye",
+                        "Kashif se 500 dinner ke liye",
+                      ],
+                      onTest: (ex) => () => testExample(ex)),
+                  _buildHintSection(
+                      sheetContext,
+                      "Receiving Money / Loans",
+                      [
+                        "Received 2000 from Kashif",
+                        "Kashif Ne ₹500 Udhar Diye",
+                        "Kashif Ne ₹500 Diye",
+                        "Kashif se ₹50 Udhar Liye",
+                      ],
+                      onTest: (ex) => () => testExample(ex)),
+                  _buildHintSection(
+                      sheetContext,
+                      "Will Receive Money",
+                      [
+                        "Will receive 500 from Shujaat",
+                        "Ashfaq se 100 loon ga",
+                        "Hamza se 5000 lene he",
+                        "Kashif se 5000 milay ga",
+                      ],
+                      onTest: (ex) => () => testExample(ex)),
+                ] else ...[
+                  _buildHintSection(
+                      sheetContext,
+                      "Expenses (Basic)",
+                      [
+                        "Spent 500 on Fuel",
+                        "Paid 1000 on Dinner",
+                        "Expense 250 on Snacks",
+                      ],
+                      onTest: (ex) => () => testExample(ex)),
+                  _buildHintSection(
+                      sheetContext,
+                      "Income (Basic)",
+                      [
+                        "2000 Received from Kashif (Payable)",
+                        "5000 Income from Salary",
+                        "Received 1000 for Bonus",
+                        "Will receive 2000 from Ali",
+                      ],
+                      onTest: (ex) => () => testExample(ex)),
+                  _buildHintSection(
+                      sheetContext,
+                      "Giving/Lending Money",
+                      [
+                        "Gave 1000 to Ashfaq",
+                        "Paid for Usman 500",
+                      ],
+                      onTest: (ex) => () => testExample(ex)),
+                  _buildHintSection(
+                      sheetContext,
+                      "Borrowing Money",
+                      [
+                        "1000 paid by Ashfaq for dinner",
+                        "Will give 5000 to Ashfaq for dinner",
+                      ],
+                      onTest: (ex) => () => testExample(ex)),
                 ],
-              ),
-              const SizedBox(height: 8),
-              Text(
-                  isSmart
-                      ? "Smart AI understands natural phrasing in English, Hindi, and Urdu."
-                      : "Basic mode works best with structured phrases like 'Paid [Amount] for [Category]'.",
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context)
-                          .textTheme
-                          .bodySmall
-                          ?.color
-                          ?.withValues(alpha: 0.7))),
-              const SizedBox(height: 24),
-              if (isSmart) ...[
-                _buildHintSection(context, "Simple Expenses", [
-                  "Spent 500 on fuel",
-                  "Dinner per 1000 kharch kiye",
-                ]),
-                _buildHintSection(context, "Giving Money (Receivable)", [
-                  "I gave 1000 to Ashfaq for dinner",
-                  "Ashfaq ko 500 dinner ke liye diye",
-                  "Kashif ne 500 dinner ke liye",
-                ]),
-                _buildHintSection(context, "Other Paid (Payable)", [
-                  "Kashif gave 1000 for dinner",
-                  "Ashfaq ne 500 dinner ke liye diye",
-                  "Kashif se 500 dinner ke liye",
-                ]),
-                _buildHintSection(context, "Receiving Money / Loans", [
-                  "Received 2000 from Kashif",
-                  "Kashif Ne ₹500 Udhar Diye",
-                  "Kashif Ne ₹500 Diye",
-                  "Kashif se ₹50 Udhar Liye",
-                ]),
-                _buildHintSection(context, "Will Receive Money", [
-                  "Will receive 500 for Shujaat",
-                  "Ashfaq se 100 loon ga",
-                  "Hamza se 5000 lene he",
-                  "Kashif se 5000 milay ga",
-                ]),
-              ] else ...[
-                _buildHintSection(context, "Expenses (Basic)", [
-                  "Spent 500 on Fuel",
-                  "Paid 1000 on Dinner",
-                  "Expense 250 on Snacks",
-                ]),
-                _buildHintSection(context, "Income (Basic)", [
-                  "2000 Received from Kashif (Payable)",
-                  "5000 Income from Salary",
-                  "Received 1000 for Bonus",
-                  "Will receive 2000 from Ali",
-                ]),
-                _buildHintSection(context, "Giving/Lending Money", [
-                  "Gave 1000 to Ashfaq",
-                  "Paid for Usman 500",
-                ]),
-                _buildHintSection(context, "Borrowing Money", [
-                  "1000 paid by Ashfaq for dinner",
-                  "Will give 5000 to Ashfaq for dinner",
-                ]),
               ],
-            ],
-          ),
-        ),
+            ),
+          );
+        },
       ),
     );
   }
 
   Widget _buildHintSection(
-      BuildContext context, String title, List<String> examples) {
+      BuildContext context, String title, List<String> examples,
+      {required VoidCallback Function(String example) onTest}) {
     final activeCashbookColor = ref.read(activeCashbookProvider).color;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -363,7 +411,7 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
         ...examples.map((ex) => Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   const Icon(Icons.check_circle_outline,
                       size: 18, color: Colors.green),
@@ -371,6 +419,28 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
                   Expanded(
                       child: Text(ex,
                           style: const TextStyle(fontStyle: FontStyle.italic))),
+                  const SizedBox(width: 8),
+                  GestureDetector(
+                    onTap: onTest(ex),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: activeCashbookColor.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(
+                            color: activeCashbookColor.withValues(alpha: 0.3)),
+                      ),
+                      child: Text(
+                        'Test',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: activeCashbookColor,
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             )),
@@ -764,20 +834,20 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
                                           l10n.amount,
                                           "${_parsedResult?.amount ?? 0}",
                                           theme,
-                                          valueColor: (_parsedResult?.type ==
-                                                  'INCOME')
-                                              ? AppColors.incomeColor
-                                              : AppColors.expenseColor),
+                                          valueColor:
+                                              (_parsedResult?.type == 'INCOME')
+                                                  ? AppColors.incomeColor
+                                                  : AppColors.expenseColor),
                                       _buildDetailRow(
                                           l10n.type,
                                           _parsedResult?.type == "INCOME"
                                               ? l10n.income
                                               : l10n.expense,
                                           theme,
-                                          valueColor: (_parsedResult?.type ==
-                                                  'INCOME')
-                                              ? AppColors.incomeColor
-                                              : AppColors.expenseColor),
+                                          valueColor:
+                                              (_parsedResult?.type == 'INCOME')
+                                                  ? AppColors.incomeColor
+                                                  : AppColors.expenseColor),
 
                                       // Category selection
                                       _buildCategorySuggestions(
@@ -896,11 +966,9 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
   Widget _buildRelationshipBadge(ThemeData theme, AppLocalizations l10n) {
     final rel = _parsedResult?.paidRelationship;
     if (rel == null) return const SizedBox.shrink();
-    final isReceivable =
-        rel == 'PAID_FOR' || rel == 'WILL_RECEIVE';
-    final color = isReceivable
-        ? AppColors.receivableColor
-        : AppColors.payableColor;
+    final isReceivable = rel == 'PAID_FOR' || rel == 'WILL_RECEIVE';
+    final color =
+        isReceivable ? AppColors.receivableColor : AppColors.payableColor;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(

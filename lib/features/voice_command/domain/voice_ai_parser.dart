@@ -133,9 +133,11 @@ class VoiceAiParser extends BaseTransactionAiParser {
       type = "EXPENSE";
     } else if (tokens.containsAny([
           'receive',
+          'received',
           'income',
           'salary',
           'got',
+          'get',
           'mila',
           'mile',
           'mili',
