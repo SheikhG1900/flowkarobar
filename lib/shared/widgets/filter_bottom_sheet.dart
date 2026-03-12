@@ -417,7 +417,9 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
               ),
             ),
             childrenPadding: const EdgeInsets.fromLTRB(8, 0, 8, 12),
-            children: [child],
+            expandedCrossAxisAlignment: CrossAxisAlignment.start,
+            expandedAlignment: Alignment.topLeft,
+            children: [SizedBox(width: double.infinity, child: child)],
           ),
         ),
       ),
@@ -471,10 +473,22 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
       required String code,
       required String label,
       required Color color,
+      required IconData icon,
     }) {
       final selected = _selectedStatusCodes.contains(code);
       return FilterChip(
-        label: Text(label, style: chipTextStyle),
+        avatar: Icon(
+          icon,
+          size: 16,
+          color: selected ? Colors.white : color,
+        ),
+        label: Text(
+          label,
+          style: chipTextStyle?.copyWith(
+            color: selected ? Colors.white : theme.colorScheme.onSurface,
+            fontSize: 12,
+          ),
+        ),
         selected: selected,
         onSelected: (isSelected) {
           setState(() {
@@ -487,8 +501,9 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
             }
           });
         },
-        selectedColor: color.withValues(alpha: 0.2),
-        checkmarkColor: color,
+        selectedColor: color,
+        checkmarkColor: Colors.white,
+        showCheckmark: false,
         backgroundColor: theme.colorScheme.surface,
         side: BorderSide(
           color: selected ? Colors.transparent : theme.dividerColor,
@@ -501,36 +516,43 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
     return Wrap(
       spacing: 8,
       runSpacing: 8,
+      alignment: WrapAlignment.start,
       children: [
         buildStatusChip(
           code: 'PAID',
           label: l10n.paidTag,
           color: AppColors.payableColor,
+          icon: Icons.check_circle_outline,
         ),
         buildStatusChip(
           code: 'RECEIVED',
           label: l10n.receivedTag,
           color: AppColors.receivableColor,
+          icon: Icons.move_to_inbox_outlined,
         ),
         buildStatusChip(
           code: 'PAYABLE',
           label: l10n.payableTag,
           color: AppColors.payableColor,
+          icon: Icons.arrow_circle_up_outlined,
         ),
         buildStatusChip(
           code: 'RECEIVABLE',
           label: l10n.receivableTag,
           color: AppColors.receivableColor,
+          icon: Icons.arrow_circle_down_outlined,
         ),
         buildStatusChip(
           code: 'AUTO',
           label: l10n.autoBadge,
           color: theme.colorScheme.secondary,
+          icon: Icons.auto_awesome_outlined,
         ),
         buildStatusChip(
           code: 'SCHEDULED',
           label: l10n.schedules,
           color: Colors.blue,
+          icon: Icons.event_repeat,
         ),
       ],
     );
@@ -563,6 +585,7 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
       data: (categories) => Wrap(
         spacing: 8,
         runSpacing: 8,
+        alignment: WrapAlignment.start,
         children: categories.map((cat) {
           final isSelected = _selectedCategoryUuids.contains(cat.uuid);
           Color categoryColor;
@@ -624,6 +647,7 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
       data: (contacts) => Wrap(
         spacing: 8,
         runSpacing: 8,
+        alignment: WrapAlignment.start,
         children: contacts.map((contact) {
           final isSelected = _selectedContactUuids.contains(contact.uuid);
           final contactColor = AppColors.getContactColor(contact.name);
