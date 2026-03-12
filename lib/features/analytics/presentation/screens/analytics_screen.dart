@@ -1945,19 +1945,19 @@ class _PayableReceivableTrendsChart extends ConsumerWidget {
                   ];
                 }
 
-                // Receivable bar: pending (dull) at bottom, received (dark) at top
+                // Receivable bar: received (dark) at bottom, pending (dull) at top
                 List<BarChartRodStackItem> receivableStack = [
-                  if (pendingR > 0)
-                    BarChartRodStackItem(
-                      0,
-                      pendingR,
-                      receivableDullColor,
-                    ),
                   if (receivedR > 0)
                     BarChartRodStackItem(
-                      pendingR,
-                      totalR,
+                      0,
+                      receivedR,
                       receivableReceivedColor,
+                    ),
+                  if (pendingR > 0)
+                    BarChartRodStackItem(
+                      receivedR,
+                      totalR,
+                      receivableDullColor,
                     ),
                 ];
                 if (receivableStack.isEmpty && totalR >= 0) {
