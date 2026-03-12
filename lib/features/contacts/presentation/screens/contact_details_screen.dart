@@ -21,6 +21,9 @@ import 'package:flutter/services.dart';
 import 'package:flowpaisa/features/whatsapp/domain/deep_link_service.dart';
 import 'package:flowpaisa/features/dashboard/domain/dashboard_widget_models.dart';
 import 'package:flowpaisa/features/dashboard/presentation/providers/dashboard_widget_provider.dart';
+import 'package:flowpaisa/features/transactions/domain/models.dart';
+import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
+import 'package:flowpaisa/features/transactions/presentation/screens/transactions_list_screen.dart';
 
 // Provider to get transactions for a contact
 // Note: We'll fetch this from the database directly in a future iteration
@@ -38,6 +41,103 @@ class ContactDetailsScreen extends ConsumerWidget {
     final statsAsync = ref.watch(contactStatisticsProvider(contactUuid));
     final currencySymbol = ref.watch(currencySymbolProvider);
     final currencyDecimalPlaces = ref.watch(currencyDecimalPlacesProvider);
+
+    void showContactNavigationSheet({
+      required String title,
+      required Color color,
+      required IconData icon,
+      required String specificLabel,
+      required IconData specificIcon,
+      required VoidCallback onSpecific,
+      required String transactionStatusCode,
+    }) {
+      showModalBottomSheet<void>(
+        context: context,
+        backgroundColor: Colors.transparent,
+        builder: (sheetContext) => Container(
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surface,
+            borderRadius:
+                const BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          padding: EdgeInsets.only(
+            left: 16,
+            right: 16,
+            top: 16,
+            bottom: MediaQuery.of(sheetContext).padding.bottom + 16,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.onSurfaceVariant
+                      .withValues(alpha: 0.4),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(icon, color: color, size: 20),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    title,
+                    style: theme.textTheme.titleLarge
+                        ?.copyWith(fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              // Transactions option
+              _ContactNavTile(
+                icon: Icons.receipt_long,
+                color: theme.colorScheme.primary,
+                label: l10n.transactions,
+                onTap: () {
+                  Navigator.pop(sheetContext);
+                  ref
+                      .read(transactionsPaginatedProvider.notifier)
+                      .applyFilters(
+                        TransactionFilters(
+                          contactUuids: [contactUuid],
+                          statusCodes: [transactionStatusCode],
+                        ),
+                      );
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const TransactionsListScreen(),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 8),
+              // Receivable / Payable specific option
+              _ContactNavTile(
+                icon: specificIcon,
+                color: color,
+                label: specificLabel,
+                onTap: () {
+                  Navigator.pop(sheetContext);
+                  onSpecific();
+                },
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        ),
+      );
+    }
 
     return Scaffold(
       body: statsAsync.when(
@@ -224,27 +324,46 @@ class ContactDetailsScreen extends ConsumerWidget {
                   children: [
                     const SizedBox(height: 16),
                     // Net Balance Card: full width, amount and badge centered
-                    Container(
-                      width: double.infinity,
-                      margin: const EdgeInsets.symmetric(horizontal: 12),
-                      padding: const EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                        gradient: isPositive
-                            ? AppColors.receivableGradient
-                            : AppColors.payableGradient,
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: InkWell(
+                        onTap: () {
+                          ref
+                              .read(transactionsPaginatedProvider.notifier)
+                              .applyFilters(
+                                TransactionFilters(
+                                  contactUuids: [contactUuid],
+                                ),
+                              );
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  const TransactionsListScreen(),
+                            ),
+                          );
+                        },
                         borderRadius: BorderRadius.circular(24),
-                        boxShadow: [
-                          BoxShadow(
-                            color: (isPositive
-                                    ? AppColors.receivableColor
-                                    : AppColors.payableColor)
-                                .withValues(alpha: 0.3),
-                            blurRadius: 16,
-                            offset: const Offset(0, 8),
-                          ),
-                        ],
-                      ),
-                      child: Column(
+                        child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          gradient: isPositive
+                              ? AppColors.receivableGradient
+                              : AppColors.payableGradient,
+                          borderRadius: BorderRadius.circular(24),
+                          boxShadow: [
+                            BoxShadow(
+                              color: (isPositive
+                                      ? AppColors.receivableColor
+                                      : AppColors.payableColor)
+                                  .withValues(alpha: 0.3),
+                              blurRadius: 16,
+                              offset: const Offset(0, 8),
+                            ),
+                          ],
+                        ),
+                        child: Column(
                         mainAxisSize: MainAxisSize.min,
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.center,
@@ -296,6 +415,8 @@ class ContactDetailsScreen extends ConsumerWidget {
                           ),
                         ],
                       ),
+                      ),
+                    ),
                     ),
                     const SizedBox(height: 16),
 
@@ -319,25 +440,29 @@ class ContactDetailsScreen extends ConsumerWidget {
                                   icon: Icons.arrow_downward,
                                   currencySymbol: currencySymbol,
                                   currencyDecimalPlaces: currencyDecimalPlaces,
-                                  onTap: () {
-                                    ref
-                                        .read(receivablesPaginatedProvider(
-                                                'PENDING')
-                                            .notifier)
-                                        .applyFilters(
-                                          ReceivableFilters(
-                                            contactUuids: [contactUuid],
-                                          ),
-                                        );
-
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            const ReceivablesListScreen(),
-                                      ),
-                                    );
-                                  },
+                                  onTap: () => showContactNavigationSheet(
+                                    title: l10n.receivable,
+                                    color: AppColors.receivableColor,
+                                    icon: Icons.arrow_downward,
+                                    specificLabel: l10n.receivables,
+                                    specificIcon: Icons.arrow_downward,
+                                    transactionStatusCode: 'RECEIVABLE',
+                                    onSpecific: () {
+                                      ref
+                                          .read(receivablesPaginatedProvider(
+                                                  'PENDING')
+                                              .notifier)
+                                          .applyFilters(ReceivableFilters(
+                                              contactUuids: [contactUuid]));
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) =>
+                                              const ReceivablesListScreen(),
+                                        ),
+                                      );
+                                    },
+                                  ),
                                 ),
                               ),
                               const SizedBox(width: 16),
@@ -352,25 +477,29 @@ class ContactDetailsScreen extends ConsumerWidget {
                                   icon: Icons.arrow_upward,
                                   currencySymbol: currencySymbol,
                                   currencyDecimalPlaces: currencyDecimalPlaces,
-                                  onTap: () {
-                                    ref
-                                        .read(
-                                            payablesPaginatedProvider('PENDING')
-                                                .notifier)
-                                        .applyFilters(
-                                          PayableFilters(
-                                            contactUuids: [contactUuid],
-                                          ),
-                                        );
-
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            const PayablesListScreen(),
-                                      ),
-                                    );
-                                  },
+                                  onTap: () => showContactNavigationSheet(
+                                    title: l10n.payable,
+                                    color: AppColors.payableColor,
+                                    icon: Icons.arrow_upward,
+                                    specificLabel: l10n.payables,
+                                    specificIcon: Icons.arrow_upward,
+                                    transactionStatusCode: 'PAYABLE',
+                                    onSpecific: () {
+                                      ref
+                                          .read(payablesPaginatedProvider(
+                                                  'PENDING')
+                                              .notifier)
+                                          .applyFilters(PayableFilters(
+                                              contactUuids: [contactUuid]));
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) =>
+                                              const PayablesListScreen(),
+                                        ),
+                                      );
+                                    },
+                                  ),
                                 ),
                               ),
                             ],
@@ -1097,6 +1226,58 @@ class _BulkSettleSheetContentState extends State<_BulkSettleSheetContent> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _ContactNavTile extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final String label;
+  final VoidCallback onTap;
+
+  const _ContactNavTile({
+    required this.icon,
+    required this.color,
+    required this.label,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          border: Border.all(color: theme.dividerColor),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: color, size: 22),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Text(
+                label,
+                style: theme.textTheme.titleMedium
+                    ?.copyWith(fontWeight: FontWeight.bold),
+              ),
+            ),
+            Icon(Icons.chevron_right,
+                color: theme.colorScheme.onSurfaceVariant),
+          ],
+        ),
       ),
     );
   }
