@@ -79,6 +79,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
   final _formKey = GlobalKey<FormState>();
   final _amountController = TextEditingController();
   final _descriptionController = TextEditingController();
+  final _amountFocusNode = FocusNode();
   bool _tourStarted = false;
 
   String _selectedType = 'EXPENSE';
@@ -163,8 +164,27 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
         final repo = ref.read(userPreferencesRepositoryProvider);
         final autoSuggest = await repo.getAutoSuggestTransactionScenario();
         if (!mounted) return;
-        if (!autoSuggest) return;
-        showTransactionScenarioPicker(context,
+        if (!autoSuggest) {
+          // Wait for the route push animation to complete before requesting
+          // focus, mirroring Flutter's own autofocus behaviour which also
+          // defers until the route has settled.
+          final animation = ModalRoute.of(context)?.animation;
+          if (animation == null ||
+              animation.status == AnimationStatus.completed) {
+            _amountFocusNode.requestFocus();
+          } else {
+            late AnimationStatusListener onStatus;
+            onStatus = (status) {
+              if (status == AnimationStatus.completed) {
+                animation.removeStatusListener(onStatus);
+                if (mounted) _amountFocusNode.requestFocus();
+              }
+            };
+            animation.addStatusListener(onStatus);
+          }
+          return;
+        }
+        await showTransactionScenarioPicker(context,
             onScenarioSelected: (type, relationship) {
           setState(() {
             _selectedType = type;
@@ -172,6 +192,8 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
             _createLinkedEntry = relationship != null;
           });
         });
+        if (!mounted) return;
+        _amountFocusNode.requestFocus();
       });
     }
   }
@@ -258,6 +280,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     _amountController.removeListener(_onAmountChanged);
     _amountController.dispose();
     _descriptionController.dispose();
+    _amountFocusNode.dispose();
     super.dispose();
   }
 
@@ -1676,8 +1699,8 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                           const SizedBox(height: 16),
                           TextFormField(
                             controller: _amountController,
-                            autofocus: widget.initialAmount ==
-                                null, // Autofocus only if no initial amount
+                            focusNode: _amountFocusNode,
+                            autofocus: false,
                             textAlign: TextAlign.center,
                             style: theme.textTheme.displayLarge?.copyWith(
                               fontWeight: FontWeight.bold,

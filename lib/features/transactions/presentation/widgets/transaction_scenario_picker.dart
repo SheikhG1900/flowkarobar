@@ -74,11 +74,11 @@ String getScenarioLabel(AppLocalizations l10n, String id) {
 /// Shows a bottom sheet listing transaction scenarios. On tap, [onScenarioSelected]
 /// is called with the scenario's type and relationship, then the sheet is closed.
 /// Includes an "Auto suggest" toggle at the top to control auto-show on manual add.
-void showTransactionScenarioPicker(
+Future<void> showTransactionScenarioPicker(
   BuildContext context, {
   required void Function(String type, String? relationship) onScenarioSelected,
 }) {
-  showModalBottomSheet<void>(
+  return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
