@@ -137,6 +137,39 @@
             color: #666;
             font-size: 14px;
         }
+
+        .qr-watermark {
+            position: absolute;
+            top: 18px;
+            right: 18px;
+            z-index: 10;
+            background: rgba(255, 255, 255, 0.92);
+            border: 2.5px solid rgba(255, 255, 255, 0.7);
+            border-radius: 10px;
+            padding: 6px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .qr-watermark img {
+            width: 100px;
+            height: 100px;
+            display: block;
+            border-radius: 4px;
+        }
+
+        .qr-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: #0088CC;
+            letter-spacing: 0.4px;
+            text-transform: uppercase;
+            text-align: center;
+            line-height: 1.2;
+        }
     </style>
 </head>
 <body>
@@ -156,6 +189,12 @@
                     <div class="feature-pill">Cloud Sync</div>
                     <div class="feature-pill">WhatsApp Integration</div>
                 </div>
+            </div>
+
+            <!-- QR Code Watermark -->
+            <div class="qr-watermark">
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https%3A%2F%2Fplay.google.com%2Fstore%2Fapps%2Fdetails%3Fid%3Dcom.tamatasoft.flowpaisa&color=0088CC&bgcolor=FFFFFF&margin=2" alt="Download on Play Store">
+                <span class="qr-label">Get it on<br>Play Store</span>
             </div>
 
             <div class="mockup-container">
