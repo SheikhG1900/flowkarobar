@@ -7132,6 +7132,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Net Flow'**
   String get netFlow;
+
+  /// No description provided for @customiseSections.
+  ///
+  /// In en, this message translates to:
+  /// **'Customise Sections'**
+  String get customiseSections;
+
+  /// No description provided for @selectAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Select All'**
+  String get selectAll;
+
+  /// No description provided for @deselectAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Deselect All'**
+  String get deselectAll;
 }
 
 class _AppLocalizationsDelegate

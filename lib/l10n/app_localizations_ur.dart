@@ -3911,4 +3911,13 @@ class AppLocalizationsUr extends AppLocalizations {
 
   @override
   String get netFlow => 'خالص بہاؤ';
+
+  @override
+  String get customiseSections => 'سیکشن ترتیب دیں';
+
+  @override
+  String get selectAll => 'سب منتخب کریں';
+
+  @override
+  String get deselectAll => 'سب ہٹائیں';
 }

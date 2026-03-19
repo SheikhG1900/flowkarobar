@@ -8,6 +8,10 @@ import 'package:flowpaisa/features/accounts/domain/models/account_models.dart';
 import 'package:flowpaisa/features/accounts/presentation/providers/accounts_provider.dart';
 import 'package:flowpaisa/features/accounts/presentation/screens/account_detail_screen.dart';
 import 'package:flowpaisa/features/analytics/presentation/providers/analytics_provider.dart';
+import 'package:flowpaisa/features/contacts/presentation/screens/contact_details_screen.dart';
+import 'package:flowpaisa/features/transactions/domain/models.dart';
+import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
+import 'package:flowpaisa/features/transactions/presentation/screens/transactions_list_screen.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
 import 'package:material_symbols_icons/symbols.dart';
@@ -299,51 +303,105 @@ class AccountSpendingChart extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Account name row
-                  Row(
-                    children: [
-                      Container(
-                        width: 28,
-                        height: 28,
-                        decoration: BoxDecoration(
-                          color: color.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(8),
+                  // Account name row — taps to account detail
+                  InkWell(
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            AccountDetailScreen(accountUuid: acc.uuid),
+                      ),
+                    ),
+                    borderRadius: BorderRadius.circular(8),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 28,
+                          height: 28,
+                          decoration: BoxDecoration(
+                            color: color.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Icon(icon, size: 15, color: color),
                         ),
-                        child: Icon(icon, size: 15, color: color),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(acc.name,
-                            style: theme.textTheme.bodyMedium
-                                ?.copyWith(fontWeight: FontWeight.w600),
-                            overflow: TextOverflow.ellipsis),
-                      ),
-                    ],
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(acc.name,
+                              style: theme.textTheme.bodyMedium
+                                  ?.copyWith(fontWeight: FontWeight.w600),
+                              overflow: TextOverflow.ellipsis),
+                        ),
+                        Icon(Icons.chevron_right,
+                            size: 16, color: theme.disabledColor),
+                      ],
+                    ),
                   ),
                   if (item.totalExpense > 0) ...[
                     const SizedBox(height: 8),
-                    _MaskedBar(
-                      label: l10n.expenses,
-                      amount: AmountFormatter.formatWithCurrency(
-                          item.totalExpense, symbol, decimals),
-                      barColor: AppColors.expenseColor,
-                      fillFactor: maxVal > 0
-                          ? (item.totalExpense / maxVal).clamp(0.0, 1.0)
-                          : 0.0,
-                      icon: Icons.arrow_upward,
+                    InkWell(
+                      onTap: () {
+                        final dateRange =
+                            ref.read(selectedDateRangeProvider);
+                        ref
+                            .read(transactionsPaginatedProvider.notifier)
+                            .applyFilters(TransactionFilters(
+                              type: 'EXPENSE',
+                              accountUuids: [acc.uuid],
+                              startDate: dateRange.startDate,
+                              endDate: dateRange.endDate,
+                            ));
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const TransactionsListScreen(),
+                          ),
+                        );
+                      },
+                      borderRadius: BorderRadius.circular(10),
+                      child: _MaskedBar(
+                        label: l10n.expenses,
+                        amount: AmountFormatter.formatWithCurrency(
+                            item.totalExpense, symbol, decimals),
+                        barColor: AppColors.expenseColor,
+                        fillFactor: maxVal > 0
+                            ? (item.totalExpense / maxVal).clamp(0.0, 1.0)
+                            : 0.0,
+                        icon: Icons.arrow_upward,
+                      ),
                     ),
                   ],
                   if (item.totalIncome > 0) ...[
                     const SizedBox(height: 6),
-                    _MaskedBar(
-                      label: l10n.income,
-                      amount: AmountFormatter.formatWithCurrency(
-                          item.totalIncome, symbol, decimals),
-                      barColor: AppColors.incomeColor,
-                      fillFactor: maxVal > 0
-                          ? (item.totalIncome / maxVal).clamp(0.0, 1.0)
-                          : 0.0,
-                      icon: Icons.arrow_downward,
+                    InkWell(
+                      onTap: () {
+                        final dateRange =
+                            ref.read(selectedDateRangeProvider);
+                        ref
+                            .read(transactionsPaginatedProvider.notifier)
+                            .applyFilters(TransactionFilters(
+                              type: 'INCOME',
+                              accountUuids: [acc.uuid],
+                              startDate: dateRange.startDate,
+                              endDate: dateRange.endDate,
+                            ));
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const TransactionsListScreen(),
+                          ),
+                        );
+                      },
+                      borderRadius: BorderRadius.circular(10),
+                      child: _MaskedBar(
+                        label: l10n.income,
+                        amount: AmountFormatter.formatWithCurrency(
+                            item.totalIncome, symbol, decimals),
+                        barColor: AppColors.incomeColor,
+                        fillFactor: maxVal > 0
+                            ? (item.totalIncome / maxVal).clamp(0.0, 1.0)
+                            : 0.0,
+                        icon: Icons.arrow_downward,
+                      ),
                     ),
                   ],
                 ],
@@ -429,42 +487,54 @@ class CreditUtilisationChart extends ConsumerWidget {
 
               return Padding(
                 padding: const EdgeInsets.only(bottom: 10),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Account name row
-                    Row(
-                      children: [
-                        Container(
-                          width: 28,
-                          height: 28,
-                          decoration: BoxDecoration(
-                            color: color.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(8),
+                child: InkWell(
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => AccountDetailScreen(
+                          accountUuid: awb.account.uuid),
+                    ),
+                  ),
+                  borderRadius: BorderRadius.circular(10),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Account name row
+                      Row(
+                        children: [
+                          Container(
+                            width: 28,
+                            height: 28,
+                            decoration: BoxDecoration(
+                              color: color.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Icon(_accountIcon(awb), size: 15,
+                                color: color),
                           ),
-                          child:
-                              Icon(_accountIcon(awb), size: 15, color: color),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(awb.account.name,
-                              style: theme.textTheme.bodyMedium
-                                  ?.copyWith(fontWeight: FontWeight.w600),
-                              overflow: TextOverflow.ellipsis),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                    _MaskedBar(
-                      label: AmountFormatter.formatWithCurrency(
-                          outstanding, symbol, decimals),
-                      amount: AmountFormatter.formatWithCurrency(
-                          limit, symbol, decimals),
-                      barColor: barColor,
-                      fillFactor: pct,
-                      icon: Symbols.credit_card,
-                    ),
-                  ],
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(awb.account.name,
+                                style: theme.textTheme.bodyMedium
+                                    ?.copyWith(fontWeight: FontWeight.w600),
+                                overflow: TextOverflow.ellipsis),
+                          ),
+                          Icon(Icons.chevron_right,
+                              size: 16, color: theme.disabledColor),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      _MaskedBar(
+                        label: AmountFormatter.formatWithCurrency(
+                            outstanding, symbol, decimals),
+                        amount: AmountFormatter.formatWithCurrency(
+                            limit, symbol, decimals),
+                        barColor: barColor,
+                        fillFactor: pct,
+                        icon: Symbols.credit_card,
+                      ),
+                    ],
+                  ),
                 ),
               );
             }),
@@ -839,27 +909,42 @@ class TransferFlowChart extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // ── Account header ──────────────────────────────────
-                      Row(
-                        children: [
-                          Container(
-                            width: 28,
-                            height: 28,
-                            decoration: BoxDecoration(
-                              color: color.withValues(alpha: 0.12),
-                              borderRadius: BorderRadius.circular(8),
+                      InkWell(
+                        onTap: awb != null
+                            ? () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => AccountDetailScreen(
+                                        accountUuid: awb.account.uuid),
+                                  ),
+                                )
+                            : null,
+                        borderRadius: BorderRadius.circular(8),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 28,
+                              height: 28,
+                              decoration: BoxDecoration(
+                                color: color.withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Icon(icon, size: 15, color: color),
                             ),
-                            child: Icon(icon, size: 15, color: color),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              awb?.account.name ?? uuid,
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                  fontWeight: FontWeight.w600),
-                              overflow: TextOverflow.ellipsis,
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                awb?.account.name ?? uuid,
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                    fontWeight: FontWeight.w600),
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
-                          ),
-                        ],
+                            if (awb != null)
+                              Icon(Icons.chevron_right,
+                                  size: 16, color: theme.disabledColor),
+                          ],
+                        ),
                       ),
                       const SizedBox(height: 10),
 
@@ -917,16 +1002,29 @@ class TransferFlowChart extends ConsumerWidget {
                               : Symbols.account_balance_wallet;
                           return Padding(
                             padding: const EdgeInsets.only(bottom: 6),
-                            child: _MaskedBar(
-                              label: srcAwb?.account.name ?? e.key,
-                              amount: AmountFormatter.formatWithCurrency(
-                                  e.value, symbol, decimals),
-                              barColor: srcColor,
-                              fillFactor: cardMax > 0
-                                  ? (e.value / cardMax).clamp(0.0, 1.0)
-                                  : 0,
-                              icon: srcIcon,
-                              reversed: true,
+                            child: InkWell(
+                              onTap: srcAwb != null
+                                  ? () => Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => AccountDetailScreen(
+                                              accountUuid:
+                                                  srcAwb.account.uuid),
+                                        ),
+                                      )
+                                  : null,
+                              borderRadius: BorderRadius.circular(10),
+                              child: _MaskedBar(
+                                label: srcAwb?.account.name ?? e.key,
+                                amount: AmountFormatter.formatWithCurrency(
+                                    e.value, symbol, decimals),
+                                barColor: srcColor,
+                                fillFactor: cardMax > 0
+                                    ? (e.value / cardMax).clamp(0.0, 1.0)
+                                    : 0,
+                                icon: srcIcon,
+                                reversed: true,
+                              ),
                             ),
                           );
                         }),
@@ -946,15 +1044,28 @@ class TransferFlowChart extends ConsumerWidget {
                               : Symbols.account_balance_wallet;
                           return Padding(
                             padding: const EdgeInsets.only(bottom: 6),
-                            child: _MaskedBar(
-                              label: dstAwb?.account.name ?? e.key,
-                              amount: AmountFormatter.formatWithCurrency(
-                                  e.value, symbol, decimals),
-                              barColor: dstColor,
-                              fillFactor: cardMax > 0
-                                  ? (e.value / cardMax).clamp(0.0, 1.0)
-                                  : 0,
-                              icon: dstIcon,
+                            child: InkWell(
+                              onTap: dstAwb != null
+                                  ? () => Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => AccountDetailScreen(
+                                              accountUuid:
+                                                  dstAwb.account.uuid),
+                                        ),
+                                      )
+                                  : null,
+                              borderRadius: BorderRadius.circular(10),
+                              child: _MaskedBar(
+                                label: dstAwb?.account.name ?? e.key,
+                                amount: AmountFormatter.formatWithCurrency(
+                                    e.value, symbol, decimals),
+                                barColor: dstColor,
+                                fillFactor: cardMax > 0
+                                    ? (e.value / cardMax).clamp(0.0, 1.0)
+                                    : 0,
+                                icon: dstIcon,
+                              ),
                             ),
                           );
                         }),

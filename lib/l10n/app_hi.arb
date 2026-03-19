@@ -1511,5 +1511,8 @@
   "income": "आय",
   "inflow": "आवक",
   "outflow": "जावक",
-  "netFlow": "शुद्ध प्रवाह"
+  "netFlow": "शुद्ध प्रवाह",
+  "customiseSections": "अनुभाग अनुकूलित करें",
+  "selectAll": "सभी चुनें",
+  "deselectAll": "सभी हटाएं"
 }

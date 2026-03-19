@@ -3905,4 +3905,13 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get netFlow => 'शुद्ध प्रवाह';
+
+  @override
+  String get customiseSections => 'अनुभाग अनुकूलित करें';
+
+  @override
+  String get selectAll => 'सभी चुनें';
+
+  @override
+  String get deselectAll => 'सभी हटाएं';
 }

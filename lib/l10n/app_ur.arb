@@ -1511,5 +1511,8 @@
   "income": "آمدنی",
   "inflow": "آمد",
   "outflow": "اخراج",
-  "netFlow": "خالص بہاؤ"
+  "netFlow": "خالص بہاؤ",
+  "customiseSections": "سیکشن ترتیب دیں",
+  "selectAll": "سب منتخب کریں",
+  "deselectAll": "سب ہٹائیں"
 }

@@ -2046,5 +2046,8 @@
   "income": "Income",
   "inflow": "Inflow",
   "outflow": "Outflow",
-  "netFlow": "Net Flow"
+  "netFlow": "Net Flow",
+  "customiseSections": "Customise Sections",
+  "selectAll": "Select All",
+  "deselectAll": "Deselect All"
 }

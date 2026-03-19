@@ -53,6 +53,16 @@ class AnalyticsScreen extends ConsumerStatefulWidget {
 }
 
 class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
+  void _showCustomiseSheet(
+      BuildContext context, WidgetRef ref, AppLocalizations l10n) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => const _AnalyticsSectionsSheet(),
+    );
+  }
+
   Future<void> _exportAnalyticsToPDF() async {
     final l10n = AppLocalizations.of(context)!;
     if (!PremiumGate.isPremium(ref)) {
@@ -169,6 +179,8 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
     final selectedDateRange = ref.watch(selectedDateRangeProvider);
     final theme = Theme.of(context);
     final isPremium = PremiumGate.isPremium(ref);
+    final hiddenSections = ref.watch(analyticsSectionsProvider);
+    bool visible(AnalyticsSection s) => !hiddenSections.contains(s);
 
     return ShowCaseWidget(
         builder: (context) => Scaffold(
@@ -236,23 +248,10 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                               ),
                             ),
                             IconButton(
-                              icon: const Icon(Symbols.refresh),
-                              onPressed: () {
-                                // Invalidate all analytics providers to refresh data
-                                ref.invalidate(financialSummaryProvider);
-                                ref.invalidate(allTimeFinancialSummaryProvider);
-                                ref.invalidate(contactSummariesProvider);
-                                ref.invalidate(expensesByCategoryProvider);
-                                ref.invalidate(monthlyTrendsProvider);
-                                ref.invalidate(payableReceivableTrendsProvider);
-                                ref.invalidate(topContactsByBalanceProvider);
-                                ref.invalidate(
-                                    paymentStatusDistributionProvider);
-                                ref.invalidate(incomeByCategoryProvider);
-                                ref.invalidate(accountSpendingProvider);
-                                ref.invalidate(transferFlowProvider);
-                              },
-                              tooltip: l10n.refreshAnalytics,
+                              icon: const Icon(Symbols.tune),
+                              onPressed: () =>
+                                  _showCustomiseSheet(context, ref, l10n),
+                              tooltip: l10n.customiseSections,
                             ),
                           ],
                           bottom: PreferredSize(
@@ -298,107 +297,117 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 // Financial Summary (Combined)
-                                RepaintBoundary(
-                                  child: Showcase(
-                                    key: TourService.analyticsFinancialSummaryKey,
-                                    title:
-                                        l10n.tourAnalyticsFinancialSummaryTitle,
-                                    description:
-                                        l10n.tourAnalyticsFinancialSummaryDesc,
-                                    targetShapeBorder:
-                                        const RoundedRectangleBorder(
-                                      borderRadius:
-                                          BorderRadius.all(Radius.circular(12)),
-                                    ),
-                                    tooltipBackgroundColor:
-                                        theme.colorScheme.primary,
-                                    textColor: theme.colorScheme.onPrimary,
-                                    tooltipPosition: TooltipPosition.bottom,
-                                    child: _CollapsibleSection(
-                                      title: l10n.financialSummary,
-                                      sectionIndex: 0,
-                                      child: const _FinancialSummaryCard(),
+                                if (visible(AnalyticsSection.financialSummary))
+                                  RepaintBoundary(
+                                    child: Showcase(
+                                      key: TourService
+                                          .analyticsFinancialSummaryKey,
+                                      title: l10n
+                                          .tourAnalyticsFinancialSummaryTitle,
+                                      description: l10n
+                                          .tourAnalyticsFinancialSummaryDesc,
+                                      targetShapeBorder:
+                                          const RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.all(
+                                            Radius.circular(12)),
+                                      ),
+                                      tooltipBackgroundColor:
+                                          theme.colorScheme.primary,
+                                      textColor: theme.colorScheme.onPrimary,
+                                      tooltipPosition: TooltipPosition.bottom,
+                                      child: _CollapsibleSection(
+                                        title: l10n.financialSummary,
+                                        sectionIndex: 0,
+                                        child: const _FinancialSummaryCard(),
+                                      ),
                                     ),
                                   ),
-                                ),
 
                                 // Contact Summaries
-                                RepaintBoundary(
-                                  child: _CollapsibleSection(
-                                    title: l10n.contactSummaries,
-                                    sectionIndex: 1,
-                                    child: const _ContactSummariesSection(),
+                                if (visible(AnalyticsSection.contactSummaries))
+                                  RepaintBoundary(
+                                    child: _CollapsibleSection(
+                                      title: l10n.contactSummaries,
+                                      sectionIndex: 1,
+                                      child: const _ContactSummariesSection(),
+                                    ),
                                   ),
-                                ),
 
                                 // Pie Chart Section
-                                RepaintBoundary(
-                                  child: Showcase(
-                                    key: TourService.analyticsChartsKey,
-                                    title: l10n.tourAnalyticsChartsTitle,
-                                    description: l10n.tourAnalyticsChartsDesc,
-                                    targetShapeBorder:
-                                        const RoundedRectangleBorder(
-                                      borderRadius:
-                                          BorderRadius.all(Radius.circular(12)),
-                                    ),
-                                    tooltipBackgroundColor:
-                                        theme.colorScheme.primary,
-                                    textColor: theme.colorScheme.onPrimary,
-                                    tooltipPosition: TooltipPosition.bottom,
-                                    child: _CollapsibleSection(
-                                      title: l10n.expensesByCategory,
-                                      sectionIndex: 2,
-                                      child: const _ExpensesPieChart(),
+                                if (visible(AnalyticsSection.expensesByCategory))
+                                  RepaintBoundary(
+                                    child: Showcase(
+                                      key: TourService.analyticsChartsKey,
+                                      title: l10n.tourAnalyticsChartsTitle,
+                                      description: l10n.tourAnalyticsChartsDesc,
+                                      targetShapeBorder:
+                                          const RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.all(
+                                            Radius.circular(12)),
+                                      ),
+                                      tooltipBackgroundColor:
+                                          theme.colorScheme.primary,
+                                      textColor: theme.colorScheme.onPrimary,
+                                      tooltipPosition: TooltipPosition.bottom,
+                                      child: _CollapsibleSection(
+                                        title: l10n.expensesByCategory,
+                                        sectionIndex: 2,
+                                        child: const _ExpensesPieChart(),
+                                      ),
                                     ),
                                   ),
-                                ),
 
                                 // Trend Chart Section
-                                RepaintBoundary(
-                                  child: _CollapsibleSection(
-                                    title: l10n.incomeVsExpenseTrend,
-                                    sectionIndex: 3,
-                                    child: const _TrendsBarChart(),
+                                if (visible(AnalyticsSection.incomeVsExpenseTrend))
+                                  RepaintBoundary(
+                                    child: _CollapsibleSection(
+                                      title: l10n.incomeVsExpenseTrend,
+                                      sectionIndex: 3,
+                                      child: const _TrendsBarChart(),
+                                    ),
                                   ),
-                                ),
 
                                 // Payables vs Receivables Trend
-                                RepaintBoundary(
-                                  child: _CollapsibleSection(
-                                    title: l10n.payablesVsReceivablesTrend,
-                                    sectionIndex: 4,
-                                    child: const _PayableReceivableTrendsChart(),
+                                if (visible(AnalyticsSection.payablesVsReceivablesTrend))
+                                  RepaintBoundary(
+                                    child: _CollapsibleSection(
+                                      title: l10n.payablesVsReceivablesTrend,
+                                      sectionIndex: 4,
+                                      child:
+                                          const _PayableReceivableTrendsChart(),
+                                    ),
                                   ),
-                                ),
 
                                 // Top Contacts by Balance
-                                RepaintBoundary(
-                                  child: _CollapsibleSection(
-                                    title: l10n.topContactsByBalance,
-                                    sectionIndex: 5,
-                                    child: const _TopContactsChart(),
+                                if (visible(AnalyticsSection.topContacts))
+                                  RepaintBoundary(
+                                    child: _CollapsibleSection(
+                                      title: l10n.topContactsByBalance,
+                                      sectionIndex: 5,
+                                      child: const _TopContactsChart(),
+                                    ),
                                   ),
-                                ),
 
                                 // Payment Status Distribution
-                                RepaintBoundary(
-                                  child: _CollapsibleSection(
-                                    title: l10n.paymentStatusDistribution,
-                                    sectionIndex: 6,
-                                    child:
-                                        const _PaymentStatusDistributionChart(),
+                                if (visible(AnalyticsSection.paymentStatus))
+                                  RepaintBoundary(
+                                    child: _CollapsibleSection(
+                                      title: l10n.paymentStatusDistribution,
+                                      sectionIndex: 6,
+                                      child:
+                                          const _PaymentStatusDistributionChart(),
+                                    ),
                                   ),
-                                ),
 
                                 // Income by Category
-                                RepaintBoundary(
-                                  child: _CollapsibleSection(
-                                    title: l10n.incomeByCategory,
-                                    sectionIndex: 7,
-                                    child: const _IncomePieChart(),
+                                if (visible(AnalyticsSection.incomeByCategory))
+                                  RepaintBoundary(
+                                    child: _CollapsibleSection(
+                                      title: l10n.incomeByCategory,
+                                      sectionIndex: 7,
+                                      child: const _IncomePieChart(),
+                                    ),
                                   ),
-                                ),
 
                                 // ── Account Analytics ─────────────────────
                                 Padding(
@@ -433,52 +442,57 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                                 ),
 
                                 // Net Worth
-                                RepaintBoundary(
-                                  child: _CollapsibleSection(
-                                    title: l10n.netWorth,
-                                    sectionIndex: 8,
-                                    showAllTimeBadge: true,
-                                    child: const AccountNetWorthCard(),
+                                if (visible(AnalyticsSection.netWorth))
+                                  RepaintBoundary(
+                                    child: _CollapsibleSection(
+                                      title: l10n.netWorth,
+                                      sectionIndex: 8,
+                                      showAllTimeBadge: true,
+                                      child: const AccountNetWorthCard(),
+                                    ),
                                   ),
-                                ),
 
                                 // Balance Distribution
-                                RepaintBoundary(
-                                  child: _CollapsibleSection(
-                                    title: l10n.balanceDistribution,
-                                    sectionIndex: 9,
-                                    showAllTimeBadge: true,
-                                    child: const BalanceDistributionChart(),
+                                if (visible(AnalyticsSection.balanceDistribution))
+                                  RepaintBoundary(
+                                    child: _CollapsibleSection(
+                                      title: l10n.balanceDistribution,
+                                      sectionIndex: 9,
+                                      showAllTimeBadge: true,
+                                      child: const BalanceDistributionChart(),
+                                    ),
                                   ),
-                                ),
 
                                 // Spending by Account
-                                RepaintBoundary(
-                                  child: _CollapsibleSection(
-                                    title: l10n.spendingByAccount,
-                                    sectionIndex: 10,
-                                    child: const AccountSpendingChart(),
+                                if (visible(AnalyticsSection.spendingByAccount))
+                                  RepaintBoundary(
+                                    child: _CollapsibleSection(
+                                      title: l10n.spendingByAccount,
+                                      sectionIndex: 10,
+                                      child: const AccountSpendingChart(),
+                                    ),
                                   ),
-                                ),
 
                                 // Credit Card Utilisation
-                                RepaintBoundary(
-                                  child: _CollapsibleSection(
-                                    title: l10n.creditUtilisation,
-                                    sectionIndex: 11,
-                                    showAllTimeBadge: true,
-                                    child: const CreditUtilisationChart(),
+                                if (visible(AnalyticsSection.creditUtilisation))
+                                  RepaintBoundary(
+                                    child: _CollapsibleSection(
+                                      title: l10n.creditUtilisation,
+                                      sectionIndex: 11,
+                                      showAllTimeBadge: true,
+                                      child: const CreditUtilisationChart(),
+                                    ),
                                   ),
-                                ),
 
                                 // Transfer Flow
-                                RepaintBoundary(
-                                  child: _CollapsibleSection(
-                                    title: l10n.transferFlow,
-                                    sectionIndex: 12,
-                                    child: const TransferFlowChart(),
+                                if (visible(AnalyticsSection.transferFlow))
+                                  RepaintBoundary(
+                                    child: _CollapsibleSection(
+                                      title: l10n.transferFlow,
+                                      sectionIndex: 12,
+                                      child: const TransferFlowChart(),
+                                    ),
                                   ),
-                                ),
 
                                 const SizedBox(height: 40),
                                 Center(
@@ -2199,41 +2213,51 @@ class _TopContactsChart extends ConsumerWidget {
 
             return Padding(
               padding: const EdgeInsets.only(bottom: 8),
-              child: Container(
-                height: 36,
-                decoration: BoxDecoration(
-                  color: barColor.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                      color: barColor.withValues(alpha: 0.25), width: 0.5),
+              child: InkWell(
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ContactDetailsScreen(
+                        contactUuid: contact.contact.uuid),
+                  ),
                 ),
-                child: Stack(
-                  children: [
-                    Align(
-                      alignment: Alignment.center,
-                      child: content(barColor),
-                    ),
-                    ClipRect(
-                      child: Align(
-                        alignment: Directionality.of(context) ==
-                                TextDirection.rtl
-                            ? Alignment.centerRight
-                            : Alignment.centerLeft,
-                        widthFactor: fillFactor,
-                        child: Container(
-                          width: double.infinity,
-                          decoration: BoxDecoration(
-                            color: barColor.withValues(alpha: 0.85),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Align(
-                            alignment: Alignment.center,
-                            child: content(Colors.white),
+                borderRadius: BorderRadius.circular(10),
+                child: Container(
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: barColor.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                        color: barColor.withValues(alpha: 0.25), width: 0.5),
+                  ),
+                  child: Stack(
+                    children: [
+                      Align(
+                        alignment: Alignment.center,
+                        child: content(barColor),
+                      ),
+                      ClipRect(
+                        child: Align(
+                          alignment: Directionality.of(context) ==
+                                  TextDirection.rtl
+                              ? Alignment.centerRight
+                              : Alignment.centerLeft,
+                          widthFactor: fillFactor,
+                          child: Container(
+                            width: double.infinity,
+                            decoration: BoxDecoration(
+                              color: barColor.withValues(alpha: 0.85),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Align(
+                              alignment: Alignment.center,
+                              child: content(Colors.white),
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             );
@@ -2750,6 +2774,139 @@ class _IncomePieChart extends ConsumerWidget {
 }
 
 // Collapsible Section Widget with Alternating Background Colors
+// ─────────────────────────────────────────────────────────────────────────────
+// Analytics Sections Customise Sheet
+// ─────────────────────────────────────────────────────────────────────────────
+class _AnalyticsSectionsSheet extends ConsumerWidget {
+  const _AnalyticsSectionsSheet();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final hidden = ref.watch(analyticsSectionsProvider);
+    final notifier = ref.read(analyticsSectionsProvider.notifier);
+    final allVisible = hidden.isEmpty;
+
+    final sections = [
+      (AnalyticsSection.financialSummary, l10n.financialSummary,
+          Symbols.account_balance),
+      (AnalyticsSection.contactSummaries, l10n.contactSummaries,
+          Symbols.people),
+      (AnalyticsSection.expensesByCategory, l10n.expensesByCategory,
+          Symbols.pie_chart),
+      (AnalyticsSection.incomeVsExpenseTrend, l10n.incomeVsExpenseTrend,
+          Symbols.bar_chart),
+      (AnalyticsSection.payablesVsReceivablesTrend,
+          l10n.payablesVsReceivablesTrend, Symbols.swap_horiz),
+      (AnalyticsSection.topContacts, l10n.topContactsByBalance,
+          Symbols.leaderboard),
+      (AnalyticsSection.paymentStatus, l10n.paymentStatusDistribution,
+          Symbols.donut_large),
+      (AnalyticsSection.incomeByCategory, l10n.incomeByCategory,
+          Symbols.pie_chart),
+      (AnalyticsSection.netWorth, l10n.netWorth, Symbols.account_balance_wallet),
+      (AnalyticsSection.balanceDistribution, l10n.balanceDistribution,
+          Symbols.pie_chart),
+      (AnalyticsSection.spendingByAccount, l10n.spendingByAccount,
+          Symbols.bar_chart),
+      (AnalyticsSection.creditUtilisation, l10n.creditUtilisation,
+          Symbols.credit_card),
+      (AnalyticsSection.transferFlow, l10n.transferFlow, Symbols.swap_horiz),
+    ];
+
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.scaffoldBackgroundColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom + 16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Handle
+          Container(
+            margin: const EdgeInsets.only(top: 12, bottom: 4),
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: theme.colorScheme.outlineVariant,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          // Title row
+          Padding(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            child: Row(
+              children: [
+                Icon(Symbols.tune,
+                    size: 20, color: theme.colorScheme.primary),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    l10n.customiseSections,
+                    style: theme.textTheme.titleMedium
+                        ?.copyWith(fontWeight: FontWeight.bold),
+                  ),
+                ),
+                IconButton(
+                  tooltip: allVisible ? l10n.deselectAll : l10n.selectAll,
+                  icon: Icon(
+                    allVisible
+                        ? Icons.deselect_rounded
+                        : Icons.select_all_rounded,
+                    color: theme.colorScheme.primary,
+                  ),
+                  onPressed: allVisible
+                      ? notifier.deselectAll
+                      : notifier.selectAll,
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 1),
+          // Section list
+          ConstrainedBox(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * 0.6,
+            ),
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: sections.length,
+              itemBuilder: (context, i) {
+                final (section, title, icon) = sections[i];
+                final isVisible = !hidden.contains(section);
+                return SwitchListTile(
+                  secondary: Icon(icon,
+                      size: 20,
+                      color: isVisible
+                          ? theme.colorScheme.primary
+                          : theme.colorScheme.onSurfaceVariant
+                              .withValues(alpha: 0.4)),
+                  title: Text(
+                    title,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: isVisible
+                          ? theme.colorScheme.onSurface
+                          : theme.colorScheme.onSurfaceVariant
+                              .withValues(alpha: 0.5),
+                    ),
+                  ),
+                  value: isVisible,
+                  onChanged: (_) => notifier.toggle(section),
+                  activeColor: theme.colorScheme.primary,
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _CollapsibleSection extends StatefulWidget {
   final String title;
   final Widget child;

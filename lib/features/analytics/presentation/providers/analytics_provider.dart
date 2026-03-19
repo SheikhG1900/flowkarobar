@@ -5,6 +5,7 @@ import 'package:flowpaisa/features/accounts/presentation/providers/accounts_prov
 import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
 import 'package:flowpaisa/shared/models/date_range_state.dart';
 import 'package:flowpaisa/shared/providers/database_provider.dart';
+import 'package:flowpaisa/shared/providers/shared_preferences_provider.dart';
 
 export 'package:flowpaisa/features/accounts/presentation/providers/accounts_provider.dart'
     show accountsWithBalanceProvider;
@@ -241,3 +242,70 @@ final transferFlowProvider =
   final dateRange = ref.watch(selectedDateRangeProvider);
   return repo.getTransferFlow(dateRange.startDate, dateRange.endDate);
 });
+
+// ── Analytics Section Visibility ────────────────────────────────────────────
+
+enum AnalyticsSection {
+  financialSummary,
+  contactSummaries,
+  expensesByCategory,
+  incomeVsExpenseTrend,
+  payablesVsReceivablesTrend,
+  topContacts,
+  paymentStatus,
+  incomeByCategory,
+  netWorth,
+  balanceDistribution,
+  spendingByAccount,
+  creditUtilisation,
+  transferFlow,
+}
+
+const _kHiddenSectionsKey = 'analytics_hidden_sections';
+
+class AnalyticsSectionsNotifier extends Notifier<Set<AnalyticsSection>> {
+  @override
+  Set<AnalyticsSection> build() {
+    final prefs = ref.watch(sharedPreferencesProvider);
+    final stored = prefs.getStringList(_kHiddenSectionsKey) ?? [];
+    return stored
+        .map((s) => AnalyticsSection.values.firstWhere(
+              (e) => e.name == s,
+              orElse: () => AnalyticsSection.financialSummary,
+            ))
+        .toSet();
+  }
+
+  bool isVisible(AnalyticsSection section) => !state.contains(section);
+
+  void toggle(AnalyticsSection section) {
+    final prefs = ref.read(sharedPreferencesProvider);
+    final next = Set<AnalyticsSection>.from(state);
+    if (next.contains(section)) {
+      next.remove(section);
+    } else {
+      next.add(section);
+    }
+    state = next;
+    prefs.setStringList(
+        _kHiddenSectionsKey, next.map((e) => e.name).toList());
+  }
+
+  void selectAll() {
+    final prefs = ref.read(sharedPreferencesProvider);
+    state = {};
+    prefs.remove(_kHiddenSectionsKey);
+  }
+
+  void deselectAll() {
+    final prefs = ref.read(sharedPreferencesProvider);
+    final all = AnalyticsSection.values.toSet();
+    state = all;
+    prefs.setStringList(
+        _kHiddenSectionsKey, all.map((e) => e.name).toList());
+  }
+}
+
+final analyticsSectionsProvider =
+    NotifierProvider<AnalyticsSectionsNotifier, Set<AnalyticsSection>>(
+        AnalyticsSectionsNotifier.new);
