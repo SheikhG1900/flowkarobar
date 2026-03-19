@@ -10,6 +10,7 @@ enum NotificationType {
   backup,
   reminder,
   sync,
+  creditCard,
 }
 
 class NotificationItem {

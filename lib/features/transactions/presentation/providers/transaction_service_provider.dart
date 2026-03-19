@@ -64,6 +64,10 @@ class TransactionService {
     bool isSplitMode = true,
     bool isImport = false,
     AppLocalizations? l10n,
+    String? accountUuid,
+    // processedDate: null = pending; defaults to date (processed immediately) for regular transactions
+    DateTime? processedDate,
+    bool isPending = false,
   }) async {
     return await database.transaction(() async {
       // 0. Determine UUIDs and optional linkedGroupId for split bills
@@ -106,6 +110,14 @@ class TransactionService {
         }
       }
 
+      // Determine processedDate:
+      // - If isPending: null (excluded from totals/balance)
+      // - If explicitly provided: use it
+      // - Otherwise: default to transaction date (processed immediately)
+      final effectiveProcessedDate = isPending
+          ? null
+          : (processedDate ?? date);
+
       final createdTxUuid = await transactionsRepository.createTransaction(
         TransactionsCompanion(
           uuid: drift.Value(contactTxUuid),
@@ -119,6 +131,8 @@ class TransactionService {
           isScheduled: drift.Value(isScheduled),
           linkedGroupId: drift.Value(sharedLinkedGroupId),
           externalLinkId: drift.Value(effectiveExternalId),
+          accountUuid: drift.Value(accountUuid),
+          processedDate: drift.Value(effectiveProcessedDate),
           createdAt: drift.Value(DateTime.now()),
           updatedAt: drift.Value(DateTime.now()),
         ),
@@ -141,6 +155,8 @@ class TransactionService {
             isScheduled: drift.Value(isScheduled),
             linkedGroupId: drift.Value(sharedLinkedGroupId),
             externalLinkId: drift.Value(userTxUuid),
+            accountUuid: drift.Value(accountUuid),
+            processedDate: drift.Value(effectiveProcessedDate),
             createdAt: drift.Value(DateTime.now()),
             updatedAt: drift.Value(DateTime.now()),
           ),

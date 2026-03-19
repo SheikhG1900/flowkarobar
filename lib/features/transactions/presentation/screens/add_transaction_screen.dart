@@ -36,6 +36,8 @@ import 'package:flowpaisa/features/transactions/presentation/widgets/schedule_se
 import 'package:flowpaisa/features/transactions/presentation/widgets/transaction_scenario_picker.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/schedule_service_provider.dart';
 import 'package:flowpaisa/shared/widgets/amount_calculator_sheet.dart';
+import 'package:flowpaisa/features/accounts/presentation/providers/accounts_provider.dart';
+import 'package:flowpaisa/features/accounts/presentation/widgets/account_picker.dart';
 
 class AddTransactionScreen extends ConsumerStatefulWidget {
   final double? initialAmount;
@@ -98,6 +100,10 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
   String?
       _paidRelationship; // 'PAID_FOR', 'PAID_BY', 'RECEIVED_FROM', 'WILL_RECEIVE' or null
   bool _createLinkedEntry = false;
+
+  // Account & processing state
+  Account? _selectedAccount;
+  bool _isPending = false; // false = Paid/Received immediately
 
   // My Share fields
   double? _myShareAmount;
@@ -405,6 +411,17 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
       return;
     }
 
+    // Show negative balance warning for CASH accounts (non-blocking)
+    if (_selectedAccount != null && _selectedType == 'EXPENSE' && !_isPending) {
+      final accountsRepo = ref.read(accountsRepositoryProvider);
+      final amount = double.tryParse(_amountController.text) ?? 0.0;
+      final wouldBeNegative =
+          await accountsRepo.wouldCauseNegativeBalance(_selectedAccount!, amount);
+      if (wouldBeNegative && mounted) {
+        ToastUtils.showWarningToast(context, ref, l10n.negativeBalanceWarning);
+      }
+    }
+
     setState(() {
       _isLoading = true;
     });
@@ -445,6 +462,8 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
           isSplitMode: _isSplitMode,
           isImport: widget.initialExternalLinkId != null,
           l10n: l10n,
+          accountUuid: _selectedAccount?.uuid,
+          isPending: _isPending,
         );
 
         // Fetch full transaction with details for toast action
@@ -2472,6 +2491,97 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                       ),
                     ),
                   ),
+                  const SizedBox(height: 16),
+
+                  // Account picker (only shown when user has accounts configured)
+                  if (ref.watch(hasAccountsProvider)) ...[
+                    AccountPickerField(
+                      selectedAccount: _selectedAccount,
+                      excludeCreditCard: _selectedType == 'INCOME',
+                      onChanged: (acc) =>
+                          setState(() => _selectedAccount = acc),
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Paid / Pending toggle
+                    Container(
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surface,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: theme.dividerColor),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () =>
+                                  setState(() => _isPending = false),
+                              child: Container(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 12),
+                                decoration: BoxDecoration(
+                                  color: !_isPending
+                                      ? AppColors.incomeColor
+                                          .withValues(alpha: 0.15)
+                                      : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(11),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    _selectedType == 'INCOME'
+                                        ? l10n.receivedLabel
+                                        : l10n.paid,
+                                    style:
+                                        theme.textTheme.labelMedium?.copyWith(
+                                      color: !_isPending
+                                          ? AppColors.incomeColor
+                                          : null,
+                                      fontWeight: !_isPending
+                                          ? FontWeight.w700
+                                          : null,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () =>
+                                  setState(() => _isPending = true),
+                              child: Container(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 12),
+                                decoration: BoxDecoration(
+                                  color: _isPending
+                                      ? AppColors.warningOrange
+                                          .withValues(alpha: 0.15)
+                                      : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(11),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    l10n.pending,
+                                    style:
+                                        theme.textTheme.labelMedium?.copyWith(
+                                      color: _isPending
+                                          ? AppColors.warningOrange
+                                          : null,
+                                      fontWeight: _isPending
+                                          ? FontWeight.w700
+                                          : null,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                  ],
+
                   const SizedBox(height: 24),
 
                   // Countdown Badge (show until limit reached)

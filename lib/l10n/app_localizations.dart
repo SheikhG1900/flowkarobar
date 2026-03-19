@@ -1177,7 +1177,7 @@ abstract class AppLocalizations {
   /// No description provided for @markAsReceived.
   ///
   /// In en, this message translates to:
-  /// **'Receive'**
+  /// **'Mark as Received'**
   String get markAsReceived;
 
   /// No description provided for @deleteReceivableTitle.
@@ -1375,7 +1375,7 @@ abstract class AppLocalizations {
   /// No description provided for @markAsPaid.
   ///
   /// In en, this message translates to:
-  /// **'Pay'**
+  /// **'Mark as Paid'**
   String get markAsPaid;
 
   /// No description provided for @deletePayableTitle.
@@ -6562,6 +6562,510 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Refund received'**
   String get scenarioRefundReceived;
+
+  /// No description provided for @accounts.
+  ///
+  /// In en, this message translates to:
+  /// **'Accounts'**
+  String get accounts;
+
+  /// No description provided for @account.
+  ///
+  /// In en, this message translates to:
+  /// **'Account'**
+  String get account;
+
+  /// No description provided for @addAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Account'**
+  String get addAccount;
+
+  /// No description provided for @editAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Account'**
+  String get editAccount;
+
+  /// No description provided for @accountName.
+  ///
+  /// In en, this message translates to:
+  /// **'Account Name'**
+  String get accountName;
+
+  /// No description provided for @accountType.
+  ///
+  /// In en, this message translates to:
+  /// **'Account Type'**
+  String get accountType;
+
+  /// No description provided for @cash.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash'**
+  String get cash;
+
+  /// No description provided for @bank.
+  ///
+  /// In en, this message translates to:
+  /// **'Bank'**
+  String get bank;
+
+  /// No description provided for @savings.
+  ///
+  /// In en, this message translates to:
+  /// **'Savings'**
+  String get savings;
+
+  /// No description provided for @creditCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit Card'**
+  String get creditCard;
+
+  /// No description provided for @openingBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Opening Balance'**
+  String get openingBalance;
+
+  /// No description provided for @openingBalanceDues.
+  ///
+  /// In en, this message translates to:
+  /// **'Opening Balance (Dues)'**
+  String get openingBalanceDues;
+
+  /// No description provided for @openingDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Opening Date'**
+  String get openingDate;
+
+  /// No description provided for @creditLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit Limit'**
+  String get creditLimit;
+
+  /// No description provided for @billingCycleDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Billing Cycle Day'**
+  String get billingCycleDay;
+
+  /// No description provided for @paymentDueDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment Due (days after cycle)'**
+  String get paymentDueDays;
+
+  /// No description provided for @linkedPaymentAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Linked Payment Account'**
+  String get linkedPaymentAccount;
+
+  /// No description provided for @linkedPaymentAccountHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Account used for auto-payment reminder'**
+  String get linkedPaymentAccountHint;
+
+  /// No description provided for @accountCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'Account created successfully'**
+  String get accountCreated;
+
+  /// No description provided for @accountUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Account updated successfully'**
+  String get accountUpdated;
+
+  /// No description provided for @accountDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Account deleted successfully'**
+  String get accountDeleted;
+
+  /// No description provided for @deleteAccountConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this account? This will not delete transactions linked to it.'**
+  String get deleteAccountConfirmation;
+
+  /// No description provided for @noAccounts.
+  ///
+  /// In en, this message translates to:
+  /// **'No accounts yet'**
+  String get noAccounts;
+
+  /// No description provided for @noAccountsDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Add your cash, bank or card accounts to track balances'**
+  String get noAccountsDescription;
+
+  /// No description provided for @outstanding.
+  ///
+  /// In en, this message translates to:
+  /// **'Outstanding'**
+  String get outstanding;
+
+  /// No description provided for @availableCredit.
+  ///
+  /// In en, this message translates to:
+  /// **'Available Credit'**
+  String get availableCredit;
+
+  /// No description provided for @creditBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit Balance'**
+  String get creditBalance;
+
+  /// No description provided for @billed.
+  ///
+  /// In en, this message translates to:
+  /// **'Billed'**
+  String get billed;
+
+  /// No description provided for @unbilled.
+  ///
+  /// In en, this message translates to:
+  /// **'Unbilled'**
+  String get unbilled;
+
+  /// No description provided for @transferMoney.
+  ///
+  /// In en, this message translates to:
+  /// **'Transfer Money'**
+  String get transferMoney;
+
+  /// No description provided for @fromAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'From Account'**
+  String get fromAccount;
+
+  /// No description provided for @toAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'To Account'**
+  String get toAccount;
+
+  /// No description provided for @transferCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'Transfer recorded successfully'**
+  String get transferCreated;
+
+  /// No description provided for @selectAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Account'**
+  String get selectAccount;
+
+  /// No description provided for @noAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'No Account'**
+  String get noAccount;
+
+  /// No description provided for @pendingTransactions.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending Transactions'**
+  String get pendingTransactions;
+
+  /// No description provided for @payFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay from'**
+  String get payFrom;
+
+  /// No description provided for @receiveInto.
+  ///
+  /// In en, this message translates to:
+  /// **'Receive Into'**
+  String get receiveInto;
+
+  /// No description provided for @accountPickerInfoMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Applies only to transactions without an assigned account'**
+  String get accountPickerInfoMessage;
+
+  /// No description provided for @negativeBalanceWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'This will put your Cash balance below zero'**
+  String get negativeBalanceWarning;
+
+  /// No description provided for @paymentDueNotification.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit card payment of {amount} is due in {days} days'**
+  String paymentDueNotification(String amount, int days);
+
+  /// No description provided for @paymentDueTodayNotification.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit card payment of {amount} is due today'**
+  String paymentDueTodayNotification(String amount);
+
+  /// No description provided for @paymentOverdueNotification.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit card payment of {amount} is overdue by {days} days'**
+  String paymentOverdueNotification(String amount, int days);
+
+  /// No description provided for @recordPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Record Payment'**
+  String get recordPayment;
+
+  /// No description provided for @accountBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Account Balance'**
+  String get accountBalance;
+
+  /// No description provided for @noAccountSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'No account selected'**
+  String get noAccountSelected;
+
+  /// No description provided for @selectPaymentAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Select payment account'**
+  String get selectPaymentAccount;
+
+  /// No description provided for @dayOfMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Day of Month'**
+  String get dayOfMonth;
+
+  /// No description provided for @howMuchDoYouOwe.
+  ///
+  /// In en, this message translates to:
+  /// **'How much do you currently owe on this card?'**
+  String get howMuchDoYouOwe;
+
+  /// No description provided for @transferBetweenAccounts.
+  ///
+  /// In en, this message translates to:
+  /// **'Transfer between accounts'**
+  String get transferBetweenAccounts;
+
+  /// No description provided for @sameAccountError.
+  ///
+  /// In en, this message translates to:
+  /// **'From and To accounts cannot be the same'**
+  String get sameAccountError;
+
+  /// No description provided for @transfers.
+  ///
+  /// In en, this message translates to:
+  /// **'Transfers'**
+  String get transfers;
+
+  /// No description provided for @recentTransfers.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent Transfers'**
+  String get recentTransfers;
+
+  /// No description provided for @noTransfers.
+  ///
+  /// In en, this message translates to:
+  /// **'No transfers yet'**
+  String get noTransfers;
+
+  /// No description provided for @transferFromTo.
+  ///
+  /// In en, this message translates to:
+  /// **'{from} → {to}'**
+  String transferFromTo(String from, String to);
+
+  /// No description provided for @accountNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Account not found'**
+  String get accountNotFound;
+
+  /// No description provided for @deleteAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Account'**
+  String get deleteAccount;
+
+  /// No description provided for @deleteAccountConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this account? This will not delete transactions linked to it.'**
+  String get deleteAccountConfirm;
+
+  /// No description provided for @outstandingBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Outstanding Balance'**
+  String get outstandingBalance;
+
+  /// No description provided for @currentBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Current Balance'**
+  String get currentBalance;
+
+  /// No description provided for @amountDue.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount Due'**
+  String get amountDue;
+
+  /// No description provided for @unbilledAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Unbilled Amount'**
+  String get unbilledAmount;
+
+  /// No description provided for @creditUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit Used'**
+  String get creditUsed;
+
+  /// No description provided for @creditCards.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit Cards'**
+  String get creditCards;
+
+  /// No description provided for @netWorth.
+  ///
+  /// In en, this message translates to:
+  /// **'Net Worth'**
+  String get netWorth;
+
+  /// No description provided for @totalAssets.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Assets'**
+  String get totalAssets;
+
+  /// No description provided for @totalLiabilities.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Liabilities'**
+  String get totalLiabilities;
+
+  /// No description provided for @available.
+  ///
+  /// In en, this message translates to:
+  /// **'Available'**
+  String get available;
+
+  /// No description provided for @due.
+  ///
+  /// In en, this message translates to:
+  /// **'Due'**
+  String get due;
+
+  /// No description provided for @pleaseEnterAccountName.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter account name'**
+  String get pleaseEnterAccountName;
+
+  /// No description provided for @appearance.
+  ///
+  /// In en, this message translates to:
+  /// **'Appearance'**
+  String get appearance;
+
+  /// No description provided for @saveChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Changes'**
+  String get saveChanges;
+
+  /// No description provided for @icon.
+  ///
+  /// In en, this message translates to:
+  /// **'Icon'**
+  String get icon;
+
+  /// No description provided for @creditCardDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit Card Details'**
+  String get creditCardDetails;
+
+  /// No description provided for @pleaseSelectBothAccounts.
+  ///
+  /// In en, this message translates to:
+  /// **'Please select both From and To accounts'**
+  String get pleaseSelectBothAccounts;
+
+  /// No description provided for @recordTransfer.
+  ///
+  /// In en, this message translates to:
+  /// **'Record Transfer'**
+  String get recordTransfer;
+
+  /// No description provided for @descriptionOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Description (Optional)'**
+  String get descriptionOptional;
+
+  /// No description provided for @dayLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Day {day}'**
+  String dayLabel(int day);
+
+  /// No description provided for @openTransactionsForAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to view transactions for this account'**
+  String get openTransactionsForAccount;
+
+  /// No description provided for @payBill.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay Bill'**
+  String get payBill;
+
+  /// No description provided for @customPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom Payment'**
+  String get customPayment;
+
+  /// No description provided for @customPaymentHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a custom amount'**
+  String get customPaymentHint;
+
+  /// No description provided for @payingAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Paying {amount}'**
+  String payingAmount(String amount);
+
+  /// No description provided for @noBankAccountsToPayFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'No bank or savings accounts available to pay from'**
+  String get noBankAccountsToPayFrom;
 }
 
 class _AppLocalizationsDelegate

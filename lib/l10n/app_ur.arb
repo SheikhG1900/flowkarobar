@@ -1364,5 +1364,130 @@
   "scenarioSalaryReceived": "تنخواہ وصول ہوئی",
   "scenarioFreelanceIncome": "فری لانس / اضافی آمدنی",
   "scenarioGiftReceived": "تحفہ / بونس وصول ہوا",
-  "scenarioRefundReceived": "واپسی وصول ہوئی"
+  "scenarioRefundReceived": "واپسی وصول ہوئی",
+
+  "accounts": "اکاؤنٹس",
+  "account": "اکاؤنٹ",
+  "addAccount": "اکاؤنٹ شامل کریں",
+  "editAccount": "اکاؤنٹ ترمیم کریں",
+  "accountName": "اکاؤنٹ کا نام",
+  "accountType": "اکاؤنٹ کی قسم",
+  "cash": "نقد",
+  "bank": "بینک",
+  "savings": "بچت",
+  "creditCard": "کریڈٹ کارڈ",
+  "openingBalance": "ابتدائی بیلنس",
+  "openingBalanceDues": "ابتدائی بیلنس (واجبات)",
+  "openingDate": "شروع کی تاریخ",
+  "creditLimit": "کریڈٹ حد",
+  "billingCycleDay": "بلنگ سائیکل دن",
+  "paymentDueDays": "ادائیگی کی آخری تاریخ (سائیکل کے بعد دن)",
+  "linkedPaymentAccount": "منسلک ادائیگی اکاؤنٹ",
+  "linkedPaymentAccountHint": "خودکار ادائیگی یاددہانی کے لیے اکاؤنٹ",
+  "accountCreated": "اکاؤنٹ کامیابی سے بنایا گیا",
+  "accountUpdated": "اکاؤنٹ کامیابی سے اپڈیٹ ہوا",
+  "accountDeleted": "اکاؤنٹ کامیابی سے حذف ہوا",
+  "deleteAccountConfirmation": "کیا آپ اس اکاؤنٹ کو حذف کرنا چاہتے ہیں؟ اس سے منسلک لین دین حذف نہیں ہوں گے۔",
+  "noAccounts": "کوئی اکاؤنٹ نہیں",
+  "noAccountsDescription": "بیلنس ٹریک کرنے کے لیے اپنے نقد، بینک یا کارڈ اکاؤنٹس شامل کریں",
+  "outstanding": "واجب الادا",
+  "availableCredit": "دستیاب کریڈٹ",
+  "creditBalance": "کریڈٹ بیلنس",
+  "billed": "بل شدہ",
+  "unbilled": "غیر بل شدہ",
+  "transferMoney": "رقم منتقل کریں",
+  "fromAccount": "اکاؤنٹ سے",
+  "toAccount": "اکاؤنٹ میں",
+  "transferCreated": "ٹرانسفر کامیابی سے درج ہوا",
+  "selectAccount": "اکاؤنٹ منتخب کریں",
+  "noAccount": "کوئی اکاؤنٹ نہیں",
+  "paid": "ادا کیا",
+  "pending": "زیر التوا",
+  "markAsPaid": "ادا کیا ہوا نشان کریں",
+  "markAsReceived": "موصول ہوا نشان کریں",
+  "pendingTransactions": "زیر التوا لین دین",
+  "payFrom": "یہاں سے ادا کریں",
+  "receiveInto": "یہاں وصول کریں",
+  "accountPickerInfoMessage": "صرف ان لین دین پر لاگو ہوتا ہے جن کا اکاؤنٹ مقرر نہیں",
+  "negativeBalanceWarning": "اس سے آپ کا نقد بیلنس صفر سے نیچے چلا جائے گا",
+  "paymentDueNotification": "کریڈٹ کارڈ ادائیگی {amount} {days} دنوں میں واجب ہے",
+  "@paymentDueNotification": {
+    "placeholders": {
+      "amount": { "type": "String" },
+      "days": { "type": "int" }
+    }
+  },
+  "paymentDueTodayNotification": "کریڈٹ کارڈ ادائیگی {amount} آج واجب ہے",
+  "@paymentDueTodayNotification": {
+    "placeholders": {
+      "amount": { "type": "String" }
+    }
+  },
+  "paymentOverdueNotification": "کریڈٹ کارڈ ادائیگی {amount} {days} دن سے زیادہ ہے",
+  "@paymentOverdueNotification": {
+    "placeholders": {
+      "amount": { "type": "String" },
+      "days": { "type": "int" }
+    }
+  },
+  "recordPayment": "ادائیگی درج کریں",
+  "balance": "بیلنس",
+  "accountBalance": "اکاؤنٹ بیلنس",
+  "noAccountSelected": "کوئی اکاؤنٹ منتخب نہیں",
+  "selectPaymentAccount": "ادائیگی اکاؤنٹ منتخب کریں",
+  "dayOfMonth": "مہینے کا دن",
+  "howMuchDoYouOwe": "اس کارڈ پر آپ اس وقت کتنا واجب الادا ہیں؟",
+  "transferBetweenAccounts": "اکاؤنٹس کے درمیان منتقلی",
+  "sameAccountError": "ماخذ اور منزل اکاؤنٹ ایک نہیں ہو سکتے",
+  "transfers": "منتقلیاں",
+  "recentTransfers": "حالیہ منتقلیاں",
+  "noTransfers": "ابھی تک کوئی منتقلی نہیں",
+  "transferFromTo": "{from} → {to}",
+  "@transferFromTo": {
+    "placeholders": {
+      "from": { "type": "String" },
+      "to": { "type": "String" }
+    }
+  },
+
+  "accountNotFound": "اکاؤنٹ نہیں ملا",
+  "deleteAccount": "اکاؤنٹ حذف کریں",
+  "deleteAccountConfirm": "کیا آپ واقعی یہ اکاؤنٹ حذف کرنا چاہتے ہیں؟ اس سے منسلک لین دین حذف نہیں ہوں گے۔",
+  "outstandingBalance": "واجب الادا بیلنس",
+  "currentBalance": "موجودہ بیلنس",
+  "amountDue": "واجب الادا رقم",
+  "unbilledAmount": "غیر بلڈ رقم",
+  "creditUsed": "استعمال شدہ کریڈٹ",
+  "creditCards": "کریڈٹ کارڈز",
+  "netWorth": "کل مالیت",
+  "totalAssets": "کل اثاثے",
+  "totalLiabilities": "کل واجبات",
+  "available": "دستیاب",
+  "due": "واجب الادا",
+  "pleaseEnterAccountName": "براہ کرم اکاؤنٹ کا نام درج کریں",
+  "appearance": "ظاہری شکل",
+  "saveChanges": "تبدیلیاں محفوظ کریں",
+  "icon": "آئیکن",
+  "creditCardDetails": "کریڈٹ کارڈ کی تفصیلات",
+  "pleaseSelectBothAccounts": "براہ کرم ماخذ اور منزل دونوں اکاؤنٹ منتخب کریں",
+  "recordTransfer": "منتقلی درج کریں",
+  "descriptionOptional": "تفصیل (اختیاری)",
+  "dayLabel": "دن {day}",
+  "@dayLabel": {
+    "placeholders": {
+      "day": { "type": "int" }
+    }
+  },
+  "openTransactionsForAccount": "اس اکاؤنٹ کے لین دین دیکھنے کے لیے تھپتھپائیں",
+  "payBill": "بل ادا کریں",
+  "payFrom": "کس سے ادا کریں",
+  "customPayment": "اپنی مرضی کی ادائیگی",
+  "customPaymentHint": "اپنی مرضی کی رقم درج کریں",
+  "payingAmount": "{amount} ادا کر رہے ہیں",
+  "@payingAmount": {
+    "placeholders": {
+      "amount": { "type": "String" }
+    }
+  },
+  "noBankAccountsToPayFrom": "ادائیگی کے لیے کوئی بینک یا بچت اکاؤنٹ دستیاب نہیں"
 }

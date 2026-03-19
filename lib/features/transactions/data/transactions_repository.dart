@@ -73,6 +73,9 @@ class TransactionsRepository {
     query.addColumns([_database.transactions.amount.sum()]);
     query.where(_database.transactions.type.equals(type));
     query.where(_database.transactions.isDeleted.equals(false));
+    // Only count processed transactions (processedDate IS NOT NULL)
+    // NULL means pending — excluded from totals/analytics
+    query.where(_database.transactions.processedDate.isNotNull());
 
     if (start != null) {
       query.where(_database.transactions.date.isBiggerOrEqualValue(start));
@@ -742,6 +745,10 @@ class TransactionsRepository {
       query.where(
           _database.transactions.contactUuid.isIn(filters.contactUuids!));
     }
+    if (filters.accountUuids != null && filters.accountUuids!.isNotEmpty) {
+      query.where(
+          _database.transactions.accountUuid.isIn(filters.accountUuids!));
+    }
     if (filters.minAmount != null) {
       query.where(_database.transactions.amount
           .isBiggerOrEqualValue(filters.minAmount!));
@@ -875,6 +882,10 @@ class TransactionsRepository {
     if (filters.contactUuids != null && filters.contactUuids!.isNotEmpty) {
       query.where(
           _database.transactions.contactUuid.isIn(filters.contactUuids!));
+    }
+    if (filters.accountUuids != null && filters.accountUuids!.isNotEmpty) {
+      query.where(
+          _database.transactions.accountUuid.isIn(filters.accountUuids!));
     }
     if (filters.minAmount != null) {
       query.where(_database.transactions.amount

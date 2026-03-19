@@ -156,6 +156,8 @@ class SyncEngine {
           _db.transactions,
           _db.categories,
           _db.contacts,
+          _db.accounts,
+          _db.accountTransfers,
           _db.receivables,
           _db.payables
         });
@@ -661,12 +663,15 @@ class SyncEngine {
 
     // CRITICAL: Use a transaction for the entire batch of changes
     await _db.transaction(() async {
-      // Contacts and Categories should be first, then Transactions, then linked tables, then preferences
+      // Contacts and Categories should be first, then Accounts, then Transactions,
+      // then transfers and linked tables, then preferences
       final tableOrder = [
         'categories',
         'contacts',
         'app_currencies',
+        'accounts',
         'transactions',
+        'account_transfers',
         'receivables',
         'payables',
         'reminders',
@@ -735,43 +740,47 @@ class SyncEngine {
       // We map string table names to Drift's TableInfo objects
       final tableInfos = updatedTableNames
           .map((name) {
-            switch (name) {
-              case 'categories':
-                return _db.categories;
-              case 'contacts':
-                return _db.contacts;
-              case 'transactions':
-                return _db.transactions;
-              case 'receivables':
-                return _db.receivables;
-              case 'payables':
-                return _db.payables;
-              case 'reminders':
-                return _db.reminders;
-              case 'app_currencies':
-                return _db.appCurrencies;
-              case 'transaction_schedules':
-                return _db.transactionSchedules;
-              case 'user_preferences':
-                return _db.userPreferences;
-              default:
-                return null;
+              switch (name) {
+                case 'categories':
+                  return _db.categories;
+                case 'contacts':
+                  return _db.contacts;
+                case 'accounts':
+                  return _db.accounts;
+                case 'transactions':
+                  return _db.transactions;
+                case 'account_transfers':
+                  return _db.accountTransfers;
+                case 'receivables':
+                  return _db.receivables;
+                case 'payables':
+                  return _db.payables;
+                case 'reminders':
+                  return _db.reminders;
+                case 'app_currencies':
+                  return _db.appCurrencies;
+                case 'transaction_schedules':
+                  return _db.transactionSchedules;
+                case 'user_preferences':
+                  return _db.userPreferences;
+                default:
+                  return null;
+              }
+            })
+            .whereType<TableInfo>()
+            .toSet();
+
+          if (tableInfos.isNotEmpty) {
+            _db.markTablesUpdated(tableInfos);
+
+            // CRITICAL: Force a WAL checkpoint to ensure data is visible to other connections
+            // and broadcast a change event that Riverpod can pick up.
+            try {
+              await _db.customStatement('PRAGMA wal_checkpoint(FULL);');
+            } catch (e) {
+              // Ignore errors if WAL mode is not enabled
             }
-          })
-          .whereType<TableInfo>()
-          .toSet();
-
-      if (tableInfos.isNotEmpty) {
-        _db.markTablesUpdated(tableInfos);
-
-        // CRITICAL: Force a WAL checkpoint to ensure data is visible to other connections
-        // and broadcast a change event that Riverpod can pick up.
-        try {
-          await _db.customStatement('PRAGMA wal_checkpoint(FULL);');
-        } catch (e) {
-          // Ignore errors if WAL mode is not enabled
-        }
-      }
+          }
     }
   }
 
@@ -790,11 +799,13 @@ class SyncEngine {
     final tables = [
       'categories',
       'contacts',
+      'app_currencies',
+      'accounts',
       'transactions',
+      'account_transfers',
       'receivables',
       'payables',
       'reminders',
-      'app_currencies',
       'transaction_schedules',
       'user_preferences',
     ];
@@ -896,8 +907,12 @@ class SyncEngine {
                 return _db.categories;
               case 'contacts':
                 return _db.contacts;
+              case 'accounts':
+                return _db.accounts;
               case 'transactions':
                 return _db.transactions;
+              case 'account_transfers':
+                return _db.accountTransfers;
               case 'receivables':
                 return _db.receivables;
               case 'payables':
@@ -953,6 +968,8 @@ class SyncEngine {
       'due_date',
       'received_date',
       'paid_date',
+      'processed_date',
+      'opening_date',
       'created_at',
       'updated_at',
       'last_sync_at',

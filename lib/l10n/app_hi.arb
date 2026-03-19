@@ -1364,5 +1364,130 @@
   "scenarioSalaryReceived": "वेतन प्राप्त",
   "scenarioFreelanceIncome": "फ्रीलांस / अतिरिक्त आय",
   "scenarioGiftReceived": "उपहार / बोनस प्राप्त",
-  "scenarioRefundReceived": "रिफंड प्राप्त"
+  "scenarioRefundReceived": "रिफंड प्राप्त",
+
+  "accounts": "खाते",
+  "account": "खाता",
+  "addAccount": "खाता जोड़ें",
+  "editAccount": "खाता संपादित करें",
+  "accountName": "खाते का नाम",
+  "accountType": "खाते का प्रकार",
+  "cash": "नकद",
+  "bank": "बैंक",
+  "savings": "बचत",
+  "creditCard": "क्रेडिट कार्ड",
+  "openingBalance": "प्रारंभिक शेष",
+  "openingBalanceDues": "प्रारंभिक शेष (बकाया)",
+  "openingDate": "प्रारंभ तिथि",
+  "creditLimit": "क्रेडिट सीमा",
+  "billingCycleDay": "बिलिंग चक्र दिन",
+  "paymentDueDays": "भुगतान देय (चक्र के बाद दिन)",
+  "linkedPaymentAccount": "लिंक्ड भुगतान खाता",
+  "linkedPaymentAccountHint": "ऑटो-भुगतान अनुस्मारक के लिए खाता",
+  "accountCreated": "खाता सफलतापूर्वक बनाया गया",
+  "accountUpdated": "खाता सफलतापूर्वक अपडेट किया गया",
+  "accountDeleted": "खाता सफलतापूर्वक हटाया गया",
+  "deleteAccountConfirmation": "क्या आप इस खाते को हटाना चाहते हैं? इससे जुड़े लेनदेन नहीं हटेंगे।",
+  "noAccounts": "कोई खाता नहीं",
+  "noAccountsDescription": "बैलेंस ट्रैक करने के लिए अपने नकद, बैंक या कार्ड खाते जोड़ें",
+  "outstanding": "बकाया",
+  "availableCredit": "उपलब्ध क्रेडिट",
+  "creditBalance": "क्रेडिट बैलेंस",
+  "billed": "बिल किया गया",
+  "unbilled": "अनबिल्ड",
+  "transferMoney": "पैसे ट्रांसफर करें",
+  "fromAccount": "खाते से",
+  "toAccount": "खाते में",
+  "transferCreated": "ट्रांसफर सफलतापूर्वक दर्ज किया गया",
+  "selectAccount": "खाता चुनें",
+  "noAccount": "कोई खाता नहीं",
+  "paid": "भुगतान किया",
+  "pending": "लंबित",
+  "markAsPaid": "भुगतान के रूप में चिह्नित करें",
+  "markAsReceived": "प्राप्त के रूप में चिह्नित करें",
+  "pendingTransactions": "लंबित लेनदेन",
+  "payFrom": "यहाँ से भुगतान करें",
+  "receiveInto": "यहाँ प्राप्त करें",
+  "accountPickerInfoMessage": "केवल उन लेनदेन पर लागू होता है जिनका खाता निर्दिष्ट नहीं है",
+  "negativeBalanceWarning": "इससे आपका नकद शेष शून्य से नीचे चला जाएगा",
+  "paymentDueNotification": "क्रेडिट कार्ड भुगतान {amount} {days} दिनों में देय है",
+  "@paymentDueNotification": {
+    "placeholders": {
+      "amount": { "type": "String" },
+      "days": { "type": "int" }
+    }
+  },
+  "paymentDueTodayNotification": "क्रेडिट कार्ड भुगतान {amount} आज देय है",
+  "@paymentDueTodayNotification": {
+    "placeholders": {
+      "amount": { "type": "String" }
+    }
+  },
+  "paymentOverdueNotification": "क्रेडिट कार्ड भुगतान {amount} {days} दिन से अधिक है",
+  "@paymentOverdueNotification": {
+    "placeholders": {
+      "amount": { "type": "String" },
+      "days": { "type": "int" }
+    }
+  },
+  "recordPayment": "भुगतान दर्ज करें",
+  "balance": "शेष",
+  "accountBalance": "खाता शेष",
+  "noAccountSelected": "कोई खाता नहीं चुना",
+  "selectPaymentAccount": "भुगतान खाता चुनें",
+  "dayOfMonth": "महीने का दिन",
+  "howMuchDoYouOwe": "इस कार्ड पर आप अभी कितना बकाया हैं?",
+  "transferBetweenAccounts": "खातों के बीच ट्रांसफर",
+  "sameAccountError": "स्रोत और गंतव्य खाते एक नहीं हो सकते",
+  "transfers": "ट्रांसफर",
+  "recentTransfers": "हाल के ट्रांसफर",
+  "noTransfers": "अभी तक कोई ट्रांसफर नहीं",
+  "transferFromTo": "{from} → {to}",
+  "@transferFromTo": {
+    "placeholders": {
+      "from": { "type": "String" },
+      "to": { "type": "String" }
+    }
+  },
+
+  "accountNotFound": "खाता नहीं मिला",
+  "deleteAccount": "खाता हटाएं",
+  "deleteAccountConfirm": "क्या आप वाकई इस खाते को हटाना चाहते हैं? इससे जुड़े लेनदेन नहीं हटेंगे।",
+  "outstandingBalance": "बकाया शेष",
+  "currentBalance": "वर्तमान शेष",
+  "amountDue": "देय राशि",
+  "unbilledAmount": "अनबिल्ड राशि",
+  "creditUsed": "उपयोग किया क्रेडिट",
+  "creditCards": "क्रेडिट कार्ड",
+  "netWorth": "कुल संपत्ति",
+  "totalAssets": "कुल संपत्ति",
+  "totalLiabilities": "कुल देनदारी",
+  "available": "उपलब्ध",
+  "due": "देय",
+  "pleaseEnterAccountName": "कृपया खाते का नाम दर्ज करें",
+  "appearance": "दिखावट",
+  "saveChanges": "बदलाव सहेजें",
+  "icon": "आइकन",
+  "creditCardDetails": "क्रेडिट कार्ड विवरण",
+  "pleaseSelectBothAccounts": "कृपया स्रोत और गंतव्य दोनों खाते चुनें",
+  "recordTransfer": "ट्रांसफर दर्ज करें",
+  "descriptionOptional": "विवरण (वैकल्पिक)",
+  "dayLabel": "दिन {day}",
+  "@dayLabel": {
+    "placeholders": {
+      "day": { "type": "int" }
+    }
+  },
+  "openTransactionsForAccount": "इस खाते के लेनदेन देखने के लिए टैप करें",
+  "payBill": "बिल भुगतान करें",
+  "payFrom": "किससे भुगतान करें",
+  "customPayment": "कस्टम भुगतान",
+  "customPaymentHint": "कस्टम राशि दर्ज करें",
+  "payingAmount": "{amount} का भुगतान",
+  "@payingAmount": {
+    "placeholders": {
+      "amount": { "type": "String" }
+    }
+  },
+  "noBankAccountsToPayFrom": "भुगतान के लिए कोई बैंक या बचत खाता उपलब्ध नहीं है"
 }

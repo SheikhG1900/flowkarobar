@@ -204,6 +204,8 @@ class _NotificationCard extends ConsumerWidget {
         return Icons.notifications;
       case NotificationType.sync:
         return Icons.sync;
+      case NotificationType.creditCard:
+        return Icons.credit_card;
     }
   }
 
@@ -221,6 +223,8 @@ class _NotificationCard extends ConsumerWidget {
         return Colors.orange;
       case NotificationType.sync:
         return Colors.blue;
+      case NotificationType.creditCard:
+        return AppColors.expenseColor;
     }
   }
 

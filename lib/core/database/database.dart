@@ -62,6 +62,15 @@ class Transactions extends Table {
   BoolColumn get isScheduled => boolean().withDefault(
       const Constant(false))(); // true if generated from a schedule
 
+  // Account tracking
+  TextColumn get accountUuid => text().nullable()(); // references Accounts.uuid
+
+  // processedDate: null = pending (excluded from balance/analytics)
+  // not null = processed on this date (use for account balance ordering)
+  // For regular transactions: set to transaction date at creation
+  // For linked/scheduled: set when user marks as paid/received
+  DateTimeColumn get processedDate => dateTime().nullable()();
+
   // Grouping identifier for split bills
   // All transactions that are part of the same split share the same linkedGroupId
   TextColumn get linkedGroupId => text().nullable()();
@@ -273,10 +282,56 @@ class SyncMetadata extends Table {
   Set<Column> get primaryKey => {deviceId};
 }
 
+/// Account types: CASH, BANK, SAVINGS, CREDIT_CARD
+class Accounts extends Table {
+  TextColumn get uuid => text()();
+  TextColumn get name => text().withLength(min: 1, max: 100)();
+  TextColumn get type => text()(); // 'CASH' | 'BANK' | 'SAVINGS' | 'CREDIT_CARD'
+  TextColumn get icon => text().nullable()();
+  TextColumn get color => text().nullable()();
+  RealColumn get openingBalance => real().withDefault(const Constant(0.0))();
+  DateTimeColumn get openingDate => dateTime().withDefault(currentDateAndTime)();
+  BoolColumn get isActive => boolean().withDefault(const Constant(true))();
+
+  // Credit card specific fields (null for non-credit-card accounts)
+  RealColumn get creditLimit => real().nullable()();
+  IntColumn get billingCycleDay => integer().nullable()(); // Day of month 1-31
+  IntColumn get paymentDueDays => integer().nullable()(); // Days after billing cycle
+  TextColumn get linkedAccountUuid => text().nullable()(); // For auto-payment reminder
+
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+  BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
+  BoolColumn get isNotSynced => boolean().withDefault(const Constant(true))();
+
+  @override
+  Set<Column> get primaryKey => {uuid};
+}
+
+class AccountTransfers extends Table {
+  TextColumn get uuid => text()();
+  @ReferenceName('outgoingTransfersRefs')
+  TextColumn get fromAccountUuid => text().references(Accounts, #uuid)();
+  @ReferenceName('incomingTransfersRefs')
+  TextColumn get toAccountUuid => text().references(Accounts, #uuid)();
+  RealColumn get amount => real()();
+  DateTimeColumn get date => dateTime()();
+  TextColumn get description => text().nullable()();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+  BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
+  BoolColumn get isNotSynced => boolean().withDefault(const Constant(true))();
+
+  @override
+  Set<Column> get primaryKey => {uuid};
+}
+
 @DriftDatabase(tables: [
   Categories,
   Contacts,
+  Accounts,
   Transactions,
+  AccountTransfers,
   Receivables,
   Payables,
   Reminders,
@@ -294,7 +349,7 @@ class AppDatabase extends _$AppDatabase {
       : super(executor ?? openConnection(fileName));
 
   @override
-  int get schemaVersion => 17;
+  int get schemaVersion => 18;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -390,6 +445,56 @@ class AppDatabase extends _$AppDatabase {
               if (kDebugMode) {
                 print(
                     'Migration: Column is_deleted might already exist on user_preferences: $e');
+              }
+            }
+          }
+
+          // Migration from version 17 to 18: Add Accounts, AccountTransfers tables
+          // and accountUuid + processedDate columns to Transactions
+          if (from <= 17) {
+            try {
+              await m.createTable(accounts);
+            } catch (e) {
+              if (kDebugMode) {
+                print('Migration: accounts table might already exist: $e');
+              }
+            }
+            try {
+              await m.createTable(accountTransfers);
+            } catch (e) {
+              if (kDebugMode) {
+                print('Migration: account_transfers table might already exist: $e');
+              }
+            }
+            try {
+              await customStatement(
+                  'ALTER TABLE transactions ADD COLUMN account_uuid TEXT;');
+            } catch (e) {
+              if (kDebugMode) {
+                print('Migration: Column account_uuid might already exist on transactions: $e');
+              }
+            }
+            try {
+              await customStatement(
+                  'ALTER TABLE transactions ADD COLUMN processed_date INTEGER;');
+            } catch (e) {
+              if (kDebugMode) {
+                print('Migration: Column processed_date might already exist on transactions: $e');
+              }
+            }
+            // Backfill processedDate for all existing non-scheduled, non-pending transactions
+            // Regular transactions and auto-generated ones are already processed
+            try {
+              await customStatement(
+                'UPDATE transactions SET processed_date = date WHERE processed_date IS NULL AND is_scheduled = 0;'
+              );
+              // Auto-generated transactions (from payable/receivable marking) are also processed
+              await customStatement(
+                'UPDATE transactions SET processed_date = date WHERE processed_date IS NULL AND is_auto_generated = 1;'
+              );
+            } catch (e) {
+              if (kDebugMode) {
+                print('Migration: processedDate backfill failed: $e');
               }
             }
           }
@@ -602,10 +707,12 @@ class AppDatabase extends _$AppDatabase {
       await delete(whatsAppQueue).go();
       await delete(receivables).go();
       await delete(payables).go();
+      await delete(accountTransfers).go();
       await delete(transactions).go();
       await delete(categoryUsageStats).go();
       await delete(contactUsageStats).go();
       await delete(contacts).go();
+      await delete(accounts).go();
       await delete(syncLog).go();
 
       // Reset sync metadata instead of deleting it, or delete it to start fresh

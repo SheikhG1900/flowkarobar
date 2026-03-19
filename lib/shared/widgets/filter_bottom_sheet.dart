@@ -4,6 +4,10 @@ import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/features/categories/presentation/providers/categories_provider.dart';
 import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
+import 'package:flowpaisa/features/accounts/presentation/providers/accounts_provider.dart';
+import 'package:flowpaisa/core/utils/icon_helper.dart';
+import 'package:flowpaisa/features/accounts/domain/models/account_models.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:flowpaisa/core/utils/localization_helper.dart';
 import 'package:flowpaisa/core/utils/icon_helper.dart';
 import 'package:flowpaisa/shared/models/date_range_state.dart';
@@ -36,6 +40,7 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
   late List<String> _selectedCategoryUuids;
   late List<String> _selectedContactUuids;
   late List<String> _selectedStatusCodes;
+  late List<String> _selectedAccountUuids;
   late bool _filterByDueDate;
   late TextEditingController _minAmountController;
   late TextEditingController _maxAmountController;
@@ -63,10 +68,12 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
       _transactionType = filters.type;
       _selectedCategoryUuids = List.from(filters.categoryUuids ?? []);
       _selectedStatusCodes = List.from(filters.statusCodes ?? []);
+      _selectedAccountUuids = List.from(filters.accountUuids ?? []);
     } else {
       _transactionType = null;
       _selectedCategoryUuids = [];
       _selectedStatusCodes = [];
+      _selectedAccountUuids = [];
     }
   }
 
@@ -86,6 +93,7 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
       _selectedCategoryUuids = [];
       _selectedContactUuids = [];
       _selectedStatusCodes = [];
+      _selectedAccountUuids = [];
       _minAmountController.text = '';
       _maxAmountController.text = '';
       _filterByDueDate = false;
@@ -174,10 +182,13 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
 
     final categoryCount = ref.watch(categoriesListProvider).value?.length ?? 0;
     final contactCount = ref.watch(contactsListProvider).value?.length ?? 0;
+    final accountCount = ref.watch(accountsWithBalanceProvider).value?.length ?? 0;
     final categoriesExpanded =
         _selectedCategoryUuids.isNotEmpty || categoryCount <= 20;
     final contactsExpanded =
         _selectedContactUuids.isNotEmpty || contactCount <= 20;
+    final accountsExpanded =
+        _selectedAccountUuids.isNotEmpty || accountCount <= 12;
 
     return Padding(
       padding: EdgeInsets.only(
@@ -263,6 +274,13 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
                           child: _buildTransactionStatusSelector(
                               l10n, primaryFilterColor),
                         ),
+                        _buildCollapsibleSection(
+                          title: l10n.accounts,
+                          initiallyExpanded: accountsExpanded,
+                          icon: Symbols.account_balance_wallet,
+                          primaryColor: primaryFilterColor,
+                          child: _buildAccountSelector(),
+                        ),
                       ],
                       _buildCollapsibleSection(
                         title: l10n.contacts,
@@ -340,6 +358,7 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
         clearType: _transactionType == null,
         categoryUuids: _selectedCategoryUuids,
         contactUuids: _selectedContactUuids,
+        accountUuids: _selectedAccountUuids,
         minAmount: minAmount,
         clearMinAmount: minAmount == null,
         maxAmount: maxAmount,
@@ -638,6 +657,94 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
       loading: () => const CircularProgressIndicator(),
       error: (_, __) => const SizedBox.shrink(),
     );
+  }
+
+  Widget _buildAccountSelector() {
+    final accountsAsync = ref.watch(accountsWithBalanceProvider);
+    final theme = Theme.of(context);
+    return accountsAsync.when(
+      data: (list) {
+        if (list.isEmpty) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Text(
+              AppLocalizations.of(context)!.noAccounts,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          );
+        }
+        return Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          alignment: WrapAlignment.start,
+          children: list.map((awb) {
+            final acc = awb.account;
+            final isSelected = _selectedAccountUuids.contains(acc.uuid);
+            final accountColor = acc.color != null
+                ? Color(int.parse(acc.color!.replaceAll('#', '0xFF')))
+                : theme.colorScheme.primary;
+            final iconData =
+                IconHelper.getIconData(acc.icon) ?? _accountTypeIcon(awb.type);
+
+            return FilterChip(
+              avatar: Icon(
+                iconData,
+                size: 16,
+                color: isSelected ? Colors.white : accountColor,
+              ),
+              label: Text(
+                acc.name,
+                style: TextStyle(
+                  color: isSelected ? Colors.white : theme.colorScheme.onSurface,
+                  fontSize: 12,
+                ),
+              ),
+              selected: isSelected,
+              selectedColor: accountColor,
+              checkmarkColor: Colors.white,
+              backgroundColor: theme.colorScheme.surface,
+              side: BorderSide(
+                color: isSelected ? Colors.transparent : theme.dividerColor,
+                width: 1.5,
+              ),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16)),
+              onSelected: (selected) {
+                setState(() {
+                  if (selected) {
+                    if (!_selectedAccountUuids.contains(acc.uuid)) {
+                      _selectedAccountUuids.add(acc.uuid);
+                    }
+                  } else {
+                    _selectedAccountUuids.remove(acc.uuid);
+                  }
+                });
+              },
+            );
+          }).toList(),
+        );
+      },
+      loading: () => const Padding(
+        padding: EdgeInsets.all(16),
+        child: Center(child: CircularProgressIndicator()),
+      ),
+      error: (_, __) => const SizedBox.shrink(),
+    );
+  }
+
+  IconData _accountTypeIcon(AccountType type) {
+    switch (type) {
+      case AccountType.cash:
+        return Symbols.payments;
+      case AccountType.bank:
+        return Symbols.account_balance;
+      case AccountType.savings:
+        return Symbols.savings;
+      case AccountType.creditCard:
+        return Symbols.credit_card;
+    }
   }
 
   Widget _buildContactSelector() {

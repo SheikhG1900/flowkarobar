@@ -614,7 +614,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get linkedTransaction => 'लिंक्ड लेन-देन';
 
   @override
-  String get markAsReceived => 'वसूल करें';
+  String get markAsReceived => 'प्राप्त के रूप में चिह्नित करें';
 
   @override
   String get deleteReceivableTitle => 'प्राप्य हटाएं';
@@ -720,10 +720,10 @@ class AppLocalizationsHi extends AppLocalizations {
   String get payablePending => 'देय (लंबित)';
 
   @override
-  String get paid => 'भुगतान किया गया';
+  String get paid => 'भुगतान किया';
 
   @override
-  String get markAsPaid => 'अदा करें';
+  String get markAsPaid => 'भुगतान के रूप में चिह्नित करें';
 
   @override
   String get deletePayableTitle => 'देय हटाएं';
@@ -3598,4 +3598,276 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get scenarioRefundReceived => 'रिफंड प्राप्त';
+
+  @override
+  String get accounts => 'खाते';
+
+  @override
+  String get account => 'खाता';
+
+  @override
+  String get addAccount => 'खाता जोड़ें';
+
+  @override
+  String get editAccount => 'खाता संपादित करें';
+
+  @override
+  String get accountName => 'खाते का नाम';
+
+  @override
+  String get accountType => 'खाते का प्रकार';
+
+  @override
+  String get cash => 'नकद';
+
+  @override
+  String get bank => 'बैंक';
+
+  @override
+  String get savings => 'बचत';
+
+  @override
+  String get creditCard => 'क्रेडिट कार्ड';
+
+  @override
+  String get openingBalance => 'प्रारंभिक शेष';
+
+  @override
+  String get openingBalanceDues => 'प्रारंभिक शेष (बकाया)';
+
+  @override
+  String get openingDate => 'प्रारंभ तिथि';
+
+  @override
+  String get creditLimit => 'क्रेडिट सीमा';
+
+  @override
+  String get billingCycleDay => 'बिलिंग चक्र दिन';
+
+  @override
+  String get paymentDueDays => 'भुगतान देय (चक्र के बाद दिन)';
+
+  @override
+  String get linkedPaymentAccount => 'लिंक्ड भुगतान खाता';
+
+  @override
+  String get linkedPaymentAccountHint => 'ऑटो-भुगतान अनुस्मारक के लिए खाता';
+
+  @override
+  String get accountCreated => 'खाता सफलतापूर्वक बनाया गया';
+
+  @override
+  String get accountUpdated => 'खाता सफलतापूर्वक अपडेट किया गया';
+
+  @override
+  String get accountDeleted => 'खाता सफलतापूर्वक हटाया गया';
+
+  @override
+  String get deleteAccountConfirmation =>
+      'क्या आप इस खाते को हटाना चाहते हैं? इससे जुड़े लेनदेन नहीं हटेंगे।';
+
+  @override
+  String get noAccounts => 'कोई खाता नहीं';
+
+  @override
+  String get noAccountsDescription =>
+      'बैलेंस ट्रैक करने के लिए अपने नकद, बैंक या कार्ड खाते जोड़ें';
+
+  @override
+  String get outstanding => 'बकाया';
+
+  @override
+  String get availableCredit => 'उपलब्ध क्रेडिट';
+
+  @override
+  String get creditBalance => 'क्रेडिट बैलेंस';
+
+  @override
+  String get billed => 'बिल किया गया';
+
+  @override
+  String get unbilled => 'अनबिल्ड';
+
+  @override
+  String get transferMoney => 'पैसे ट्रांसफर करें';
+
+  @override
+  String get fromAccount => 'खाते से';
+
+  @override
+  String get toAccount => 'खाते में';
+
+  @override
+  String get transferCreated => 'ट्रांसफर सफलतापूर्वक दर्ज किया गया';
+
+  @override
+  String get selectAccount => 'खाता चुनें';
+
+  @override
+  String get noAccount => 'कोई खाता नहीं';
+
+  @override
+  String get pendingTransactions => 'लंबित लेनदेन';
+
+  @override
+  String get payFrom => 'किससे भुगतान करें';
+
+  @override
+  String get receiveInto => 'यहाँ प्राप्त करें';
+
+  @override
+  String get accountPickerInfoMessage =>
+      'केवल उन लेनदेन पर लागू होता है जिनका खाता निर्दिष्ट नहीं है';
+
+  @override
+  String get negativeBalanceWarning =>
+      'इससे आपका नकद शेष शून्य से नीचे चला जाएगा';
+
+  @override
+  String paymentDueNotification(String amount, int days) {
+    return 'क्रेडिट कार्ड भुगतान $amount $days दिनों में देय है';
+  }
+
+  @override
+  String paymentDueTodayNotification(String amount) {
+    return 'क्रेडिट कार्ड भुगतान $amount आज देय है';
+  }
+
+  @override
+  String paymentOverdueNotification(String amount, int days) {
+    return 'क्रेडिट कार्ड भुगतान $amount $days दिन से अधिक है';
+  }
+
+  @override
+  String get recordPayment => 'भुगतान दर्ज करें';
+
+  @override
+  String get accountBalance => 'खाता शेष';
+
+  @override
+  String get noAccountSelected => 'कोई खाता नहीं चुना';
+
+  @override
+  String get selectPaymentAccount => 'भुगतान खाता चुनें';
+
+  @override
+  String get dayOfMonth => 'महीने का दिन';
+
+  @override
+  String get howMuchDoYouOwe => 'इस कार्ड पर आप अभी कितना बकाया हैं?';
+
+  @override
+  String get transferBetweenAccounts => 'खातों के बीच ट्रांसफर';
+
+  @override
+  String get sameAccountError => 'स्रोत और गंतव्य खाते एक नहीं हो सकते';
+
+  @override
+  String get transfers => 'ट्रांसफर';
+
+  @override
+  String get recentTransfers => 'हाल के ट्रांसफर';
+
+  @override
+  String get noTransfers => 'अभी तक कोई ट्रांसफर नहीं';
+
+  @override
+  String transferFromTo(String from, String to) {
+    return '$from → $to';
+  }
+
+  @override
+  String get accountNotFound => 'खाता नहीं मिला';
+
+  @override
+  String get deleteAccount => 'खाता हटाएं';
+
+  @override
+  String get deleteAccountConfirm =>
+      'क्या आप वाकई इस खाते को हटाना चाहते हैं? इससे जुड़े लेनदेन नहीं हटेंगे।';
+
+  @override
+  String get outstandingBalance => 'बकाया शेष';
+
+  @override
+  String get currentBalance => 'वर्तमान शेष';
+
+  @override
+  String get amountDue => 'देय राशि';
+
+  @override
+  String get unbilledAmount => 'अनबिल्ड राशि';
+
+  @override
+  String get creditUsed => 'उपयोग किया क्रेडिट';
+
+  @override
+  String get creditCards => 'क्रेडिट कार्ड';
+
+  @override
+  String get netWorth => 'कुल संपत्ति';
+
+  @override
+  String get totalAssets => 'कुल संपत्ति';
+
+  @override
+  String get totalLiabilities => 'कुल देनदारी';
+
+  @override
+  String get available => 'उपलब्ध';
+
+  @override
+  String get due => 'देय';
+
+  @override
+  String get pleaseEnterAccountName => 'कृपया खाते का नाम दर्ज करें';
+
+  @override
+  String get appearance => 'दिखावट';
+
+  @override
+  String get saveChanges => 'बदलाव सहेजें';
+
+  @override
+  String get icon => 'आइकन';
+
+  @override
+  String get creditCardDetails => 'क्रेडिट कार्ड विवरण';
+
+  @override
+  String get pleaseSelectBothAccounts =>
+      'कृपया स्रोत और गंतव्य दोनों खाते चुनें';
+
+  @override
+  String get recordTransfer => 'ट्रांसफर दर्ज करें';
+
+  @override
+  String get descriptionOptional => 'विवरण (वैकल्पिक)';
+
+  @override
+  String dayLabel(int day) {
+    return 'दिन $day';
+  }
+
+  @override
+  String get openTransactionsForAccount =>
+      'इस खाते के लेनदेन देखने के लिए टैप करें';
+
+  @override
+  String get payBill => 'बिल भुगतान करें';
+
+  @override
+  String get customPayment => 'कस्टम भुगतान';
+
+  @override
+  String get customPaymentHint => 'कस्टम राशि दर्ज करें';
+
+  @override
+  String payingAmount(String amount) {
+    return '$amount का भुगतान';
+  }
+
+  @override
+  String get noBankAccountsToPayFrom =>
+      'भुगतान के लिए कोई बैंक या बचत खाता उपलब्ध नहीं है';
 }

@@ -611,7 +611,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get linkedTransaction => 'Linked Transaction';
 
   @override
-  String get markAsReceived => 'Receive';
+  String get markAsReceived => 'Mark as Received';
 
   @override
   String get deleteReceivableTitle => 'Delete Receivable';
@@ -719,7 +719,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get paid => 'Paid';
 
   @override
-  String get markAsPaid => 'Pay';
+  String get markAsPaid => 'Mark as Paid';
 
   @override
   String get deletePayableTitle => 'Delete Payable';
@@ -3587,4 +3587,277 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get scenarioRefundReceived => 'Refund received';
+
+  @override
+  String get accounts => 'Accounts';
+
+  @override
+  String get account => 'Account';
+
+  @override
+  String get addAccount => 'Add Account';
+
+  @override
+  String get editAccount => 'Edit Account';
+
+  @override
+  String get accountName => 'Account Name';
+
+  @override
+  String get accountType => 'Account Type';
+
+  @override
+  String get cash => 'Cash';
+
+  @override
+  String get bank => 'Bank';
+
+  @override
+  String get savings => 'Savings';
+
+  @override
+  String get creditCard => 'Credit Card';
+
+  @override
+  String get openingBalance => 'Opening Balance';
+
+  @override
+  String get openingBalanceDues => 'Opening Balance (Dues)';
+
+  @override
+  String get openingDate => 'Opening Date';
+
+  @override
+  String get creditLimit => 'Credit Limit';
+
+  @override
+  String get billingCycleDay => 'Billing Cycle Day';
+
+  @override
+  String get paymentDueDays => 'Payment Due (days after cycle)';
+
+  @override
+  String get linkedPaymentAccount => 'Linked Payment Account';
+
+  @override
+  String get linkedPaymentAccountHint =>
+      'Account used for auto-payment reminder';
+
+  @override
+  String get accountCreated => 'Account created successfully';
+
+  @override
+  String get accountUpdated => 'Account updated successfully';
+
+  @override
+  String get accountDeleted => 'Account deleted successfully';
+
+  @override
+  String get deleteAccountConfirmation =>
+      'Are you sure you want to delete this account? This will not delete transactions linked to it.';
+
+  @override
+  String get noAccounts => 'No accounts yet';
+
+  @override
+  String get noAccountsDescription =>
+      'Add your cash, bank or card accounts to track balances';
+
+  @override
+  String get outstanding => 'Outstanding';
+
+  @override
+  String get availableCredit => 'Available Credit';
+
+  @override
+  String get creditBalance => 'Credit Balance';
+
+  @override
+  String get billed => 'Billed';
+
+  @override
+  String get unbilled => 'Unbilled';
+
+  @override
+  String get transferMoney => 'Transfer Money';
+
+  @override
+  String get fromAccount => 'From Account';
+
+  @override
+  String get toAccount => 'To Account';
+
+  @override
+  String get transferCreated => 'Transfer recorded successfully';
+
+  @override
+  String get selectAccount => 'Select Account';
+
+  @override
+  String get noAccount => 'No Account';
+
+  @override
+  String get pendingTransactions => 'Pending Transactions';
+
+  @override
+  String get payFrom => 'Pay from';
+
+  @override
+  String get receiveInto => 'Receive Into';
+
+  @override
+  String get accountPickerInfoMessage =>
+      'Applies only to transactions without an assigned account';
+
+  @override
+  String get negativeBalanceWarning =>
+      'This will put your Cash balance below zero';
+
+  @override
+  String paymentDueNotification(String amount, int days) {
+    return 'Credit card payment of $amount is due in $days days';
+  }
+
+  @override
+  String paymentDueTodayNotification(String amount) {
+    return 'Credit card payment of $amount is due today';
+  }
+
+  @override
+  String paymentOverdueNotification(String amount, int days) {
+    return 'Credit card payment of $amount is overdue by $days days';
+  }
+
+  @override
+  String get recordPayment => 'Record Payment';
+
+  @override
+  String get accountBalance => 'Account Balance';
+
+  @override
+  String get noAccountSelected => 'No account selected';
+
+  @override
+  String get selectPaymentAccount => 'Select payment account';
+
+  @override
+  String get dayOfMonth => 'Day of Month';
+
+  @override
+  String get howMuchDoYouOwe => 'How much do you currently owe on this card?';
+
+  @override
+  String get transferBetweenAccounts => 'Transfer between accounts';
+
+  @override
+  String get sameAccountError => 'From and To accounts cannot be the same';
+
+  @override
+  String get transfers => 'Transfers';
+
+  @override
+  String get recentTransfers => 'Recent Transfers';
+
+  @override
+  String get noTransfers => 'No transfers yet';
+
+  @override
+  String transferFromTo(String from, String to) {
+    return '$from → $to';
+  }
+
+  @override
+  String get accountNotFound => 'Account not found';
+
+  @override
+  String get deleteAccount => 'Delete Account';
+
+  @override
+  String get deleteAccountConfirm =>
+      'Are you sure you want to delete this account? This will not delete transactions linked to it.';
+
+  @override
+  String get outstandingBalance => 'Outstanding Balance';
+
+  @override
+  String get currentBalance => 'Current Balance';
+
+  @override
+  String get amountDue => 'Amount Due';
+
+  @override
+  String get unbilledAmount => 'Unbilled Amount';
+
+  @override
+  String get creditUsed => 'Credit Used';
+
+  @override
+  String get creditCards => 'Credit Cards';
+
+  @override
+  String get netWorth => 'Net Worth';
+
+  @override
+  String get totalAssets => 'Total Assets';
+
+  @override
+  String get totalLiabilities => 'Total Liabilities';
+
+  @override
+  String get available => 'Available';
+
+  @override
+  String get due => 'Due';
+
+  @override
+  String get pleaseEnterAccountName => 'Please enter account name';
+
+  @override
+  String get appearance => 'Appearance';
+
+  @override
+  String get saveChanges => 'Save Changes';
+
+  @override
+  String get icon => 'Icon';
+
+  @override
+  String get creditCardDetails => 'Credit Card Details';
+
+  @override
+  String get pleaseSelectBothAccounts =>
+      'Please select both From and To accounts';
+
+  @override
+  String get recordTransfer => 'Record Transfer';
+
+  @override
+  String get descriptionOptional => 'Description (Optional)';
+
+  @override
+  String dayLabel(int day) {
+    return 'Day $day';
+  }
+
+  @override
+  String get openTransactionsForAccount =>
+      'Tap to view transactions for this account';
+
+  @override
+  String get payBill => 'Pay Bill';
+
+  @override
+  String get customPayment => 'Custom Payment';
+
+  @override
+  String get customPaymentHint => 'Enter a custom amount';
+
+  @override
+  String payingAmount(String amount) {
+    return 'Paying $amount';
+  }
+
+  @override
+  String get noBankAccountsToPayFrom =>
+      'No bank or savings accounts available to pay from';
 }

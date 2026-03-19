@@ -474,6 +474,10 @@ class AnalyticsRepository {
       whereExpr = whereExpr &
           _database.transactions.contactUuid.isIn(filters.contactUuids!);
     }
+    if (filters.accountUuids != null && filters.accountUuids!.isNotEmpty) {
+      whereExpr = whereExpr &
+          _database.transactions.accountUuid.isIn(filters.accountUuids!);
+    }
     if (filters.minAmount != null) {
       whereExpr = whereExpr &
           _database.transactions.amount

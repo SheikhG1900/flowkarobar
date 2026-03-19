@@ -980,6 +980,786 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
   }
 }
 
+class $AccountsTable extends Accounts with TableInfo<$AccountsTable, Account> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $AccountsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _uuidMeta = const VerificationMeta('uuid');
+  @override
+  late final GeneratedColumn<String> uuid = GeneratedColumn<String>(
+      'uuid', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+      'name', aliasedName, false,
+      additionalChecks:
+          GeneratedColumn.checkTextLength(minTextLength: 1, maxTextLength: 100),
+      type: DriftSqlType.string,
+      requiredDuringInsert: true);
+  static const VerificationMeta _typeMeta = const VerificationMeta('type');
+  @override
+  late final GeneratedColumn<String> type = GeneratedColumn<String>(
+      'type', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _iconMeta = const VerificationMeta('icon');
+  @override
+  late final GeneratedColumn<String> icon = GeneratedColumn<String>(
+      'icon', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _colorMeta = const VerificationMeta('color');
+  @override
+  late final GeneratedColumn<String> color = GeneratedColumn<String>(
+      'color', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _openingBalanceMeta =
+      const VerificationMeta('openingBalance');
+  @override
+  late final GeneratedColumn<double> openingBalance = GeneratedColumn<double>(
+      'opening_balance', aliasedName, false,
+      type: DriftSqlType.double,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0.0));
+  static const VerificationMeta _openingDateMeta =
+      const VerificationMeta('openingDate');
+  @override
+  late final GeneratedColumn<DateTime> openingDate = GeneratedColumn<DateTime>(
+      'opening_date', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _isActiveMeta =
+      const VerificationMeta('isActive');
+  @override
+  late final GeneratedColumn<bool> isActive = GeneratedColumn<bool>(
+      'is_active', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_active" IN (0, 1))'),
+      defaultValue: const Constant(true));
+  static const VerificationMeta _creditLimitMeta =
+      const VerificationMeta('creditLimit');
+  @override
+  late final GeneratedColumn<double> creditLimit = GeneratedColumn<double>(
+      'credit_limit', aliasedName, true,
+      type: DriftSqlType.double, requiredDuringInsert: false);
+  static const VerificationMeta _billingCycleDayMeta =
+      const VerificationMeta('billingCycleDay');
+  @override
+  late final GeneratedColumn<int> billingCycleDay = GeneratedColumn<int>(
+      'billing_cycle_day', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _paymentDueDaysMeta =
+      const VerificationMeta('paymentDueDays');
+  @override
+  late final GeneratedColumn<int> paymentDueDays = GeneratedColumn<int>(
+      'payment_due_days', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _linkedAccountUuidMeta =
+      const VerificationMeta('linkedAccountUuid');
+  @override
+  late final GeneratedColumn<String> linkedAccountUuid =
+      GeneratedColumn<String>('linked_account_uuid', aliasedName, true,
+          type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _updatedAtMeta =
+      const VerificationMeta('updatedAt');
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+      'updated_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _isDeletedMeta =
+      const VerificationMeta('isDeleted');
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+      'is_deleted', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_deleted" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _isNotSyncedMeta =
+      const VerificationMeta('isNotSynced');
+  @override
+  late final GeneratedColumn<bool> isNotSynced = GeneratedColumn<bool>(
+      'is_not_synced', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("is_not_synced" IN (0, 1))'),
+      defaultValue: const Constant(true));
+  @override
+  List<GeneratedColumn> get $columns => [
+        uuid,
+        name,
+        type,
+        icon,
+        color,
+        openingBalance,
+        openingDate,
+        isActive,
+        creditLimit,
+        billingCycleDay,
+        paymentDueDays,
+        linkedAccountUuid,
+        createdAt,
+        updatedAt,
+        isDeleted,
+        isNotSynced
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'accounts';
+  @override
+  VerificationContext validateIntegrity(Insertable<Account> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('uuid')) {
+      context.handle(
+          _uuidMeta, uuid.isAcceptableOrUnknown(data['uuid']!, _uuidMeta));
+    } else if (isInserting) {
+      context.missing(_uuidMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('type')) {
+      context.handle(
+          _typeMeta, type.isAcceptableOrUnknown(data['type']!, _typeMeta));
+    } else if (isInserting) {
+      context.missing(_typeMeta);
+    }
+    if (data.containsKey('icon')) {
+      context.handle(
+          _iconMeta, icon.isAcceptableOrUnknown(data['icon']!, _iconMeta));
+    }
+    if (data.containsKey('color')) {
+      context.handle(
+          _colorMeta, color.isAcceptableOrUnknown(data['color']!, _colorMeta));
+    }
+    if (data.containsKey('opening_balance')) {
+      context.handle(
+          _openingBalanceMeta,
+          openingBalance.isAcceptableOrUnknown(
+              data['opening_balance']!, _openingBalanceMeta));
+    }
+    if (data.containsKey('opening_date')) {
+      context.handle(
+          _openingDateMeta,
+          openingDate.isAcceptableOrUnknown(
+              data['opening_date']!, _openingDateMeta));
+    }
+    if (data.containsKey('is_active')) {
+      context.handle(_isActiveMeta,
+          isActive.isAcceptableOrUnknown(data['is_active']!, _isActiveMeta));
+    }
+    if (data.containsKey('credit_limit')) {
+      context.handle(
+          _creditLimitMeta,
+          creditLimit.isAcceptableOrUnknown(
+              data['credit_limit']!, _creditLimitMeta));
+    }
+    if (data.containsKey('billing_cycle_day')) {
+      context.handle(
+          _billingCycleDayMeta,
+          billingCycleDay.isAcceptableOrUnknown(
+              data['billing_cycle_day']!, _billingCycleDayMeta));
+    }
+    if (data.containsKey('payment_due_days')) {
+      context.handle(
+          _paymentDueDaysMeta,
+          paymentDueDays.isAcceptableOrUnknown(
+              data['payment_due_days']!, _paymentDueDaysMeta));
+    }
+    if (data.containsKey('linked_account_uuid')) {
+      context.handle(
+          _linkedAccountUuidMeta,
+          linkedAccountUuid.isAcceptableOrUnknown(
+              data['linked_account_uuid']!, _linkedAccountUuidMeta));
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta,
+          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(_isDeletedMeta,
+          isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta));
+    }
+    if (data.containsKey('is_not_synced')) {
+      context.handle(
+          _isNotSyncedMeta,
+          isNotSynced.isAcceptableOrUnknown(
+              data['is_not_synced']!, _isNotSyncedMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {uuid};
+  @override
+  Account map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return Account(
+      uuid: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}uuid'])!,
+      name: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
+      type: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}type'])!,
+      icon: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}icon']),
+      color: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}color']),
+      openingBalance: attachedDatabase.typeMapping.read(
+          DriftSqlType.double, data['${effectivePrefix}opening_balance'])!,
+      openingDate: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}opening_date'])!,
+      isActive: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_active'])!,
+      creditLimit: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}credit_limit']),
+      billingCycleDay: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}billing_cycle_day']),
+      paymentDueDays: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}payment_due_days']),
+      linkedAccountUuid: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}linked_account_uuid']),
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      updatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
+      isDeleted: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_deleted'])!,
+      isNotSynced: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_not_synced'])!,
+    );
+  }
+
+  @override
+  $AccountsTable createAlias(String alias) {
+    return $AccountsTable(attachedDatabase, alias);
+  }
+}
+
+class Account extends DataClass implements Insertable<Account> {
+  final String uuid;
+  final String name;
+  final String type;
+  final String? icon;
+  final String? color;
+  final double openingBalance;
+  final DateTime openingDate;
+  final bool isActive;
+  final double? creditLimit;
+  final int? billingCycleDay;
+  final int? paymentDueDays;
+  final String? linkedAccountUuid;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final bool isDeleted;
+  final bool isNotSynced;
+  const Account(
+      {required this.uuid,
+      required this.name,
+      required this.type,
+      this.icon,
+      this.color,
+      required this.openingBalance,
+      required this.openingDate,
+      required this.isActive,
+      this.creditLimit,
+      this.billingCycleDay,
+      this.paymentDueDays,
+      this.linkedAccountUuid,
+      required this.createdAt,
+      required this.updatedAt,
+      required this.isDeleted,
+      required this.isNotSynced});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['uuid'] = Variable<String>(uuid);
+    map['name'] = Variable<String>(name);
+    map['type'] = Variable<String>(type);
+    if (!nullToAbsent || icon != null) {
+      map['icon'] = Variable<String>(icon);
+    }
+    if (!nullToAbsent || color != null) {
+      map['color'] = Variable<String>(color);
+    }
+    map['opening_balance'] = Variable<double>(openingBalance);
+    map['opening_date'] = Variable<DateTime>(openingDate);
+    map['is_active'] = Variable<bool>(isActive);
+    if (!nullToAbsent || creditLimit != null) {
+      map['credit_limit'] = Variable<double>(creditLimit);
+    }
+    if (!nullToAbsent || billingCycleDay != null) {
+      map['billing_cycle_day'] = Variable<int>(billingCycleDay);
+    }
+    if (!nullToAbsent || paymentDueDays != null) {
+      map['payment_due_days'] = Variable<int>(paymentDueDays);
+    }
+    if (!nullToAbsent || linkedAccountUuid != null) {
+      map['linked_account_uuid'] = Variable<String>(linkedAccountUuid);
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    map['is_not_synced'] = Variable<bool>(isNotSynced);
+    return map;
+  }
+
+  AccountsCompanion toCompanion(bool nullToAbsent) {
+    return AccountsCompanion(
+      uuid: Value(uuid),
+      name: Value(name),
+      type: Value(type),
+      icon: icon == null && nullToAbsent ? const Value.absent() : Value(icon),
+      color:
+          color == null && nullToAbsent ? const Value.absent() : Value(color),
+      openingBalance: Value(openingBalance),
+      openingDate: Value(openingDate),
+      isActive: Value(isActive),
+      creditLimit: creditLimit == null && nullToAbsent
+          ? const Value.absent()
+          : Value(creditLimit),
+      billingCycleDay: billingCycleDay == null && nullToAbsent
+          ? const Value.absent()
+          : Value(billingCycleDay),
+      paymentDueDays: paymentDueDays == null && nullToAbsent
+          ? const Value.absent()
+          : Value(paymentDueDays),
+      linkedAccountUuid: linkedAccountUuid == null && nullToAbsent
+          ? const Value.absent()
+          : Value(linkedAccountUuid),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      isDeleted: Value(isDeleted),
+      isNotSynced: Value(isNotSynced),
+    );
+  }
+
+  factory Account.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return Account(
+      uuid: serializer.fromJson<String>(json['uuid']),
+      name: serializer.fromJson<String>(json['name']),
+      type: serializer.fromJson<String>(json['type']),
+      icon: serializer.fromJson<String?>(json['icon']),
+      color: serializer.fromJson<String?>(json['color']),
+      openingBalance: serializer.fromJson<double>(json['openingBalance']),
+      openingDate: serializer.fromJson<DateTime>(json['openingDate']),
+      isActive: serializer.fromJson<bool>(json['isActive']),
+      creditLimit: serializer.fromJson<double?>(json['creditLimit']),
+      billingCycleDay: serializer.fromJson<int?>(json['billingCycleDay']),
+      paymentDueDays: serializer.fromJson<int?>(json['paymentDueDays']),
+      linkedAccountUuid:
+          serializer.fromJson<String?>(json['linkedAccountUuid']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+      isNotSynced: serializer.fromJson<bool>(json['isNotSynced']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'uuid': serializer.toJson<String>(uuid),
+      'name': serializer.toJson<String>(name),
+      'type': serializer.toJson<String>(type),
+      'icon': serializer.toJson<String?>(icon),
+      'color': serializer.toJson<String?>(color),
+      'openingBalance': serializer.toJson<double>(openingBalance),
+      'openingDate': serializer.toJson<DateTime>(openingDate),
+      'isActive': serializer.toJson<bool>(isActive),
+      'creditLimit': serializer.toJson<double?>(creditLimit),
+      'billingCycleDay': serializer.toJson<int?>(billingCycleDay),
+      'paymentDueDays': serializer.toJson<int?>(paymentDueDays),
+      'linkedAccountUuid': serializer.toJson<String?>(linkedAccountUuid),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+      'isNotSynced': serializer.toJson<bool>(isNotSynced),
+    };
+  }
+
+  Account copyWith(
+          {String? uuid,
+          String? name,
+          String? type,
+          Value<String?> icon = const Value.absent(),
+          Value<String?> color = const Value.absent(),
+          double? openingBalance,
+          DateTime? openingDate,
+          bool? isActive,
+          Value<double?> creditLimit = const Value.absent(),
+          Value<int?> billingCycleDay = const Value.absent(),
+          Value<int?> paymentDueDays = const Value.absent(),
+          Value<String?> linkedAccountUuid = const Value.absent(),
+          DateTime? createdAt,
+          DateTime? updatedAt,
+          bool? isDeleted,
+          bool? isNotSynced}) =>
+      Account(
+        uuid: uuid ?? this.uuid,
+        name: name ?? this.name,
+        type: type ?? this.type,
+        icon: icon.present ? icon.value : this.icon,
+        color: color.present ? color.value : this.color,
+        openingBalance: openingBalance ?? this.openingBalance,
+        openingDate: openingDate ?? this.openingDate,
+        isActive: isActive ?? this.isActive,
+        creditLimit: creditLimit.present ? creditLimit.value : this.creditLimit,
+        billingCycleDay: billingCycleDay.present
+            ? billingCycleDay.value
+            : this.billingCycleDay,
+        paymentDueDays:
+            paymentDueDays.present ? paymentDueDays.value : this.paymentDueDays,
+        linkedAccountUuid: linkedAccountUuid.present
+            ? linkedAccountUuid.value
+            : this.linkedAccountUuid,
+        createdAt: createdAt ?? this.createdAt,
+        updatedAt: updatedAt ?? this.updatedAt,
+        isDeleted: isDeleted ?? this.isDeleted,
+        isNotSynced: isNotSynced ?? this.isNotSynced,
+      );
+  Account copyWithCompanion(AccountsCompanion data) {
+    return Account(
+      uuid: data.uuid.present ? data.uuid.value : this.uuid,
+      name: data.name.present ? data.name.value : this.name,
+      type: data.type.present ? data.type.value : this.type,
+      icon: data.icon.present ? data.icon.value : this.icon,
+      color: data.color.present ? data.color.value : this.color,
+      openingBalance: data.openingBalance.present
+          ? data.openingBalance.value
+          : this.openingBalance,
+      openingDate:
+          data.openingDate.present ? data.openingDate.value : this.openingDate,
+      isActive: data.isActive.present ? data.isActive.value : this.isActive,
+      creditLimit:
+          data.creditLimit.present ? data.creditLimit.value : this.creditLimit,
+      billingCycleDay: data.billingCycleDay.present
+          ? data.billingCycleDay.value
+          : this.billingCycleDay,
+      paymentDueDays: data.paymentDueDays.present
+          ? data.paymentDueDays.value
+          : this.paymentDueDays,
+      linkedAccountUuid: data.linkedAccountUuid.present
+          ? data.linkedAccountUuid.value
+          : this.linkedAccountUuid,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+      isNotSynced:
+          data.isNotSynced.present ? data.isNotSynced.value : this.isNotSynced,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('Account(')
+          ..write('uuid: $uuid, ')
+          ..write('name: $name, ')
+          ..write('type: $type, ')
+          ..write('icon: $icon, ')
+          ..write('color: $color, ')
+          ..write('openingBalance: $openingBalance, ')
+          ..write('openingDate: $openingDate, ')
+          ..write('isActive: $isActive, ')
+          ..write('creditLimit: $creditLimit, ')
+          ..write('billingCycleDay: $billingCycleDay, ')
+          ..write('paymentDueDays: $paymentDueDays, ')
+          ..write('linkedAccountUuid: $linkedAccountUuid, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('isNotSynced: $isNotSynced')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      uuid,
+      name,
+      type,
+      icon,
+      color,
+      openingBalance,
+      openingDate,
+      isActive,
+      creditLimit,
+      billingCycleDay,
+      paymentDueDays,
+      linkedAccountUuid,
+      createdAt,
+      updatedAt,
+      isDeleted,
+      isNotSynced);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Account &&
+          other.uuid == this.uuid &&
+          other.name == this.name &&
+          other.type == this.type &&
+          other.icon == this.icon &&
+          other.color == this.color &&
+          other.openingBalance == this.openingBalance &&
+          other.openingDate == this.openingDate &&
+          other.isActive == this.isActive &&
+          other.creditLimit == this.creditLimit &&
+          other.billingCycleDay == this.billingCycleDay &&
+          other.paymentDueDays == this.paymentDueDays &&
+          other.linkedAccountUuid == this.linkedAccountUuid &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.isDeleted == this.isDeleted &&
+          other.isNotSynced == this.isNotSynced);
+}
+
+class AccountsCompanion extends UpdateCompanion<Account> {
+  final Value<String> uuid;
+  final Value<String> name;
+  final Value<String> type;
+  final Value<String?> icon;
+  final Value<String?> color;
+  final Value<double> openingBalance;
+  final Value<DateTime> openingDate;
+  final Value<bool> isActive;
+  final Value<double?> creditLimit;
+  final Value<int?> billingCycleDay;
+  final Value<int?> paymentDueDays;
+  final Value<String?> linkedAccountUuid;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<bool> isDeleted;
+  final Value<bool> isNotSynced;
+  final Value<int> rowid;
+  const AccountsCompanion({
+    this.uuid = const Value.absent(),
+    this.name = const Value.absent(),
+    this.type = const Value.absent(),
+    this.icon = const Value.absent(),
+    this.color = const Value.absent(),
+    this.openingBalance = const Value.absent(),
+    this.openingDate = const Value.absent(),
+    this.isActive = const Value.absent(),
+    this.creditLimit = const Value.absent(),
+    this.billingCycleDay = const Value.absent(),
+    this.paymentDueDays = const Value.absent(),
+    this.linkedAccountUuid = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.isNotSynced = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  AccountsCompanion.insert({
+    required String uuid,
+    required String name,
+    required String type,
+    this.icon = const Value.absent(),
+    this.color = const Value.absent(),
+    this.openingBalance = const Value.absent(),
+    this.openingDate = const Value.absent(),
+    this.isActive = const Value.absent(),
+    this.creditLimit = const Value.absent(),
+    this.billingCycleDay = const Value.absent(),
+    this.paymentDueDays = const Value.absent(),
+    this.linkedAccountUuid = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.isNotSynced = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : uuid = Value(uuid),
+        name = Value(name),
+        type = Value(type);
+  static Insertable<Account> custom({
+    Expression<String>? uuid,
+    Expression<String>? name,
+    Expression<String>? type,
+    Expression<String>? icon,
+    Expression<String>? color,
+    Expression<double>? openingBalance,
+    Expression<DateTime>? openingDate,
+    Expression<bool>? isActive,
+    Expression<double>? creditLimit,
+    Expression<int>? billingCycleDay,
+    Expression<int>? paymentDueDays,
+    Expression<String>? linkedAccountUuid,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<bool>? isDeleted,
+    Expression<bool>? isNotSynced,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (uuid != null) 'uuid': uuid,
+      if (name != null) 'name': name,
+      if (type != null) 'type': type,
+      if (icon != null) 'icon': icon,
+      if (color != null) 'color': color,
+      if (openingBalance != null) 'opening_balance': openingBalance,
+      if (openingDate != null) 'opening_date': openingDate,
+      if (isActive != null) 'is_active': isActive,
+      if (creditLimit != null) 'credit_limit': creditLimit,
+      if (billingCycleDay != null) 'billing_cycle_day': billingCycleDay,
+      if (paymentDueDays != null) 'payment_due_days': paymentDueDays,
+      if (linkedAccountUuid != null) 'linked_account_uuid': linkedAccountUuid,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (isNotSynced != null) 'is_not_synced': isNotSynced,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  AccountsCompanion copyWith(
+      {Value<String>? uuid,
+      Value<String>? name,
+      Value<String>? type,
+      Value<String?>? icon,
+      Value<String?>? color,
+      Value<double>? openingBalance,
+      Value<DateTime>? openingDate,
+      Value<bool>? isActive,
+      Value<double?>? creditLimit,
+      Value<int?>? billingCycleDay,
+      Value<int?>? paymentDueDays,
+      Value<String?>? linkedAccountUuid,
+      Value<DateTime>? createdAt,
+      Value<DateTime>? updatedAt,
+      Value<bool>? isDeleted,
+      Value<bool>? isNotSynced,
+      Value<int>? rowid}) {
+    return AccountsCompanion(
+      uuid: uuid ?? this.uuid,
+      name: name ?? this.name,
+      type: type ?? this.type,
+      icon: icon ?? this.icon,
+      color: color ?? this.color,
+      openingBalance: openingBalance ?? this.openingBalance,
+      openingDate: openingDate ?? this.openingDate,
+      isActive: isActive ?? this.isActive,
+      creditLimit: creditLimit ?? this.creditLimit,
+      billingCycleDay: billingCycleDay ?? this.billingCycleDay,
+      paymentDueDays: paymentDueDays ?? this.paymentDueDays,
+      linkedAccountUuid: linkedAccountUuid ?? this.linkedAccountUuid,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      isDeleted: isDeleted ?? this.isDeleted,
+      isNotSynced: isNotSynced ?? this.isNotSynced,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (uuid.present) {
+      map['uuid'] = Variable<String>(uuid.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (type.present) {
+      map['type'] = Variable<String>(type.value);
+    }
+    if (icon.present) {
+      map['icon'] = Variable<String>(icon.value);
+    }
+    if (color.present) {
+      map['color'] = Variable<String>(color.value);
+    }
+    if (openingBalance.present) {
+      map['opening_balance'] = Variable<double>(openingBalance.value);
+    }
+    if (openingDate.present) {
+      map['opening_date'] = Variable<DateTime>(openingDate.value);
+    }
+    if (isActive.present) {
+      map['is_active'] = Variable<bool>(isActive.value);
+    }
+    if (creditLimit.present) {
+      map['credit_limit'] = Variable<double>(creditLimit.value);
+    }
+    if (billingCycleDay.present) {
+      map['billing_cycle_day'] = Variable<int>(billingCycleDay.value);
+    }
+    if (paymentDueDays.present) {
+      map['payment_due_days'] = Variable<int>(paymentDueDays.value);
+    }
+    if (linkedAccountUuid.present) {
+      map['linked_account_uuid'] = Variable<String>(linkedAccountUuid.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (isNotSynced.present) {
+      map['is_not_synced'] = Variable<bool>(isNotSynced.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AccountsCompanion(')
+          ..write('uuid: $uuid, ')
+          ..write('name: $name, ')
+          ..write('type: $type, ')
+          ..write('icon: $icon, ')
+          ..write('color: $color, ')
+          ..write('openingBalance: $openingBalance, ')
+          ..write('openingDate: $openingDate, ')
+          ..write('isActive: $isActive, ')
+          ..write('creditLimit: $creditLimit, ')
+          ..write('billingCycleDay: $billingCycleDay, ')
+          ..write('paymentDueDays: $paymentDueDays, ')
+          ..write('linkedAccountUuid: $linkedAccountUuid, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('isNotSynced: $isNotSynced, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $TransactionsTable extends Transactions
     with TableInfo<$TransactionsTable, Transaction> {
   @override
@@ -1068,6 +1848,18 @@ class $TransactionsTable extends Transactions
       defaultConstraints: GeneratedColumn.constraintIsAlways(
           'CHECK ("is_scheduled" IN (0, 1))'),
       defaultValue: const Constant(false));
+  static const VerificationMeta _accountUuidMeta =
+      const VerificationMeta('accountUuid');
+  @override
+  late final GeneratedColumn<String> accountUuid = GeneratedColumn<String>(
+      'account_uuid', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _processedDateMeta =
+      const VerificationMeta('processedDate');
+  @override
+  late final GeneratedColumn<DateTime> processedDate =
+      GeneratedColumn<DateTime>('processed_date', aliasedName, true,
+          type: DriftSqlType.dateTime, requiredDuringInsert: false);
   static const VerificationMeta _linkedGroupIdMeta =
       const VerificationMeta('linkedGroupId');
   @override
@@ -1132,6 +1924,8 @@ class $TransactionsTable extends Transactions
         paidRelationship,
         isAutoGenerated,
         isScheduled,
+        accountUuid,
+        processedDate,
         linkedGroupId,
         externalLinkId,
         createdAt,
@@ -1221,6 +2015,18 @@ class $TransactionsTable extends Transactions
           isScheduled.isAcceptableOrUnknown(
               data['is_scheduled']!, _isScheduledMeta));
     }
+    if (data.containsKey('account_uuid')) {
+      context.handle(
+          _accountUuidMeta,
+          accountUuid.isAcceptableOrUnknown(
+              data['account_uuid']!, _accountUuidMeta));
+    }
+    if (data.containsKey('processed_date')) {
+      context.handle(
+          _processedDateMeta,
+          processedDate.isAcceptableOrUnknown(
+              data['processed_date']!, _processedDateMeta));
+    }
     if (data.containsKey('linked_group_id')) {
       context.handle(
           _linkedGroupIdMeta,
@@ -1285,6 +2091,10 @@ class $TransactionsTable extends Transactions
           DriftSqlType.bool, data['${effectivePrefix}is_auto_generated'])!,
       isScheduled: attachedDatabase.typeMapping
           .read(DriftSqlType.bool, data['${effectivePrefix}is_scheduled'])!,
+      accountUuid: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}account_uuid']),
+      processedDate: attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime, data['${effectivePrefix}processed_date']),
       linkedGroupId: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}linked_group_id']),
       externalLinkId: attachedDatabase.typeMapping.read(
@@ -1319,6 +2129,8 @@ class Transaction extends DataClass implements Insertable<Transaction> {
   final String? paidRelationship;
   final bool isAutoGenerated;
   final bool isScheduled;
+  final String? accountUuid;
+  final DateTime? processedDate;
   final String? linkedGroupId;
   final String? externalLinkId;
   final DateTime createdAt;
@@ -1338,6 +2150,8 @@ class Transaction extends DataClass implements Insertable<Transaction> {
       this.paidRelationship,
       required this.isAutoGenerated,
       required this.isScheduled,
+      this.accountUuid,
+      this.processedDate,
       this.linkedGroupId,
       this.externalLinkId,
       required this.createdAt,
@@ -1371,6 +2185,12 @@ class Transaction extends DataClass implements Insertable<Transaction> {
     }
     map['is_auto_generated'] = Variable<bool>(isAutoGenerated);
     map['is_scheduled'] = Variable<bool>(isScheduled);
+    if (!nullToAbsent || accountUuid != null) {
+      map['account_uuid'] = Variable<String>(accountUuid);
+    }
+    if (!nullToAbsent || processedDate != null) {
+      map['processed_date'] = Variable<DateTime>(processedDate);
+    }
     if (!nullToAbsent || linkedGroupId != null) {
       map['linked_group_id'] = Variable<String>(linkedGroupId);
     }
@@ -1410,6 +2230,12 @@ class Transaction extends DataClass implements Insertable<Transaction> {
           : Value(paidRelationship),
       isAutoGenerated: Value(isAutoGenerated),
       isScheduled: Value(isScheduled),
+      accountUuid: accountUuid == null && nullToAbsent
+          ? const Value.absent()
+          : Value(accountUuid),
+      processedDate: processedDate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(processedDate),
       linkedGroupId: linkedGroupId == null && nullToAbsent
           ? const Value.absent()
           : Value(linkedGroupId),
@@ -1441,6 +2267,8 @@ class Transaction extends DataClass implements Insertable<Transaction> {
       paidRelationship: serializer.fromJson<String?>(json['paidRelationship']),
       isAutoGenerated: serializer.fromJson<bool>(json['isAutoGenerated']),
       isScheduled: serializer.fromJson<bool>(json['isScheduled']),
+      accountUuid: serializer.fromJson<String?>(json['accountUuid']),
+      processedDate: serializer.fromJson<DateTime?>(json['processedDate']),
       linkedGroupId: serializer.fromJson<String?>(json['linkedGroupId']),
       externalLinkId: serializer.fromJson<String?>(json['externalLinkId']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
@@ -1465,6 +2293,8 @@ class Transaction extends DataClass implements Insertable<Transaction> {
       'paidRelationship': serializer.toJson<String?>(paidRelationship),
       'isAutoGenerated': serializer.toJson<bool>(isAutoGenerated),
       'isScheduled': serializer.toJson<bool>(isScheduled),
+      'accountUuid': serializer.toJson<String?>(accountUuid),
+      'processedDate': serializer.toJson<DateTime?>(processedDate),
       'linkedGroupId': serializer.toJson<String?>(linkedGroupId),
       'externalLinkId': serializer.toJson<String?>(externalLinkId),
       'createdAt': serializer.toJson<DateTime>(createdAt),
@@ -1487,6 +2317,8 @@ class Transaction extends DataClass implements Insertable<Transaction> {
           Value<String?> paidRelationship = const Value.absent(),
           bool? isAutoGenerated,
           bool? isScheduled,
+          Value<String?> accountUuid = const Value.absent(),
+          Value<DateTime?> processedDate = const Value.absent(),
           Value<String?> linkedGroupId = const Value.absent(),
           Value<String?> externalLinkId = const Value.absent(),
           DateTime? createdAt,
@@ -1513,6 +2345,9 @@ class Transaction extends DataClass implements Insertable<Transaction> {
             : this.paidRelationship,
         isAutoGenerated: isAutoGenerated ?? this.isAutoGenerated,
         isScheduled: isScheduled ?? this.isScheduled,
+        accountUuid: accountUuid.present ? accountUuid.value : this.accountUuid,
+        processedDate:
+            processedDate.present ? processedDate.value : this.processedDate,
         linkedGroupId:
             linkedGroupId.present ? linkedGroupId.value : this.linkedGroupId,
         externalLinkId:
@@ -1549,6 +2384,11 @@ class Transaction extends DataClass implements Insertable<Transaction> {
           : this.isAutoGenerated,
       isScheduled:
           data.isScheduled.present ? data.isScheduled.value : this.isScheduled,
+      accountUuid:
+          data.accountUuid.present ? data.accountUuid.value : this.accountUuid,
+      processedDate: data.processedDate.present
+          ? data.processedDate.value
+          : this.processedDate,
       linkedGroupId: data.linkedGroupId.present
           ? data.linkedGroupId.value
           : this.linkedGroupId,
@@ -1578,6 +2418,8 @@ class Transaction extends DataClass implements Insertable<Transaction> {
           ..write('paidRelationship: $paidRelationship, ')
           ..write('isAutoGenerated: $isAutoGenerated, ')
           ..write('isScheduled: $isScheduled, ')
+          ..write('accountUuid: $accountUuid, ')
+          ..write('processedDate: $processedDate, ')
           ..write('linkedGroupId: $linkedGroupId, ')
           ..write('externalLinkId: $externalLinkId, ')
           ..write('createdAt: $createdAt, ')
@@ -1602,6 +2444,8 @@ class Transaction extends DataClass implements Insertable<Transaction> {
       paidRelationship,
       isAutoGenerated,
       isScheduled,
+      accountUuid,
+      processedDate,
       linkedGroupId,
       externalLinkId,
       createdAt,
@@ -1624,6 +2468,8 @@ class Transaction extends DataClass implements Insertable<Transaction> {
           other.paidRelationship == this.paidRelationship &&
           other.isAutoGenerated == this.isAutoGenerated &&
           other.isScheduled == this.isScheduled &&
+          other.accountUuid == this.accountUuid &&
+          other.processedDate == this.processedDate &&
           other.linkedGroupId == this.linkedGroupId &&
           other.externalLinkId == this.externalLinkId &&
           other.createdAt == this.createdAt &&
@@ -1645,6 +2491,8 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
   final Value<String?> paidRelationship;
   final Value<bool> isAutoGenerated;
   final Value<bool> isScheduled;
+  final Value<String?> accountUuid;
+  final Value<DateTime?> processedDate;
   final Value<String?> linkedGroupId;
   final Value<String?> externalLinkId;
   final Value<DateTime> createdAt;
@@ -1665,6 +2513,8 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
     this.paidRelationship = const Value.absent(),
     this.isAutoGenerated = const Value.absent(),
     this.isScheduled = const Value.absent(),
+    this.accountUuid = const Value.absent(),
+    this.processedDate = const Value.absent(),
     this.linkedGroupId = const Value.absent(),
     this.externalLinkId = const Value.absent(),
     this.createdAt = const Value.absent(),
@@ -1686,6 +2536,8 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
     this.paidRelationship = const Value.absent(),
     this.isAutoGenerated = const Value.absent(),
     this.isScheduled = const Value.absent(),
+    this.accountUuid = const Value.absent(),
+    this.processedDate = const Value.absent(),
     this.linkedGroupId = const Value.absent(),
     this.externalLinkId = const Value.absent(),
     this.createdAt = const Value.absent(),
@@ -1710,6 +2562,8 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
     Expression<String>? paidRelationship,
     Expression<bool>? isAutoGenerated,
     Expression<bool>? isScheduled,
+    Expression<String>? accountUuid,
+    Expression<DateTime>? processedDate,
     Expression<String>? linkedGroupId,
     Expression<String>? externalLinkId,
     Expression<DateTime>? createdAt,
@@ -1732,6 +2586,8 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
       if (paidRelationship != null) 'paid_relationship': paidRelationship,
       if (isAutoGenerated != null) 'is_auto_generated': isAutoGenerated,
       if (isScheduled != null) 'is_scheduled': isScheduled,
+      if (accountUuid != null) 'account_uuid': accountUuid,
+      if (processedDate != null) 'processed_date': processedDate,
       if (linkedGroupId != null) 'linked_group_id': linkedGroupId,
       if (externalLinkId != null) 'external_link_id': externalLinkId,
       if (createdAt != null) 'created_at': createdAt,
@@ -1755,6 +2611,8 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
       Value<String?>? paidRelationship,
       Value<bool>? isAutoGenerated,
       Value<bool>? isScheduled,
+      Value<String?>? accountUuid,
+      Value<DateTime?>? processedDate,
       Value<String?>? linkedGroupId,
       Value<String?>? externalLinkId,
       Value<DateTime>? createdAt,
@@ -1775,6 +2633,8 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
       paidRelationship: paidRelationship ?? this.paidRelationship,
       isAutoGenerated: isAutoGenerated ?? this.isAutoGenerated,
       isScheduled: isScheduled ?? this.isScheduled,
+      accountUuid: accountUuid ?? this.accountUuid,
+      processedDate: processedDate ?? this.processedDate,
       linkedGroupId: linkedGroupId ?? this.linkedGroupId,
       externalLinkId: externalLinkId ?? this.externalLinkId,
       createdAt: createdAt ?? this.createdAt,
@@ -1825,6 +2685,12 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
     if (isScheduled.present) {
       map['is_scheduled'] = Variable<bool>(isScheduled.value);
     }
+    if (accountUuid.present) {
+      map['account_uuid'] = Variable<String>(accountUuid.value);
+    }
+    if (processedDate.present) {
+      map['processed_date'] = Variable<DateTime>(processedDate.value);
+    }
     if (linkedGroupId.present) {
       map['linked_group_id'] = Variable<String>(linkedGroupId.value);
     }
@@ -1864,8 +2730,535 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
           ..write('paidRelationship: $paidRelationship, ')
           ..write('isAutoGenerated: $isAutoGenerated, ')
           ..write('isScheduled: $isScheduled, ')
+          ..write('accountUuid: $accountUuid, ')
+          ..write('processedDate: $processedDate, ')
           ..write('linkedGroupId: $linkedGroupId, ')
           ..write('externalLinkId: $externalLinkId, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('isNotSynced: $isNotSynced, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $AccountTransfersTable extends AccountTransfers
+    with TableInfo<$AccountTransfersTable, AccountTransfer> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $AccountTransfersTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _uuidMeta = const VerificationMeta('uuid');
+  @override
+  late final GeneratedColumn<String> uuid = GeneratedColumn<String>(
+      'uuid', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _fromAccountUuidMeta =
+      const VerificationMeta('fromAccountUuid');
+  @override
+  late final GeneratedColumn<String> fromAccountUuid = GeneratedColumn<String>(
+      'from_account_uuid', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: true,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES accounts (uuid)'));
+  static const VerificationMeta _toAccountUuidMeta =
+      const VerificationMeta('toAccountUuid');
+  @override
+  late final GeneratedColumn<String> toAccountUuid = GeneratedColumn<String>(
+      'to_account_uuid', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: true,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES accounts (uuid)'));
+  static const VerificationMeta _amountMeta = const VerificationMeta('amount');
+  @override
+  late final GeneratedColumn<double> amount = GeneratedColumn<double>(
+      'amount', aliasedName, false,
+      type: DriftSqlType.double, requiredDuringInsert: true);
+  static const VerificationMeta _dateMeta = const VerificationMeta('date');
+  @override
+  late final GeneratedColumn<DateTime> date = GeneratedColumn<DateTime>(
+      'date', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _descriptionMeta =
+      const VerificationMeta('description');
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+      'description', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _updatedAtMeta =
+      const VerificationMeta('updatedAt');
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+      'updated_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _isDeletedMeta =
+      const VerificationMeta('isDeleted');
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+      'is_deleted', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_deleted" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _isNotSyncedMeta =
+      const VerificationMeta('isNotSynced');
+  @override
+  late final GeneratedColumn<bool> isNotSynced = GeneratedColumn<bool>(
+      'is_not_synced', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("is_not_synced" IN (0, 1))'),
+      defaultValue: const Constant(true));
+  @override
+  List<GeneratedColumn> get $columns => [
+        uuid,
+        fromAccountUuid,
+        toAccountUuid,
+        amount,
+        date,
+        description,
+        createdAt,
+        updatedAt,
+        isDeleted,
+        isNotSynced
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'account_transfers';
+  @override
+  VerificationContext validateIntegrity(Insertable<AccountTransfer> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('uuid')) {
+      context.handle(
+          _uuidMeta, uuid.isAcceptableOrUnknown(data['uuid']!, _uuidMeta));
+    } else if (isInserting) {
+      context.missing(_uuidMeta);
+    }
+    if (data.containsKey('from_account_uuid')) {
+      context.handle(
+          _fromAccountUuidMeta,
+          fromAccountUuid.isAcceptableOrUnknown(
+              data['from_account_uuid']!, _fromAccountUuidMeta));
+    } else if (isInserting) {
+      context.missing(_fromAccountUuidMeta);
+    }
+    if (data.containsKey('to_account_uuid')) {
+      context.handle(
+          _toAccountUuidMeta,
+          toAccountUuid.isAcceptableOrUnknown(
+              data['to_account_uuid']!, _toAccountUuidMeta));
+    } else if (isInserting) {
+      context.missing(_toAccountUuidMeta);
+    }
+    if (data.containsKey('amount')) {
+      context.handle(_amountMeta,
+          amount.isAcceptableOrUnknown(data['amount']!, _amountMeta));
+    } else if (isInserting) {
+      context.missing(_amountMeta);
+    }
+    if (data.containsKey('date')) {
+      context.handle(
+          _dateMeta, date.isAcceptableOrUnknown(data['date']!, _dateMeta));
+    } else if (isInserting) {
+      context.missing(_dateMeta);
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+          _descriptionMeta,
+          description.isAcceptableOrUnknown(
+              data['description']!, _descriptionMeta));
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta,
+          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(_isDeletedMeta,
+          isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta));
+    }
+    if (data.containsKey('is_not_synced')) {
+      context.handle(
+          _isNotSyncedMeta,
+          isNotSynced.isAcceptableOrUnknown(
+              data['is_not_synced']!, _isNotSyncedMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {uuid};
+  @override
+  AccountTransfer map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return AccountTransfer(
+      uuid: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}uuid'])!,
+      fromAccountUuid: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}from_account_uuid'])!,
+      toAccountUuid: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}to_account_uuid'])!,
+      amount: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}amount'])!,
+      date: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}date'])!,
+      description: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}description']),
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      updatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
+      isDeleted: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_deleted'])!,
+      isNotSynced: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_not_synced'])!,
+    );
+  }
+
+  @override
+  $AccountTransfersTable createAlias(String alias) {
+    return $AccountTransfersTable(attachedDatabase, alias);
+  }
+}
+
+class AccountTransfer extends DataClass implements Insertable<AccountTransfer> {
+  final String uuid;
+  final String fromAccountUuid;
+  final String toAccountUuid;
+  final double amount;
+  final DateTime date;
+  final String? description;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final bool isDeleted;
+  final bool isNotSynced;
+  const AccountTransfer(
+      {required this.uuid,
+      required this.fromAccountUuid,
+      required this.toAccountUuid,
+      required this.amount,
+      required this.date,
+      this.description,
+      required this.createdAt,
+      required this.updatedAt,
+      required this.isDeleted,
+      required this.isNotSynced});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['uuid'] = Variable<String>(uuid);
+    map['from_account_uuid'] = Variable<String>(fromAccountUuid);
+    map['to_account_uuid'] = Variable<String>(toAccountUuid);
+    map['amount'] = Variable<double>(amount);
+    map['date'] = Variable<DateTime>(date);
+    if (!nullToAbsent || description != null) {
+      map['description'] = Variable<String>(description);
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    map['is_not_synced'] = Variable<bool>(isNotSynced);
+    return map;
+  }
+
+  AccountTransfersCompanion toCompanion(bool nullToAbsent) {
+    return AccountTransfersCompanion(
+      uuid: Value(uuid),
+      fromAccountUuid: Value(fromAccountUuid),
+      toAccountUuid: Value(toAccountUuid),
+      amount: Value(amount),
+      date: Value(date),
+      description: description == null && nullToAbsent
+          ? const Value.absent()
+          : Value(description),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      isDeleted: Value(isDeleted),
+      isNotSynced: Value(isNotSynced),
+    );
+  }
+
+  factory AccountTransfer.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return AccountTransfer(
+      uuid: serializer.fromJson<String>(json['uuid']),
+      fromAccountUuid: serializer.fromJson<String>(json['fromAccountUuid']),
+      toAccountUuid: serializer.fromJson<String>(json['toAccountUuid']),
+      amount: serializer.fromJson<double>(json['amount']),
+      date: serializer.fromJson<DateTime>(json['date']),
+      description: serializer.fromJson<String?>(json['description']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+      isNotSynced: serializer.fromJson<bool>(json['isNotSynced']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'uuid': serializer.toJson<String>(uuid),
+      'fromAccountUuid': serializer.toJson<String>(fromAccountUuid),
+      'toAccountUuid': serializer.toJson<String>(toAccountUuid),
+      'amount': serializer.toJson<double>(amount),
+      'date': serializer.toJson<DateTime>(date),
+      'description': serializer.toJson<String?>(description),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+      'isNotSynced': serializer.toJson<bool>(isNotSynced),
+    };
+  }
+
+  AccountTransfer copyWith(
+          {String? uuid,
+          String? fromAccountUuid,
+          String? toAccountUuid,
+          double? amount,
+          DateTime? date,
+          Value<String?> description = const Value.absent(),
+          DateTime? createdAt,
+          DateTime? updatedAt,
+          bool? isDeleted,
+          bool? isNotSynced}) =>
+      AccountTransfer(
+        uuid: uuid ?? this.uuid,
+        fromAccountUuid: fromAccountUuid ?? this.fromAccountUuid,
+        toAccountUuid: toAccountUuid ?? this.toAccountUuid,
+        amount: amount ?? this.amount,
+        date: date ?? this.date,
+        description: description.present ? description.value : this.description,
+        createdAt: createdAt ?? this.createdAt,
+        updatedAt: updatedAt ?? this.updatedAt,
+        isDeleted: isDeleted ?? this.isDeleted,
+        isNotSynced: isNotSynced ?? this.isNotSynced,
+      );
+  AccountTransfer copyWithCompanion(AccountTransfersCompanion data) {
+    return AccountTransfer(
+      uuid: data.uuid.present ? data.uuid.value : this.uuid,
+      fromAccountUuid: data.fromAccountUuid.present
+          ? data.fromAccountUuid.value
+          : this.fromAccountUuid,
+      toAccountUuid: data.toAccountUuid.present
+          ? data.toAccountUuid.value
+          : this.toAccountUuid,
+      amount: data.amount.present ? data.amount.value : this.amount,
+      date: data.date.present ? data.date.value : this.date,
+      description:
+          data.description.present ? data.description.value : this.description,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+      isNotSynced:
+          data.isNotSynced.present ? data.isNotSynced.value : this.isNotSynced,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AccountTransfer(')
+          ..write('uuid: $uuid, ')
+          ..write('fromAccountUuid: $fromAccountUuid, ')
+          ..write('toAccountUuid: $toAccountUuid, ')
+          ..write('amount: $amount, ')
+          ..write('date: $date, ')
+          ..write('description: $description, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('isNotSynced: $isNotSynced')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(uuid, fromAccountUuid, toAccountUuid, amount,
+      date, description, createdAt, updatedAt, isDeleted, isNotSynced);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is AccountTransfer &&
+          other.uuid == this.uuid &&
+          other.fromAccountUuid == this.fromAccountUuid &&
+          other.toAccountUuid == this.toAccountUuid &&
+          other.amount == this.amount &&
+          other.date == this.date &&
+          other.description == this.description &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.isDeleted == this.isDeleted &&
+          other.isNotSynced == this.isNotSynced);
+}
+
+class AccountTransfersCompanion extends UpdateCompanion<AccountTransfer> {
+  final Value<String> uuid;
+  final Value<String> fromAccountUuid;
+  final Value<String> toAccountUuid;
+  final Value<double> amount;
+  final Value<DateTime> date;
+  final Value<String?> description;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<bool> isDeleted;
+  final Value<bool> isNotSynced;
+  final Value<int> rowid;
+  const AccountTransfersCompanion({
+    this.uuid = const Value.absent(),
+    this.fromAccountUuid = const Value.absent(),
+    this.toAccountUuid = const Value.absent(),
+    this.amount = const Value.absent(),
+    this.date = const Value.absent(),
+    this.description = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.isNotSynced = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  AccountTransfersCompanion.insert({
+    required String uuid,
+    required String fromAccountUuid,
+    required String toAccountUuid,
+    required double amount,
+    required DateTime date,
+    this.description = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.isNotSynced = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : uuid = Value(uuid),
+        fromAccountUuid = Value(fromAccountUuid),
+        toAccountUuid = Value(toAccountUuid),
+        amount = Value(amount),
+        date = Value(date);
+  static Insertable<AccountTransfer> custom({
+    Expression<String>? uuid,
+    Expression<String>? fromAccountUuid,
+    Expression<String>? toAccountUuid,
+    Expression<double>? amount,
+    Expression<DateTime>? date,
+    Expression<String>? description,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<bool>? isDeleted,
+    Expression<bool>? isNotSynced,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (uuid != null) 'uuid': uuid,
+      if (fromAccountUuid != null) 'from_account_uuid': fromAccountUuid,
+      if (toAccountUuid != null) 'to_account_uuid': toAccountUuid,
+      if (amount != null) 'amount': amount,
+      if (date != null) 'date': date,
+      if (description != null) 'description': description,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (isNotSynced != null) 'is_not_synced': isNotSynced,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  AccountTransfersCompanion copyWith(
+      {Value<String>? uuid,
+      Value<String>? fromAccountUuid,
+      Value<String>? toAccountUuid,
+      Value<double>? amount,
+      Value<DateTime>? date,
+      Value<String?>? description,
+      Value<DateTime>? createdAt,
+      Value<DateTime>? updatedAt,
+      Value<bool>? isDeleted,
+      Value<bool>? isNotSynced,
+      Value<int>? rowid}) {
+    return AccountTransfersCompanion(
+      uuid: uuid ?? this.uuid,
+      fromAccountUuid: fromAccountUuid ?? this.fromAccountUuid,
+      toAccountUuid: toAccountUuid ?? this.toAccountUuid,
+      amount: amount ?? this.amount,
+      date: date ?? this.date,
+      description: description ?? this.description,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      isDeleted: isDeleted ?? this.isDeleted,
+      isNotSynced: isNotSynced ?? this.isNotSynced,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (uuid.present) {
+      map['uuid'] = Variable<String>(uuid.value);
+    }
+    if (fromAccountUuid.present) {
+      map['from_account_uuid'] = Variable<String>(fromAccountUuid.value);
+    }
+    if (toAccountUuid.present) {
+      map['to_account_uuid'] = Variable<String>(toAccountUuid.value);
+    }
+    if (amount.present) {
+      map['amount'] = Variable<double>(amount.value);
+    }
+    if (date.present) {
+      map['date'] = Variable<DateTime>(date.value);
+    }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (isNotSynced.present) {
+      map['is_not_synced'] = Variable<bool>(isNotSynced.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AccountTransfersCompanion(')
+          ..write('uuid: $uuid, ')
+          ..write('fromAccountUuid: $fromAccountUuid, ')
+          ..write('toAccountUuid: $toAccountUuid, ')
+          ..write('amount: $amount, ')
+          ..write('date: $date, ')
+          ..write('description: $description, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('isDeleted: $isDeleted, ')
@@ -4976,7 +6369,7 @@ class $UserPreferencesTable extends UserPreferences
       requiredDuringInsert: false,
       defaultConstraints: GeneratedColumn.constraintIsAlways(
           'CHECK ("is_not_synced" IN (0, 1))'),
-      defaultValue: const Constant(true));
+      defaultValue: const Constant(false));
   @override
   List<GeneratedColumn> get $columns =>
       [id, key, value, updatedAt, isDeleted, isNotSynced];
@@ -5055,6 +6448,8 @@ class UserPreference extends DataClass implements Insertable<UserPreference> {
   final String value;
   final DateTime updatedAt;
   final bool isDeleted;
+
+  /// Default false so first-install / default data stays clean; set true when user changes a preference.
   final bool isNotSynced;
   const UserPreference(
       {required this.id,
@@ -7515,7 +8910,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $CategoriesTable categories = $CategoriesTable(this);
   late final $ContactsTable contacts = $ContactsTable(this);
+  late final $AccountsTable accounts = $AccountsTable(this);
   late final $TransactionsTable transactions = $TransactionsTable(this);
+  late final $AccountTransfersTable accountTransfers =
+      $AccountTransfersTable(this);
   late final $ReceivablesTable receivables = $ReceivablesTable(this);
   late final $PayablesTable payables = $PayablesTable(this);
   late final $RemindersTable reminders = $RemindersTable(this);
@@ -7538,7 +8936,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   List<DatabaseSchemaEntity> get allSchemaEntities => [
         categories,
         contacts,
+        accounts,
         transactions,
+        accountTransfers,
         receivables,
         payables,
         reminders,
@@ -8747,6 +10147,512 @@ typedef $$ContactsTableProcessedTableManager = ProcessedTableManager<
         bool whatsAppQueueRefs,
         bool contactUsageStatsRefs,
         bool transactionSchedulesRefs})>;
+typedef $$AccountsTableCreateCompanionBuilder = AccountsCompanion Function({
+  required String uuid,
+  required String name,
+  required String type,
+  Value<String?> icon,
+  Value<String?> color,
+  Value<double> openingBalance,
+  Value<DateTime> openingDate,
+  Value<bool> isActive,
+  Value<double?> creditLimit,
+  Value<int?> billingCycleDay,
+  Value<int?> paymentDueDays,
+  Value<String?> linkedAccountUuid,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<bool> isDeleted,
+  Value<bool> isNotSynced,
+  Value<int> rowid,
+});
+typedef $$AccountsTableUpdateCompanionBuilder = AccountsCompanion Function({
+  Value<String> uuid,
+  Value<String> name,
+  Value<String> type,
+  Value<String?> icon,
+  Value<String?> color,
+  Value<double> openingBalance,
+  Value<DateTime> openingDate,
+  Value<bool> isActive,
+  Value<double?> creditLimit,
+  Value<int?> billingCycleDay,
+  Value<int?> paymentDueDays,
+  Value<String?> linkedAccountUuid,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<bool> isDeleted,
+  Value<bool> isNotSynced,
+  Value<int> rowid,
+});
+
+final class $$AccountsTableReferences
+    extends BaseReferences<_$AppDatabase, $AccountsTable, Account> {
+  $$AccountsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static MultiTypedResultKey<$AccountTransfersTable, List<AccountTransfer>>
+      _outgoingTransfersRefsTable(_$AppDatabase db) =>
+          MultiTypedResultKey.fromTable(db.accountTransfers,
+              aliasName: $_aliasNameGenerator(
+                  db.accounts.uuid, db.accountTransfers.fromAccountUuid));
+
+  $$AccountTransfersTableProcessedTableManager get outgoingTransfersRefs {
+    final manager = $$AccountTransfersTableTableManager(
+            $_db, $_db.accountTransfers)
+        .filter((f) =>
+            f.fromAccountUuid.uuid.sqlEquals($_itemColumn<String>('uuid')!));
+
+    final cache =
+        $_typedResult.readTableOrNull(_outgoingTransfersRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
+  static MultiTypedResultKey<$AccountTransfersTable, List<AccountTransfer>>
+      _incomingTransfersRefsTable(_$AppDatabase db) =>
+          MultiTypedResultKey.fromTable(db.accountTransfers,
+              aliasName: $_aliasNameGenerator(
+                  db.accounts.uuid, db.accountTransfers.toAccountUuid));
+
+  $$AccountTransfersTableProcessedTableManager get incomingTransfersRefs {
+    final manager =
+        $$AccountTransfersTableTableManager($_db, $_db.accountTransfers).filter(
+            (f) =>
+                f.toAccountUuid.uuid.sqlEquals($_itemColumn<String>('uuid')!));
+
+    final cache =
+        $_typedResult.readTableOrNull(_incomingTransfersRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+}
+
+class $$AccountsTableFilterComposer
+    extends Composer<_$AppDatabase, $AccountsTable> {
+  $$AccountsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get uuid => $composableBuilder(
+      column: $table.uuid, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get type => $composableBuilder(
+      column: $table.type, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get icon => $composableBuilder(
+      column: $table.icon, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get color => $composableBuilder(
+      column: $table.color, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get openingBalance => $composableBuilder(
+      column: $table.openingBalance,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get openingDate => $composableBuilder(
+      column: $table.openingDate, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isActive => $composableBuilder(
+      column: $table.isActive, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get creditLimit => $composableBuilder(
+      column: $table.creditLimit, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get billingCycleDay => $composableBuilder(
+      column: $table.billingCycleDay,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get paymentDueDays => $composableBuilder(
+      column: $table.paymentDueDays,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get linkedAccountUuid => $composableBuilder(
+      column: $table.linkedAccountUuid,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+      column: $table.isDeleted, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => ColumnFilters(column));
+
+  Expression<bool> outgoingTransfersRefs(
+      Expression<bool> Function($$AccountTransfersTableFilterComposer f) f) {
+    final $$AccountTransfersTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.uuid,
+        referencedTable: $db.accountTransfers,
+        getReferencedColumn: (t) => t.fromAccountUuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$AccountTransfersTableFilterComposer(
+              $db: $db,
+              $table: $db.accountTransfers,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<bool> incomingTransfersRefs(
+      Expression<bool> Function($$AccountTransfersTableFilterComposer f) f) {
+    final $$AccountTransfersTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.uuid,
+        referencedTable: $db.accountTransfers,
+        getReferencedColumn: (t) => t.toAccountUuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$AccountTransfersTableFilterComposer(
+              $db: $db,
+              $table: $db.accountTransfers,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+}
+
+class $$AccountsTableOrderingComposer
+    extends Composer<_$AppDatabase, $AccountsTable> {
+  $$AccountsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get uuid => $composableBuilder(
+      column: $table.uuid, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get type => $composableBuilder(
+      column: $table.type, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get icon => $composableBuilder(
+      column: $table.icon, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get color => $composableBuilder(
+      column: $table.color, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get openingBalance => $composableBuilder(
+      column: $table.openingBalance,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get openingDate => $composableBuilder(
+      column: $table.openingDate, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isActive => $composableBuilder(
+      column: $table.isActive, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get creditLimit => $composableBuilder(
+      column: $table.creditLimit, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get billingCycleDay => $composableBuilder(
+      column: $table.billingCycleDay,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get paymentDueDays => $composableBuilder(
+      column: $table.paymentDueDays,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get linkedAccountUuid => $composableBuilder(
+      column: $table.linkedAccountUuid,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+      column: $table.isDeleted, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => ColumnOrderings(column));
+}
+
+class $$AccountsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $AccountsTable> {
+  $$AccountsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get uuid =>
+      $composableBuilder(column: $table.uuid, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get type =>
+      $composableBuilder(column: $table.type, builder: (column) => column);
+
+  GeneratedColumn<String> get icon =>
+      $composableBuilder(column: $table.icon, builder: (column) => column);
+
+  GeneratedColumn<String> get color =>
+      $composableBuilder(column: $table.color, builder: (column) => column);
+
+  GeneratedColumn<double> get openingBalance => $composableBuilder(
+      column: $table.openingBalance, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get openingDate => $composableBuilder(
+      column: $table.openingDate, builder: (column) => column);
+
+  GeneratedColumn<bool> get isActive =>
+      $composableBuilder(column: $table.isActive, builder: (column) => column);
+
+  GeneratedColumn<double> get creditLimit => $composableBuilder(
+      column: $table.creditLimit, builder: (column) => column);
+
+  GeneratedColumn<int> get billingCycleDay => $composableBuilder(
+      column: $table.billingCycleDay, builder: (column) => column);
+
+  GeneratedColumn<int> get paymentDueDays => $composableBuilder(
+      column: $table.paymentDueDays, builder: (column) => column);
+
+  GeneratedColumn<String> get linkedAccountUuid => $composableBuilder(
+      column: $table.linkedAccountUuid, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+
+  GeneratedColumn<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => column);
+
+  Expression<T> outgoingTransfersRefs<T extends Object>(
+      Expression<T> Function($$AccountTransfersTableAnnotationComposer a) f) {
+    final $$AccountTransfersTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.uuid,
+        referencedTable: $db.accountTransfers,
+        getReferencedColumn: (t) => t.fromAccountUuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$AccountTransfersTableAnnotationComposer(
+              $db: $db,
+              $table: $db.accountTransfers,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<T> incomingTransfersRefs<T extends Object>(
+      Expression<T> Function($$AccountTransfersTableAnnotationComposer a) f) {
+    final $$AccountTransfersTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.uuid,
+        referencedTable: $db.accountTransfers,
+        getReferencedColumn: (t) => t.toAccountUuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$AccountTransfersTableAnnotationComposer(
+              $db: $db,
+              $table: $db.accountTransfers,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+}
+
+class $$AccountsTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $AccountsTable,
+    Account,
+    $$AccountsTableFilterComposer,
+    $$AccountsTableOrderingComposer,
+    $$AccountsTableAnnotationComposer,
+    $$AccountsTableCreateCompanionBuilder,
+    $$AccountsTableUpdateCompanionBuilder,
+    (Account, $$AccountsTableReferences),
+    Account,
+    PrefetchHooks Function(
+        {bool outgoingTransfersRefs, bool incomingTransfersRefs})> {
+  $$AccountsTableTableManager(_$AppDatabase db, $AccountsTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$AccountsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$AccountsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$AccountsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> uuid = const Value.absent(),
+            Value<String> name = const Value.absent(),
+            Value<String> type = const Value.absent(),
+            Value<String?> icon = const Value.absent(),
+            Value<String?> color = const Value.absent(),
+            Value<double> openingBalance = const Value.absent(),
+            Value<DateTime> openingDate = const Value.absent(),
+            Value<bool> isActive = const Value.absent(),
+            Value<double?> creditLimit = const Value.absent(),
+            Value<int?> billingCycleDay = const Value.absent(),
+            Value<int?> paymentDueDays = const Value.absent(),
+            Value<String?> linkedAccountUuid = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<bool> isDeleted = const Value.absent(),
+            Value<bool> isNotSynced = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              AccountsCompanion(
+            uuid: uuid,
+            name: name,
+            type: type,
+            icon: icon,
+            color: color,
+            openingBalance: openingBalance,
+            openingDate: openingDate,
+            isActive: isActive,
+            creditLimit: creditLimit,
+            billingCycleDay: billingCycleDay,
+            paymentDueDays: paymentDueDays,
+            linkedAccountUuid: linkedAccountUuid,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            isDeleted: isDeleted,
+            isNotSynced: isNotSynced,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String uuid,
+            required String name,
+            required String type,
+            Value<String?> icon = const Value.absent(),
+            Value<String?> color = const Value.absent(),
+            Value<double> openingBalance = const Value.absent(),
+            Value<DateTime> openingDate = const Value.absent(),
+            Value<bool> isActive = const Value.absent(),
+            Value<double?> creditLimit = const Value.absent(),
+            Value<int?> billingCycleDay = const Value.absent(),
+            Value<int?> paymentDueDays = const Value.absent(),
+            Value<String?> linkedAccountUuid = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<bool> isDeleted = const Value.absent(),
+            Value<bool> isNotSynced = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              AccountsCompanion.insert(
+            uuid: uuid,
+            name: name,
+            type: type,
+            icon: icon,
+            color: color,
+            openingBalance: openingBalance,
+            openingDate: openingDate,
+            isActive: isActive,
+            creditLimit: creditLimit,
+            billingCycleDay: billingCycleDay,
+            paymentDueDays: paymentDueDays,
+            linkedAccountUuid: linkedAccountUuid,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            isDeleted: isDeleted,
+            isNotSynced: isNotSynced,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) =>
+                  (e.readTable(table), $$AccountsTableReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: (
+              {outgoingTransfersRefs = false, incomingTransfersRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [
+                if (outgoingTransfersRefs) db.accountTransfers,
+                if (incomingTransfersRefs) db.accountTransfers
+              ],
+              addJoins: null,
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (outgoingTransfersRefs)
+                    await $_getPrefetchedData<Account, $AccountsTable,
+                            AccountTransfer>(
+                        currentTable: table,
+                        referencedTable: $$AccountsTableReferences
+                            ._outgoingTransfersRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$AccountsTableReferences(db, table, p0)
+                                .outgoingTransfersRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.fromAccountUuid == item.uuid),
+                        typedResults: items),
+                  if (incomingTransfersRefs)
+                    await $_getPrefetchedData<Account, $AccountsTable,
+                            AccountTransfer>(
+                        currentTable: table,
+                        referencedTable: $$AccountsTableReferences
+                            ._incomingTransfersRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$AccountsTableReferences(db, table, p0)
+                                .incomingTransfersRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.toAccountUuid == item.uuid),
+                        typedResults: items)
+                ];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$AccountsTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $AccountsTable,
+    Account,
+    $$AccountsTableFilterComposer,
+    $$AccountsTableOrderingComposer,
+    $$AccountsTableAnnotationComposer,
+    $$AccountsTableCreateCompanionBuilder,
+    $$AccountsTableUpdateCompanionBuilder,
+    (Account, $$AccountsTableReferences),
+    Account,
+    PrefetchHooks Function(
+        {bool outgoingTransfersRefs, bool incomingTransfersRefs})>;
 typedef $$TransactionsTableCreateCompanionBuilder = TransactionsCompanion
     Function({
   required String uuid,
@@ -8761,6 +10667,8 @@ typedef $$TransactionsTableCreateCompanionBuilder = TransactionsCompanion
   Value<String?> paidRelationship,
   Value<bool> isAutoGenerated,
   Value<bool> isScheduled,
+  Value<String?> accountUuid,
+  Value<DateTime?> processedDate,
   Value<String?> linkedGroupId,
   Value<String?> externalLinkId,
   Value<DateTime> createdAt,
@@ -8783,6 +10691,8 @@ typedef $$TransactionsTableUpdateCompanionBuilder = TransactionsCompanion
   Value<String?> paidRelationship,
   Value<bool> isAutoGenerated,
   Value<bool> isScheduled,
+  Value<String?> accountUuid,
+  Value<DateTime?> processedDate,
   Value<String?> linkedGroupId,
   Value<String?> externalLinkId,
   Value<DateTime> createdAt,
@@ -8869,6 +10779,12 @@ class $$TransactionsTableFilterComposer
 
   ColumnFilters<bool> get isScheduled => $composableBuilder(
       column: $table.isScheduled, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get accountUuid => $composableBuilder(
+      column: $table.accountUuid, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get processedDate => $composableBuilder(
+      column: $table.processedDate, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get linkedGroupId => $composableBuilder(
       column: $table.linkedGroupId, builder: (column) => ColumnFilters(column));
@@ -8973,6 +10889,13 @@ class $$TransactionsTableOrderingComposer
   ColumnOrderings<bool> get isScheduled => $composableBuilder(
       column: $table.isScheduled, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get accountUuid => $composableBuilder(
+      column: $table.accountUuid, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get processedDate => $composableBuilder(
+      column: $table.processedDate,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<String> get linkedGroupId => $composableBuilder(
       column: $table.linkedGroupId,
       builder: (column) => ColumnOrderings(column));
@@ -9073,6 +10996,12 @@ class $$TransactionsTableAnnotationComposer
   GeneratedColumn<bool> get isScheduled => $composableBuilder(
       column: $table.isScheduled, builder: (column) => column);
 
+  GeneratedColumn<String> get accountUuid => $composableBuilder(
+      column: $table.accountUuid, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get processedDate => $composableBuilder(
+      column: $table.processedDate, builder: (column) => column);
+
   GeneratedColumn<String> get linkedGroupId => $composableBuilder(
       column: $table.linkedGroupId, builder: (column) => column);
 
@@ -9167,6 +11096,8 @@ class $$TransactionsTableTableManager extends RootTableManager<
             Value<String?> paidRelationship = const Value.absent(),
             Value<bool> isAutoGenerated = const Value.absent(),
             Value<bool> isScheduled = const Value.absent(),
+            Value<String?> accountUuid = const Value.absent(),
+            Value<DateTime?> processedDate = const Value.absent(),
             Value<String?> linkedGroupId = const Value.absent(),
             Value<String?> externalLinkId = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
@@ -9188,6 +11119,8 @@ class $$TransactionsTableTableManager extends RootTableManager<
             paidRelationship: paidRelationship,
             isAutoGenerated: isAutoGenerated,
             isScheduled: isScheduled,
+            accountUuid: accountUuid,
+            processedDate: processedDate,
             linkedGroupId: linkedGroupId,
             externalLinkId: externalLinkId,
             createdAt: createdAt,
@@ -9209,6 +11142,8 @@ class $$TransactionsTableTableManager extends RootTableManager<
             Value<String?> paidRelationship = const Value.absent(),
             Value<bool> isAutoGenerated = const Value.absent(),
             Value<bool> isScheduled = const Value.absent(),
+            Value<String?> accountUuid = const Value.absent(),
+            Value<DateTime?> processedDate = const Value.absent(),
             Value<String?> linkedGroupId = const Value.absent(),
             Value<String?> externalLinkId = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
@@ -9230,6 +11165,8 @@ class $$TransactionsTableTableManager extends RootTableManager<
             paidRelationship: paidRelationship,
             isAutoGenerated: isAutoGenerated,
             isScheduled: isScheduled,
+            accountUuid: accountUuid,
+            processedDate: processedDate,
             linkedGroupId: linkedGroupId,
             externalLinkId: externalLinkId,
             createdAt: createdAt,
@@ -9306,6 +11243,437 @@ typedef $$TransactionsTableProcessedTableManager = ProcessedTableManager<
     (Transaction, $$TransactionsTableReferences),
     Transaction,
     PrefetchHooks Function({bool categoryUuid, bool contactUuid})>;
+typedef $$AccountTransfersTableCreateCompanionBuilder
+    = AccountTransfersCompanion Function({
+  required String uuid,
+  required String fromAccountUuid,
+  required String toAccountUuid,
+  required double amount,
+  required DateTime date,
+  Value<String?> description,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<bool> isDeleted,
+  Value<bool> isNotSynced,
+  Value<int> rowid,
+});
+typedef $$AccountTransfersTableUpdateCompanionBuilder
+    = AccountTransfersCompanion Function({
+  Value<String> uuid,
+  Value<String> fromAccountUuid,
+  Value<String> toAccountUuid,
+  Value<double> amount,
+  Value<DateTime> date,
+  Value<String?> description,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<bool> isDeleted,
+  Value<bool> isNotSynced,
+  Value<int> rowid,
+});
+
+final class $$AccountTransfersTableReferences extends BaseReferences<
+    _$AppDatabase, $AccountTransfersTable, AccountTransfer> {
+  $$AccountTransfersTableReferences(
+      super.$_db, super.$_table, super.$_typedResult);
+
+  static $AccountsTable _fromAccountUuidTable(_$AppDatabase db) =>
+      db.accounts.createAlias($_aliasNameGenerator(
+          db.accountTransfers.fromAccountUuid, db.accounts.uuid));
+
+  $$AccountsTableProcessedTableManager get fromAccountUuid {
+    final $_column = $_itemColumn<String>('from_account_uuid')!;
+
+    final manager = $$AccountsTableTableManager($_db, $_db.accounts)
+        .filter((f) => f.uuid.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_fromAccountUuidTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static $AccountsTable _toAccountUuidTable(_$AppDatabase db) =>
+      db.accounts.createAlias($_aliasNameGenerator(
+          db.accountTransfers.toAccountUuid, db.accounts.uuid));
+
+  $$AccountsTableProcessedTableManager get toAccountUuid {
+    final $_column = $_itemColumn<String>('to_account_uuid')!;
+
+    final manager = $$AccountsTableTableManager($_db, $_db.accounts)
+        .filter((f) => f.uuid.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_toAccountUuidTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+}
+
+class $$AccountTransfersTableFilterComposer
+    extends Composer<_$AppDatabase, $AccountTransfersTable> {
+  $$AccountTransfersTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get uuid => $composableBuilder(
+      column: $table.uuid, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get amount => $composableBuilder(
+      column: $table.amount, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get date => $composableBuilder(
+      column: $table.date, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+      column: $table.isDeleted, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => ColumnFilters(column));
+
+  $$AccountsTableFilterComposer get fromAccountUuid {
+    final $$AccountsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.fromAccountUuid,
+        referencedTable: $db.accounts,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$AccountsTableFilterComposer(
+              $db: $db,
+              $table: $db.accounts,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$AccountsTableFilterComposer get toAccountUuid {
+    final $$AccountsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.toAccountUuid,
+        referencedTable: $db.accounts,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$AccountsTableFilterComposer(
+              $db: $db,
+              $table: $db.accounts,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$AccountTransfersTableOrderingComposer
+    extends Composer<_$AppDatabase, $AccountTransfersTable> {
+  $$AccountTransfersTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get uuid => $composableBuilder(
+      column: $table.uuid, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get amount => $composableBuilder(
+      column: $table.amount, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get date => $composableBuilder(
+      column: $table.date, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+      column: $table.isDeleted, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => ColumnOrderings(column));
+
+  $$AccountsTableOrderingComposer get fromAccountUuid {
+    final $$AccountsTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.fromAccountUuid,
+        referencedTable: $db.accounts,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$AccountsTableOrderingComposer(
+              $db: $db,
+              $table: $db.accounts,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$AccountsTableOrderingComposer get toAccountUuid {
+    final $$AccountsTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.toAccountUuid,
+        referencedTable: $db.accounts,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$AccountsTableOrderingComposer(
+              $db: $db,
+              $table: $db.accounts,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$AccountTransfersTableAnnotationComposer
+    extends Composer<_$AppDatabase, $AccountTransfersTable> {
+  $$AccountTransfersTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get uuid =>
+      $composableBuilder(column: $table.uuid, builder: (column) => column);
+
+  GeneratedColumn<double> get amount =>
+      $composableBuilder(column: $table.amount, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get date =>
+      $composableBuilder(column: $table.date, builder: (column) => column);
+
+  GeneratedColumn<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+
+  GeneratedColumn<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => column);
+
+  $$AccountsTableAnnotationComposer get fromAccountUuid {
+    final $$AccountsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.fromAccountUuid,
+        referencedTable: $db.accounts,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$AccountsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.accounts,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$AccountsTableAnnotationComposer get toAccountUuid {
+    final $$AccountsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.toAccountUuid,
+        referencedTable: $db.accounts,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$AccountsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.accounts,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$AccountTransfersTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $AccountTransfersTable,
+    AccountTransfer,
+    $$AccountTransfersTableFilterComposer,
+    $$AccountTransfersTableOrderingComposer,
+    $$AccountTransfersTableAnnotationComposer,
+    $$AccountTransfersTableCreateCompanionBuilder,
+    $$AccountTransfersTableUpdateCompanionBuilder,
+    (AccountTransfer, $$AccountTransfersTableReferences),
+    AccountTransfer,
+    PrefetchHooks Function({bool fromAccountUuid, bool toAccountUuid})> {
+  $$AccountTransfersTableTableManager(
+      _$AppDatabase db, $AccountTransfersTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$AccountTransfersTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$AccountTransfersTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$AccountTransfersTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> uuid = const Value.absent(),
+            Value<String> fromAccountUuid = const Value.absent(),
+            Value<String> toAccountUuid = const Value.absent(),
+            Value<double> amount = const Value.absent(),
+            Value<DateTime> date = const Value.absent(),
+            Value<String?> description = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<bool> isDeleted = const Value.absent(),
+            Value<bool> isNotSynced = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              AccountTransfersCompanion(
+            uuid: uuid,
+            fromAccountUuid: fromAccountUuid,
+            toAccountUuid: toAccountUuid,
+            amount: amount,
+            date: date,
+            description: description,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            isDeleted: isDeleted,
+            isNotSynced: isNotSynced,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String uuid,
+            required String fromAccountUuid,
+            required String toAccountUuid,
+            required double amount,
+            required DateTime date,
+            Value<String?> description = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<bool> isDeleted = const Value.absent(),
+            Value<bool> isNotSynced = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              AccountTransfersCompanion.insert(
+            uuid: uuid,
+            fromAccountUuid: fromAccountUuid,
+            toAccountUuid: toAccountUuid,
+            amount: amount,
+            date: date,
+            description: description,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            isDeleted: isDeleted,
+            isNotSynced: isNotSynced,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable(table),
+                    $$AccountTransfersTableReferences(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: (
+              {fromAccountUuid = false, toAccountUuid = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins: <
+                  T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic>>(state) {
+                if (fromAccountUuid) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.fromAccountUuid,
+                    referencedTable: $$AccountTransfersTableReferences
+                        ._fromAccountUuidTable(db),
+                    referencedColumn: $$AccountTransfersTableReferences
+                        ._fromAccountUuidTable(db)
+                        .uuid,
+                  ) as T;
+                }
+                if (toAccountUuid) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.toAccountUuid,
+                    referencedTable: $$AccountTransfersTableReferences
+                        ._toAccountUuidTable(db),
+                    referencedColumn: $$AccountTransfersTableReferences
+                        ._toAccountUuidTable(db)
+                        .uuid,
+                  ) as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$AccountTransfersTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $AccountTransfersTable,
+    AccountTransfer,
+    $$AccountTransfersTableFilterComposer,
+    $$AccountTransfersTableOrderingComposer,
+    $$AccountTransfersTableAnnotationComposer,
+    $$AccountTransfersTableCreateCompanionBuilder,
+    $$AccountTransfersTableUpdateCompanionBuilder,
+    (AccountTransfer, $$AccountTransfersTableReferences),
+    AccountTransfer,
+    PrefetchHooks Function({bool fromAccountUuid, bool toAccountUuid})>;
 typedef $$ReceivablesTableCreateCompanionBuilder = ReceivablesCompanion
     Function({
   required String uuid,
@@ -12980,8 +15348,12 @@ class $AppDatabaseManager {
       $$CategoriesTableTableManager(_db, _db.categories);
   $$ContactsTableTableManager get contacts =>
       $$ContactsTableTableManager(_db, _db.contacts);
+  $$AccountsTableTableManager get accounts =>
+      $$AccountsTableTableManager(_db, _db.accounts);
   $$TransactionsTableTableManager get transactions =>
       $$TransactionsTableTableManager(_db, _db.transactions);
+  $$AccountTransfersTableTableManager get accountTransfers =>
+      $$AccountTransfersTableTableManager(_db, _db.accountTransfers);
   $$ReceivablesTableTableManager get receivables =>
       $$ReceivablesTableTableManager(_db, _db.receivables);
   $$PayablesTableTableManager get payables =>

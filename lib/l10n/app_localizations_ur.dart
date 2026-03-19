@@ -484,7 +484,7 @@ class AppLocalizationsUr extends AppLocalizations {
   String get receivables => 'وصولی';
 
   @override
-  String get pending => 'زیر التواء';
+  String get pending => 'زیر التوا';
 
   @override
   String get overdue => 'واجب الادا تاریخ گزر گئی';
@@ -613,7 +613,7 @@ class AppLocalizationsUr extends AppLocalizations {
   String get linkedTransaction => 'منسلک لین دین';
 
   @override
-  String get markAsReceived => 'وصول کریں';
+  String get markAsReceived => 'موصول ہوا نشان کریں';
 
   @override
   String get deleteReceivableTitle => 'وصولی حذف کریں';
@@ -720,10 +720,10 @@ class AppLocalizationsUr extends AppLocalizations {
   String get payablePending => 'واجب الادا (زیر التواء)';
 
   @override
-  String get paid => 'ادا کیا گیا';
+  String get paid => 'ادا کیا';
 
   @override
-  String get markAsPaid => 'ادا کریں';
+  String get markAsPaid => 'ادا کیا ہوا نشان کریں';
 
   @override
   String get deletePayableTitle => 'واجب الادا حذف کریں';
@@ -2571,7 +2571,7 @@ class AppLocalizationsUr extends AppLocalizations {
   String get splittedTransactions => 'تقسیم شدہ لین دین';
 
   @override
-  String get balance => 'بقیہ';
+  String get balance => 'بیلنس';
 
   @override
   String get received => 'وصول کیا گیا';
@@ -3603,4 +3603,277 @@ class AppLocalizationsUr extends AppLocalizations {
 
   @override
   String get scenarioRefundReceived => 'واپسی وصول ہوئی';
+
+  @override
+  String get accounts => 'اکاؤنٹس';
+
+  @override
+  String get account => 'اکاؤنٹ';
+
+  @override
+  String get addAccount => 'اکاؤنٹ شامل کریں';
+
+  @override
+  String get editAccount => 'اکاؤنٹ ترمیم کریں';
+
+  @override
+  String get accountName => 'اکاؤنٹ کا نام';
+
+  @override
+  String get accountType => 'اکاؤنٹ کی قسم';
+
+  @override
+  String get cash => 'نقد';
+
+  @override
+  String get bank => 'بینک';
+
+  @override
+  String get savings => 'بچت';
+
+  @override
+  String get creditCard => 'کریڈٹ کارڈ';
+
+  @override
+  String get openingBalance => 'ابتدائی بیلنس';
+
+  @override
+  String get openingBalanceDues => 'ابتدائی بیلنس (واجبات)';
+
+  @override
+  String get openingDate => 'شروع کی تاریخ';
+
+  @override
+  String get creditLimit => 'کریڈٹ حد';
+
+  @override
+  String get billingCycleDay => 'بلنگ سائیکل دن';
+
+  @override
+  String get paymentDueDays => 'ادائیگی کی آخری تاریخ (سائیکل کے بعد دن)';
+
+  @override
+  String get linkedPaymentAccount => 'منسلک ادائیگی اکاؤنٹ';
+
+  @override
+  String get linkedPaymentAccountHint =>
+      'خودکار ادائیگی یاددہانی کے لیے اکاؤنٹ';
+
+  @override
+  String get accountCreated => 'اکاؤنٹ کامیابی سے بنایا گیا';
+
+  @override
+  String get accountUpdated => 'اکاؤنٹ کامیابی سے اپڈیٹ ہوا';
+
+  @override
+  String get accountDeleted => 'اکاؤنٹ کامیابی سے حذف ہوا';
+
+  @override
+  String get deleteAccountConfirmation =>
+      'کیا آپ اس اکاؤنٹ کو حذف کرنا چاہتے ہیں؟ اس سے منسلک لین دین حذف نہیں ہوں گے۔';
+
+  @override
+  String get noAccounts => 'کوئی اکاؤنٹ نہیں';
+
+  @override
+  String get noAccountsDescription =>
+      'بیلنس ٹریک کرنے کے لیے اپنے نقد، بینک یا کارڈ اکاؤنٹس شامل کریں';
+
+  @override
+  String get outstanding => 'واجب الادا';
+
+  @override
+  String get availableCredit => 'دستیاب کریڈٹ';
+
+  @override
+  String get creditBalance => 'کریڈٹ بیلنس';
+
+  @override
+  String get billed => 'بل شدہ';
+
+  @override
+  String get unbilled => 'غیر بل شدہ';
+
+  @override
+  String get transferMoney => 'رقم منتقل کریں';
+
+  @override
+  String get fromAccount => 'اکاؤنٹ سے';
+
+  @override
+  String get toAccount => 'اکاؤنٹ میں';
+
+  @override
+  String get transferCreated => 'ٹرانسفر کامیابی سے درج ہوا';
+
+  @override
+  String get selectAccount => 'اکاؤنٹ منتخب کریں';
+
+  @override
+  String get noAccount => 'کوئی اکاؤنٹ نہیں';
+
+  @override
+  String get pendingTransactions => 'زیر التوا لین دین';
+
+  @override
+  String get payFrom => 'کس سے ادا کریں';
+
+  @override
+  String get receiveInto => 'یہاں وصول کریں';
+
+  @override
+  String get accountPickerInfoMessage =>
+      'صرف ان لین دین پر لاگو ہوتا ہے جن کا اکاؤنٹ مقرر نہیں';
+
+  @override
+  String get negativeBalanceWarning =>
+      'اس سے آپ کا نقد بیلنس صفر سے نیچے چلا جائے گا';
+
+  @override
+  String paymentDueNotification(String amount, int days) {
+    return 'کریڈٹ کارڈ ادائیگی $amount $days دنوں میں واجب ہے';
+  }
+
+  @override
+  String paymentDueTodayNotification(String amount) {
+    return 'کریڈٹ کارڈ ادائیگی $amount آج واجب ہے';
+  }
+
+  @override
+  String paymentOverdueNotification(String amount, int days) {
+    return 'کریڈٹ کارڈ ادائیگی $amount $days دن سے زیادہ ہے';
+  }
+
+  @override
+  String get recordPayment => 'ادائیگی درج کریں';
+
+  @override
+  String get accountBalance => 'اکاؤنٹ بیلنس';
+
+  @override
+  String get noAccountSelected => 'کوئی اکاؤنٹ منتخب نہیں';
+
+  @override
+  String get selectPaymentAccount => 'ادائیگی اکاؤنٹ منتخب کریں';
+
+  @override
+  String get dayOfMonth => 'مہینے کا دن';
+
+  @override
+  String get howMuchDoYouOwe => 'اس کارڈ پر آپ اس وقت کتنا واجب الادا ہیں؟';
+
+  @override
+  String get transferBetweenAccounts => 'اکاؤنٹس کے درمیان منتقلی';
+
+  @override
+  String get sameAccountError => 'ماخذ اور منزل اکاؤنٹ ایک نہیں ہو سکتے';
+
+  @override
+  String get transfers => 'منتقلیاں';
+
+  @override
+  String get recentTransfers => 'حالیہ منتقلیاں';
+
+  @override
+  String get noTransfers => 'ابھی تک کوئی منتقلی نہیں';
+
+  @override
+  String transferFromTo(String from, String to) {
+    return '$from → $to';
+  }
+
+  @override
+  String get accountNotFound => 'اکاؤنٹ نہیں ملا';
+
+  @override
+  String get deleteAccount => 'اکاؤنٹ حذف کریں';
+
+  @override
+  String get deleteAccountConfirm =>
+      'کیا آپ واقعی یہ اکاؤنٹ حذف کرنا چاہتے ہیں؟ اس سے منسلک لین دین حذف نہیں ہوں گے۔';
+
+  @override
+  String get outstandingBalance => 'واجب الادا بیلنس';
+
+  @override
+  String get currentBalance => 'موجودہ بیلنس';
+
+  @override
+  String get amountDue => 'واجب الادا رقم';
+
+  @override
+  String get unbilledAmount => 'غیر بلڈ رقم';
+
+  @override
+  String get creditUsed => 'استعمال شدہ کریڈٹ';
+
+  @override
+  String get creditCards => 'کریڈٹ کارڈز';
+
+  @override
+  String get netWorth => 'کل مالیت';
+
+  @override
+  String get totalAssets => 'کل اثاثے';
+
+  @override
+  String get totalLiabilities => 'کل واجبات';
+
+  @override
+  String get available => 'دستیاب';
+
+  @override
+  String get due => 'واجب الادا';
+
+  @override
+  String get pleaseEnterAccountName => 'براہ کرم اکاؤنٹ کا نام درج کریں';
+
+  @override
+  String get appearance => 'ظاہری شکل';
+
+  @override
+  String get saveChanges => 'تبدیلیاں محفوظ کریں';
+
+  @override
+  String get icon => 'آئیکن';
+
+  @override
+  String get creditCardDetails => 'کریڈٹ کارڈ کی تفصیلات';
+
+  @override
+  String get pleaseSelectBothAccounts =>
+      'براہ کرم ماخذ اور منزل دونوں اکاؤنٹ منتخب کریں';
+
+  @override
+  String get recordTransfer => 'منتقلی درج کریں';
+
+  @override
+  String get descriptionOptional => 'تفصیل (اختیاری)';
+
+  @override
+  String dayLabel(int day) {
+    return 'دن $day';
+  }
+
+  @override
+  String get openTransactionsForAccount =>
+      'اس اکاؤنٹ کے لین دین دیکھنے کے لیے تھپتھپائیں';
+
+  @override
+  String get payBill => 'بل ادا کریں';
+
+  @override
+  String get customPayment => 'اپنی مرضی کی ادائیگی';
+
+  @override
+  String get customPaymentHint => 'اپنی مرضی کی رقم درج کریں';
+
+  @override
+  String payingAmount(String amount) {
+    return '$amount ادا کر رہے ہیں';
+  }
+
+  @override
+  String get noBankAccountsToPayFrom =>
+      'ادائیگی کے لیے کوئی بینک یا بچت اکاؤنٹ دستیاب نہیں';
 }

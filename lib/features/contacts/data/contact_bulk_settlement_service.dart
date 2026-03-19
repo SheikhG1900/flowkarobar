@@ -19,10 +19,11 @@ class ContactBulkSettlementService {
 
   /// Settle all pending payables and receivables for a contact.
   ///
-  /// This blindly marks:
-  /// - all PENDING payables as PAID
-  /// - all PENDING receivables as RECEIVED
-  Future<void> settleAll(String contactUuid) async {
+  /// [outgoingAccountUuid] — account to debit for payables (optional).
+  /// [incomingAccountUuid] — account to credit for receivables (optional).
+  /// These apply only to auto-generated transactions or those without an account.
+  Future<void> settleAll(String contactUuid,
+      {String? outgoingAccountUuid, String? incomingAccountUuid}) async {
     // Get current pending entries
     final pendingPayables =
         await payablesRepository.getPendingPayablesForContactOrderedForSettlement(
@@ -33,12 +34,14 @@ class ContactBulkSettlementService {
 
     // Mark payables as paid
     for (final payable in pendingPayables) {
-      await payablesRepository.markAsPaid(payable.uuid);
+      await payablesRepository.markAsPaid(payable.uuid,
+          accountUuid: outgoingAccountUuid);
     }
 
     // Mark receivables as received
     for (final receivable in pendingReceivables) {
-      await receivablesRepository.markAsReceived(receivable.uuid);
+      await receivablesRepository.markAsReceived(receivable.uuid,
+          accountUuid: incomingAccountUuid);
     }
   }
 
@@ -61,6 +64,8 @@ class ContactBulkSettlementService {
     String contactUuid,
     double amount, {
     required bool isNetReceivable,
+    String? outgoingAccountUuid,
+    String? incomingAccountUuid,
   }) async {
     if (amount <= 0) return;
 
@@ -85,7 +90,9 @@ class ContactBulkSettlementService {
 
     // If user-settle amount is effectively "all", just settle everything.
     if (amount >= netBalance.abs() - 0.01) {
-      await settleAll(contactUuid);
+      await settleAll(contactUuid,
+          outgoingAccountUuid: outgoingAccountUuid,
+          incomingAccountUuid: incomingAccountUuid);
       return;
     }
 
@@ -104,6 +111,8 @@ class ContactBulkSettlementService {
         amount: amount,
         pendingPayables: pendingPayables,
         pendingReceivables: pendingReceivables,
+        outgoingAccountUuid: outgoingAccountUuid,
+        incomingAccountUuid: incomingAccountUuid,
       );
     } else {
       await _settlePayableAmount(
@@ -111,6 +120,8 @@ class ContactBulkSettlementService {
         amount: amount,
         pendingPayables: pendingPayables,
         pendingReceivables: pendingReceivables,
+        outgoingAccountUuid: outgoingAccountUuid,
+        incomingAccountUuid: incomingAccountUuid,
       );
     }
   }
@@ -120,6 +131,8 @@ class ContactBulkSettlementService {
     required double amount,
     required List<Payable> pendingPayables,
     required List<Receivable> pendingReceivables,
+    String? outgoingAccountUuid,
+    String? incomingAccountUuid,
   }) async {
     final totalPayable =
         pendingPayables.fold<double>(0, (sum, p) => sum + p.amount);
@@ -129,7 +142,8 @@ class ContactBulkSettlementService {
 
     // 1. Mark all payables as paid.
     for (final payable in pendingPayables) {
-      await payablesRepository.markAsPaid(payable.uuid);
+      await payablesRepository.markAsPaid(payable.uuid,
+          accountUuid: outgoingAccountUuid);
     }
 
     // 2. Mark receivables in order until we've reached target sum (overdue first, then by date).
@@ -141,7 +155,8 @@ class ContactBulkSettlementService {
       if (receivableMarkedSum >= targetReceivableSum - 1e-6) break;
       if (used.contains(r.uuid)) continue;
       if (receivableMarkedSum + r.amount <= targetReceivableSum + 1e-6) {
-        await receivablesRepository.markAsReceived(r.uuid);
+        await receivablesRepository.markAsReceived(r.uuid,
+            accountUuid: incomingAccountUuid);
         receivableMarkedSum += r.amount;
         used.add(r.uuid);
       }
@@ -156,7 +171,8 @@ class ContactBulkSettlementService {
       for (final r in ordered) {
         if (used.contains(r.uuid)) continue;
         if (r.amount <= remaining + 1e-6) {
-          await receivablesRepository.markAsReceived(r.uuid);
+          await receivablesRepository.markAsReceived(r.uuid,
+              accountUuid: incomingAccountUuid);
           receivableMarkedSum += r.amount;
           used.add(r.uuid);
           progress = true;
@@ -180,6 +196,8 @@ class ContactBulkSettlementService {
           description: const Value('bulk adjustment'),
           date: Value(now),
           paidRelationship: const Value('RECEIVED_FROM'),
+          accountUuid: Value(incomingAccountUuid),
+          processedDate: Value(now),
           createdAt: Value(now),
           updatedAt: Value(now),
         ),
@@ -212,6 +230,8 @@ class ContactBulkSettlementService {
     required double amount,
     required List<Payable> pendingPayables,
     required List<Receivable> pendingReceivables,
+    String? outgoingAccountUuid,
+    String? incomingAccountUuid,
   }) async {
     final totalReceivable =
         pendingReceivables.fold<double>(0, (sum, r) => sum + r.amount);
@@ -221,7 +241,8 @@ class ContactBulkSettlementService {
 
     // 1. Mark all receivables as received.
     for (final receivable in pendingReceivables) {
-      await receivablesRepository.markAsReceived(receivable.uuid);
+      await receivablesRepository.markAsReceived(receivable.uuid,
+          accountUuid: incomingAccountUuid);
     }
 
     // 2. Mark payables in order until we've reached target sum (overdue first, then by date).
@@ -233,7 +254,8 @@ class ContactBulkSettlementService {
       if (payableMarkedSum >= targetPayableSum - 1e-6) break;
       if (used.contains(p.uuid)) continue;
       if (payableMarkedSum + p.amount <= targetPayableSum + 1e-6) {
-        await payablesRepository.markAsPaid(p.uuid);
+        await payablesRepository.markAsPaid(p.uuid,
+            accountUuid: outgoingAccountUuid);
         payableMarkedSum += p.amount;
         used.add(p.uuid);
       }
@@ -248,7 +270,8 @@ class ContactBulkSettlementService {
       for (final p in ordered) {
         if (used.contains(p.uuid)) continue;
         if (p.amount <= remaining + 1e-6) {
-          await payablesRepository.markAsPaid(p.uuid);
+          await payablesRepository.markAsPaid(p.uuid,
+              accountUuid: outgoingAccountUuid);
           payableMarkedSum += p.amount;
           used.add(p.uuid);
           progress = true;
@@ -271,6 +294,8 @@ class ContactBulkSettlementService {
           description: const Value('bulk adjustment'),
           date: Value(now),
           paidRelationship: const Value('PAID_FOR'),
+          accountUuid: Value(outgoingAccountUuid),
+          processedDate: Value(now),
           createdAt: Value(now),
           updatedAt: Value(now),
         ),

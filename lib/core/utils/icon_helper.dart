@@ -674,6 +674,24 @@ class IconHelper {
       return allIconsMap[codePoint];
     }
 
+    // Glyph code string (e.g. account add/edit picker stores names like "payments")
+    var glyph = codePointString;
+    switch (glyph) {
+      case 'wallet':
+        glyph = 'account_balance_wallet';
+        break;
+      case 'shopping_bag':
+        glyph = 'shopping_basket';
+        break;
+      case 'local_atm':
+        glyph = 'payments';
+        break;
+    }
+    for (final e in _iconGlyphMap.entries) {
+      if (e.value == glyph) {
+        return allIconsMap[e.key];
+      }
+    }
     return null;
   }
 

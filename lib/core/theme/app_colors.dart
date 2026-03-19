@@ -72,6 +72,29 @@ class AppColors {
     end: Alignment.bottomRight,
   );
 
+  /// Card border + shadow matching [TransactionsListScreen] list rows.
+  static BoxDecoration transactionListItemDecoration(
+    ThemeData theme,
+    Color accentColor,
+  ) {
+    final isDark = theme.brightness == Brightness.dark;
+    return BoxDecoration(
+      color: theme.cardColor,
+      borderRadius: BorderRadius.circular(20),
+      border: Border.all(
+        color: accentColor.withValues(alpha: isDark ? 0.2 : 0.1),
+        width: 0,
+      ),
+      boxShadow: [
+        BoxShadow(
+          color: accentColor.withValues(alpha: isDark ? 0.05 : 0.08),
+          blurRadius: 12,
+          offset: const Offset(0, 4),
+        ),
+      ],
+    );
+  }
+
   // Solid Brand Colors (extracted from GermGuard palette)
   static const brightCyan = Color(0xFF00D4FF);
   static const deepBlue = Color(0xFF0088CC);

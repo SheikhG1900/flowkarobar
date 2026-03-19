@@ -49,6 +49,9 @@ import 'package:flowpaisa/shared/widgets/premium_badge.dart';
 import 'package:flowpaisa/shared/widgets/user_avatar.dart';
 import 'package:flowpaisa/features/cashbooks/presentation/screens/cashbooks_screen.dart';
 import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
+import 'package:flowpaisa/features/accounts/presentation/screens/accounts_screen.dart';
+import 'package:flowpaisa/features/accounts/presentation/providers/accounts_provider.dart';
+import 'package:flowpaisa/features/accounts/data/credit_card_notification_service.dart';
 
 import 'package:flowpaisa/features/dashboard/presentation/widgets/sync_status_section.dart';
 import 'package:flowpaisa/features/dashboard/domain/dashboard_widget_models.dart';
@@ -263,8 +266,41 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
         // Check if tour should be shown on first launch
         _checkAndShowTour();
+
+        // Check credit card payment due dates
+        _checkCreditCardNotifications();
       }
     });
+  }
+
+  Future<void> _checkCreditCardNotifications() async {
+    try {
+      final accountsRepo = ref.read(accountsRepositoryProvider);
+      final notifier = ref.read(notificationProvider.notifier);
+      final currencySymbol = ref.read(currencySymbolProvider);
+      final decimals = ref.read(currencyDecimalPlacesProvider);
+
+      final service = CreditCardNotificationService(accountsRepo);
+      await service.checkAndNotify(
+        currencySymbol: currencySymbol,
+        decimals: decimals,
+        addNotification: ({
+          required String title,
+          required String message,
+          required NotificationType type,
+          required bool isUrgent,
+        }) {
+          notifier.addNotification(
+            title: title,
+            message: message,
+            type: type,
+            isUrgent: isUrgent,
+          );
+        },
+      );
+    } catch (e) {
+      debugPrint('Credit card notification check failed: $e');
+    }
   }
 
   Future<void> _checkAndShowTour() async {
@@ -2661,6 +2697,22 @@ class _SettingsTab extends ConsumerWidget {
       ),
       body: ListView(
         children: [
+          // Accounts entry
+          ListTile(
+            leading: const Icon(Symbols.account_balance_wallet),
+            title: Text(l10n.accounts),
+            subtitle: Text(l10n.noAccountsDescription),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const AccountsScreen(),
+                ),
+              );
+            },
+          ),
+          const Divider(),
           Showcase(
             key: TourService.settingsAppPreferencesKey,
             title: l10n.tourSettingsAppPreferencesTitle,
