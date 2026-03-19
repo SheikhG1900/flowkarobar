@@ -3769,7 +3769,7 @@ class AppLocalizationsUr extends AppLocalizations {
   String get sameAccountError => 'ماخذ اور منزل اکاؤنٹ ایک نہیں ہو سکتے';
 
   @override
-  String get transfers => 'منتقلیاں';
+  String get transfers => 'ٹرانسفر';
 
   @override
   String get recentTransfers => 'حالیہ منتقلیاں';
@@ -3811,7 +3811,7 @@ class AppLocalizationsUr extends AppLocalizations {
   String get creditCards => 'کریڈٹ کارڈز';
 
   @override
-  String get netWorth => 'کل مالیت';
+  String get netWorth => 'خالص مالیت';
 
   @override
   String get totalAssets => 'کل اثاثے';
@@ -3876,4 +3876,39 @@ class AppLocalizationsUr extends AppLocalizations {
   @override
   String get noBankAccountsToPayFrom =>
       'ادائیگی کے لیے کوئی بینک یا بچت اکاؤنٹ دستیاب نہیں';
+
+  @override
+  String get accountsOverview => 'اکاؤنٹس کا جائزہ';
+
+  @override
+  String get balanceDistribution => 'بیلنس تقسیم';
+
+  @override
+  String get spendingByAccount => 'اکاؤنٹ کے مطابق خرچ';
+
+  @override
+  String get transferFlow => 'ٹرانسفر بہاؤ';
+
+  @override
+  String get creditUtilisation => 'کریڈٹ استعمال';
+
+  @override
+  String get noAccountActivity => 'اس مدت میں کوئی اکاؤنٹ سرگرمی نہیں';
+
+  @override
+  String get noTransferActivity => 'اس مدت میں کوئی ٹرانسفر نہیں';
+
+  @override
+  String creditUsedOf(String used, String limit) {
+    return '$limit میں سے $used استعمال';
+  }
+
+  @override
+  String get inflow => 'آمد';
+
+  @override
+  String get outflow => 'اخراج';
+
+  @override
+  String get netFlow => 'خالص بہاؤ';
 }

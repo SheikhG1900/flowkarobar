@@ -3763,7 +3763,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get sameAccountError => 'स्रोत और गंतव्य खाते एक नहीं हो सकते';
 
   @override
-  String get transfers => 'ट्रांसफर';
+  String get transfers => 'स्थानांतरण';
 
   @override
   String get recentTransfers => 'हाल के ट्रांसफर';
@@ -3808,10 +3808,10 @@ class AppLocalizationsHi extends AppLocalizations {
   String get netWorth => 'कुल संपत्ति';
 
   @override
-  String get totalAssets => 'कुल संपत्ति';
+  String get totalAssets => 'कुल परिसंपत्तियां';
 
   @override
-  String get totalLiabilities => 'कुल देनदारी';
+  String get totalLiabilities => 'कुल देनदारियां';
 
   @override
   String get available => 'उपलब्ध';
@@ -3870,4 +3870,39 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get noBankAccountsToPayFrom =>
       'भुगतान के लिए कोई बैंक या बचत खाता उपलब्ध नहीं है';
+
+  @override
+  String get accountsOverview => 'खाते अवलोकन';
+
+  @override
+  String get balanceDistribution => 'शेष वितरण';
+
+  @override
+  String get spendingByAccount => 'खाते के अनुसार खर्च';
+
+  @override
+  String get transferFlow => 'स्थानांतरण प्रवाह';
+
+  @override
+  String get creditUtilisation => 'क्रेडिट उपयोग';
+
+  @override
+  String get noAccountActivity => 'इस अवधि में कोई खाता गतिविधि नहीं';
+
+  @override
+  String get noTransferActivity => 'इस अवधि में कोई स्थानांतरण नहीं';
+
+  @override
+  String creditUsedOf(String used, String limit) {
+    return '$limit में से $used उपयोग';
+  }
+
+  @override
+  String get inflow => 'आवक';
+
+  @override
+  String get outflow => 'जावक';
+
+  @override
+  String get netFlow => 'शुद्ध प्रवाह';
 }

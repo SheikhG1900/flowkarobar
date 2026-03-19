@@ -55,6 +55,23 @@ class AnalyticsRepository {
     return trends;
   }
 
+  /// Monthly income/expense trends within [rangeStart]..[rangeEnd].
+  Future<List<MonthlyFinancials>> getMonthlyTrendsForRange(
+      DateTime rangeStart, DateTime rangeEnd) async {
+    final List<MonthlyFinancials> trends = [];
+    DateTime cursor = DateTime(rangeStart.year, rangeStart.month, 1);
+    while (!cursor.isAfter(DateTime(rangeEnd.year, rangeEnd.month, 1))) {
+      final start = DateTime(cursor.year, cursor.month, 1);
+      final end = DateTime(cursor.year, cursor.month + 1, 0, 23, 59, 59);
+      final income = await _getTotalByType('INCOME', start, end);
+      final expense = await _getTotalByType('EXPENSE', start, end);
+      trends.add(
+          MonthlyFinancials(month: start, income: income, expense: expense));
+      cursor = DateTime(cursor.year, cursor.month + 1, 1);
+    }
+    return trends;
+  }
+
   Future<double> _getTotalByType(
       String type, DateTime start, DateTime end) async {
     // Exclude inactive: do not include expense/income linked to PENDING payable/receivable
@@ -663,6 +680,20 @@ class AnalyticsRepository {
         totalIncome: totalIncome);
   }
 
+  /// Payable/receivable trends within [rangeStart]..[rangeEnd].
+  Future<List<PayableReceivableTrend>> getPayableReceivableTrendsForRange(
+      DateTime rangeStart, DateTime rangeEnd) async {
+    final List<PayableReceivableTrend> trends = [];
+    DateTime cursor = DateTime(rangeStart.year, rangeStart.month, 1);
+    while (!cursor.isAfter(DateTime(rangeEnd.year, rangeEnd.month, 1))) {
+      final start = DateTime(cursor.year, cursor.month, 1);
+      final end = DateTime(cursor.year, cursor.month + 1, 0, 23, 59, 59);
+      trends.add(await _buildPayableReceivableTrendForMonth(start, end));
+      cursor = DateTime(cursor.year, cursor.month + 1, 1);
+    }
+    return trends;
+  }
+
   Future<List<PayableReceivableTrend>> getPayableReceivableTrends(
       int months) async {
     final now = DateTime.now();
@@ -672,6 +703,13 @@ class AnalyticsRepository {
       final start = DateTime(month.year, month.month, 1);
       final end = DateTime(month.year, month.month + 1, 0, 23, 59, 59);
 
+      trends.add(await _buildPayableReceivableTrendForMonth(start, end));
+    }
+    return trends;
+  }
+
+  Future<PayableReceivableTrend> _buildPayableReceivableTrendForMonth(
+      DateTime start, DateTime end) async {
       final pendingPayable = await (_database.selectOnly(_database.payables)
             ..addColumns([_database.payables.amount.sum()])
             ..where(_database.payables.date.isBetweenValues(start, end))
@@ -708,16 +746,14 @@ class AnalyticsRepository {
                   row.read(_database.receivables.amount.sum()) ?? 0.0);
       final totalReceivable = pendingReceivable + receivedReceivable;
 
-      trends.add(PayableReceivableTrend(
+      return PayableReceivableTrend(
           month: start,
           totalPayable: totalPayable,
           totalReceivable: totalReceivable,
           pendingPayable: pendingPayable,
           paidPayable: paidPayable,
           pendingReceivable: pendingReceivable,
-          receivedReceivable: receivedReceivable));
-    }
-    return trends;
+          receivedReceivable: receivedReceivable);
   }
 
   Future<List<ContactSummary>> getTopContactsByBalance(

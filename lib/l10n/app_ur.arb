@@ -1489,5 +1489,27 @@
       "amount": { "type": "String" }
     }
   },
-  "noBankAccountsToPayFrom": "ادائیگی کے لیے کوئی بینک یا بچت اکاؤنٹ دستیاب نہیں"
+  "noBankAccountsToPayFrom": "ادائیگی کے لیے کوئی بینک یا بچت اکاؤنٹ دستیاب نہیں",
+  "accountsOverview": "اکاؤنٹس کا جائزہ",
+  "netWorth": "خالص مالیت",
+  "totalAssets": "کل اثاثے",
+  "totalLiabilities": "کل واجبات",
+  "balanceDistribution": "بیلنس تقسیم",
+  "spendingByAccount": "اکاؤنٹ کے مطابق خرچ",
+  "transferFlow": "ٹرانسفر بہاؤ",
+  "creditUtilisation": "کریڈٹ استعمال",
+  "noAccountActivity": "اس مدت میں کوئی اکاؤنٹ سرگرمی نہیں",
+  "noTransferActivity": "اس مدت میں کوئی ٹرانسفر نہیں",
+  "creditUsedOf": "{limit} میں سے {used} استعمال",
+  "@creditUsedOf": {
+    "placeholders": {
+      "used": { "type": "String" },
+      "limit": { "type": "String" }
+    }
+  },
+  "transfers": "ٹرانسفر",
+  "income": "آمدنی",
+  "inflow": "آمد",
+  "outflow": "اخراج",
+  "netFlow": "خالص بہاؤ"
 }

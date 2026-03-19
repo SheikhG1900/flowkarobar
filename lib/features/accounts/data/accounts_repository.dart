@@ -4,6 +4,30 @@ import 'package:flowpaisa/features/accounts/domain/models/account_models.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:uuid/uuid.dart';
 
+class AccountSpending {
+  final Account account;
+  final double totalExpense;
+  final double totalIncome;
+  AccountSpending({
+    required this.account,
+    required this.totalExpense,
+    required this.totalIncome,
+  });
+}
+
+class TransferFlowItem {
+  final String fromAccountUuid;
+  final String toAccountUuid;
+  final double totalAmount;
+  final int count;
+  TransferFlowItem({
+    required this.fromAccountUuid,
+    required this.toAccountUuid,
+    required this.totalAmount,
+    required this.count,
+  });
+}
+
 class AccountsRepository {
   final AppDatabase _db;
 
@@ -488,5 +512,78 @@ class AccountsRepository {
     if (AccountType.fromValue(account.type) != AccountType.cash) return false;
     final currentBalance = await getAccountBalance(account);
     return (currentBalance - amount) < 0;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Analytics
+  // ---------------------------------------------------------------------------
+
+  /// Expense & income totals grouped by account for a date range.
+  Future<List<AccountSpending>> getSpendingByAccount(
+      DateTime start, DateTime end) async {
+    final accounts = await getAllAccounts();
+    final List<AccountSpending> result = [];
+    for (final acc in accounts) {
+      final expenseRow = await (_db.selectOnly(_db.transactions)
+            ..addColumns([_db.transactions.amount.sum()])
+            ..where(_db.transactions.accountUuid.equals(acc.uuid))
+            ..where(_db.transactions.type.equals('EXPENSE'))
+            ..where(_db.transactions.isDeleted.equals(false))
+            ..where(_db.transactions.date.isBetweenValues(start, end)))
+          .getSingle();
+      final incomeRow = await (_db.selectOnly(_db.transactions)
+            ..addColumns([_db.transactions.amount.sum()])
+            ..where(_db.transactions.accountUuid.equals(acc.uuid))
+            ..where(_db.transactions.type.equals('INCOME'))
+            ..where(_db.transactions.isDeleted.equals(false))
+            ..where(_db.transactions.date.isBetweenValues(start, end)))
+          .getSingle();
+      final expense =
+          expenseRow.read(_db.transactions.amount.sum()) ?? 0.0;
+      final income =
+          incomeRow.read(_db.transactions.amount.sum()) ?? 0.0;
+      if (expense > 0 || income > 0) {
+        result.add(AccountSpending(
+            account: acc, totalExpense: expense, totalIncome: income));
+      }
+    }
+    result.sort(
+        (a, b) => b.totalExpense.compareTo(a.totalExpense));
+    return result;
+  }
+
+  /// Total amount transferred between each account pair in a date range.
+  Future<List<TransferFlowItem>> getTransferFlow(
+      DateTime start, DateTime end) async {
+    final rows = await (_db.select(_db.accountTransfers)
+          ..where((t) =>
+              t.isDeleted.equals(false) &
+              t.date.isBetweenValues(start, end))
+          ..orderBy([(t) => OrderingTerm.desc(t.amount)]))
+        .get();
+
+    // Group by from+to pair
+    final Map<String, TransferFlowItem> map = {};
+    for (final t in rows) {
+      final key = '${t.fromAccountUuid}→${t.toAccountUuid}';
+      if (map.containsKey(key)) {
+        map[key] = TransferFlowItem(
+          fromAccountUuid: t.fromAccountUuid,
+          toAccountUuid: t.toAccountUuid,
+          totalAmount: map[key]!.totalAmount + t.amount,
+          count: map[key]!.count + 1,
+        );
+      } else {
+        map[key] = TransferFlowItem(
+          fromAccountUuid: t.fromAccountUuid,
+          toAccountUuid: t.toAccountUuid,
+          totalAmount: t.amount,
+          count: 1,
+        );
+      }
+    }
+    final list = map.values.toList()
+      ..sort((a, b) => b.totalAmount.compareTo(a.totalAmount));
+    return list;
   }
 }

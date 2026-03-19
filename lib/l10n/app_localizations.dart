@@ -7066,6 +7066,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No bank or savings accounts available to pay from'**
   String get noBankAccountsToPayFrom;
+
+  /// No description provided for @accountsOverview.
+  ///
+  /// In en, this message translates to:
+  /// **'Accounts Overview'**
+  String get accountsOverview;
+
+  /// No description provided for @balanceDistribution.
+  ///
+  /// In en, this message translates to:
+  /// **'Balance Distribution'**
+  String get balanceDistribution;
+
+  /// No description provided for @spendingByAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Spending by Account'**
+  String get spendingByAccount;
+
+  /// No description provided for @transferFlow.
+  ///
+  /// In en, this message translates to:
+  /// **'Transfer Flow'**
+  String get transferFlow;
+
+  /// No description provided for @creditUtilisation.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit Utilisation'**
+  String get creditUtilisation;
+
+  /// No description provided for @noAccountActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'No account activity in this period'**
+  String get noAccountActivity;
+
+  /// No description provided for @noTransferActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'No transfers in this period'**
+  String get noTransferActivity;
+
+  /// No description provided for @creditUsedOf.
+  ///
+  /// In en, this message translates to:
+  /// **'{used} used of {limit}'**
+  String creditUsedOf(String used, String limit);
+
+  /// No description provided for @inflow.
+  ///
+  /// In en, this message translates to:
+  /// **'Inflow'**
+  String get inflow;
+
+  /// No description provided for @outflow.
+  ///
+  /// In en, this message translates to:
+  /// **'Outflow'**
+  String get outflow;
+
+  /// No description provided for @netFlow.
+  ///
+  /// In en, this message translates to:
+  /// **'Net Flow'**
+  String get netFlow;
 }
 
 class _AppLocalizationsDelegate

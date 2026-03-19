@@ -1489,5 +1489,27 @@
       "amount": { "type": "String" }
     }
   },
-  "noBankAccountsToPayFrom": "भुगतान के लिए कोई बैंक या बचत खाता उपलब्ध नहीं है"
+  "noBankAccountsToPayFrom": "भुगतान के लिए कोई बैंक या बचत खाता उपलब्ध नहीं है",
+  "accountsOverview": "खाते अवलोकन",
+  "netWorth": "कुल संपत्ति",
+  "totalAssets": "कुल परिसंपत्तियां",
+  "totalLiabilities": "कुल देनदारियां",
+  "balanceDistribution": "शेष वितरण",
+  "spendingByAccount": "खाते के अनुसार खर्च",
+  "transferFlow": "स्थानांतरण प्रवाह",
+  "creditUtilisation": "क्रेडिट उपयोग",
+  "noAccountActivity": "इस अवधि में कोई खाता गतिविधि नहीं",
+  "noTransferActivity": "इस अवधि में कोई स्थानांतरण नहीं",
+  "creditUsedOf": "{limit} में से {used} उपयोग",
+  "@creditUsedOf": {
+    "placeholders": {
+      "used": { "type": "String" },
+      "limit": { "type": "String" }
+    }
+  },
+  "transfers": "स्थानांतरण",
+  "income": "आय",
+  "inflow": "आवक",
+  "outflow": "जावक",
+  "netFlow": "शुद्ध प्रवाह"
 }

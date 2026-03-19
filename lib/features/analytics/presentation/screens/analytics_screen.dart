@@ -33,6 +33,7 @@ import 'package:pdf/pdf.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:flowpaisa/features/analytics/presentation/widgets/account_analytics_widgets.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:flowpaisa/features/tour/domain/tour_service.dart';
 
@@ -185,6 +186,8 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                       ref.invalidate(topContactsByBalanceProvider);
                       ref.invalidate(paymentStatusDistributionProvider);
                       ref.invalidate(incomeByCategoryProvider);
+                      ref.invalidate(accountSpendingProvider);
+                      ref.invalidate(transferFlowProvider);
 
                       // Wait for the main summary to load
                       await ref.read(financialSummaryProvider.future);
@@ -246,6 +249,8 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                                 ref.invalidate(
                                     paymentStatusDistributionProvider);
                                 ref.invalidate(incomeByCategoryProvider);
+                                ref.invalidate(accountSpendingProvider);
+                                ref.invalidate(transferFlowProvider);
                               },
                               tooltip: l10n.refreshAnalytics,
                             ),
@@ -392,6 +397,86 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                                     title: l10n.incomeByCategory,
                                     sectionIndex: 7,
                                     child: const _IncomePieChart(),
+                                  ),
+                                ),
+
+                                // ── Account Analytics ─────────────────────
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(4, 16, 4, 4),
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: Divider(
+                                          color: theme.colorScheme.outlineVariant,
+                                          thickness: 1,
+                                        ),
+                                      ),
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                                        child: Text(
+                                          l10n.accountsOverview,
+                                          style: theme.textTheme.labelMedium?.copyWith(
+                                            color: theme.colorScheme.onSurfaceVariant,
+                                            fontWeight: FontWeight.w600,
+                                            letterSpacing: 0.8,
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        child: Divider(
+                                          color: theme.colorScheme.outlineVariant,
+                                          thickness: 1,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+
+                                // Net Worth
+                                RepaintBoundary(
+                                  child: _CollapsibleSection(
+                                    title: l10n.netWorth,
+                                    sectionIndex: 8,
+                                    showAllTimeBadge: true,
+                                    child: const AccountNetWorthCard(),
+                                  ),
+                                ),
+
+                                // Balance Distribution
+                                RepaintBoundary(
+                                  child: _CollapsibleSection(
+                                    title: l10n.balanceDistribution,
+                                    sectionIndex: 9,
+                                    showAllTimeBadge: true,
+                                    child: const BalanceDistributionChart(),
+                                  ),
+                                ),
+
+                                // Spending by Account
+                                RepaintBoundary(
+                                  child: _CollapsibleSection(
+                                    title: l10n.spendingByAccount,
+                                    sectionIndex: 10,
+                                    child: const AccountSpendingChart(),
+                                  ),
+                                ),
+
+                                // Credit Card Utilisation
+                                RepaintBoundary(
+                                  child: _CollapsibleSection(
+                                    title: l10n.creditUtilisation,
+                                    sectionIndex: 11,
+                                    showAllTimeBadge: true,
+                                    child: const CreditUtilisationChart(),
+                                  ),
+                                ),
+
+                                // Transfer Flow
+                                RepaintBoundary(
+                                  child: _CollapsibleSection(
+                                    title: l10n.transferFlow,
+                                    sectionIndex: 12,
+                                    child: const TransferFlowChart(),
                                   ),
                                 ),
 
@@ -1689,93 +1774,104 @@ class _TrendsBarChart extends ConsumerWidget {
         maxY = maxY * 1.2; // Add 20% buffer
         if (maxY == 0) maxY = 100;
 
-        return AspectRatio(
-          aspectRatio: 1.5,
-          child: BarChart(
-            BarChartData(
-              alignment: BarChartAlignment.spaceAround,
-              maxY: maxY,
-              barTouchData: BarTouchData(
-                touchTooltipData: BarTouchTooltipData(
-                  getTooltipColor: (_) => theme.cardColor,
-                  getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                    final type = rodIndex == 0 ? l10n.income : l10n.expense;
-                    return BarTooltipItem(
-                      '$type\n',
-                      TextStyle(
-                        color: theme.colorScheme.onSurface,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      children: [
-                        TextSpan(
-                          text: AmountFormatter.formatWithCurrency(
-                              rod.toY, currencySymbol, 0),
-                          style: TextStyle(
-                            color: rodIndex == 0
-                                ? AppColors.incomeColor
-                                : AppColors.expenseColor,
-                            fontWeight: FontWeight.w500,
-                          ),
+        const double barGroupWidth = 56;
+        const double chartHeight = 220;
+        final barChart = BarChart(
+          BarChartData(
+            alignment: BarChartAlignment.spaceAround,
+            maxY: maxY,
+            barTouchData: BarTouchData(
+              touchTooltipData: BarTouchTooltipData(
+                getTooltipColor: (_) => theme.cardColor,
+                getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                  final type = rodIndex == 0 ? l10n.income : l10n.expense;
+                  return BarTooltipItem(
+                    '$type\n',
+                    TextStyle(
+                      color: theme.colorScheme.onSurface,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    children: [
+                      TextSpan(
+                        text: AmountFormatter.formatWithCurrency(
+                            rod.toY, currencySymbol, 0),
+                        style: TextStyle(
+                          color: rodIndex == 0
+                              ? AppColors.incomeColor
+                              : AppColors.expenseColor,
+                          fontWeight: FontWeight.w500,
                         ),
-                      ],
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+            titlesData: FlTitlesData(
+              show: true,
+              bottomTitles: AxisTitles(
+                sideTitles: SideTitles(
+                  showTitles: true,
+                  getTitlesWidget: (value, meta) {
+                    final index = value.toInt();
+                    if (index < 0 || index >= trends.length)
+                      return const Text('');
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: Text(
+                        AppDateFormatter.formatMonth(trends[index].month,
+                            context: context),
+                        style: const TextStyle(fontSize: 10),
+                      ),
                     );
                   },
+                  reservedSize: 30,
                 ),
               ),
-              titlesData: FlTitlesData(
-                show: true,
-                bottomTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: true,
-                    getTitlesWidget: (value, meta) {
-                      final index = value.toInt();
-                      if (index < 0 || index >= trends.length)
-                        return const Text('');
-                      return Padding(
-                        padding: const EdgeInsets.only(top: 8.0),
-                        child: Text(
-                          AppDateFormatter.formatMonth(trends[index].month,
-                              context: context),
-                          style: const TextStyle(fontSize: 10),
-                        ),
-                      );
-                    },
-                    reservedSize: 30,
-                  ),
-                ),
-                leftTitles:
-                    const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                topTitles:
-                    const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                rightTitles:
-                    const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-              ),
-              gridData: const FlGridData(show: false),
-              borderData: FlBorderData(show: false),
-              barGroups: trends.asMap().entries.map((entry) {
-                final index = entry.key;
-                final data = entry.value;
-                return BarChartGroupData(
-                  x: index,
-                  barRods: [
-                    BarChartRodData(
-                      toY: data.income,
-                      color: AppColors.incomeColor,
-                      width: 12,
-                      borderRadius:
-                          const BorderRadius.vertical(top: Radius.circular(4)),
-                    ),
-                    BarChartRodData(
-                      toY: data.expense,
-                      color: AppColors.expenseColor,
-                      width: 12,
-                      borderRadius:
-                          const BorderRadius.vertical(top: Radius.circular(4)),
-                    ),
-                  ],
-                );
-              }).toList(),
+              leftTitles: const AxisTitles(
+                  sideTitles: SideTitles(showTitles: false)),
+              topTitles: const AxisTitles(
+                  sideTitles: SideTitles(showTitles: false)),
+              rightTitles: const AxisTitles(
+                  sideTitles: SideTitles(showTitles: false)),
             ),
+            gridData: const FlGridData(show: false),
+            borderData: FlBorderData(show: false),
+            barGroups: trends.asMap().entries.map((entry) {
+              final index = entry.key;
+              final data = entry.value;
+              return BarChartGroupData(
+                x: index,
+                barRods: [
+                  BarChartRodData(
+                    toY: data.income,
+                    color: AppColors.incomeColor,
+                    width: 12,
+                    borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(4)),
+                  ),
+                  BarChartRodData(
+                    toY: data.expense,
+                    color: AppColors.expenseColor,
+                    width: 12,
+                    borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(4)),
+                  ),
+                ],
+              );
+            }).toList(),
+          ),
+        );
+
+        if (trends.length <= 6) {
+          return AspectRatio(aspectRatio: 1.5, child: barChart);
+        }
+        return SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: SizedBox(
+            width: trends.length * barGroupWidth,
+            height: chartHeight,
+            child: barChart,
           ),
         );
       },
@@ -1835,16 +1931,16 @@ class _PayableReceivableTrendsChart extends ConsumerWidget {
             Color.lerp(AppColors.receivableColor, dullBlend, dullAmount)!;
         final receivableReceivedColor = AppColors.receivableColor;
 
-        return AspectRatio(
-          aspectRatio: 1.5,
-          child: BarChart(
-            BarChartData(
-              alignment: BarChartAlignment.spaceAround,
-              maxY: maxY,
-              barTouchData: BarTouchData(
-                touchTooltipData: BarTouchTooltipData(
-                  getTooltipColor: (_) => theme.cardColor,
-                  getTooltipItem: (group, groupIndex, rod, rodIndex) {
+        const double barGroupWidth = 56;
+        const double chartHeight = 220;
+        final barChart = BarChart(
+          BarChartData(
+            alignment: BarChartAlignment.spaceAround,
+            maxY: maxY,
+            barTouchData: BarTouchData(
+              touchTooltipData: BarTouchTooltipData(
+                getTooltipColor: (_) => theme.cardColor,
+                getTooltipItem: (group, groupIndex, rod, rodIndex) {
                     final data = trends[group.x.toInt()];
                     final type =
                         rodIndex == 0 ? l10n.payableTag : l10n.receivableTag;
@@ -1987,6 +2083,17 @@ class _PayableReceivableTrendsChart extends ConsumerWidget {
                 );
               }).toList(),
             ),
+          );
+
+        if (trends.length <= 6) {
+          return AspectRatio(aspectRatio: 1.5, child: barChart);
+        }
+        return SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: SizedBox(
+            width: trends.length * barGroupWidth,
+            height: chartHeight,
+            child: barChart,
           ),
         );
       },
@@ -2025,28 +2132,55 @@ class _TopContactsChart extends ConsumerWidget {
           );
         }
 
-        return Column(
-          children: contacts.take(5).map((contact) {
-            final isPositive = contact.balance >= 0;
-            final color =
-                isPositive ? AppColors.receivableColor : AppColors.payableColor;
-            final maxAmount = contacts.first.balance.abs();
-            final percentage =
-                maxAmount > 0 ? (contact.balance.abs() / maxAmount) : 0.0;
+        final maxAmount = contacts.fold(
+            0.0, (m, c) => c.balance.abs() > m ? c.balance.abs() : m);
 
-            return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        return Column(
+          children: contacts.take(10).map((contact) {
+            final isPositive = contact.balance >= 0;
+            final barColor = isPositive
+                ? AppColors.receivableColor
+                : AppColors.payableColor;
+            final avatarColor =
+                AppColors.getContactColor(contact.contact.name);
+            final fillFactor = maxAmount > 0
+                ? (contact.balance.abs() / maxAmount).clamp(0.0, 1.0)
+                : 0.0;
+            final initials = contact.contact.name.trim().isNotEmpty
+                ? contact.contact.name.trim()[0].toUpperCase()
+                : '?';
+
+            Widget content(Color textColor) => Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  child: Row(
                     children: [
+                      // Avatar circle
+                      Container(
+                        width: 24,
+                        height: 24,
+                        decoration: BoxDecoration(
+                          color: avatarColor,
+                          shape: BoxShape.circle,
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          initials,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           contact.contact.name,
-                          style: theme.textTheme.bodyMedium
-                              ?.copyWith(fontWeight: FontWeight.w600),
+                          style: TextStyle(
+                            color: textColor.withValues(alpha: 0.85),
+                            fontWeight: FontWeight.w500,
+                            fontSize: 11,
+                          ),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
@@ -2054,23 +2188,53 @@ class _TopContactsChart extends ConsumerWidget {
                         AmountFormatter.formatWithCurrency(
                             contact.balance.abs(), currencySymbol, 0),
                         style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: color,
-                            fontSize: 14),
+                          color: textColor,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 4),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
-                    child: LinearProgressIndicator(
-                      value: percentage,
-                      backgroundColor: color.withValues(alpha: 0.1),
-                      valueColor: AlwaysStoppedAnimation<Color>(color),
-                      minHeight: 8,
+                );
+
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Container(
+                height: 36,
+                decoration: BoxDecoration(
+                  color: barColor.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                      color: barColor.withValues(alpha: 0.25), width: 0.5),
+                ),
+                child: Stack(
+                  children: [
+                    Align(
+                      alignment: Alignment.center,
+                      child: content(barColor),
                     ),
-                  ),
-                ],
+                    ClipRect(
+                      child: Align(
+                        alignment: Directionality.of(context) ==
+                                TextDirection.rtl
+                            ? Alignment.centerRight
+                            : Alignment.centerLeft,
+                        widthFactor: fillFactor,
+                        child: Container(
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            color: barColor.withValues(alpha: 0.85),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Align(
+                            alignment: Alignment.center,
+                            child: content(Colors.white),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             );
           }).toList(),
@@ -2590,11 +2754,13 @@ class _CollapsibleSection extends StatefulWidget {
   final String title;
   final Widget child;
   final int sectionIndex;
+  final bool showAllTimeBadge;
 
   const _CollapsibleSection({
     required this.title,
     required this.child,
     required this.sectionIndex,
+    this.showAllTimeBadge = false,
   });
 
   @override
@@ -2687,6 +2853,42 @@ class _CollapsibleSectionState extends State<_CollapsibleSection>
                           ),
                         ),
                       ),
+                      if (widget.showAllTimeBadge) ...[
+                        Container(
+                          margin: const EdgeInsets.only(right: 8),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.onSurfaceVariant
+                                .withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: theme.colorScheme.onSurfaceVariant
+                                  .withValues(alpha: 0.3),
+                              width: 1,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.all_inclusive,
+                                size: 12,
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                l10n.allTime,
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                       RotationTransition(
                         turns: _iconTurns,
                         child: Icon(

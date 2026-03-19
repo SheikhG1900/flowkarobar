@@ -3860,4 +3860,39 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get noBankAccountsToPayFrom =>
       'No bank or savings accounts available to pay from';
+
+  @override
+  String get accountsOverview => 'Accounts Overview';
+
+  @override
+  String get balanceDistribution => 'Balance Distribution';
+
+  @override
+  String get spendingByAccount => 'Spending by Account';
+
+  @override
+  String get transferFlow => 'Transfer Flow';
+
+  @override
+  String get creditUtilisation => 'Credit Utilisation';
+
+  @override
+  String get noAccountActivity => 'No account activity in this period';
+
+  @override
+  String get noTransferActivity => 'No transfers in this period';
+
+  @override
+  String creditUsedOf(String used, String limit) {
+    return '$used used of $limit';
+  }
+
+  @override
+  String get inflow => 'Inflow';
+
+  @override
+  String get outflow => 'Outflow';
+
+  @override
+  String get netFlow => 'Net Flow';
 }

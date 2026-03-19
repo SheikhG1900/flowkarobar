@@ -2024,5 +2024,27 @@
       "amount": { "type": "String" }
     }
   },
-  "noBankAccountsToPayFrom": "No bank or savings accounts available to pay from"
+  "noBankAccountsToPayFrom": "No bank or savings accounts available to pay from",
+  "accountsOverview": "Accounts Overview",
+  "netWorth": "Net Worth",
+  "totalAssets": "Total Assets",
+  "totalLiabilities": "Total Liabilities",
+  "balanceDistribution": "Balance Distribution",
+  "spendingByAccount": "Spending by Account",
+  "transferFlow": "Transfer Flow",
+  "creditUtilisation": "Credit Utilisation",
+  "noAccountActivity": "No account activity in this period",
+  "noTransferActivity": "No transfers in this period",
+  "creditUsedOf": "{used} used of {limit}",
+  "@creditUsedOf": {
+    "placeholders": {
+      "used": { "type": "String" },
+      "limit": { "type": "String" }
+    }
+  },
+  "transfers": "Transfers",
+  "income": "Income",
+  "inflow": "Inflow",
+  "outflow": "Outflow",
+  "netFlow": "Net Flow"
 }

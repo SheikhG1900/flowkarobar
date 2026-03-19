@@ -1,8 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/features/analytics/data/analytics_repository.dart';
+import 'package:flowpaisa/features/accounts/data/accounts_repository.dart';
+import 'package:flowpaisa/features/accounts/presentation/providers/accounts_provider.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
 import 'package:flowpaisa/shared/models/date_range_state.dart';
 import 'package:flowpaisa/shared/providers/database_provider.dart';
+
+export 'package:flowpaisa/features/accounts/presentation/providers/accounts_provider.dart'
+    show accountsWithBalanceProvider;
 
 // Re-export for consumers that imported from here
 export 'package:flowpaisa/shared/models/date_range_state.dart';
@@ -103,6 +108,20 @@ final selectedIncomeCategoryIndexProvider =
     NotifierProvider<SelectedIncomeCategoryIndexNotifier, int?>(
         SelectedIncomeCategoryIndexNotifier.new);
 
+// Selected index for balance distribution pie chart
+class SelectedBalanceAccountIndexNotifier extends Notifier<int?> {
+  @override
+  int? build() => null;
+
+  void setIndex(int? index) {
+    state = index;
+  }
+}
+
+final selectedBalanceAccountIndexProvider =
+    NotifierProvider<SelectedBalanceAccountIndexNotifier, int?>(
+        SelectedBalanceAccountIndexNotifier.new);
+
 // Expenses by Category Provider (uses full selected date range)
 final expensesByCategoryProvider =
     FutureProvider.autoDispose<List<CategoryExpense>>((ref) async {
@@ -116,7 +135,9 @@ final expensesByCategoryProvider =
 final monthlyTrendsProvider =
     FutureProvider.autoDispose<List<MonthlyFinancials>>((ref) async {
   final repository = ref.watch(analyticsRepositoryProvider);
-  return repository.getMonthlyTrends(6);
+  final dateRange = ref.watch(selectedDateRangeProvider);
+  return repository.getMonthlyTrendsForRange(
+      dateRange.startDate, dateRange.endDate);
 });
 
 // Contact Summaries Provider for selected range
@@ -153,7 +174,9 @@ final allTimeFinancialSummaryProvider =
 final payableReceivableTrendsProvider =
     FutureProvider.autoDispose<List<PayableReceivableTrend>>((ref) async {
   final repository = ref.watch(analyticsRepositoryProvider);
-  return repository.getPayableReceivableTrends(6);
+  final dateRange = ref.watch(selectedDateRangeProvider);
+  return repository.getPayableReceivableTrendsForRange(
+      dateRange.startDate, dateRange.endDate);
 });
 
 // Top Contacts by Balance Provider (Top 10)
@@ -199,4 +222,22 @@ final transactionListSummaryProvider =
       ref.read(transactionsPaginatedProvider.notifier).currentFilters;
   final repository = ref.watch(analyticsRepositoryProvider);
   return repository.getFinancialSummaryForTransactionFilters(filters);
+});
+
+// ── Account Analytics Providers ─────────────────────────────────────────────
+
+/// Spending (expense + income) grouped by account for the selected date range.
+final accountSpendingProvider =
+    FutureProvider.autoDispose<List<AccountSpending>>((ref) async {
+  final repo = ref.watch(accountsRepositoryProvider);
+  final dateRange = ref.watch(selectedDateRangeProvider);
+  return repo.getSpendingByAccount(dateRange.startDate, dateRange.endDate);
+});
+
+/// Transfer flow between accounts for the selected date range.
+final transferFlowProvider =
+    FutureProvider.autoDispose<List<TransferFlowItem>>((ref) async {
+  final repo = ref.watch(accountsRepositoryProvider);
+  final dateRange = ref.watch(selectedDateRangeProvider);
+  return repo.getTransferFlow(dateRange.startDate, dateRange.endDate);
 });
