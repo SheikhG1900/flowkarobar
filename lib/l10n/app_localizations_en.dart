@@ -2698,6 +2698,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get paidTag => 'Paid';
 
   @override
+  String get filterTransactionProcessed => 'Processed';
+
+  @override
+  String get filterTransactionNotProcessed => 'Not processed';
+
+  @override
   String get currencyUSD => 'US Dollar (\$)';
 
   @override

@@ -2705,6 +2705,12 @@ class AppLocalizationsHi extends AppLocalizations {
   String get paidTag => 'भुगतान किया गया';
 
   @override
+  String get filterTransactionProcessed => 'संसाधित';
+
+  @override
+  String get filterTransactionNotProcessed => 'असंसाधित';
+
+  @override
   String get currencyUSD => 'अमेरिकी डॉलर (\$)';
 
   @override

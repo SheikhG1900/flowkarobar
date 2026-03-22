@@ -2713,6 +2713,12 @@ class AppLocalizationsUr extends AppLocalizations {
   String get paidTag => 'ادا شدہ';
 
   @override
+  String get filterTransactionProcessed => 'مکمل شدہ';
+
+  @override
+  String get filterTransactionNotProcessed => 'نامکمل';
+
+  @override
   String get currencyUSD => 'امریکی ڈالر (\$)';
 
   @override

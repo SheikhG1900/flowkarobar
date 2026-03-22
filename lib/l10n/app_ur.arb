@@ -918,6 +918,8 @@
   "receivableTag": "وصولی",
   "receivedTag": "وصول شدہ",
   "paidTag": "ادا شدہ",
+  "filterTransactionProcessed": "مکمل شدہ",
+  "filterTransactionNotProcessed": "نامکمل",
   "fontSelection": "فونٹ کا انتخاب",
   "defaultPremiumPrice": "Rs. 2500",
   "noDataForTrends": "رجحانات کے لیے کوئی ڈیٹا نہیں ہے",

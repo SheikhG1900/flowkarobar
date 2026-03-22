@@ -68,7 +68,8 @@ class TransactionFilters {
   final double? maxAmount;
 
   /// Optional transaction status filters:
-  /// 'PAID', 'RECEIVED', 'PAYABLE', 'RECEIVABLE', 'AUTO'
+  /// 'PAID', 'RECEIVED', 'PAYABLE', 'RECEIVABLE', 'AUTO', 'SCHEDULED',
+  /// 'PROCESSED' (processedDate set), 'NOT_PROCESSED' (processedDate null)
   final List<String>? statusCodes;
 
   TransactionFilters({

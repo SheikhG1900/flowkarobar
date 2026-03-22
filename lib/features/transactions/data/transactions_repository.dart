@@ -802,7 +802,8 @@ class TransactionsRepository {
           .isSmallerOrEqualValue(filters.maxAmount!));
     }
 
-    // Status-based filters: PAID / RECEIVED / PAYABLE / RECEIVABLE / AUTO / SCHEDULED
+    // Status-based filters: PAID / RECEIVED / PAYABLE / RECEIVABLE / AUTO /
+    // SCHEDULED / PROCESSED / NOT_PROCESSED
     if (filters.statusCodes != null && filters.statusCodes!.isNotEmpty) {
       final statuses = filters.statusCodes!;
       Expression<bool>? statusExpr;
@@ -818,6 +819,15 @@ class TransactionsRepository {
       // Scheduled transactions
       if (has('SCHEDULED')) {
         final expr = _database.transactions.isScheduled.equals(true);
+        statusExpr = statusExpr == null ? expr : (statusExpr | expr);
+      }
+
+      if (has('PROCESSED')) {
+        final expr = _database.transactions.processedDate.isNotNull();
+        statusExpr = statusExpr == null ? expr : (statusExpr | expr);
+      }
+      if (has('NOT_PROCESSED')) {
+        final expr = _database.transactions.processedDate.isNull();
         statusExpr = statusExpr == null ? expr : (statusExpr | expr);
       }
 
@@ -945,7 +955,8 @@ class TransactionsRepository {
           .isSmallerOrEqualValue(filters.maxAmount!));
     }
 
-    // Status-based filters: PAID / RECEIVED / PAYABLE / RECEIVABLE / AUTO / SCHEDULED
+    // Status-based filters: PAID / RECEIVED / PAYABLE / RECEIVABLE / AUTO /
+    // SCHEDULED / PROCESSED / NOT_PROCESSED
     if (filters.statusCodes != null && filters.statusCodes!.isNotEmpty) {
       final statuses = filters.statusCodes!;
       Expression<bool>? statusExpr;
@@ -959,6 +970,15 @@ class TransactionsRepository {
 
       if (has('SCHEDULED')) {
         final expr = _database.transactions.isScheduled.equals(true);
+        statusExpr = statusExpr == null ? expr : (statusExpr | expr);
+      }
+
+      if (has('PROCESSED')) {
+        final expr = _database.transactions.processedDate.isNotNull();
+        statusExpr = statusExpr == null ? expr : (statusExpr | expr);
+      }
+      if (has('NOT_PROCESSED')) {
+        final expr = _database.transactions.processedDate.isNull();
         statusExpr = statusExpr == null ? expr : (statusExpr | expr);
       }
 

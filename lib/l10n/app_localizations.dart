@@ -4972,6 +4972,18 @@ abstract class AppLocalizations {
   /// **'Paid'**
   String get paidTag;
 
+  /// No description provided for @filterTransactionProcessed.
+  ///
+  /// In en, this message translates to:
+  /// **'Processed'**
+  String get filterTransactionProcessed;
+
+  /// No description provided for @filterTransactionNotProcessed.
+  ///
+  /// In en, this message translates to:
+  /// **'Not processed'**
+  String get filterTransactionNotProcessed;
+
   /// No description provided for @currencyUSD.
   ///
   /// In en, this message translates to:

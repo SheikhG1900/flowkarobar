@@ -918,6 +918,8 @@
   "receivableTag": "प्राप्य",
   "receivedTag": "प्राप्त",
   "paidTag": "भुगतान किया गया",
+  "filterTransactionProcessed": "संसाधित",
+  "filterTransactionNotProcessed": "असंसाधित",
   "fontSelection": "फ़ॉन्ट चयन",
   "defaultPremiumPrice": "Rs. 2500",
   "noDataForTrends": "रुझानों के लिए कोई डेटा नहीं है",

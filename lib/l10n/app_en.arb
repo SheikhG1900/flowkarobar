@@ -1423,6 +1423,8 @@
   "receivableTag": "Receivable",
   "receivedTag": "Received",
   "paidTag": "Paid",
+  "filterTransactionProcessed": "Processed",
+  "filterTransactionNotProcessed": "Not processed",
   "currencyUSD": "US Dollar ($)",
   "currencyINR": "Indian Rupee (₹)",
   "currencyPKR": "Pakistani Rupee (Rs)",

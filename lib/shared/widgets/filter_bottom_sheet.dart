@@ -573,6 +573,18 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
           color: Colors.blue,
           icon: Icons.event_repeat,
         ),
+        buildStatusChip(
+          code: 'PROCESSED',
+          label: l10n.filterTransactionProcessed,
+          color: AppColors.incomeColor,
+          icon: Icons.task_alt,
+        ),
+        buildStatusChip(
+          code: 'NOT_PROCESSED',
+          label: l10n.filterTransactionNotProcessed,
+          color: theme.colorScheme.outline,
+          icon: Icons.pending_outlined,
+        ),
       ],
     );
   }
