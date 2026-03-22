@@ -1409,6 +1409,7 @@
   "payFrom": "یہاں سے ادا کریں",
   "receiveInto": "یہاں وصول کریں",
   "accountPickerInfoMessage": "صرف ان لین دین پر لاگو ہوتا ہے جن کا اکاؤنٹ مقرر نہیں",
+  "settlementContinueWithoutAccount": "اکاؤنٹ کے بغیر جاری رکھیں",
   "negativeBalanceWarning": "اس سے آپ کا نقد بیلنس صفر سے نیچے چلا جائے گا",
   "paymentDueNotification": "کریڈٹ کارڈ ادائیگی {amount} {days} دنوں میں واجب ہے",
   "@paymentDueNotification": {

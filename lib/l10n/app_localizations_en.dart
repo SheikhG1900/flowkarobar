@@ -3710,6 +3710,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Applies only to transactions without an assigned account';
 
   @override
+  String get settlementContinueWithoutAccount => 'Continue without account';
+
+  @override
   String get negativeBalanceWarning =>
       'This will put your Cash balance below zero';
 

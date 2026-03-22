@@ -29,10 +29,14 @@ final accountDetailWithBalanceProvider =
       .watchAccountWithBalance(uuid);
 });
 
-/// Whether user has at least one account configured
+/// Whether user has at least one account configured.
+/// Uses [AsyncValue.asData] (Riverpod 3) so we read the latest emitted list; while
+/// the stream is still loading before the first event, this is false until data arrives.
 final hasAccountsProvider = Provider<bool>((ref) {
   final accounts = ref.watch(accountsStreamProvider);
-  return accounts.whenData((list) => list.isNotEmpty).value ?? false;
+  final data = accounts.asData;
+  if (data == null) return false;
+  return data.value.isNotEmpty;
 });
 
 /// Accounts valid for INCOME (excludes CREDIT_CARD)

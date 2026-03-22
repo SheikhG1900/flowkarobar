@@ -20,6 +20,7 @@ import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_pro
 import 'package:flowpaisa/features/transactions/presentation/screens/add_transaction_screen.dart';
 import 'package:flowpaisa/features/transactions/presentation/screens/edit_transaction_screen.dart';
 import 'package:flowpaisa/features/transactions/presentation/screens/splitted_transactions_screen.dart';
+import 'package:flowpaisa/features/transactions/presentation/widgets/linked_settlement_account_sheet.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/payables/presentation/providers/payables_provider.dart';
 import 'package:flowpaisa/features/receivables/presentation/providers/receivables_provider.dart';
@@ -1372,29 +1373,21 @@ class TransactionDetailsDialog extends ConsumerWidget {
   static Future<void> _markAsPaid(BuildContext context, WidgetRef ref,
       String payableUuid, TransactionWithDetails item) async {
     final l10n = AppLocalizations.of(context)!;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.markAsPaid),
-        content: Text(l10n.markPendingAsPaidSubtitle),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(l10n.markAsPaid),
-          ),
-        ],
-      ),
+    final choice = await resolveSettlementAccountChoice(
+      context,
+      ref,
+      isPayable: true,
+      initialAccount: item.account,
+      transactionForAccountDefault: item.transaction,
     );
-
-    if (confirmed != true) return;
+    if (choice == null) return;
 
     try {
       final repository = ref.read(payablesRepositoryProvider);
-      await repository.markAsPaid(payableUuid);
+      await repository.markAsPaid(
+        payableUuid,
+        accountUuid: choice.accountUuid,
+      );
 
       if (context.mounted) {
         final activeColor = ref.read(activeCashbookProvider).color;
@@ -1456,29 +1449,21 @@ class TransactionDetailsDialog extends ConsumerWidget {
   static Future<void> _markAsReceived(BuildContext context, WidgetRef ref,
       String receivableUuid, TransactionWithDetails item) async {
     final l10n = AppLocalizations.of(context)!;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.markAsReceived),
-        content: Text(l10n.markReceivedSubtitle),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(l10n.markAsReceived),
-          ),
-        ],
-      ),
+    final choice = await resolveSettlementAccountChoice(
+      context,
+      ref,
+      isPayable: false,
+      initialAccount: item.account,
+      transactionForAccountDefault: item.transaction,
     );
-
-    if (confirmed != true) return;
+    if (choice == null) return;
 
     try {
       final repository = ref.read(receivablesRepositoryProvider);
-      await repository.markAsReceived(receivableUuid);
+      await repository.markAsReceived(
+        receivableUuid,
+        accountUuid: choice.accountUuid,
+      );
 
       if (context.mounted) {
         final activeColor = ref.read(activeCashbookProvider).color;

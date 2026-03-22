@@ -1944,6 +1944,7 @@
   "payFrom": "Pay From",
   "receiveInto": "Receive Into",
   "accountPickerInfoMessage": "Applies only to transactions without an assigned account",
+  "settlementContinueWithoutAccount": "Continue without account",
   "negativeBalanceWarning": "This will put your Cash balance below zero",
   "paymentDueNotification": "Credit card payment of {amount} is due in {days} days",
   "@paymentDueNotification": {

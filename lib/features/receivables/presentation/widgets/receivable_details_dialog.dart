@@ -1,3 +1,5 @@
+import 'package:flowpaisa/features/receivables/domain/models.dart';
+import 'package:flowpaisa/features/transactions/presentation/widgets/linked_settlement_account_sheet.dart';
 import 'package:flowpaisa/features/transactions/presentation/widgets/transaction_details_dialog.dart';
 import 'package:flowpaisa/features/contacts/presentation/screens/contact_details_screen.dart';
 import 'package:flowpaisa/core/utils/localization_helper.dart';
@@ -64,7 +66,6 @@ class ReceivableDetailsDialog extends ConsumerWidget {
 
         final receivable = item.receivable;
         final contact = item.contact;
-        final linkedTransaction = item.linkedTransaction;
 
         if (currency == null) {
           return const Center(child: CircularProgressIndicator());
@@ -497,8 +498,7 @@ class ReceivableDetailsDialog extends ConsumerWidget {
                   SizedBox(
                     width: double.infinity,
                     child: FilledButton.icon(
-                      onPressed: () =>
-                          _markAsReceived(context, ref, receivable.uuid),
+                      onPressed: () => _markAsReceived(context, ref, item),
                       icon: const Icon(Icons.check_circle),
                       label: Text(l10n.markAsReceived),
                       style: FilledButton.styleFrom(
@@ -801,30 +801,26 @@ class ReceivableDetailsDialog extends ConsumerWidget {
   }
 
   Future<void> _markAsReceived(
-      BuildContext context, WidgetRef ref, String receivableUuid) async {
+    BuildContext context,
+    WidgetRef ref,
+    ReceivableWithLinkedData item,
+  ) async {
+    final receivableUuid = item.receivable.uuid;
     final l10n = AppLocalizations.of(context)!;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.markAsReceived),
-        content: Text(l10n.markReceivedSubtitle),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(l10n.markAsReceived),
-          ),
-        ],
-      ),
+    final choice = await resolveSettlementAccountChoice(
+      context,
+      ref,
+      isPayable: false,
+      transactionForAccountDefault: item.linkedTransaction,
     );
-    if (confirmed != true) return;
+    if (choice == null) return;
 
     try {
       final repository = ref.read(receivablesRepositoryProvider);
-      await repository.markAsReceived(receivableUuid);
+      await repository.markAsReceived(
+        receivableUuid,
+        accountUuid: choice.accountUuid,
+      );
 
       if (context.mounted) {
         // Refresh item to get updated status and externalLinkId

@@ -1,3 +1,4 @@
+import 'package:flowpaisa/features/transactions/presentation/widgets/linked_settlement_account_sheet.dart';
 import 'package:flowpaisa/features/transactions/presentation/widgets/transaction_details_dialog.dart';
 import 'package:flowpaisa/features/contacts/presentation/screens/contact_details_screen.dart';
 import 'package:flutter/material.dart';
@@ -13,6 +14,7 @@ import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/features/transactions/domain/models.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transaction_service_provider.dart';
+import 'package:flowpaisa/features/payables/domain/models.dart';
 import 'package:flowpaisa/features/payables/presentation/providers/payables_provider.dart';
 import 'package:flowpaisa/core/utils/share_helper.dart';
 import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
@@ -62,7 +64,6 @@ class PayableDetailsDialog extends ConsumerWidget {
 
         final payable = item.payable;
         final contact = item.contact;
-        final linkedTransaction = item.linkedTransaction;
 
         if (currency == null) {
           return const Center(child: CircularProgressIndicator());
@@ -491,7 +492,7 @@ class PayableDetailsDialog extends ConsumerWidget {
                   SizedBox(
                     width: double.infinity,
                     child: FilledButton.icon(
-                      onPressed: () => _markAsPaid(context, ref, payable.uuid),
+                      onPressed: () => _markAsPaid(context, ref, item),
                       icon: const Icon(Icons.check_circle),
                       label: Text(l10n.markAsPaid),
                       style: FilledButton.styleFrom(
@@ -794,30 +795,26 @@ class PayableDetailsDialog extends ConsumerWidget {
   }
 
   Future<void> _markAsPaid(
-      BuildContext context, WidgetRef ref, String payableUuid) async {
+    BuildContext context,
+    WidgetRef ref,
+    PayableWithLinkedData item,
+  ) async {
+    final payableUuid = item.payable.uuid;
     final l10n = AppLocalizations.of(context)!;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.markAsPaid),
-        content: Text(l10n.markPendingAsPaidSubtitle),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(l10n.markAsPaid),
-          ),
-        ],
-      ),
+    final choice = await resolveSettlementAccountChoice(
+      context,
+      ref,
+      isPayable: true,
+      transactionForAccountDefault: item.linkedTransaction,
     );
-    if (confirmed != true) return;
+    if (choice == null) return;
 
     try {
       final repository = ref.read(payablesRepositoryProvider);
-      await repository.markAsPaid(payableUuid);
+      await repository.markAsPaid(
+        payableUuid,
+        accountUuid: choice.accountUuid,
+      );
 
       if (context.mounted) {
         // Refresh item to get updated status and externalLinkId

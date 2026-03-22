@@ -6797,6 +6797,12 @@ abstract class AppLocalizations {
   /// **'Applies only to transactions without an assigned account'**
   String get accountPickerInfoMessage;
 
+  /// No description provided for @settlementContinueWithoutAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue without account'**
+  String get settlementContinueWithoutAccount;
+
   /// No description provided for @negativeBalanceWarning.
   ///
   /// In en, this message translates to:

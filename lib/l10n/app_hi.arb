@@ -1409,6 +1409,7 @@
   "payFrom": "यहाँ से भुगतान करें",
   "receiveInto": "यहाँ प्राप्त करें",
   "accountPickerInfoMessage": "केवल उन लेनदेन पर लागू होता है जिनका खाता निर्दिष्ट नहीं है",
+  "settlementContinueWithoutAccount": "बिना खाते के जारी रखें",
   "negativeBalanceWarning": "इससे आपका नकद शेष शून्य से नीचे चला जाएगा",
   "paymentDueNotification": "क्रेडिट कार्ड भुगतान {amount} {days} दिनों में देय है",
   "@paymentDueNotification": {
