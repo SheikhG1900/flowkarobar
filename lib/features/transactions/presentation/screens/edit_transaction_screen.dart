@@ -31,6 +31,7 @@ import 'package:flowpaisa/features/transactions/presentation/providers/schedule_
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/features/transactions/presentation/screens/edit_split_transaction_screen.dart';
 import 'package:flowpaisa/features/transactions/presentation/widgets/transaction_scenario_picker.dart';
+import 'package:flowpaisa/features/transactions/presentation/widgets/split_bill_multi_contact_picker_sheet.dart';
 import 'package:flowpaisa/shared/widgets/amount_calculator_sheet.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/features/accounts/presentation/providers/accounts_provider.dart';
@@ -506,7 +507,7 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
       });
     } else {
       if (_selectedContact == null) {
-        _showContactPicker(null);
+        _showContactPicker();
       }
       setState(() => _paidRelationship = value);
       if (_selectedContact == null && mounted) {
@@ -647,7 +648,7 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
     );
   }
 
-  void _showContactPicker(StateSetter? setModalState) {
+  void _showContactPicker() {
     final l10n = AppLocalizations.of(context)!;
     showModalBottomSheet(
       context: context,
@@ -690,38 +691,11 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                                 builder: (_) => const AddContactScreen()),
                           );
                           if (newContact != null && context.mounted) {
-                            if (setModalState != null) {
-                              setModalState(() {
-                                if (!_groupShares.any(
-                                    (s) => s.contact?.uuid == newContact.uuid)) {
-                                  final newShare = SplitShare(contact: newContact);
-                                  _groupShares.add(newShare);
-                                  
-                                  // Recalculate shares to include the new one
-                                  final totalAmount = double.tryParse(_amountController.text) ?? 0.0;
-                                  final lockedShares = _groupShares.where((s) => s.isLocked).toList();
-                                  final unlockedShares = _groupShares.where((s) => !s.isLocked).toList();
-                                  
-                                  if (unlockedShares.isNotEmpty) {
-                                    double lockedPercent = lockedShares.fold(0.0, (sum, s) => sum + s.percentage);
-                                    double remainingPercent = 100.0 - lockedPercent;
-                                    if (remainingPercent < 0) remainingPercent = 0;
-                                    
-                                    double perSharePercent = remainingPercent / unlockedShares.length;
-                                    for (var s in unlockedShares) {
-                                      s.percentage = perSharePercent;
-                                      s.amount = (perSharePercent / 100) * totalAmount;
-                                    }
-                                  }
-                                }
-                              });
-                            } else {
-                              setState(() {
-                                _selectedContact = newContact;
-                                _selectedContactUuid = newContact.uuid;
-                              });
-                            }
-                            Navigator.pop(context); // Close picker
+                            setState(() {
+                              _selectedContact = newContact;
+                              _selectedContactUuid = newContact.uuid;
+                            });
+                            Navigator.pop(context);
                           }
                         },
                         icon: const Icon(Icons.add),
@@ -774,37 +748,10 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                                     color: theme.colorScheme.primary)
                                 : null,
                             onTap: () {
-                              if (setModalState != null) {
-                                setModalState(() {
-                                  if (!_groupShares.any(
-                                      (s) => s.contact?.uuid == contact.uuid)) {
-                                    _groupShares
-                                        .add(SplitShare(contact: contact));
-                                    
-                                    // Recalculate shares to include the new one
-                                    final totalAmount = double.tryParse(_amountController.text) ?? 0.0;
-                                    final lockedShares = _groupShares.where((s) => s.isLocked).toList();
-                                    final unlockedShares = _groupShares.where((s) => !s.isLocked).toList();
-                                    
-                                    if (unlockedShares.isNotEmpty) {
-                                      double lockedPercent = lockedShares.fold(0.0, (sum, s) => sum + s.percentage);
-                                      double remainingPercent = 100.0 - lockedPercent;
-                                      if (remainingPercent < 0) remainingPercent = 0;
-                                      
-                                      double perSharePercent = remainingPercent / unlockedShares.length;
-                                      for (var s in unlockedShares) {
-                                        s.percentage = perSharePercent;
-                                        s.amount = (perSharePercent / 100) * totalAmount;
-                                      }
-                                    }
-                                  }
-                                });
-                              } else {
-                                setState(() {
-                                  _selectedContact = contact;
-                                  _selectedContactUuid = contact.uuid;
-                                });
-                              }
+                              setState(() {
+                                _selectedContact = contact;
+                                _selectedContactUuid = contact.uuid;
+                              });
                               Navigator.pop(context);
                             },
                           );
@@ -993,13 +940,25 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                             ),
                             tooltip: l10n.me,
                           ),
-                          // Add Contact Action
+                          // Add Contact Action (multi-select, same as splitted bill screen)
                           IconButton(
-                            onPressed: () {
-                              _showContactPicker(setModalState);
-                              // Note: Recalculation will happen when the picker closes if we add a contact
-                              // But since we are using setModalState inside the picker, it should be fine.
-                              // To be sure, we can trigger a recalculation here if we had a way to know when it's done.
+                            onPressed: () async {
+                              final excludeUuids = _groupShares
+                                  .where((s) => s.contact != null)
+                                  .map((s) => s.contact!.uuid)
+                                  .toSet();
+                              final contacts =
+                                  await showSplitBillMultiContactPicker(
+                                context,
+                                excludeContactUuids: excludeUuids,
+                              );
+                              if (contacts == null || contacts.isEmpty) return;
+                              setModalState(() {
+                                for (final contact in contacts) {
+                                  _groupShares.add(SplitShare(contact: contact));
+                                }
+                                recalculateShares(_groupShares.length - 1);
+                              });
                             },
                             icon: const Icon(Icons.person_add_outlined),
                             tooltip: l10n.addContact,
@@ -1614,7 +1573,7 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
 
               // Contact Selector
               InkWell(
-                onTap: () => _showContactPicker(null),
+                onTap: () => _showContactPicker(),
                 borderRadius: BorderRadius.circular(12),
                 child: Container(
                   padding: const EdgeInsets.all(16),
