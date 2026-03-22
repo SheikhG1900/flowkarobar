@@ -733,20 +733,32 @@ class ContactDetailsScreen extends ConsumerWidget {
     final absNet = netBalance.abs();
     final service = ref.read(contactBulkSettlementServiceProvider);
 
-    await showModalBottomSheet(
+    await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (ctx) => _BulkSettleSheetContent(
-        contactUuid: contactUuid,
-        absNet: absNet,
-        isNetReceivable: isNetReceivable,
-        service: service,
-        l10n: l10n,
-        ref: ref,
-      ),
+      builder: (ctx) {
+        final keyboardInset = MediaQuery.viewInsetsOf(ctx).bottom;
+        return AnimatedPadding(
+          duration: const Duration(milliseconds: 120),
+          curve: Curves.easeOut,
+          padding: EdgeInsets.only(bottom: keyboardInset),
+          child: SingleChildScrollView(
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+            child: _BulkSettleSheetContent(
+              contactUuid: contactUuid,
+              absNet: absNet,
+              isNetReceivable: isNetReceivable,
+              service: service,
+              l10n: l10n,
+              ref: ref,
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -1096,12 +1108,7 @@ class _BulkSettleSheetContentState extends State<_BulkSettleSheetContent> {
         widget.ref.watch(currencyDecimalPlacesProvider);
 
     return Padding(
-      padding: EdgeInsets.only(
-        left: 20,
-        right: 20,
-        top: 16,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-      ),
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
