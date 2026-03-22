@@ -28,7 +28,8 @@ class TransferAccountBox extends StatelessWidget {
     this.onAccountTap,
   });
 
-  static IconData _iconForAccount(Account? account) {
+  /// Icon for list rows, pickers, etc. (custom icon or default by account type).
+  static IconData iconForAccount(Account? account) {
     if (account == null) return Symbols.account_balance_wallet;
     final icon = IconHelper.getIconData(account.icon);
     if (icon != null) return icon;
@@ -48,13 +49,23 @@ class TransferAccountBox extends StatelessWidget {
     }
   }
 
+  /// Parsed account color, or theme primary when missing / invalid.
+  static Color accentColorFor(Account account, ThemeData theme) {
+    if (account.color != null) {
+      try {
+        return Color(int.parse(account.color!.replaceAll('#', '0xFF')));
+      } catch (_) {}
+    }
+    return theme.colorScheme.primary;
+  }
+
   @override
   Widget build(BuildContext context) {
     final name = account?.name ?? '?';
-    final color = account?.color != null
-        ? Color(int.parse(account!.color!.replaceAll('#', '0xFF')))
+    final color = account != null
+        ? accentColorFor(account!, theme)
         : theme.colorScheme.primary;
-    final iconData = _iconForAccount(account);
+    final iconData = iconForAccount(account);
 
     final box = Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),

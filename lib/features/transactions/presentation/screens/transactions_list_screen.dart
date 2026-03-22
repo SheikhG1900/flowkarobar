@@ -24,6 +24,7 @@ import 'package:flowpaisa/core/utils/category_helper.dart';
 import 'package:flowpaisa/core/utils/localization_helper.dart';
 import 'package:flowpaisa/features/transactions/presentation/widgets/schedule_icon_badge.dart';
 import 'package:flowpaisa/features/transactions/presentation/widgets/split_icon_badge.dart';
+import 'package:flowpaisa/features/transactions/presentation/widgets/transaction_account_icon_badge.dart';
 import 'package:flowpaisa/features/transactions/presentation/widgets/schedule_list_item.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/schedule_service_provider.dart';
 import 'package:flowpaisa/features/transactions/presentation/screens/bulk_import_screen.dart';
@@ -723,6 +724,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
 
     final linkedGroupId = transaction.linkedGroupId;
     final showSplitBadge = linkedGroupId != null && linkedGroupId.isNotEmpty;
+    final account = item.account;
 
     return Stack(
       clipBehavior: Clip.none,
@@ -958,8 +960,15 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
         ),
         // Schedule icon badge (top-right corner)
         if (transaction.isScheduled == true) const ScheduleIconBadge(),
-        // Split icon badge (top-right corner); same transaction has linkedGroupId from DB
+        // Split icon badge (top-left in LTR); same transaction has linkedGroupId from DB
         if (showSplitBadge) SplitIconBadge(groupId: linkedGroupId!),
+        // Account icon (bottom-left in LTR), same horizontal side as split badge
+        if (account != null)
+          TransactionAccountIconBadge(
+            account: account,
+            theme: theme,
+            isInactive: isInactive,
+          ),
       ],
     );
   }
