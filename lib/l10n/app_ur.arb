@@ -1514,5 +1514,15 @@
   "netFlow": "خالص بہاؤ",
   "customiseSections": "سیکشن ترتیب دیں",
   "selectAll": "سب منتخب کریں",
-  "deselectAll": "سب ہٹائیں"
+  "deselectAll": "سب ہٹائیں",
+  "moreOptions": "مزید اختیارات",
+  "processed": "مکمل",
+  "processedImmediately": "فوری ادائیگی ہوئی",
+  "receivedImmediately": "فوری موصول ہوئی",
+  "processedOn": "مکمل تاریخ",
+  "markAsProcessed": "مکمل کے طور پر نشان زد کریں",
+  "paidForSubtitle": "میں نے ادائیگی کی، واپس ملے گی",
+  "paidBySubtitle": "کسی نے میری طرف سے ادائیگی کی",
+  "willReceiveSubtitle": "متوقع، ابھی موصول نہیں ہوئی",
+  "receivedFromSubtitle": "موصول ہوئی، واپس کرنی ہے"
 }

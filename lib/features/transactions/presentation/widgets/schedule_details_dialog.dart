@@ -214,6 +214,7 @@ class ScheduleDetailsDialog extends ConsumerWidget {
               theme,
               l10n,
               schedule,
+              account: item.account,
             ),
 
             const SizedBox(height: 16),
@@ -241,6 +242,12 @@ class ScheduleDetailsDialog extends ConsumerWidget {
                 isReceivable: false,
                 contact: contact,
               ),
+
+            // Processed card (process immediately when schedule runs)
+            if (schedule.paidRelationship == 'PROCESSED') ...[
+              _buildProcessedCard(context, theme, l10n, contact: contact),
+              const SizedBox(height: 16),
+            ],
 
             // Contact card when relationship is not defined but contact is provided
             if (contact != null && schedule.paidRelationship == null) ...[
@@ -326,8 +333,9 @@ class ScheduleDetailsDialog extends ConsumerWidget {
     WidgetRef ref,
     ThemeData theme,
     AppLocalizations l10n,
-    TransactionSchedule schedule,
-  ) {
+    TransactionSchedule schedule, {
+    Account? account,
+  }) {
     final dateFormat = ref.watch(userProfileProvider).dateFormat;
     final hasStart = schedule.startDate != null;
     final hasEnd = schedule.endDate != null;
@@ -499,6 +507,13 @@ class ScheduleDetailsDialog extends ConsumerWidget {
               value: AppDateFormatter.formatDate(schedule.lastGeneratedDate!,
                   pattern: dateFormat),
             ),
+          if (account != null)
+            _buildDetailRow(
+              context,
+              icon: Icons.account_balance_wallet,
+              label: l10n.account,
+              value: account.name,
+            ),
         ],
       ),
     );
@@ -562,6 +577,173 @@ class ScheduleDetailsDialog extends ConsumerWidget {
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: color,
+                ),
+              ),
+            ],
+          ),
+          if (contact != null) ...[
+            const SizedBox(height: 16),
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ContactDetailsScreen(
+                        contactUuid: contact.uuid,
+                      ),
+                    ),
+                  );
+                },
+                borderRadius: BorderRadius.circular(12),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          gradient:
+                              AppColors.getContactGradient(contact.name),
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.getContactColor(contact.name)
+                                  .withValues(alpha: 0.3),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          contact.name.isNotEmpty
+                              ? contact.name[0].toUpperCase()
+                              : '?',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              contact.name,
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            if (contact.phone != null) ...[
+                              const SizedBox(height: 2),
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.phone,
+                                    size: 14,
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    contact.phone!,
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                      Icon(
+                        Icons.chevron_right,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  static Widget _buildProcessedCard(
+    BuildContext context,
+    ThemeData theme,
+    AppLocalizations l10n, {
+    Contact? contact,
+  }) {
+    final color = theme.colorScheme.primary;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            color.withValues(alpha: 0.15),
+            color.withValues(alpha: 0.06),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withValues(alpha: 0.4), width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.12),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.25),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  Icons.check_circle_outline,
+                  size: 24,
+                  color: color,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      l10n.processed,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: color,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      l10n.processedImmediately,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],

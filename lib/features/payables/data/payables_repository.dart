@@ -336,17 +336,16 @@ class PayablesRepository {
                 isNotSynced: true,
               ),
             );
-      } else if (payable.linkedExpenseUuid != null && accountUuid != null) {
-        // Existing linked expense — update its account and processedDate if not set
-        final paidDate = DateTime.now();
+      } else if (payable.linkedExpenseUuid != null) {
+        // Existing linked expense — set processedDate to paidDate (always),
+        // and update accountUuid only when provided
         await (_database.update(_database.transactions)
-              ..where((t) =>
-                  t.uuid.equals(payable.linkedExpenseUuid!) &
-                  t.accountUuid.isNull()))
+              ..where((t) => t.uuid.equals(payable.linkedExpenseUuid!)))
             .write(TransactionsCompanion(
-          accountUuid: Value(accountUuid),
           processedDate: Value(paidDate),
+          accountUuid: accountUuid != null ? Value(accountUuid) : const Value.absent(),
           isNotSynced: const Value(true),
+          updatedAt: Value(DateTime.now()),
         ));
       }
     });

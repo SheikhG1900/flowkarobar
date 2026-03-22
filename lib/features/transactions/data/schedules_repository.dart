@@ -15,7 +15,7 @@ class SchedulesRepository {
         .watch();
   }
 
-  // Watch all schedules with category and contact details
+  // Watch all schedules with category, contact, and account details
   Stream<List<ScheduleWithDetails>> watchAllSchedulesWithDetails() {
     final query = _database.select(_database.transactionSchedules).join([
       leftOuterJoin(
@@ -27,6 +27,11 @@ class SchedulesRepository {
         _database.contacts,
         _database.contacts.uuid
             .equalsExp(_database.transactionSchedules.contactUuid),
+      ),
+      leftOuterJoin(
+        _database.accounts,
+        _database.accounts.uuid
+            .equalsExp(_database.transactionSchedules.accountUuid),
       ),
     ]);
 
@@ -40,6 +45,7 @@ class SchedulesRepository {
           schedule: row.readTable(_database.transactionSchedules),
           category: row.readTableOrNull(_database.categories),
           contact: row.readTableOrNull(_database.contacts),
+          account: row.readTableOrNull(_database.accounts),
         );
       }).toList();
     });
@@ -58,6 +64,11 @@ class SchedulesRepository {
         _database.contacts.uuid
             .equalsExp(_database.transactionSchedules.contactUuid),
       ),
+      leftOuterJoin(
+        _database.accounts,
+        _database.accounts.uuid
+            .equalsExp(_database.transactionSchedules.accountUuid),
+      ),
     ]);
 
     query.where(_database.transactionSchedules.uuid.equals(uuid) &
@@ -69,6 +80,7 @@ class SchedulesRepository {
         schedule: row.readTable(_database.transactionSchedules),
         category: row.readTableOrNull(_database.categories),
         contact: row.readTableOrNull(_database.contacts),
+        account: row.readTableOrNull(_database.accounts),
       );
     });
   }

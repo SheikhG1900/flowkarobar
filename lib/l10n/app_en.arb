@@ -2049,5 +2049,15 @@
   "netFlow": "Net Flow",
   "customiseSections": "Customise Sections",
   "selectAll": "Select All",
-  "deselectAll": "Deselect All"
+  "deselectAll": "Deselect All",
+  "moreOptions": "More Options",
+  "processed": "Processed",
+  "processedImmediately": "Paid immediately",
+  "receivedImmediately": "Received immediately",
+  "processedOn": "Processed On",
+  "markAsProcessed": "Mark as Processed",
+  "paidForSubtitle": "I paid, will receive back",
+  "paidBySubtitle": "Someone paid for me",
+  "willReceiveSubtitle": "Expected, not received yet",
+  "receivedFromSubtitle": "Received, will pay back"
 }

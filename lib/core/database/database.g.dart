@@ -7602,6 +7602,15 @@ class $TransactionSchedulesTable extends TransactionSchedules
       requiredDuringInsert: false,
       defaultConstraints:
           GeneratedColumn.constraintIsAlways('REFERENCES contacts (uuid)'));
+  static const VerificationMeta _accountUuidMeta =
+      const VerificationMeta('accountUuid');
+  @override
+  late final GeneratedColumn<String> accountUuid = GeneratedColumn<String>(
+      'account_uuid', aliasedName, true,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES accounts (uuid)'));
   static const VerificationMeta _descriptionMeta =
       const VerificationMeta('description');
   @override
@@ -7715,6 +7724,7 @@ class $TransactionSchedulesTable extends TransactionSchedules
         type,
         categoryUuid,
         contactUuid,
+        accountUuid,
         description,
         paidRelationship,
         dueDate,
@@ -7869,6 +7879,8 @@ class $TransactionSchedulesTable extends TransactionSchedules
           .read(DriftSqlType.string, data['${effectivePrefix}category_uuid']),
       contactUuid: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}contact_uuid']),
+      accountUuid: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}account_uuid']),
       description: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}description']),
       paidRelationship: attachedDatabase.typeMapping.read(
@@ -7916,6 +7928,7 @@ class TransactionSchedule extends DataClass
   final String type;
   final String? categoryUuid;
   final String? contactUuid;
+  final String? accountUuid;
   final String? description;
   final String? paidRelationship;
   final DateTime? dueDate;
@@ -7937,6 +7950,7 @@ class TransactionSchedule extends DataClass
       required this.type,
       this.categoryUuid,
       this.contactUuid,
+      this.accountUuid,
       this.description,
       this.paidRelationship,
       this.dueDate,
@@ -7963,6 +7977,9 @@ class TransactionSchedule extends DataClass
     }
     if (!nullToAbsent || contactUuid != null) {
       map['contact_uuid'] = Variable<String>(contactUuid);
+    }
+    if (!nullToAbsent || accountUuid != null) {
+      map['account_uuid'] = Variable<String>(accountUuid);
     }
     if (!nullToAbsent || description != null) {
       map['description'] = Variable<String>(description);
@@ -8056,6 +8073,7 @@ class TransactionSchedule extends DataClass
       type: serializer.fromJson<String>(json['type']),
       categoryUuid: serializer.fromJson<String?>(json['categoryUuid']),
       contactUuid: serializer.fromJson<String?>(json['contactUuid']),
+      accountUuid: serializer.fromJson<String?>(json['accountUuid']),
       description: serializer.fromJson<String?>(json['description']),
       paidRelationship: serializer.fromJson<String?>(json['paidRelationship']),
       dueDate: serializer.fromJson<DateTime?>(json['dueDate']),
@@ -8085,6 +8103,7 @@ class TransactionSchedule extends DataClass
       'type': serializer.toJson<String>(type),
       'categoryUuid': serializer.toJson<String?>(categoryUuid),
       'contactUuid': serializer.toJson<String?>(contactUuid),
+      'accountUuid': serializer.toJson<String?>(accountUuid),
       'description': serializer.toJson<String?>(description),
       'paidRelationship': serializer.toJson<String?>(paidRelationship),
       'dueDate': serializer.toJson<DateTime?>(dueDate),
@@ -8109,6 +8128,7 @@ class TransactionSchedule extends DataClass
           String? type,
           Value<String?> categoryUuid = const Value.absent(),
           Value<String?> contactUuid = const Value.absent(),
+          Value<String?> accountUuid = const Value.absent(),
           Value<String?> description = const Value.absent(),
           Value<String?> paidRelationship = const Value.absent(),
           Value<DateTime?> dueDate = const Value.absent(),
@@ -8131,6 +8151,7 @@ class TransactionSchedule extends DataClass
         categoryUuid:
             categoryUuid.present ? categoryUuid.value : this.categoryUuid,
         contactUuid: contactUuid.present ? contactUuid.value : this.contactUuid,
+        accountUuid: accountUuid.present ? accountUuid.value : this.accountUuid,
         description: description.present ? description.value : this.description,
         paidRelationship: paidRelationship.present
             ? paidRelationship.value
@@ -8280,6 +8301,7 @@ class TransactionSchedulesCompanion
   final Value<String> type;
   final Value<String?> categoryUuid;
   final Value<String?> contactUuid;
+  final Value<String?> accountUuid;
   final Value<String?> description;
   final Value<String?> paidRelationship;
   final Value<DateTime?> dueDate;
@@ -8302,6 +8324,7 @@ class TransactionSchedulesCompanion
     this.type = const Value.absent(),
     this.categoryUuid = const Value.absent(),
     this.contactUuid = const Value.absent(),
+    this.accountUuid = const Value.absent(),
     this.description = const Value.absent(),
     this.paidRelationship = const Value.absent(),
     this.dueDate = const Value.absent(),
@@ -8325,6 +8348,7 @@ class TransactionSchedulesCompanion
     required String type,
     this.categoryUuid = const Value.absent(),
     this.contactUuid = const Value.absent(),
+    this.accountUuid = const Value.absent(),
     this.description = const Value.absent(),
     this.paidRelationship = const Value.absent(),
     this.dueDate = const Value.absent(),
@@ -8401,6 +8425,7 @@ class TransactionSchedulesCompanion
       Value<String>? type,
       Value<String?>? categoryUuid,
       Value<String?>? contactUuid,
+      Value<String?>? accountUuid,
       Value<String?>? description,
       Value<String?>? paidRelationship,
       Value<DateTime?>? dueDate,
@@ -8423,6 +8448,7 @@ class TransactionSchedulesCompanion
       type: type ?? this.type,
       categoryUuid: categoryUuid ?? this.categoryUuid,
       contactUuid: contactUuid ?? this.contactUuid,
+      accountUuid: accountUuid ?? this.accountUuid,
       description: description ?? this.description,
       paidRelationship: paidRelationship ?? this.paidRelationship,
       dueDate: dueDate ?? this.dueDate,
@@ -8459,6 +8485,9 @@ class TransactionSchedulesCompanion
     }
     if (contactUuid.present) {
       map['contact_uuid'] = Variable<String>(contactUuid.value);
+    }
+    if (accountUuid.present) {
+      map['account_uuid'] = Variable<String>(accountUuid.value);
     }
     if (description.present) {
       map['description'] = Variable<String>(description.value);

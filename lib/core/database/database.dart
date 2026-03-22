@@ -239,6 +239,8 @@ class TransactionSchedules extends Table {
   TextColumn get categoryUuid =>
       text().nullable().references(Categories, #uuid)();
   TextColumn get contactUuid => text().nullable().references(Contacts, #uuid)();
+  TextColumn get accountUuid =>
+      text().nullable().references(Accounts, #uuid)();
   TextColumn get description => text().nullable()();
   TextColumn get paidRelationship => text()
       .nullable()(); // 'PAID_FOR', 'PAID_BY', 'RECEIVED_FROM', 'WILL_RECEIVE' or null
@@ -349,7 +351,7 @@ class AppDatabase extends _$AppDatabase {
       : super(executor ?? openConnection(fileName));
 
   @override
-  int get schemaVersion => 18;
+  int get schemaVersion => 19;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -451,6 +453,18 @@ class AppDatabase extends _$AppDatabase {
 
           // Migration from version 17 to 18: Add Accounts, AccountTransfers tables
           // and accountUuid + processedDate columns to Transactions
+          // Migration from version 18 to 19: Add accountUuid to TransactionSchedules
+          if (from <= 18) {
+            try {
+              await customStatement(
+                  'ALTER TABLE transaction_schedules ADD COLUMN account_uuid TEXT REFERENCES accounts (uuid);');
+            } catch (e) {
+              if (kDebugMode) {
+                print('Migration: transaction_schedules account_uuid might already exist: $e');
+              }
+            }
+          }
+
           if (from <= 17) {
             try {
               await m.createTable(accounts);
@@ -627,6 +641,13 @@ class AppDatabase extends _$AppDatabase {
         '#E91E63',
         'INCOME',
         'default_cat_gift'
+      ),
+      (
+        'Refund',
+        Symbols.replay.codePoint.toString(),
+        '#FF9800',
+        'INCOME',
+        'default_cat_refund'
       ),
       (
         'Other',

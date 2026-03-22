@@ -39,6 +39,7 @@ class ScheduleService {
     String? description,
     String? categoryUuid,
     String? contactUuid,
+    String? accountUuid,
     String? paidRelationship,
     DateTime? dueDate,
     int? dueDateOffset,
@@ -68,6 +69,7 @@ class ScheduleService {
           description: Value(description),
           categoryUuid: Value(categoryUuid),
           contactUuid: Value(contactUuid),
+          accountUuid: Value(accountUuid),
           paidRelationship: Value(paidRelationship),
           dueDate: Value(dueDate),
           dueDateOffset: Value(dueDateOffset),
@@ -202,6 +204,14 @@ class ScheduleService {
       calculatedDueDate = schedule.dueDate;
     }
 
+    // Translate 'PROCESSED' (schedule-only workaround) to null relationship + not pending
+    final scheduleRelationship = schedule.paidRelationship;
+    final effectiveRelationship = scheduleRelationship == 'PROCESSED'
+        ? null
+        : scheduleRelationship;
+    final isPendingTx = effectiveRelationship == 'PAID_BY' ||
+        effectiveRelationship == 'WILL_RECEIVE';
+
     await transactionService.createTransaction(
       amount: schedule.amount,
       type: schedule.type,
@@ -209,7 +219,9 @@ class ScheduleService {
       description: schedule.description,
       categoryUuid: schedule.categoryUuid,
       contactUuid: schedule.contactUuid,
-      paidRelationship: schedule.paidRelationship,
+      accountUuid: schedule.accountUuid,
+      paidRelationship: effectiveRelationship,
+      isPending: isPendingTx,
       dueDate: calculatedDueDate,
       isScheduled: true,
       transactionUuid: transactionUuid,
@@ -322,6 +334,7 @@ class ScheduleService {
     String? description,
     String? categoryUuid,
     String? contactUuid,
+    String? accountUuid,
     String? paidRelationship,
     DateTime? dueDate,
     int? dueDateOffset,
@@ -364,6 +377,7 @@ class ScheduleService {
         description: Value(description),
         categoryUuid: Value(categoryUuid),
         contactUuid: Value(contactUuid),
+        accountUuid: Value(accountUuid),
         paidRelationship: Value(paidRelationship),
         dueDate: dueDate != null ? Value(dueDate) : const Value.absent(),
         dueDateOffset: dueDateOffset != null

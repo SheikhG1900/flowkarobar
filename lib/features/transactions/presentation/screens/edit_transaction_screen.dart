@@ -33,17 +33,22 @@ import 'package:flowpaisa/features/transactions/presentation/screens/edit_split_
 import 'package:flowpaisa/features/transactions/presentation/widgets/transaction_scenario_picker.dart';
 import 'package:flowpaisa/shared/widgets/amount_calculator_sheet.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
+import 'package:flowpaisa/features/accounts/presentation/providers/accounts_provider.dart';
+import 'package:flowpaisa/features/accounts/presentation/widgets/account_picker.dart';
+import 'add_transaction_screen.dart' show TxMoreOptionsSection;
 
 class EditTransactionScreen extends ConsumerStatefulWidget {
   final Transaction transaction;
   final Category? category;
   final Contact? contact;
+  final Account? account;
 
   const EditTransactionScreen({
     super.key,
     required this.transaction,
     this.category,
     this.contact,
+    this.account,
   });
 
   @override
@@ -66,7 +71,21 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
   Contact? _selectedContact;
   String? _selectedContactUuid;
 
+  /// UI: `'PROCESSED'` = Processed; `null` = none (clears processedDate on save).
   String? _paidRelationship;
+  bool _isMoreOptionsExpanded = false;
+  Account? _selectedAccount;
+
+  String? get _paidRelationshipForDb =>
+      _paidRelationship == 'PROCESSED' ? null : _paidRelationship;
+
+  /// `true` → processedDate cleared on save.
+  bool get _saveIsPending {
+    final r = _paidRelationship;
+    if (r == null) return true;
+    if (r == 'PROCESSED') return false;
+    return r == 'PAID_BY' || r == 'WILL_RECEIVE';
+  }
 
   List<SplitShare> _groupShares = [];
   bool _isGroupSplit = false;
@@ -85,7 +104,15 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
     _selectedCategory = widget.category;
     _selectedContact = widget.contact;
     _selectedContactUuid = widget.transaction.contactUuid;
-    _paidRelationship = widget.transaction.paidRelationship;
+    _selectedAccount = widget.account;
+    final t = widget.transaction;
+    if (t.paidRelationship != null) {
+      _paidRelationship = t.paidRelationship;
+    } else if (t.processedDate != null) {
+      _paidRelationship = 'PROCESSED';
+    } else {
+      _paidRelationship = null;
+    }
 
     // Fetch due date from linked payable/receivable if exists
     _loadLinkedEntryDueDate();
@@ -169,7 +196,8 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
         description: description,
         categoryUuid: _selectedCategory?.uuid,
         contactUuid: _selectedContactUuid,
-        paidRelationship: _paidRelationship,
+        accountUuid: _selectedAccount?.uuid,
+        paidRelationship: _paidRelationship ?? 'PROCESSED',
         dueDate: _dueDate,
         scheduleType: result.scheduleType,
         selectedDaysOfWeek: result.selectedDaysOfWeek,
@@ -210,7 +238,9 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
     }
 
     // Validate contact for linked transactions
-    if (_paidRelationship != null && _selectedContact == null) {
+    if (_paidRelationship != null &&
+        _paidRelationship != 'PROCESSED' &&
+        _selectedContact == null) {
       ToastUtils.showErrorToast(
         context,
         ref,
@@ -238,7 +268,7 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
           date: _selectedDate,
           description: description,
           categoryUuid: _selectedCategory?.uuid,
-          paidRelationship: _paidRelationship,
+          paidRelationship: _paidRelationshipForDb,
           dueDate: _dueDate,
           shares: _groupShares,
         );
@@ -254,8 +284,10 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
           description: description,
           contactUuid: _selectedContactUuid,
           categoryUuid: _selectedCategory?.uuid,
-          paidRelationship: _paidRelationship,
+          accountUuid: _selectedAccount?.uuid,
+          paidRelationship: _paidRelationshipForDb,
           dueDate: _dueDate,
+          isPending: _saveIsPending,
         );
       }
 
@@ -459,21 +491,24 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
 
   Future<void> _handleRelationshipChange(String? value) async {
     final l10n = AppLocalizations.of(context)!;
+    if (value == 'PROCESSED') {
+      setState(() {
+        _paidRelationship =
+            _paidRelationship == 'PROCESSED' ? null : 'PROCESSED';
+        _dueDate = null;
+      });
+      return;
+    }
     if (_paidRelationship == value) {
       setState(() {
         _paidRelationship = null;
+        _dueDate = null;
       });
     } else {
-      // Logic from AddTransactionScreen to prompt for contact if missing
       if (_selectedContact == null) {
-        // Attempt to show picker
         _showContactPicker(null);
       }
-
-      setState(() {
-        _paidRelationship = value;
-      });
-
+      setState(() => _paidRelationship = value);
       if (_selectedContact == null && mounted) {
         ToastUtils.showErrorToast(
           context,
@@ -1278,6 +1313,42 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
             ),
         ],
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 8),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            if (!_isGroupSplit) ...[
+              FloatingActionButton.small(
+                heroTag: 'edit_schedule_fab',
+                tooltip: l10n.schedule,
+                backgroundColor:
+                    isExpense ? AppColors.expenseColor : AppColors.incomeColor,
+                foregroundColor: Colors.white,
+                onPressed: (_isLoading ||
+                        (scheduleLimitsAsync.asData?.value != null &&
+                            !scheduleLimitsAsync.asData!.value.canAdd))
+                    ? null
+                    : _scheduleTransaction,
+                child: (scheduleLimitsAsync.asData?.value != null &&
+                        !scheduleLimitsAsync.asData!.value.canAdd)
+                    ? const Icon(Icons.lock)
+                    : const Icon(Icons.schedule),
+              ),
+              const SizedBox(height: 8),
+            ],
+            _EditFabChip(
+              label: _isLoading ? l10n.updating : l10n.updateTransaction,
+              icon: _isLoading ? null : Icons.check,
+              isLoading: _isLoading,
+              color: isExpense ? AppColors.expenseColor : AppColors.incomeColor,
+              onPressed: _isLoading ? null : _updateTransaction,
+            ),
+          ],
+        ),
+      ),
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -1321,79 +1392,95 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                     ),
                   ],
                 ),
-                child: Column(
+                child: Stack(
                   children: [
-                    Text(
-                      l10n.howMuch,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _amountController,
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.displayLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: isExpense
-                            ? AppColors.expenseColor
-                            : AppColors.incomeColor,
-                      ),
-                      decoration: InputDecoration(
-                        prefixText: Directionality.of(context) == TextDirection.rtl ? null : '$currencySymbol ',
-                        suffixText: Directionality.of(context) == TextDirection.rtl ? ' $currencySymbol' : null,
-                        prefixStyle: theme.textTheme.displayMedium?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
+                    Column(
+                      children: [
+                        Text(
+                          l10n.howMuch,
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
                         ),
-                        suffixStyle: theme.textTheme.displayMedium?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: _amountController,
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.displayLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: isExpense
+                                ? AppColors.expenseColor
+                                : AppColors.incomeColor,
+                          ),
+                          decoration: InputDecoration(
+                            prefixText: Directionality.of(context) == TextDirection.rtl ? null : '$currencySymbol ',
+                            suffixText: Directionality.of(context) == TextDirection.rtl ? ' $currencySymbol' : null,
+                            prefixStyle: theme.textTheme.displayMedium?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                            suffixStyle: theme.textTheme.displayMedium?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                            border: InputBorder.none,
+                            hintText: '0.00',
+                            hintStyle: theme.textTheme.displayLarge?.copyWith(
+                              color: Colors.grey.withValues(alpha: 0.3),
+                            ),
+                          ),
+                          keyboardType:
+                              const TextInputType.numberWithOptions(decimal: true),
+                          inputFormatters: [
+                            FilteringTextInputFormatter.allow(
+                                RegExp(r'^\d+\.?\d{0,2}')),
+                          ],
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return l10n.pleaseEnterValidAmount;
+                            }
+                            if (double.tryParse(value) == null) {
+                              return l10n.pleaseEnterValidAmount;
+                            }
+                            if (double.parse(value) <= 0) {
+                              return l10n.amountGreaterThanZero;
+                            }
+                            return null;
+                          },
                         ),
-                        border: InputBorder.none,
-                        hintText: '0.00',
-                        hintStyle: theme.textTheme.displayLarge?.copyWith(
-                          color: Colors.grey.withValues(alpha: 0.3),
-                        ),
-                      ),
-                      keyboardType:
-                          const TextInputType.numberWithOptions(decimal: true),
-                      inputFormatters: [
-                        FilteringTextInputFormatter.allow(
-                            RegExp(r'^\d+\.?\d{0,2}')),
                       ],
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return l10n.pleaseEnterValidAmount;
-                        }
-                        if (double.tryParse(value) == null) {
-                          return l10n.pleaseEnterValidAmount;
-                        }
-                        if (double.parse(value) <= 0) {
-                          return l10n.amountGreaterThanZero;
-                        }
-                        return null;
-                      },
                     ),
-                    if ((double.tryParse(_amountController.text) ?? 0) > 0) ...[
-                      const SizedBox(height: 12),
-                      IconButton.filled(
-                        onPressed: () async {
-                          final amount = double.tryParse(_amountController.text) ?? 0.0;
-                          await AmountCalculatorSheet.show(
-                            context,
-                            initialAmount: amount,
-                            currencySymbol: currencySymbol,
-                            decimalPlaces: decimalPlaces,
-                            onDone: (result) {
-                              setState(() {
-                                _amountController.text = result.toStringAsFixed(decimalPlaces);
-                              });
-                            },
-                          );
-                        },
-                        icon: const Icon(Symbols.calculate, size: 22),
-                        tooltip: l10n.amountCalculatorButtonTooltip,
+                    if ((double.tryParse(_amountController.text) ?? 0) > 0)
+                      Positioned(
+                        top: -8,
+                        right: 0,
+                        child: IconButton(
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(
+                              minWidth: 28, minHeight: 28),
+                          onPressed: () async {
+                            final amount =
+                                double.tryParse(_amountController.text) ?? 0.0;
+                            await AmountCalculatorSheet.show(
+                              context,
+                              initialAmount: amount,
+                              currencySymbol: currencySymbol,
+                              decimalPlaces: decimalPlaces,
+                              onDone: (result) {
+                                setState(() {
+                                  _amountController.text =
+                                      result.toStringAsFixed(decimalPlaces);
+                                });
+                              },
+                            );
+                          },
+                          icon: Icon(
+                            Symbols.calculate,
+                            size: 20,
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                          tooltip: l10n.amountCalculatorButtonTooltip,
+                        ),
                       ),
-                    ],
                   ],
                 ),
               ),
@@ -1412,7 +1499,7 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                         setState(() {
                           _selectedType = 'EXPENSE';
                           // Reset relationship when type changes
-                          _paidRelationship = null;
+                          _paidRelationship = 'PROCESSED';
                           _dueDate = null;
                         });
                       },
@@ -1429,7 +1516,7 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                         setState(() {
                           _selectedType = 'INCOME';
                           // Reset relationship when type changes
-                          _paidRelationship = null;
+                          _paidRelationship = 'PROCESSED';
                           _dueDate = null;
                         });
                       },
@@ -1613,7 +1700,18 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
+
+              // Account picker
+              if (ref.watch(hasAccountsProvider)) ...[
+                AccountPickerField(
+                  selectedAccount: _selectedAccount,
+                  excludeCreditCard: _selectedType == 'INCOME' &&
+                      _selectedCategory?.uuid != 'default_cat_refund',
+                  onChanged: (acc) => setState(() => _selectedAccount = acc),
+                ),
+                const SizedBox(height: 16),
+              ],
 
               // Description
               TextFormField(
@@ -1626,253 +1724,7 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                 maxLines: 2,
                 textCapitalization: TextCapitalization.sentences,
               ),
-              const SizedBox(height: 24),
-
-              // Paid Relationship Section (Linked Transactions)
-              if (isExpense) ...[
-                Text(
-                  l10n.paidRelationship,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                IntrinsicHeight(
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Expanded(
-                        child: _RelationshipButton(
-                          label: l10n.paidFor,
-                          subtitle: l10n.iWillReceiveBack,
-                          icon: Icons.account_balance_wallet,
-                          isSelected: _paidRelationship == 'PAID_FOR',
-                          gradient: AppColors.receivableGradient,
-                          color: AppColors.receivableColor,
-                          onTap: isSplitted ? () {} : () => _handleRelationshipChange('PAID_FOR'),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _RelationshipButton(
-                          label: l10n.paidBy,
-                          subtitle: l10n.someonePaidForMe,
-                          icon: Icons.person_outline,
-                          isSelected: _paidRelationship == 'PAID_BY',
-                          gradient: AppColors.payableGradient,
-                          color: AppColors.payableColor,
-                          onTap: isSplitted ? () {} : () => _handleRelationshipChange('PAID_BY'),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-              ] else if (_selectedType == 'INCOME') ...[
-                Text(
-                  l10n.receivedRelationship,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                IntrinsicHeight(
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Expanded(
-                        child: _RelationshipButton(
-                          label: l10n.iOwe,
-                          subtitle: l10n.receivedLoan,
-                          icon: Icons.download,
-                          isSelected: _paidRelationship == 'RECEIVED_FROM',
-                          gradient: AppColors.payableGradient,
-                          color: AppColors.payableColor,
-                          onTap: isSplitted ? () {} : () => _handleRelationshipChange('RECEIVED_FROM'),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _RelationshipButton(
-                          label: l10n.willReceive,
-                          subtitle: l10n.receiveLater,
-                          icon: Icons.schedule,
-                          isSelected: _paidRelationship == 'WILL_RECEIVE',
-                          gradient: AppColors.receivableGradient,
-                          color: AppColors.receivableColor,
-                          onTap: isSplitted ? () {} : () => _handleRelationshipChange('WILL_RECEIVE'),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-              ],
-
-              // Split Bill Button (only for non-splitted transactions)
-              if (!isSplitted && _paidRelationship != null) ...[
-                InkWell(
-                  onTap: _showGroupSplitDialog,
-                  borderRadius: BorderRadius.circular(12),
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: _isGroupSplit
-                          ? theme.colorScheme.primary.withValues(alpha: 0.1)
-                          : theme.cardColor,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: _isGroupSplit
-                            ? theme.colorScheme.primary
-                            : theme.dividerColor,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          _isGroupSplit ? Icons.groups : Icons.splitscreen,
-                          color: _isGroupSplit
-                              ? theme.colorScheme.primary
-                              : theme.hintColor,
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                l10n.splitBill,
-                                style: theme.textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              if (_isGroupSplit)
-                                Text(
-                                  '${_groupShares.length} ${l10n.contacts}',
-                                  style: theme.textTheme.bodySmall,
-                                ),
-                            ],
-                          ),
-                        ),
-                        if (_isGroupSplit)
-                          IconButton(
-                            icon: Icon(Icons.close, color: theme.hintColor),
-                            onPressed: () {
-                              setState(() {
-                                _isGroupSplit = false;
-                                _groupShares = [];
-                              });
-                            },
-                          )
-                        else
-                          const Icon(
-                            Icons.chevron_right,
-                            color: Colors.grey,
-                          ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-              ],
-
-              // Due Date Selector (only shown when relationship is active)
-              if (_paidRelationship != null) ...[
-                InkWell(
-                  onTap: _selectDueDate,
-                  borderRadius: BorderRadius.circular(12),
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surface,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: theme.dividerColor),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            gradient: _paidRelationship == 'PAID_FOR' ||
-                                    _paidRelationship == 'WILL_RECEIVE'
-                                ? AppColors.receivableGradient
-                                : AppColors.payableGradient,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: const Icon(
-                            Icons.event_available,
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              l10n.dueDateOptional,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            if (_dueDate != null) ...[
-                              Text(
-                                '${_dueDate!.day}/${_dueDate!.month}/${_dueDate!.year}',
-                                style: theme.textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              Builder(
-                                builder: (context) {
-                                  final txDate = DateTime(_selectedDate.year,
-                                      _selectedDate.month, _selectedDate.day);
-                                  final dDate = DateTime(_dueDate!.year,
-                                      _dueDate!.month, _dueDate!.day);
-                                  final diff = dDate.difference(txDate).inDays;
-                                  String relativeText;
-                                  if (diff == 0) {
-                                    relativeText = l10n.sameDay;
-                                  } else if (diff > 0) {
-                                    relativeText = l10n.inDays(diff);
-                                  } else {
-                                    relativeText = l10n.daysAgoRelative(diff.abs());
-                                  }
-                                  return Text(
-                                    relativeText,
-                                    style: theme.textTheme.bodySmall?.copyWith(
-                                      color: theme.colorScheme.primary,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  );
-                                },
-                              ),
-                            ] else
-                              Text(
-                                l10n.notSet,
-                                style: theme.textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                          ],
-                        ),
-                        const Spacer(),
-                        if (_dueDate != null)
-                          IconButton(
-                            icon: const Icon(Icons.clear, size: 20),
-                            onPressed: () {
-                              setState(() {
-                                _dueDate = null;
-                              });
-                            },
-                          ),
-                        const Icon(Icons.arrow_forward_ios, size: 16),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-              ],
+              const SizedBox(height: 16),
 
               // Date Selector
               InkWell(
@@ -1925,59 +1777,35 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 16),
 
-              // Update Button
-              GradientButton(
-                label: _isLoading ? l10n.updating : l10n.updateTransaction,
-                onPressed: _isLoading ? null : _updateTransaction,
-                gradient: isExpense
-                    ? AppColors.expenseGradient
-                    : AppColors.incomeGradient,
-                isLoading: _isLoading,
-                icon: _isLoading ? null : Icons.check,
-                width: double.infinity,
-                foreColor: Colors.white,
+              // More Options
+              TxMoreOptionsSection(
+                isExpanded: _isMoreOptionsExpanded,
+                onToggle: () => setState(
+                    () => _isMoreOptionsExpanded = !_isMoreOptionsExpanded),
+                selectedType: _selectedType,
+                paidRelationship: _paidRelationship,
+                onRelationshipChange: isSplitted
+                    ? (_) async {}
+                    : _handleRelationshipChange,
+                dueDate: _dueDate,
+                selectedDate: _selectedDate,
+                onDueDateTap: _selectDueDate,
+                onClearDueDate: () => setState(() => _dueDate = null),
+                isGroupSplit: _isGroupSplit,
+                groupSharesCount: _groupShares.length,
+                myShareAmount: null,
+                isSplitMode: true,
+                onSplitTap: _showGroupSplitDialog,
+                onClearSplit: () => setState(() {
+                  _isGroupSplit = false;
+                  _groupShares = [];
+                }),
+                showSplitButton: !isSplitted,
               ),
-              const SizedBox(height: 12),
-              // Schedule Button with Lock Icon (only when limit reached)
-              Stack(
-                alignment: Alignment.topRight,
-                children: [
-                  SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton.icon(
-                      onPressed: (_isLoading ||
-                              (scheduleLimitsAsync.asData?.value != null &&
-                                  !scheduleLimitsAsync.asData!.value.canAdd))
-                          ? null
-                          : _scheduleTransaction,
-                      icon: const Icon(Icons.schedule),
-                      label: Text(l10n.schedule),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        side: BorderSide(
-                          color: isExpense
-                              ? AppColors.expenseColor
-                              : AppColors.incomeColor,
-                        ),
-                      ),
-                    ),
-                  ),
-                  if (scheduleLimitsAsync.asData?.value != null &&
-                      !scheduleLimitsAsync.asData!.value.canAdd)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8, right: 8),
-                      child: Icon(
-                        Icons.lock,
-                        size: 16,
-                        color: isExpense
-                            ? AppColors.expenseColor
-                            : AppColors.incomeColor,
-                      ),
-                    ),
-                ],
-              ),
+
+              const SizedBox(height: 100),
             ],
           ),
         ),
@@ -2054,91 +1882,6 @@ class _TypeButton extends StatelessWidget {
   }
 }
 
-// Relationship Button Widget for Paid FOR/BY selection
-class _RelationshipButton extends StatelessWidget {
-  final String label;
-  final String subtitle;
-  final IconData icon;
-  final bool isSelected;
-  final VoidCallback onTap;
-  final Gradient gradient;
-  final Color color;
-
-  const _RelationshipButton({
-    required this.label,
-    required this.subtitle,
-    required this.icon,
-    required this.isSelected,
-    required this.onTap,
-    required this.gradient,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          gradient: isSelected ? gradient : null,
-          color: isSelected ? null : theme.colorScheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: isSelected ? color : theme.dividerColor,
-            width: isSelected ? 2 : 1,
-          ),
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: color.withValues(alpha: 0.3),
-                    blurRadius: 12,
-                    offset: const Offset(0, 6),
-                  ),
-                ]
-              : null,
-        ),
-        child: SizedBox.expand(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                icon,
-                color: isSelected
-                    ? Colors.white
-                    : theme.colorScheme.onSurfaceVariant,
-                size: 28,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                label,
-                style: theme.textTheme.titleSmall?.copyWith(
-                  color: isSelected ? Colors.white : theme.colorScheme.onSurface,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                subtitle,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: isSelected
-                      ? Colors.white.withValues(alpha: 0.9 / 1.0)
-                      : theme.colorScheme.onSurfaceVariant,
-                  fontSize: 11,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 class _SplitShareCard extends StatefulWidget {
   final SplitShare share;
@@ -2362,6 +2105,65 @@ class _SplitShareCardState extends State<_SplitShareCard> {
       ),
       onDismissed: (_) => widget.onDelete?.call(),
       child: card,
+    );
+  }
+}
+
+class _EditFabChip extends StatelessWidget {
+  final String label;
+  final IconData? icon;
+  final Color color;
+  final VoidCallback? onPressed;
+  final bool isLoading;
+
+  const _EditFabChip({
+    required this.label,
+    required this.color,
+    required this.onPressed,
+    this.icon,
+    this.isLoading = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final disabled = onPressed == null && !isLoading;
+    final effectiveColor = disabled ? color.withValues(alpha: 0.5) : color;
+
+    return Material(
+      elevation: disabled ? 0 : 4,
+      borderRadius: BorderRadius.circular(24),
+      color: effectiveColor,
+      shadowColor: color.withValues(alpha: 0.4),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(24),
+        onTap: onPressed,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (isLoading)
+                const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                      color: Colors.white, strokeWidth: 2),
+                )
+              else if (icon != null)
+                Icon(icon, color: Colors.white, size: 18),
+              if (isLoading || icon != null) const SizedBox(width: 8),
+              Text(
+                label,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

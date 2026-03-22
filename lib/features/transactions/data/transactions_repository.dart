@@ -168,6 +168,10 @@ class TransactionsRepository {
         _database.contacts.uuid.equalsExp(_database.transactions.contactUuid),
       ),
       leftOuterJoin(
+        _database.accounts,
+        _database.accounts.uuid.equalsExp(_database.transactions.accountUuid),
+      ),
+      leftOuterJoin(
         _database.payables,
         _database.payables.uuid
             .equalsExp(_database.transactions.linkedPayableUuid),
@@ -190,6 +194,7 @@ class TransactionsRepository {
       transaction: row.readTable(_database.transactions),
       category: row.readTableOrNull(_database.categories),
       contact: row.readTableOrNull(_database.contacts),
+      account: row.readTableOrNull(_database.accounts),
       linkedPayable: row.readTableOrNull(_database.payables),
       linkedReceivable: row.readTableOrNull(_database.receivables),
     );
@@ -207,6 +212,10 @@ class TransactionsRepository {
       leftOuterJoin(
         _database.contacts,
         _database.contacts.uuid.equalsExp(_database.transactions.contactUuid),
+      ),
+      leftOuterJoin(
+        _database.accounts,
+        _database.accounts.uuid.equalsExp(_database.transactions.accountUuid),
       ),
       leftOuterJoin(
         _database.payables,
@@ -230,6 +239,7 @@ class TransactionsRepository {
         transaction: row.readTable(_database.transactions),
         category: row.readTableOrNull(_database.categories),
         contact: row.readTableOrNull(_database.contacts),
+        account: row.readTableOrNull(_database.accounts),
         linkedPayable: row.readTableOrNull(_database.payables),
         linkedReceivable: row.readTableOrNull(_database.receivables),
       );
@@ -256,6 +266,10 @@ class TransactionsRepository {
         _database.contacts.uuid.equalsExp(_database.transactions.contactUuid),
       ),
       leftOuterJoin(
+        _database.accounts,
+        _database.accounts.uuid.equalsExp(_database.transactions.accountUuid),
+      ),
+      leftOuterJoin(
         _database.payables,
         _database.payables.uuid
             .equalsExp(_database.transactions.linkedPayableUuid),
@@ -275,6 +289,7 @@ class TransactionsRepository {
         transaction: row.readTable(_database.transactions),
         category: row.readTableOrNull(_database.categories),
         contact: row.readTableOrNull(_database.contacts),
+        account: row.readTableOrNull(_database.accounts),
         linkedPayable: row.readTableOrNull(_database.payables),
         linkedReceivable: row.readTableOrNull(_database.receivables),
       );
@@ -300,6 +315,10 @@ class TransactionsRepository {
         _database.contacts.uuid.equalsExp(_database.transactions.contactUuid),
       ),
       leftOuterJoin(
+        _database.accounts,
+        _database.accounts.uuid.equalsExp(_database.transactions.accountUuid),
+      ),
+      leftOuterJoin(
         _database.payables,
         _database.payables.uuid
             .equalsExp(_database.transactions.linkedPayableUuid),
@@ -320,6 +339,7 @@ class TransactionsRepository {
           transaction: row.readTable(_database.transactions),
           category: row.readTableOrNull(_database.categories),
           contact: row.readTableOrNull(_database.contacts),
+          account: row.readTableOrNull(_database.accounts),
           linkedPayable: row.readTableOrNull(_database.payables),
           linkedReceivable: row.readTableOrNull(_database.receivables),
         );
@@ -512,6 +532,10 @@ class TransactionsRepository {
         _database.contacts.uuid.equalsExp(_database.transactions.contactUuid),
       ),
       leftOuterJoin(
+        _database.accounts,
+        _database.accounts.uuid.equalsExp(_database.transactions.accountUuid),
+      ),
+      leftOuterJoin(
         _database.payables,
         _database.payables.uuid
             .equalsExp(_database.transactions.linkedPayableUuid),
@@ -531,6 +555,7 @@ class TransactionsRepository {
           transaction: row.readTable(_database.transactions),
           category: row.readTableOrNull(_database.categories),
           contact: row.readTableOrNull(_database.contacts),
+          account: row.readTableOrNull(_database.accounts),
           linkedPayable: row.readTableOrNull(_database.payables),
           linkedReceivable: row.readTableOrNull(_database.receivables),
         );
@@ -554,6 +579,10 @@ class TransactionsRepository {
         _database.contacts.uuid.equalsExp(_database.transactions.contactUuid),
       ),
       leftOuterJoin(
+        _database.accounts,
+        _database.accounts.uuid.equalsExp(_database.transactions.accountUuid),
+      ),
+      leftOuterJoin(
         _database.payables,
         _database.payables.uuid
             .equalsExp(_database.transactions.linkedPayableUuid),
@@ -575,6 +604,7 @@ class TransactionsRepository {
           transaction: row.readTable(_database.transactions),
           category: row.readTableOrNull(_database.categories),
           contact: row.readTableOrNull(_database.contacts),
+          account: row.readTableOrNull(_database.accounts),
           linkedPayable: row.readTableOrNull(_database.payables),
           linkedReceivable: row.readTableOrNull(_database.receivables),
         );
@@ -618,6 +648,10 @@ class TransactionsRepository {
         _database.contacts.uuid.equalsExp(_database.transactions.contactUuid),
       ),
       leftOuterJoin(
+        _database.accounts,
+        _database.accounts.uuid.equalsExp(_database.transactions.accountUuid),
+      ),
+      leftOuterJoin(
         _database.payables,
         _database.payables.uuid
             .equalsExp(_database.transactions.linkedPayableUuid),
@@ -639,6 +673,7 @@ class TransactionsRepository {
           transaction: row.readTable(_database.transactions),
           category: row.readTableOrNull(_database.categories),
           contact: row.readTableOrNull(_database.contacts),
+          account: row.readTableOrNull(_database.accounts),
           linkedPayable: row.readTableOrNull(_database.payables),
           linkedReceivable: row.readTableOrNull(_database.receivables),
         );
@@ -664,6 +699,10 @@ class TransactionsRepository {
         _database.contacts.uuid.equalsExp(_database.transactions.contactUuid),
       ),
       leftOuterJoin(
+        _database.accounts,
+        _database.accounts.uuid.equalsExp(_database.transactions.accountUuid),
+      ),
+      leftOuterJoin(
         _database.payables,
         _database.payables.uuid
             .equalsExp(_database.transactions.linkedPayableUuid),
@@ -685,6 +724,7 @@ class TransactionsRepository {
           transaction: row.readTable(_database.transactions),
           category: row.readTableOrNull(_database.categories),
           contact: row.readTableOrNull(_database.contacts),
+          account: row.readTableOrNull(_database.accounts),
           linkedPayable: row.readTableOrNull(_database.payables),
           linkedReceivable: row.readTableOrNull(_database.receivables),
         );
@@ -709,6 +749,10 @@ class TransactionsRepository {
       leftOuterJoin(
         _database.contacts,
         _database.contacts.uuid.equalsExp(_database.transactions.contactUuid),
+      ),
+      leftOuterJoin(
+        _database.accounts,
+        _database.accounts.uuid.equalsExp(_database.transactions.accountUuid),
       ),
       leftOuterJoin(
         _database.payables,
@@ -823,6 +867,7 @@ class TransactionsRepository {
           transaction: row.readTable(_database.transactions),
           category: row.readTableOrNull(_database.categories),
           contact: row.readTableOrNull(_database.contacts),
+          account: row.readTableOrNull(_database.accounts),
           linkedPayable: row.readTableOrNull(_database.payables),
           linkedReceivable: row.readTableOrNull(_database.receivables),
         );
@@ -847,6 +892,10 @@ class TransactionsRepository {
       leftOuterJoin(
         _database.contacts,
         _database.contacts.uuid.equalsExp(_database.transactions.contactUuid),
+      ),
+      leftOuterJoin(
+        _database.accounts,
+        _database.accounts.uuid.equalsExp(_database.transactions.accountUuid),
       ),
       leftOuterJoin(
         _database.payables,
@@ -955,6 +1004,7 @@ class TransactionsRepository {
           transaction: row.readTable(_database.transactions),
           category: row.readTableOrNull(_database.categories),
           contact: row.readTableOrNull(_database.contacts),
+          account: row.readTableOrNull(_database.accounts),
           linkedPayable: row.readTableOrNull(_database.payables),
           linkedReceivable: row.readTableOrNull(_database.receivables),
         );
@@ -978,6 +1028,10 @@ class TransactionsRepository {
         _database.contacts.uuid.equalsExp(_database.transactions.contactUuid),
       ),
       leftOuterJoin(
+        _database.accounts,
+        _database.accounts.uuid.equalsExp(_database.transactions.accountUuid),
+      ),
+      leftOuterJoin(
         _database.payables,
         _database.payables.uuid
             .equalsExp(_database.transactions.linkedPayableUuid),
@@ -998,6 +1052,7 @@ class TransactionsRepository {
           transaction: row.readTable(_database.transactions),
           category: row.readTableOrNull(_database.categories),
           contact: row.readTableOrNull(_database.contacts),
+          account: row.readTableOrNull(_database.accounts),
           linkedPayable: row.readTableOrNull(_database.payables),
           linkedReceivable: row.readTableOrNull(_database.receivables),
         );
@@ -1021,6 +1076,10 @@ class TransactionsRepository {
         _database.contacts.uuid.equalsExp(_database.transactions.contactUuid),
       ),
       leftOuterJoin(
+        _database.accounts,
+        _database.accounts.uuid.equalsExp(_database.transactions.accountUuid),
+      ),
+      leftOuterJoin(
         _database.payables,
         _database.payables.uuid
             .equalsExp(_database.transactions.linkedPayableUuid),
@@ -1041,6 +1100,7 @@ class TransactionsRepository {
           transaction: row.readTable(_database.transactions),
           category: row.readTableOrNull(_database.categories),
           contact: row.readTableOrNull(_database.contacts),
+          account: row.readTableOrNull(_database.accounts),
           linkedPayable: row.readTableOrNull(_database.payables),
           linkedReceivable: row.readTableOrNull(_database.receivables),
         );

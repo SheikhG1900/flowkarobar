@@ -3914,4 +3914,34 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get deselectAll => 'सभी हटाएं';
+
+  @override
+  String get moreOptions => 'अधिक विकल्प';
+
+  @override
+  String get processed => 'संसाधित';
+
+  @override
+  String get processedImmediately => 'तुरंत भुगतान किया';
+
+  @override
+  String get receivedImmediately => 'तुरंत प्राप्त हुआ';
+
+  @override
+  String get processedOn => 'संसाधित तिथि';
+
+  @override
+  String get markAsProcessed => 'संसाधित के रूप में चिह्नित करें';
+
+  @override
+  String get paidForSubtitle => 'मैंने भुगतान किया, वापस मिलेगा';
+
+  @override
+  String get paidBySubtitle => 'किसी ने मेरे लिए भुगतान किया';
+
+  @override
+  String get willReceiveSubtitle => 'अपेक्षित, अभी प्राप्त नहीं हुआ';
+
+  @override
+  String get receivedFromSubtitle => 'प्राप्त हुआ, वापस करना है';
 }

@@ -111,10 +111,13 @@ class TransactionService {
       }
 
       // Determine processedDate:
-      // - If isPending: null (excluded from totals/balance)
-      // - If explicitly provided: use it
+      // - PAID_BY / WILL_RECEIVE → null (money hasn't moved yet)
+      // - isPending flag also forces null
       // - Otherwise: default to transaction date (processed immediately)
-      final effectiveProcessedDate = isPending
+      final effectiveIsPending = isPending ||
+          paidRelationship == 'PAID_BY' ||
+          paidRelationship == 'WILL_RECEIVE';
+      final effectiveProcessedDate = effectiveIsPending
           ? null
           : (processedDate ?? date);
 
@@ -299,12 +302,19 @@ class TransactionService {
     required List<SplitShare> shares,
     String? description,
     String? categoryUuid,
+    String? accountUuid,
     String? paidRelationship,
     DateTime? dueDate,
   }) async {
     try {
       await database.transaction(() async {
         final linkedGroupId = DeepLinkService.newMinifiedUuid();
+
+        // Same as createTransaction: PAID_BY / WILL_RECEIVE → pending (null); else processed on date
+        final effectiveIsPending = paidRelationship == 'PAID_BY' ||
+            paidRelationship == 'WILL_RECEIVE';
+        final effectiveProcessedDate =
+            effectiveIsPending ? null : date;
 
         for (int i = 0; i < shares.length; i++) {
           final share = shares[i];
@@ -320,8 +330,10 @@ class TransactionService {
                 categoryUuid: drift.Value(categoryUuid),
                 description: drift.Value(description),
                 date: drift.Value(date),
+                accountUuid: drift.Value(accountUuid),
                 linkedGroupId: drift.Value(linkedGroupId),
                 externalLinkId: drift.Value(userTxUuid),
+                processedDate: drift.Value(effectiveProcessedDate),
                 createdAt: drift.Value(DateTime.now()),
                 updatedAt: drift.Value(DateTime.now()),
               ),
@@ -337,9 +349,11 @@ class TransactionService {
                 categoryUuid: drift.Value(categoryUuid),
                 description: drift.Value(description),
                 date: drift.Value(date),
+                accountUuid: drift.Value(accountUuid),
                 paidRelationship: drift.Value(paidRelationship),
                 linkedGroupId: drift.Value(linkedGroupId),
                 externalLinkId: drift.Value(transactionUuid),
+                processedDate: drift.Value(effectiveProcessedDate),
                 createdAt: drift.Value(DateTime.now()),
                 updatedAt: drift.Value(DateTime.now()),
               ),
@@ -497,6 +511,8 @@ class TransactionService {
     String? paidRelationship,
     DateTime? dueDate,
     required List<GroupShareEdit> shares,
+    /// When true (or PAID_BY / WILL_RECEIVE), [processedDate] is cleared for all rows in the group.
+    bool isPending = false,
   }) async {
     await database.transaction(() async {
       final existing = await transactionsRepository
@@ -513,6 +529,13 @@ class TransactionService {
           }
         }
       }
+
+      // Same as createTransaction: pending → null processedDate; else date
+      final effectiveIsPending = isPending ||
+          effectiveRelationship == 'PAID_BY' ||
+          effectiveRelationship == 'WILL_RECEIVE';
+      final effectiveProcessedDate =
+          effectiveIsPending ? null : date;
 
       // 1. First, handle updates and additions to ensure we have relationship context
       // and to avoid issues if all existing records were to be deleted.
@@ -541,6 +564,7 @@ class TransactionService {
                 contactUuid: drift.Value(edit.contactUuid),
                 paidRelationship:
                     drift.Value(edit.isUser ? null : effectiveRelationship),
+                processedDate: drift.Value(effectiveProcessedDate),
                 updatedAt: drift.Value(DateTime.now()),
               ),
             );
@@ -587,6 +611,7 @@ class TransactionService {
               date: drift.Value(date),
               linkedGroupId: drift.Value(linkedGroupId),
               externalLinkId: drift.Value(userTxUuid),
+              processedDate: drift.Value(effectiveProcessedDate),
               createdAt: drift.Value(DateTime.now()),
               updatedAt: drift.Value(DateTime.now()),
             ),
@@ -605,6 +630,7 @@ class TransactionService {
               paidRelationship: drift.Value(effectiveRelationship),
               linkedGroupId: drift.Value(linkedGroupId),
               externalLinkId: drift.Value(txUuid),
+              processedDate: drift.Value(effectiveProcessedDate),
               createdAt: drift.Value(DateTime.now()),
               updatedAt: drift.Value(DateTime.now()),
             ),
@@ -909,6 +935,23 @@ class TransactionService {
     await transactionsRepository.markAsReviewed(uuid);
   }
 
+  /// Marks the transaction (and all others in the same split group) as processed.
+  Future<void> markAsProcessed(String transactionUuid) async {
+    final group = await getGroupByTransactionUuid(transactionUuid);
+    final processedDate = DateTime.now();
+    final companion = TransactionsCompanion(
+      processedDate: drift.Value(processedDate),
+      updatedAt: drift.Value(processedDate),
+      isNotSynced: const drift.Value(true),
+    );
+    for (final item in group) {
+      await transactionsRepository.updateTransactionWithCompanion(
+        item.transaction.uuid,
+        companion,
+      );
+    }
+  }
+
   /// Update a transaction and sync the amount/description with linked entries
   /// If type or relationship changes significantly, linked entries are recreated
   Future<void> updateTransaction({
@@ -919,8 +962,11 @@ class TransactionService {
     String? description,
     String? categoryUuid,
     String? contactUuid,
+    String? accountUuid,
     String? paidRelationship,
     DateTime? dueDate,
+    /// When true (or PAID_BY / WILL_RECEIVE), [processedDate] is cleared.
+    bool isPending = false,
   }) async {
     await database.transaction(() async {
       // 1. Get the existing transaction to check for linked entries
@@ -930,6 +976,13 @@ class TransactionService {
       if (existingTransaction == null) {
         throw Exception('Transaction not found');
       }
+
+      // Same rules as [createTransaction]: pending → no processedDate.
+      final effectiveIsPending = isPending ||
+          paidRelationship == 'PAID_BY' ||
+          paidRelationship == 'WILL_RECEIVE';
+      final effectiveProcessedDate =
+          effectiveIsPending ? null : date;
 
       // 2. Check if type or relationship changed (requires linked entry recreation)
       final typeChanged = existingTransaction.type != type;
@@ -979,7 +1032,9 @@ class TransactionService {
           categoryUuid: drift.Value(categoryUuid),
           description: drift.Value(description),
           date: drift.Value(date),
+          accountUuid: drift.Value(accountUuid),
           paidRelationship: drift.Value(paidRelationship),
+          processedDate: drift.Value(effectiveProcessedDate),
           linkedPayableUuid: drift.Value(oldLinkedPayableUuid),
           linkedReceivableUuid: drift.Value(oldLinkedReceivableUuid),
           isScheduled: const drift.Value(false),

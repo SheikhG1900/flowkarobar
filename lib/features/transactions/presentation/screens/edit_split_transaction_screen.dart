@@ -1375,6 +1375,9 @@ class _EditSplitTransactionScreenState
           )
           .toList();
 
+      final isPending = _paidRelationship == 'PAID_BY' ||
+          _paidRelationship == 'WILL_RECEIVE';
+
       await ref.read(transactionServiceProvider).updateGroupSplit(
             linkedGroupId: _linkedGroupId!,
             type: _selectedType!,
@@ -1386,6 +1389,7 @@ class _EditSplitTransactionScreenState
             paidRelationship: _paidRelationship,
             dueDate: _dueDate,
             shares: shares,
+            isPending: isPending,
           );
 
       if (mounted) {

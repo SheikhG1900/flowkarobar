@@ -108,13 +108,16 @@ class LocalizationHelper {
         return l10n.iOwe;
       case 'WILL_RECEIVE':
         return l10n.willReceive;
+      case 'PROCESSED':
+        return l10n.processed;
       default:
         return relationship;
     }
   }
 
-  /// Short form for schedule/transaction details: Receivable or Payable.
-  /// PAID_FOR, WILL_RECEIVE → Receivable; PAID_BY, RECEIVED_FROM → Payable.
+  /// Short form for schedule/transaction details: Receivable, Payable, or Processed.
+  /// PAID_FOR, WILL_RECEIVE → Receivable; PAID_BY, RECEIVED_FROM → Payable;
+  /// PROCESSED → Processed (schedules only).
   static String localizeRelationshipShort(
       AppLocalizations l10n, String? relationship) {
     if (relationship == null) return '';
@@ -125,6 +128,8 @@ class LocalizationHelper {
       case 'PAID_BY':
       case 'RECEIVED_FROM':
         return l10n.payable;
+      case 'PROCESSED':
+        return l10n.processed;
       default:
         return relationship;
     }

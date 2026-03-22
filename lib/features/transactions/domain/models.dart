@@ -6,6 +6,7 @@ class TransactionWithDetails {
   final Transaction transaction;
   final Category? category;
   final Contact? contact;
+  final Account? account;
   final Payable? linkedPayable;
   final Receivable? linkedReceivable;
 
@@ -13,6 +14,7 @@ class TransactionWithDetails {
     required this.transaction,
     this.category,
     this.contact,
+    this.account,
     this.linkedPayable,
     this.linkedReceivable,
   });
@@ -39,16 +41,18 @@ class ScheduleWithDetails {
   final TransactionSchedule schedule;
   final Category? category;
   final Contact? contact;
+  final Account? account;
 
   ScheduleWithDetails({
     required this.schedule,
     this.category,
     this.contact,
+    this.account,
   });
 
   @override
   String toString() {
-    return 'ScheduleWithDetails(schedule: ${schedule.uuid}, category: ${category?.name}, contact: ${contact?.name})';
+    return 'ScheduleWithDetails(schedule: ${schedule.uuid}, category: ${category?.name}, contact: ${contact?.name}, account: ${account?.name})';
   }
 }
 

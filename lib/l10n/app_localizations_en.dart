@@ -3904,4 +3904,34 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deselectAll => 'Deselect All';
+
+  @override
+  String get moreOptions => 'More Options';
+
+  @override
+  String get processed => 'Processed';
+
+  @override
+  String get processedImmediately => 'Paid immediately';
+
+  @override
+  String get receivedImmediately => 'Received immediately';
+
+  @override
+  String get processedOn => 'Processed On';
+
+  @override
+  String get markAsProcessed => 'Mark as Processed';
+
+  @override
+  String get paidForSubtitle => 'I paid, will receive back';
+
+  @override
+  String get paidBySubtitle => 'Someone paid for me';
+
+  @override
+  String get willReceiveSubtitle => 'Expected, not received yet';
+
+  @override
+  String get receivedFromSubtitle => 'Received, will pay back';
 }

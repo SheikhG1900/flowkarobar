@@ -3920,4 +3920,34 @@ class AppLocalizationsUr extends AppLocalizations {
 
   @override
   String get deselectAll => 'سب ہٹائیں';
+
+  @override
+  String get moreOptions => 'مزید اختیارات';
+
+  @override
+  String get processed => 'مکمل';
+
+  @override
+  String get processedImmediately => 'فوری ادائیگی ہوئی';
+
+  @override
+  String get receivedImmediately => 'فوری موصول ہوئی';
+
+  @override
+  String get processedOn => 'مکمل تاریخ';
+
+  @override
+  String get markAsProcessed => 'مکمل کے طور پر نشان زد کریں';
+
+  @override
+  String get paidForSubtitle => 'میں نے ادائیگی کی، واپس ملے گی';
+
+  @override
+  String get paidBySubtitle => 'کسی نے میری طرف سے ادائیگی کی';
+
+  @override
+  String get willReceiveSubtitle => 'متوقع، ابھی موصول نہیں ہوئی';
+
+  @override
+  String get receivedFromSubtitle => 'موصول ہوئی، واپس کرنی ہے';
 }

@@ -7150,6 +7150,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Deselect All'**
   String get deselectAll;
+
+  /// No description provided for @moreOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'More Options'**
+  String get moreOptions;
+
+  /// No description provided for @processed.
+  ///
+  /// In en, this message translates to:
+  /// **'Processed'**
+  String get processed;
+
+  /// No description provided for @processedImmediately.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid immediately'**
+  String get processedImmediately;
+
+  /// No description provided for @receivedImmediately.
+  ///
+  /// In en, this message translates to:
+  /// **'Received immediately'**
+  String get receivedImmediately;
+
+  /// No description provided for @processedOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Processed On'**
+  String get processedOn;
+
+  /// No description provided for @markAsProcessed.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark as Processed'**
+  String get markAsProcessed;
+
+  /// No description provided for @paidForSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'I paid, will receive back'**
+  String get paidForSubtitle;
+
+  /// No description provided for @paidBySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Someone paid for me'**
+  String get paidBySubtitle;
+
+  /// No description provided for @willReceiveSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Expected, not received yet'**
+  String get willReceiveSubtitle;
+
+  /// No description provided for @receivedFromSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Received, will pay back'**
+  String get receivedFromSubtitle;
 }
 
 class _AppLocalizationsDelegate

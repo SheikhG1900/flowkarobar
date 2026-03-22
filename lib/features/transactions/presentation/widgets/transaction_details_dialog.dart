@@ -425,6 +425,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
                                   transaction: transaction,
                                   category: category,
                                   contact: contact,
+                                  account: item.account,
                                 ),
                               ),
                             );
@@ -750,6 +751,14 @@ class TransactionDetailsDialog extends ConsumerWidget {
                   pattern: ref.watch(userProfileProvider).dateFormat),
             ),
 
+            if (item.account != null)
+              _buildDetailRow(
+                context,
+                icon: Icons.account_balance_wallet,
+                label: l10n.account,
+                value: item.account!.name,
+              ),
+
             if (transaction.description != null &&
                 transaction.description!.isNotEmpty)
               _buildDetailRow(
@@ -758,6 +767,41 @@ class TransactionDetailsDialog extends ConsumerWidget {
                 label: l10n.description,
                 value: transaction.description!,
               ),
+
+            // Processed On date
+            if (transaction.processedDate != null)
+              _buildDetailRow(
+                context,
+                icon: Icons.check_circle_outline,
+                label: l10n.processedOn,
+                value: AppDateFormatter.formatDate(transaction.processedDate!,
+                    pattern: ref.watch(userProfileProvider).dateFormat),
+              ),
+
+            // Mark as Processed button (only when not yet processed and no linked entry)
+            if (transaction.processedDate == null &&
+                linkedPayable == null &&
+                linkedReceivable == null) ...[
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () async {
+                    await ref
+                        .read(transactionServiceProvider)
+                        .markAsProcessed(transaction.uuid);
+                    if (context.mounted) Navigator.pop(context);
+                  },
+                  icon: const Icon(Icons.check_circle_outline),
+                  label: Text(l10n.markAsProcessed),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.incomeColor,
+                    side: BorderSide(color: AppColors.incomeColor),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                ),
+              ),
+            ],
 
             // Linked Entry Section
             if (linkedPayable != null || linkedReceivable != null) ...[

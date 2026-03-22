@@ -574,6 +574,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                                     transaction: item.transaction,
                                     category: item.category,
                                     contact: item.contact,
+                                    account: item.account,
                                   ),
                                 ),
                               );
@@ -692,10 +693,8 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
     final contact = item.contact;
     final l10n = AppLocalizations.of(context)!;
 
-    // Check if it's an "inactive" transaction (Paid BY or Will Receive that hasn't been marked yet)
-    final isInactive = (transaction.paidRelationship == 'PAID_BY' ||
-            transaction.paidRelationship == 'WILL_RECEIVE') &&
-        !item.isLinkedEntryMarked;
+    // Dull display for any transaction not yet processed (processedDate == null)
+    final isInactive = transaction.processedDate == null;
 
     // Resolve category color and icon
     Color categoryColor;
