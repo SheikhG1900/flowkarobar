@@ -2,6 +2,7 @@ import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/features/transactions/domain/models.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
+import 'package:flowpaisa/features/transactions/presentation/utils/split_share_settled_label.dart';
 import 'package:flowpaisa/features/transactions/presentation/widgets/transaction_details_dialog.dart';
 import 'package:flowpaisa/features/transactions/presentation/screens/edit_split_transaction_screen.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
@@ -186,6 +187,8 @@ class SplittedTransactionsScreen extends ConsumerWidget {
     final linkedPayable = sibling.linkedPayable;
     final linkedReceivable = sibling.linkedReceivable;
     final isSettled = (linkedPayable?.status == 'PAID') || (linkedReceivable?.status == 'RECEIVED');
+    final settledLineLabel =
+        splitShareSettledStatusLabel(l10n, linkedPayable, linkedReceivable);
     final canMarkPaid = linkedPayable != null && linkedPayable.status == 'PENDING';
     final canMarkReceived = linkedReceivable != null && linkedReceivable.status == 'PENDING';
 
@@ -236,10 +239,10 @@ class SplittedTransactionsScreen extends ConsumerWidget {
                             label,
                             style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
                           ),
-                          if (isSettled) ...[
+                          if (settledLineLabel != null) ...[
                             const SizedBox(height: 2),
                             Text(
-                              linkedPayable != null ? l10n.paid : l10n.receivedLabel,
+                              settledLineLabel,
                               style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.primary),
                             ),
                           ],
@@ -268,14 +271,11 @@ class SplittedTransactionsScreen extends ConsumerWidget {
                           await TransactionDetailsDialog.markAsReceived(context, ref, linkedReceivable.uuid, sibling);
                         }
                       },
-                      icon: const Icon(Icons.check_circle, size: 18),
+                      icon: const Icon(Icons.check_circle),
                       label: Text(canMarkPaid ? l10n.markAsPaid : l10n.markAsReceived),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: canMarkPaid
-                            ? AppColors.payableColor.withValues(alpha: 0.6)
-                            : AppColors.receivableColor.withValues(alpha: 0.6),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                      ),
+                      style: canMarkPaid
+                          ? AppColors.transactionMarkAsPaidFilledStyle()
+                          : AppColors.transactionMarkAsReceivedFilledStyle(),
                     ),
                   ),
                 ],

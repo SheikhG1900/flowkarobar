@@ -614,7 +614,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get linkedTransaction => 'लिंक्ड लेन-देन';
 
   @override
-  String get markAsReceived => 'प्राप्त के रूप में चिह्नित करें';
+  String get markAsReceived => 'वसूल करें';
 
   @override
   String get deleteReceivableTitle => 'प्राप्य हटाएं';
@@ -723,7 +723,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get paid => 'भुगतान किया';
 
   @override
-  String get markAsPaid => 'भुगतान के रूप में चिह्नित करें';
+  String get markAsPaid => 'अदा करें';
 
   @override
   String get deletePayableTitle => 'देय हटाएं';
@@ -3931,7 +3931,10 @@ class AppLocalizationsHi extends AppLocalizations {
   String get processedOn => 'संसाधित तिथि';
 
   @override
-  String get markAsProcessed => 'संसाधित के रूप में चिह्नित करें';
+  String get paidOnRowLabel => 'भुगतान की तिथि';
+
+  @override
+  String get receivedOnRowLabel => 'प्राप्ति की तिथि';
 
   @override
   String get paidForSubtitle => 'मैंने भुगतान किया, वापस मिलेगा';

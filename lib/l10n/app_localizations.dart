@@ -1177,7 +1177,7 @@ abstract class AppLocalizations {
   /// No description provided for @markAsReceived.
   ///
   /// In en, this message translates to:
-  /// **'Mark as Received'**
+  /// **'Receive'**
   String get markAsReceived;
 
   /// No description provided for @deleteReceivableTitle.
@@ -1375,7 +1375,7 @@ abstract class AppLocalizations {
   /// No description provided for @markAsPaid.
   ///
   /// In en, this message translates to:
-  /// **'Mark as Paid'**
+  /// **'Pay'**
   String get markAsPaid;
 
   /// No description provided for @deletePayableTitle.
@@ -7181,11 +7181,17 @@ abstract class AppLocalizations {
   /// **'Processed On'**
   String get processedOn;
 
-  /// No description provided for @markAsProcessed.
+  /// No description provided for @paidOnRowLabel.
   ///
   /// In en, this message translates to:
-  /// **'Mark as Processed'**
-  String get markAsProcessed;
+  /// **'Paid on'**
+  String get paidOnRowLabel;
+
+  /// No description provided for @receivedOnRowLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Received on'**
+  String get receivedOnRowLabel;
 
   /// No description provided for @paidForSubtitle.
   ///

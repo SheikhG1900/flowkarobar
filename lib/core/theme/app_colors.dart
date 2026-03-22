@@ -141,6 +141,14 @@ class AppColors {
   static const receivableColor = Color(0xFF22D3EE); // Cyan
   static const payableColor = Color(0xFFFBBF24); // Amber
 
+  /// [FilledButton] for marking a linked payable as paid (transaction details, split list, etc.).
+  static ButtonStyle transactionMarkAsPaidFilledStyle() =>
+      FilledButton.styleFrom(backgroundColor: payableColor);
+
+  /// [FilledButton] for marking a linked receivable as received.
+  static ButtonStyle transactionMarkAsReceivedFilledStyle() =>
+      FilledButton.styleFrom(backgroundColor: receivableColor);
+
   // Section Colors (for FABs, tabs, and quick actions)
   static const dashboardSectionColor = Color(0xFF00D4FF); // Bright Cyan
   static const transactionsSectionColor = Color(0xFF00B8FF); // Electric Blue

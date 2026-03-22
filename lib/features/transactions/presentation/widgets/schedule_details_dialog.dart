@@ -245,7 +245,13 @@ class ScheduleDetailsDialog extends ConsumerWidget {
 
             // Processed card (process immediately when schedule runs)
             if (schedule.paidRelationship == 'PROCESSED') ...[
-              _buildProcessedCard(context, theme, l10n, contact: contact),
+              _buildProcessedCard(
+                context,
+                theme,
+                l10n,
+                isExpense: isExpense,
+                contact: contact,
+              ),
               const SizedBox(height: 16),
             ],
 
@@ -681,6 +687,7 @@ class ScheduleDetailsDialog extends ConsumerWidget {
     BuildContext context,
     ThemeData theme,
     AppLocalizations l10n, {
+    required bool isExpense,
     Contact? contact,
   }) {
     final color = theme.colorScheme.primary;
@@ -730,7 +737,7 @@ class ScheduleDetailsDialog extends ConsumerWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      l10n.processed,
+                      isExpense ? l10n.markAsPaid : l10n.markAsReceived,
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: color,
@@ -738,7 +745,9 @@ class ScheduleDetailsDialog extends ConsumerWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      l10n.processedImmediately,
+                      isExpense
+                          ? l10n.processedImmediately
+                          : l10n.receivedImmediately,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),

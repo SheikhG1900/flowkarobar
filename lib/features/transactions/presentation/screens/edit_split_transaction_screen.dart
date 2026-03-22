@@ -7,6 +7,7 @@ import 'package:flowpaisa/features/contacts/presentation/providers/contacts_prov
 import 'package:flowpaisa/features/transactions/domain/models.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transaction_service_provider.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
+import 'package:flowpaisa/features/transactions/presentation/utils/split_share_settled_label.dart';
 import 'package:flowpaisa/core/utils/icon_helper.dart';
 import 'package:flowpaisa/core/utils/localization_helper.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
@@ -29,6 +30,8 @@ class _ShareRow {
   bool isUser;
   bool isLocked;
   bool isProcessed;
+  Payable? linkedPayable;
+  Receivable? linkedReceivable;
   final TextEditingController amountController;
   final TextEditingController percentController;
 
@@ -41,6 +44,8 @@ class _ShareRow {
     required this.isUser,
     this.isLocked = false,
     this.isProcessed = false,
+    this.linkedPayable,
+    this.linkedReceivable,
   })  : amountController = TextEditingController(text: amount.toStringAsFixed(2)),
         percentController = TextEditingController(text: percentage.toStringAsFixed(1));
 
@@ -140,6 +145,8 @@ class _EditSplitTransactionScreenState
         isUser: isUser,
         isLocked: false,
         isProcessed: isSettled,
+        linkedPayable: e.linkedPayable,
+        linkedReceivable: e.linkedReceivable,
       );
     }).toList();
   }
@@ -567,6 +574,13 @@ class _EditSplitTransactionScreenState
     _ShareRow row,
   ) {
     final label = row.isUser ? l10n.me : (row.contact?.name ?? l10n.selectContact);
+    final settledBadgeLabel = row.isProcessed
+        ? splitShareSettledStatusLabel(
+            l10n,
+            row.linkedPayable,
+            row.linkedReceivable,
+          )
+        : null;
     final contactColor = row.isUser
         ? theme.colorScheme.secondary
         : (row.contact?.name != null
@@ -652,7 +666,7 @@ class _EditSplitTransactionScreenState
                         ],
                       ),
                     ),
-                    if (row.isProcessed)
+                    if (settledBadgeLabel != null)
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
@@ -660,10 +674,7 @@ class _EditSplitTransactionScreenState
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
-                          (_paidRelationship?.toLowerCase() == 'paid_for' || 
-                           _paidRelationship?.toLowerCase() == 'will_receive')
-                              ? l10n.receivedTag
-                              : l10n.paidTag,
+                          settledBadgeLabel,
                           style: theme.textTheme.labelSmall?.copyWith(
                             color: theme.colorScheme.primary,
                             fontWeight: FontWeight.bold,

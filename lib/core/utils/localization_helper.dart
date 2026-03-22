@@ -97,7 +97,10 @@ class LocalizationHelper {
   }
 
   static String localizeRelationship(
-      AppLocalizations l10n, String? relationship) {
+    AppLocalizations l10n,
+    String? relationship, {
+    bool? isExpense,
+  }) {
     if (relationship == null) return '';
     switch (relationship.toUpperCase()) {
       case 'PAID_FOR':
@@ -109,17 +112,27 @@ class LocalizationHelper {
       case 'WILL_RECEIVE':
         return l10n.willReceive;
       case 'PROCESSED':
-        return l10n.processed;
+        return processedRelationshipLabel(l10n, isExpense);
       default:
         return relationship;
     }
   }
 
-  /// Short form for schedule/transaction details: Receivable, Payable, or Processed.
+  /// Immediate-settlement relationship: expense → [markAsPaid] (Pay), income → [markAsReceived] (Receive).
+  static String processedRelationshipLabel(
+      AppLocalizations l10n, bool? isExpense) {
+    if (isExpense == false) return l10n.markAsReceived;
+    return l10n.markAsPaid;
+  }
+
+  /// Short form for schedule/transaction details: Receivable, Payable, or Pay/Receive when PROCESSED.
   /// PAID_FOR, WILL_RECEIVE → Receivable; PAID_BY, RECEIVED_FROM → Payable;
-  /// PROCESSED → Processed (schedules only).
+  /// PROCESSED → Pay (expense) or Receive (income).
   static String localizeRelationshipShort(
-      AppLocalizations l10n, String? relationship) {
+    AppLocalizations l10n,
+    String? relationship, {
+    bool? isExpense,
+  }) {
     if (relationship == null) return '';
     switch (relationship.toUpperCase()) {
       case 'PAID_FOR':
@@ -129,7 +142,7 @@ class LocalizationHelper {
       case 'RECEIVED_FROM':
         return l10n.payable;
       case 'PROCESSED':
-        return l10n.processed;
+        return processedRelationshipLabel(l10n, isExpense);
       default:
         return relationship;
     }

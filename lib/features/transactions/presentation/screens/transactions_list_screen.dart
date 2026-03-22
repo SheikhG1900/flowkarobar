@@ -888,8 +888,12 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                           const SizedBox(width: 3),
                         ],
                         Text(
-                          _getStatusLabel(l10n, transaction.paidRelationship!,
-                              item.isLinkedEntryMarked),
+                          _getStatusLabel(
+                            l10n,
+                            transaction.paidRelationship!,
+                            item.isLinkedEntryMarked,
+                            isExpense: transaction.type == 'EXPENSE',
+                          ),
                           style: TextStyle(
                             fontSize: 10,
                             color:
@@ -1016,7 +1020,11 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
   }
 
   String _getStatusLabel(
-      AppLocalizations l10n, String relationship, bool isMarked) {
+    AppLocalizations l10n,
+    String relationship,
+    bool isMarked, {
+    required bool isExpense,
+  }) {
     if (isMarked) {
       switch (relationship.toUpperCase()) {
         case 'PAID_FOR':
@@ -1027,7 +1035,11 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
           return l10n.paidTag;
       }
     }
-    return LocalizationHelper.localizeRelationshipShort(l10n, relationship);
+    return LocalizationHelper.localizeRelationshipShort(
+      l10n,
+      relationship,
+      isExpense: isExpense,
+    );
   }
 }
 

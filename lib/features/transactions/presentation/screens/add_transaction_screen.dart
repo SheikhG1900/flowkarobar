@@ -2837,7 +2837,11 @@ class TxMoreOptionsSection extends StatelessWidget {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
-                      _relationshipLabel(paidRelationship!, l10n),
+                      _relationshipLabel(
+                        paidRelationship!,
+                        l10n,
+                        isExpense,
+                      ),
                       style: theme.textTheme.labelSmall?.copyWith(
                         color: isExpense ? AppColors.expenseColor : AppColors.incomeColor,
                         fontWeight: FontWeight.w600,
@@ -2873,7 +2877,7 @@ class TxMoreOptionsSection extends StatelessWidget {
                 if (isExpense) ...[
                   RelationshipButtonGroup(
                     top: RelationshipButtonData(
-                      label: l10n.processed,
+                      label: l10n.markAsPaid,
                       subtitle: l10n.processedImmediately,
                       icon: Icons.check_circle_outline,
                       isSelected: paidRelationship == 'PROCESSED',
@@ -2907,7 +2911,7 @@ class TxMoreOptionsSection extends StatelessWidget {
                 ] else ...[
                   RelationshipButtonGroup(
                     top: RelationshipButtonData(
-                      label: l10n.processed,
+                      label: l10n.markAsReceived,
                       subtitle: l10n.receivedImmediately,
                       icon: Icons.check_circle_outline,
                       isSelected: paidRelationship == 'PROCESSED',
@@ -3026,10 +3030,14 @@ class TxMoreOptionsSection extends StatelessWidget {
     );
   }
 
-  static String _relationshipLabel(String rel, AppLocalizations l10n) {
+  static String _relationshipLabel(
+    String rel,
+    AppLocalizations l10n,
+    bool isExpense,
+  ) {
     switch (rel) {
       case 'PROCESSED':
-        return l10n.processed;
+        return isExpense ? l10n.markAsPaid : l10n.markAsReceived;
       case 'PAID_FOR':
       case 'WILL_RECEIVE':
         return l10n.receivable;

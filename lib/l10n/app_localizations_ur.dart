@@ -613,7 +613,7 @@ class AppLocalizationsUr extends AppLocalizations {
   String get linkedTransaction => 'منسلک لین دین';
 
   @override
-  String get markAsReceived => 'موصول ہوا نشان کریں';
+  String get markAsReceived => 'وصول کریں';
 
   @override
   String get deleteReceivableTitle => 'وصولی حذف کریں';
@@ -723,7 +723,7 @@ class AppLocalizationsUr extends AppLocalizations {
   String get paid => 'ادا کیا';
 
   @override
-  String get markAsPaid => 'ادا کیا ہوا نشان کریں';
+  String get markAsPaid => 'ادا کریں';
 
   @override
   String get deletePayableTitle => 'واجب الادا حذف کریں';
@@ -3937,7 +3937,10 @@ class AppLocalizationsUr extends AppLocalizations {
   String get processedOn => 'مکمل تاریخ';
 
   @override
-  String get markAsProcessed => 'مکمل کے طور پر نشان زد کریں';
+  String get paidOnRowLabel => 'ادا کی تاریخ';
+
+  @override
+  String get receivedOnRowLabel => 'وصول کی تاریخ';
 
   @override
   String get paidForSubtitle => 'میں نے ادائیگی کی، واپس ملے گی';

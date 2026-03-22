@@ -240,7 +240,10 @@ class ScheduleListItem extends ConsumerWidget {
                     ),
                     child: Text(
                       LocalizationHelper.localizeRelationshipShort(
-                          l10n, schedule.paidRelationship),
+                        l10n,
+                        schedule.paidRelationship,
+                        isExpense: isExpense,
+                      ),
                       style: TextStyle(
                         fontSize: 10,
                         color: AppColors.getRelationshipColor(

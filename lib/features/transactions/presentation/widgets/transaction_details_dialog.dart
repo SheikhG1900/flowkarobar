@@ -265,7 +265,9 @@ class TransactionDetailsDialog extends ConsumerWidget {
                             _getStatusLabel(
                                 context,
                                 transaction.paidRelationship!,
-                                item.isLinkedEntryMarked),
+                                item.isLinkedEntryMarked,
+                                isExpense: isExpense,
+                            ),
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 12,
@@ -773,7 +775,9 @@ class TransactionDetailsDialog extends ConsumerWidget {
               _buildDetailRow(
                 context,
                 icon: Icons.check_circle_outline,
-                label: l10n.processedOn,
+                label: isExpense
+                    ? l10n.paidOnRowLabel
+                    : l10n.receivedOnRowLabel,
                 value: AppDateFormatter.formatDate(transaction.processedDate!,
                     pattern: ref.watch(userProfileProvider).dateFormat),
               ),
@@ -793,10 +797,18 @@ class TransactionDetailsDialog extends ConsumerWidget {
                     if (context.mounted) Navigator.pop(context);
                   },
                   icon: const Icon(Icons.check_circle_outline),
-                  label: Text(l10n.markAsProcessed),
+                  label: Text(
+                    isExpense ? l10n.markAsPaid : l10n.markAsReceived,
+                  ),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.incomeColor,
-                    side: BorderSide(color: AppColors.incomeColor),
+                    foregroundColor: isExpense
+                        ? AppColors.expenseColor
+                        : AppColors.incomeColor,
+                    side: BorderSide(
+                      color: isExpense
+                          ? AppColors.expenseColor
+                          : AppColors.incomeColor,
+                    ),
                     padding: const EdgeInsets.symmetric(vertical: 14),
                   ),
                 ),
@@ -1162,9 +1174,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
                 onPressed: () => _markAsPaid(context, ref, payable.uuid, item),
                 icon: const Icon(Icons.check_circle),
                 label: Text(l10n.markAsPaid),
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.payableColor,
-                ),
+                style: AppColors.transactionMarkAsPaidFilledStyle(),
               ),
             ),
           ],
@@ -1256,9 +1266,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
                     _markAsReceived(context, ref, receivable.uuid, item),
                 icon: const Icon(Icons.check_circle),
                 label: Text(l10n.markAsReceived),
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.receivableColor,
-                ),
+                style: AppColors.transactionMarkAsReceivedFilledStyle(),
               ),
             ),
           ],
@@ -1268,7 +1276,11 @@ class TransactionDetailsDialog extends ConsumerWidget {
   }
 
   static String _getStatusLabel(
-      BuildContext context, String relationship, bool isMarked) {
+    BuildContext context,
+    String relationship,
+    bool isMarked, {
+    required bool isExpense,
+  }) {
     final l10n = AppLocalizations.of(context)!;
     if (isMarked) {
       switch (relationship.toUpperCase()) {
@@ -1280,7 +1292,11 @@ class TransactionDetailsDialog extends ConsumerWidget {
           return l10n.paidTag;
       }
     }
-    return LocalizationHelper.localizeRelationshipShort(l10n, relationship);
+    return LocalizationHelper.localizeRelationshipShort(
+      l10n,
+      relationship,
+      isExpense: isExpense,
+    );
   }
 
   static Future<void> _markAsReviewed(

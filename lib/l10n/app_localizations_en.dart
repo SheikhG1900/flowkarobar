@@ -611,7 +611,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get linkedTransaction => 'Linked Transaction';
 
   @override
-  String get markAsReceived => 'Mark as Received';
+  String get markAsReceived => 'Receive';
 
   @override
   String get deleteReceivableTitle => 'Delete Receivable';
@@ -719,7 +719,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get paid => 'Paid';
 
   @override
-  String get markAsPaid => 'Mark as Paid';
+  String get markAsPaid => 'Pay';
 
   @override
   String get deletePayableTitle => 'Delete Payable';
@@ -3921,7 +3921,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get processedOn => 'Processed On';
 
   @override
-  String get markAsProcessed => 'Mark as Processed';
+  String get paidOnRowLabel => 'Paid on';
+
+  @override
+  String get receivedOnRowLabel => 'Received on';
 
   @override
   String get paidForSubtitle => 'I paid, will receive back';
