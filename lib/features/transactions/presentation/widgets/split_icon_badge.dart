@@ -23,25 +23,25 @@ class SplitIconBadge extends StatelessWidget {
       child: Opacity(
         opacity: 0.8,
         child: Container(
-          padding: const EdgeInsets.all(4),
+          padding: const EdgeInsets.all(3),
           decoration: BoxDecoration(
             color: color.withValues(alpha: 0.55),
             shape: BoxShape.circle,
             border: Border.all(
               color: color.withValues(alpha: 0.7),
-              width: 1.5,
+              width: 1,
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.15),
-                blurRadius: 4,
-                offset: const Offset(0, 2),
+                color: Colors.black.withValues(alpha: 0.12),
+                blurRadius: 3,
+                offset: const Offset(0, 1),
               ),
             ],
           ),
           child: Icon(
             icon,
-            size: 28,
+            size: 0,
             color: Colors.white.withValues(alpha: 0.95),
           ),
         ),
