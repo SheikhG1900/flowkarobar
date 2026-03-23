@@ -15,6 +15,8 @@ import 'package:flowpaisa/features/payables/presentation/widgets/payable_details
 import 'package:flowpaisa/features/receivables/presentation/widgets/receivable_details_dialog.dart';
 import 'package:flowpaisa/features/contacts/presentation/screens/contact_details_screen.dart';
 import 'package:flowpaisa/features/categories/presentation/screens/category_details_screen.dart';
+import 'package:flowpaisa/features/accounts/presentation/screens/account_detail_screen.dart';
+import 'package:flowpaisa/features/analytics/presentation/screens/analytics_screen.dart';
 
 class DeepLinkHandler {
   final DeepLinkService _deepLinkService;
@@ -142,6 +144,24 @@ class DeepLinkHandler {
             builder: (context) => ReceivableDetailsDialog(
               receivableUuid: result.uuid,
             ),
+          ),
+        );
+        break;
+      case 'account':
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => AccountDetailScreen(
+              accountUuid: result.uuid,
+            ),
+          ),
+        );
+        break;
+      case 'networth':
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const AnalyticsScreen(),
           ),
         );
         break;

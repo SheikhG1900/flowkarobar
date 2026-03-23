@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
+import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/dashboard/domain/dashboard_widget_models.dart';
 import 'package:flowpaisa/features/dashboard/domain/models.dart';
 import 'package:flowpaisa/features/dashboard/presentation/providers/dashboard_provider.dart';
@@ -19,9 +21,13 @@ import 'package:flowpaisa/features/payables/presentation/providers/payables_prov
 import 'package:flowpaisa/features/payables/domain/models.dart';
 import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
 import 'package:flowpaisa/features/categories/presentation/providers/categories_provider.dart';
+import 'package:flowpaisa/features/accounts/domain/models/account_models.dart';
+import 'package:flowpaisa/features/accounts/presentation/providers/accounts_provider.dart';
+import 'package:flowpaisa/features/analytics/presentation/screens/analytics_screen.dart';
+import 'package:flowpaisa/features/whatsapp/domain/deep_link_service.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
-import 'package:material_symbols_icons/symbols.dart';
+import 'package:material_symbols_icons/symbols.dart' show Symbols;
 
 /// A summary-type widget card on the dashboard (balance, cash flow, receivables, etc.).
 class DashboardSummaryWidgetCard extends ConsumerWidget {
@@ -136,6 +142,55 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
           onRemove: () => _removeAt(ref, layoutIndex),
           reorderKey: reorderKey,
         );
+      case DashboardWidgetKind.netWorth:
+        final accountsAsync = ref.watch(accountsWithBalanceProvider);
+        return accountsAsync.when(
+          data: (accounts) {
+            double totalAssets = 0;
+            double totalLiabilities = 0;
+            for (final awb in accounts) {
+              if (awb.type.isCreditCard) {
+                if (awb.balance < 0) {
+                  totalLiabilities += awb.balance.abs();
+                }
+              } else {
+                if (awb.balance > 0) {
+                  totalAssets += awb.balance;
+                } else {
+                  totalLiabilities += awb.balance.abs();
+                }
+              }
+            }
+            final netWorth = totalAssets - totalLiabilities;
+            final label = currency != null
+                ? AmountFormatter.formatWithCurrency(
+                    netWorth, currency.symbol, currency.decimalPlaces)
+                : '—';
+            return _buildSummaryCard(
+              context,
+              ref,
+              theme,
+              l10n,
+              title: l10n.netWorth,
+              subtitle: null,
+              amountLabel: label,
+              icon: Symbols.account_balance_wallet,
+              color: AppColors.dashboardSectionColor,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const AnalyticsScreen()),
+                );
+              },
+              onRemove: () => _removeAt(ref, layoutIndex),
+              reorderKey: reorderKey,
+              copyOpenLinkEntityType: 'networth',
+              copyOpenLinkUuid: 'summary',
+            );
+          },
+          loading: () => _buildCardPlaceholder(theme, reorderKey),
+          error: (_, __) => const SizedBox.shrink(),
+        );
       default:
         return const SizedBox.shrink();
     }
@@ -191,6 +246,8 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
     required VoidCallback onTap,
     required VoidCallback onRemove,
     Key? reorderKey,
+    String? copyOpenLinkEntityType,
+    String? copyOpenLinkUuid,
   }) {
     return _wrapCard(
       reorderKey: reorderKey,
@@ -202,7 +259,14 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
           clipBehavior: Clip.antiAlias,
           child: InkWell(
             onTap: onTap,
-            onLongPress: () => _showRemoveSheet(context, ref, onRemove, l10n),
+            onLongPress: () => _showSummaryActionsSheet(
+              context,
+              ref,
+              onRemove,
+              l10n,
+              copyOpenLinkEntityType: copyOpenLinkEntityType,
+              copyOpenLinkUuid: copyOpenLinkUuid,
+            ),
             child: Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -362,18 +426,49 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
     );
   }
 
-  void _showRemoveSheet(BuildContext context, WidgetRef ref, VoidCallback onRemove,
-      AppLocalizations l10n) {
-    showModalBottomSheet(
+  void _showSummaryActionsSheet(
+    BuildContext context,
+    WidgetRef ref,
+    VoidCallback onRemove,
+    AppLocalizations l10n, {
+    String? copyOpenLinkEntityType,
+    String? copyOpenLinkUuid,
+  }) {
+    final copyType = copyOpenLinkEntityType;
+    final copyUuid = copyOpenLinkUuid;
+    final hasCopy = copyType != null &&
+        copyType.isNotEmpty &&
+        copyUuid != null &&
+        copyUuid.isNotEmpty;
+    showModalBottomSheet<void>(
       context: context,
       builder: (ctx) => SafeArea(
-        child: ListTile(
-          leading: const Icon(Icons.push_pin),
-          title: Text(l10n.unpinFromDashboard),
-          onTap: () {
-            Navigator.pop(ctx);
-            onRemove();
-          },
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (hasCopy)
+              ListTile(
+                leading: const Icon(Icons.link),
+                title: Text(l10n.copyLink),
+                onTap: () {
+                  final link = DeepLinkService().generateEntityOpenLinkHttps(
+                    copyType,
+                    copyUuid,
+                  );
+                  Clipboard.setData(ClipboardData(text: link));
+                  Navigator.pop(ctx);
+                  ToastUtils.showSuccessToast(context, ref, l10n.linkCopied);
+                },
+              ),
+            ListTile(
+              leading: const Icon(Icons.push_pin),
+              title: Text(l10n.unpinFromDashboard),
+              onTap: () {
+                Navigator.pop(ctx);
+                onRemove();
+              },
+            ),
+          ],
         ),
       ),
     );

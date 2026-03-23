@@ -1821,6 +1821,7 @@ class _DashboardTab extends ConsumerWidget {
       (DashboardWidgetKind.payablesSummary, l10n.payableTag, Icons.call_made),
       (DashboardWidgetKind.contactsSummary, l10n.contacts, Icons.people_outline),
       (DashboardWidgetKind.categoriesSummary, l10n.categories, Icons.category_outlined),
+      (DashboardWidgetKind.netWorth, l10n.netWorth, Icons.pie_chart_outline),
     ];
     showModalBottomSheet<void>(
       context: context,

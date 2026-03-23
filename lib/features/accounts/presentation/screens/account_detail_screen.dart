@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
@@ -12,6 +13,9 @@ import 'package:flowpaisa/features/accounts/presentation/widgets/account_transfe
 import 'package:flowpaisa/features/accounts/presentation/widgets/pay_bill_sheet.dart';
 import 'package:flowpaisa/features/accounts/presentation/widgets/transfer_account_box.dart';
 import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
+import 'package:flowpaisa/features/dashboard/domain/dashboard_widget_models.dart';
+import 'package:flowpaisa/features/dashboard/presentation/providers/dashboard_widget_provider.dart';
+import 'package:flowpaisa/features/whatsapp/domain/deep_link_service.dart';
 import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 import 'package:flowpaisa/features/transactions/domain/models.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
@@ -172,6 +176,64 @@ class _AccountDetailViewState extends ConsumerState<_AccountDetailView> {
                   )
                 : null,
             actions: [
+              IconButton(
+                icon: const Icon(Icons.link),
+                color: Colors.white,
+                tooltip: l10n.copyLink,
+                onPressed: () {
+                  final link = DeepLinkService()
+                      .generateEntityOpenLinkHttps('account', acc.uuid);
+                  Clipboard.setData(ClipboardData(text: link));
+                  ToastUtils.showSuccessToast(context, ref, l10n.linkCopied);
+                },
+              ),
+              Builder(
+                builder: (context) {
+                  ref.watch(dashboardWidgetLayoutProvider);
+                  final notifier =
+                      ref.read(dashboardWidgetLayoutProvider.notifier);
+                  final isPinned = notifier.isPinned(
+                      DashboardWidgetKind.account, acc.uuid);
+                  return IconButton(
+                    icon: Icon(
+                      isPinned ? Icons.push_pin : Icons.push_pin_outlined,
+                      color: isPinned ? Colors.white : Colors.white70,
+                    ),
+                    tooltip: isPinned
+                        ? l10n.unpinFromDashboard
+                        : l10n.pinToDashboard,
+                    onPressed: () async {
+                      if (isPinned) {
+                        final layout =
+                            ref.read(dashboardWidgetLayoutProvider).value ?? [];
+                        final idx = layout.indexWhere((c) =>
+                            c.kind == DashboardWidgetKind.account &&
+                            c.accountUuid == acc.uuid);
+                        if (idx >= 0) {
+                          await ref
+                              .read(dashboardWidgetLayoutProvider.notifier)
+                              .removeAt(idx);
+                          if (context.mounted) {
+                            ToastUtils.showSuccessToast(
+                                context, ref, l10n.unpinnedFromDashboard);
+                          }
+                        }
+                      } else {
+                        await ref
+                            .read(dashboardWidgetLayoutProvider.notifier)
+                            .addWidget(DashboardWidgetConfig(
+                              kind: DashboardWidgetKind.account,
+                              accountUuid: acc.uuid,
+                            ));
+                        if (context.mounted) {
+                          ToastUtils.showSuccessToast(
+                              context, ref, l10n.pinnedToDashboard);
+                        }
+                      }
+                    },
+                  );
+                },
+              ),
               IconButton(
                 icon: const Icon(Icons.edit_outlined),
                 color: Colors.white,

@@ -224,7 +224,15 @@ class DeepLinkService {
       final entityType = segments[0];
       final uuid = segments[1];
       if (uuid.isEmpty) return null;
-      const allowed = ['transaction', 'category', 'contact', 'payable', 'receivable'];
+      const allowed = [
+        'transaction',
+        'category',
+        'contact',
+        'payable',
+        'receivable',
+        'account',
+        'networth',
+      ];
       if (!allowed.contains(entityType)) return null;
       return OpenLinkResult(entityType: entityType, uuid: uuid);
     } catch (_) {

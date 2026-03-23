@@ -6,6 +6,7 @@ import 'package:flowpaisa/features/categories/presentation/providers/categories_
 import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
 import 'package:flowpaisa/features/payables/presentation/providers/payables_provider.dart';
 import 'package:flowpaisa/features/receivables/presentation/providers/receivables_provider.dart';
+import 'package:flowpaisa/features/accounts/presentation/providers/accounts_provider.dart';
 import 'package:flowpaisa/features/settings/data/user_preferences_repository.dart';
 import 'package:flowpaisa/shared/providers/database_provider.dart';
 
@@ -115,6 +116,7 @@ final effectiveDashboardWidgetLayoutProvider =
   final contactRepo = ref.read(contactsRepositoryProvider);
   final payRepo = ref.read(payablesRepositoryProvider);
   final recRepo = ref.read(receivablesRepositoryProvider);
+  final accRepo = ref.read(accountsRepositoryProvider);
   final notifier = ref.read(dashboardWidgetLayoutProvider.notifier);
 
   final List<DashboardWidgetConfig> toRemove = [];
@@ -145,6 +147,9 @@ final effectiveDashboardWidgetLayoutProvider =
         break;
       case DashboardWidgetKind.receivable:
         exists = await recRepo.getReceivableByUuid(uuid) != null;
+        break;
+      case DashboardWidgetKind.account:
+        exists = await accRepo.getAccountByUuid(uuid) != null;
         break;
       default:
         break;

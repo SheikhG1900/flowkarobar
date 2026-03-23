@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
@@ -19,6 +20,13 @@ import 'package:flowpaisa/features/receivables/presentation/providers/receivable
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
 import 'package:flowpaisa/core/utils/category_helper.dart';
+import 'package:flowpaisa/core/utils/icon_helper.dart';
+import 'package:flowpaisa/core/utils/toast_utils.dart';
+import 'package:flowpaisa/features/accounts/domain/models/account_models.dart';
+import 'package:flowpaisa/features/accounts/presentation/providers/accounts_provider.dart';
+import 'package:flowpaisa/features/accounts/presentation/screens/account_detail_screen.dart';
+import 'package:flowpaisa/features/whatsapp/domain/deep_link_service.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 /// A single entity widget card on the dashboard. Shows key info and opens detail on tap.
 /// Long-press to remove from dashboard.
@@ -79,6 +87,7 @@ class DashboardEntityWidgetCard extends ConsumerWidget {
               l10n,
               currency,
               kind: config.kind,
+              entityUuid: uuid,
               leadingChild: leadingChild,
               title: item.transaction.description?.isNotEmpty == true
                   ? item.transaction.description!
@@ -111,6 +120,7 @@ class DashboardEntityWidgetCard extends ConsumerWidget {
               l10n,
               currency,
               kind: config.kind,
+              entityUuid: uuid,
               leadingChild: Container(
                 width: 44,
                 height: 44,
@@ -147,6 +157,7 @@ class DashboardEntityWidgetCard extends ConsumerWidget {
               l10n,
               currency,
               kind: config.kind,
+              entityUuid: uuid,
               leadingChild: _buildContactAvatar(stats.contact.name),
               title: stats.contact.name,
               subtitle: net >= 0 ? l10n.receivableTag : l10n.payableTag,
@@ -178,6 +189,7 @@ class DashboardEntityWidgetCard extends ConsumerWidget {
               l10n,
               currency,
               kind: config.kind,
+              entityUuid: uuid,
               leadingChild: contactName.isNotEmpty
                   ? _buildContactAvatar(contactName)
                   : null,
@@ -210,6 +222,7 @@ class DashboardEntityWidgetCard extends ConsumerWidget {
               l10n,
               currency,
               kind: config.kind,
+              entityUuid: uuid,
               leadingChild: contactName.isNotEmpty
                   ? _buildContactAvatar(contactName)
                   : null,
@@ -229,6 +242,30 @@ class DashboardEntityWidgetCard extends ConsumerWidget {
           loading: () => _buildCardPlaceholder(theme),
           error: (_, __) => const SizedBox.shrink(),
         );
+      case DashboardWidgetKind.account:
+        // Prefer aggregated list (same source as accounts / net worth). Fall back
+        // to per-account stream for inactive accounts (excluded from the list) or
+        // while the combined stream is still catching up.
+        final listAsync = ref.watch(accountsWithBalanceProvider);
+        final detailAsync = ref.watch(accountDetailWithBalanceProvider(uuid));
+        final awb = _resolvePinnedAccount(listAsync, detailAsync, uuid);
+        if (awb != null) {
+          return _buildAccountEntityCard(
+            context,
+            ref,
+            theme,
+            l10n,
+            currency,
+            awb,
+            uuid,
+            layoutIndex,
+            config.kind,
+          );
+        }
+        if (listAsync.isLoading || detailAsync.isLoading) {
+          return _buildCardPlaceholder(theme);
+        }
+        return const SizedBox.shrink();
       default:
         return const SizedBox.shrink();
     }
@@ -262,6 +299,7 @@ class DashboardEntityWidgetCard extends ConsumerWidget {
     AppLocalizations l10n,
     dynamic currency, {
     required DashboardWidgetKind kind,
+    required String entityUuid,
     Widget? leadingChild,
     required String title,
     required String subtitle,
@@ -271,6 +309,7 @@ class DashboardEntityWidgetCard extends ConsumerWidget {
     Color? amountColor,
     required VoidCallback onTap,
     required VoidCallback onRemove,
+    Widget? titleColumnExtra,
   }) {
     final effectiveAmountColor = amountColor ??
         (isExpense ? AppColors.expenseColor : AppColors.incomeColor);
@@ -282,7 +321,8 @@ class DashboardEntityWidgetCard extends ConsumerWidget {
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: onTap,
-          onLongPress: () => _showRemoveSheet(context, ref, onRemove, l10n),
+          onLongPress: () => _showEntityActionsSheet(
+                context, ref, onRemove, l10n, kind, entityUuid),
           child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -329,6 +369,10 @@ class DashboardEntityWidgetCard extends ConsumerWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
+                      if (titleColumnExtra != null) ...[
+                        const SizedBox(height: 6),
+                        titleColumnExtra!,
+                      ],
                     ],
                   ),
                 ),
@@ -363,6 +407,8 @@ class DashboardEntityWidgetCard extends ConsumerWidget {
         return Icons.call_made;
       case DashboardWidgetKind.receivable:
         return Icons.call_received;
+      case DashboardWidgetKind.account:
+        return Icons.account_balance_wallet_outlined;
       default:
         return Icons.widgets_outlined;
     }
@@ -387,22 +433,64 @@ class DashboardEntityWidgetCard extends ConsumerWidget {
     );
   }
 
-  void _showRemoveSheet(
-      BuildContext context, WidgetRef ref, VoidCallback onRemove,
-      AppLocalizations l10n) {
-    showModalBottomSheet(
+  void _showEntityActionsSheet(
+    BuildContext context,
+    WidgetRef ref,
+    VoidCallback onRemove,
+    AppLocalizations l10n,
+    DashboardWidgetKind kind,
+    String uuid,
+  ) {
+    final linkType = _entityOpenLinkType(kind);
+    showModalBottomSheet<void>(
       context: context,
-      builder: (context) => SafeArea(
-        child: ListTile(
-          leading: const Icon(Icons.push_pin),
-          title: Text(l10n.unpinFromDashboard),
-          onTap: () {
-            Navigator.pop(context);
-            onRemove();
-          },
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (linkType != null)
+              ListTile(
+                leading: const Icon(Icons.link),
+                title: Text(l10n.copyLink),
+                onTap: () {
+                  final link =
+                      DeepLinkService().generateEntityOpenLinkHttps(linkType, uuid);
+                  Clipboard.setData(ClipboardData(text: link));
+                  Navigator.pop(ctx);
+                  ToastUtils.showSuccessToast(context, ref, l10n.linkCopied);
+                },
+              ),
+            ListTile(
+              leading: const Icon(Icons.push_pin),
+              title: Text(l10n.unpinFromDashboard),
+              onTap: () {
+                Navigator.pop(ctx);
+                onRemove();
+              },
+            ),
+          ],
         ),
       ),
     );
+  }
+
+  String? _entityOpenLinkType(DashboardWidgetKind kind) {
+    switch (kind) {
+      case DashboardWidgetKind.transaction:
+        return 'transaction';
+      case DashboardWidgetKind.category:
+        return 'category';
+      case DashboardWidgetKind.contact:
+        return 'contact';
+      case DashboardWidgetKind.payable:
+        return 'payable';
+      case DashboardWidgetKind.receivable:
+        return 'receivable';
+      case DashboardWidgetKind.account:
+        return 'account';
+      default:
+        return null;
+    }
   }
 
   Future<void> _removeAt(WidgetRef ref, int index) async {
@@ -452,5 +540,153 @@ class DashboardEntityWidgetCard extends ConsumerWidget {
         builder: (context) => ReceivableDetailsDialog(receivableUuid: uuid),
       ),
     );
+  }
+
+  void _openAccount(BuildContext context, String uuid) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AccountDetailScreen(accountUuid: uuid),
+      ),
+    );
+  }
+
+  Widget _buildAccountEntityCard(
+    BuildContext context,
+    WidgetRef ref,
+    ThemeData theme,
+    AppLocalizations l10n,
+    dynamic currency,
+    AccountWithBalance awb,
+    String uuid,
+    int layoutIndex,
+    DashboardWidgetKind kind,
+  ) {
+    final acc = awb.account;
+    final type = awb.type;
+    final accountColor = acc.color != null
+        ? Color(int.parse(acc.color!.replaceAll('#', '0xFF')))
+        : theme.colorScheme.primary;
+    final iconData =
+        IconHelper.getIconData(acc.icon) ?? _defaultAccountIcon(type);
+    double displayAmount;
+    bool isExpense;
+    if (type.isCreditCard) {
+      if (awb.creditBalance > 0) {
+        displayAmount = awb.creditBalance;
+        isExpense = false;
+      } else {
+        displayAmount = awb.balance.abs();
+        isExpense = true;
+      }
+    } else {
+      displayAmount = awb.balance.abs();
+      isExpense = awb.balance < 0;
+    }
+    return _buildCard(
+      context,
+      ref,
+      theme,
+      l10n,
+      currency,
+      kind: kind,
+      entityUuid: uuid,
+      leadingChild: Container(
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(
+          color: accountColor.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        alignment: Alignment.center,
+        child: Icon(iconData, color: accountColor, size: 22),
+      ),
+      title: acc.name,
+      subtitle: _accountTypeLabel(l10n, type),
+      amount: displayAmount,
+      isExpense: isExpense,
+      color: accountColor,
+      amountColor: type.isCreditCard
+          ? (awb.creditBalance > 0
+              ? AppColors.incomeColor
+              : AppColors.expenseColor)
+          : (awb.balance < 0
+              ? AppColors.expenseColor
+              : AppColors.incomeColor),
+      onTap: () => _openAccount(context, uuid),
+      onRemove: () => _removeAt(ref, layoutIndex),
+      titleColumnExtra:
+          _accountDashboardTitleExtra(theme, l10n, currency, awb),
+    );
+  }
+
+  /// Extra line under account type for credit cards: available credit only.
+  /// Outstanding / utilized amount is already shown on the right of the card.
+  Widget? _accountDashboardTitleExtra(
+    ThemeData theme,
+    AppLocalizations l10n,
+    dynamic currency,
+    AccountWithBalance awb,
+  ) {
+    if (currency == null || !awb.type.isCreditCard) return null;
+
+    final acc = awb.account;
+    final limit = acc.creditLimit ?? 0;
+    if (limit <= 0) return null;
+
+    final symbol = currency.symbol;
+    final decimals = currency.decimalPlaces;
+    final available = awb.availableCredit ?? 0;
+
+    return Text(
+      '${l10n.available}: ${AmountFormatter.formatWithCurrency(available, symbol, decimals)}',
+      style: theme.textTheme.labelSmall?.copyWith(
+        color: AppColors.incomeColor,
+        fontWeight: FontWeight.w600,
+      ),
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+    );
+  }
+}
+
+/// Resolves a pinned account from the main balances list or the per-account stream.
+AccountWithBalance? _resolvePinnedAccount(
+  AsyncValue<List<AccountWithBalance>> listAsync,
+  AsyncValue<AccountWithBalance?> detailAsync,
+  String uuid,
+) {
+  final list = listAsync.asData?.value;
+  if (list != null) {
+    for (final a in list) {
+      if (a.account.uuid == uuid) return a;
+    }
+  }
+  return detailAsync.asData?.value;
+}
+
+IconData _defaultAccountIcon(AccountType type) {
+  switch (type) {
+    case AccountType.cash:
+      return Symbols.payments;
+    case AccountType.bank:
+      return Symbols.account_balance;
+    case AccountType.savings:
+      return Symbols.savings;
+    case AccountType.creditCard:
+      return Symbols.credit_card;
+  }
+}
+
+String _accountTypeLabel(AppLocalizations l10n, AccountType type) {
+  switch (type) {
+    case AccountType.cash:
+      return l10n.cash;
+    case AccountType.bank:
+      return l10n.bank;
+    case AccountType.savings:
+      return l10n.savings;
+    case AccountType.creditCard:
+      return l10n.creditCard;
   }
 }

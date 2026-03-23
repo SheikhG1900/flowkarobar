@@ -24,6 +24,8 @@ final accountsWithBalanceProvider =
 /// (Named distinctly from any prior FutureProvider to avoid hot-reload type cache issues.)
 final accountDetailWithBalanceProvider =
     StreamProvider.family<AccountWithBalance?, String>((ref, uuid) {
+  // Keep in sync with aggregated balances (dashboard pins, detail screen, etc.).
+  ref.watch(accountsWithBalanceProvider);
   return ref
       .watch(accountsRepositoryProvider)
       .watchAccountWithBalance(uuid);

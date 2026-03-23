@@ -10,12 +10,14 @@ enum DashboardWidgetKind {
   recentTransactions,
   contactsSummary,
   categoriesSummary,
+  netWorth,
   // Entity widgets
   transaction,
   category,
   contact,
   payable,
   receivable,
+  account,
 }
 
 extension DashboardWidgetKindX on DashboardWidgetKind {
@@ -24,7 +26,8 @@ extension DashboardWidgetKindX on DashboardWidgetKind {
       this == DashboardWidgetKind.category ||
       this == DashboardWidgetKind.contact ||
       this == DashboardWidgetKind.payable ||
-      this == DashboardWidgetKind.receivable;
+      this == DashboardWidgetKind.receivable ||
+      this == DashboardWidgetKind.account;
 }
 
 /// Single widget slot on the dashboard.
@@ -35,6 +38,7 @@ class DashboardWidgetConfig {
   final String? contactUuid;
   final String? payableUuid;
   final String? receivableUuid;
+  final String? accountUuid;
 
   const DashboardWidgetConfig({
     required this.kind,
@@ -43,6 +47,7 @@ class DashboardWidgetConfig {
     this.contactUuid,
     this.payableUuid,
     this.receivableUuid,
+    this.accountUuid,
   });
 
   String? get entityUuid {
@@ -57,6 +62,8 @@ class DashboardWidgetConfig {
         return payableUuid;
       case DashboardWidgetKind.receivable:
         return receivableUuid;
+      case DashboardWidgetKind.account:
+        return accountUuid;
       default:
         return null;
     }
@@ -71,12 +78,13 @@ class DashboardWidgetConfig {
           categoryUuid == other.categoryUuid &&
           contactUuid == other.contactUuid &&
           payableUuid == other.payableUuid &&
-          receivableUuid == other.receivableUuid;
+          receivableUuid == other.receivableUuid &&
+          accountUuid == other.accountUuid;
 
   @override
   int get hashCode =>
       Object.hash(kind, transactionUuid, categoryUuid, contactUuid,
-          payableUuid, receivableUuid);
+          payableUuid, receivableUuid, accountUuid);
 
   Map<String, dynamic> toJson() {
     final map = <String, dynamic>{'kind': kind.name};
@@ -85,6 +93,7 @@ class DashboardWidgetConfig {
     if (contactUuid != null) map['contactUuid'] = contactUuid;
     if (payableUuid != null) map['payableUuid'] = payableUuid;
     if (receivableUuid != null) map['receivableUuid'] = receivableUuid;
+    if (accountUuid != null) map['accountUuid'] = accountUuid;
     return map;
   }
 
@@ -106,6 +115,7 @@ class DashboardWidgetConfig {
       contactUuid: json['contactUuid'] as String?,
       payableUuid: json['payableUuid'] as String?,
       receivableUuid: json['receivableUuid'] as String?,
+      accountUuid: (json['accountUuid'] as String?)?.trim(),
     );
   }
 
