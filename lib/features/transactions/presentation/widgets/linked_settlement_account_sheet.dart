@@ -11,10 +11,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// Sheet returns `null` if the user cancelled.
 typedef SettlementAccountChoice = ({String? accountUuid});
 
-/// When the user has accounts: bottom sheet with picker (optional default), cancel,
-/// continue without account, and primary action with selected account only.
-///
-/// When they have no accounts: caller should show [AlertDialog] instead (see [resolveSettlementAccountChoice]).
+/// Settlement sheet with [AccountPickerField] (create account when needed), cancel,
+/// continue without account, and primary action with a selected account.
 Future<SettlementAccountChoice?> showLinkedSettlementAccountSheet(
   BuildContext context, {
   required bool isPayable,
@@ -68,7 +66,7 @@ Account? resolveSettlementInitialAccount(
   return resolved;
 }
 
-/// If user has accounts → sheet. If not → confirmation dialog only.
+/// Always opens the settlement sheet so the user can pick, create, or skip account.
 ///
 /// Loads accounts via [AccountsRepository.getAllAccounts] (always completes), unlike
 /// `StreamProvider.future` which could hang if the stream never emits to this listener.
@@ -80,8 +78,6 @@ Future<SettlementAccountChoice?> resolveSettlementAccountChoice(
   Account? initialAccount,
   Transaction? transactionForAccountDefault,
 }) async {
-  final l10n = AppLocalizations.of(context)!;
-
   List<Account> accountsList;
   try {
     accountsList = await ref.read(accountsRepositoryProvider).getAllAccounts();
@@ -91,42 +87,19 @@ Future<SettlementAccountChoice?> resolveSettlementAccountChoice(
 
   if (!context.mounted) return null;
 
-  if (accountsList.isNotEmpty) {
-    final effectiveInitial = resolveSettlementInitialAccount(
-      accountsList,
-      initialAccount,
-      transactionForAccountDefault,
-      isPayable: isPayable,
-    );
-    return showLinkedSettlementAccountSheet(
-      context,
-      isPayable: isPayable,
-      initialAccount: effectiveInitial,
-    );
-  }
-
-  final confirmed = await showDialog<bool>(
-    context: context,
-    builder: (dialogContext) => AlertDialog(
-      title: Text(isPayable ? l10n.markAsPaid : l10n.markAsReceived),
-      content: Text(
-        isPayable ? l10n.markPendingAsPaidSubtitle : l10n.markReceivedSubtitle,
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(dialogContext, false),
-          child: Text(l10n.cancel),
-        ),
-        FilledButton(
-          onPressed: () => Navigator.pop(dialogContext, true),
-          child: Text(isPayable ? l10n.markAsPaid : l10n.markAsReceived),
-        ),
-      ],
-    ),
+  final effectiveInitial = accountsList.isEmpty
+      ? null
+      : resolveSettlementInitialAccount(
+          accountsList,
+          initialAccount,
+          transactionForAccountDefault,
+          isPayable: isPayable,
+        );
+  return showLinkedSettlementAccountSheet(
+    context,
+    isPayable: isPayable,
+    initialAccount: effectiveInitial,
   );
-  if (!context.mounted) return null;
-  if (confirmed != true) return null;
-  return (accountUuid: null);
 }
 
 class _LinkedSettlementAccountSheet extends StatefulWidget {

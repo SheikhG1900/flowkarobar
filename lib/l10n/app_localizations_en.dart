@@ -3670,6 +3670,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Add your cash, bank or card accounts to track balances';
 
   @override
+  String get creditCardNotAllowedForReceive =>
+      'Credit cards can\'t be used here. Add or pick a cash, bank, or savings account instead.';
+
+  @override
   String get outstanding => 'Outstanding';
 
   @override

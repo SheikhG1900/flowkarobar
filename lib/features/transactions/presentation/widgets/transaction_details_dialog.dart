@@ -3,6 +3,8 @@ import 'package:flowpaisa/features/payables/presentation/widgets/payable_details
 import 'package:flowpaisa/features/receivables/presentation/widgets/receivable_details_dialog.dart';
 import 'package:flowpaisa/features/contacts/presentation/screens/contact_details_screen.dart';
 import 'package:flowpaisa/features/categories/presentation/screens/category_details_screen.dart';
+import 'package:flowpaisa/features/accounts/presentation/screens/account_detail_screen.dart';
+import 'package:flowpaisa/features/accounts/domain/models/account_models.dart';
 import 'package:flowpaisa/features/messages/presentation/providers/message_template_provider.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/core/utils/localization_helper.dart';
@@ -12,7 +14,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/core/utils/date_formatter.dart';
-import 'package:flowpaisa/core/database/database.dart' show Category, Contact;
+import 'package:flowpaisa/core/database/database.dart' show Account, Category, Contact;
 import 'package:flowpaisa/features/transactions/domain/models.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transaction_service_provider.dart';
 import 'package:flowpaisa/core/utils/share_helper.dart';
@@ -33,6 +35,7 @@ import 'package:flutter/services.dart';
 import 'package:flowpaisa/features/whatsapp/domain/deep_link_service.dart';
 import 'package:flowpaisa/features/dashboard/domain/dashboard_widget_models.dart';
 import 'package:flowpaisa/features/dashboard/presentation/providers/dashboard_widget_provider.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 class TransactionDetailsDialog extends ConsumerWidget {
   final String transactionUuid;
@@ -623,6 +626,15 @@ class TransactionDetailsDialog extends ConsumerWidget {
               ),
               const SizedBox(height: 16),
             ],
+            if (item.account != null) ...[
+              _buildTxAccountCard(
+                context,
+                theme,
+                l10n,
+                account: item.account!,
+              ),
+              const SizedBox(height: 16),
+            ],
 
             _buildSectionCard(
               context,
@@ -638,13 +650,6 @@ class TransactionDetailsDialog extends ConsumerWidget {
                     value: AppDateFormatter.formatDate(transaction.date,
                         pattern: ref.watch(userProfileProvider).dateFormat),
                   ),
-                  if (item.account != null)
-                    _buildDetailRow(
-                      context,
-                      icon: Icons.account_balance_wallet,
-                      label: l10n.account,
-                      value: item.account!.name,
-                    ),
                   if (transaction.description != null &&
                       transaction.description!.isNotEmpty)
                     _buildDetailRow(
@@ -1422,6 +1427,112 @@ class TransactionDetailsDialog extends ConsumerWidget {
                       Text(
                         LocalizationHelper.getLocalizedCategoryName(
                             context, category.name),
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: color,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  static Widget _buildTxAccountCard(
+    BuildContext context,
+    ThemeData theme,
+    AppLocalizations l10n, {
+    required Account account,
+  }) {
+    final type = AccountType.fromValue(account.type);
+    final color = account.color != null
+        ? Color(int.parse(account.color!.replaceAll('#', '0xFF')))
+        : theme.colorScheme.primary;
+
+    IconData iconData() {
+      final fromDb = IconHelper.getIconData(account.icon);
+      if (fromDb != null) return fromDb;
+      switch (type) {
+        case AccountType.cash:
+          return Symbols.payments;
+        case AccountType.bank:
+          return Symbols.account_balance;
+        case AccountType.savings:
+          return Symbols.savings;
+        case AccountType.creditCard:
+          return Symbols.credit_card;
+      }
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.08),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => AccountDetailScreen(
+                  accountUuid: account.uuid,
+                ),
+              ),
+            );
+          },
+          borderRadius: BorderRadius.circular(20),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    iconData(),
+                    color: color,
+                    size: 28,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.account,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        account.name,
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                           color: color,

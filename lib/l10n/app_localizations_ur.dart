@@ -3686,6 +3686,10 @@ class AppLocalizationsUr extends AppLocalizations {
       'بیلنس ٹریک کرنے کے لیے اپنے نقد، بینک یا کارڈ اکاؤنٹس شامل کریں';
 
   @override
+  String get creditCardNotAllowedForReceive =>
+      'کریڈٹ کارڈ یہاں استعمال نہیں ہو سکتا۔ نقد، بینک یا بچت اکاؤنٹ شامل کریں یا منتخب کریں۔';
+
+  @override
   String get outstanding => 'واجب الادا';
 
   @override

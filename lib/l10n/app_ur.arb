@@ -1392,6 +1392,7 @@
   "deleteAccountConfirmation": "کیا آپ اس اکاؤنٹ کو حذف کرنا چاہتے ہیں؟ اس سے منسلک لین دین حذف نہیں ہوں گے۔",
   "noAccounts": "کوئی اکاؤنٹ نہیں",
   "noAccountsDescription": "بیلنس ٹریک کرنے کے لیے اپنے نقد، بینک یا کارڈ اکاؤنٹس شامل کریں",
+  "creditCardNotAllowedForReceive": "کریڈٹ کارڈ یہاں استعمال نہیں ہو سکتا۔ نقد، بینک یا بچت اکاؤنٹ شامل کریں یا منتخب کریں۔",
   "outstanding": "واجب الادا",
   "availableCredit": "دستیاب کریڈٹ",
   "creditBalance": "کریڈٹ بیلنس",

@@ -1392,6 +1392,7 @@
   "deleteAccountConfirmation": "क्या आप इस खाते को हटाना चाहते हैं? इससे जुड़े लेनदेन नहीं हटेंगे।",
   "noAccounts": "कोई खाता नहीं",
   "noAccountsDescription": "बैलेंस ट्रैक करने के लिए अपने नकद, बैंक या कार्ड खाते जोड़ें",
+  "creditCardNotAllowedForReceive": "क्रेडिट कार्ड यहाँ उपयोग नहीं हो सकता। नकद, बैंक या बचत खाता जोड़ें या चुनें।",
   "outstanding": "बकाया",
   "availableCredit": "उपलब्ध क्रेडिट",
   "creditBalance": "क्रेडिट बैलेंस",

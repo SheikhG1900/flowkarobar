@@ -3680,6 +3680,10 @@ class AppLocalizationsHi extends AppLocalizations {
       'बैलेंस ट्रैक करने के लिए अपने नकद, बैंक या कार्ड खाते जोड़ें';
 
   @override
+  String get creditCardNotAllowedForReceive =>
+      'क्रेडिट कार्ड यहाँ उपयोग नहीं हो सकता। नकद, बैंक या बचत खाता जोड़ें या चुनें।';
+
+  @override
   String get outstanding => 'बकाया';
 
   @override

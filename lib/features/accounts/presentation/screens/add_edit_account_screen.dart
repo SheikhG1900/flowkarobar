@@ -123,9 +123,10 @@ class _AddEditAccountScreenState extends ConsumerState<AddEditAccountScreen> {
           Navigator.pop(context);
         }
       } else {
+        final newUuid = const Uuid().v4();
         await repo.createAccount(
           AccountsCompanion.insert(
-            uuid: const Uuid().v4(),
+            uuid: newUuid,
             name: name,
             type: _selectedType.value,
             openingBalance: drift.Value(openingBalance),
@@ -145,8 +146,9 @@ class _AddEditAccountScreenState extends ConsumerState<AddEditAccountScreen> {
           ),
         );
         if (mounted) {
+          final created = await repo.getAccountByUuid(newUuid);
           ToastUtils.showSuccessToast(context, ref, l10n.accountCreated);
-          Navigator.pop(context);
+          Navigator.pop(context, created);
         }
       }
     } catch (e) {

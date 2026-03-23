@@ -4,11 +4,50 @@ import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/core/utils/icon_helper.dart';
+import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/accounts/domain/models/account_models.dart';
 import 'package:flowpaisa/features/accounts/presentation/providers/accounts_provider.dart';
+import 'package:flowpaisa/features/accounts/presentation/screens/add_edit_account_screen.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
 import 'package:material_symbols_icons/symbols.dart';
+
+/// Non-null when the user confirmed a choice (including explicit "No account").
+/// `null` when the sheet was dismissed (close / drag) without confirming.
+class _AccountPickResult {
+  final Account? account;
+  const _AccountPickResult(this.account);
+}
+
+/// Opens [AddEditAccountScreen]; refreshes providers and calls [onCreated] with
+/// the new row. When [excludeCreditCard] is true, new credit card accounts are
+/// rejected (e.g. income / receive-into pickers).
+Future<void> navigateToAddAccountAndSelect({
+  required BuildContext context,
+  required WidgetRef ref,
+  required bool excludeCreditCard,
+  required void Function(Account account) onCreated,
+}) async {
+  final newAccount = await Navigator.of(context).push<Account?>(
+    MaterialPageRoute(
+      fullscreenDialog: true,
+      builder: (_) => const AddEditAccountScreen(),
+    ),
+  );
+  if (newAccount == null || !context.mounted) return;
+  if (excludeCreditCard &&
+      AccountType.fromValue(newAccount.type).isCreditCard) {
+    ToastUtils.showErrorToast(
+      context,
+      ref,
+      AppLocalizations.of(context)!.creditCardNotAllowedForReceive,
+    );
+    return;
+  }
+  ref.invalidate(accountsStreamProvider);
+  ref.invalidate(accountsWithBalanceProvider);
+  onCreated(newAccount);
+}
 
 Color _accountPickerAccent(Account account, ThemeData theme) {
   final hex = account.color;
@@ -47,8 +86,6 @@ class AccountPickerField extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final hasAccounts = ref.watch(hasAccountsProvider);
-
-    if (!hasAccounts) return const SizedBox.shrink();
 
     final sectionColor = theme.colorScheme.primary;
     final isSelected = selectedAccount != null;
@@ -114,7 +151,9 @@ class AccountPickerField extends ConsumerWidget {
                           nameColor: accent!,
                         )
                       : Text(
-                          l10n.noAccountSelected,
+                          hasAccounts
+                              ? l10n.noAccountSelected
+                              : l10n.noAccounts,
                           style: theme.textTheme.titleMedium?.copyWith(
                             color: theme.colorScheme.onSurfaceVariant,
                           ),
@@ -136,7 +175,7 @@ class AccountPickerField extends ConsumerWidget {
   }
 
   Future<void> _showPicker(BuildContext context, WidgetRef ref) async {
-    final result = await showModalBottomSheet<Account>(
+    final result = await showModalBottomSheet<_AccountPickResult?>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -147,10 +186,11 @@ class AccountPickerField extends ConsumerWidget {
         selectedAccount: selectedAccount,
         excludeCreditCard: excludeCreditCard,
         excludeAccountUuid: excludeAccountUuid,
-        onSelected: (acc) => Navigator.of(context).pop(acc),
       ),
     );
-    if (result != null) onChanged(result);
+    if (result != null) {
+      onChanged(result.account);
+    }
   }
 
   IconData _accountIcon(Account account) {
@@ -226,10 +266,11 @@ class _SelectedAccountBalance extends ConsumerWidget {
 }
 
 /// Bottom sheet for picking an account — styled to match app sheets.
+///
+/// Pops [_AccountPickResult] when the user picks an option; pops `null` if dismissed.
 class AccountPickerSheet extends ConsumerWidget {
   final Account? selectedAccount;
   final bool excludeCreditCard;
-  final ValueChanged<Account?> onSelected;
   final String? infoMessage;
   /// If set, account with this uuid is excluded from the list.
   final String? excludeAccountUuid;
@@ -238,7 +279,6 @@ class AccountPickerSheet extends ConsumerWidget {
     super.key,
     this.selectedAccount,
     this.excludeCreditCard = false,
-    required this.onSelected,
     this.infoMessage,
     this.excludeAccountUuid,
   });
@@ -249,6 +289,10 @@ class AccountPickerSheet extends ConsumerWidget {
     final theme = Theme.of(context);
     final accountsAsync = ref.watch(accountsWithBalanceProvider);
 
+    void pick(Account? account) {
+      Navigator.of(context).pop(_AccountPickResult(account));
+    }
+
     return DraggableScrollableSheet(
       initialChildSize: 0.6,
       minChildSize: 0.4,
@@ -257,16 +301,17 @@ class AccountPickerSheet extends ConsumerWidget {
       builder: (context, scrollController) {
         return Column(
           children: [
-            // Header
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+              padding: const EdgeInsets.fromLTRB(20, 16, 8, 8),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    l10n.selectAccount,
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
+                  Expanded(
+                    child: Text(
+                      l10n.selectAccount,
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                   IconButton(
@@ -282,9 +327,11 @@ class AccountPickerSheet extends ConsumerWidget {
               child: accountsAsync.when(
                 data: (accounts) {
                   var filtered = excludeCreditCard
-                      ? accounts.where((a) =>
-                          AccountType.fromValue(a.account.type) !=
-                          AccountType.creditCard).toList()
+                      ? accounts
+                          .where((a) =>
+                              AccountType.fromValue(a.account.type) !=
+                              AccountType.creditCard)
+                          .toList()
                       : accounts;
                   if (excludeAccountUuid != null) {
                     filtered = filtered
@@ -295,7 +342,6 @@ class AccountPickerSheet extends ConsumerWidget {
                   return ListView(
                     controller: scrollController,
                     children: [
-                      // "None" option
                       _AccountSheetTile(
                         icon: Symbols.block,
                         iconColor: theme.colorScheme.onSurfaceVariant,
@@ -304,15 +350,34 @@ class AccountPickerSheet extends ConsumerWidget {
                         balanceText: '',
                         balanceColor: Colors.transparent,
                         isSelected: selectedAccount == null,
-                        onTap: () => onSelected(null),
+                        onTap: () => pick(null),
                       ),
                       const Divider(height: 1, indent: 20),
-                      if (filtered.isEmpty)
+                      _AccountSheetTile(
+                        icon: Icons.add_circle_outline,
+                        iconColor: theme.colorScheme.primary,
+                        title: l10n.addAccount,
+                        subtitle: '',
+                        balanceText: '',
+                        balanceColor: Colors.transparent,
+                        isSelected: false,
+                        onTap: () {
+                          navigateToAddAccountAndSelect(
+                            context: context,
+                            ref: ref,
+                            excludeCreditCard: excludeCreditCard,
+                            onCreated: (acc) => pick(acc),
+                          );
+                        },
+                      ),
+                      const Divider(height: 1, indent: 20),
+                      if (filtered.isEmpty && accounts.isEmpty)
                         Padding(
-                          padding: const EdgeInsets.all(24),
+                          padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
                           child: Center(
                             child: Text(
-                              l10n.noAccounts,
+                              l10n.noAccountsDescription,
+                              textAlign: TextAlign.center,
                               style: theme.textTheme.bodyMedium?.copyWith(
                                 color: theme.colorScheme.onSurfaceVariant,
                               ),
@@ -320,11 +385,11 @@ class AccountPickerSheet extends ConsumerWidget {
                           ),
                         )
                       else
-                        ...filtered.map((awb) =>
-                            _AccountWithBalanceTile(
+                        ...filtered.map((awb) => _AccountWithBalanceTile(
                               awb: awb,
-                              isSelected: selectedAccount?.uuid == awb.account.uuid,
-                              onTap: () => onSelected(awb.account),
+                              isSelected:
+                                  selectedAccount?.uuid == awb.account.uuid,
+                              onTap: () => pick(awb.account),
                             )),
                       if (infoMessage != null)
                         Padding(

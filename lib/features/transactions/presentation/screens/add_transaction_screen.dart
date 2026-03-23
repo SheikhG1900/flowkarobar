@@ -2173,17 +2173,14 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                     ),
                   const SizedBox(height: 16),
 
-                  // Account picker (shown when user has accounts)
-                  if (ref.watch(hasAccountsProvider)) ...[
-                    AccountPickerField(
-                      selectedAccount: _selectedAccount,
-                      excludeCreditCard: _selectedType == 'INCOME' &&
-                          _selectedCategory?.uuid != 'default_cat_refund',
-                      onChanged: (acc) =>
-                          setState(() => _selectedAccount = acc),
-                    ),
-                    const SizedBox(height: 16),
-                  ],
+                  // Account picker (create account from sheet when none exist)
+                  AccountPickerField(
+                    selectedAccount: _selectedAccount,
+                    excludeCreditCard: _selectedType == 'INCOME' &&
+                        _selectedCategory?.uuid != 'default_cat_refund',
+                    onChanged: (acc) => setState(() => _selectedAccount = acc),
+                  ),
+                  const SizedBox(height: 16),
 
                   // Description
                   TextFormField(

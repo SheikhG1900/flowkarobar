@@ -6719,6 +6719,12 @@ abstract class AppLocalizations {
   /// **'Add your cash, bank or card accounts to track balances'**
   String get noAccountsDescription;
 
+  /// No description provided for @creditCardNotAllowedForReceive.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit cards can\'t be used here. Add or pick a cash, bank, or savings account instead.'**
+  String get creditCardNotAllowedForReceive;
+
   /// No description provided for @outstanding.
   ///
   /// In en, this message translates to:

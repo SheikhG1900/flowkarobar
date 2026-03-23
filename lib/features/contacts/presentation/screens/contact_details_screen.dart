@@ -24,7 +24,6 @@ import 'package:flowpaisa/features/dashboard/presentation/providers/dashboard_wi
 import 'package:flowpaisa/features/transactions/domain/models.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
 import 'package:flowpaisa/core/database/database.dart' show Account;
-import 'package:flowpaisa/features/accounts/presentation/providers/accounts_provider.dart';
 import 'package:flowpaisa/features/accounts/presentation/widgets/account_picker.dart';
 import 'package:flowpaisa/features/transactions/presentation/screens/transactions_list_screen.dart';
 
@@ -1199,51 +1198,45 @@ class _BulkSettleSheetContentState extends State<_BulkSettleSheetContent> {
             ),
           ),
 
-          // Account pickers (only shown if user has accounts)
-          if (widget.ref.watch(hasAccountsProvider)) ...[
-            const SizedBox(height: 12),
-            // Outgoing account (for paying payables)
-            if (!widget.isNetReceivable || true) ...[
-              Text(
-                widget.l10n.payFrom,
-                style: theme.textTheme.labelMedium,
-              ),
-              const SizedBox(height: 6),
-              AccountPickerField(
-                selectedAccount: _outgoingAccount,
-                onChanged: (acc) => setState(() => _outgoingAccount = acc),
-                label: widget.l10n.payFrom,
-              ),
-            ],
-            const SizedBox(height: 12),
-            // Incoming account (for receiving receivables)
-            Text(
-              widget.l10n.receiveInto,
-              style: theme.textTheme.labelMedium,
-            ),
-            const SizedBox(height: 6),
-            AccountPickerField(
-              selectedAccount: _incomingAccount,
-              excludeCreditCard: true,
-              onChanged: (acc) => setState(() => _incomingAccount = acc),
-              label: widget.l10n.receiveInto,
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                const Icon(Icons.info_outline, size: 14, color: Colors.grey),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(
-                    widget.l10n.accountPickerInfoMessage,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: Colors.grey,
-                    ),
+          // Account pickers (create account from sheet when none exist)
+          const SizedBox(height: 12),
+          Text(
+            widget.l10n.payFrom,
+            style: theme.textTheme.labelMedium,
+          ),
+          const SizedBox(height: 6),
+          AccountPickerField(
+            selectedAccount: _outgoingAccount,
+            onChanged: (acc) => setState(() => _outgoingAccount = acc),
+            label: widget.l10n.payFrom,
+          ),
+          const SizedBox(height: 12),
+          Text(
+            widget.l10n.receiveInto,
+            style: theme.textTheme.labelMedium,
+          ),
+          const SizedBox(height: 6),
+          AccountPickerField(
+            selectedAccount: _incomingAccount,
+            excludeCreditCard: true,
+            onChanged: (acc) => setState(() => _incomingAccount = acc),
+            label: widget.l10n.receiveInto,
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              const Icon(Icons.info_outline, size: 14, color: Colors.grey),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  widget.l10n.accountPickerInfoMessage,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: Colors.grey,
                   ),
                 ),
-              ],
-            ),
-          ],
+              ),
+            ],
+          ),
 
           const SizedBox(height: 12),
           SizedBox(
