@@ -657,6 +657,11 @@ class _DashboardTab extends ConsumerWidget {
     });
 
     final lastStats = ref.watch(lastDashboardStatsProvider);
+    final hasAccounts = ref.watch(hasAccountsProvider);
+    final mainBalanceView = ref.watch(dashboardMainBalanceViewProvider);
+    final accountsWithBalanceAsync = ref.watch(accountsWithBalanceProvider);
+    final showNetWorthOnHero = hasAccounts &&
+        mainBalanceView == DashboardMainBalanceView.netWorth;
 
     // Show loading if currency is not yet loaded
     if (currency == null) {
@@ -889,89 +894,208 @@ class _DashboardTab extends ConsumerWidget {
                             child: Padding(
                               padding:
                                   const EdgeInsets.symmetric(horizontal: 4),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    l10n.availableCash,
-                                    style: theme.textTheme.titleSmall?.copyWith(
-                                      color: isDark
-                                          ? Colors.white.withValues(alpha: 0.9)
-                                          : AppColors.lightTextSecondary,
-                                      fontWeight: FontWeight.w600,
-                                      shadows: isDark
-                                          ? AppTheme.textShadow(
-                                              blurMultiplier: 1.0)
-                                          : null,
-                                    ),
-                                  ),
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      dashboardStatsAsync.when(
-                                        data: (stats) => RollingAmount(
-                                          amount: stats.totalBalance,
-                                          currencySymbol: currency.symbol,
-                                          decimalPlaces: currency.decimalPlaces,
-                                          style: theme.textTheme.displaySmall
-                                              ?.copyWith(
-                                            color: isDark
-                                                ? Colors.white
-                                                : AppColors.lightText,
-                                            fontWeight: FontWeight.bold,
-                                            height: 1.1,
-                                            fontSize:
-                                                AmountFormatter.getFontSize(
-                                                    stats.totalBalance,
-                                                    baseSize: 32,
-                                                    decimalPlaces:
-                                                        currency.decimalPlaces),
-                                            shadows: isDark
-                                                ? AppTheme.textShadow(
-                                                    blurMultiplier: 4.0)
-                                                : null,
-                                          ),
-                                        ),
-                                        loading: () => lastStats != null
-                                            ? RollingAmount(
-                                                amount: lastStats.totalBalance,
-                                                currencySymbol: currency.symbol,
-                                                decimalPlaces:
-                                                    currency.decimalPlaces,
-                                                style: theme.textTheme
-                                                    .displaySmall
+                              child: Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  onTap: hasAccounts
+                                      ? () => ref
+                                          .read(
+                                              dashboardMainBalanceViewProvider
+                                                  .notifier)
+                                          .toggle()
+                                      : null,
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Padding(
+                                    padding:
+                                        const EdgeInsets.symmetric(vertical: 4),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Expanded(
+                                              child: Text(
+                                                showNetWorthOnHero
+                                                    ? l10n.netWorth
+                                                    : l10n.availableCash,
+                                                style: theme
+                                                    .textTheme.titleSmall
                                                     ?.copyWith(
                                                   color: isDark
-                                                      ? Colors.white
-                                                      : AppColors.lightText,
-                                                  fontWeight: FontWeight.bold,
-                                                  height: 1.1,
-                                                  fontSize: AmountFormatter
-                                                      .getFontSize(
-                                                    lastStats.totalBalance,
-                                                    baseSize: 32,
-                                                    decimalPlaces:
-                                                        currency.decimalPlaces,
-                                                  ),
+                                                      ? Colors.white.withValues(
+                                                          alpha: 0.9)
+                                                      : AppColors
+                                                          .lightTextSecondary,
+                                                  fontWeight: FontWeight.w600,
                                                   shadows: isDark
                                                       ? AppTheme.textShadow(
-                                                          blurMultiplier: 4.0)
+                                                          blurMultiplier: 1.0)
                                                       : null,
                                                 ),
-                                              )
-                                            : const SizedBox(height: 32),
-                                        error: (_, __) => Text(l10n.error,
-                                            style: TextStyle(
+                                              ),
+                                            ),
+                                            if (hasAccounts)
+                                              Icon(
+                                                Icons.swap_horiz_rounded,
+                                                size: 18,
                                                 color: isDark
                                                     ? Colors.white
-                                                    : AppColors.error)),
-                                      ),
-                                      _buildFilterChip(
-                                          context, ref, filter, isDark),
-                                    ],
+                                                        .withValues(
+                                                            alpha: 0.55)
+                                                    : AppColors
+                                                        .lightTextSecondary,
+                                              ),
+                                          ],
+                                        ),
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            showNetWorthOnHero
+                                                ? accountsWithBalanceAsync.when(
+                                                    data: (accounts) {
+                                                      final nw =
+                                                          dashboardNetWorthFromAccounts(
+                                                              accounts);
+                                                      return RollingAmount(
+                                                        amount: nw,
+                                                        currencySymbol:
+                                                            currency.symbol,
+                                                        decimalPlaces: currency
+                                                            .decimalPlaces,
+                                                        style: theme.textTheme
+                                                            .displaySmall
+                                                            ?.copyWith(
+                                                          color: isDark
+                                                              ? Colors.white
+                                                              : AppColors
+                                                                  .lightText,
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          height: 1.1,
+                                                          fontSize: AmountFormatter
+                                                              .getFontSize(
+                                                            nw,
+                                                            baseSize: 32,
+                                                            decimalPlaces: currency
+                                                                .decimalPlaces,
+                                                          ),
+                                                          shadows: isDark
+                                                              ? AppTheme
+                                                                  .textShadow(
+                                                                      blurMultiplier:
+                                                                          4.0)
+                                                              : null,
+                                                        ),
+                                                      );
+                                                    },
+                                                    loading: () =>
+                                                        const SizedBox(
+                                                            height: 32),
+                                                    error: (_, __) => Text(
+                                                      l10n.error,
+                                                      style: TextStyle(
+                                                        color: isDark
+                                                            ? Colors.white
+                                                            : AppColors.error,
+                                                      ),
+                                                    ),
+                                                  )
+                                                : dashboardStatsAsync.when(
+                                                    data: (stats) =>
+                                                        RollingAmount(
+                                                      amount:
+                                                          stats.totalBalance,
+                                                      currencySymbol:
+                                                          currency.symbol,
+                                                      decimalPlaces: currency
+                                                          .decimalPlaces,
+                                                      style: theme.textTheme
+                                                          .displaySmall
+                                                          ?.copyWith(
+                                                        color: isDark
+                                                            ? Colors.white
+                                                            : AppColors
+                                                                .lightText,
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        height: 1.1,
+                                                        fontSize: AmountFormatter
+                                                            .getFontSize(
+                                                          stats.totalBalance,
+                                                          baseSize: 32,
+                                                          decimalPlaces: currency
+                                                              .decimalPlaces,
+                                                        ),
+                                                        shadows: isDark
+                                                            ? AppTheme
+                                                                .textShadow(
+                                                                    blurMultiplier:
+                                                                        4.0)
+                                                            : null,
+                                                      ),
+                                                    ),
+                                                    loading: () =>
+                                                        lastStats != null
+                                                            ? RollingAmount(
+                                                                amount: lastStats
+                                                                    .totalBalance,
+                                                                currencySymbol:
+                                                                    currency
+                                                                        .symbol,
+                                                                decimalPlaces:
+                                                                    currency
+                                                                        .decimalPlaces,
+                                                                style: theme
+                                                                    .textTheme
+                                                                    .displaySmall
+                                                                    ?.copyWith(
+                                                                  color: isDark
+                                                                      ? Colors
+                                                                          .white
+                                                                      : AppColors
+                                                                          .lightText,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .bold,
+                                                                  height: 1.1,
+                                                                  fontSize: AmountFormatter
+                                                                      .getFontSize(
+                                                                    lastStats
+                                                                        .totalBalance,
+                                                                    baseSize:
+                                                                        32,
+                                                                    decimalPlaces:
+                                                                        currency
+                                                                            .decimalPlaces,
+                                                                  ),
+                                                                  shadows: isDark
+                                                                      ? AppTheme.textShadow(
+                                                                          blurMultiplier:
+                                                                              4.0)
+                                                                      : null,
+                                                                ),
+                                                              )
+                                                            : const SizedBox(
+                                                                height: 32),
+                                                    error: (_, __) => Text(
+                                                      l10n.error,
+                                                      style: TextStyle(
+                                                        color: isDark
+                                                            ? Colors.white
+                                                            : AppColors.error,
+                                                      ),
+                                                    ),
+                                                  ),
+                                            _buildFilterChip(
+                                                context, ref, filter, isDark),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                ],
+                                ),
                               ),
                             ),
                           ),
@@ -1825,30 +1949,65 @@ class _DashboardTab extends ConsumerWidget {
     ];
     showModalBottomSheet<void>(
       context: context,
+      isScrollControlled: true,
       builder: (ctx) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Text(
-                l10n.addToDashboard,
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+        child: Consumer(
+          builder: (context, ref, _) {
+            final layoutAsync = ref.watch(dashboardWidgetLayoutProvider);
+            final configs =
+                layoutAsync.value ?? defaultDashboardWidgetLayout;
+            return SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                    child: Text(
+                      l10n.onDashboard,
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  ...summaryKinds.map((e) {
+                    final checked = configs.any((c) => c.kind == e.$1);
+                    final busy = layoutAsync.isLoading;
+                    Future<void> apply(bool v) async {
+                      await ref
+                          .read(dashboardWidgetLayoutProvider.notifier)
+                          .setSummaryKindOnDashboard(e.$1, v);
+                    }
+
+                    return ListTile(
+                      leading: Icon(e.$3),
+                      title: Text(e.$2),
+                      trailing: Checkbox(
+                        value: checked,
+                        onChanged: busy
+                            ? null
+                            : (v) async {
+                                if (v == null) return;
+                                await apply(v);
+                              },
+                      ),
+                      onTap: busy
+                          ? null
+                          : () async {
+                              await apply(!checked);
+                            },
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 4),
+                    );
+                  }),
+                  SizedBox(
+                    height: 8 + MediaQuery.paddingOf(context).bottom,
+                  ),
+                ],
               ),
-            ),
-            ...summaryKinds.map((e) => ListTile(
-                  leading: Icon(e.$3),
-                  title: Text(e.$2),
-                  onTap: () async {
-                    await ref
-                        .read(dashboardWidgetLayoutProvider.notifier)
-                        .addWidget(DashboardWidgetConfig(kind: e.$1));
-                    if (ctx.mounted) Navigator.pop(ctx);
-                  },
-                )),
-          ],
+            );
+          },
         ),
       ),
     );
@@ -2208,6 +2367,19 @@ class _DashboardTab extends ConsumerWidget {
                           context,
                           MaterialPageRoute(
                             builder: (context) => const ScanReceiptScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                    _QuickActionButton(
+                      icon: Symbols.account_balance,
+                      label: l10n.accounts,
+                      gradient: AppColors.dashboardSectionGradient,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const AccountsScreen(),
                           ),
                         );
                       },

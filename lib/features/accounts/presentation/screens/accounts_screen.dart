@@ -696,6 +696,7 @@ class _TransferRow extends ConsumerWidget {
                       account: details.fromAccount,
                       theme: theme,
                       arrowBesideIcon: true,
+                      showBorder: false,
                       onAccountTap: details.fromAccount != null
                           ? () => Navigator.push(
                                 context,
@@ -711,6 +712,7 @@ class _TransferRow extends ConsumerWidget {
                     TransferAccountBox(
                       account: details.toAccount,
                       theme: theme,
+                      showBorder: false,
                       onAccountTap: details.toAccount != null
                           ? () => Navigator.push(
                                 context,

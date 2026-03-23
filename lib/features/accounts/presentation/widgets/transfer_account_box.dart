@@ -19,6 +19,8 @@ class TransferAccountBox extends StatelessWidget {
   /// Opens account detail when set (only for boxes that show the account name).
   final VoidCallback? onAccountTap;
 
+  final bool showBorder;
+
   const TransferAccountBox({
     super.key,
     required this.account,
@@ -26,6 +28,7 @@ class TransferAccountBox extends StatelessWidget {
     this.arrowBesideIcon = false,
     this.hideName = false,
     this.onAccountTap,
+    this.showBorder = true,
   });
 
   /// Icon for list rows, pickers, etc. (custom icon or default by account type).
@@ -72,10 +75,12 @@ class TransferAccountBox extends StatelessWidget {
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(
-          color: color.withValues(alpha: 0.4),
-          width: 1,
-        ),
+        border: showBorder
+            ? Border.all(
+                color: color.withValues(alpha: 0.4),
+                width: 1,
+              )
+            : null,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,

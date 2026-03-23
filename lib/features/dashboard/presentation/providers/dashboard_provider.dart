@@ -5,7 +5,44 @@ import 'package:flowpaisa/features/receivables/presentation/providers/receivable
 import 'package:flowpaisa/features/payables/presentation/providers/payables_provider.dart';
 import 'package:flowpaisa/features/dashboard/domain/models.dart';
 import 'package:flowpaisa/features/backup/presentation/providers/backup_provider.dart';
+import 'package:flowpaisa/features/accounts/domain/models/account_models.dart';
 import 'package:rxdart/rxdart.dart';
+
+/// Main dashboard hero amount: cash from transactions vs net worth from accounts.
+enum DashboardMainBalanceView { availableCash, netWorth }
+
+class DashboardMainBalanceViewNotifier extends Notifier<DashboardMainBalanceView> {
+  @override
+  DashboardMainBalanceView build() => DashboardMainBalanceView.availableCash;
+
+  void toggle() {
+    state = state == DashboardMainBalanceView.availableCash
+        ? DashboardMainBalanceView.netWorth
+        : DashboardMainBalanceView.availableCash;
+  }
+}
+
+final dashboardMainBalanceViewProvider =
+    NotifierProvider<DashboardMainBalanceViewNotifier, DashboardMainBalanceView>(
+        DashboardMainBalanceViewNotifier.new);
+
+/// Same logic as analytics / pinned net-worth widget (assets − liabilities).
+double dashboardNetWorthFromAccounts(List<AccountWithBalance> accounts) {
+  double totalAssets = 0;
+  double totalLiabilities = 0;
+  for (final awb in accounts) {
+    if (awb.type.isCreditCard) {
+      if (awb.balance < 0) totalLiabilities += awb.balance.abs();
+    } else {
+      if (awb.balance > 0) {
+        totalAssets += awb.balance;
+      } else {
+        totalLiabilities += awb.balance.abs();
+      }
+    }
+  }
+  return totalAssets - totalLiabilities;
+}
 
 class DashboardFilterNotifier extends Notifier<DashboardFilter> {
   @override

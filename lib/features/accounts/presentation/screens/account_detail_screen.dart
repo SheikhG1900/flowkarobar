@@ -1242,6 +1242,7 @@ class _TransferTile extends ConsumerWidget {
                       account: details.fromAccount,
                       theme: theme,
                       arrowBesideIcon: true,
+                      showBorder: false,
                       hideName: details.fromAccount?.uuid == currentAccountUuid,
                       onAccountTap: details.fromAccount != null &&
                               details.fromAccount!.uuid != currentAccountUuid
@@ -1259,6 +1260,7 @@ class _TransferTile extends ConsumerWidget {
                     TransferAccountBox(
                       account: details.toAccount,
                       theme: theme,
+                      showBorder: false,
                       hideName: details.toAccount?.uuid == currentAccountUuid,
                       onAccountTap: details.toAccount != null &&
                               details.toAccount!.uuid != currentAccountUuid

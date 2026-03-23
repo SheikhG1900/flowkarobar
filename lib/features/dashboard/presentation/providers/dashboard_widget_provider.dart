@@ -65,6 +65,22 @@ class DashboardWidgetLayoutNotifier
     await setLayout(next);
   }
 
+  /// Show or hide a summary widget kind. At most one slot when adding; removing
+  /// clears all duplicate entries of that kind. Entity pins are unchanged.
+  Future<void> setSummaryKindOnDashboard(
+      DashboardWidgetKind kind, bool on) async {
+    if (kind.isEntity) return;
+    final current = state.value ?? defaultDashboardWidgetLayout;
+    if (on) {
+      if (current.any((c) => c.kind == kind)) return;
+      await setLayout([...current, DashboardWidgetConfig(kind: kind)]);
+    } else {
+      final next = current.where((c) => c.kind != kind).toList();
+      if (next.length == current.length) return;
+      await setLayout(next);
+    }
+  }
+
   Future<void> reorder(int from, int to) async {
     final current = state.value ?? defaultDashboardWidgetLayout;
     if (from < 0 || from >= current.length || to < 0 || to >= current.length) {
