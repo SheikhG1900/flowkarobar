@@ -351,7 +351,7 @@ class AppDatabase extends _$AppDatabase {
       : super(executor ?? openConnection(fileName));
 
   @override
-  int get schemaVersion => 19;
+  int get schemaVersion => 20;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -509,6 +509,21 @@ class AppDatabase extends _$AppDatabase {
             } catch (e) {
               if (kDebugMode) {
                 print('Migration: processedDate backfill failed: $e');
+              }
+            }
+          }
+
+          // Migration from version 19 to 20: ensure default Refund category has icon
+          if (from <= 19) {
+            try {
+              final replayCode = Symbols.replay.codePoint.toString();
+              await customStatement(
+                "UPDATE categories SET icon = '$replayCode' WHERE uuid = 'default_cat_refund' AND (icon IS NULL OR icon = '');",
+              );
+            } catch (e) {
+              if (kDebugMode) {
+                print(
+                    'Migration: default_cat_refund icon backfill failed: $e');
               }
             }
           }

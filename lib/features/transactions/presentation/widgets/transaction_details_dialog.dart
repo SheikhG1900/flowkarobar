@@ -12,6 +12,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/core/utils/date_formatter.dart';
+import 'package:flowpaisa/core/database/database.dart' show Category, Contact;
 import 'package:flowpaisa/features/transactions/domain/models.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transaction_service_provider.dart';
 import 'package:flowpaisa/core/utils/share_helper.dart';
@@ -26,7 +27,7 @@ import 'package:flowpaisa/features/payables/presentation/providers/payables_prov
 import 'package:flowpaisa/features/receivables/presentation/providers/receivables_provider.dart';
 import 'package:flowpaisa/features/whatsapp/presentation/providers/whatsapp_provider.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart' hide Category;
 import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
 import 'package:flutter/services.dart';
 import 'package:flowpaisa/features/whatsapp/domain/deep_link_service.dart';
@@ -135,6 +136,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
   }) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
+    final pr = transaction.paidRelationship as String?;
 
     return Scaffold(
       appBar: AppBar(
@@ -447,389 +449,59 @@ class TransactionDetailsDialog extends ConsumerWidget {
               ),
             ),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
 
-            // Contact & Category Header Section
-            if (contact != null || category != null) ...[
-              if (contact != null) ...[
-                InkWell(
+            if (isSplitGroup) ...[
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(20),
                   onTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => ContactDetailsScreen(
-                          contactUuid: contact.uuid,
+                        builder: (context) => SplittedTransactionsScreen(
+                          transactionUuid: transaction.uuid,
                         ),
                       ),
                     );
                   },
-                  borderRadius: BorderRadius.circular(12),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: Row(
-                      children: [
-                        // Contact Section
-                        Container(
-                          width: 60,
-                          height: 60,
-                          decoration: BoxDecoration(
-                            gradient:
-                                AppColors.getContactGradient(contact.name),
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppColors.getContactColor(contact.name)
-                                    .withValues(alpha: 0.3),
-                                blurRadius: 12,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          alignment: Alignment.center,
-                          child: Text(
-                            contact.name.isNotEmpty
-                                ? contact.name[0].toUpperCase()
-                                : '?',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 28,
-                              fontWeight: FontWeight.bold,
+                  child: _buildSectionCard(
+                    context,
+                    title: l10n.splittedBill,
+                    titleIcon: Icons.people_outline,
+                    useScheduleDateRangeStyle: true,
+                    titleTrailing: IconButton(
+                      icon: const Icon(Icons.edit_outlined, size: 20),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => EditSplitTransactionScreen(
+                              transactionUuid: transaction.uuid,
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                contact.name,
-                                style: theme.textTheme.titleLarge?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              if (contact.phone != null) ...[
-                                const SizedBox(height: 4),
-                                Row(
-                                  children: [
-                                    Icon(
-                                      Icons.phone,
-                                      size: 16,
-                                      color: theme.colorScheme.onSurfaceVariant,
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      contact.phone!,
-                                      style:
-                                          theme.textTheme.bodyMedium?.copyWith(
-                                        color:
-                                            theme.colorScheme.onSurfaceVariant,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ],
-                          ),
-                        ),
-                        if (contact.phone != null &&
-                            transaction.isAutoGenerated != true)
-                          IconButton(
-                            icon: const Icon(Icons.chat,
-                                color: Color(0xFF25D366)),
-                            onPressed: () {
-                              final capturedCurrency = currency;
-                              final capturedUserProfile =
-                                  ref.read(userProfileProvider);
-                              final capturedTransactionService =
-                                  ref.read(transactionServiceProvider);
-                              final capturedWhatsAppService =
-                                  ref.read(whatsAppServiceProvider);
-                              final capturedTemplateService =
-                                  ref.read(messageTemplateServiceProvider);
-                              final capturedLanguage =
-                                  getCurrentLanguageCode(ref);
-
-                              ShareHelper.shareTransaction(
-                                context,
-                                ref,
-                                transaction,
-                                contact,
-                                category,
-                                item.isLinkedEntryMarked,
-                                currencyOverride: capturedCurrency,
-                                userProfileOverride: capturedUserProfile,
-                                transactionServiceOverride:
-                                    capturedTransactionService,
-                                whatsAppServiceOverride:
-                                    capturedWhatsAppService,
-                                templateServiceOverride:
-                                    capturedTemplateService,
-                                languageOverride: capturedLanguage,
-                              );
-                            },
-                            tooltip: l10n.sendMessage,
-                          ),
-                      ],
+                        );
+                      },
+                      tooltip: l10n.editTransaction,
                     ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-              ],
-              // Category Section
-              Container(
-                decoration: BoxDecoration(
-                  color: category != null
-                      ? Color(int.parse(
-                              category.color!.replaceAll('#', '0xFF')))
-                          .withValues(alpha: 0.1)
-                      : (isExpense
-                              ? AppColors.expenseColor
-                              : AppColors.incomeColor)
-                          .withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: category != null
-                        ? Color(int.parse(
-                                category.color!.replaceAll('#', '0xFF')))
-                            .withValues(alpha: 0.3)
-                        : (isExpense
-                                ? AppColors.expenseColor
-                                : AppColors.incomeColor)
-                            .withValues(alpha: 0.3),
-                    width: 1,
-                  ),
-                ),
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: category != null
-                        ? () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => CategoryDetailsScreen(
-                                  categoryUuid: category.uuid,
-                                ),
-                              ),
-                            );
-                          }
-                        : null,
-                    borderRadius: BorderRadius.circular(16),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 48,
-                            height: 48,
-                            decoration: BoxDecoration(
-                              color: category != null
-                                  ? Color(int.parse(category.color!
-                                          .replaceAll('#', '0xFF')))
-                                      .withValues(alpha: 0.2)
-                                  : (isExpense
-                                          ? AppColors.expenseColor
-                                          : AppColors.incomeColor)
-                                      .withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Icon(
-                              category != null && category.icon != null
-                                  ? IconHelper.getIconData(category.icon!)
-                                  : (isExpense
-                                      ? Icons.arrow_circle_down
-                                      : Icons.arrow_circle_up),
-                              color: category != null
-                                  ? Color(int.parse(
-                                      category.color!.replaceAll('#', '0xFF')))
-                                  : (isExpense
-                                      ? AppColors.expenseColor
-                                      : AppColors.incomeColor),
-                              size: 28,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  l10n.category,
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: theme.colorScheme.onSurfaceVariant,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  category != null
-                                      ? LocalizationHelper
-                                          .getLocalizedCategoryName(
-                                              context, category.name)
-                                      : (isExpense
-                                          ? l10n.expense
-                                          : l10n.income),
-                                  style: theme.textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: category != null
-                                        ? Color(int.parse(category.color!
-                                            .replaceAll('#', '0xFF')))
-                                        : null,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
+                    body: _buildSplitSummaryCard(
+                      context,
+                      group,
+                      currency,
+                      embedded: true,
                     ),
                   ),
                 ),
               ),
-              const SizedBox(height: 24),
-              const Divider(),
               const SizedBox(height: 16),
             ],
 
-            // Split bill section (when this transaction is part of a group)
-            if (isSplitGroup) ...[
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      Text(
-                        l10n.splittedBill,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      IconButton(
-                        icon: const Icon(Icons.edit_square, size: 18),
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => EditSplitTransactionScreen(
-                                transactionUuid: transaction.uuid,
-                              ),
-                            ),
-                          );
-                        },
-                        constraints: const BoxConstraints(),
-                        padding: const EdgeInsets.all(4),
-                        tooltip: l10n.editTransaction,
-                      ),
-                    ],
-                  ),
-                  TextButton.icon(
-                    label: Text(l10n.viewAll),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => SplittedTransactionsScreen(
-                            transactionUuid: transaction.uuid,
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              _buildSplitSummaryCard(context, group, currency),
-              const SizedBox(height: 24),
-              const Divider(),
-              const SizedBox(height: 16),
-            ],
-
-            // Details Section
-            _buildDetailRow(
-              context,
-              icon: Icons.calendar_today,
-              label: l10n.date,
-              value: AppDateFormatter.formatDate(transaction.date,
-                  pattern: ref.watch(userProfileProvider).dateFormat),
-            ),
-
-            if (item.account != null)
-              _buildDetailRow(
-                context,
-                icon: Icons.account_balance_wallet,
-                label: l10n.account,
-                value: item.account!.name,
-              ),
-
-            if (transaction.description != null &&
-                transaction.description!.isNotEmpty)
-              _buildDetailRow(
-                context,
-                icon: Icons.description,
-                label: l10n.description,
-                value: transaction.description!,
-              ),
-
-            // Processed On date
-            if (transaction.processedDate != null)
-              _buildDetailRow(
-                context,
-                icon: Icons.check_circle_outline,
-                label: isExpense
-                    ? l10n.paidOnRowLabel
-                    : l10n.receivedOnRowLabel,
-                value: AppDateFormatter.formatDate(transaction.processedDate!,
-                    pattern: ref.watch(userProfileProvider).dateFormat),
-              ),
-
-            // Mark as Processed button (only when not yet processed and no linked entry)
-            if (transaction.processedDate == null &&
-                linkedPayable == null &&
-                linkedReceivable == null) ...[
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: () async {
-                    await ref
-                        .read(transactionServiceProvider)
-                        .markAsProcessed(transaction.uuid);
-                    if (context.mounted) Navigator.pop(context);
-                  },
-                  icon: const Icon(Icons.check_circle_outline),
-                  label: Text(
-                    isExpense ? l10n.markAsPaid : l10n.markAsReceived,
-                  ),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: isExpense
-                        ? AppColors.expenseColor
-                        : AppColors.incomeColor,
-                    side: BorderSide(
-                      color: isExpense
-                          ? AppColors.expenseColor
-                          : AppColors.incomeColor,
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                  ),
-                ),
-              ),
-            ],
-
-            // Linked Entry Section
-            if (linkedPayable != null || linkedReceivable != null) ...[
-              const SizedBox(height: 24),
-              const Divider(),
-              const SizedBox(height: 16),
-              Text(
-                l10n.linkedEntry,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 16),
-              if (linkedPayable != null)
-                InkWell(
+            if (linkedPayable != null) ...[
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(20),
                   onTap: () {
                     showDialog(
                       context: context,
@@ -838,12 +510,22 @@ class TransactionDetailsDialog extends ConsumerWidget {
                       ),
                     );
                   },
-                  borderRadius: BorderRadius.circular(16),
                   child: _buildLinkedPayableCard(
-                      context, ref, linkedPayable, item),
+                    context,
+                    ref,
+                    linkedPayable,
+                    item,
+                    contact: contact as Contact?,
+                  ),
                 ),
-              if (linkedReceivable != null)
-                InkWell(
+              ),
+              const SizedBox(height: 16),
+            ],
+            if (linkedReceivable != null) ...[
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(20),
                   onTap: () {
                     showDialog(
                       context: context,
@@ -852,14 +534,171 @@ class TransactionDetailsDialog extends ConsumerWidget {
                       ),
                     );
                   },
-                  borderRadius: BorderRadius.circular(16),
                   child: _buildLinkedReceivableCard(
-                      context, ref, linkedReceivable, item),
+                    context,
+                    ref,
+                    linkedReceivable,
+                    item,
+                    contact: contact as Contact?,
+                  ),
                 ),
+              ),
+              const SizedBox(height: 16),
+            ],
+            if (linkedPayable == null &&
+                linkedReceivable == null &&
+                pr != null &&
+                (pr == 'PAID_FOR' ||
+                    pr == 'WILL_RECEIVE' ||
+                    pr == 'PAID_BY' ||
+                    pr == 'RECEIVED_FROM')) ...[
+              _buildTxRelationshipCard(
+                context,
+                theme,
+                l10n,
+                isReceivable: pr == 'PAID_FOR' || pr == 'WILL_RECEIVE',
+                contact: contact as Contact?,
+              ),
+              const SizedBox(height: 16),
+            ],
+            if (pr == 'PROCESSED') ...[
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _buildTxProcessedCard(
+                    context,
+                    theme,
+                    l10n,
+                    isExpense: isExpense,
+                    contact: contact as Contact?,
+                  ),
+                  if (transaction.processedDate == null &&
+                      linkedPayable == null &&
+                      linkedReceivable == null) ...[
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton.icon(
+                        onPressed: () async {
+                          await ref
+                              .read(transactionServiceProvider)
+                              .markAsProcessed(transaction.uuid);
+                          if (context.mounted) Navigator.pop(context);
+                        },
+                        icon: const Icon(Icons.check_circle),
+                        label: Text(
+                          isExpense ? l10n.markAsPaid : l10n.markAsReceived,
+                        ),
+                        style: isExpense
+                            ? AppColors.transactionMarkAsPaidFilledStyle()
+                            : AppColors.transactionMarkAsReceivedFilledStyle(),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+              const SizedBox(height: 16),
+            ],
+            if (contact != null && pr == null) ...[
+              _buildTxContactCard(
+                context,
+                theme,
+                l10n,
+                ref,
+                contact as Contact,
+                transaction,
+                category,
+                item,
+                currency,
+              ),
+              const SizedBox(height: 16),
+            ],
+            if (category != null) ...[
+              _buildTxCategoryCard(
+                context,
+                theme,
+                l10n,
+                category: category as Category,
+                isExpense: isExpense,
+              ),
+              const SizedBox(height: 16),
             ],
 
+            _buildSectionCard(
+              context,
+              title: l10n.information,
+              titleIcon: Icons.info_outline,
+              body: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _buildDetailRow(
+                    context,
+                    icon: Icons.calendar_today_outlined,
+                    label: l10n.date,
+                    value: AppDateFormatter.formatDate(transaction.date,
+                        pattern: ref.watch(userProfileProvider).dateFormat),
+                  ),
+                  if (item.account != null)
+                    _buildDetailRow(
+                      context,
+                      icon: Icons.account_balance_wallet,
+                      label: l10n.account,
+                      value: item.account!.name,
+                    ),
+                  if (transaction.description != null &&
+                      transaction.description!.isNotEmpty)
+                    _buildDetailRow(
+                      context,
+                      icon: Icons.notes_outlined,
+                      label: l10n.description,
+                      value: transaction.description!,
+                    ),
+                  if (transaction.processedDate != null)
+                    _buildDetailRow(
+                      context,
+                      icon: Icons.check_circle_outline,
+                      label: isExpense
+                          ? l10n.paidOnRowLabel
+                          : l10n.receivedOnRowLabel,
+                      value: AppDateFormatter.formatDate(
+                          transaction.processedDate!,
+                          pattern: ref.watch(userProfileProvider).dateFormat),
+                    ),
+                  if (transaction.processedDate == null &&
+                      linkedPayable == null &&
+                      linkedReceivable == null &&
+                      pr != 'PROCESSED') ...[
+                    const SizedBox(height: 8),
+                    OutlinedButton.icon(
+                      onPressed: () async {
+                        await ref
+                            .read(transactionServiceProvider)
+                            .markAsProcessed(transaction.uuid);
+                        if (context.mounted) Navigator.pop(context);
+                      },
+                      icon: const Icon(Icons.check_circle_outline),
+                      label: Text(
+                        isExpense ? l10n.markAsPaid : l10n.markAsReceived,
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: isExpense
+                            ? AppColors.expenseColor
+                            : AppColors.incomeColor,
+                        side: BorderSide(
+                          color: isExpense
+                              ? AppColors.expenseColor
+                              : AppColors.incomeColor,
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+
             if (kDebugMode) ...[
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
               const Divider(),
               const SizedBox(height: 8),
               Theme(
@@ -922,8 +761,690 @@ class TransactionDetailsDialog extends ConsumerWidget {
     );
   }
 
+  /// Section shell (schedule / account-detail style).
+  static Widget _buildSectionCard(
+    BuildContext context, {
+    required String title,
+    required IconData titleIcon,
+    Color? accentColor,
+    Widget? titleTrailing,
+    required Widget body,
+    bool useScheduleDateRangeStyle = false,
+  }) {
+    final theme = Theme.of(context);
+    final accent = accentColor ?? theme.colorScheme.primary;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: useScheduleDateRangeStyle
+          ? BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  theme.colorScheme.primaryContainer.withValues(alpha: 0.6),
+                  theme.colorScheme.secondaryContainer.withValues(alpha: 0.4),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(20),
+            )
+          : BoxDecoration(
+              color: theme.colorScheme.surfaceContainerLow,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+                width: 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: theme.colorScheme.shadow.withValues(alpha: 0.06),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: useScheduleDateRangeStyle
+                      ? theme.colorScheme.primaryContainer
+                      : accent.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  titleIcon,
+                  size: 24,
+                  color: useScheduleDateRangeStyle
+                      ? theme.colorScheme.onPrimaryContainer
+                      : accent,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  title,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.onSurface,
+                  ),
+                ),
+              ),
+              if (titleTrailing != null) titleTrailing,
+            ],
+          ),
+          const SizedBox(height: 20),
+          body,
+        ],
+      ),
+    );
+  }
+
+  /// Schedule details–style receivable / payable card.
+  static Widget _buildTxRelationshipCard(
+    BuildContext context,
+    ThemeData theme,
+    AppLocalizations l10n, {
+    required bool isReceivable,
+    Contact? contact,
+  }) {
+    final color = isReceivable
+        ? AppColors.receivableColor
+        : AppColors.payableColor;
+    final label = isReceivable ? l10n.receivable : l10n.payable;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            color.withValues(alpha: 0.15),
+            color.withValues(alpha: 0.06),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withValues(alpha: 0.4), width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.12),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.25),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  isReceivable ? Icons.call_received : Icons.call_made,
+                  size: 24,
+                  color: color,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                label,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                ),
+              ),
+            ],
+          ),
+          if (contact != null) ...[
+            const SizedBox(height: 16),
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ContactDetailsScreen(
+                        contactUuid: contact.uuid,
+                      ),
+                    ),
+                  );
+                },
+                borderRadius: BorderRadius.circular(12),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          gradient: AppColors.getContactGradient(contact.name),
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.getContactColor(contact.name)
+                                  .withValues(alpha: 0.3),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          contact.name.isNotEmpty
+                              ? contact.name[0].toUpperCase()
+                              : '?',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              contact.name,
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            if (contact.phone != null) ...[
+                              const SizedBox(height: 2),
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.phone,
+                                    size: 14,
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    contact.phone!,
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                      Icon(
+                        Icons.chevron_right,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  static Widget _buildTxProcessedCard(
+    BuildContext context,
+    ThemeData theme,
+    AppLocalizations l10n, {
+    required bool isExpense,
+    Contact? contact,
+  }) {
+    final color = theme.colorScheme.primary;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            color.withValues(alpha: 0.15),
+            color.withValues(alpha: 0.06),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withValues(alpha: 0.4), width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.12),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.25),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  Icons.check_circle_outline,
+                  size: 24,
+                  color: color,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      isExpense ? l10n.markAsPaid : l10n.markAsReceived,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: color,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      isExpense
+                          ? l10n.processedImmediately
+                          : l10n.receivedImmediately,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          if (contact != null) ...[
+            const SizedBox(height: 16),
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ContactDetailsScreen(
+                        contactUuid: contact.uuid,
+                      ),
+                    ),
+                  );
+                },
+                borderRadius: BorderRadius.circular(12),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          gradient: AppColors.getContactGradient(contact.name),
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.getContactColor(contact.name)
+                                  .withValues(alpha: 0.3),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          contact.name.isNotEmpty
+                              ? contact.name[0].toUpperCase()
+                              : '?',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              contact.name,
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            if (contact.phone != null) ...[
+                              const SizedBox(height: 2),
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.phone,
+                                    size: 14,
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    contact.phone!,
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                      Icon(
+                        Icons.chevron_right,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  static Widget _buildTxContactCard(
+    BuildContext context,
+    ThemeData theme,
+    AppLocalizations l10n,
+    WidgetRef ref,
+    Contact contact,
+    dynamic transaction,
+    dynamic category,
+    TransactionWithDetails item,
+    dynamic currency,
+  ) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: theme.colorScheme.shadow.withValues(alpha: 0.06),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  Icons.person,
+                  size: 24,
+                  color: theme.colorScheme.onPrimaryContainer,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                l10n.contact,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: theme.colorScheme.onSurface,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ContactDetailsScreen(
+                      contactUuid: contact.uuid,
+                    ),
+                  ),
+                );
+              },
+              borderRadius: BorderRadius.circular(12),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        gradient: AppColors.getContactGradient(contact.name),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.getContactColor(contact.name)
+                                .withValues(alpha: 0.3),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        contact.name.isNotEmpty
+                            ? contact.name[0].toUpperCase()
+                            : '?',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            contact.name,
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          if (contact.phone != null) ...[
+                            const SizedBox(height: 2),
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.phone,
+                                  size: 14,
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  contact.phone!,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    if (contact.phone != null &&
+                        transaction.isAutoGenerated != true)
+                      IconButton(
+                        icon:
+                            const Icon(Icons.chat, color: Color(0xFF25D366)),
+                        onPressed: () {
+                          ShareHelper.shareTransaction(
+                            context,
+                            ref,
+                            transaction,
+                            contact,
+                            category,
+                            item.isLinkedEntryMarked,
+                            currencyOverride: currency,
+                            userProfileOverride: ref.read(userProfileProvider),
+                            transactionServiceOverride:
+                                ref.read(transactionServiceProvider),
+                            whatsAppServiceOverride:
+                                ref.read(whatsAppServiceProvider),
+                            templateServiceOverride:
+                                ref.read(messageTemplateServiceProvider),
+                            languageOverride: getCurrentLanguageCode(ref),
+                          );
+                        },
+                        tooltip: l10n.sendMessage,
+                      ),
+                    Icon(
+                      Icons.chevron_right,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static Widget _buildTxCategoryCard(
+    BuildContext context,
+    ThemeData theme,
+    AppLocalizations l10n, {
+    required Category category,
+    required bool isExpense,
+  }) {
+    final color = category.color != null
+        ? Color(int.parse(category.color!.replaceAll('#', '0xFF')))
+        : (isExpense ? AppColors.expenseColor : AppColors.incomeColor);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.08),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => CategoryDetailsScreen(
+                  categoryUuid: category.uuid,
+                ),
+              ),
+            );
+          },
+          borderRadius: BorderRadius.circular(20),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    category.icon != null
+                        ? IconHelper.getIconData(category.icon!)
+                        : (isExpense
+                            ? Icons.arrow_circle_down
+                            : Icons.arrow_circle_up),
+                    color: color,
+                    size: 28,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.category,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        LocalizationHelper.getLocalizedCategoryName(
+                            context, category.name),
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: color,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   static Widget _buildSplitSummaryCard(BuildContext context,
-      List<TransactionWithDetails> group, dynamic currency) {
+      List<TransactionWithDetails> group, dynamic currency,
+      {bool embedded = false}) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
 
@@ -953,6 +1474,45 @@ class TransactionDetailsDialog extends ConsumerWidget {
       }
     }
 
+    final inner = Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            _buildSummaryMiniItem(context, l10n.totalAmount, totalAmount,
+                currency, theme.colorScheme.primary),
+            _buildSummaryMiniItem(
+                context,
+                l10n.balance,
+                totalAmount - paidAmount - receivedAmount,
+                currency,
+                theme.colorScheme.secondary),
+          ],
+        ),
+        Divider(
+          height: embedded ? 22 : 24,
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.4),
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            if (hasPayables)
+              _buildSummaryMiniItem(context, l10n.paid, paidAmount, currency,
+                  AppColors.expenseColor),
+            if (hasReceivables)
+              _buildSummaryMiniItem(context, l10n.received, receivedAmount,
+                  currency, AppColors.incomeColor),
+            _buildSummaryMiniItem(context, l10n.pending, pendingAmount,
+                currency, Colors.orange),
+          ],
+        ),
+      ],
+    );
+
+    if (embedded) {
+      return inner;
+    }
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -962,37 +1522,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
         border:
             Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.1)),
       ),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _buildSummaryMiniItem(context, l10n.totalAmount, totalAmount,
-                  currency, theme.colorScheme.primary),
-              _buildSummaryMiniItem(
-                  context,
-                  l10n.balance,
-                  totalAmount - paidAmount - receivedAmount,
-                  currency,
-                  theme.colorScheme.secondary),
-            ],
-          ),
-          const Divider(height: 24),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              if (hasPayables)
-                _buildSummaryMiniItem(context, l10n.paid, paidAmount, currency,
-                    AppColors.expenseColor),
-              if (hasReceivables)
-                _buildSummaryMiniItem(context, l10n.received, receivedAmount,
-                    currency, AppColors.incomeColor),
-              _buildSummaryMiniItem(context, l10n.pending, pendingAmount,
-                  currency, Colors.orange),
-            ],
-          ),
-        ],
-      ),
+      child: inner,
     );
   }
 
@@ -1050,20 +1580,20 @@ class TransactionDetailsDialog extends ConsumerWidget {
     final theme = Theme.of(context);
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
+      padding: const EdgeInsets.only(bottom: 16),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: theme.colorScheme.primaryContainer,
-              borderRadius: BorderRadius.circular(8),
+              color: theme.colorScheme.surfaceContainerHighest,
+              borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(
               icon,
               size: 20,
-              color: theme.colorScheme.onPrimaryContainer,
+              color: theme.colorScheme.primary,
             ),
           ),
           const SizedBox(width: 16),
@@ -1081,7 +1611,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
                 Text(
                   value,
                   style: theme.textTheme.bodyLarge?.copyWith(
-                    fontWeight: FontWeight.w500,
+                    fontWeight: FontWeight.w600,
                     color: valueColor,
                   ),
                 ),
@@ -1094,43 +1624,148 @@ class TransactionDetailsDialog extends ConsumerWidget {
     );
   }
 
-  static Widget _buildLinkedPayableCard(BuildContext context, WidgetRef ref,
-      dynamic payable, TransactionWithDetails item) {
+  static Widget _buildLinkedPayableCard(
+    BuildContext context,
+    WidgetRef ref,
+    dynamic payable,
+    TransactionWithDetails item, {
+    Contact? contact,
+  }) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final isPending = payable.status == 'PENDING';
+    const color = AppColors.payableColor;
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.payableColor.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: AppColors.payableColor.withValues(alpha: 0.3),
-          width: 1,
+        gradient: LinearGradient(
+          colors: [
+            color.withValues(alpha: 0.15),
+            color.withValues(alpha: 0.06),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withValues(alpha: 0.4), width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.12),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(
-                isPending ? Icons.schedule : Icons.check_circle,
-                color: AppColors.payableColor,
-                size: 20,
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.25),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.call_made, size: 24, color: color),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 12),
               Text(
-                isPending ? l10n.payablePending : l10n.paidTag,
-                style: const TextStyle(
-                  color: AppColors.payableColor,
-                  fontSize: 16,
+                l10n.payable,
+                style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
+                  color: color,
                 ),
               ),
             ],
           ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Icon(
+                isPending ? Icons.schedule : Icons.check_circle,
+                color: color,
+                size: 18,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                isPending ? l10n.payablePending : l10n.paidTag,
+                style: TextStyle(
+                  color: color,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          if (contact != null) ...[
+            const SizedBox(height: 14),
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ContactDetailsScreen(
+                        contactUuid: contact.uuid,
+                      ),
+                    ),
+                  );
+                },
+                borderRadius: BorderRadius.circular(12),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          gradient: AppColors.getContactGradient(contact.name),
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.getContactColor(contact.name)
+                                  .withValues(alpha: 0.28),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          contact.name.isNotEmpty
+                              ? contact.name[0].toUpperCase()
+                              : '?',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          contact.name,
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      Icon(
+                        Icons.chevron_right,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
           if (payable.dueDate != null) ...[
             const SizedBox(height: 8),
             Text(
@@ -1184,43 +1819,148 @@ class TransactionDetailsDialog extends ConsumerWidget {
     );
   }
 
-  static Widget _buildLinkedReceivableCard(BuildContext context, WidgetRef ref,
-      dynamic receivable, TransactionWithDetails item) {
+  static Widget _buildLinkedReceivableCard(
+    BuildContext context,
+    WidgetRef ref,
+    dynamic receivable,
+    TransactionWithDetails item, {
+    Contact? contact,
+  }) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final isPending = receivable.status == 'PENDING';
+    const color = AppColors.receivableColor;
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.receivableColor.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: AppColors.receivableColor.withValues(alpha: 0.3),
-          width: 1,
+        gradient: LinearGradient(
+          colors: [
+            color.withValues(alpha: 0.15),
+            color.withValues(alpha: 0.06),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withValues(alpha: 0.4), width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.12),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(
-                isPending ? Icons.schedule : Icons.check_circle,
-                color: AppColors.receivableColor,
-                size: 20,
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.25),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.call_received, size: 24, color: color),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 12),
               Text(
-                isPending ? l10n.receivablePending : l10n.receivedTag,
-                style: const TextStyle(
-                  color: AppColors.receivableColor,
-                  fontSize: 16,
+                l10n.receivable,
+                style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
+                  color: color,
                 ),
               ),
             ],
           ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Icon(
+                isPending ? Icons.schedule : Icons.check_circle,
+                color: color,
+                size: 18,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                isPending ? l10n.receivablePending : l10n.receivedTag,
+                style: TextStyle(
+                  color: color,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          if (contact != null) ...[
+            const SizedBox(height: 14),
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ContactDetailsScreen(
+                        contactUuid: contact.uuid,
+                      ),
+                    ),
+                  );
+                },
+                borderRadius: BorderRadius.circular(12),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          gradient: AppColors.getContactGradient(contact.name),
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.getContactColor(contact.name)
+                                  .withValues(alpha: 0.28),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          contact.name.isNotEmpty
+                              ? contact.name[0].toUpperCase()
+                              : '?',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          contact.name,
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      Icon(
+                        Icons.chevron_right,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
           if (receivable.dueDate != null) ...[
             const SizedBox(height: 8),
             Text(
