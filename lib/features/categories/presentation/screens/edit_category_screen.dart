@@ -130,6 +130,9 @@ class _EditCategoryScreenState extends ConsumerState<EditCategoryScreen> {
 
       if (mounted) {
         if (success) {
+          ref.invalidate(
+              categoryDetailBudgetProvider(widget.category.uuid));
+          invalidateCategoryPeriodNets(ref, widget.category.type);
           Navigator.pop(context, true); // Return true to indicate success
           ToastUtils.showSuccessToast(
               context, ref, l10n.categoryUpdatedSuccessfully);

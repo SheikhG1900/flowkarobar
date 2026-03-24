@@ -1,5 +1,8 @@
 import 'package:drift/drift.dart';
 import 'package:flowpaisa/core/database/database.dart';
+import 'package:flowpaisa/core/utils/category_budget_utils.dart';
+import 'package:flowpaisa/features/categories/domain/category_budget_models.dart';
+import 'package:flowpaisa/shared/models/date_range_state.dart';
 import 'package:uuid/uuid.dart';
 
 class CategoriesRepository {
@@ -234,6 +237,160 @@ class CategoriesRepository {
         lastUsed: row.readTable(_database.categoryUsageStats).lastUsed,
       );
     }).toList();
+  }
+
+  // ── Category budgets & period net (active = not deleted + processed) ─────
+
+  Future<double> getCategoryNetAmount(
+      String categoryUuid, DateTime start, DateTime end) async {
+    final startDate = DateTime(start.year, start.month, start.day, 0, 0, 0);
+    final endDate = DateTime(end.year, end.month, end.day, 23, 59, 59);
+    final expenseSum = await (_database.selectOnly(_database.transactions)
+          ..addColumns([_database.transactions.amount.sum()])
+          ..where(_database.transactions.categoryUuid.equals(categoryUuid))
+          ..where(_database.transactions.type.equals('EXPENSE'))
+          ..where(_database.transactions.date.isBetweenValues(startDate, endDate))
+          ..where(_database.transactions.isDeleted.equals(false))
+          ..where(_database.transactions.processedDate.isNotNull()))
+        .getSingle()
+        .then((r) => r.read(_database.transactions.amount.sum()) ?? 0.0);
+    final incomeSum = await (_database.selectOnly(_database.transactions)
+          ..addColumns([_database.transactions.amount.sum()])
+          ..where(_database.transactions.categoryUuid.equals(categoryUuid))
+          ..where(_database.transactions.type.equals('INCOME'))
+          ..where(_database.transactions.date.isBetweenValues(startDate, endDate))
+          ..where(_database.transactions.isDeleted.equals(false))
+          ..where(_database.transactions.processedDate.isNotNull()))
+        .getSingle()
+        .then((r) => r.read(_database.transactions.amount.sum()) ?? 0.0);
+    return expenseSum - incomeSum;
+  }
+
+  /// Net for transactions with no category: sum(EXPENSE) − sum(INCOME) in range.
+  /// Same sign convention as [getCategoryNetAmount].
+  Future<double> getUncategorizedNetAmount(
+      DateTime start, DateTime end) async {
+    final startDate = DateTime(start.year, start.month, start.day, 0, 0, 0);
+    final endDate = DateTime(end.year, end.month, end.day, 23, 59, 59);
+    final expenseSum = await (_database.selectOnly(_database.transactions)
+          ..addColumns([_database.transactions.amount.sum()])
+          ..where(_database.transactions.categoryUuid.isNull())
+          ..where(_database.transactions.type.equals('EXPENSE'))
+          ..where(_database.transactions.date.isBetweenValues(startDate, endDate))
+          ..where(_database.transactions.isDeleted.equals(false))
+          ..where(_database.transactions.processedDate.isNotNull()))
+        .getSingle()
+        .then((r) => r.read(_database.transactions.amount.sum()) ?? 0.0);
+    final incomeSum = await (_database.selectOnly(_database.transactions)
+          ..addColumns([_database.transactions.amount.sum()])
+          ..where(_database.transactions.categoryUuid.isNull())
+          ..where(_database.transactions.type.equals('INCOME'))
+          ..where(_database.transactions.date.isBetweenValues(startDate, endDate))
+          ..where(_database.transactions.isDeleted.equals(false))
+          ..where(_database.transactions.processedDate.isNotNull()))
+        .getSingle()
+        .then((r) => r.read(_database.transactions.amount.sum()) ?? 0.0);
+    return expenseSum - incomeSum;
+  }
+
+  Future<int> getCategoryTransactionCount(
+      String categoryUuid, DateTime start, DateTime end) async {
+    final startDate = DateTime(start.year, start.month, start.day, 0, 0, 0);
+    final endDate = DateTime(end.year, end.month, end.day, 23, 59, 59);
+    return (_database.selectOnly(_database.transactions)
+          ..addColumns([_database.transactions.uuid.count()])
+          ..where(_database.transactions.categoryUuid.equals(categoryUuid))
+          ..where(_database.transactions.date.isBetweenValues(startDate, endDate))
+          ..where(_database.transactions.isDeleted.equals(false))
+          ..where(_database.transactions.processedDate.isNotNull()))
+        .getSingle()
+        .then((r) => r.read(_database.transactions.uuid.count()) ?? 0);
+  }
+
+  Future<CategoryPeriodStats> getCategoryPeriodStats(
+      String categoryUuid, DateTime start, DateTime end) async {
+    final net = await getCategoryNetAmount(categoryUuid, start, end);
+    final count = await getCategoryTransactionCount(categoryUuid, start, end);
+    return CategoryPeriodStats(netAmount: net, transactionCount: count);
+  }
+
+  Future<CategoryBudgetSnapshot> getCategoryBudgetSnapshot(
+      String categoryUuid, DateRangeState range) async {
+    final category = await getCategoryByUuid(categoryUuid);
+    if (category == null) {
+      throw Exception('Category not found');
+    }
+    final stats = await getCategoryPeriodStats(
+        categoryUuid, range.startDate, range.endDate);
+    return CategoryBudgetSnapshot(
+      category: category,
+      period: range,
+      netAmount: stats.netAmount,
+      budgetAmount: budgetAmountForPeriod(category, range),
+      transactionCount: stats.transactionCount,
+    );
+  }
+
+  /// Batch net amounts for list rows (same period for all).
+  Future<Map<String, double>> getCategoryNetAmountsForCategories(
+    List<String> categoryUuids,
+    DateTime start,
+    DateTime end,
+  ) async {
+    if (categoryUuids.isEmpty) return {};
+    final startDate = DateTime(start.year, start.month, start.day, 0, 0, 0);
+    final endDate = DateTime(end.year, end.month, end.day, 23, 59, 59);
+    final query = _database.selectOnly(_database.transactions)
+      ..addColumns([
+        _database.transactions.categoryUuid,
+        _database.transactions.type,
+        _database.transactions.amount.sum(),
+      ])
+      ..where(_database.transactions.categoryUuid.isIn(categoryUuids))
+      ..where(_database.transactions.date.isBetweenValues(startDate, endDate))
+      ..where(_database.transactions.isDeleted.equals(false))
+      ..where(_database.transactions.processedDate.isNotNull())
+      ..groupBy(
+          [_database.transactions.categoryUuid, _database.transactions.type]);
+
+    final rows = await query.get();
+    final expenseBy = <String, double>{};
+    final incomeBy = <String, double>{};
+    for (final row in rows) {
+      final catUuid = row.read(_database.transactions.categoryUuid);
+      final type = row.read(_database.transactions.type);
+      final sum = row.read(_database.transactions.amount.sum()) ?? 0.0;
+      if (catUuid == null) continue;
+      if (type == 'EXPENSE') {
+        expenseBy[catUuid] = sum;
+      } else if (type == 'INCOME') {
+        incomeBy[catUuid] = sum;
+      }
+    }
+    final result = <String, double>{};
+    for (final id in categoryUuids) {
+      final e = expenseBy[id] ?? 0.0;
+      final i = incomeBy[id] ?? 0.0;
+      result[id] = e - i;
+    }
+    return result;
+  }
+
+  /// Updates only budget fields (use [Value.absent] to leave unchanged).
+  Future<bool> updateCategoryBudgetFields(
+    Category category, {
+    Value<double?> monthlyBudget = const Value.absent(),
+    Value<double?> quarterlyBudget = const Value.absent(),
+    Value<double?> yearlyBudget = const Value.absent(),
+  }) async {
+    return updateCategory(
+      category.copyWith(
+        monthlyBudget: monthlyBudget,
+        quarterlyBudget: quarterlyBudget,
+        yearlyBudget: yearlyBudget,
+        updatedAt: DateTime.now(),
+      ),
+    );
   }
 }
 

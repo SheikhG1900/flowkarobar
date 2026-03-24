@@ -2530,6 +2530,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get uncategorized => 'बिना श्रेणी';
 
   @override
+  String get categoriesSummaryIncludeInTotal => 'कुल में शामिल करें';
+
+  @override
   String get schedule => 'शेड्यूल';
 
   @override
@@ -3396,6 +3399,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get netExpenses => 'शुद्ध खर्च';
 
   @override
+  String get categoriesAggregateTitle => 'सभी श्रेणियाँ';
+
+  @override
   String get syncStatusTitle => 'सिंक स्थिति';
 
   @override
@@ -3960,4 +3966,63 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get receivedFromSubtitle => 'प्राप्त हुआ, वापस करना है';
+
+  @override
+  String get spendingBudget => 'खर्च बजट';
+
+  @override
+  String get savingsTarget => 'बचत लक्ष्य';
+
+  @override
+  String get setBudget => 'बजट सेट करें';
+
+  @override
+  String get editBudget => 'बजट संपादित करें';
+
+  @override
+  String get monthlyBudget => 'मासिक बजट';
+
+  @override
+  String get quarterlyBudget => 'त्रैमासिक बजट';
+
+  @override
+  String get yearlyBudget => 'वार्षिक बजट';
+
+  @override
+  String get spendingBudgetDescription =>
+      'कैलेंडर माह, तिमाही या वर्ष के लिए वैकल्पिक खर्च सीमा।';
+
+  @override
+  String get savingsTargetDescription =>
+      'कैलेंडर माह, तिमाही या वर्ष के लिए वैकल्पिक बचत लक्ष्य।';
+
+  @override
+  String get budgetSaved => 'बजट सहेजा गया';
+
+  @override
+  String budgetRemainingOf(String remaining, String total) {
+    return '$total में से $remaining शेष';
+  }
+
+  @override
+  String budgetOverBy(String amount) {
+    return 'बजट से $amount अधिक';
+  }
+
+  @override
+  String towardSavingsTarget(String amount) {
+    return 'लक्ष्य की ओर $amount';
+  }
+
+  @override
+  String get customCategoryBadge => 'कस्टम श्रेणी';
+
+  @override
+  String get budgetBarUsed => 'उपयोग';
+
+  @override
+  String get budgetBarProgress => 'प्रगति';
+
+  @override
+  String get categoryRefund => 'रिफंड';
 }

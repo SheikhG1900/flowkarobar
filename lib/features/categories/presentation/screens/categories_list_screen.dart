@@ -13,6 +13,16 @@ import 'package:material_symbols_icons/symbols.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/core/utils/localization_helper.dart';
 import 'package:flowpaisa/shared/widgets/app_floating_action_button.dart';
+import 'package:flowpaisa/core/utils/category_budget_utils.dart';
+import 'package:flowpaisa/core/utils/amount_formatter.dart';
+import 'package:flowpaisa/features/categories/presentation/widgets/category_budget_date_range_selector.dart';
+import 'package:flowpaisa/features/categories/presentation/widgets/category_budget_progress_bar.dart';
+import 'package:flowpaisa/shared/models/date_range_state.dart';
+import 'package:flowpaisa/shared/providers/currency_provider.dart';
+import 'package:flowpaisa/shared/widgets/dual_amount_progress_bar.dart';
+import 'package:flowpaisa/features/transactions/domain/models.dart';
+import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
+import 'package:flowpaisa/features/transactions/presentation/screens/transactions_list_screen.dart';
 
 class CategoriesListScreen extends ConsumerStatefulWidget {
   const CategoriesListScreen({super.key});
@@ -95,43 +105,7 @@ class _CategoryList extends ConsumerWidget {
 
     return categoriesAsync.when(
       data: (categories) {
-        if (categories.isEmpty) {
-          final typeLabel = type == 'EXPENSE' ? l10n.expense : l10n.income;
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Symbols.category,
-                  size: 80,
-                  color: Theme.of(context)
-                      .colorScheme
-                      .outline
-                      .withValues(alpha: 0.5),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  l10n.noTypeCategories(typeLabel),
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                ),
-              ],
-            ),
-          );
-        }
-
-        return ListView.builder(
-          padding: const EdgeInsets.all(16),
-          itemCount: categories.length,
-          itemBuilder: (context, index) {
-            final category = categories[index];
-            return _CategoryCard(
-              key: ValueKey(category.uuid),
-              category: category,
-            );
-          },
-        );
+        return _CategoryListBody(type: type, categories: categories);
       },
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (error, stack) =>
@@ -140,10 +114,462 @@ class _CategoryList extends ConsumerWidget {
   }
 }
 
+class _CategoryListBody extends ConsumerWidget {
+  final String type;
+  final List<Category> categories;
+
+  const _CategoryListBody({
+    required this.type,
+    required this.categories,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final range = ref.watch(categoryBudgetDateRangeProvider);
+    final netsAsync = ref.watch(categoryNetAmountsForListProvider(type));
+
+    final dateHeader = Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      child: CategoryBudgetDateRangeSelector(
+        selectedDateRange: range,
+        onDateRangeChanged: (dateRange) {
+          ref.read(categoryBudgetDateRangeProvider.notifier).updateRange(dateRange);
+        },
+        onNextPeriod: () {
+          ref.read(categoryBudgetDateRangeProvider.notifier).nextPeriod();
+        },
+        onPreviousPeriod: () {
+          ref.read(categoryBudgetDateRangeProvider.notifier).previousPeriod();
+        },
+      ),
+    );
+
+    return netsAsync.when(
+      data: (nets) {
+        if (categories.isEmpty) {
+          final typeLabel = type == 'EXPENSE' ? l10n.expense : l10n.income;
+          return CustomScrollView(
+            slivers: [
+              SliverToBoxAdapter(child: dateHeader),
+              const SliverToBoxAdapter(child: SizedBox(height: 4)),
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Symbols.category,
+                        size: 80,
+                        color: theme.colorScheme.outline.withValues(alpha: 0.5),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        l10n.noTypeCategories(typeLabel),
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          );
+        }
+        return CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(child: dateHeader),
+            const SliverToBoxAdapter(child: SizedBox(height: 4)),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                child: _CategoriesAggregateSummary(
+                  type: type,
+                  categories: categories,
+                  nets: nets,
+                  range: range,
+                ),
+              ),
+            ),
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              sliver: SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                    final category = categories[index];
+                    final net = nets[category.uuid] ?? 0.0;
+                    return _CategoryCard(
+                      key: ValueKey(category.uuid),
+                      category: category,
+                      netAmount: net,
+                      dateRange: range,
+                    );
+                  },
+                  childCount: categories.length,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+      loading: () => CustomScrollView(
+        slivers: [
+          SliverToBoxAdapter(child: dateHeader),
+          const SliverToBoxAdapter(child: SizedBox(height: 4)),
+          const SliverFillRemaining(
+            child: Center(child: CircularProgressIndicator()),
+          ),
+        ],
+      ),
+      error: (e, _) => CustomScrollView(
+        slivers: [
+          SliverToBoxAdapter(child: dateHeader),
+          const SliverToBoxAdapter(child: SizedBox(height: 4)),
+          SliverFillRemaining(
+            hasScrollBody: false,
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Text(
+                  l10n.errorOccurred(e.toString()),
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.error,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Sum of net amounts and combined budgets for every category in this tab for [range].
+class _CategoriesAggregateSummary extends ConsumerWidget {
+  final String type;
+  final List<Category> categories;
+  final Map<String, double> nets;
+  final DateRangeState range;
+
+  const _CategoriesAggregateSummary({
+    required this.type,
+    required this.categories,
+    required this.nets,
+    required this.range,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
+    final isExpense = type == 'EXPENSE';
+    final color =
+        isExpense ? AppColors.expenseColor : AppColors.incomeColor;
+    final symbol = ref.watch(currencySymbolProvider);
+    final decimals = ref.watch(currencyDecimalPlacesProvider);
+
+    double categorizedNet = 0;
+    double totalBudgetCap = 0;
+    for (final c in categories) {
+      categorizedNet += nets[c.uuid] ?? 0;
+      final b = budgetAmountForPeriod(c, range);
+      if (b != null && b > 0) {
+        totalBudgetCap += b;
+      }
+    }
+
+    final uncategorizedAsync =
+        ref.watch(uncategorizedNetForCategoryPeriodProvider);
+    final uncategorizedAmt = uncategorizedAsync.maybeWhen(
+      data: (v) => v,
+      orElse: () => 0.0,
+    );
+
+    final includeAsync =
+        ref.watch(includeUncategorizedInCategorySummaryProvider);
+    final includeUncategorized = includeAsync.maybeWhen(
+      data: (v) => v,
+      orElse: () => false,
+    );
+
+    final totalNet = categorizedNet +
+        (includeUncategorized ? uncategorizedAmt : 0.0);
+
+    final hasBudget = totalBudgetCap > 0;
+    final pr = hasBudget ? totalNet / totalBudgetCap : 0.0;
+    final over = hasBudget && pr > 1.0;
+    final barFillColor = over ? AppColors.expenseColor : color;
+    final remaining = hasBudget ? totalBudgetCap - totalNet : 0.0;
+
+    final netStr = AmountFormatter.formatWithCurrency(
+      totalNet,
+      symbol,
+      decimals,
+    );
+    final uncategorizedStr = AmountFormatter.formatWithCurrency(
+      uncategorizedAmt,
+      symbol,
+      decimals,
+    );
+    final budgetStr = AmountFormatter.formatWithCurrency(
+      totalBudgetCap,
+      symbol,
+      decimals,
+    );
+
+    final gradientCardDecoration = BoxDecoration(
+      gradient: LinearGradient(
+        colors: [color, color.withValues(alpha: 0.82)],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
+      borderRadius: BorderRadius.circular(12),
+      boxShadow: [
+        BoxShadow(
+          color: color.withValues(alpha: 0.28),
+          blurRadius: 8,
+          offset: const Offset(0, 3),
+        ),
+      ],
+    );
+
+    final barRightAmount =
+        hasBudget && remaining > 0 ? remaining : 0.0;
+    final prefsReady = includeAsync.hasValue;
+    final isDarkForChip = theme.brightness == Brightness.dark;
+    const chipLabelLight = Color(0xFF0F172A);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Container(
+          clipBehavior: Clip.antiAlias,
+          decoration: gradientCardDecoration,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              InkWell(
+                onTap: () async {
+                  ref.read(transactionsPaginatedProvider.notifier).applyFilters(
+                        TransactionFilters(
+                          startDate: range.startDate,
+                          endDate: range.endDate,
+                          type: type,
+                        ),
+                      );
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const TransactionsListScreen(),
+                    ),
+                  );
+                  if (context.mounted) {
+                    invalidateCategoryPeriodNets(ref, type);
+                  }
+                },
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(12),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      alignment: Alignment.center,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 32),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Text(
+                                isExpense ? l10n.netExpenses : l10n.netIncome,
+                                textAlign: TextAlign.center,
+                                style: theme.textTheme.labelMedium?.copyWith(
+                                  color: Colors.white.withValues(alpha: 0.88),
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 11,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                netStr,
+                                textAlign: TextAlign.center,
+                                style: theme.textTheme.titleLarge?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 20,
+                                  height: 1.15,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              if (hasBudget) ...[
+                                const SizedBox(height: 6),
+                                Text(
+                                  budgetStr,
+                                  textAlign: TextAlign.center,
+                                  style: theme.textTheme.labelLarge?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 12,
+                                    color: Colors.white.withValues(alpha: 0.92),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                        PositionedDirectional(
+                          end: 0,
+                          top: 0,
+                          child: Container(
+                            padding: const EdgeInsets.all(7),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.arrow_forward_ios,
+                              size: 14,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              Divider(
+                height: 1,
+                thickness: 1,
+                color: Colors.white.withValues(alpha: 0.22),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            l10n.uncategorized,
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: Colors.white.withValues(alpha: 0.78),
+                              fontWeight: FontWeight.w600,
+                              fontSize: 10,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            uncategorizedStr,
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    FilterChip(
+                      showCheckmark: true,
+                      selected: includeUncategorized,
+                      label: Text(
+                        l10n.categoriesSummaryIncludeInTotal,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: isDarkForChip
+                              ? Colors.white.withValues(
+                                  alpha: includeUncategorized ? 1.0 : 0.92,
+                                )
+                              : (includeUncategorized
+                                  ? color
+                                  : chipLabelLight),
+                        ),
+                      ),
+                      selectedColor: isDarkForChip
+                          ? Colors.white.withValues(alpha: 0.28)
+                          : Colors.white.withValues(alpha: 0.92),
+                      backgroundColor: isDarkForChip
+                          ? Colors.white.withValues(alpha: 0.12)
+                          : Colors.white.withValues(alpha: 0.55),
+                      disabledColor: isDarkForChip
+                          ? Colors.white.withValues(alpha: 0.08)
+                          : Colors.white.withValues(alpha: 0.35),
+                      checkmarkColor: isDarkForChip ? Colors.white : color,
+                      side: BorderSide(
+                        color: isDarkForChip
+                            ? Colors.white.withValues(
+                                alpha: includeUncategorized ? 0.5 : 0.32,
+                              )
+                            : Colors.white.withValues(
+                                alpha: includeUncategorized ? 0.75 : 0.5,
+                              ),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 0,
+                      ),
+                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      visualDensity: VisualDensity.compact,
+                      onSelected: prefsReady
+                          ? (selected) {
+                              ref
+                                  .read(
+                                    includeUncategorizedInCategorySummaryProvider
+                                        .notifier,
+                                  )
+                                  .setInclude(selected);
+                            }
+                          : null,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (hasBudget) ...[
+          const SizedBox(height: 8),
+          DualAmountProgressBar(
+            leftLabel:
+                isExpense ? l10n.budgetBarUsed : l10n.budgetBarProgress,
+            leftAmount: totalNet > 0 ? totalNet : 0.0,
+            rightLabel: l10n.remaining,
+            rightAmount: barRightAmount,
+            symbol: symbol,
+            decimals: decimals,
+            filledColor: barFillColor,
+            compact: true,
+          ),
+        ],
+      ],
+    );
+  }
+}
+
 class _CategoryCard extends ConsumerWidget {
   final Category category;
+  final double netAmount;
+  final DateRangeState dateRange;
 
-  const _CategoryCard({super.key, required this.category});
+  const _CategoryCard({
+    super.key,
+    required this.category,
+    required this.netAmount,
+    required this.dateRange,
+  });
 
   Future<void> _deleteCategory(BuildContext context, WidgetRef ref) async {
     final repository = ref.read(categoriesRepositoryProvider);
@@ -182,6 +608,13 @@ class _CategoryCard extends ConsumerWidget {
     final color = category.color != null
         ? Color(int.parse(category.color!.replaceAll('#', '0xFF')))
         : (isExpense ? AppColors.expenseColor : AppColors.incomeColor);
+    final symbol = ref.watch(currencySymbolProvider);
+    final decimals = ref.watch(currencyDecimalPlacesProvider);
+    final budget = budgetAmountForPeriod(category, dateRange);
+    final hasBudget = budget != null && budget > 0;
+    final pr = hasBudget ? netAmount / budget : 0.0;
+    final fillColor =
+        hasBudget && pr > 1.0 ? AppColors.expenseColor : color;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
@@ -202,6 +635,7 @@ class _CategoryCard extends ConsumerWidget {
           );
           if (updated == true) {
             ref.invalidate(categoriesByTypeProvider);
+            invalidateCategoryPeriodNets(ref, category.type);
           }
         },
         onDelete: category.isDefault
@@ -210,82 +644,148 @@ class _CategoryCard extends ConsumerWidget {
                 await _deleteCategory(context, ref);
               },
         child: InkWell(
-          onTap: () {
-            Navigator.push(
+          onTap: () async {
+            await Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (context) =>
                     CategoryDetailsScreen(categoryUuid: category.uuid),
               ),
             );
+            invalidateCategoryPeriodNets(ref, category.type);
           },
           borderRadius: BorderRadius.circular(16),
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: theme.cardColor,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: theme.dividerColor.withValues(alpha: 0.5),
-                width: 1,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Container(
+                clipBehavior: Clip.antiAlias,
+                decoration: BoxDecoration(
+                  color: theme.cardColor,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: theme.dividerColor.withValues(alpha: 0.5),
+                    width: 1,
+                  ),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Hero(
+                            tag: 'category_icon_${category.uuid}',
+                            child: Container(
+                              width: 48,
+                              height: 48,
+                              decoration: BoxDecoration(
+                                color: color.withValues(
+                                    alpha: theme.brightness == Brightness.dark
+                                        ? 0.1
+                                        : 0.15),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: color.withValues(alpha: 0.3),
+                                  width: 1,
+                                ),
+                              ),
+                              alignment: Alignment.center,
+                              child: CategoryHelper.buildCategoryIcon(
+                                  category.icon, color, isExpense),
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Text(
+                              LocalizationHelper.getLocalizedCategoryName(
+                                  context, category.name),
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                AmountFormatter.formatWithCurrency(
+                                  netAmount,
+                                  symbol,
+                                  decimals,
+                                ),
+                                style: theme.textTheme.titleSmall?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                  color: theme.colorScheme.onSurface,
+                                ),
+                              ),
+                              if (hasBudget) ...[
+                                const SizedBox(height: 2),
+                                Text(
+                                  AmountFormatter.formatWithCurrency(
+                                    budget!,
+                                    symbol,
+                                    decimals,
+                                  ),
+                                  style: theme.textTheme.labelSmall?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                    fontWeight: FontWeight.w300,
+                                    fontSize: 10,
+                                    height: 1.2,
+                                  ),
+                                  textAlign: TextAlign.end,
+                                ),
+                              ],
+                            ],
+                          ),
+                          const SizedBox(width: 8),
+                          Icon(
+                            Icons.arrow_forward_ios,
+                            size: 14,
+                            color: theme.colorScheme.onSurfaceVariant
+                                .withValues(alpha: 0.5),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (hasBudget)
+                      CategoryBudgetProgressBar(
+                        progress: pr,
+                        fillColor: fillColor,
+                      ),
+                  ],
+                ),
               ),
-            ),
-            child: Row(
-              children: [
-                Hero(
-                  tag: 'category_icon_${category.uuid}',
-                  child: Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: color.withValues(
-                          alpha:
-                              theme.brightness == Brightness.dark ? 0.1 : 0.15),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: color.withValues(alpha: 0.3),
-                        width: 1,
-                      ),
-                    ),
-                    alignment: Alignment.center,
-                    child: CategoryHelper.buildCategoryIcon(
-                        category.icon, color, isExpense),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Text(
-                    LocalizationHelper.getLocalizedCategoryName(
-                        context, category.name),
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-                if (category.isDefault)
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      l10n.defaultLabel,
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
+              if (!category.isDefault)
+                Positioned(
+                  top: 6,
+                  right: 6,
+                  child: Semantics(
+                    label: l10n.customCategoryBadge,
+                    child: Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: color,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: theme.scaffoldBackgroundColor,
+                          width: 1.5,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.08),
+                            blurRadius: 2,
+                          ),
+                        ],
                       ),
                     ),
                   ),
-                const SizedBox(width: 8),
-                Icon(
-                  Icons.arrow_forward_ios,
-                  size: 14,
-                  color:
-                      theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
                 ),
-              ],
-            ),
+            ],
           ),
         ),
       ),

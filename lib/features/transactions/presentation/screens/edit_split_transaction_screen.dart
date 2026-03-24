@@ -13,8 +13,12 @@ import 'package:flowpaisa/core/utils/localization_helper.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
 import 'package:flowpaisa/features/categories/presentation/providers/categories_provider.dart';
+import 'package:flowpaisa/features/categories/domain/category_monthly_hint_key.dart';
+import 'package:flowpaisa/features/categories/presentation/widgets/category_budget_progress_bar.dart';
+import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/features/categories/presentation/screens/add_category_screen.dart';
 import 'package:flowpaisa/features/contacts/presentation/screens/add_contact_screen.dart';
+import 'package:flowpaisa/shared/widgets/dual_amount_progress_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -302,28 +306,103 @@ class _EditSplitTransactionScreenState
                       const SizedBox(height: 16),
                       // Category
                       if (_selectedCategory != null)
-                        ListTile(
-                          contentPadding: EdgeInsets.zero,
-                          leading: Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: Color(int.parse(_selectedCategory!.color!
-                                      .replaceAll('#', '0xFF')))
-                                  .withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Icon(
-                              IconHelper.getIconData(
-                                  _selectedCategory!.icon ?? 'category'),
-                              color: Color(int.parse(_selectedCategory!.color!
-                                  .replaceAll('#', '0xFF'))),
-                            ),
-                          ),
-                          title: Text(LocalizationHelper.getLocalizedCategoryName(
-                              context, _selectedCategory!.name)),
-                          subtitle: Text(l10n.category),
-                          onTap: _showCategoryPicker,
+                        Consumer(
+                          builder: (context, ref, _) {
+                            final hintAsync = ref.watch(
+                              categoryMonthlyBudgetHintProvider(
+                                CategoryMonthlyHintKey(
+                                  _selectedCategory!.uuid,
+                                  _selectedDate,
+                                ),
+                              ),
+                            );
+                            final sym = ref.watch(currencySymbolProvider);
+                            final dec = ref.watch(currencyDecimalPlacesProvider);
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                ListTile(
+                                  contentPadding: EdgeInsets.zero,
+                                  leading: Container(
+                                    width: 40,
+                                    height: 40,
+                                    decoration: BoxDecoration(
+                                      color: Color(int.parse(_selectedCategory!
+                                              .color!
+                                              .replaceAll('#', '0xFF')))
+                                          .withValues(alpha: 0.1),
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: Icon(
+                                      IconHelper.getIconData(
+                                          _selectedCategory!.icon ?? 'category'),
+                                      color: Color(int.parse(_selectedCategory!
+                                          .color!
+                                          .replaceAll('#', '0xFF'))),
+                                    ),
+                                  ),
+                                  title: Text(
+                                      LocalizationHelper.getLocalizedCategoryName(
+                                          context, _selectedCategory!.name)),
+                                  subtitle: Text(l10n.category),
+                                  onTap: _showCategoryPicker,
+                                ),
+                                hintAsync.when(
+                                  data: (snap) {
+                                    if (snap == null || !snap.hasBudget) {
+                                      return const SizedBox.shrink();
+                                    }
+                                    final catColor = Color(int.parse(
+                                        _selectedCategory!.color!
+                                            .replaceAll('#', '0xFF')));
+                                    final rem = snap.remainingOrGap;
+                                    final remStr =
+                                        AmountFormatter.formatWithCurrency(
+                                      rem.abs(),
+                                      sym,
+                                      dec,
+                                    );
+                                    final budStr =
+                                        AmountFormatter.formatWithCurrency(
+                                      snap.budgetAmount!,
+                                      sym,
+                                      dec,
+                                    );
+                                    final sub = rem >= 0
+                                        ? l10n.budgetRemainingOf(remStr, budStr)
+                                        : l10n.budgetOverBy(remStr);
+                                    return Padding(
+                                      padding: const EdgeInsets.only(bottom: 8),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.stretch,
+                                        children: [
+                                          DualAmountProgressBar(
+                                            leftLabel: l10n.budgetBarUsed,
+                                            leftAmount: snap.netAmount > 0
+                                                ? snap.netAmount
+                                                : 0.0,
+                                            rightLabel: l10n.remaining,
+                                            rightAmount: snap.remainingOrGap > 0
+                                                ? snap.remainingOrGap
+                                                : 0.0,
+                                            symbol: sym,
+                                            decimals: dec,
+                                            filledColor: snap.progressRatio > 1
+                                                ? AppColors.expenseColor
+                                                : catColor,
+                                            compact: true,
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  },
+                                  loading: () => const SizedBox.shrink(),
+                                  error: (_, __) => const SizedBox.shrink(),
+                                ),
+                              ],
+                            );
+                          },
                         ),
                       const SizedBox(height: 16),
                       // Total Amount Input with Lock

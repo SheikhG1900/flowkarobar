@@ -21,6 +21,8 @@ import 'package:flowpaisa/features/transactions/presentation/providers/transacti
 import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
 // import 'package:flowpaisa/features/transactions/presentation/widgets/transaction_details_dialog.dart';
 import 'package:flowpaisa/features/categories/presentation/providers/categories_provider.dart';
+import 'package:flowpaisa/features/categories/domain/category_monthly_hint_key.dart';
+import 'package:flowpaisa/features/categories/presentation/widgets/category_budget_progress_bar.dart';
 import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
 import 'package:flowpaisa/features/categories/presentation/screens/add_category_screen.dart';
 import 'package:flowpaisa/features/contacts/presentation/screens/add_contact_screen.dart';
@@ -30,6 +32,7 @@ import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/shared/widgets/limit_countdown_badge.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
 import 'package:flowpaisa/core/utils/icon_helper.dart';
+import 'package:flowpaisa/shared/widgets/dual_amount_progress_bar.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:flowpaisa/features/transactions/presentation/widgets/schedule_selection_drawer.dart';
 import 'package:flowpaisa/features/transactions/presentation/widgets/transaction_scenario_picker.dart';
@@ -1915,90 +1918,184 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                         ? AppColors.expenseColor
                         : AppColors.incomeColor,
                     textColor: Colors.white,
-                    child: InkWell(
-                      onTap: _showCategoryPicker,
-                      borderRadius: BorderRadius.circular(12),
-                      child: Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.surface,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: _selectedCategory != null
-                                ? (_selectedType == 'EXPENSE'
-                                    ? AppColors.expenseColor
-                                    : AppColors.incomeColor)
-                                : theme.dividerColor,
-                            width: _selectedCategory != null ? 1.5 : 1,
+                    child: Consumer(
+                      builder: (context, ref, _) {
+                        final hintAsync = ref.watch(
+                          categoryMonthlyBudgetHintProvider(
+                            CategoryMonthlyHintKey(
+                              _selectedCategory?.uuid,
+                              _selectedDate,
+                            ),
                           ),
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 40,
-                              height: 40,
-                              decoration: BoxDecoration(
-                                color: _selectedCategory?.color != null
-                                    ? Color(int.parse(_selectedCategory!.color!
-                                            .replaceAll('#', '0xFF')))
-                                        .withValues(alpha: 0.1)
-                                    : theme.colorScheme.surfaceContainerHighest,
-                                borderRadius: BorderRadius.circular(10),
-                                border: _selectedCategory?.color != null
-                                    ? Border.all(
-                                        color: Color(int.parse(
-                                                _selectedCategory!.color!
-                                                    .replaceAll('#', '0xFF')))
-                                            .withValues(alpha: 0.3),
-                                      )
-                                    : null,
-                              ),
-                              alignment: Alignment.center,
-                              child: Icon(
-                                IconHelper.getIconData(
-                                        _selectedCategory?.icon) ??
-                                    Symbols.category,
-                                color: _selectedCategory?.color != null
-                                    ? Color(int.parse(_selectedCategory!.color!
-                                        .replaceAll('#', '0xFF')))
-                                    : Theme.of(context)
-                                        .colorScheme
-                                        .onSurfaceVariant,
-                                size: 24,
+                        );
+                        final sym = ref.watch(currencySymbolProvider);
+                        final dec = ref.watch(currencyDecimalPlacesProvider);
+                        return InkWell(
+                          onTap: _showCategoryPicker,
+                          borderRadius: BorderRadius.circular(12),
+                          child: Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.surface,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: _selectedCategory != null
+                                    ? (_selectedType == 'EXPENSE'
+                                        ? AppColors.expenseColor
+                                        : AppColors.incomeColor)
+                                    : theme.dividerColor,
+                                width: _selectedCategory != null ? 1.5 : 1,
                               ),
                             ),
-                            const SizedBox(width: 16),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              mainAxisSize: MainAxisSize.min,
                               children: [
-                                Text(
-                                  l10n.category,
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: theme.colorScheme.onSurfaceVariant,
-                                  ),
+                                Row(
+                                  children: [
+                                    Container(
+                                      width: 40,
+                                      height: 40,
+                                      decoration: BoxDecoration(
+                                        color: _selectedCategory?.color != null
+                                            ? Color(int.parse(_selectedCategory!
+                                                    .color!
+                                                    .replaceAll('#', '0xFF')))
+                                                .withValues(alpha: 0.1)
+                                            : theme.colorScheme
+                                                .surfaceContainerHighest,
+                                        borderRadius: BorderRadius.circular(10),
+                                        border: _selectedCategory?.color != null
+                                            ? Border.all(
+                                                color: Color(int.parse(
+                                                        _selectedCategory!
+                                                            .color!
+                                                            .replaceAll(
+                                                                '#', '0xFF')))
+                                                    .withValues(alpha: 0.3),
+                                              )
+                                            : null,
+                                      ),
+                                      alignment: Alignment.center,
+                                      child: Icon(
+                                        IconHelper.getIconData(
+                                                _selectedCategory?.icon) ??
+                                            Symbols.category,
+                                        color: _selectedCategory?.color != null
+                                            ? Color(int.parse(_selectedCategory!
+                                                .color!
+                                                .replaceAll('#', '0xFF')))
+                                            : Theme.of(context)
+                                                .colorScheme
+                                                .onSurfaceVariant,
+                                        size: 24,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 16),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            l10n.category,
+                                            style: theme.textTheme.bodySmall
+                                                ?.copyWith(
+                                              color: theme.colorScheme
+                                                  .onSurfaceVariant,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            _selectedCategory != null
+                                                ? CategoryHelper.getCategoryName(
+                                                    _selectedCategory!, l10n)
+                                                : l10n.selectCategory,
+                                            style: theme.textTheme.titleMedium
+                                                ?.copyWith(
+                                              fontWeight:
+                                                  _selectedCategory != null
+                                                      ? FontWeight.bold
+                                                      : FontWeight.normal,
+                                              color: _selectedCategory != null
+                                                  ? theme.colorScheme.onSurface
+                                                  : theme.colorScheme
+                                                      .onSurfaceVariant,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    const Icon(Icons.arrow_forward_ios,
+                                        size: 16),
+                                  ],
                                 ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  _selectedCategory != null
-                                      ? CategoryHelper.getCategoryName(
-                                          _selectedCategory!, l10n)
-                                      : l10n.selectCategory,
-                                  style: theme.textTheme.titleMedium?.copyWith(
-                                    fontWeight: _selectedCategory != null
-                                        ? FontWeight.bold
-                                        : FontWeight.normal,
-                                    color: _selectedCategory != null
-                                        ? theme.colorScheme.onSurface
-                                        : theme.colorScheme.onSurfaceVariant,
-                                  ),
+                                hintAsync.when(
+                                  data: (snap) {
+                                    if (snap == null || !snap.hasBudget) {
+                                      return const SizedBox.shrink();
+                                    }
+                                    final catColor = _selectedCategory
+                                                ?.color !=
+                                            null
+                                        ? Color(int.parse(_selectedCategory!
+                                            .color!
+                                            .replaceAll('#', '0xFF')))
+                                        : (_selectedType == 'EXPENSE'
+                                            ? AppColors.expenseColor
+                                            : AppColors.incomeColor);
+                                    final rem = snap.remainingOrGap;
+                                    final remStr =
+                                        AmountFormatter.formatWithCurrency(
+                                      rem.abs(),
+                                      sym,
+                                      dec,
+                                    );
+                                    final budStr =
+                                        AmountFormatter.formatWithCurrency(
+                                      snap.budgetAmount!,
+                                      sym,
+                                      dec,
+                                    );
+                                    final sub = rem >= 0
+                                        ? l10n.budgetRemainingOf(remStr, budStr)
+                                        : l10n.budgetOverBy(remStr);
+                                    return Padding(
+                                      padding: const EdgeInsets.only(top: 10),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.stretch,
+                                        children: [
+                                    DualAmountProgressBar(
+                                      leftLabel: _selectedType == 'EXPENSE'
+                                          ? l10n.budgetBarUsed
+                                          : l10n.budgetBarProgress,
+                                      leftAmount: snap.netAmount > 0
+                                          ? snap.netAmount
+                                          : 0.0,
+                                      rightLabel: l10n.remaining,
+                                      rightAmount: snap.remainingOrGap > 0
+                                          ? snap.remainingOrGap
+                                          : 0.0,
+                                      symbol: sym,
+                                      decimals: dec,
+                                      filledColor: snap.progressRatio > 1
+                                          ? AppColors.expenseColor
+                                          : catColor,
+                                      compact: true,
+                                    ),
+                                  ],
+                                ),
+                              );
+                                  },
+                                  loading: () => const SizedBox.shrink(),
+                                  error: (_, __) => const SizedBox.shrink(),
                                 ),
                               ],
                             ),
-                            const Spacer(),
-                            const Icon(Icons.arrow_forward_ios, size: 16),
-                          ],
-                        ),
-                      ),
+                          ),
+                        );
+                      },
                     ),
                   ),
                   if (widget.initialCategoryName != null &&

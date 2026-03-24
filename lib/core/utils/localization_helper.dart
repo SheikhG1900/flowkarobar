@@ -29,6 +29,8 @@ class LocalizationHelper {
         return l10n.categoryGift;
       case 'rent':
         return l10n.categoryRent;
+      case 'refund':
+        return l10n.categoryRefund;
       case 'other':
         return l10n.categoryOther;
       case 'income':

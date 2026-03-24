@@ -12,6 +12,7 @@ import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transaction_service_provider.dart';
 import 'package:flowpaisa/features/categories/presentation/providers/categories_provider.dart';
+import 'package:flowpaisa/features/categories/domain/category_monthly_hint_key.dart';
 import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
 import 'package:flowpaisa/features/payables/data/payables_repository.dart';
 import 'package:flowpaisa/features/receivables/data/receivables_repository.dart';
@@ -26,6 +27,7 @@ import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
 import 'package:flowpaisa/core/utils/icon_helper.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:flowpaisa/shared/widgets/dual_amount_progress_bar.dart';
 import 'package:flowpaisa/features/transactions/presentation/widgets/schedule_selection_drawer.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/schedule_service_provider.dart';
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
@@ -1503,68 +1505,144 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                       width: _selectedCategory != null ? 1.5 : 1,
                     ),
                   ),
-                  child: Row(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: _selectedCategory?.color != null
-                              ? Color(int.parse(_selectedCategory!.color!
-                                      .replaceAll('#', '0xFF')))
-                                  .withValues(alpha: 0.1)
-                              : theme.colorScheme.surfaceContainerHighest,
-                          borderRadius: BorderRadius.circular(10),
-                          border: _selectedCategory?.color != null
-                              ? Border.all(
-                                  color: Color(int.parse(_selectedCategory!
-                                          .color!
-                                          .replaceAll('#', '0xFF')))
-                                      .withValues(alpha: 0.3),
-                                )
-                              : null,
-                        ),
-                        alignment: Alignment.center,
-                        child: Icon(
-                          _selectedCategory?.icon != null
-                              ? IconHelper.getIconData(_selectedCategory!.icon)
-                              : Symbols.category,
-                          color: _selectedCategory?.color != null
-                              ? Color(int.parse(_selectedCategory!.color!
-                                  .replaceAll('#', '0xFF')))
-                              : null,
-                          size: 24,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      Row(
                         children: [
-                          Text(
-                            l10n.category,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
+                          Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: _selectedCategory?.color != null
+                                  ? Color(int.parse(_selectedCategory!.color!
+                                          .replaceAll('#', '0xFF')))
+                                      .withValues(alpha: 0.1)
+                                  : theme.colorScheme.surfaceContainerHighest,
+                              borderRadius: BorderRadius.circular(10),
+                              border: _selectedCategory?.color != null
+                                  ? Border.all(
+                                      color: Color(int.parse(_selectedCategory!
+                                              .color!
+                                              .replaceAll('#', '0xFF')))
+                                          .withValues(alpha: 0.3),
+                                    )
+                                  : null,
+                            ),
+                            alignment: Alignment.center,
+                            child: Icon(
+                              _selectedCategory?.icon != null
+                                  ? IconHelper.getIconData(_selectedCategory!.icon)
+                                  : Symbols.category,
+                              color: _selectedCategory?.color != null
+                                  ? Color(int.parse(_selectedCategory!.color!
+                                      .replaceAll('#', '0xFF')))
+                                  : null,
+                              size: 24,
                             ),
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            _selectedCategory != null
-                                ? CategoryHelper.getCategoryName(
-                                    _selectedCategory!, l10n)
-                                : l10n.selectCategory,
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: _selectedCategory != null
-                                  ? FontWeight.bold
-                                  : FontWeight.normal,
-                              color: _selectedCategory != null
-                                  ? theme.colorScheme.onSurface
-                                  : theme.colorScheme.onSurfaceVariant,
-                            ),
+                          const SizedBox(width: 16),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                l10n.category,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                _selectedCategory != null
+                                    ? CategoryHelper.getCategoryName(
+                                        _selectedCategory!, l10n)
+                                    : l10n.selectCategory,
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  fontWeight: _selectedCategory != null
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
+                                  color: _selectedCategory != null
+                                      ? theme.colorScheme.onSurface
+                                      : theme.colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
                           ),
+                          const Spacer(),
+                          const Icon(Icons.arrow_forward_ios, size: 16),
                         ],
                       ),
-                      const Spacer(),
-                      const Icon(Icons.arrow_forward_ios, size: 16),
+                      Consumer(
+                        builder: (context, ref, _) {
+                          final hintAsync = ref.watch(
+                            categoryMonthlyBudgetHintProvider(
+                              CategoryMonthlyHintKey(
+                                _selectedCategory?.uuid,
+                                _selectedDate,
+                              ),
+                            ),
+                          );
+                          final sym = ref.watch(currencySymbolProvider);
+                          final dec = ref.watch(currencyDecimalPlacesProvider);
+
+                          return hintAsync.when(
+                            data: (snap) {
+                              if (snap == null || !snap.hasBudget) {
+                                return const SizedBox.shrink();
+                              }
+                              final catColor = _selectedCategory?.color != null
+                                  ? Color(int.parse(_selectedCategory!.color!
+                                      .replaceAll('#', '0xFF')))
+                                  : (isExpense
+                                      ? AppColors.expenseColor
+                                      : AppColors.incomeColor);
+                              final rem = snap.remainingOrGap;
+                              final remStr = AmountFormatter.formatWithCurrency(
+                                rem.abs(),
+                                sym,
+                                dec,
+                              );
+                              final budStr = AmountFormatter.formatWithCurrency(
+                                snap.budgetAmount!,
+                                sym,
+                                dec,
+                              );
+                              final sub = rem >= 0
+                                  ? l10n.budgetRemainingOf(remStr, budStr)
+                                  : l10n.budgetOverBy(remStr);
+
+                              return Padding(
+                                padding: const EdgeInsets.only(top: 12),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  children: [
+                                  DualAmountProgressBar(
+                                    leftLabel: isExpense
+                                        ? l10n.budgetBarUsed
+                                        : l10n.budgetBarProgress,
+                                    leftAmount:
+                                        snap.netAmount > 0 ? snap.netAmount : 0.0,
+                                    rightLabel: l10n.remaining,
+                                    rightAmount: snap.remainingOrGap > 0
+                                        ? snap.remainingOrGap
+                                        : 0.0,
+                                    symbol: sym,
+                                    decimals: dec,
+                                    filledColor: snap.progressRatio > 1
+                                        ? AppColors.expenseColor
+                                        : catColor,
+                                    compact: true,
+                                  ),
+                                ],
+                              ),
+                            );
+                            },
+                            loading: () => const SizedBox.shrink(),
+                            error: (_, __) => const SizedBox.shrink(),
+                          );
+                        },
+                      ),
                     ],
                   ),
                 ),

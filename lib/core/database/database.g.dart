@@ -83,6 +83,24 @@ class $CategoriesTable extends Categories
       defaultConstraints: GeneratedColumn.constraintIsAlways(
           'CHECK ("is_not_synced" IN (0, 1))'),
       defaultValue: const Constant(true));
+  static const VerificationMeta _monthlyBudgetMeta =
+      const VerificationMeta('monthlyBudget');
+  @override
+  late final GeneratedColumn<double> monthlyBudget = GeneratedColumn<double>(
+      'monthly_budget', aliasedName, true,
+      type: DriftSqlType.double, requiredDuringInsert: false);
+  static const VerificationMeta _quarterlyBudgetMeta =
+      const VerificationMeta('quarterlyBudget');
+  @override
+  late final GeneratedColumn<double> quarterlyBudget = GeneratedColumn<double>(
+      'quarterly_budget', aliasedName, true,
+      type: DriftSqlType.double, requiredDuringInsert: false);
+  static const VerificationMeta _yearlyBudgetMeta =
+      const VerificationMeta('yearlyBudget');
+  @override
+  late final GeneratedColumn<double> yearlyBudget = GeneratedColumn<double>(
+      'yearly_budget', aliasedName, true,
+      type: DriftSqlType.double, requiredDuringInsert: false);
   @override
   List<GeneratedColumn> get $columns => [
         uuid,
@@ -94,7 +112,10 @@ class $CategoriesTable extends Categories
         isDeleted,
         createdAt,
         updatedAt,
-        isNotSynced
+        isNotSynced,
+        monthlyBudget,
+        quarterlyBudget,
+        yearlyBudget
       ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -154,6 +175,24 @@ class $CategoriesTable extends Categories
           isNotSynced.isAcceptableOrUnknown(
               data['is_not_synced']!, _isNotSyncedMeta));
     }
+    if (data.containsKey('monthly_budget')) {
+      context.handle(
+          _monthlyBudgetMeta,
+          monthlyBudget.isAcceptableOrUnknown(
+              data['monthly_budget']!, _monthlyBudgetMeta));
+    }
+    if (data.containsKey('quarterly_budget')) {
+      context.handle(
+          _quarterlyBudgetMeta,
+          quarterlyBudget.isAcceptableOrUnknown(
+              data['quarterly_budget']!, _quarterlyBudgetMeta));
+    }
+    if (data.containsKey('yearly_budget')) {
+      context.handle(
+          _yearlyBudgetMeta,
+          yearlyBudget.isAcceptableOrUnknown(
+              data['yearly_budget']!, _yearlyBudgetMeta));
+    }
     return context;
   }
 
@@ -183,6 +222,12 @@ class $CategoriesTable extends Categories
           .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
       isNotSynced: attachedDatabase.typeMapping
           .read(DriftSqlType.bool, data['${effectivePrefix}is_not_synced'])!,
+      monthlyBudget: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}monthly_budget']),
+      quarterlyBudget: attachedDatabase.typeMapping.read(
+          DriftSqlType.double, data['${effectivePrefix}quarterly_budget']),
+      yearlyBudget: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}yearly_budget']),
     );
   }
 
@@ -203,6 +248,9 @@ class Category extends DataClass implements Insertable<Category> {
   final DateTime createdAt;
   final DateTime updatedAt;
   final bool isNotSynced;
+  final double? monthlyBudget;
+  final double? quarterlyBudget;
+  final double? yearlyBudget;
   const Category(
       {required this.uuid,
       required this.name,
@@ -213,7 +261,10 @@ class Category extends DataClass implements Insertable<Category> {
       required this.isDeleted,
       required this.createdAt,
       required this.updatedAt,
-      required this.isNotSynced});
+      required this.isNotSynced,
+      this.monthlyBudget,
+      this.quarterlyBudget,
+      this.yearlyBudget});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -231,6 +282,15 @@ class Category extends DataClass implements Insertable<Category> {
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
     map['is_not_synced'] = Variable<bool>(isNotSynced);
+    if (!nullToAbsent || monthlyBudget != null) {
+      map['monthly_budget'] = Variable<double>(monthlyBudget);
+    }
+    if (!nullToAbsent || quarterlyBudget != null) {
+      map['quarterly_budget'] = Variable<double>(quarterlyBudget);
+    }
+    if (!nullToAbsent || yearlyBudget != null) {
+      map['yearly_budget'] = Variable<double>(yearlyBudget);
+    }
     return map;
   }
 
@@ -247,6 +307,15 @@ class Category extends DataClass implements Insertable<Category> {
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
       isNotSynced: Value(isNotSynced),
+      monthlyBudget: monthlyBudget == null && nullToAbsent
+          ? const Value.absent()
+          : Value(monthlyBudget),
+      quarterlyBudget: quarterlyBudget == null && nullToAbsent
+          ? const Value.absent()
+          : Value(quarterlyBudget),
+      yearlyBudget: yearlyBudget == null && nullToAbsent
+          ? const Value.absent()
+          : Value(yearlyBudget),
     );
   }
 
@@ -264,6 +333,9 @@ class Category extends DataClass implements Insertable<Category> {
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       isNotSynced: serializer.fromJson<bool>(json['isNotSynced']),
+      monthlyBudget: serializer.fromJson<double?>(json['monthlyBudget']),
+      quarterlyBudget: serializer.fromJson<double?>(json['quarterlyBudget']),
+      yearlyBudget: serializer.fromJson<double?>(json['yearlyBudget']),
     );
   }
   @override
@@ -280,6 +352,9 @@ class Category extends DataClass implements Insertable<Category> {
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'isNotSynced': serializer.toJson<bool>(isNotSynced),
+      'monthlyBudget': serializer.toJson<double?>(monthlyBudget),
+      'quarterlyBudget': serializer.toJson<double?>(quarterlyBudget),
+      'yearlyBudget': serializer.toJson<double?>(yearlyBudget),
     };
   }
 
@@ -293,7 +368,10 @@ class Category extends DataClass implements Insertable<Category> {
           bool? isDeleted,
           DateTime? createdAt,
           DateTime? updatedAt,
-          bool? isNotSynced}) =>
+          bool? isNotSynced,
+          Value<double?> monthlyBudget = const Value.absent(),
+          Value<double?> quarterlyBudget = const Value.absent(),
+          Value<double?> yearlyBudget = const Value.absent()}) =>
       Category(
         uuid: uuid ?? this.uuid,
         name: name ?? this.name,
@@ -305,6 +383,13 @@ class Category extends DataClass implements Insertable<Category> {
         createdAt: createdAt ?? this.createdAt,
         updatedAt: updatedAt ?? this.updatedAt,
         isNotSynced: isNotSynced ?? this.isNotSynced,
+        monthlyBudget:
+            monthlyBudget.present ? monthlyBudget.value : this.monthlyBudget,
+        quarterlyBudget: quarterlyBudget.present
+            ? quarterlyBudget.value
+            : this.quarterlyBudget,
+        yearlyBudget:
+            yearlyBudget.present ? yearlyBudget.value : this.yearlyBudget,
       );
   Category copyWithCompanion(CategoriesCompanion data) {
     return Category(
@@ -319,6 +404,15 @@ class Category extends DataClass implements Insertable<Category> {
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       isNotSynced:
           data.isNotSynced.present ? data.isNotSynced.value : this.isNotSynced,
+      monthlyBudget: data.monthlyBudget.present
+          ? data.monthlyBudget.value
+          : this.monthlyBudget,
+      quarterlyBudget: data.quarterlyBudget.present
+          ? data.quarterlyBudget.value
+          : this.quarterlyBudget,
+      yearlyBudget: data.yearlyBudget.present
+          ? data.yearlyBudget.value
+          : this.yearlyBudget,
     );
   }
 
@@ -334,14 +428,29 @@ class Category extends DataClass implements Insertable<Category> {
           ..write('isDeleted: $isDeleted, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
-          ..write('isNotSynced: $isNotSynced')
+          ..write('isNotSynced: $isNotSynced, ')
+          ..write('monthlyBudget: $monthlyBudget, ')
+          ..write('quarterlyBudget: $quarterlyBudget, ')
+          ..write('yearlyBudget: $yearlyBudget')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(uuid, name, icon, color, type, isDefault,
-      isDeleted, createdAt, updatedAt, isNotSynced);
+  int get hashCode => Object.hash(
+      uuid,
+      name,
+      icon,
+      color,
+      type,
+      isDefault,
+      isDeleted,
+      createdAt,
+      updatedAt,
+      isNotSynced,
+      monthlyBudget,
+      quarterlyBudget,
+      yearlyBudget);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -355,7 +464,10 @@ class Category extends DataClass implements Insertable<Category> {
           other.isDeleted == this.isDeleted &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
-          other.isNotSynced == this.isNotSynced);
+          other.isNotSynced == this.isNotSynced &&
+          other.monthlyBudget == this.monthlyBudget &&
+          other.quarterlyBudget == this.quarterlyBudget &&
+          other.yearlyBudget == this.yearlyBudget);
 }
 
 class CategoriesCompanion extends UpdateCompanion<Category> {
@@ -369,6 +481,9 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<bool> isNotSynced;
+  final Value<double?> monthlyBudget;
+  final Value<double?> quarterlyBudget;
+  final Value<double?> yearlyBudget;
   final Value<int> rowid;
   const CategoriesCompanion({
     this.uuid = const Value.absent(),
@@ -381,6 +496,9 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.isNotSynced = const Value.absent(),
+    this.monthlyBudget = const Value.absent(),
+    this.quarterlyBudget = const Value.absent(),
+    this.yearlyBudget = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   CategoriesCompanion.insert({
@@ -394,6 +512,9 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.isNotSynced = const Value.absent(),
+    this.monthlyBudget = const Value.absent(),
+    this.quarterlyBudget = const Value.absent(),
+    this.yearlyBudget = const Value.absent(),
     this.rowid = const Value.absent(),
   })  : uuid = Value(uuid),
         name = Value(name),
@@ -409,6 +530,9 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<bool>? isNotSynced,
+    Expression<double>? monthlyBudget,
+    Expression<double>? quarterlyBudget,
+    Expression<double>? yearlyBudget,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -422,6 +546,9 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (isNotSynced != null) 'is_not_synced': isNotSynced,
+      if (monthlyBudget != null) 'monthly_budget': monthlyBudget,
+      if (quarterlyBudget != null) 'quarterly_budget': quarterlyBudget,
+      if (yearlyBudget != null) 'yearly_budget': yearlyBudget,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -437,6 +564,9 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
       Value<DateTime>? createdAt,
       Value<DateTime>? updatedAt,
       Value<bool>? isNotSynced,
+      Value<double?>? monthlyBudget,
+      Value<double?>? quarterlyBudget,
+      Value<double?>? yearlyBudget,
       Value<int>? rowid}) {
     return CategoriesCompanion(
       uuid: uuid ?? this.uuid,
@@ -449,6 +579,9 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       isNotSynced: isNotSynced ?? this.isNotSynced,
+      monthlyBudget: monthlyBudget ?? this.monthlyBudget,
+      quarterlyBudget: quarterlyBudget ?? this.quarterlyBudget,
+      yearlyBudget: yearlyBudget ?? this.yearlyBudget,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -486,6 +619,15 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
     if (isNotSynced.present) {
       map['is_not_synced'] = Variable<bool>(isNotSynced.value);
     }
+    if (monthlyBudget.present) {
+      map['monthly_budget'] = Variable<double>(monthlyBudget.value);
+    }
+    if (quarterlyBudget.present) {
+      map['quarterly_budget'] = Variable<double>(quarterlyBudget.value);
+    }
+    if (yearlyBudget.present) {
+      map['yearly_budget'] = Variable<double>(yearlyBudget.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -505,6 +647,9 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('isNotSynced: $isNotSynced, ')
+          ..write('monthlyBudget: $monthlyBudget, ')
+          ..write('quarterlyBudget: $quarterlyBudget, ')
+          ..write('yearlyBudget: $yearlyBudget, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -8993,6 +9138,9 @@ typedef $$CategoriesTableCreateCompanionBuilder = CategoriesCompanion Function({
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
   Value<bool> isNotSynced,
+  Value<double?> monthlyBudget,
+  Value<double?> quarterlyBudget,
+  Value<double?> yearlyBudget,
   Value<int> rowid,
 });
 typedef $$CategoriesTableUpdateCompanionBuilder = CategoriesCompanion Function({
@@ -9006,6 +9154,9 @@ typedef $$CategoriesTableUpdateCompanionBuilder = CategoriesCompanion Function({
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
   Value<bool> isNotSynced,
+  Value<double?> monthlyBudget,
+  Value<double?> quarterlyBudget,
+  Value<double?> yearlyBudget,
   Value<int> rowid,
 });
 
@@ -9106,6 +9257,16 @@ class $$CategoriesTableFilterComposer
 
   ColumnFilters<bool> get isNotSynced => $composableBuilder(
       column: $table.isNotSynced, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get monthlyBudget => $composableBuilder(
+      column: $table.monthlyBudget, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get quarterlyBudget => $composableBuilder(
+      column: $table.quarterlyBudget,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get yearlyBudget => $composableBuilder(
+      column: $table.yearlyBudget, builder: (column) => ColumnFilters(column));
 
   Expression<bool> transactionsRefs(
       Expression<bool> Function($$TransactionsTableFilterComposer f) f) {
@@ -9210,6 +9371,17 @@ class $$CategoriesTableOrderingComposer
 
   ColumnOrderings<bool> get isNotSynced => $composableBuilder(
       column: $table.isNotSynced, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get monthlyBudget => $composableBuilder(
+      column: $table.monthlyBudget,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get quarterlyBudget => $composableBuilder(
+      column: $table.quarterlyBudget,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get yearlyBudget => $composableBuilder(
+      column: $table.yearlyBudget, builder: (column) => ColumnOrderings(column));
 }
 
 class $$CategoriesTableAnnotationComposer
@@ -9250,6 +9422,15 @@ class $$CategoriesTableAnnotationComposer
 
   GeneratedColumn<bool> get isNotSynced => $composableBuilder(
       column: $table.isNotSynced, builder: (column) => column);
+
+  GeneratedColumn<double> get monthlyBudget => $composableBuilder(
+      column: $table.monthlyBudget, builder: (column) => column);
+
+  GeneratedColumn<double> get quarterlyBudget => $composableBuilder(
+      column: $table.quarterlyBudget, builder: (column) => column);
+
+  GeneratedColumn<double> get yearlyBudget => $composableBuilder(
+      column: $table.yearlyBudget, builder: (column) => column);
 
   Expression<T> transactionsRefs<T extends Object>(
       Expression<T> Function($$TransactionsTableAnnotationComposer a) f) {
@@ -9354,6 +9535,9 @@ class $$CategoriesTableTableManager extends RootTableManager<
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
             Value<bool> isNotSynced = const Value.absent(),
+            Value<double?> monthlyBudget = const Value.absent(),
+            Value<double?> quarterlyBudget = const Value.absent(),
+            Value<double?> yearlyBudget = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               CategoriesCompanion(
@@ -9367,6 +9551,9 @@ class $$CategoriesTableTableManager extends RootTableManager<
             createdAt: createdAt,
             updatedAt: updatedAt,
             isNotSynced: isNotSynced,
+            monthlyBudget: monthlyBudget,
+            quarterlyBudget: quarterlyBudget,
+            yearlyBudget: yearlyBudget,
             rowid: rowid,
           ),
           createCompanionCallback: ({
@@ -9380,6 +9567,9 @@ class $$CategoriesTableTableManager extends RootTableManager<
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
             Value<bool> isNotSynced = const Value.absent(),
+            Value<double?> monthlyBudget = const Value.absent(),
+            Value<double?> quarterlyBudget = const Value.absent(),
+            Value<double?> yearlyBudget = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               CategoriesCompanion.insert(
@@ -9393,6 +9583,9 @@ class $$CategoriesTableTableManager extends RootTableManager<
             createdAt: createdAt,
             updatedAt: updatedAt,
             isNotSynced: isNotSynced,
+            monthlyBudget: monthlyBudget,
+            quarterlyBudget: quarterlyBudget,
+            yearlyBudget: yearlyBudget,
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0

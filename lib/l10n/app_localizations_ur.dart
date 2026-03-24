@@ -2534,6 +2534,9 @@ class AppLocalizationsUr extends AppLocalizations {
   String get uncategorized => 'بغیر زمرہ';
 
   @override
+  String get categoriesSummaryIncludeInTotal => 'کل میں شامل کریں';
+
+  @override
   String get schedule => 'شیڈول';
 
   @override
@@ -3402,6 +3405,9 @@ class AppLocalizationsUr extends AppLocalizations {
   String get netExpenses => 'خالص اخراجات';
 
   @override
+  String get categoriesAggregateTitle => 'تمام زمرے';
+
+  @override
   String get syncStatusTitle => 'سنک کی حالت';
 
   @override
@@ -3966,4 +3972,63 @@ class AppLocalizationsUr extends AppLocalizations {
 
   @override
   String get receivedFromSubtitle => 'موصول ہوئی، واپس کرنی ہے';
+
+  @override
+  String get spendingBudget => 'خرچ بجٹ';
+
+  @override
+  String get savingsTarget => 'بچت ہدف';
+
+  @override
+  String get setBudget => 'بجٹ سیٹ کریں';
+
+  @override
+  String get editBudget => 'بجٹ میں ترمیم';
+
+  @override
+  String get monthlyBudget => 'ماہانہ بجٹ';
+
+  @override
+  String get quarterlyBudget => 'سہ ماہی بجٹ';
+
+  @override
+  String get yearlyBudget => 'سالانہ بجٹ';
+
+  @override
+  String get spendingBudgetDescription =>
+      'کیلنڈر ماہ، سہ ماہی یا سال کے لیے اختیاری خرچ کی حد۔';
+
+  @override
+  String get savingsTargetDescription =>
+      'کیلنڈر ماہ، سہ ماہی یا سال کے لیے اختیاری بچت کے اہداف۔';
+
+  @override
+  String get budgetSaved => 'بجٹ محفوظ ہو گیا';
+
+  @override
+  String budgetRemainingOf(String remaining, String total) {
+    return '$total میں سے $remaining باقی';
+  }
+
+  @override
+  String budgetOverBy(String amount) {
+    return 'بجٹ سے $amount زائد';
+  }
+
+  @override
+  String towardSavingsTarget(String amount) {
+    return 'ہدف کی طرف $amount';
+  }
+
+  @override
+  String get customCategoryBadge => 'حسب ضرورت زمرہ';
+
+  @override
+  String get budgetBarUsed => 'استعمال';
+
+  @override
+  String get budgetBarProgress => 'پیشرفت';
+
+  @override
+  String get categoryRefund => 'رقم کی واپسی';
 }

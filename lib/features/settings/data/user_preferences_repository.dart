@@ -22,6 +22,8 @@ class UserPreferencesRepository {
   static const String keyDashboardWidgetLayout = 'dashboard_widget_layout';
   static const String keyAutoSuggestTransactionScenario =
       'auto_suggest_transaction_scenario';
+  static const String keyIncludeUncategorizedInCategorySummary =
+      'include_uncategorized_in_category_summary';
 
   // Get a preference value by key (excludes soft-deleted rows so they sync correctly)
   Future<String?> getPreference(String key) async {
@@ -132,6 +134,20 @@ class UserPreferencesRepository {
   Future<void> setAutoSuggestTransactionScenario(bool value) async {
     await setPreference(
         keyAutoSuggestTransactionScenario, value ? 'true' : 'false');
+  }
+
+  /// When true, category list aggregate total includes uncategorized net.
+  Future<bool> getIncludeUncategorizedInCategorySummary() async {
+    final value =
+        await getPreference(keyIncludeUncategorizedInCategorySummary);
+    return value == 'true';
+  }
+
+  Future<void> setIncludeUncategorizedInCategorySummary(bool value) async {
+    await setPreference(
+      keyIncludeUncategorizedInCategorySummary,
+      value ? 'true' : 'false',
+    );
   }
 
   // User Profile Information

@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
-import 'package:flowpaisa/core/utils/date_formatter.dart';
 import 'package:flowpaisa/core/utils/localization_helper.dart';
 import 'package:flowpaisa/features/categories/presentation/providers/categories_provider.dart';
-import 'package:flowpaisa/features/analytics/presentation/providers/analytics_provider.dart';
+import 'package:flowpaisa/shared/widgets/dual_amount_progress_bar.dart';
+import 'package:flowpaisa/features/categories/presentation/widgets/category_budget_date_range_selector.dart';
+import 'package:flowpaisa/features/categories/presentation/widgets/set_category_budget_sheet.dart';
 import 'package:flowpaisa/features/categories/presentation/screens/edit_category_screen.dart';
 import 'package:flowpaisa/features/transactions/domain/models.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
@@ -18,6 +19,8 @@ import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/whatsapp/domain/deep_link_service.dart';
 import 'package:flowpaisa/features/dashboard/domain/dashboard_widget_models.dart';
 import 'package:flowpaisa/features/dashboard/presentation/providers/dashboard_widget_provider.dart';
+import 'package:flowpaisa/shared/models/date_range_state.dart';
+import 'package:flowpaisa/features/categories/domain/category_budget_models.dart';
 
 class CategoryDetailsScreen extends ConsumerWidget {
   final String categoryUuid;
@@ -28,21 +31,21 @@ class CategoryDetailsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
-    final statsAsync = ref.watch(categoryStatisticsProvider(categoryUuid));
+    final budgetAsync = ref.watch(categoryDetailBudgetProvider(categoryUuid));
     final currencySymbol = ref.watch(currencySymbolProvider);
     final decimalPlaces = ref.watch(currencyDecimalPlacesProvider);
-    final selectedDateRange = ref.watch(selectedDateRangeProvider);
+    final selectedDateRange = ref.watch(categoryBudgetDateRangeProvider);
 
-    return Scaffold(
-      body: statsAsync.when(
-        data: (stats) {
-          final category = stats.category;
-          final isExpense = category.type == 'EXPENSE';
-          final color = category.color != null
-              ? Color(int.parse(category.color!.replaceAll('#', '0xFF')))
-              : (isExpense ? AppColors.expenseColor : AppColors.incomeColor);
+    return budgetAsync.when(
+      skipLoadingOnReload: true,
+      data: (snapshot) {
+        final category = snapshot.category;
+        final isExpense = category.type == 'EXPENSE';
+        final color = category.color != null
+            ? Color(int.parse(category.color!.replaceAll('#', '0xFF')))
+            : (isExpense ? AppColors.expenseColor : AppColors.incomeColor);
 
-          return Scaffold(
+        return Scaffold(
             appBar: AppBar(
               title: Text(l10n.categoryDetails),
               actions: [
@@ -117,7 +120,7 @@ class CategoryDetailsScreen extends ConsumerWidget {
                       ),
                     );
                     if (updated == true) {
-                      ref.invalidate(categoryStatisticsProvider(categoryUuid));
+                      ref.invalidate(categoryDetailBudgetProvider(categoryUuid));
                       ref.invalidate(categoriesByTypeProvider);
                     }
                   },
@@ -196,30 +199,37 @@ class CategoryDetailsScreen extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Date Range Selector (Same as Analytics)
-                        _DateRangeSelector(
+                        CategoryBudgetDateRangeSelector(
                           selectedDateRange: selectedDateRange,
                           onDateRangeChanged: (dateRange) {
                             ref
-                                .read(selectedDateRangeProvider.notifier)
+                                .read(categoryBudgetDateRangeProvider.notifier)
                                 .updateRange(dateRange);
                           },
                           onNextPeriod: () {
                             ref
-                                .read(selectedDateRangeProvider.notifier)
+                                .read(categoryBudgetDateRangeProvider.notifier)
                                 .nextPeriod();
                           },
                           onPreviousPeriod: () {
                             ref
-                                .read(selectedDateRangeProvider.notifier)
+                                .read(categoryBudgetDateRangeProvider.notifier)
                                 .previousPeriod();
                           },
                         ),
                         const SizedBox(height: 24),
 
-                        // Summary Card
-                        InkWell(
-                          onTap: () async {
+                        // Summary / budget card
+                        _CategoryBudgetSummarySection(
+                          snapshot: snapshot,
+                          categoryUuid: categoryUuid,
+                          selectedDateRange: selectedDateRange,
+                          color: color,
+                          isExpense: isExpense,
+                          currencySymbol: currencySymbol,
+                          decimalPlaces: decimalPlaces,
+                          l10n: l10n,
+                          onOpenTransactions: () async {
                             ref
                                 .read(transactionsPaginatedProvider.notifier)
                                 .applyFilters(
@@ -236,72 +246,15 @@ class CategoryDetailsScreen extends ConsumerWidget {
                                     const TransactionsListScreen(),
                               ),
                             );
-                            // Refresh summary when returning (e.g. after editing a transaction)
-                            ref.invalidate(categoryStatisticsProvider(categoryUuid));
+                            ref.invalidate(
+                                categoryDetailBudgetProvider(categoryUuid));
                           },
-                          borderRadius: BorderRadius.circular(24),
-                          child: Container(
-                            padding: const EdgeInsets.all(24),
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [color, color.withValues(alpha: 0.8)],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                              borderRadius: BorderRadius.circular(24),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: color.withValues(alpha: 0.3),
-                                  blurRadius: 16,
-                                  offset: const Offset(0, 8),
-                                ),
-                              ],
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      isExpense
-                                          ? l10n.netExpenses
-                                          : l10n.netIncome,
-                                      style: const TextStyle(
-                                        color: Colors.white70,
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      AmountFormatter.formatWithCurrency(
-                                          stats.totalAmount,
-                                          currencySymbol,
-                                          decimalPlaces),
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 32,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                Container(
-                                  padding: const EdgeInsets.all(12),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withValues(alpha: 0.2),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: const Icon(
-                                    Icons.arrow_forward_ios,
-                                    color: Colors.white,
-                                    size: 20,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+                          onSetBudget: () {
+                            showSetCategoryBudgetSheet(
+                              context,
+                              category: category,
+                            );
+                          },
                         ),
                         const SizedBox(height: 16),
 
@@ -324,7 +277,8 @@ class CategoryDetailsScreen extends ConsumerWidget {
                                     const TransactionsListScreen(),
                               ),
                             );
-                            ref.invalidate(categoryStatisticsProvider(categoryUuid));
+                            ref.invalidate(
+                                categoryDetailBudgetProvider(categoryUuid));
                           },
                           borderRadius: BorderRadius.circular(16),
                           child: Container(
@@ -361,7 +315,7 @@ class CategoryDetailsScreen extends ConsumerWidget {
                                         ),
                                       ),
                                       Text(
-                                        '${stats.transactionCount} ${l10n.transactions.toLowerCase()}',
+                                        '${snapshot.transactionCount} ${l10n.transactions.toLowerCase()}',
                                         style:
                                             theme.textTheme.titleMedium?.copyWith(
                                           fontWeight: FontWeight.bold,
@@ -386,183 +340,244 @@ class CategoryDetailsScreen extends ConsumerWidget {
                 ),
               ],
             ),
-          );
-        },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) => Center(child: Text('Error: $error')),
+        );
+      },
+      loading: () => Scaffold(
+        appBar: AppBar(title: Text(l10n.categoryDetails)),
+        body: const Center(child: CircularProgressIndicator()),
+      ),
+      error: (error, stack) => Scaffold(
+        appBar: AppBar(title: Text(l10n.categoryDetails)),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Text(
+              l10n.errorOccurred(error.toString()),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ),
       ),
     );
   }
 }
 
-class _DateRangeSelector extends StatelessWidget {
+class _CategoryBudgetSummarySection extends StatelessWidget {
+  final CategoryBudgetSnapshot snapshot;
+  final String categoryUuid;
   final DateRangeState selectedDateRange;
-  final Function(DateRangeState) onDateRangeChanged;
-  final VoidCallback onNextPeriod;
-  final VoidCallback onPreviousPeriod;
+  final Color color;
+  final bool isExpense;
+  final String currencySymbol;
+  final int decimalPlaces;
+  final AppLocalizations l10n;
+  final Future<void> Function() onOpenTransactions;
+  final VoidCallback onSetBudget;
 
-  const _DateRangeSelector({
+  const _CategoryBudgetSummarySection({
+    required this.snapshot,
+    required this.categoryUuid,
     required this.selectedDateRange,
-    required this.onDateRangeChanged,
-    required this.onNextPeriod,
-    required this.onPreviousPeriod,
+    required this.color,
+    required this.isExpense,
+    required this.currencySymbol,
+    required this.decimalPlaces,
+    required this.l10n,
+    required this.onOpenTransactions,
+    required this.onSetBudget,
   });
-
-  String _getDisplayText(BuildContext context) {
-    switch (selectedDateRange.type) {
-      case DateRangeType.month:
-        return AppDateFormatter.formatMonthYear(selectedDateRange.startDate,
-            context: context);
-      case DateRangeType.quarter:
-        final quarter = ((selectedDateRange.startDate.month - 1) ~/ 3) + 1;
-        return 'Q$quarter ${AppDateFormatter.getFormatter('y').format(selectedDateRange.startDate)}';
-      case DateRangeType.year:
-        return AppDateFormatter.getFormatter('y')
-            .format(selectedDateRange.startDate);
-      case DateRangeType.custom:
-        return '${AppDateFormatter.formatDate(selectedDateRange.startDate)} - ${AppDateFormatter.formatDate(selectedDateRange.endDate)}';
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final l10n = AppLocalizations.of(context)!;
+    final netStr = AmountFormatter.formatWithCurrency(
+      snapshot.netAmount,
+      currencySymbol,
+      decimalPlaces,
+    );
+    final budgetStr = snapshot.budgetAmount != null
+        ? AmountFormatter.formatWithCurrency(
+            snapshot.budgetAmount!,
+            currencySymbol,
+            decimalPlaces,
+          )
+        : '';
+
+    final gradientCardDecoration = BoxDecoration(
+      gradient: LinearGradient(
+        colors: [color, color.withValues(alpha: 0.82)],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
+      borderRadius: BorderRadius.circular(16),
+      boxShadow: [
+        BoxShadow(
+          color: color.withValues(alpha: 0.35),
+          blurRadius: 14,
+          offset: const Offset(0, 6),
+        ),
+      ],
+    );
+
+    final hasBudget = snapshot.hasBudget;
+    final pr = hasBudget ? snapshot.progressRatio : 0.0;
+    final over = hasBudget && pr > 1.0;
+    final barFillColor = over ? AppColors.expenseColor : color;
+
+    final net = snapshot.netAmount;
+    final barRightAmount = hasBudget && snapshot.remainingOrGap > 0
+        ? snapshot.remainingOrGap
+        : 0.0;
 
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+        Container(
+          clipBehavior: Clip.antiAlias,
+          decoration: gradientCardDecoration,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _RangeTypeChip(
-                label: l10n.month,
-                isSelected: selectedDateRange.type == DateRangeType.month,
-                onTap: () => onDateRangeChanged(DateRangeState.currentMonth()),
+              InkWell(
+                onTap: onOpenTransactions,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(16),
+                ),
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    20,
+                    20,
+                    20,
+                    hasBudget ? 16 : 0,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      SizedBox(
+                        width: double.infinity,
+                        child: Stack(
+                          clipBehavior: Clip.none,
+                          alignment: Alignment.center,
+                          children: [
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 44),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    isExpense
+                                        ? l10n.netExpenses
+                                        : l10n.netIncome,
+                                    textAlign: TextAlign.center,
+                                    style:
+                                        theme.textTheme.bodyMedium?.copyWith(
+                                      color: Colors.white
+                                          .withValues(alpha: 0.85),
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    netStr,
+                                    textAlign: TextAlign.center,
+                                    style: theme.textTheme.headlineLarge
+                                        ?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 32,
+                                      height: 1.1,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            PositionedDirectional(
+                              end: 0,
+                              top: 0,
+                              child: Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.22),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.arrow_forward_ios,
+                                  size: 18,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (hasBudget) ...[
+                        const SizedBox(height: 16),
+                        Text(
+                          isExpense
+                              ? l10n.spendingBudget
+                              : l10n.savingsTarget,
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: Colors.white.withValues(alpha: 0.75),
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.2,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          budgetStr,
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white.withValues(alpha: 0.95),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
               ),
-              const SizedBox(width: 8),
-              _RangeTypeChip(
-                label: l10n.quarter,
-                isSelected: selectedDateRange.type == DateRangeType.quarter,
-                onTap: () {
-                  final now = DateTime.now();
-                  final currentQuarter = ((now.month - 1) ~/ 3) + 1;
-                  onDateRangeChanged(
-                      DateRangeState.quarter(now.year, currentQuarter));
-                },
-              ),
-              const SizedBox(width: 8),
-              _RangeTypeChip(
-                label: l10n.year,
-                isSelected: selectedDateRange.type == DateRangeType.year,
-                onTap: () => onDateRangeChanged(
-                    DateRangeState.year(DateTime.now().year)),
-              ),
-              const SizedBox(width: 8),
-              _RangeTypeChip(
-                label: l10n.custom,
-                isSelected: selectedDateRange.type == DateRangeType.custom,
-                onTap: () async {
-                  final picked = await showDateRangePicker(
-                    context: context,
-                    firstDate: DateTime(2000),
-                    lastDate: DateTime(2100),
-                    initialDateRange: DateTimeRange(
-                      start: selectedDateRange.startDate,
-                      end: selectedDateRange.endDate,
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
+                child: Center(
+                  child: FilledButton.tonalIcon(
+                    style: FilledButton.styleFrom(
+                      foregroundColor: color,
+                      backgroundColor: Colors.white.withValues(alpha: 0.94),
                     ),
-                  );
-                  if (picked != null) {
-                    onDateRangeChanged(
-                        DateRangeState.custom(picked.start, picked.end));
-                  }
-                },
+                    onPressed: onSetBudget,
+                    icon: Icon(
+                      isExpense
+                          ? Icons.account_balance_wallet_outlined
+                          : Icons.savings_outlined,
+                      size: 20,
+                    ),
+                    label: Text(
+                      hasBudget ? l10n.editBudget : l10n.setBudget,
+                    ),
+                  ),
+                ),
               ),
             ],
           ),
         ),
-        const SizedBox(height: 12),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            IconButton(
-              icon: const Icon(Icons.chevron_left),
-              onPressed: selectedDateRange.type != DateRangeType.custom
-                  ? onPreviousPeriod
-                  : null,
-            ),
-            Expanded(
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  _getDisplayText(context),
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ),
-            IconButton(
-              icon: const Icon(Icons.chevron_right),
-              onPressed: selectedDateRange.type != DateRangeType.custom
-                  ? onNextPeriod
-                  : null,
-            ),
-          ],
-        ),
+        if (hasBudget) ...[
+          const SizedBox(height: 12),
+          DualAmountProgressBar(
+            leftLabel:
+                isExpense ? l10n.budgetBarUsed : l10n.budgetBarProgress,
+            leftAmount: net > 0 ? net : 0.0,
+            rightLabel: l10n.remaining,
+            rightAmount: barRightAmount,
+            symbol: currencySymbol,
+            decimals: decimalPlaces,
+            filledColor: barFillColor,
+          ),
+        ],
       ],
-    );
-  }
-}
-
-class _RangeTypeChip extends StatelessWidget {
-  final String label;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  const _RangeTypeChip({
-    required this.label,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? theme.colorScheme.primaryContainer
-              : theme.colorScheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: isSelected ? theme.colorScheme.primary : Colors.transparent,
-            width: 1.5,
-          ),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-            color: isSelected
-                ? theme.colorScheme.onPrimaryContainer
-                : theme.colorScheme.onSurfaceVariant,
-          ),
-        ),
-      ),
     );
   }
 }

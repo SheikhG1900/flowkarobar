@@ -4636,6 +4636,12 @@ abstract class AppLocalizations {
   /// **'Uncategorized'**
   String get uncategorized;
 
+  /// No description provided for @categoriesSummaryIncludeInTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Include in total'**
+  String get categoriesSummaryIncludeInTotal;
+
   /// No description provided for @schedule.
   ///
   /// In en, this message translates to:
@@ -6209,6 +6215,12 @@ abstract class AppLocalizations {
   /// **'Net Expenses'**
   String get netExpenses;
 
+  /// No description provided for @categoriesAggregateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'All categories'**
+  String get categoriesAggregateTitle;
+
   /// No description provided for @syncStatusTitle.
   ///
   /// In en, this message translates to:
@@ -7240,6 +7252,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Received, will pay back'**
   String get receivedFromSubtitle;
+
+  /// No description provided for @spendingBudget.
+  ///
+  /// In en, this message translates to:
+  /// **'Spending budget'**
+  String get spendingBudget;
+
+  /// No description provided for @savingsTarget.
+  ///
+  /// In en, this message translates to:
+  /// **'Savings target'**
+  String get savingsTarget;
+
+  /// No description provided for @setBudget.
+  ///
+  /// In en, this message translates to:
+  /// **'Set budget'**
+  String get setBudget;
+
+  /// No description provided for @editBudget.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit budget'**
+  String get editBudget;
+
+  /// No description provided for @monthlyBudget.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly budget'**
+  String get monthlyBudget;
+
+  /// No description provided for @quarterlyBudget.
+  ///
+  /// In en, this message translates to:
+  /// **'Quarterly budget'**
+  String get quarterlyBudget;
+
+  /// No description provided for @yearlyBudget.
+  ///
+  /// In en, this message translates to:
+  /// **'Yearly budget'**
+  String get yearlyBudget;
+
+  /// No description provided for @spendingBudgetDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional spending limits for the calendar month, quarter, or year.'**
+  String get spendingBudgetDescription;
+
+  /// No description provided for @savingsTargetDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional savings targets for the calendar month, quarter, or year.'**
+  String get savingsTargetDescription;
+
+  /// No description provided for @budgetSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Budget saved'**
+  String get budgetSaved;
+
+  /// No description provided for @budgetRemainingOf.
+  ///
+  /// In en, this message translates to:
+  /// **'{remaining} left of {total}'**
+  String budgetRemainingOf(String remaining, String total);
+
+  /// No description provided for @budgetOverBy.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} over budget'**
+  String budgetOverBy(String amount);
+
+  /// No description provided for @towardSavingsTarget.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} toward target'**
+  String towardSavingsTarget(String amount);
+
+  /// No description provided for @customCategoryBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom category'**
+  String get customCategoryBadge;
+
+  /// No description provided for @budgetBarUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'Used'**
+  String get budgetBarUsed;
+
+  /// No description provided for @budgetBarProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Progress'**
+  String get budgetBarProgress;
+
+  /// No description provided for @categoryRefund.
+  ///
+  /// In en, this message translates to:
+  /// **'Refund'**
+  String get categoryRefund;
 }
 
 class _AppLocalizationsDelegate

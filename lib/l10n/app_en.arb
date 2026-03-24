@@ -1334,6 +1334,7 @@
   "bulkPayInBulk": "Pay in bulk",
   "bulkProcessInBulk": "Process in bulk",
   "uncategorized": "Uncategorized",
+  "categoriesSummaryIncludeInTotal": "Include in total",
   "editSchedule": "Edit Schedule",
   "schedule": "Schedule",
   "daily": "Daily",
@@ -1816,6 +1817,7 @@
   "categoryDetails": "Category Details",
   "netIncome": "Net Income",
   "netExpenses": "Net Expenses",
+  "categoriesAggregateTitle": "All categories",
   "syncStatusTitle": "Sync Status",
   "changesToPush": "{count, plural, =1{1 change to push} other{{count} changes to push}}",
   "@changesToPush": {
@@ -2064,5 +2066,38 @@
   "paidForSubtitle": "I paid, will receive back",
   "paidBySubtitle": "Someone paid for me",
   "willReceiveSubtitle": "Expected, not received yet",
-  "receivedFromSubtitle": "Received, will pay back"
+  "receivedFromSubtitle": "Received, will pay back",
+  "spendingBudget": "Spending budget",
+  "savingsTarget": "Savings target",
+  "setBudget": "Set budget",
+  "editBudget": "Edit budget",
+  "monthlyBudget": "Monthly budget",
+  "quarterlyBudget": "Quarterly budget",
+  "yearlyBudget": "Yearly budget",
+  "spendingBudgetDescription": "Optional spending limits for the calendar month, quarter, or year.",
+  "savingsTargetDescription": "Optional savings targets for the calendar month, quarter, or year.",
+  "budgetSaved": "Budget saved",
+  "budgetRemainingOf": "{remaining} left of {total}",
+  "@budgetRemainingOf": {
+    "placeholders": {
+      "remaining": { "type": "String" },
+      "total": { "type": "String" }
+    }
+  },
+  "budgetOverBy": "{amount} over budget",
+  "@budgetOverBy": {
+    "placeholders": {
+      "amount": { "type": "String" }
+    }
+  },
+  "towardSavingsTarget": "{amount} toward target",
+  "@towardSavingsTarget": {
+    "placeholders": {
+      "amount": { "type": "String" }
+    }
+  },
+  "customCategoryBadge": "Custom category",
+  "budgetBarUsed": "Used",
+  "budgetBarProgress": "Progress",
+  "categoryRefund": "Refund"
 }

@@ -55,6 +55,7 @@ class CategoryHelper {
     if (name.contains('salary') || name.contains('income')) return l10n.categorySalary;
     if (name.contains('gift')) return l10n.categoryGift;
     if (name.contains('investment')) return l10n.categoryInvestment;
+    if (name.contains('refund')) return l10n.categoryRefund;
     if (name.contains('other')) return l10n.categoryOther;
 
     return category.name;

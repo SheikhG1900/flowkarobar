@@ -22,6 +22,11 @@ class Categories extends Table {
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
   BoolColumn get isNotSynced => boolean().withDefault(const Constant(true))();
 
+  /// Spending cap (expense) or savings target (income); null = not set.
+  RealColumn get monthlyBudget => real().nullable()();
+  RealColumn get quarterlyBudget => real().nullable()();
+  RealColumn get yearlyBudget => real().nullable()();
+
   @override
   Set<Column> get primaryKey => {uuid};
 }
@@ -351,7 +356,7 @@ class AppDatabase extends _$AppDatabase {
       : super(executor ?? openConnection(fileName));
 
   @override
-  int get schemaVersion => 20;
+  int get schemaVersion => 21;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -524,6 +529,31 @@ class AppDatabase extends _$AppDatabase {
               if (kDebugMode) {
                 print(
                     'Migration: default_cat_refund icon backfill failed: $e');
+              }
+            }
+          }
+
+          // Migration from version 20 to 21: category budgets (spending / savings targets)
+          if (from <= 20) {
+            try {
+              await m.addColumn(categories, categories.monthlyBudget);
+            } catch (e) {
+              if (kDebugMode) {
+                print('Migration: monthly_budget might already exist: $e');
+              }
+            }
+            try {
+              await m.addColumn(categories, categories.quarterlyBudget);
+            } catch (e) {
+              if (kDebugMode) {
+                print('Migration: quarterly_budget might already exist: $e');
+              }
+            }
+            try {
+              await m.addColumn(categories, categories.yearlyBudget);
+            } catch (e) {
+              if (kDebugMode) {
+                print('Migration: yearly_budget might already exist: $e');
               }
             }
           }

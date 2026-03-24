@@ -2522,6 +2522,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get uncategorized => 'Uncategorized';
 
   @override
+  String get categoriesSummaryIncludeInTotal => 'Include in total';
+
+  @override
   String get schedule => 'Schedule';
 
   @override
@@ -3384,6 +3387,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get netExpenses => 'Net Expenses';
 
   @override
+  String get categoriesAggregateTitle => 'All categories';
+
+  @override
   String get syncStatusTitle => 'Sync Status';
 
   @override
@@ -3950,4 +3956,63 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get receivedFromSubtitle => 'Received, will pay back';
+
+  @override
+  String get spendingBudget => 'Spending budget';
+
+  @override
+  String get savingsTarget => 'Savings target';
+
+  @override
+  String get setBudget => 'Set budget';
+
+  @override
+  String get editBudget => 'Edit budget';
+
+  @override
+  String get monthlyBudget => 'Monthly budget';
+
+  @override
+  String get quarterlyBudget => 'Quarterly budget';
+
+  @override
+  String get yearlyBudget => 'Yearly budget';
+
+  @override
+  String get spendingBudgetDescription =>
+      'Optional spending limits for the calendar month, quarter, or year.';
+
+  @override
+  String get savingsTargetDescription =>
+      'Optional savings targets for the calendar month, quarter, or year.';
+
+  @override
+  String get budgetSaved => 'Budget saved';
+
+  @override
+  String budgetRemainingOf(String remaining, String total) {
+    return '$remaining left of $total';
+  }
+
+  @override
+  String budgetOverBy(String amount) {
+    return '$amount over budget';
+  }
+
+  @override
+  String towardSavingsTarget(String amount) {
+    return '$amount toward target';
+  }
+
+  @override
+  String get customCategoryBadge => 'Custom category';
+
+  @override
+  String get budgetBarUsed => 'Used';
+
+  @override
+  String get budgetBarProgress => 'Progress';
+
+  @override
+  String get categoryRefund => 'Refund';
 }
