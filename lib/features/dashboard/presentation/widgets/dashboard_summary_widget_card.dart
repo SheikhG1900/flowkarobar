@@ -23,6 +23,7 @@ import 'package:flowpaisa/features/contacts/presentation/providers/contacts_prov
 import 'package:flowpaisa/features/categories/presentation/providers/categories_provider.dart';
 import 'package:flowpaisa/features/accounts/domain/models/account_models.dart';
 import 'package:flowpaisa/features/accounts/presentation/providers/accounts_provider.dart';
+import 'package:flowpaisa/features/accounts/presentation/screens/accounts_screen.dart';
 import 'package:flowpaisa/features/analytics/presentation/screens/analytics_screen.dart';
 import 'package:flowpaisa/features/whatsapp/domain/deep_link_service.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
@@ -179,7 +180,7 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => const AnalyticsScreen()),
+                  MaterialPageRoute(builder: (_) => AccountsScreen()),
                 );
               },
               onRemove: () => _removeAt(ref, layoutIndex),
