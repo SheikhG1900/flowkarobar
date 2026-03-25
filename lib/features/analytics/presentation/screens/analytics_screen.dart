@@ -1760,6 +1760,7 @@ class _TrendsBarChart extends ConsumerWidget {
     final currencySymbol = ref.watch(currencySymbolProvider);
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
+    final selectedIndex = ref.watch(selectedTrendIndexProvider);
 
     return trendsAsync.when(
       data: (trends) {
@@ -1788,105 +1789,218 @@ class _TrendsBarChart extends ConsumerWidget {
         maxY = maxY * 1.2; // Add 20% buffer
         if (maxY == 0) maxY = 100;
 
-        const double barGroupWidth = 56;
+        const double barGroupWidth = 64;
         const double chartHeight = 220;
-        final barChart = BarChart(
-          BarChartData(
-            alignment: BarChartAlignment.spaceAround,
-            maxY: maxY,
-            barTouchData: BarTouchData(
-              touchTooltipData: BarTouchTooltipData(
-                getTooltipColor: (_) => theme.cardColor,
-                getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                  final type = rodIndex == 0 ? l10n.income : l10n.expense;
-                  return BarTooltipItem(
-                    '$type\n',
-                    TextStyle(
-                      color: theme.colorScheme.onSurface,
-                      fontWeight: FontWeight.bold,
-                    ),
+
+        final selectedData =
+            selectedIndex != null ? trends[selectedIndex] : null;
+
+        return Column(
+          children: [
+            if (selectedData != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 16, left: 8, right: 8),
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surfaceContainerHighest
+                        .withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: theme.colorScheme.outlineVariant),
+                  ),
+                  child: Row(
                     children: [
-                      TextSpan(
-                        text: AmountFormatter.formatWithCurrency(
-                            rod.toY, currencySymbol, 0),
-                        style: TextStyle(
-                          color: rodIndex == 0
-                              ? AppColors.incomeColor
-                              : AppColors.expenseColor,
-                          fontWeight: FontWeight.w500,
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  width: 12,
+                                  height: 12,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.incomeColor,
+                                    borderRadius: BorderRadius.circular(2),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Text(l10n.income,
+                                    style: theme.textTheme.labelSmall),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              AmountFormatter.formatWithCurrency(
+                                  selectedData.income, currencySymbol, 0),
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.incomeColor,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        width: 1,
+                        height: 40,
+                        color: theme.colorScheme.outlineVariant,
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  width: 12,
+                                  height: 12,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.expenseColor,
+                                    borderRadius: BorderRadius.circular(2),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Text(l10n.expenses,
+                                    style: theme.textTheme.labelSmall),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              AmountFormatter.formatWithCurrency(
+                                  selectedData.expense, currencySymbol, 0),
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.expenseColor,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
-                  );
-                },
-              ),
-            ),
-            titlesData: FlTitlesData(
-              show: true,
-              bottomTitles: AxisTitles(
-                sideTitles: SideTitles(
-                  showTitles: true,
-                  getTitlesWidget: (value, meta) {
-                    final index = value.toInt();
-                    if (index < 0 || index >= trends.length)
-                      return const Text('');
-                    return Padding(
-                      padding: const EdgeInsets.only(top: 8.0),
-                      child: Text(
-                        AppDateFormatter.formatMonth(trends[index].month,
-                            context: context),
-                        style: const TextStyle(fontSize: 10),
-                      ),
-                    );
-                  },
-                  reservedSize: 30,
+                  ),
                 ),
               ),
-              leftTitles: const AxisTitles(
-                  sideTitles: SideTitles(showTitles: false)),
-              topTitles: const AxisTitles(
-                  sideTitles: SideTitles(showTitles: false)),
-              rightTitles: const AxisTitles(
-                  sideTitles: SideTitles(showTitles: false)),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: SizedBox(
+                width: trends.length <= 6
+                    ? MediaQuery.of(context).size.width - 32
+                    : trends.length * barGroupWidth,
+                height: chartHeight,
+                child: BarChart(
+                  BarChartData(
+                    alignment: BarChartAlignment.spaceAround,
+                    maxY: maxY,
+                    barTouchData: BarTouchData(
+                      handleBuiltInTouches: true,
+                      touchCallback:
+                          (FlTouchEvent event, BarTouchResponse? response) {
+                        if (event is FlTapUpEvent && response?.spot != null) {
+                          final index = response!.spot!.touchedBarGroupIndex;
+                          ref
+                              .read(selectedTrendIndexProvider.notifier)
+                              .setIndex(selectedIndex == index ? null : index);
+                        }
+                      },
+                      touchTooltipData: BarTouchTooltipData(
+                        getTooltipColor: (_) => Colors.transparent,
+                        getTooltipItem: (_, __, ___, ____) => null,
+                      ),
+                    ),
+                    titlesData: FlTitlesData(
+                      show: true,
+                      bottomTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          getTitlesWidget: (value, meta) {
+                            final index = value.toInt();
+                            if (index < 0 || index >= trends.length)
+                              return const Text('');
+                            final isSelected = selectedIndex == index;
+                            return SideTitleWidget(
+                              meta: meta,
+                              space: 8,
+                              child: GestureDetector(
+                                onTap: () {
+                                  ref
+                                      .read(selectedTrendIndexProvider.notifier)
+                                      .setIndex(isSelected ? null : index);
+                                },
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 200),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: isSelected
+                                        ? theme.colorScheme.primaryContainer
+                                        : Colors.transparent,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    AppDateFormatter.formatMonth(
+                                        trends[index].month,
+                                        context: context),
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: isSelected
+                                          ? FontWeight.bold
+                                          : FontWeight.normal,
+                                      color: isSelected
+                                          ? theme.colorScheme.onPrimaryContainer
+                                          : theme.textTheme.bodySmall?.color,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                          reservedSize: 40,
+                        ),
+                      ),
+                      leftTitles: const AxisTitles(
+                          sideTitles: SideTitles(showTitles: false)),
+                      topTitles: const AxisTitles(
+                          sideTitles: SideTitles(showTitles: false)),
+                      rightTitles: const AxisTitles(
+                          sideTitles: SideTitles(showTitles: false)),
+                    ),
+                    gridData: const FlGridData(show: false),
+                    borderData: FlBorderData(show: false),
+                    barGroups: trends.asMap().entries.map((entry) {
+                      final index = entry.key;
+                      final data = entry.value;
+                      final isSelected = selectedIndex == index;
+                      return BarChartGroupData(
+                        x: index,
+                        barRods: [
+                          BarChartRodData(
+                            toY: data.income,
+                            color: isSelected
+                                ? AppColors.incomeColor
+                                : AppColors.incomeColor.withValues(alpha: 0.4),
+                            width: 14,
+                            borderRadius: const BorderRadius.vertical(
+                                top: Radius.circular(4)),
+                          ),
+                          BarChartRodData(
+                            toY: data.expense,
+                            color: isSelected
+                                ? AppColors.expenseColor
+                                : AppColors.expenseColor.withValues(alpha: 0.4),
+                            width: 14,
+                            borderRadius: const BorderRadius.vertical(
+                                top: Radius.circular(4)),
+                          ),
+                        ],
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ),
             ),
-            gridData: const FlGridData(show: false),
-            borderData: FlBorderData(show: false),
-            barGroups: trends.asMap().entries.map((entry) {
-              final index = entry.key;
-              final data = entry.value;
-              return BarChartGroupData(
-                x: index,
-                barRods: [
-                  BarChartRodData(
-                    toY: data.income,
-                    color: AppColors.incomeColor,
-                    width: 12,
-                    borderRadius: const BorderRadius.vertical(
-                        top: Radius.circular(4)),
-                  ),
-                  BarChartRodData(
-                    toY: data.expense,
-                    color: AppColors.expenseColor,
-                    width: 12,
-                    borderRadius: const BorderRadius.vertical(
-                        top: Radius.circular(4)),
-                  ),
-                ],
-              );
-            }).toList(),
-          ),
-        );
-
-        if (trends.length <= 6) {
-          return AspectRatio(aspectRatio: 1.5, child: barChart);
-        }
-        return SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: SizedBox(
-            width: trends.length * barGroupWidth,
-            height: chartHeight,
-            child: barChart,
-          ),
+          ],
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
@@ -1904,6 +2018,7 @@ class _PayableReceivableTrendsChart extends ConsumerWidget {
     final currencySymbol = ref.watch(currencySymbolProvider);
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
+    final selectedIndex = ref.watch(selectedPayableReceivableTrendIndexProvider);
 
     return trendsAsync.when(
       data: (trends) {
@@ -1945,170 +2060,307 @@ class _PayableReceivableTrendsChart extends ConsumerWidget {
             Color.lerp(AppColors.receivableColor, dullBlend, dullAmount)!;
         final receivableReceivedColor = AppColors.receivableColor;
 
-        const double barGroupWidth = 56;
+        const double barGroupWidth = 64;
         const double chartHeight = 220;
-        final barChart = BarChart(
-          BarChartData(
-            alignment: BarChartAlignment.spaceAround,
-            maxY: maxY,
-            barTouchData: BarTouchData(
-              touchTooltipData: BarTouchTooltipData(
-                getTooltipColor: (_) => theme.cardColor,
-                getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                    final data = trends[group.x.toInt()];
-                    final type =
-                        rodIndex == 0 ? l10n.payableTag : l10n.receivableTag;
-                    final pending = (rodIndex == 0
-                            ? (data.pendingPayable ?? 0)
-                            : (data.pendingReceivable ?? 0))
-                        .toDouble();
-                    final settled = (rodIndex == 0
-                            ? (data.paidPayable ?? 0)
-                            : (data.receivedReceivable ?? 0))
-                        .toDouble();
-                    return BarTooltipItem(
-                      '$type\n',
-                      TextStyle(
-                          color: theme.colorScheme.onSurface,
-                          fontWeight: FontWeight.bold),
-                      children: [
-                        if (pending > 0)
-                          TextSpan(
-                            text:
-                                '${l10n.pending ?? 'Pending'}: ${AmountFormatter.formatWithCurrency(pending, currencySymbol, 0)}\n',
-                            style: TextStyle(
-                              color: rodIndex == 0
-                                  ? payableDullColor
-                                  : receivableDullColor,
-                              fontWeight: FontWeight.w500,
+
+        final selectedData =
+            selectedIndex != null ? trends[selectedIndex] : null;
+
+        return Column(
+          children: [
+            if (selectedData != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 16, left: 8, right: 8),
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surfaceContainerHighest
+                        .withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: theme.colorScheme.outlineVariant),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  width: 12,
+                                  height: 12,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.payableColor,
+                                    borderRadius: BorderRadius.circular(2),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Text(l10n.payableTag,
+                                    style: theme.textTheme.labelSmall),
+                              ],
                             ),
-                          ),
-                        if (settled > 0)
-                          TextSpan(
-                            text:
-                                '${rodIndex == 0 ? (l10n.paid ?? 'Paid') : (l10n.received ?? 'Received')}: ${AmountFormatter.formatWithCurrency(settled, currencySymbol, 0)}',
-                            style: TextStyle(
-                              color: rodIndex == 0
-                                  ? payableDarkColor
-                                  : receivableReceivedColor,
-                              fontWeight: FontWeight.w500,
+                            const SizedBox(height: 4),
+                            Text(
+                              AmountFormatter.formatWithCurrency(
+                                  selectedData.totalPayable, currencySymbol, 0),
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.payableColor,
+                              ),
                             ),
-                          ),
-                      ],
-                    );
-                  },
-                ),
-              ),
-              titlesData: FlTitlesData(
-                show: true,
-                bottomTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: true,
-                    getTitlesWidget: (value, meta) {
-                      final index = value.toInt();
-                      if (index < 0 || index >= trends.length)
-                        return const Text('');
-                      return Padding(
-                        padding: const EdgeInsets.only(top: 8.0),
-                        child: Text(
-                            AppDateFormatter.formatMonth(trends[index].month,
-                                context: context),
-                            style: const TextStyle(fontSize: 10)),
-                      );
-                    },
-                    reservedSize: 30,
+                            if ((selectedData.pendingPayable ?? 0) > 0)
+                              Text(
+                                '${l10n.pending}: ${AmountFormatter.formatWithCurrency(selectedData.pendingPayable!, currencySymbol, 0)}',
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        width: 1,
+                        height: 40,
+                        color: theme.colorScheme.outlineVariant,
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  width: 12,
+                                  height: 12,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.receivableColor,
+                                    borderRadius: BorderRadius.circular(2),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Text(l10n.receivableTag,
+                                    style: theme.textTheme.labelSmall),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              AmountFormatter.formatWithCurrency(
+                                  selectedData.totalReceivable,
+                                  currencySymbol,
+                                  0),
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.receivableColor,
+                              ),
+                            ),
+                            if ((selectedData.pendingReceivable ?? 0) > 0)
+                              Text(
+                                '${l10n.pending}: ${AmountFormatter.formatWithCurrency(selectedData.pendingReceivable!, currencySymbol, 0)}',
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                leftTitles:
-                    const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                topTitles:
-                    const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                rightTitles:
-                    const AxisTitles(sideTitles: SideTitles(showTitles: false)),
               ),
-              gridData: const FlGridData(show: false),
-              borderData: FlBorderData(show: false),
-              barGroups: trends.asMap().entries.map((entry) {
-                final index = entry.key;
-                final data = entry.value;
-                final totalP = (data.totalPayable ?? 0).toDouble();
-                final pendingP = (data.pendingPayable ?? 0).toDouble();
-                final paidP = (data.paidPayable ?? 0).toDouble();
-                final totalR = (data.totalReceivable ?? 0).toDouble();
-                final pendingR = (data.pendingReceivable ?? 0).toDouble();
-                final receivedR = (data.receivedReceivable ?? 0).toDouble();
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: SizedBox(
+                width: trends.length <= 6
+                    ? MediaQuery.of(context).size.width - 32
+                    : trends.length * barGroupWidth,
+                height: chartHeight,
+                child: BarChart(
+                  BarChartData(
+                    alignment: BarChartAlignment.spaceAround,
+                    maxY: maxY,
+                    barTouchData: BarTouchData(
+                      enabled: true,
+                      handleBuiltInTouches: true,
+                      touchCallback:
+                          (FlTouchEvent event, BarTouchResponse? response) {
+                        if (event is FlTapUpEvent && response?.spot != null) {
+                          final index = response!.spot!.touchedBarGroupIndex;
+                          ref
+                              .read(
+                                  selectedPayableReceivableTrendIndexProvider.notifier)
+                              .setIndex(selectedIndex == index ? null : index);
+                        }
+                      },
+                      touchTooltipData: BarTouchTooltipData(
+                        getTooltipColor: (_) => Colors.transparent,
+                        getTooltipItem: (_, __, ___, ____) => null,
+                      ),
+                    ),
+                    titlesData: FlTitlesData(
+                      show: true,
+                      bottomTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          getTitlesWidget: (value, meta) {
+                            final index = value.toInt();
+                            if (index < 0 || index >= trends.length)
+                              return const Text('');
+                            final isSelected = selectedIndex == index;
+                            return SideTitleWidget(
+                              meta: meta,
+                              space: 8,
+                              child: GestureDetector(
+                                onTap: () {
+                                  ref
+                                      .read(
+                                          selectedPayableReceivableTrendIndexProvider
+                                              .notifier)
+                                      .setIndex(isSelected ? null : index);
+                                },
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 200),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: isSelected
+                                        ? theme.colorScheme.primaryContainer
+                                        : Colors.transparent,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    AppDateFormatter.formatMonth(
+                                        trends[index].month,
+                                        context: context),
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: isSelected
+                                          ? FontWeight.bold
+                                          : FontWeight.normal,
+                                      color: isSelected
+                                          ? theme.colorScheme.onPrimaryContainer
+                                          : theme.textTheme.bodySmall?.color,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                          reservedSize: 40,
+                        ),
+                      ),
+                      leftTitles: const AxisTitles(
+                          sideTitles: SideTitles(showTitles: false)),
+                      topTitles: const AxisTitles(
+                          sideTitles: SideTitles(showTitles: false)),
+                      rightTitles: const AxisTitles(
+                          sideTitles: SideTitles(showTitles: false)),
+                    ),
+                    gridData: const FlGridData(show: false),
+                    borderData: FlBorderData(show: false),
+                    barGroups: trends.asMap().entries.map((entry) {
+                      final index = entry.key;
+                      final data = entry.value;
+                      final isSelected = selectedIndex == index;
+                      final totalP = (data.totalPayable ?? 0).toDouble();
+                      final pendingP = (data.pendingPayable ?? 0).toDouble();
+                      final paidP = (data.paidPayable ?? 0).toDouble();
+                      final totalR = (data.totalReceivable ?? 0).toDouble();
+                      final pendingR = (data.pendingReceivable ?? 0).toDouble();
+                      final receivedR =
+                          (data.receivedReceivable ?? 0).toDouble();
 
-                // Payable bar: paid (dark) at bottom, payable/pending (dull) at top
-                List<BarChartRodStackItem> payableStack = [
-                  if (paidP > 0)
-                    BarChartRodStackItem(0, paidP, payableDarkColor),
-                  if (pendingP > 0)
-                    BarChartRodStackItem(
-                      paidP,
-                      totalP,
-                      payableDullColor,
-                    ),
-                ];
-                if (payableStack.isEmpty && totalP >= 0) {
-                  payableStack = [
-                    BarChartRodStackItem(0, totalP, payableDullColor),
-                  ];
-                }
+                      // Payable bar: paid (dark) at bottom, payable/pending (dull) at top
+                      List<BarChartRodStackItem> payableStack = [
+                        if (paidP > 0)
+                          BarChartRodStackItem(0, paidP, (AppColors.payableColor)),
+                        if (pendingP > 0)
+                          BarChartRodStackItem(
+                            paidP,
+                            totalP,
+                            (Color.lerp(AppColors.payableColor, theme.brightness == Brightness.dark ? Colors.black : Colors.white, 0.6)!),
+                          ),
+                      ];
+                      if (payableStack.isEmpty && totalP >= 0) {
+                        payableStack = [
+                          BarChartRodStackItem(0, totalP, (Color.lerp(AppColors.payableColor, theme.brightness == Brightness.dark ? Colors.black : Colors.white, 0.6)!)),
+                        ];
+                      }
 
-                // Receivable bar: received (dark) at bottom, pending (dull) at top
-                List<BarChartRodStackItem> receivableStack = [
-                  if (receivedR > 0)
-                    BarChartRodStackItem(
-                      0,
-                      receivedR,
-                      receivableReceivedColor,
-                    ),
-                  if (pendingR > 0)
-                    BarChartRodStackItem(
-                      receivedR,
-                      totalR,
-                      receivableDullColor,
-                    ),
-                ];
-                if (receivableStack.isEmpty && totalR >= 0) {
-                  receivableStack = [
-                    BarChartRodStackItem(0, totalR, receivableDullColor),
-                  ];
-                }
+                      // Receivable bar: received (dark) at bottom, pending (dull) at top
+                      List<BarChartRodStackItem> receivableStack = [
+                        if (receivedR > 0)
+                          BarChartRodStackItem(
+                            0,
+                            receivedR,
+                            (AppColors.receivableColor),
+                          ),
+                        if (pendingR > 0)
+                          BarChartRodStackItem(
+                            receivedR,
+                            totalR,
+                            (Color.lerp(AppColors.receivableColor, theme.brightness == Brightness.dark ? Colors.black : Colors.white, 0.6)!),
+                          ),
+                      ];
+                      if (receivableStack.isEmpty && totalR >= 0) {
+                        receivableStack = [
+                          BarChartRodStackItem(0, totalR, (Color.lerp(AppColors.receivableColor, theme.brightness == Brightness.dark ? Colors.black : Colors.white, 0.6)!)),
+                        ];
+                      }
 
-                return BarChartGroupData(
-                  x: index,
-                  barRods: [
-                    BarChartRodData(
-                      toY: totalP,
-                      width: 12,
-                      borderRadius:
-                          const BorderRadius.vertical(top: Radius.circular(4)),
-                      rodStackItems: payableStack,
-                    ),
-                    BarChartRodData(
-                      toY: totalR,
-                      width: 12,
-                      borderRadius:
-                          const BorderRadius.vertical(top: Radius.circular(4)),
-                      rodStackItems: receivableStack,
-                    ),
-                  ],
-                );
-              }).toList(),
+                      return BarChartGroupData(
+                        x: index,
+                        barRods: [
+                          BarChartRodData(
+                            toY: totalP,
+                            width: 14,
+                            color: isSelected
+                                ? null
+                                : AppColors.payableColor.withValues(alpha: 0.4),
+                            borderRadius: const BorderRadius.vertical(
+                                top: Radius.circular(4)),
+                            rodStackItems: payableStack.map((item) {
+                              if (!isSelected) {
+                                return BarChartRodStackItem(
+                                  item.fromY,
+                                  item.toY,
+                                  (item.color ?? Colors.transparent)
+                                      .withValues(alpha: 0.4),
+                                );
+                              }
+                              return item;
+                            }).toList(),
+                          ),
+                          BarChartRodData(
+                            toY: totalR,
+                            width: 14,
+                            color: isSelected
+                                ? null
+                                : AppColors.receivableColor
+                                    .withValues(alpha: 0.4),
+                            borderRadius: const BorderRadius.vertical(
+                                top: Radius.circular(4)),
+                            rodStackItems: receivableStack.map((item) {
+                              if (!isSelected) {
+                                return BarChartRodStackItem(
+                                  item.fromY,
+                                  item.toY,
+                                  (item.color ?? Colors.transparent)
+                                      .withValues(alpha: 0.4),
+                                );
+                              }
+                              return item;
+                            }).toList(),
+                          ),
+                        ],
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ),
             ),
-          );
-
-        if (trends.length <= 6) {
-          return AspectRatio(aspectRatio: 1.5, child: barChart);
-        }
-        return SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: SizedBox(
-            width: trends.length * barGroupWidth,
-            height: chartHeight,
-            child: barChart,
-          ),
+          ],
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),

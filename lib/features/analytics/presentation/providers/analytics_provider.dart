@@ -123,6 +123,34 @@ final selectedBalanceAccountIndexProvider =
     NotifierProvider<SelectedBalanceAccountIndexNotifier, int?>(
         SelectedBalanceAccountIndexNotifier.new);
 
+// Selected index for Trends Bar Chart
+class SelectedTrendIndexNotifier extends Notifier<int?> {
+  @override
+  int? build() => null;
+
+  void setIndex(int? index) {
+    state = index;
+  }
+}
+
+final selectedTrendIndexProvider =
+    NotifierProvider<SelectedTrendIndexNotifier, int?>(
+        SelectedTrendIndexNotifier.new);
+
+// Selected index for Payable/Receivable Trends Bar Chart
+class SelectedPayableReceivableTrendIndexNotifier extends Notifier<int?> {
+  @override
+  int? build() => null;
+
+  void setIndex(int? index) {
+    state = index;
+  }
+}
+
+final selectedPayableReceivableTrendIndexProvider =
+    NotifierProvider<SelectedPayableReceivableTrendIndexNotifier, int?>(
+        SelectedPayableReceivableTrendIndexNotifier.new);
+
 // Expenses by Category Provider (uses full selected date range)
 final expensesByCategoryProvider =
     FutureProvider.autoDispose<List<CategoryExpense>>((ref) async {
