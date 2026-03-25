@@ -12,6 +12,7 @@ import 'package:flowpaisa/shared/providers/database_provider.dart';
 
 /// Default widget layout when none is saved.
 List<DashboardWidgetConfig> get defaultDashboardWidgetLayout => [
+      const DashboardWidgetConfig(kind: DashboardWidgetKind.quickActions),
       const DashboardWidgetConfig(kind: DashboardWidgetKind.balance),
       const DashboardWidgetConfig(kind: DashboardWidgetKind.cashFlow),
       const DashboardWidgetConfig(kind: DashboardWidgetKind.receivablesSummary),

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:collection/collection.dart';
 
 /// Kind of dashboard widget: summary (no entity) or entity (pinned item).
 enum DashboardWidgetKind {
@@ -11,6 +12,7 @@ enum DashboardWidgetKind {
   contactsSummary,
   categoriesSummary,
   netWorth,
+  quickActions,
   // Entity widgets
   transaction,
   category,
@@ -39,6 +41,7 @@ class DashboardWidgetConfig {
   final String? payableUuid;
   final String? receivableUuid;
   final String? accountUuid;
+  final List<String>? quickActionCodes;
 
   const DashboardWidgetConfig({
     required this.kind,
@@ -48,6 +51,7 @@ class DashboardWidgetConfig {
     this.payableUuid,
     this.receivableUuid,
     this.accountUuid,
+    this.quickActionCodes,
   });
 
   String? get entityUuid {
@@ -79,12 +83,20 @@ class DashboardWidgetConfig {
           contactUuid == other.contactUuid &&
           payableUuid == other.payableUuid &&
           receivableUuid == other.receivableUuid &&
-          accountUuid == other.accountUuid;
+          accountUuid == other.accountUuid &&
+          const ListEquality().equals(quickActionCodes, other.quickActionCodes);
 
   @override
   int get hashCode =>
-      Object.hash(kind, transactionUuid, categoryUuid, contactUuid,
-          payableUuid, receivableUuid, accountUuid);
+      Object.hash(
+          kind,
+          transactionUuid,
+          categoryUuid,
+          contactUuid,
+          payableUuid,
+          receivableUuid,
+          accountUuid,
+          Object.hashAll(quickActionCodes ?? []));
 
   Map<String, dynamic> toJson() {
     final map = <String, dynamic>{'kind': kind.name};
@@ -94,6 +106,7 @@ class DashboardWidgetConfig {
     if (payableUuid != null) map['payableUuid'] = payableUuid;
     if (receivableUuid != null) map['receivableUuid'] = receivableUuid;
     if (accountUuid != null) map['accountUuid'] = accountUuid;
+    if (quickActionCodes != null) map['quickActionCodes'] = quickActionCodes;
     return map;
   }
 
@@ -116,6 +129,9 @@ class DashboardWidgetConfig {
       payableUuid: json['payableUuid'] as String?,
       receivableUuid: json['receivableUuid'] as String?,
       accountUuid: (json['accountUuid'] as String?)?.trim(),
+      quickActionCodes: (json['quickActionCodes'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList(),
     );
   }
 

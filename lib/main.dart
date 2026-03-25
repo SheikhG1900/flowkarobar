@@ -1715,8 +1715,6 @@ class _DashboardTab extends ConsumerWidget {
                         const SyncStatusSection(),
                         const SizedBox(height: 16),
                         _buildPrivacyHighlight(context, ref, l10n, isDark),
-                        const SizedBox(height: 16),
-                        _buildQuickActions(context, ref, l10n, isPremium),
                       ],
                     ),
                   ),
@@ -1946,6 +1944,7 @@ class _DashboardTab extends ConsumerWidget {
       (DashboardWidgetKind.contactsSummary, l10n.contacts, Icons.people_outline),
       (DashboardWidgetKind.categoriesSummary, l10n.categories, Icons.category_outlined),
       (DashboardWidgetKind.netWorth, l10n.netWorth, Icons.pie_chart_outline),
+      (DashboardWidgetKind.quickActions, l10n.quickActions, Icons.grid_view_rounded),
     ];
     showModalBottomSheet<void>(
       context: context,
@@ -1975,6 +1974,20 @@ class _DashboardTab extends ConsumerWidget {
                     final checked = configs.any((c) => c.kind == e.$1);
                     final busy = layoutAsync.isLoading;
                     Future<void> apply(bool v) async {
+                      if (e.$1 == DashboardWidgetKind.quickActions && v) {
+                        // Show quick action selection sheet
+                        final selected = await _showQuickActionSelectionSheet(
+                            context, theme, l10n);
+                        if (selected != null) {
+                          await ref
+                              .read(dashboardWidgetLayoutProvider.notifier)
+                              .addWidget(DashboardWidgetConfig(
+                                kind: DashboardWidgetKind.quickActions,
+                                quickActionCodes: selected,
+                              ));
+                        }
+                        return;
+                      }
                       await ref
                           .read(dashboardWidgetLayoutProvider.notifier)
                           .setSummaryKindOnDashboard(e.$1, v);
@@ -2008,6 +2021,79 @@ class _DashboardTab extends ConsumerWidget {
               ),
             );
           },
+        ),
+      ),
+    );
+  }
+
+  static Future<List<String>?> _showQuickActionSelectionSheet(
+      BuildContext context, ThemeData theme, AppLocalizations l10n) async {
+    final actions = [
+      ('voice_add', l10n.voiceAdd, Icons.mic_none_rounded),
+      ('add_transaction', l10n.add, Icons.add),
+      ('scan_receipt', l10n.scan, Icons.document_scanner_outlined),
+      ('accounts', l10n.accounts, Symbols.account_balance),
+      ('contacts', l10n.contacts, Icons.people_outline_rounded),
+      ('receivables', l10n.receivableTag, Symbols.account_balance_wallet),
+      ('payables', l10n.payables, Icons.payment_outlined),
+      ('categories', l10n.categories, Icons.category_outlined),
+      ('analytics', l10n.analytics, Icons.bar_chart_rounded),
+      ('user_guide', l10n.userGuide, Icons.help_outline_rounded),
+      ('app_tour', l10n.appTour, Icons.tour_outlined),
+    ];
+
+    final selected = <String>{};
+    return showModalBottomSheet<List<String>>(
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setState) => SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                child: Text(
+                  l10n.quickActions,
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              Flexible(
+                child: ListView(
+                  shrinkWrap: true,
+                  children: actions.map((e) {
+                    final isSelected = selected.contains(e.$1);
+                    return CheckboxListTile(
+                      secondary: Icon(e.$3),
+                      title: Text(e.$2),
+                      value: isSelected,
+                      onChanged: (v) {
+                        setState(() {
+                          if (v == true) {
+                            selected.add(e.$1);
+                          } else {
+                            selected.remove(e.$1);
+                          }
+                        });
+                      },
+                    );
+                  }).toList(),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: FilledButton(
+                  onPressed: selected.isEmpty
+                      ? null
+                      : () => Navigator.pop(ctx, selected.toList()),
+                  child: Text(l10n.add),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

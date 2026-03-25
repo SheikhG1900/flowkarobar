@@ -25,6 +25,16 @@ import 'package:flowpaisa/features/accounts/domain/models/account_models.dart';
 import 'package:flowpaisa/features/accounts/presentation/providers/accounts_provider.dart';
 import 'package:flowpaisa/features/accounts/presentation/screens/accounts_screen.dart';
 import 'package:flowpaisa/features/analytics/presentation/screens/analytics_screen.dart';
+import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
+import 'package:flowpaisa/features/voice_command/presentation/screens/voice_add_screen.dart';
+import 'package:flowpaisa/features/receipt_scan/presentation/screens/scan_receipt_screen.dart';
+import 'package:flowpaisa/features/transactions/presentation/screens/add_transaction_screen.dart';
+import 'package:flowpaisa/features/settings/presentation/screens/user_guide_screen.dart';
+import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
+import 'package:flowpaisa/core/utils/category_helper.dart';
+import 'package:showcaseview/showcaseview.dart';
+import 'package:flowpaisa/features/tour/domain/tour_service.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flowpaisa/features/whatsapp/domain/deep_link_service.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
@@ -51,6 +61,7 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
     final currencyAsync = ref.watch(currentCurrencyProvider);
     final currency = currencyAsync.value;
     final filter = ref.watch(dashboardFilterProvider);
+    final isPremium = PremiumGate.isPremium(ref);
 
     switch (config.kind) {
       case DashboardWidgetKind.balance:
@@ -192,6 +203,8 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
           loading: () => _buildCardPlaceholder(theme, reorderKey),
           error: (_, __) => const SizedBox.shrink(),
         );
+      case DashboardWidgetKind.quickActions:
+        return _buildQuickActions(context, ref, l10n, isPremium);
       default:
         return const SizedBox.shrink();
     }
@@ -530,6 +543,419 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => const PayablesListScreen()),
+    );
+  }
+
+  Widget _buildQuickActions(BuildContext context, WidgetRef ref,
+      AppLocalizations l10n, bool isPremium) {
+    final theme = Theme.of(context);
+    final activeCashbook = ref.watch(activeCashbookProvider);
+    final activeColor = activeCashbook.color;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  l10n.quickActions,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.more_vert, size: 20),
+                  onPressed: () => _showSummaryActionsSheet(
+                    context,
+                    ref,
+                    () => _removeAt(ref, layoutIndex),
+                    l10n,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          // Grid layout for quick actions (responsive)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                // Calculate optimal item width based on available space
+                const double minItemWidth = 100; // Minimum width per item
+                final double availableWidth = constraints.maxWidth;
+
+                // Calculate how many items can fit
+                int crossAxisCount = (availableWidth / minItemWidth).floor();
+                crossAxisCount =
+                    crossAxisCount.clamp(2, 6); // Min 2, Max 6 columns
+
+                // Calculate actual item width
+                final double itemWidth = availableWidth / crossAxisCount;
+                final double childAspectRatio =
+                    itemWidth / 110; // Height is fixed at ~110px
+
+                return GridView.count(
+                  shrinkWrap: true,
+                  padding: EdgeInsets.zero,
+                  physics: const NeverScrollableScrollPhysics(),
+                  crossAxisCount: crossAxisCount,
+                  mainAxisSpacing: 10,
+                  crossAxisSpacing: 10,
+                  childAspectRatio: childAspectRatio,
+                  children: [
+                    if (config.quickActionCodes == null ||
+                        config.quickActionCodes!.contains('voice_add'))
+                      _QuickActionButton(
+                        icon: Icons.mic_none_rounded,
+                        label: l10n.voiceAdd,
+                        gradient: AppColors.transactionsSectionGradient,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => VoiceAddScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                    if (config.quickActionCodes == null ||
+                        config.quickActionCodes!.contains('add_transaction'))
+                      _QuickActionButton(
+                        icon: Icons.add,
+                        label: l10n.add,
+                        gradient: AppColors.transactionsSectionGradient,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  const AddTransactionScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                    if (config.quickActionCodes == null ||
+                        config.quickActionCodes!.contains('scan_receipt'))
+                      _QuickActionButton(
+                        icon: Icons.document_scanner_outlined,
+                        label: l10n.scan,
+                        gradient: AppColors.transactionsSectionGradient,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ScanReceiptScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                    if (config.quickActionCodes == null ||
+                        config.quickActionCodes!.contains('accounts'))
+                      _QuickActionButton(
+                        icon: Symbols.account_balance,
+                        label: l10n.accounts,
+                        gradient: AppColors.dashboardSectionGradient,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const AccountsScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                    if (config.quickActionCodes == null ||
+                        config.quickActionCodes!.contains('contacts'))
+                      _QuickActionButton(
+                        icon: Icons.people_outline_rounded,
+                        label: l10n.contacts,
+                        gradient: AppColors.getPrimaryGradient(
+                            theme.colorScheme.primary),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const ContactsListScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                    if (config.quickActionCodes == null ||
+                        config.quickActionCodes!.contains('receivables'))
+                      _QuickActionButton(
+                        icon: Symbols.account_balance_wallet,
+                        label: l10n.receivableTag,
+                        gradient: AppColors.receivablesSectionGradient,
+                        onTap: () {
+                          // Clear filters and search before navigating
+                          final pendingNotifier = ref.read(
+                              receivablesPaginatedProvider('PENDING').notifier);
+                          pendingNotifier.updateSearchQuery('');
+                          pendingNotifier.applyFilters(ReceivableFilters());
+
+                          final overdueNotifier = ref.read(
+                              receivablesPaginatedProvider('OVERDUE').notifier);
+                          overdueNotifier.updateSearchQuery('');
+                          overdueNotifier.applyFilters(ReceivableFilters());
+
+                          final receivedNotifier = ref.read(
+                              receivablesPaginatedProvider('RECEIVED')
+                                  .notifier);
+                          receivedNotifier.updateSearchQuery('');
+                          receivedNotifier.applyFilters(ReceivableFilters());
+
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  const ReceivablesListScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                    if (config.quickActionCodes == null ||
+                        config.quickActionCodes!.contains('payables'))
+                      _QuickActionButton(
+                        icon: Icons.payment_outlined,
+                        label: l10n.payables,
+                        gradient: AppColors.payablesSectionGradient,
+                        onTap: () {
+                          // Clear filters and search before navigating
+                          final pendingNotifier = ref.read(
+                              payablesPaginatedProvider('PENDING').notifier);
+                          pendingNotifier.updateSearchQuery('');
+                          pendingNotifier.applyFilters(PayableFilters());
+
+                          final overdueNotifier = ref.read(
+                              payablesPaginatedProvider('OVERDUE').notifier);
+                          overdueNotifier.updateSearchQuery('');
+                          overdueNotifier.applyFilters(PayableFilters());
+
+                          final paidNotifier = ref
+                              .read(payablesPaginatedProvider('PAID').notifier);
+                          paidNotifier.updateSearchQuery('');
+                          paidNotifier.applyFilters(PayableFilters());
+
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const PayablesListScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                    if (config.quickActionCodes == null ||
+                        config.quickActionCodes!.contains('categories'))
+                      _QuickActionButton(
+                        icon: Icons.category_outlined,
+                        label: l10n.categories,
+                        gradient: AppColors.getSecondaryGradient(
+                            theme.colorScheme.primary),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  const CategoriesListScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                    if (config.quickActionCodes == null ||
+                        config.quickActionCodes!.contains('analytics'))
+                      _QuickActionButton(
+                        icon: Icons.bar_chart_rounded,
+                        label: l10n.analytics,
+                        gradient: AppColors.analyticsSectionGradient,
+                        showLock: !isPremium,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const AnalyticsScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                    if (config.quickActionCodes == null ||
+                        config.quickActionCodes!.contains('user_guide'))
+                      _QuickActionButton(
+                        icon: Icons.help_outline_rounded,
+                        label: l10n.userGuide,
+                        gradient: AppColors.getSecondaryGradient(
+                            theme.colorScheme.secondary),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const UserGuideScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                    if (config.quickActionCodes == null ||
+                        config.quickActionCodes!.contains('app_tour'))
+                      _QuickActionButton(
+                        icon: Icons.tour_outlined,
+                        label: l10n.appTour,
+                        gradient: AppColors.getPrimaryGradient(activeColor),
+                        onTap: () {
+                          // Start the dashboard tour
+                          try {
+                            final showcaseState = ShowCaseWidget.of(context);
+                            showcaseState
+                                .startShowCase(TourService.dashboardTourKeys);
+                          } catch (e) {
+                            debugPrint('Error starting tour: $e');
+                          }
+                        },
+                      ),
+                  ],
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: 24),
+        ],
+      ),
+    );
+  }
+}
+
+class _QuickActionButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Gradient gradient;
+  final VoidCallback onTap;
+  final bool showLock;
+
+  const _QuickActionButton({
+    required this.icon,
+    required this.label,
+    required this.gradient,
+    required this.onTap,
+    this.showLock = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return _AnimatedPressScale(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 0),
+        decoration: BoxDecoration(
+          gradient: gradient.withOpacity(0.2),
+          border: Border.all(
+              color: gradient.colors.first.withValues(alpha: 0.5), width: 1),
+          borderRadius: const BorderRadiusDirectional.only(
+            topStart: Radius.circular(20),
+            bottomEnd: Radius.circular(20),
+          ),
+          // Diagonal beveled
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Stack(
+              alignment: Alignment.topRight,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                        color: gradient.colors.first.withValues(alpha: 0.8),
+                        width: 1),
+                    color: gradient.colors.first.withValues(alpha: 0.2 / 1.0),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(icon, size: 24),
+                ),
+                if (showLock)
+                  const Positioned(
+                    top: 0,
+                    right: 0,
+                    child: Icon(Icons.lock, size: 12, color: Colors.white),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontWeight: FontWeight.w700,
+                fontSize: 14,
+                letterSpacing: 0.5,
+                shadows: [
+                  Shadow(
+                    color: Colors.black26,
+                    offset: Offset(0, 1),
+                    blurRadius: 2,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Helper widget for press & scale micro-animation
+class _AnimatedPressScale extends StatefulWidget {
+  final Widget child;
+  final VoidCallback onTap;
+
+  const _AnimatedPressScale({required this.child, required this.onTap});
+
+  @override
+  State<_AnimatedPressScale> createState() => _AnimatedPressScaleState();
+}
+
+class _AnimatedPressScaleState extends State<_AnimatedPressScale>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 100),
+      lowerBound: 0.0,
+      upperBound: 0.05,
+    );
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.95).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => _controller.forward(),
+      onTapUp: (_) => _controller.reverse(),
+      onTapCancel: () => _controller.reverse(),
+      onTap: widget.onTap,
+      child: ScaleTransition(
+        scale: _scaleAnimation,
+        child: widget.child,
+      ),
     );
   }
 }
