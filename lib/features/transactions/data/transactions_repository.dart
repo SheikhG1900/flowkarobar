@@ -868,19 +868,6 @@ class TransactionsRepository {
       }
     }
 
-    // Default: only include processed transactions, UNLESS explicitly asked for NOT_PROCESSED.
-    if (!hasNotProcessedFilter && filters.statusCodes?.contains('PROCESSED') != true) {
-      // If no specific status filter is applied, we follow the default rule:
-      // only include processed transactions for income/expense.
-      // However, if the user is filtering by other statuses (like PAID/PAYABLE),
-      // those already imply certain processed states or are handled by statusExpr.
-      // To be safe and consistent with the requirement:
-      // "by default in the filter it should not be included for expense and income calculation"
-      if (filters.statusCodes == null || filters.statusCodes!.isEmpty) {
-        query.where(_database.transactions.processedDate.isNotNull());
-      }
-    }
-
     query.where(_database.transactions.isDeleted.equals(false));
 
     query.orderBy([OrderingTerm.desc(_database.transactions.date)]);
@@ -1027,13 +1014,6 @@ class TransactionsRepository {
 
       if (statusExpr != null) {
         query.where(statusExpr);
-      }
-    }
-
-    // Default: only include processed transactions, UNLESS explicitly asked for NOT_PROCESSED.
-    if (!hasNotProcessedFilter && filters.statusCodes?.contains('PROCESSED') != true) {
-      if (filters.statusCodes == null || filters.statusCodes!.isEmpty) {
-        query.where(_database.transactions.processedDate.isNotNull());
       }
     }
 

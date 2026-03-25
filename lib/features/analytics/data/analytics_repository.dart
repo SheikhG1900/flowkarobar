@@ -449,6 +449,10 @@ class AnalyticsRepository {
   Future<double> _getTransactionSumByFilter(
       TransactionFilters filters, String type) async {
     if (filters.type != null && filters.type != type) return 0.0;
+
+    final query = _database.selectOnly(_database.transactions);
+    query.addColumns([_database.transactions.amount.sum()]);
+
     Expression<bool> whereExpr = _database.transactions.type.equals(type) &
         _database.transactions.isDeleted.equals(false);
     if (filters.startDate != null) {
@@ -486,14 +490,16 @@ class AnalyticsRepository {
               .isSmallerOrEqualValue(filters.maxAmount!);
     }
 
-    // Status-based filters: PAID / RECEIVED / PAYABLE / RECEIVABLE / AUTO / SCHEDULED / NOT_PROCESSED
+    // Status-based filters: PAID / RECEIVED / PAYABLE / RECEIVABLE / AUTO / SCHEDULED / NOT_PROCESSED / PROCESSED
     bool hasNotProcessedFilter = false;
+    bool hasProcessedFilter = false;
     if (filters.statusCodes != null && filters.statusCodes!.isNotEmpty) {
       final statuses = filters.statusCodes!;
       Expression<bool>? statusExpr;
 
       bool has(String code) => statuses.contains(code);
       hasNotProcessedFilter = has('NOT_PROCESSED');
+      hasProcessedFilter = has('PROCESSED');
 
       // Auto-generated transactions
       if (has('AUTO')) {
@@ -507,6 +513,12 @@ class AnalyticsRepository {
         statusExpr = statusExpr == null ? expr : (statusExpr | expr);
       }
 
+      // PROCESSED transactions
+      if (has('PROCESSED')) {
+        final expr = _database.transactions.processedDate.isNotNull();
+        statusExpr = statusExpr == null ? expr : (statusExpr | expr);
+      }
+
       // NOT_PROCESSED transactions
       if (has('NOT_PROCESSED')) {
         final expr = _database.transactions.processedDate.isNull();
@@ -515,6 +527,15 @@ class AnalyticsRepository {
 
       // Join to payables/receivables to filter by their status
       // PAID / PAYABLE relate to payables
+      if (has('PAID') || has('PAYABLE')) {
+        query.join([
+          leftOuterJoin(
+            _database.payables,
+            _database.payables.uuid
+                .equalsExp(_database.transactions.linkedPayableUuid),
+          ),
+        ]);
+      }
       if (has('PAID')) {
         final expr = _database.transactions.paidRelationship
                 .isIn(['PAID_BY', 'RECEIVED_FROM']) &
@@ -529,6 +550,15 @@ class AnalyticsRepository {
       }
 
       // RECEIVED / RECEIVABLE relate to receivables
+      if (has('RECEIVED') || has('RECEIVABLE')) {
+        query.join([
+          leftOuterJoin(
+            _database.receivables,
+            _database.receivables.uuid
+                .equalsExp(_database.transactions.linkedReceivableUuid),
+          ),
+        ]);
+      }
       if (has('RECEIVED')) {
         final expr = _database.transactions.paidRelationship
                 .isIn(['PAID_FOR', 'WILL_RECEIVE']) &
@@ -547,15 +577,13 @@ class AnalyticsRepository {
       }
     }
 
-    // Only include transactions that have been processed, 
+    // Default: only include processed transactions, 
     // UNLESS the user explicitly asked for NOT_PROCESSED transactions.
     if (!hasNotProcessedFilter) {
       whereExpr = whereExpr & _database.transactions.processedDate.isNotNull();
     }
 
-    final query = _database.selectOnly(_database.transactions)
-      ..addColumns([_database.transactions.amount.sum()])
-      ..where(whereExpr);
+    query.where(whereExpr);
     final row = await query.getSingle();
     return row.read(_database.transactions.amount.sum()) ?? 0.0;
   }
