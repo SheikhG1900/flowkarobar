@@ -19,6 +19,8 @@ import 'dart:async';
 import 'package:flowpaisa/features/payables/presentation/providers/payables_provider.dart';
 import 'package:flowpaisa/features/receivables/presentation/providers/receivables_provider.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
+import 'package:flowpaisa/features/accounts/presentation/providers/accounts_provider.dart';
+import 'package:flowpaisa/features/categories/presentation/providers/categories_provider.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -570,7 +572,9 @@ class BackupNotifier extends Notifier<BackupState> {
       final streams = [
         db.select(db.categories).watch(),
         db.select(db.contacts).watch(),
+        db.select(db.accounts).watch(),
         db.select(db.transactions).watch(),
+        db.select(db.accountTransfers).watch(),
         db.select(db.receivables).watch(),
         db.select(db.payables).watch(),
         db.select(db.reminders).watch(),
@@ -687,7 +691,9 @@ class BackupNotifier extends Notifier<BackupState> {
     final tables = [
       'categories',
       'contacts',
+      'accounts',
       'transactions',
+      'account_transfers',
       'receivables',
       'payables',
       'reminders',
@@ -800,16 +806,18 @@ class BackupNotifier extends Notifier<BackupState> {
           // CRITICAL: Notify Drift that tables might have changed in the background.
           // Stream-based providers (dashboard, recent transactions) will re-query and
           // emit new data without invalidating Riverpod state, avoiding dashboard flicker.
-          db.markTablesUpdated({
-            db.categories,
-            db.contacts,
-            db.transactions,
-            db.receivables,
-            db.payables,
-            db.reminders,
-            db.appCurrencies,
-            db.transactionSchedules,
-          });
+    db.markTablesUpdated({
+      db.categories,
+      db.contacts,
+      db.accounts,
+      db.transactions,
+      db.accountTransfers,
+      db.receivables,
+      db.payables,
+      db.reminders,
+      db.appCurrencies,
+      db.transactionSchedules,
+    });
 
           // If we just finished a sync (transitioned from syncing to success), trigger full refresh
           if (wasSyncing && isNowSuccess) {
@@ -876,7 +884,9 @@ class BackupNotifier extends Notifier<BackupState> {
     db.markTablesUpdated({
       db.categories,
       db.contacts,
+      db.accounts,
       db.transactions,
+      db.accountTransfers,
       db.receivables,
       db.payables,
       db.reminders,
@@ -885,6 +895,10 @@ class BackupNotifier extends Notifier<BackupState> {
     });
 
     // FORCE REFRESH: Explicitly tell Riverpod to discard cached state
+    ref.invalidate(categoriesListProvider);
+    ref.invalidate(accountsWithBalanceProvider);
+    ref.invalidate(accountsStreamProvider);
+    ref.invalidate(allTransfersWithDetailsProvider);
     ref.invalidate(allTransactionsProvider);
     ref.invalidate(dashboardStatsProvider);
     ref.invalidate(recentTransactionsProvider);
@@ -1540,7 +1554,9 @@ class BackupNotifier extends Notifier<BackupState> {
       final tables = [
         'categories',
         'contacts',
+        'accounts',
         'transactions',
+        'account_transfers',
         'receivables',
         'payables',
         'reminders',

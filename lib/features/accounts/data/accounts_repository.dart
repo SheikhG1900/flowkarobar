@@ -39,14 +39,14 @@ class AccountsRepository {
 
   Stream<List<Account>> watchAllAccounts() {
     return (_db.select(_db.accounts)
-          ..where((a) => a.isDeleted.equals(false) & a.isActive.equals(true))
+          ..where((a) => a.isDeleted.equals(false))
           ..orderBy([(a) => OrderingTerm.asc(a.createdAt)]))
         .watch();
   }
 
   Future<List<Account>> getAllAccounts() {
     return (_db.select(_db.accounts)
-          ..where((a) => a.isDeleted.equals(false) & a.isActive.equals(true))
+          ..where((a) => a.isDeleted.equals(false))
           ..orderBy([(a) => OrderingTerm.asc(a.createdAt)]))
         .get();
   }

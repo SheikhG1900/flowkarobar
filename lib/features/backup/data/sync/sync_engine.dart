@@ -706,8 +706,8 @@ class SyncEngine {
             final isDefault =
                 row['is_default'] == 1 || row['isDefault'] == true;
             if (isDefault) {
-              // Skip default categories/currencies from cloud if they already exist locally
-              // This prevents duplicates since local defaults have fixed UUIDs now
+              // For default categories/currencies, we still want to update their fields
+              // (like budget fields) if they already exist, but skip INSERT to avoid duplicates.
               final uuid = row['uuid'];
               final existing = await _db.customSelect(
                 'SELECT COUNT(*) as count FROM $tableName WHERE uuid = ?',
@@ -717,9 +717,11 @@ class SyncEngine {
               if ((existing.data['count'] as num).toInt() > 0) {
                 if (kDebugMode) {
                   print(
-                      'SyncEngine: Skipping default $tableName entry with UUID $uuid (already exists)');
+                      'SyncEngine: Updating existing default $tableName entry with UUID $uuid');
                 }
-                continue;
+                // Fall through to _upsertRow which handles ON CONFLICT DO UPDATE
+              } else {
+                // If it doesn't exist, we let _upsertRow handle the INSERT
               }
             }
           }
@@ -740,47 +742,47 @@ class SyncEngine {
       // We map string table names to Drift's TableInfo objects
       final tableInfos = updatedTableNames
           .map((name) {
-              switch (name) {
-                case 'categories':
-                  return _db.categories;
-                case 'contacts':
-                  return _db.contacts;
-                case 'accounts':
-                  return _db.accounts;
-                case 'transactions':
-                  return _db.transactions;
-                case 'account_transfers':
-                  return _db.accountTransfers;
-                case 'receivables':
-                  return _db.receivables;
-                case 'payables':
-                  return _db.payables;
-                case 'reminders':
-                  return _db.reminders;
-                case 'app_currencies':
-                  return _db.appCurrencies;
-                case 'transaction_schedules':
-                  return _db.transactionSchedules;
-                case 'user_preferences':
-                  return _db.userPreferences;
-                default:
-                  return null;
-              }
-            })
-            .whereType<TableInfo>()
-            .toSet();
-
-          if (tableInfos.isNotEmpty) {
-            _db.markTablesUpdated(tableInfos);
-
-            // CRITICAL: Force a WAL checkpoint to ensure data is visible to other connections
-            // and broadcast a change event that Riverpod can pick up.
-            try {
-              await _db.customStatement('PRAGMA wal_checkpoint(FULL);');
-            } catch (e) {
-              // Ignore errors if WAL mode is not enabled
+            switch (name) {
+              case 'categories':
+                return _db.categories;
+              case 'contacts':
+                return _db.contacts;
+              case 'accounts':
+                return _db.accounts;
+              case 'transactions':
+                return _db.transactions;
+              case 'account_transfers':
+                return _db.accountTransfers;
+              case 'receivables':
+                return _db.receivables;
+              case 'payables':
+                return _db.payables;
+              case 'reminders':
+                return _db.reminders;
+              case 'app_currencies':
+                return _db.appCurrencies;
+              case 'transaction_schedules':
+                return _db.transactionSchedules;
+              case 'user_preferences':
+                return _db.userPreferences;
+              default:
+                return null;
             }
-          }
+          })
+          .whereType<TableInfo>()
+          .toSet();
+
+      if (tableInfos.isNotEmpty) {
+        _db.markTablesUpdated(tableInfos);
+
+        // CRITICAL: Force a WAL checkpoint to ensure data is visible to other connections
+        // and broadcast a change event that Riverpod can pick up.
+        try {
+          await _db.customStatement('PRAGMA wal_checkpoint(FULL);');
+        } catch (e) {
+          // Ignore errors if WAL mode is not enabled
+        }
+      }
     }
   }
 
@@ -887,9 +889,8 @@ class SyncEngine {
         }
         for (final row in rows) {
           final idColumn = tableName == 'user_preferences' ? 'key' : 'uuid';
-          final idValue = tableName == 'user_preferences'
-              ? row['key']
-              : row['uuid'];
+          final idValue =
+              tableName == 'user_preferences' ? row['key'] : row['uuid'];
           await _db.customStatement(
             'UPDATE $tableName SET is_not_synced = 0 WHERE $idColumn = ?',
             [idValue],
@@ -991,8 +992,11 @@ class SyncEngine {
     // Map camelCase keys from JSON back to snake_case for SQL
     final Map<String, dynamic> sqlData = {};
     rowData.forEach((key, value) {
-      final snakeKey = key.replaceAllMapped(
-          RegExp(r'[A-Z]'), (match) => '_${match.group(0)!.toLowerCase()}');
+      // Convert camelCase to snake_case (e.g., monthlyBudget -> monthly_budget)
+      final snakeKey = key
+          .replaceAllMapped(RegExp(r'([a-z0-9])([A-Z])'),
+              (match) => '${match.group(1)}_${match.group(2)!.toLowerCase()}')
+          .toLowerCase();
       sqlData[snakeKey] = value;
     });
 
@@ -1005,8 +1009,7 @@ class SyncEngine {
     final columns = sqlData.keys.join(', ');
     final placeholders = List.filled(sqlData.length, '?').join(', ');
     final updates = sqlData.keys.map((k) => '$k = EXCLUDED.$k').join(', ');
-    final conflictColumn =
-        tableName == 'user_preferences' ? 'key' : 'uuid';
+    final conflictColumn = tableName == 'user_preferences' ? 'key' : 'uuid';
 
     await _runWithRetryOnBusy(() async {
       try {
