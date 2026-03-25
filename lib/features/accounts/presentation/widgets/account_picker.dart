@@ -10,6 +10,7 @@ import 'package:flowpaisa/features/accounts/presentation/providers/accounts_prov
 import 'package:flowpaisa/features/accounts/presentation/screens/add_edit_account_screen.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
+import 'package:flowpaisa/shared/widgets/dual_amount_progress_bar.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 /// Non-null when the user confirmed a choice (including explicit "No account").
@@ -111,63 +112,78 @@ class AccountPickerField extends ConsumerWidget {
             width: isSelected ? 1.5 : 1,
           ),
         ),
-        child: Row(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: iconCircleBg,
-                shape: BoxShape.circle,
-              ),
-              alignment: Alignment.center,
-              child: isSelected
-                  ? Icon(
-                      _accountIcon(selectedAccount!),
-                      color: accent,
-                      size: 20,
-                    )
-                  : Icon(
-                      Symbols.account_balance_wallet,
-                      color: theme.colorScheme.onSurfaceVariant,
-                      size: 20,
-                    ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    label ?? l10n.account,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
+            Row(
+              crossAxisAlignment: isSelected
+                  ? CrossAxisAlignment.start
+                  : CrossAxisAlignment.center,
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: iconCircleBg,
+                    shape: BoxShape.circle,
                   ),
-                  const SizedBox(height: 4),
-                  isSelected
-                      ? _SelectedAccountBalance(
+                  alignment: Alignment.center,
+                  child: isSelected
+                      ? Icon(
+                          _accountIcon(selectedAccount!),
+                          color: accent,
+                          size: 20,
+                        )
+                      : Icon(
+                          Symbols.account_balance_wallet,
+                          color: theme.colorScheme.onSurfaceVariant,
+                          size: 20,
+                        ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: isSelected
+                      ? _SelectedAccountInfo(
                           account: selectedAccount!,
                           nameColor: accent!,
+                          label: label,
                         )
-                      : Text(
-                          hasAccounts
-                              ? l10n.noAccountSelected
-                              : l10n.noAccounts,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
+                      : Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              label ?? l10n.account,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              hasAccounts
+                                  ? l10n.noAccountSelected
+                                  : l10n.noAccounts,
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
                         ),
-                ],
-              ),
+                ),
+                if (isSelected)
+                  IconButton(
+                    icon: Icon(Icons.close, size: 20, color: accent),
+                    onPressed: () => onChanged(null),
+                  )
+                else
+                  const Icon(Icons.arrow_forward_ios, size: 16),
+              ],
             ),
             if (isSelected)
-              IconButton(
-                icon: Icon(Icons.close, size: 20, color: accent),
-                onPressed: () => onChanged(null),
-              )
-            else
-              const Icon(Icons.arrow_forward_ios, size: 16),
+              _SelectedAccountProgressBar(
+                account: selectedAccount!,
+                accentColor: accent!,
+              ),
           ],
         ),
       ),
@@ -209,13 +225,15 @@ class AccountPickerField extends ConsumerWidget {
   }
 }
 
-class _SelectedAccountBalance extends ConsumerWidget {
+class _SelectedAccountInfo extends ConsumerWidget {
   final Account account;
   final Color nameColor;
+  final String? label;
 
-  const _SelectedAccountBalance({
+  const _SelectedAccountInfo({
     required this.account,
     required this.nameColor,
+    this.label,
   });
 
   @override
@@ -224,6 +242,7 @@ class _SelectedAccountBalance extends ConsumerWidget {
     final symbol = ref.watch(currencySymbolProvider);
     final decimals = ref.watch(currencyDecimalPlacesProvider);
     final repo = ref.watch(accountsRepositoryProvider);
+    final l10n = AppLocalizations.of(context)!;
 
     return FutureBuilder<double>(
       future: repo.getAccountBalance(account),
@@ -235,30 +254,92 @@ class _SelectedAccountBalance extends ConsumerWidget {
             ? AppColors.expenseColor
             : AppColors.incomeColor;
 
-        return Row(
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
-              child: Text(
-                account.name,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: nameColor,
-                ),
+            Text(
+              label ?? l10n.account,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
-            if (snapshot.hasData)
-              Text(
-                AmountFormatter.formatWithCurrency(
-                  balance.abs() * (isNegative || type.isCreditCard ? -1 : 1),
-                  symbol,
-                  decimals,
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    account.name,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: nameColor,
+                    ),
+                  ),
                 ),
-                style: theme.textTheme.titleSmall?.copyWith(
-                  color: balanceColor,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+                if (snapshot.hasData)
+                  Text(
+                    AmountFormatter.formatWithCurrency(
+                      balance.abs() * (isNegative || type.isCreditCard ? -1 : 1),
+                      symbol,
+                      decimals,
+                    ),
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      color: balanceColor,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+              ],
+            ),
           ],
+        );
+      },
+    );
+  }
+}
+
+class _SelectedAccountProgressBar extends ConsumerWidget {
+  final Account account;
+  final Color accentColor;
+
+  const _SelectedAccountProgressBar({
+    required this.account,
+    required this.accentColor,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final symbol = ref.watch(currencySymbolProvider);
+    final decimals = ref.watch(currencyDecimalPlacesProvider);
+    final repo = ref.watch(accountsRepositoryProvider);
+    final l10n = AppLocalizations.of(context)!;
+    final type = AccountType.fromValue(account.type);
+
+    if (!type.isCreditCard) return const SizedBox.shrink();
+
+    return FutureBuilder<AccountWithBalance?>(
+      future: repo.getAllAccountsWithBalance().then((list) =>
+          list.where((a) => a.account.uuid == account.uuid).firstOrNull),
+      builder: (context, snapshot) {
+        final awb = snapshot.data;
+        if (awb == null || (awb.account.creditLimit ?? 0) <= 0) {
+          return const SizedBox.shrink();
+        }
+
+        return Padding(
+          padding: const EdgeInsets.only(top: 12),
+          child: DualAmountProgressBar(
+            leftLabel: l10n.outstanding,
+            leftAmount: awb.balance < 0 ? awb.balance.abs() : 0.0,
+            rightLabel: l10n.availableCredit,
+            rightAmount: awb.availableCredit ?? 0.0,
+            symbol: symbol,
+            decimals: decimals,
+            filledColor: awb.balance < 0 &&
+                    awb.balance.abs() / (awb.account.creditLimit ?? 1) > 0.8
+                ? AppColors.expenseColor
+                : accentColor,
+            compact: true,
+          ),
         );
       },
     );

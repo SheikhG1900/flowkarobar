@@ -1543,34 +1543,51 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                             ),
                           ),
                           const SizedBox(width: 16),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                l10n.category,
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: theme.colorScheme.onSurfaceVariant,
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  l10n.category,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                _selectedCategory != null
-                                    ? CategoryHelper.getCategoryName(
-                                        _selectedCategory!, l10n)
-                                    : l10n.selectCategory,
-                                style: theme.textTheme.titleMedium?.copyWith(
-                                  fontWeight: _selectedCategory != null
-                                      ? FontWeight.bold
-                                      : FontWeight.normal,
-                                  color: _selectedCategory != null
-                                      ? theme.colorScheme.onSurface
-                                      : theme.colorScheme.onSurfaceVariant,
+                                const SizedBox(height: 4),
+                                Text(
+                                  _selectedCategory != null
+                                      ? CategoryHelper.getCategoryName(
+                                          _selectedCategory!, l10n)
+                                      : l10n.selectCategory,
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    fontWeight: _selectedCategory != null
+                                        ? FontWeight.bold
+                                        : FontWeight.normal,
+                                    color: _selectedCategory != null
+                                        ? theme.colorScheme.onSurface
+                                        : theme.colorScheme.onSurfaceVariant,
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                          const Spacer(),
-                          const Icon(Icons.arrow_forward_ios, size: 16),
+                          if (_selectedCategory != null)
+                            IconButton(
+                              icon: Icon(Icons.close,
+                                  size: 20,
+                                  color: _selectedCategory?.color != null
+                                      ? Color(int.parse(_selectedCategory!
+                                          .color!
+                                          .replaceAll('#', '0xFF')))
+                                      : theme.colorScheme.primary),
+                              onPressed: () {
+                                setState(() {
+                                  _selectedCategory = null;
+                                });
+                              },
+                            )
+                          else
+                            const Icon(Icons.arrow_forward_ios, size: 16),
                         ],
                       ),
                       Consumer(

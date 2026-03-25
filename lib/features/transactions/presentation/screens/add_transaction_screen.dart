@@ -2026,8 +2026,26 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                                         ],
                                       ),
                                     ),
-                                    const Icon(Icons.arrow_forward_ios,
-                                        size: 16),
+                                    if (_selectedCategory != null)
+                                      IconButton(
+                                        icon: Icon(Icons.close,
+                                            size: 20,
+                                            color: _selectedCategory?.color !=
+                                                    null
+                                                ? Color(int.parse(
+                                                    _selectedCategory!.color!
+                                                        .replaceAll(
+                                                            '#', '0xFF')))
+                                                : theme.colorScheme.primary),
+                                        onPressed: () {
+                                          setState(() {
+                                            _selectedCategory = null;
+                                          });
+                                        },
+                                      )
+                                    else
+                                      const Icon(Icons.arrow_forward_ios,
+                                          size: 16),
                                   ],
                                 ),
                                 hintAsync.when(

@@ -702,6 +702,7 @@ class _CategoryCard extends ConsumerWidget {
                             child: Text(
                               LocalizationHelper.getLocalizedCategoryName(
                                   context, category.name),
+                              overflow: TextOverflow.ellipsis,
                               style: theme.textTheme.titleMedium?.copyWith(
                                 fontWeight: FontWeight.w600,
                               ),
