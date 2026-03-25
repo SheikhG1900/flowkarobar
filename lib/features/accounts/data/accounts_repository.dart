@@ -529,6 +529,7 @@ class AccountsRepository {
             ..where(_db.transactions.accountUuid.equals(acc.uuid))
             ..where(_db.transactions.type.equals('EXPENSE'))
             ..where(_db.transactions.isDeleted.equals(false))
+            ..where(_db.transactions.processedDate.isNotNull())
             ..where(_db.transactions.date.isBetweenValues(start, end)))
           .getSingle();
       final incomeRow = await (_db.selectOnly(_db.transactions)
@@ -536,6 +537,7 @@ class AccountsRepository {
             ..where(_db.transactions.accountUuid.equals(acc.uuid))
             ..where(_db.transactions.type.equals('INCOME'))
             ..where(_db.transactions.isDeleted.equals(false))
+            ..where(_db.transactions.processedDate.isNotNull())
             ..where(_db.transactions.date.isBetweenValues(start, end)))
           .getSingle();
       final expense =

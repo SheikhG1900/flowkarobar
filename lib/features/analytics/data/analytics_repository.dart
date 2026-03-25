@@ -20,6 +20,7 @@ class AnalyticsRepository {
       ..where(_database.transactions.date.isBetweenValues(startDate, endDate))
       ..where(_database.transactions.type.equals('EXPENSE'))
       ..where(_database.transactions.isDeleted.equals(false))
+      ..where(_database.transactions.processedDate.isNotNull())
       ..groupBy([_database.transactions.categoryUuid]);
     final results = await query.get();
     final List<CategoryExpense> categoryExpenses = [];
@@ -74,34 +75,13 @@ class AnalyticsRepository {
 
   Future<double> _getTotalByType(
       String type, DateTime start, DateTime end) async {
-    // Exclude inactive: do not include expense/income linked to PENDING payable/receivable
+    // Only include transactions that have been processed
     Expression<bool> whereExpr = _database.transactions.type.equals(type) &
         _database.transactions.date.isBetweenValues(start, end) &
-        _database.transactions.isDeleted.equals(false);
-    if (type == 'EXPENSE') {
-      whereExpr = whereExpr &
-          (_database.transactions.linkedPayableUuid.isNull() |
-              _database.payables.status.equals('PAID'));
-    }
-    if (type == 'INCOME') {
-      whereExpr = whereExpr &
-          (_database.transactions.linkedReceivableUuid.isNull() |
-              _database.receivables.status.equals('RECEIVED'));
-    }
+        _database.transactions.isDeleted.equals(false) &
+        _database.transactions.processedDate.isNotNull();
     final result = await (_database.selectOnly(_database.transactions)
           ..addColumns([_database.transactions.amount.sum()])
-          ..join([
-            leftOuterJoin(
-              _database.payables,
-              _database.payables.uuid
-                  .equalsExp(_database.transactions.linkedPayableUuid),
-            ),
-            leftOuterJoin(
-              _database.receivables,
-              _database.receivables.uuid
-                  .equalsExp(_database.transactions.linkedReceivableUuid),
-            ),
-          ])
           ..where(whereExpr))
         .getSingle();
     return result.read(_database.transactions.amount.sum()) ?? 0.0;
@@ -559,32 +539,11 @@ class AnalyticsRepository {
       }
     }
 
-    // Exclude inactive: do not include expense/income linked to PENDING payable/receivable
-    if (type == 'EXPENSE') {
-      whereExpr = whereExpr &
-          (_database.transactions.linkedPayableUuid.isNull() |
-              _database.payables.status.equals('PAID'));
-    }
-    if (type == 'INCOME') {
-      whereExpr = whereExpr &
-          (_database.transactions.linkedReceivableUuid.isNull() |
-              _database.receivables.status.equals('RECEIVED'));
-    }
+    // Only include transactions that have been processed
+    whereExpr = whereExpr & _database.transactions.processedDate.isNotNull();
 
     final query = _database.selectOnly(_database.transactions)
       ..addColumns([_database.transactions.amount.sum()])
-      ..join([
-        leftOuterJoin(
-          _database.payables,
-          _database.payables.uuid
-              .equalsExp(_database.transactions.linkedPayableUuid),
-        ),
-        leftOuterJoin(
-          _database.receivables,
-          _database.receivables.uuid
-              .equalsExp(_database.transactions.linkedReceivableUuid),
-        ),
-      ])
       ..where(whereExpr);
     final row = await query.getSingle();
     return row.read(_database.transactions.amount.sum()) ?? 0.0;
@@ -630,46 +589,20 @@ class AnalyticsRepository {
           ..where(_database.receivables.status.equals('PENDING')))
         .getSingle()
         .then((row) => row.read(_database.receivables.amount.sum()) ?? 0.0);
-    // Exclude inactive: do not include expense/income linked to PENDING payable/receivable
+    // Only include transactions that have been processed
     final expenseWhere = _database.transactions.type.equals('EXPENSE') &
         _database.transactions.isDeleted.equals(false) &
-        (_database.transactions.linkedPayableUuid.isNull() |
-            _database.payables.status.equals('PAID'));
+        _database.transactions.processedDate.isNotNull();
     final totalExpense = await (_database.selectOnly(_database.transactions)
           ..addColumns([_database.transactions.amount.sum()])
-          ..join([
-            leftOuterJoin(
-              _database.payables,
-              _database.payables.uuid
-                  .equalsExp(_database.transactions.linkedPayableUuid),
-            ),
-            leftOuterJoin(
-              _database.receivables,
-              _database.receivables.uuid
-                  .equalsExp(_database.transactions.linkedReceivableUuid),
-            ),
-          ])
           ..where(expenseWhere))
         .getSingle()
         .then((row) => row.read(_database.transactions.amount.sum()) ?? 0.0);
     final incomeWhere = _database.transactions.type.equals('INCOME') &
         _database.transactions.isDeleted.equals(false) &
-        (_database.transactions.linkedReceivableUuid.isNull() |
-            _database.receivables.status.equals('RECEIVED'));
+        _database.transactions.processedDate.isNotNull();
     final totalIncome = await (_database.selectOnly(_database.transactions)
           ..addColumns([_database.transactions.amount.sum()])
-          ..join([
-            leftOuterJoin(
-              _database.payables,
-              _database.payables.uuid
-                  .equalsExp(_database.transactions.linkedPayableUuid),
-            ),
-            leftOuterJoin(
-              _database.receivables,
-              _database.receivables.uuid
-                  .equalsExp(_database.transactions.linkedReceivableUuid),
-            ),
-          ])
           ..where(incomeWhere))
         .getSingle()
         .then((row) => row.read(_database.transactions.amount.sum()) ?? 0.0);
@@ -828,6 +761,7 @@ class AnalyticsRepository {
       ..where(_database.transactions.date.isBetweenValues(start, end))
       ..where(_database.transactions.type.equals('INCOME'))
       ..where(_database.transactions.isDeleted.equals(false))
+      ..where(_database.transactions.processedDate.isNotNull())
       ..groupBy([_database.transactions.categoryUuid]);
     final results = await query.get();
     final List<CategoryIncome> categoryIncomes = [];
@@ -859,7 +793,8 @@ class AnalyticsRepository {
           ..addColumns([_database.transactions.amount.sum()])
           ..where(_database.transactions.categoryUuid.equals(categoryUuid))
           ..where(_database.transactions.date.isBetweenValues(start, end))
-          ..where(_database.transactions.isDeleted.equals(false)))
+          ..where(_database.transactions.isDeleted.equals(false))
+          ..where(_database.transactions.processedDate.isNotNull()))
         .getSingle()
         .then((row) => row.read(_database.transactions.amount.sum()) ?? 0.0);
 
@@ -867,7 +802,8 @@ class AnalyticsRepository {
           ..addColumns([_database.transactions.uuid.count()])
           ..where(_database.transactions.categoryUuid.equals(categoryUuid))
           ..where(_database.transactions.date.isBetweenValues(start, end))
-          ..where(_database.transactions.isDeleted.equals(false)))
+          ..where(_database.transactions.isDeleted.equals(false))
+          ..where(_database.transactions.processedDate.isNotNull()))
         .getSingle()
         .then((row) => row.read(_database.transactions.uuid.count()) ?? 0);
 
