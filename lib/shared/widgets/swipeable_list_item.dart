@@ -181,6 +181,7 @@ class SwipeableListItem extends StatelessWidget {
             onPressed: () => Navigator.of(context).pop(true),
             style: FilledButton.styleFrom(
               backgroundColor: confirmColor,
+              foregroundColor: Colors.white,
             ),
             child: Text(confirmText),
           ),

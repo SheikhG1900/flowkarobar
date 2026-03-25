@@ -533,8 +533,10 @@ class _AccountDetailViewState extends ConsumerState<_AccountDetailView> {
             child: Text(l10n.cancel),
           ),
           FilledButton(
-            style:
-                FilledButton.styleFrom(backgroundColor: AppColors.expenseColor),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.expenseColor,
+              foregroundColor: Colors.white,
+            ),
             onPressed: () => Navigator.pop(ctx, true),
             child: Text(l10n.deleteAccount),
           ),
