@@ -26,6 +26,8 @@ import 'package:flowpaisa/features/accounts/domain/models/account_models.dart';
 import 'package:flowpaisa/features/accounts/presentation/providers/accounts_provider.dart';
 import 'package:flowpaisa/features/accounts/presentation/screens/account_detail_screen.dart';
 import 'package:flowpaisa/features/whatsapp/domain/deep_link_service.dart';
+import 'package:flowpaisa/features/categories/presentation/providers/categories_provider.dart';
+import 'package:flowpaisa/shared/widgets/dual_amount_progress_bar.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 /// A single entity widget card on the dashboard. Shows key info and opens detail on tap.
@@ -105,14 +107,41 @@ class DashboardEntityWidgetCard extends ConsumerWidget {
         );
       case DashboardWidgetKind.category:
         final async = ref.watch(categoryStatisticsProvider(uuid));
+        final budgetAsync = ref.watch(categoryDetailBudgetProvider(uuid));
+        final symbol = ref.watch(currencySymbolProvider);
+        final decimals = ref.watch(currencyDecimalPlacesProvider);
+
         return async.when(
           data: (stats) {
             final cat = stats.category;
             final isExpense = cat.type == 'EXPENSE';
             final color = cat.color != null
-                ? Color(int.parse(
-                    cat.color!.replaceAll('#', '0xFF')))
+                ? Color(int.parse(cat.color!.replaceAll('#', '0xFF')))
                 : (isExpense ? AppColors.expenseColor : AppColors.incomeColor);
+
+            Widget? progressChild;
+            budgetAsync.whenData((snap) {
+              if (snap.hasBudget) {
+                progressChild = Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: DualAmountProgressBar(
+                    leftLabel: isExpense
+                        ? l10n.budgetBarUsed
+                        : l10n.budgetBarProgress,
+                    leftAmount: snap.netAmount > 0 ? snap.netAmount : 0.0,
+                    rightLabel: l10n.remaining,
+                    rightAmount: snap.remainingOrGap > 0 ? snap.remainingOrGap : 0.0,
+                    symbol: symbol,
+                    decimals: decimals,
+                    filledColor: snap.progressRatio > 1
+                        ? AppColors.expenseColor
+                        : color,
+                    compact: true,
+                  ),
+                );
+              }
+            });
+
             return _buildCard(
               context,
               ref,
@@ -140,6 +169,7 @@ class DashboardEntityWidgetCard extends ConsumerWidget {
               color: color,
               onTap: () => _openCategory(context, uuid),
               onRemove: () => _removeAt(ref, layoutIndex),
+              titleColumnExtra: progressChild,
             );
           },
           loading: () => _buildCardPlaceholder(theme),
@@ -330,63 +360,68 @@ class DashboardEntityWidgetCard extends ConsumerWidget {
                   color: color.withValues(alpha: 0.4), width: 1),
               borderRadius: BorderRadius.circular(16),
             ),
-            child: Row(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                leadingChild ??
-                    Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: color.withValues(alpha: 0.15),
-                        shape: BoxShape.circle,
-                      ),
-                      alignment: Alignment.center,
-                      child: Icon(
-                        _iconForKind(kind),
-                        color: color,
-                        size: 22,
+                Row(
+                  children: [
+                    leadingChild ??
+                        Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: color.withValues(alpha: 0.15),
+                            shape: BoxShape.circle,
+                          ),
+                          alignment: Alignment.center,
+                          child: Icon(
+                            _iconForKind(kind),
+                            color: color,
+                            size: 22,
+                          ),
+                        ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            title,
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            subtitle,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
                       ),
                     ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w600,
+                    if (currency != null)
+                      Directionality(
+                        textDirection: TextDirection.ltr,
+                        child: Text(
+                          '${isExpense ? '\u200E−' : '\u200E+'} ${AmountFormatter.formatWithCurrency(amount, currency.symbol, currency.decimalPlaces)}',
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: effectiveAmountColor,
+                          ),
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        subtitle,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      if (titleColumnExtra != null) ...[
-                        const SizedBox(height: 6),
-                        titleColumnExtra!,
-                      ],
-                    ],
-                  ),
+                  ],
                 ),
-                if (currency != null)
-                  Directionality(
-                    textDirection: TextDirection.ltr,
-                    child: Text(
-                      '${isExpense ? '\u200E−' : '\u200E+'} ${AmountFormatter.formatWithCurrency(amount, currency.symbol, currency.decimalPlaces)}',
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: effectiveAmountColor,
-                      ),
-                    ),
-                  ),
+                if (titleColumnExtra != null) ...[
+                  titleColumnExtra!,
+                ],
               ],
             ),
           ),
@@ -583,6 +618,29 @@ class DashboardEntityWidgetCard extends ConsumerWidget {
       displayAmount = awb.balance.abs();
       isExpense = awb.balance < 0;
     }
+
+    Widget? progressChild;
+    if (type.isCreditCard && (acc.creditLimit ?? 0) > 0) {
+      final symbol = currency?.symbol ?? '';
+      final decimals = currency?.decimalPlaces ?? 2;
+      progressChild = Padding(
+        padding: const EdgeInsets.only(top: 8),
+        child: DualAmountProgressBar(
+          leftLabel: l10n.outstanding,
+          leftAmount: awb.balance < 0 ? awb.balance.abs() : 0.0,
+          rightLabel: l10n.availableCredit,
+          rightAmount: awb.availableCredit ?? 0.0,
+          symbol: symbol,
+          decimals: decimals,
+          filledColor: awb.balance < 0 &&
+                  awb.balance.abs() / (acc.creditLimit ?? 1) > 0.8
+              ? AppColors.expenseColor
+              : accountColor,
+          compact: true,
+        ),
+      );
+    }
+
     return _buildCard(
       context,
       ref,
@@ -615,7 +673,7 @@ class DashboardEntityWidgetCard extends ConsumerWidget {
               : AppColors.incomeColor),
       onTap: () => _openAccount(context, uuid),
       onRemove: () => _removeAt(ref, layoutIndex),
-      titleColumnExtra:
+      titleColumnExtra: progressChild ??
           _accountDashboardTitleExtra(theme, l10n, currency, awb),
     );
   }
