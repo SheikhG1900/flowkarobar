@@ -7354,6 +7354,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Refund'**
   String get categoryRefund;
+
+  /// No description provided for @showQuickActionButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Show Quick Action Button'**
+  String get showQuickActionButton;
+
+  /// No description provided for @showQuickActionButtonDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Display the center button in the bottom bar'**
+  String get showQuickActionButtonDesc;
 }
 
 class _AppLocalizationsDelegate

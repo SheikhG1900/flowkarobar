@@ -4015,4 +4015,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get categoryRefund => 'Refund';
+
+  @override
+  String get showQuickActionButton => 'Show Quick Action Button';
+
+  @override
+  String get showQuickActionButtonDesc =>
+      'Display the center button in the bottom bar';
 }

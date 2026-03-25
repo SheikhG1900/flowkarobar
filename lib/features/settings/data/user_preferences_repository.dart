@@ -24,6 +24,9 @@ class UserPreferencesRepository {
       'auto_suggest_transaction_scenario';
   static const String keyIncludeUncategorizedInCategorySummary =
       'include_uncategorized_in_category_summary';
+  static const String keyBottomBarQuickAction = 'bottom_bar_quick_action';
+  static const String keyShowBottomBarQuickButton =
+      'show_bottom_bar_quick_button';
 
   // Get a preference value by key (excludes soft-deleted rows so they sync correctly)
   Future<String?> getPreference(String key) async {
@@ -236,5 +239,25 @@ class UserPreferencesRepository {
   // Clear all preferences
   Future<void> clearAllPreferences() async {
     await _db.delete(_db.userPreferences).go();
+  }
+
+  // Bottom Bar Quick Action
+  Future<String> getBottomBarQuickAction() async {
+    final value = await getPreference(keyBottomBarQuickAction);
+    return value ?? 'add_transaction'; // Default to Add Transaction
+  }
+
+  Future<void> setBottomBarQuickAction(String actionCode) async {
+    await setPreference(keyBottomBarQuickAction, actionCode);
+  }
+
+  // Show Bottom Bar Quick Button
+  Future<bool> getShowBottomBarQuickButton() async {
+    final value = await getPreference(keyShowBottomBarQuickButton);
+    return value != 'false'; // Default to true
+  }
+
+  Future<void> setShowBottomBarQuickButton(bool show) async {
+    await setPreference(keyShowBottomBarQuickButton, show ? 'true' : 'false');
   }
 }

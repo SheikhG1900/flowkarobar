@@ -239,6 +239,58 @@ final fontProvider = NotifierProvider<FontNotifier, Map<String, String>>(() {
   return FontNotifier();
 });
 
+// Bottom Bar Quick Action Notifier
+class BottomBarQuickActionNotifier extends Notifier<String> {
+  late UserPreferencesRepository _repository;
+
+  @override
+  String build() {
+    _repository = ref.watch(userPreferencesRepositoryProvider);
+    _loadAction();
+    return 'add_transaction'; // Default initial state
+  }
+
+  Future<void> _loadAction() async {
+    state = await _repository.getBottomBarQuickAction();
+  }
+
+  Future<void> setAction(String actionCode) async {
+    await _repository.setBottomBarQuickAction(actionCode);
+    state = actionCode;
+  }
+}
+
+final bottomBarQuickActionProvider =
+    NotifierProvider<BottomBarQuickActionNotifier, String>(() {
+  return BottomBarQuickActionNotifier();
+});
+
+// Show Bottom Bar Quick Button Notifier
+class ShowBottomBarQuickButtonNotifier extends Notifier<bool> {
+  late UserPreferencesRepository _repository;
+
+  @override
+  bool build() {
+    _repository = ref.watch(userPreferencesRepositoryProvider);
+    _loadVisibility();
+    return true; // Default initial state
+  }
+
+  Future<void> _loadVisibility() async {
+    state = await _repository.getShowBottomBarQuickButton();
+  }
+
+  Future<void> setVisibility(bool show) async {
+    await _repository.setShowBottomBarQuickButton(show);
+    state = show;
+  }
+}
+
+final showBottomBarQuickButtonProvider =
+    NotifierProvider<ShowBottomBarQuickButtonNotifier, bool>(() {
+  return ShowBottomBarQuickButtonNotifier();
+});
+
 // Helper provider to get the font for the CURRENT language
 final currentFontProvider = Provider<String>((ref) {
   final fonts = ref.watch(fontProvider);

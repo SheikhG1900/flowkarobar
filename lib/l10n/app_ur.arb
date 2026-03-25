@@ -1548,5 +1548,7 @@
   "customCategoryBadge": "حسب ضرورت زمرہ",
   "budgetBarUsed": "استعمال",
   "budgetBarProgress": "پیشرفت",
-  "categoryRefund": "رقم کی واپسی"
+  "categoryRefund": "رقم کی واپسی",
+  "showQuickActionButton": "فوری کارروائی کا بٹن دکھائیں",
+  "showQuickActionButtonDesc": "نیچے والی پٹی میں مرکزی بٹن دکھائیں"
 }

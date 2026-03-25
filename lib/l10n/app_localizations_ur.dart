@@ -4031,4 +4031,10 @@ class AppLocalizationsUr extends AppLocalizations {
 
   @override
   String get categoryRefund => 'رقم کی واپسی';
+
+  @override
+  String get showQuickActionButton => 'فوری کارروائی کا بٹن دکھائیں';
+
+  @override
+  String get showQuickActionButtonDesc => 'نیچے والی پٹی میں مرکزی بٹن دکھائیں';
 }

@@ -451,6 +451,31 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       });
                     },
                     labelType: NavigationRailLabelType.all,
+                    leading: Consumer(
+                      builder: (context, ref, child) {
+                        final showQuickButton =
+                            ref.watch(showBottomBarQuickButtonProvider);
+                        if (!showQuickButton) return const SizedBox.shrink();
+
+                        final activeCashbook = ref.watch(activeCashbookProvider);
+                        final activeColor = activeCashbook.color;
+                        final quickActionCode =
+                            ref.watch(bottomBarQuickActionProvider);
+                        final isPremium = PremiumGate.isPremium(ref);
+
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          child: _buildCenterQuickButton(
+                            context,
+                            ref,
+                            quickActionCode,
+                            isPremium,
+                            l10n,
+                            activeColor,
+                          ),
+                        );
+                      },
+                    ),
                     destinations: [
                       NavigationRailDestination(
                         icon: const Icon(Icons.dashboard),
@@ -493,12 +518,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ? Theme(
                 data: Theme.of(context).copyWith(
                   navigationBarTheme: NavigationBarThemeData(
-                    indicatorColor: _getSectionColor(_selectedIndex)
-                        .withValues(alpha: 0.15),
+                    indicatorColor: _selectedIndex == -1
+                        ? Colors.transparent
+                        : _getSectionColor(_selectedIndex)
+                            .withValues(alpha: 0.15),
                     iconTheme: WidgetStateProperty.resolveWith((states) {
                       if (states.contains(WidgetState.selected)) {
                         return IconThemeData(
-                            color: _getSectionColor(_selectedIndex));
+                            color: _selectedIndex == -1
+                                ? Theme.of(context).colorScheme.onSurfaceVariant
+                                : _getSectionColor(_selectedIndex));
                       }
                       return IconThemeData(
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -507,7 +536,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     labelTextStyle: WidgetStateProperty.resolveWith((states) {
                       if (states.contains(WidgetState.selected)) {
                         return TextStyle(
-                          color: _getSectionColor(_selectedIndex),
+                          color: _selectedIndex == -1
+                              ? Theme.of(context).colorScheme.onSurfaceVariant
+                              : _getSectionColor(_selectedIndex),
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
                         );
@@ -523,6 +554,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   builder: (context, ref, child) {
                     final activeCashbook = ref.watch(activeCashbookProvider);
                     final activeColor = activeCashbook.color;
+                    final quickActionCode =
+                        ref.watch(bottomBarQuickActionProvider);
+                    final isPremium = PremiumGate.isPremium(ref);
+                    final showQuickButton =
+                        ref.watch(showBottomBarQuickButtonProvider);
+
                     return Showcase(
                       key: TourService.bottomNavKey,
                       title: l10n.tourBottomNavTitle,
@@ -533,89 +570,108 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       tooltipBackgroundColor: activeColor,
                       textColor: Colors.white,
                       targetBorderRadius: BorderRadius.circular(20),
-                      child: NavigationBar(
-                        selectedIndex: _selectedIndex,
-                        onDestinationSelected: (index) {
-                          if (index == 1) {
-                            // Clear transactions filters and search when navigating via bottom bar
-                            final notifier = ref
-                                .read(transactionsPaginatedProvider.notifier);
-                            notifier.search('');
-                            notifier.applyFilters(TransactionFilters());
+                      child: Stack(
+                        alignment: Alignment.bottomCenter,
+                        clipBehavior: Clip.none,
+                        children: [
+                          NavigationBar(
+                            selectedIndex:
+                                _selectedIndex == -1 ? 0 : _selectedIndex,
+                            onDestinationSelected: (index) {
+                              if (index == 1) {
+                                // Clear transactions filters and search when navigating via bottom bar
+                                final notifier = ref.read(
+                                    transactionsPaginatedProvider.notifier);
+                                notifier.search('');
+                                notifier.applyFilters(TransactionFilters());
 
-                            // Start transactions tour if not shown before
-                            Future.delayed(const Duration(milliseconds: 800),
-                                () {
-                              if (context.mounted) {
-                                final tourNotifier =
-                                    ref.read(tourNotifierProvider);
-                                if (!tourNotifier.isTourCompleted(
-                                    tourNotifier.transactionsKey)) {
-                                  TourService.startTransactionsTour(context);
-                                  tourNotifier.markTourCompleted(
-                                      tourNotifier.transactionsKey);
-                                }
+                                // Start transactions tour if not shown before
+                                Future.delayed(const Duration(milliseconds: 800),
+                                    () {
+                                  if (context.mounted) {
+                                    final tourNotifier =
+                                        ref.read(tourNotifierProvider);
+                                    if (!tourNotifier.isTourCompleted(
+                                        tourNotifier.transactionsKey)) {
+                                      TourService.startTransactionsTour(context);
+                                      tourNotifier.markTourCompleted(
+                                          tourNotifier.transactionsKey);
+                                    }
+                                  }
+                                });
+                              } else if (index == 2) {
+                                // Start analytics tour if not shown before and premium is active
+                                Future.delayed(const Duration(milliseconds: 800),
+                                    () {
+                                  if (context.mounted) {
+                                    final tourNotifier =
+                                        ref.read(tourNotifierProvider);
+                                    final isPremium = PremiumGate.isPremium(ref);
+                                    if (!tourNotifier.isTourCompleted(
+                                            tourNotifier.analyticsKey) &&
+                                        isPremium) {
+                                      TourService.startAnalyticsTour(context);
+                                      tourNotifier.markTourCompleted(
+                                          tourNotifier.analyticsKey);
+                                    }
+                                  }
+                                });
+                              } else if (index == 3) {
+                                // Start settings tour if not shown before
+                                Future.delayed(const Duration(milliseconds: 800),
+                                    () {
+                                  if (context.mounted) {
+                                    final tourNotifier =
+                                        ref.read(tourNotifierProvider);
+                                    if (!tourNotifier.isTourCompleted(
+                                        tourNotifier.settingsKey)) {
+                                      TourService.startSettingsTour(context);
+                                      tourNotifier.markTourCompleted(
+                                          tourNotifier.settingsKey);
+                                    }
+                                  }
+                                });
                               }
-                            });
-                          } else if (index == 2) {
-                            // Start analytics tour if not shown before and premium is active
-                            Future.delayed(const Duration(milliseconds: 800),
-                                () {
-                              if (context.mounted) {
-                                final tourNotifier =
-                                    ref.read(tourNotifierProvider);
-                                final isPremium = PremiumGate.isPremium(ref);
-                                if (!tourNotifier.isTourCompleted(
-                                        tourNotifier.analyticsKey) &&
-                                    isPremium) {
-                                  TourService.startAnalyticsTour(context);
-                                  tourNotifier.markTourCompleted(
-                                      tourNotifier.analyticsKey);
-                                }
-                              }
-                            });
-                          } else if (index == 3) {
-                            // Start settings tour if not shown before
-                            Future.delayed(const Duration(milliseconds: 800),
-                                () {
-                              if (context.mounted) {
-                                final tourNotifier =
-                                    ref.read(tourNotifierProvider);
-                                if (!tourNotifier.isTourCompleted(
-                                    tourNotifier.settingsKey)) {
-                                  TourService.startSettingsTour(context);
-                                  tourNotifier.markTourCompleted(
-                                      tourNotifier.settingsKey);
-                                }
-                              }
-                            });
-                          }
-                          // Unfocus and dismiss overlay before tab switch to avoid FocusScope assertion
-                          FocusManager.instance.primaryFocus?.unfocus();
-                          try {
-                            ShowCaseWidget.of(context).dismiss();
-                          } catch (_) {}
-                          setState(() {
-                            _selectedIndex = index;
-                          });
-                        },
-                        destinations: [
-                          NavigationDestination(
-                            icon: const Icon(Icons.dashboard),
-                            label: l10n.dashboard,
+                              // Unfocus and dismiss overlay before tab switch to avoid FocusScope assertion
+                              FocusManager.instance.primaryFocus?.unfocus();
+                              try {
+                                ShowCaseWidget.of(context).dismiss();
+                              } catch (_) {}
+                              setState(() {
+                                _selectedIndex = index;
+                              });
+                            },
+                            destinations: [
+                              NavigationDestination(
+                                icon: const Icon(Icons.dashboard),
+                                label: l10n.dashboard,
+                              ),
+                              NavigationDestination(
+                                icon: const Icon(Icons.receipt_long),
+                                label: l10n.transactions,
+                              ),
+                              NavigationDestination(
+                                icon: const Icon(Icons.analytics),
+                                label: l10n.analytics,
+                              ),
+                              NavigationDestination(
+                                icon: const Icon(Icons.settings),
+                                label: l10n.settings,
+                              ),
+                            ],
                           ),
-                          NavigationDestination(
-                            icon: const Icon(Icons.receipt_long),
-                            label: l10n.transactions,
-                          ),
-                          NavigationDestination(
-                            icon: const Icon(Icons.analytics),
-                            label: l10n.analytics,
-                          ),
-                          NavigationDestination(
-                            icon: const Icon(Icons.settings),
-                            label: l10n.settings,
-                          ),
+                          if (showQuickButton)
+                            Positioned(
+                              top: -28, // Lift the button to overlap the top border
+                              child: _buildCenterQuickButton(
+                                context,
+                                ref,
+                                quickActionCode,
+                                isPremium,
+                                l10n,
+                                activeColor,
+                              ),
+                            ),
                         ],
                       ),
                     );
@@ -623,6 +679,147 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
               )
             : null,
+      ),
+    );
+  }
+
+  Widget _buildCenterQuickButton(
+    BuildContext context,
+    WidgetRef ref,
+    String code,
+    bool isPremium,
+    AppLocalizations l10n,
+    Color activeColor,
+  ) {
+    final theme = Theme.of(context);
+
+    IconData icon;
+    VoidCallback onTap;
+
+    switch (code) {
+      case 'voice_add':
+        icon = Icons.mic_none_rounded;
+        onTap = () => Navigator.push(
+            context, MaterialPageRoute(builder: (_) => VoiceAddScreen()));
+        break;
+      case 'scan_receipt':
+        icon = Icons.document_scanner_outlined;
+        onTap = () => Navigator.push(
+            context, MaterialPageRoute(builder: (_) => ScanReceiptScreen()));
+        break;
+      case 'accounts':
+        icon = Symbols.account_balance;
+        onTap = () => Navigator.push(
+            context, MaterialPageRoute(builder: (_) => const AccountsScreen()));
+        break;
+      case 'contacts':
+        icon = Icons.people_outline_rounded;
+        onTap = () => Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const ContactsListScreen()));
+        break;
+      case 'receivables':
+        icon = Symbols.account_balance_wallet;
+        onTap = () {
+          ref
+              .read(receivablesPaginatedProvider('PENDING').notifier)
+              .applyFilters(ReceivableFilters());
+          Navigator.push(context,
+              MaterialPageRoute(builder: (_) => const ReceivablesListScreen()));
+        };
+        break;
+      case 'payables':
+        icon = Icons.payment_outlined;
+        onTap = () {
+          ref
+              .read(payablesPaginatedProvider('PENDING').notifier)
+              .applyFilters(PayableFilters());
+          Navigator.push(context,
+              MaterialPageRoute(builder: (_) => const PayablesListScreen()));
+        };
+        break;
+      case 'categories':
+        icon = Icons.category_outlined;
+        onTap = () => Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const CategoriesListScreen()));
+        break;
+      case 'analytics':
+        icon = Icons.bar_chart_rounded;
+        onTap = () => Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const AnalyticsScreen()));
+        break;
+      case 'add_transaction':
+      default:
+        icon = Icons.add;
+        onTap = () => Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const AddTransactionScreen()));
+        break;
+    }
+
+    return GestureDetector(
+      onLongPress: () => _showQuickActionSelectionSheetForBottomBar(
+          context, ref, theme, l10n),
+      child: FloatingActionButton(
+        onPressed: onTap,
+        backgroundColor: activeColor,
+        elevation: 4,
+        shape: const CircleBorder(),
+        child: Icon(icon, color: Colors.white, size: 28),
+      ),
+    );
+  }
+
+  Future<void> _showQuickActionSelectionSheetForBottomBar(BuildContext context,
+      WidgetRef ref, ThemeData theme, AppLocalizations l10n) async {
+    final actions = [
+      ('voice_add', l10n.voiceAdd, Icons.mic_none_rounded),
+      ('add_transaction', l10n.add, Icons.add),
+      ('scan_receipt', l10n.scan, Icons.document_scanner_outlined),
+      ('accounts', l10n.accounts, Symbols.account_balance),
+      ('contacts', l10n.contacts, Icons.people_outline_rounded),
+      ('receivables', l10n.receivableTag, Symbols.account_balance_wallet),
+      ('payables', l10n.payables, Icons.payment_outlined),
+      ('categories', l10n.categories, Icons.category_outlined),
+      ('analytics', l10n.analytics, Icons.bar_chart_rounded),
+    ];
+
+    final currentCode = ref.read(bottomBarQuickActionProvider);
+
+    await showModalBottomSheet(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(
+                l10n.quickActions,
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            Flexible(
+              child: ListView(
+                shrinkWrap: true,
+                children: actions.map((e) {
+                  return ListTile(
+                    leading: Icon(e.$3),
+                    title: Text(e.$2),
+                    trailing:
+                        currentCode == e.$1 ? const Icon(Icons.check) : null,
+                    onTap: () {
+                      ref
+                          .read(bottomBarQuickActionProvider.notifier)
+                          .setAction(e.$1);
+                      Navigator.pop(ctx);
+                    },
+                  );
+                }).toList(),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -2781,6 +2978,147 @@ class _DashboardTab extends ConsumerWidget {
       ),
     );
   }
+
+  Widget _buildCenterQuickButton(
+    BuildContext context,
+    WidgetRef ref,
+    String code,
+    bool isPremium,
+    AppLocalizations l10n,
+    Color activeColor,
+  ) {
+    final theme = Theme.of(context);
+
+    IconData icon;
+    VoidCallback onTap;
+
+    switch (code) {
+      case 'voice_add':
+        icon = Icons.mic_none_rounded;
+        onTap = () => Navigator.push(
+            context, MaterialPageRoute(builder: (_) => VoiceAddScreen()));
+        break;
+      case 'scan_receipt':
+        icon = Icons.document_scanner_outlined;
+        onTap = () => Navigator.push(
+            context, MaterialPageRoute(builder: (_) => ScanReceiptScreen()));
+        break;
+      case 'accounts':
+        icon = Symbols.account_balance;
+        onTap = () => Navigator.push(
+            context, MaterialPageRoute(builder: (_) => const AccountsScreen()));
+        break;
+      case 'contacts':
+        icon = Icons.people_outline_rounded;
+        onTap = () => Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const ContactsListScreen()));
+        break;
+      case 'receivables':
+        icon = Symbols.account_balance_wallet;
+        onTap = () {
+          ref
+              .read(receivablesPaginatedProvider('PENDING').notifier)
+              .applyFilters(ReceivableFilters());
+          Navigator.push(context,
+              MaterialPageRoute(builder: (_) => const ReceivablesListScreen()));
+        };
+        break;
+      case 'payables':
+        icon = Icons.payment_outlined;
+        onTap = () {
+          ref
+              .read(payablesPaginatedProvider('PENDING').notifier)
+              .applyFilters(PayableFilters());
+          Navigator.push(context,
+              MaterialPageRoute(builder: (_) => const PayablesListScreen()));
+        };
+        break;
+      case 'categories':
+        icon = Icons.category_outlined;
+        onTap = () => Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const CategoriesListScreen()));
+        break;
+      case 'analytics':
+        icon = Icons.bar_chart_rounded;
+        onTap = () => Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const AnalyticsScreen()));
+        break;
+      case 'add_transaction':
+      default:
+        icon = Icons.add;
+        onTap = () => Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const AddTransactionScreen()));
+        break;
+    }
+
+    return GestureDetector(
+      onLongPress: () => _showQuickActionSelectionSheetForBottomBar(
+          context, ref, theme, l10n),
+      child: FloatingActionButton(
+        onPressed: onTap,
+        backgroundColor: activeColor,
+        elevation: 4,
+        shape: const CircleBorder(),
+        child: Icon(icon, color: Colors.white, size: 28),
+      ),
+    );
+  }
+
+  Future<void> _showQuickActionSelectionSheetForBottomBar(BuildContext context,
+      WidgetRef ref, ThemeData theme, AppLocalizations l10n) async {
+    final actions = [
+      ('voice_add', l10n.voiceAdd, Icons.mic_none_rounded),
+      ('add_transaction', l10n.add, Icons.add),
+      ('scan_receipt', l10n.scan, Icons.document_scanner_outlined),
+      ('accounts', l10n.accounts, Symbols.account_balance),
+      ('contacts', l10n.contacts, Icons.people_outline_rounded),
+      ('receivables', l10n.receivableTag, Symbols.account_balance_wallet),
+      ('payables', l10n.payables, Icons.payment_outlined),
+      ('categories', l10n.categories, Icons.category_outlined),
+      ('analytics', l10n.analytics, Icons.bar_chart_rounded),
+    ];
+
+    final currentCode = ref.read(bottomBarQuickActionProvider);
+
+    await showModalBottomSheet(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(
+                l10n.quickActions,
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            Flexible(
+              child: ListView(
+                shrinkWrap: true,
+                children: actions.map((e) {
+                  return ListTile(
+                    leading: Icon(e.$3),
+                    title: Text(e.$2),
+                    trailing:
+                        currentCode == e.$1 ? const Icon(Icons.check) : null,
+                    onTap: () {
+                      ref
+                          .read(bottomBarQuickActionProvider.notifier)
+                          .setAction(e.$1);
+                      Navigator.pop(ctx);
+                    },
+                  );
+                }).toList(),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class _QuickActionButton extends StatelessWidget {
@@ -3053,6 +3391,23 @@ class _SettingsTab extends ConsumerWidget {
                       MaterialPageRoute(
                         builder: (context) => const ThemeSelectorScreen(),
                       ),
+                    );
+                  },
+                ),
+                Consumer(
+                  builder: (context, ref, child) {
+                    final showQuickButton =
+                        ref.watch(showBottomBarQuickButtonProvider);
+                    return SwitchListTile(
+                      secondary: const Icon(Icons.add_circle_outline),
+                      title: Text(l10n.showQuickActionButton),
+                      subtitle: Text(l10n.showQuickActionButtonDesc),
+                      value: showQuickButton,
+                      onChanged: (value) {
+                        ref
+                            .read(showBottomBarQuickButtonProvider.notifier)
+                            .setVisibility(value);
+                      },
                     );
                   },
                 ),

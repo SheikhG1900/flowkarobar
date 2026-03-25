@@ -4025,4 +4025,11 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get categoryRefund => 'रिफंड';
+
+  @override
+  String get showQuickActionButton => 'त्वरित कार्य बटन दिखाएं';
+
+  @override
+  String get showQuickActionButtonDesc =>
+      'नीचे की पट्टी में केंद्र बटन प्रदर्शित करें';
 }

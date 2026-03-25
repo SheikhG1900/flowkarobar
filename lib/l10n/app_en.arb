@@ -2099,5 +2099,7 @@
   "customCategoryBadge": "Custom category",
   "budgetBarUsed": "Used",
   "budgetBarProgress": "Progress",
-  "categoryRefund": "Refund"
+  "categoryRefund": "Refund",
+  "showQuickActionButton": "Show Quick Action Button",
+  "showQuickActionButtonDesc": "Display the center button in the bottom bar"
 }

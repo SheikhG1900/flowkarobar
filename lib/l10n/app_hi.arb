@@ -1548,5 +1548,7 @@
   "customCategoryBadge": "कस्टम श्रेणी",
   "budgetBarUsed": "उपयोग",
   "budgetBarProgress": "प्रगति",
-  "categoryRefund": "रिफंड"
+  "categoryRefund": "रिफंड",
+  "showQuickActionButton": "त्वरित कार्य बटन दिखाएं",
+  "showQuickActionButtonDesc": "नीचे की पट्टी में केंद्र बटन प्रदर्शित करें"
 }
