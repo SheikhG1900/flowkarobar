@@ -486,12 +486,14 @@ class AnalyticsRepository {
               .isSmallerOrEqualValue(filters.maxAmount!);
     }
 
-    // Status-based filters: PAID / RECEIVED / PAYABLE / RECEIVABLE / AUTO / SCHEDULED
+    // Status-based filters: PAID / RECEIVED / PAYABLE / RECEIVABLE / AUTO / SCHEDULED / NOT_PROCESSED
+    bool hasNotProcessedFilter = false;
     if (filters.statusCodes != null && filters.statusCodes!.isNotEmpty) {
       final statuses = filters.statusCodes!;
       Expression<bool>? statusExpr;
 
       bool has(String code) => statuses.contains(code);
+      hasNotProcessedFilter = has('NOT_PROCESSED');
 
       // Auto-generated transactions
       if (has('AUTO')) {
@@ -502,6 +504,12 @@ class AnalyticsRepository {
       // Scheduled transactions
       if (has('SCHEDULED')) {
         final expr = _database.transactions.isScheduled.equals(true);
+        statusExpr = statusExpr == null ? expr : (statusExpr | expr);
+      }
+
+      // NOT_PROCESSED transactions
+      if (has('NOT_PROCESSED')) {
+        final expr = _database.transactions.processedDate.isNull();
         statusExpr = statusExpr == null ? expr : (statusExpr | expr);
       }
 
@@ -539,8 +547,11 @@ class AnalyticsRepository {
       }
     }
 
-    // Only include transactions that have been processed
-    whereExpr = whereExpr & _database.transactions.processedDate.isNotNull();
+    // Only include transactions that have been processed, 
+    // UNLESS the user explicitly asked for NOT_PROCESSED transactions.
+    if (!hasNotProcessedFilter) {
+      whereExpr = whereExpr & _database.transactions.processedDate.isNotNull();
+    }
 
     final query = _database.selectOnly(_database.transactions)
       ..addColumns([_database.transactions.amount.sum()])
