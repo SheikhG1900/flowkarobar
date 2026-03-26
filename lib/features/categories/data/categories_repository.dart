@@ -293,6 +293,24 @@ class CategoriesRepository {
     return expenseSum - incomeSum;
   }
 
+  /// Total for transactions with no category by type (EXPENSE or INCOME) in range.
+  Future<double> getUncategorizedAmountByType(
+      String type, DateTime start, DateTime end) async {
+    final startDate = DateTime(start.year, start.month, start.day, 0, 0, 0);
+    final endDate = DateTime(end.year, end.month, end.day, 23, 59, 59);
+    final sum = await (_database.selectOnly(_database.transactions)
+          ..addColumns([_database.transactions.amount.sum()])
+          ..where(_database.transactions.categoryUuid.isNull())
+          ..where(_database.transactions.type.equals(type))
+          ..where(
+              _database.transactions.date.isBetweenValues(startDate, endDate))
+          ..where(_database.transactions.isDeleted.equals(false))
+          ..where(_database.transactions.processedDate.isNotNull()))
+        .getSingle()
+        .then((r) => r.read(_database.transactions.amount.sum()) ?? 0.0);
+    return sum;
+  }
+
   Future<int> getCategoryTransactionCount(
       String categoryUuid, DateTime start, DateTime end) async {
     final startDate = DateTime(start.year, start.month, start.day, 0, 0, 0);

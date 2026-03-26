@@ -1555,5 +1555,7 @@
   "showDashboardWidgetAreaDesc": "ڈیش بورڈ پر حسب ضرورت ویجٹ سیکشن دکھائیں",
   "noWidgetsOnDashboard": "ڈیش بورڈ پر کوئی ویجٹ نہیں ہے",
   "switchCashbook": "کیش بک تبدیل کریں",
-  "switchText": "تبدیل کریں"
+  "switchText": "تبدیل کریں",
+  "totalIncome": "کل آمدنی",
+  "totalExpenses": "کل اخراجات"
 }

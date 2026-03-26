@@ -4048,4 +4048,10 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get switchText => 'बदलें';
+
+  @override
+  String get totalIncome => 'कुल आय';
+
+  @override
+  String get totalExpenses => 'कुल खर्च';
 }

@@ -1555,5 +1555,7 @@
   "showDashboardWidgetAreaDesc": "डैशबोर्ड पर अनुकूलन योग्य विजेट अनुभाग प्रदर्शित करें",
   "noWidgetsOnDashboard": "डैशबोर्ड पर कोई विजेट नहीं है",
   "switchCashbook": "कैशबुक बदलें",
-  "switchText": "बदलें"
+  "switchText": "बदलें",
+  "totalIncome": "कुल आय",
+  "totalExpenses": "कुल खर्च"
 }

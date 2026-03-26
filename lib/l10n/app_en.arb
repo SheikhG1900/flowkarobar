@@ -2106,5 +2106,7 @@
   "showDashboardWidgetAreaDesc": "Display the customizable widget section on the dashboard",
   "noWidgetsOnDashboard": "No widgets on dashboard",
   "switchCashbook": "Switch Cashbook",
-  "switchText": "Switch"
+  "switchText": "Switch",
+  "totalIncome": "Total Income",
+  "totalExpenses": "Total Expenses"
 }

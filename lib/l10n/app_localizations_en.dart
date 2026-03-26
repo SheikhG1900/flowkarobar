@@ -4038,4 +4038,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get switchText => 'Switch';
+
+  @override
+  String get totalIncome => 'Total Income';
+
+  @override
+  String get totalExpenses => 'Total Expenses';
 }

@@ -150,6 +150,14 @@ final uncategorizedNetForCategoryPeriodProvider =
   return repo.getUncategorizedNetAmount(range.startDate, range.endDate);
 });
 
+/// Uncategorized total for transactions of [type] for the current category budget period.
+final uncategorizedAmountByTypeProvider =
+    FutureProvider.autoDispose.family<double, String>((ref, type) async {
+  final range = ref.watch(categoryBudgetDateRangeProvider);
+  final repo = ref.watch(categoriesRepositoryProvider);
+  return repo.getUncategorizedAmountByType(type, range.startDate, range.endDate);
+});
+
 class IncludeUncategorizedInCategorySummaryNotifier extends AsyncNotifier<bool> {
   @override
   Future<bool> build() async {

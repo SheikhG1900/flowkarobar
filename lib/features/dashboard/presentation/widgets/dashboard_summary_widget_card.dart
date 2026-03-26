@@ -256,7 +256,7 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
     final includeAsync =
         ref.watch(includeUncategorizedInCategorySummaryProvider);
     final uncategorizedAsync =
-        ref.watch(uncategorizedNetForCategoryPeriodProvider);
+        ref.watch(uncategorizedAmountByTypeProvider(type));
 
     final symbol = currency?.symbol ?? '';
     final decimals = currency?.decimalPlaces ?? 2;
@@ -366,8 +366,8 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
                                       children: [
                                         Text(
                                           isIncome
-                                              ? l10n.netIncome
-                                              : l10n.netExpenses,
+                                              ? l10n.totalIncome
+                                              : l10n.totalExpenses,
                                           style: theme.textTheme.labelMedium
                                               ?.copyWith(
                                             color: Colors.white

@@ -7396,6 +7396,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Switch'**
   String get switchText;
+
+  /// No description provided for @totalIncome.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Income'**
+  String get totalIncome;
+
+  /// No description provided for @totalExpenses.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Expenses'**
+  String get totalExpenses;
 }
 
 class _AppLocalizationsDelegate

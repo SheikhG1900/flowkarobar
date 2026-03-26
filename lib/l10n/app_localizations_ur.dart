@@ -4053,4 +4053,10 @@ class AppLocalizationsUr extends AppLocalizations {
 
   @override
   String get switchText => 'تبدیل کریں';
+
+  @override
+  String get totalIncome => 'کل آمدنی';
+
+  @override
+  String get totalExpenses => 'کل اخراجات';
 }

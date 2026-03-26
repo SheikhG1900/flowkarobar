@@ -289,7 +289,7 @@ class _CategoriesAggregateSummary extends ConsumerWidget {
     }
 
     final uncategorizedAsync =
-        ref.watch(uncategorizedNetForCategoryPeriodProvider);
+        ref.watch(uncategorizedAmountByTypeProvider(type));
     final uncategorizedAmt = uncategorizedAsync.maybeWhen(
       data: (v) => v,
       orElse: () => 0.0,
@@ -396,7 +396,7 @@ class _CategoriesAggregateSummary extends ConsumerWidget {
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               Text(
-                                isExpense ? l10n.netExpenses : l10n.netIncome,
+                                isExpense ? l10n.totalExpenses : l10n.totalIncome,
                                 textAlign: TextAlign.center,
                                 style: theme.textTheme.labelMedium?.copyWith(
                                   color: Colors.white.withValues(alpha: 0.88),
