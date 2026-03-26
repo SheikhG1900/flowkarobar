@@ -41,6 +41,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flowpaisa/features/whatsapp/domain/deep_link_service.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
+import 'package:flowpaisa/shared/models/date_range_state.dart';
+import 'package:flowpaisa/core/utils/date_formatter.dart';
 import 'package:material_symbols_icons/symbols.dart' show Symbols;
 
 /// A summary-type widget card on the dashboard (balance, cash flow, receivables, etc.).
@@ -67,175 +69,286 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
     final isPremium = PremiumGate.isPremium(ref);
     final reorderMode = ref.watch(dashboardReorderModeProvider);
 
+    final wrapRemove = reorderMode
+        ? (Widget child, VoidCallback? onRemove) =>
+            _wrapCard(reorderKey: reorderKey, child: child, onRemove: onRemove)
+        : (Widget child, VoidCallback? onRemove) =>
+            _wrapCard(reorderKey: reorderKey, child: child);
+
     switch (config.kind) {
       case DashboardWidgetKind.balance:
-        return _buildFromStats(
-          context,
-          ref,
-          theme,
-          l10n,
-          currency,
-          filter,
-          title: l10n.availableCash,
-          icon: Icons.account_balance_wallet_outlined,
-          color: AppColors.dashboardSectionColor,
-          builder: (stats) => AmountFormatter.formatWithCurrency(
-              stats.totalBalance, currency!.symbol, currency.decimalPlaces),
-          onTap: () {},
-          onRemove: () => _removeAt(ref, layoutIndex),
-          reorderKey: reorderKey,
+        return wrapRemove(
+          _buildFromStats(
+            context,
+            ref,
+            theme,
+            l10n,
+            currency,
+            filter,
+            title: l10n.availableCash,
+            icon: Icons.account_balance_wallet_outlined,
+            color: AppColors.dashboardSectionColor,
+            builder: (stats) => AmountFormatter.formatWithCurrency(
+                stats.totalBalance, currency!.symbol, currency.decimalPlaces),
+            onTap: () {},
+            onRemove: () => _removeAt(ref, layoutIndex),
+          ),
+          () => _removeAt(ref, layoutIndex),
         );
       case DashboardWidgetKind.cashFlow:
-        return _buildFromStats(
-          context,
-          ref,
-          theme,
-          l10n,
-          currency,
-          filter,
-          title: l10n.cashFlow,
-          icon: Icons.trending_up,
-          color: AppColors.incomeColor,
-          builder: (stats) => AmountFormatter.formatWithCurrency(
-              stats.netCash(filter), currency!.symbol, currency.decimalPlaces),
-          onTap: () => _openTransactionsFiltered(ref, context, filter),
-          onRemove: () => _removeAt(ref, layoutIndex),
-          reorderKey: reorderKey,
+        return wrapRemove(
+          _buildCashFlowWidget(
+            context,
+            ref,
+            theme,
+            l10n,
+            currency,
+            filter,
+            onRemove: () => _removeAt(ref, layoutIndex),
+          ),
+          () => _removeAt(ref, layoutIndex),
         );
       case DashboardWidgetKind.receivablesSummary:
-        return _buildFromStats(
-          context,
-          ref,
-          theme,
-          l10n,
-          currency,
-          filter,
-          title: l10n.receivableTag,
-          icon: Icons.call_received,
-          color: AppColors.receivableColor,
-          builder: (stats) => AmountFormatter.formatWithCurrency(
-              stats.receivable(filter), currency!.symbol, currency.decimalPlaces),
-          onTap: () => _openReceivables(ref, context, filter),
-          onRemove: () => _removeAt(ref, layoutIndex),
-          reorderKey: reorderKey,
+        return wrapRemove(
+          _buildFromStats(
+            context,
+            ref,
+            theme,
+            l10n,
+            currency,
+            filter,
+            title: l10n.receivableTag,
+            icon: Icons.call_received,
+            color: AppColors.receivableColor,
+            builder: (stats) => AmountFormatter.formatWithCurrency(
+                stats.receivable(filter),
+                currency!.symbol,
+                currency.decimalPlaces),
+            onTap: () => _openReceivables(ref, context, filter),
+            onRemove: () => _removeAt(ref, layoutIndex),
+          ),
+          () => _removeAt(ref, layoutIndex),
         );
       case DashboardWidgetKind.payablesSummary:
-        return _buildFromStats(
-          context,
-          ref,
-          theme,
-          l10n,
-          currency,
-          filter,
-          title: l10n.payableTag,
-          icon: Icons.call_made,
-          color: AppColors.payableColor,
-          builder: (stats) => AmountFormatter.formatWithCurrency(
-              stats.payable(filter), currency!.symbol, currency.decimalPlaces),
-          onTap: () => _openPayables(ref, context, filter),
-          onRemove: () => _removeAt(ref, layoutIndex),
-          reorderKey: reorderKey,
+        return wrapRemove(
+          _buildFromStats(
+            context,
+            ref,
+            theme,
+            l10n,
+            currency,
+            filter,
+            title: l10n.payableTag,
+            icon: Icons.call_made,
+            color: AppColors.payableColor,
+            builder: (stats) => AmountFormatter.formatWithCurrency(
+                stats.payable(filter), currency!.symbol, currency.decimalPlaces),
+            onTap: () => _openPayables(ref, context, filter),
+            onRemove: () => _removeAt(ref, layoutIndex),
+          ),
+          () => _removeAt(ref, layoutIndex),
         );
       case DashboardWidgetKind.contactsSummary:
-        return _buildCountCard(
-          context,
-          ref,
-          theme,
-          l10n,
-          title: l10n.contacts,
-          icon: Icons.people_outline,
-          color: theme.colorScheme.primary,
-          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ContactsListScreen())),
-          onRemove: () => _removeAt(ref, layoutIndex),
-          reorderKey: reorderKey,
+        return wrapRemove(
+          _buildCountCard(
+            context,
+            ref,
+            theme,
+            l10n,
+            title: l10n.contacts,
+            icon: Icons.people_outline,
+            color: theme.colorScheme.primary,
+            onTap: () => Navigator.push(context,
+                MaterialPageRoute(builder: (_) => const ContactsListScreen())),
+            onRemove: () => _removeAt(ref, layoutIndex),
+          ),
+          () => _removeAt(ref, layoutIndex),
         );
       case DashboardWidgetKind.categoriesSummary:
-        return _buildCategoriesCountCard(
-          context,
-          ref,
-          theme,
-          l10n,
-          onRemove: () => _removeAt(ref, layoutIndex),
-          reorderKey: reorderKey,
+        return wrapRemove(
+          _buildCategoriesCountCard(
+            context,
+            ref,
+            theme,
+            l10n,
+            onRemove: () => _removeAt(ref, layoutIndex),
+          ),
+          () => _removeAt(ref, layoutIndex),
         );
       case DashboardWidgetKind.netWorth:
-        final accountsAsync = ref.watch(accountsWithBalanceProvider);
-        return accountsAsync.when(
-          data: (accounts) {
-            double totalAssets = 0;
-            double totalLiabilities = 0;
-            for (final awb in accounts) {
-              if (awb.type.isCreditCard) {
-                if (awb.balance < 0) {
-                  totalLiabilities += awb.balance.abs();
-                }
-              } else {
-                if (awb.balance > 0) {
-                  totalAssets += awb.balance;
-                } else {
-                  totalLiabilities += awb.balance.abs();
-                }
-              }
-            }
-            final netWorth = totalAssets - totalLiabilities;
-            final label = currency != null
-                ? AmountFormatter.formatWithCurrency(
-                    netWorth, currency.symbol, currency.decimalPlaces)
-                : '—';
-            return _buildSummaryCard(
-              context,
-              ref,
-              theme,
-              l10n,
-              title: l10n.netWorth,
-              subtitle: null,
-              amountLabel: label,
-              icon: Symbols.account_balance_wallet,
-              color: AppColors.dashboardSectionColor,
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => AccountsScreen()),
-                );
-              },
-              onRemove: () => _removeAt(ref, layoutIndex),
-              reorderKey: reorderKey,
-              copyOpenLinkEntityType: 'networth',
-              copyOpenLinkUuid: 'summary',
-            );
-          },
-          loading: () => _buildCardPlaceholder(theme, reorderKey),
-          error: (_, __) => const SizedBox.shrink(),
+        return wrapRemove(
+          _buildNetWorthWidget(
+            context,
+            ref,
+            theme,
+            l10n,
+            currency,
+            onRemove: () => _removeAt(ref, layoutIndex),
+          ),
+          () => _removeAt(ref, layoutIndex),
         );
       case DashboardWidgetKind.quickActions:
-        return _buildQuickActions(context, ref, l10n, isPremium, reorderMode);
+        return wrapRemove(
+          _buildQuickActions(
+              context, ref, l10n, isPremium, reorderMode, config, layoutIndex),
+          () => _removeAt(ref, layoutIndex),
+        );
+      case DashboardWidgetKind.netCredit:
+        return wrapRemove(
+          _buildNetCreditWidget(
+            context,
+            ref,
+            theme,
+            l10n,
+            currency,
+            filter,
+            onRemove: () => _removeAt(ref, layoutIndex),
+          ),
+          () => _removeAt(ref, layoutIndex),
+        );
       case DashboardWidgetKind.incomeSummary:
-        return _buildIncomeExpenseSummary(
-          context,
-          ref,
-          theme,
-          l10n,
-          currency,
-          filter,
-          isIncome: true,
-          onRemove: () => _removeAt(ref, layoutIndex),
-          reorderKey: reorderKey,
+        return wrapRemove(
+          _buildIncomeExpenseSummary(
+            context,
+            ref,
+            theme,
+            l10n,
+            currency,
+            filter,
+            isIncome: true,
+            onRemove: () => _removeAt(ref, layoutIndex),
+          ),
+          () => _removeAt(ref, layoutIndex),
         );
       case DashboardWidgetKind.expenseSummary:
-        return _buildIncomeExpenseSummary(
-          context,
-          ref,
-          theme,
-          l10n,
-          currency,
-          filter,
-          isIncome: false,
-          onRemove: () => _removeAt(ref, layoutIndex),
-          reorderKey: reorderKey,
+        return wrapRemove(
+          _buildIncomeExpenseSummary(
+            context,
+            ref,
+            theme,
+            l10n,
+            currency,
+            filter,
+            isIncome: false,
+            onRemove: () => _removeAt(ref, layoutIndex),
+          ),
+          () => _removeAt(ref, layoutIndex),
+        );
+      case DashboardWidgetKind.recentTransactions:
+        return wrapRemove(
+          _buildRecentTransactions(
+            context,
+            ref,
+            theme,
+            l10n,
+            currency,
+            onRemove: () => _removeAt(ref, layoutIndex),
+          ),
+          () => _removeAt(ref, layoutIndex),
         );
       default:
         return const SizedBox.shrink();
     }
+  }
+
+  Widget _buildRecentTransactions(
+    BuildContext context,
+    WidgetRef ref,
+    ThemeData theme,
+    AppLocalizations l10n,
+    dynamic currency, {
+    required VoidCallback onRemove,
+    Key? reorderKey,
+  }) {
+    final transactionsAsync = ref.watch(transactionsPaginatedProvider);
+    final symbol = currency?.symbol ?? '';
+    final decimals = currency?.decimalPlaces ?? 2;
+
+    final transactions = transactionsAsync.items.take(5).toList();
+    if (transactions.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Material(
+        color: theme.cardColor,
+        borderRadius: BorderRadius.circular(16),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const TransactionsListScreen()),
+            );
+          },
+          onLongPress: () => _showSummaryActionsSheet(
+            context,
+            ref,
+            onRemove,
+            l10n,
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              border: Border.all(
+                  color: theme.dividerColor.withValues(alpha: 0.1), width: 1),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.history,
+                        color: theme.colorScheme.primary, size: 20),
+                    const SizedBox(width: 8),
+                    Text(
+                      l10n.recentTransactions,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const Spacer(),
+                    Icon(Icons.arrow_forward_ios,
+                        size: 12, color: theme.hintColor),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                ...transactions.map((tx) {
+                  final isIncome = tx.transaction.type == 'INCOME';
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            tx.transaction.description ??
+                                tx.category?.name ??
+                                l10n.uncategorized,
+                            style: theme.textTheme.bodySmall,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        Text(
+                          AmountFormatter.formatWithCurrency(
+                              tx.transaction.amount, symbol, decimals),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: isIncome
+                                ? AppColors.incomeColor
+                                : AppColors.expenseColor,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildIncomeExpenseSummary(
@@ -376,7 +489,19 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
                                             fontSize: 11,
                                           ),
                                         ),
-                                        const SizedBox(height: 4),
+                                        const SizedBox(height: 1),
+                                        Text(
+                                          _getPeriodLabel(context, range, l10n),
+                                          style: theme.textTheme.labelSmall
+                                              ?.copyWith(
+                                            color: Colors.white
+                                                .withValues(alpha: 0.65),
+                                            fontWeight: FontWeight.w400,
+                                            fontSize: 9,
+                                            fontStyle: FontStyle.italic,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 3),
                                         Text(
                                           netStr,
                                           style: theme.textTheme.titleLarge
@@ -548,11 +673,444 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
               ),
             );
           },
-          loading: () => _buildCardPlaceholder(theme, reorderKey),
+          loading: () => _buildCardPlaceholder(theme),
           error: (_, __) => const SizedBox.shrink(),
         );
       },
-      loading: () => _buildCardPlaceholder(theme, reorderKey),
+      loading: () => _buildCardPlaceholder(theme),
+      error: (_, __) => const SizedBox.shrink(),
+    );
+  }
+
+  Widget _buildNetWorthWidget(
+    BuildContext context,
+    WidgetRef ref,
+    ThemeData theme,
+    AppLocalizations l10n,
+    dynamic currency, {
+    required VoidCallback onRemove,
+    Key? reorderKey,
+  }) {
+    final accountsAsync = ref.watch(accountsWithBalanceProvider);
+    final symbol = currency?.symbol ?? '';
+    final decimals = currency?.decimalPlaces ?? 2;
+
+    return accountsAsync.when(
+      data: (accounts) {
+        final totalAssets = accounts.where((a) => !a.type.balanceIsLiability).fold<double>(
+            0, (sum, a) => sum + a.balance.clamp(0, double.infinity));
+        final totalLiabilities = accounts
+            .where((a) => a.type.balanceIsLiability)
+            .fold<double>(0, (sum, a) => sum + a.balance.abs());
+        final netWorth = totalAssets - totalLiabilities;
+
+        return _wrapCard(
+          reorderKey: reorderKey,
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Material(
+              color: theme.cardColor,
+              borderRadius: BorderRadius.circular(16),
+              clipBehavior: Clip.antiAlias,
+              child: InkWell(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const AccountsScreen()),
+                  );
+                },
+                onLongPress: () => _showSummaryActionsSheet(
+                  context,
+                  ref,
+                  onRemove,
+                  l10n,
+                ),
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                        color: AppColors.receivableColor.withValues(alpha: 0.4),
+                        width: 1),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Net Worth Item (Smaller version of _NetWorthItem)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: AppColors.receivableColor.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                              color: AppColors.receivableColor
+                                  .withValues(alpha: 0.2)),
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Symbols.account_balance,
+                                  color: AppColors.receivableColor,
+                                  size: 14,
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  l10n.netWorth,
+                                  style: theme.textTheme.labelSmall?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 10,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              AmountFormatter.formatWithCurrency(
+                                  netWorth, symbol, decimals),
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                color: AppColors.receivableColor,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      // Assets & Liabilities Row (Smaller version of _StatItem)
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildSmallStatItem(
+                              theme: theme,
+                              color: AppColors.incomeColor,
+                              icon: Symbols.trending_up,
+                              label: l10n.totalAssets,
+                              amount: totalAssets,
+                              symbol: symbol,
+                              decimals: decimals,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: _buildSmallStatItem(
+                              theme: theme,
+                              color: AppColors.payableColor,
+                              icon: Symbols.trending_down,
+                              label: l10n.totalLiabilities,
+                              amount: totalLiabilities,
+                              symbol: symbol,
+                              decimals: decimals,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+      loading: () => _buildCardPlaceholder(theme),
+      error: (_, __) => const SizedBox.shrink(),
+    );
+  }
+
+  Widget _buildSmallStatItem({
+    required ThemeData theme,
+    required Color color,
+    required IconData icon,
+    required String label,
+    required double amount,
+    required String symbol,
+    required int decimals,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: color, size: 14),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  label,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 9,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            AmountFormatter.formatWithCurrency(amount, symbol, decimals),
+            style: theme.textTheme.labelMedium?.copyWith(
+              color: color,
+              fontWeight: FontWeight.bold,
+              fontSize: 12,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNetCreditWidget(
+    BuildContext context,
+    WidgetRef ref,
+    ThemeData theme,
+    AppLocalizations l10n,
+    dynamic currency,
+    DashboardFilter filter, {
+    required VoidCallback onRemove,
+    Key? reorderKey,
+  }) {
+    final async = ref.watch(dashboardStatsProvider);
+    final symbol = currency?.symbol ?? '';
+    final decimals = currency?.decimalPlaces ?? 2;
+
+    return async.when(
+      data: (stats) {
+        final netCredit = stats.netCredit(filter);
+        final isReceivableHigher = netCredit >= 0;
+        final amount = netCredit.abs();
+        final label = isReceivableHigher ? l10n.netReceivable : l10n.netPayable;
+        final gradient = isReceivableHigher
+            ? AppColors.receivablesSectionGradient
+            : AppColors.payablesSectionGradient;
+
+        final transparentGradient = LinearGradient(
+          colors: gradient.colors.map((c) => c.withValues(alpha: .85)).toList(),
+          begin: gradient.begin,
+          end: gradient.end,
+          stops: gradient.stops,
+        );
+
+        return _wrapCard(
+          reorderKey: reorderKey,
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () => _openReceivables(ref, context, filter),
+                onLongPress: () => _showSummaryActionsSheet(
+                  context,
+                  ref,
+                  onRemove,
+                  l10n,
+                ),
+                borderRadius: BorderRadius.circular(16),
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  decoration: BoxDecoration(
+                    gradient: transparentGradient,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: gradient.colors.first.withValues(alpha: 0.25),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              label,
+                              style: theme.textTheme.labelMedium?.copyWith(
+                                color: Colors.white.withValues(alpha: 0.9),
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              filter == DashboardFilter.monthly
+                                  ? AppDateFormatter.formatMonthYear(
+                                      DateTime.now(),
+                                      context: context)
+                                  : l10n.allTime,
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: Colors.white.withValues(alpha: 0.7),
+                                fontSize: 10,
+                                fontStyle: FontStyle.italic,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Text(
+                        AmountFormatter.formatWithCurrency(
+                            amount, symbol, decimals),
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      const Icon(
+                        Icons.arrow_forward_ios,
+                        size: 14,
+                        color: Colors.white70,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+      loading: () => _buildCardPlaceholder(theme),
+      error: (_, __) => const SizedBox.shrink(),
+    );
+  }
+
+  Widget _buildCashFlowWidget(
+    BuildContext context,
+    WidgetRef ref,
+    ThemeData theme,
+    AppLocalizations l10n,
+    dynamic currency,
+    DashboardFilter filter, {
+    required VoidCallback onRemove,
+    Key? reorderKey,
+  }) {
+    final async = ref.watch(dashboardStatsProvider);
+    final symbol = currency?.symbol ?? '';
+    final decimals = currency?.decimalPlaces ?? 2;
+
+    return async.when(
+      data: (stats) {
+        final netCash = stats.netCash(filter);
+        final isIncomeHigher = netCash >= 0;
+        final amount = netCash.abs();
+        final label = isIncomeHigher ? l10n.netIncome : l10n.netExpenses;
+        final gradient =
+            isIncomeHigher ? AppColors.incomeGradient : AppColors.expenseGradient;
+
+        final transparentGradient = LinearGradient(
+          colors: gradient.colors.map((c) => c.withValues(alpha: .85)).toList(),
+          begin: gradient.begin,
+          end: gradient.end,
+          stops: gradient.stops,
+        );
+
+        return _wrapCard(
+          reorderKey: reorderKey,
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () => _openTransactionsFiltered(ref, context, filter),
+                onLongPress: () => _showSummaryActionsSheet(
+                  context,
+                  ref,
+                  onRemove,
+                  l10n,
+                ),
+                borderRadius: BorderRadius.circular(16),
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  decoration: BoxDecoration(
+                    gradient: transparentGradient,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: gradient.colors.first.withValues(alpha: 0.25),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              label,
+                              style: theme.textTheme.labelMedium?.copyWith(
+                                color: Colors.white.withValues(alpha: 0.9),
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              filter == DashboardFilter.monthly
+                                  ? AppDateFormatter.formatMonthYear(
+                                      DateTime.now(),
+                                      context: context)
+                                  : l10n.allTime,
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: Colors.white.withValues(alpha: 0.7),
+                                fontSize: 10,
+                                fontStyle: FontStyle.italic,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Text(
+                        AmountFormatter.formatWithCurrency(
+                            amount, symbol, decimals),
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      const Icon(
+                        Icons.arrow_forward_ios,
+                        size: 14,
+                        color: Colors.white70,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+      loading: () => _buildCardPlaceholder(theme),
       error: (_, __) => const SizedBox.shrink(),
     );
   }
@@ -589,7 +1147,7 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
         onRemove: onRemove,
         reorderKey: reorderKey,
       ),
-      loading: () => _buildCardPlaceholder(theme, reorderKey),
+      loading: () => _buildCardPlaceholder(theme),
       error: (_, __) => const SizedBox.shrink(),
     );
   }
@@ -610,80 +1168,77 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
     String? copyOpenLinkEntityType,
     String? copyOpenLinkUuid,
   }) {
-    return _wrapCard(
-      reorderKey: reorderKey,
-      child: Padding(
-        padding: const EdgeInsets.only(bottom: 10),
-        child: Material(
-          color: theme.cardColor,
-          borderRadius: BorderRadius.circular(16),
-          clipBehavior: Clip.antiAlias,
-          child: InkWell(
-            onTap: onTap,
-            onLongPress: () => _showSummaryActionsSheet(
-              context,
-              ref,
-              onRemove,
-              l10n,
-              copyOpenLinkEntityType: copyOpenLinkEntityType,
-              copyOpenLinkUuid: copyOpenLinkUuid,
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Material(
+        color: theme.cardColor,
+        borderRadius: BorderRadius.circular(16),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          onLongPress: () => _showSummaryActionsSheet(
+            context,
+            ref,
+            onRemove,
+            l10n,
+            copyOpenLinkEntityType: copyOpenLinkEntityType,
+            copyOpenLinkUuid: copyOpenLinkUuid,
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              border: Border.all(color: color.withValues(alpha: 0.4), width: 1),
+              borderRadius: BorderRadius.circular(16),
             ),
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                border: Border.all(color: color.withValues(alpha: 0.4), width: 1),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: color.withValues(alpha: 0.15),
-                      shape: BoxShape.circle,
-                    ),
-                    alignment: Alignment.center,
-                    child: Icon(icon, color: color, size: 22),
+            child: Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.15),
+                    shape: BoxShape.circle,
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
+                  alignment: Alignment.center,
+                  child: Icon(icon, color: color, size: 22),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      if (subtitle != null) ...[
+                        const SizedBox(height: 2),
                         Text(
-                          title,
-                          style: theme.textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w600,
+                          subtitle,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        if (subtitle != null) ...[
-                          const SizedBox(height: 2),
-                          Text(
-                            subtitle,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
                       ],
-                    ),
+                    ],
                   ),
-                  Text(
-                    amountLabel,
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: color,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                ),
+                Text(
+                  amountLabel,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: color,
                   ),
-                ],
-              ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
             ),
           ),
         ),
@@ -718,7 +1273,7 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
         onRemove: onRemove,
         reorderKey: reorderKey,
       ),
-      loading: () => _buildCardPlaceholder(theme, reorderKey),
+      loading: () => _buildCardPlaceholder(theme),
       error: (_, __) => const SizedBox.shrink(),
     );
   }
@@ -755,33 +1310,67 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
         onRemove: onRemove,
         reorderKey: reorderKey,
       ),
-      loading: () => _buildCardPlaceholder(theme, reorderKey),
+      loading: () => _buildCardPlaceholder(theme),
       error: (_, __) => const SizedBox.shrink(),
     );
   }
 
-  Widget _wrapCard({Key? reorderKey, required Widget child}) {
-    if (reorderKey != null) return KeyedSubtree(key: reorderKey, child: child);
-    return child;
+  Widget _wrapCard(
+      {Key? reorderKey, required Widget child, VoidCallback? onRemove}) {
+    final widget =
+        reorderKey != null ? KeyedSubtree(key: reorderKey, child: child) : child;
+    if (onRemove == null) return widget;
+
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        widget,
+        PositionedDirectional(
+          top: -10,
+          end: -10,
+          child: GestureDetector(
+            onTap: onRemove,
+            child: Container(
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
+                color: Colors.red,
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 2),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Colors.black26,
+                    blurRadius: 4,
+                    offset: Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: const Icon(
+                Icons.delete,
+                color: Colors.white,
+                size: 16,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
-  Widget _buildCardPlaceholder(ThemeData theme, Key? reorderKey) {
-    return _wrapCard(
-      reorderKey: reorderKey,
-      child: Padding(
-        padding: const EdgeInsets.only(bottom: 10),
-        child: Container(
-          height: 76,
-          decoration: BoxDecoration(
-            color: theme.cardColor,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          alignment: Alignment.center,
-          child: const SizedBox(
-            width: 24,
-            height: 24,
-            child: CircularProgressIndicator(strokeWidth: 2),
-          ),
+  Widget _buildCardPlaceholder(ThemeData theme) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Container(
+        height: 76,
+        decoration: BoxDecoration(
+          color: theme.cardColor,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        alignment: Alignment.center,
+        child: const SizedBox(
+          width: 24,
+          height: 24,
+          child: CircularProgressIndicator(strokeWidth: 2),
         ),
       ),
     );
@@ -839,7 +1428,7 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
     await ref.read(dashboardWidgetLayoutProvider.notifier).removeAt(index);
   }
 
-  static Future<void> _showQuickActionSelectionSheetForWidget(
+  Future<void> _showQuickActionSelectionSheetForWidget(
       BuildContext context,
       WidgetRef ref,
       AppLocalizations l10n,
@@ -1004,11 +1593,34 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
     );
   }
 
-  Widget _buildQuickActions(BuildContext context, WidgetRef ref,
-      AppLocalizations l10n, bool isPremium, bool reorderMode) {
+  String _getPeriodLabel(
+      BuildContext context, DateRangeState range, AppLocalizations l10n) {
+    switch (range.type) {
+      case DateRangeType.month:
+        return AppDateFormatter.formatMonthYear(range.startDate,
+            context: context);
+      case DateRangeType.quarter:
+        final quarter = ((range.startDate.month - 1) ~/ 3) + 1;
+        return 'Q$quarter ${range.startDate.year}';
+      case DateRangeType.year:
+        return '${range.startDate.year}';
+      case DateRangeType.custom:
+        return '${AppDateFormatter.formatDate(range.startDate, pattern: 'MMM dd')} - ${AppDateFormatter.formatDate(range.endDate, pattern: 'MMM dd')}';
+    }
+  }
+
+  Widget _buildQuickActions(
+      BuildContext context,
+      WidgetRef ref,
+      AppLocalizations l10n,
+      bool isPremium,
+      bool reorderMode,
+      DashboardWidgetConfig config,
+      int layoutIndex) {
     final theme = Theme.of(context);
     final activeCashbook = ref.watch(activeCashbookProvider);
     final activeColor = activeCashbook.color;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 0),
       child: Column(
@@ -1155,12 +1767,14 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
                         onTap: () {
                           // Clear filters and search before navigating
                           final pendingNotifier = ref.read(
-                              receivablesPaginatedProvider('PENDING').notifier);
+                              receivablesPaginatedProvider('PENDING')
+                                  .notifier);
                           pendingNotifier.updateSearchQuery('');
                           pendingNotifier.applyFilters(ReceivableFilters());
 
                           final overdueNotifier = ref.read(
-                              receivablesPaginatedProvider('OVERDUE').notifier);
+                              receivablesPaginatedProvider('OVERDUE')
+                                  .notifier);
                           overdueNotifier.updateSearchQuery('');
                           overdueNotifier.applyFilters(ReceivableFilters());
 
@@ -1197,8 +1811,8 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
                           overdueNotifier.updateSearchQuery('');
                           overdueNotifier.applyFilters(PayableFilters());
 
-                          final paidNotifier = ref
-                              .read(payablesPaginatedProvider('PAID').notifier);
+                          final paidNotifier = ref.read(
+                              payablesPaginatedProvider('PAID').notifier);
                           paidNotifier.updateSearchQuery('');
                           paidNotifier.applyFilters(PayableFilters());
 
@@ -1269,8 +1883,8 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
                           // Start the dashboard tour
                           try {
                             final showcaseState = ShowCaseWidget.of(context);
-                            showcaseState
-                                .startShowCase(TourService.dashboardTourKeys);
+                            showcaseState.startShowCase(
+                                TourService.dashboardTourKeys);
                           } catch (e) {
                             debugPrint('Error starting tour: $e');
                           }

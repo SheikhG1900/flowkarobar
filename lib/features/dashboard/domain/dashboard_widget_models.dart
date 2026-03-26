@@ -6,6 +6,7 @@ enum DashboardWidgetKind {
   // Summary widgets
   balance,
   cashFlow,
+  netCredit,
   receivablesSummary,
   payablesSummary,
   recentTransactions,

@@ -468,7 +468,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             ref.watch(showBottomBarQuickButtonProvider);
                         if (!showQuickButton) return const SizedBox.shrink();
 
-                        final activeCashbook = ref.watch(activeCashbookProvider);
+                        final activeCashbook =
+                            ref.watch(activeCashbookProvider);
                         final activeColor = activeCashbook.color;
                         final quickActionCode =
                             ref.watch(bottomBarQuickActionProvider);
@@ -597,14 +598,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 notifier.applyFilters(TransactionFilters());
 
                                 // Start transactions tour if not shown before
-                                Future.delayed(const Duration(milliseconds: 800),
-                                    () {
+                                Future.delayed(
+                                    const Duration(milliseconds: 800), () {
                                   if (context.mounted) {
                                     final tourNotifier =
                                         ref.read(tourNotifierProvider);
                                     if (!tourNotifier.isTourCompleted(
                                         tourNotifier.transactionsKey)) {
-                                      TourService.startTransactionsTour(context);
+                                      TourService.startTransactionsTour(
+                                          context);
                                       tourNotifier.markTourCompleted(
                                           tourNotifier.transactionsKey);
                                     }
@@ -612,12 +614,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 });
                               } else if (index == 2) {
                                 // Start analytics tour if not shown before and premium is active
-                                Future.delayed(const Duration(milliseconds: 800),
-                                    () {
+                                Future.delayed(
+                                    const Duration(milliseconds: 800), () {
                                   if (context.mounted) {
                                     final tourNotifier =
                                         ref.read(tourNotifierProvider);
-                                    final isPremium = PremiumGate.isPremium(ref);
+                                    final isPremium =
+                                        PremiumGate.isPremium(ref);
                                     if (!tourNotifier.isTourCompleted(
                                             tourNotifier.analyticsKey) &&
                                         isPremium) {
@@ -629,8 +632,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 });
                               } else if (index == 3) {
                                 // Start settings tour if not shown before
-                                Future.delayed(const Duration(milliseconds: 800),
-                                    () {
+                                Future.delayed(
+                                    const Duration(milliseconds: 800), () {
                                   if (context.mounted) {
                                     final tourNotifier =
                                         ref.read(tourNotifierProvider);
@@ -673,7 +676,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           ),
                           if (showQuickButton)
                             Positioned(
-                              top: -28, // Lift the button to overlap the top border
+                              top:
+                                  -28, // Lift the button to overlap the top border
                               child: _buildCenterQuickButton(
                                 context,
                                 ref,
@@ -767,8 +771,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
 
     return GestureDetector(
-      onLongPress: () => _showQuickActionSelectionSheetForBottomBar(
-          context, ref, theme, l10n),
+      onLongPress: () =>
+          _showQuickActionSelectionSheetForBottomBar(context, ref, theme, l10n),
       child: FloatingActionButton(
         onPressed: onTap,
         backgroundColor: activeColor,
@@ -869,8 +873,8 @@ class _DashboardTab extends ConsumerWidget {
     final hasAccounts = ref.watch(hasAccountsProvider);
     final mainBalanceView = ref.watch(dashboardMainBalanceViewProvider);
     final accountsWithBalanceAsync = ref.watch(accountsWithBalanceProvider);
-    final showNetWorthOnHero = hasAccounts &&
-        mainBalanceView == DashboardMainBalanceView.netWorth;
+    final showNetWorthOnHero =
+        hasAccounts && mainBalanceView == DashboardMainBalanceView.netWorth;
 
     // Show loading if currency is not yet loaded
     if (currency == null) {
@@ -1088,605 +1092,649 @@ class _DashboardTab extends ConsumerWidget {
                               mainAxisSize: MainAxisSize.min,
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                          // Balance Section
-                          Showcase(
-                            key: TourService.balanceKey,
-                            title: l10n.tourBalanceTitle,
-                            description: l10n.tourBalanceDesc,
-                            targetShapeBorder: const RoundedRectangleBorder(
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(12)),
-                            ),
-                            tooltipBackgroundColor: activeColor,
-                            textColor: Colors.white,
-                            targetBorderRadius: BorderRadius.circular(12),
-                            child: Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 4),
-                              child: Material(
-                                color: Colors.transparent,
-                                child: InkWell(
-                                  onTap: hasAccounts
-                                      ? () => ref
-                                          .read(
-                                              dashboardMainBalanceViewProvider
-                                                  .notifier)
-                                          .toggle()
-                                      : null,
-                                  borderRadius: BorderRadius.circular(12),
+                                // Balance Section
+                                Showcase(
+                                  key: TourService.balanceKey,
+                                  title: l10n.tourBalanceTitle,
+                                  description: l10n.tourBalanceDesc,
+                                  targetShapeBorder:
+                                      const RoundedRectangleBorder(
+                                    borderRadius:
+                                        BorderRadius.all(Radius.circular(12)),
+                                  ),
+                                  tooltipBackgroundColor: activeColor,
+                                  textColor: Colors.white,
+                                  targetBorderRadius: BorderRadius.circular(12),
                                   child: Padding(
-                                    padding:
-                                        const EdgeInsets.symmetric(vertical: 4),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Row(
-                                          children: [
-                                            Expanded(
-                                              child: Text(
-                                                showNetWorthOnHero
-                                                    ? l10n.netWorth
-                                                    : l10n.availableCash,
-                                                style: theme
-                                                    .textTheme.titleSmall
-                                                    ?.copyWith(
-                                                  color: isDark
-                                                      ? Colors.white.withValues(
-                                                          alpha: 0.9)
-                                                      : AppColors
-                                                          .lightTextSecondary,
-                                                  fontWeight: FontWeight.w600,
-                                                  shadows: isDark
-                                                      ? AppTheme.textShadow(
-                                                          blurMultiplier: 1.0)
-                                                      : null,
-                                                ),
-                                              ),
-                                            ),
-                                            if (hasAccounts)
-                                              Icon(
-                                                Icons.swap_horiz_rounded,
-                                                size: 18,
-                                                color: isDark
-                                                    ? Colors.white
-                                                        .withValues(
-                                                            alpha: 0.55)
-                                                    : AppColors
-                                                        .lightTextSecondary,
-                                              ),
-                                          ],
-                                        ),
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            showNetWorthOnHero
-                                                ? accountsWithBalanceAsync.when(
-                                                    data: (accounts) {
-                                                      final nw =
-                                                          dashboardNetWorthFromAccounts(
-                                                              accounts);
-                                                      return RollingAmount(
-                                                        amount: nw,
-                                                        currencySymbol:
-                                                            currency.symbol,
-                                                        decimalPlaces: currency
-                                                            .decimalPlaces,
-                                                        style: theme.textTheme
-                                                            .displaySmall
-                                                            ?.copyWith(
-                                                          color: isDark
-                                                              ? Colors.white
-                                                              : AppColors
-                                                                  .lightText,
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                          height: 1.1,
-                                                          fontSize: AmountFormatter
-                                                              .getFontSize(
-                                                            nw,
-                                                            baseSize: 32,
-                                                            decimalPlaces: currency
-                                                                .decimalPlaces,
-                                                          ),
-                                                          shadows: isDark
-                                                              ? AppTheme
-                                                                  .textShadow(
-                                                                      blurMultiplier:
-                                                                          4.0)
-                                                              : null,
-                                                        ),
-                                                      );
-                                                    },
-                                                    loading: () =>
-                                                        const SizedBox(
-                                                            height: 32),
-                                                    error: (_, __) => Text(
-                                                      l10n.error,
-                                                      style: TextStyle(
-                                                        color: isDark
-                                                            ? Colors.white
-                                                            : AppColors.error,
-                                                      ),
-                                                    ),
-                                                  )
-                                                : dashboardStatsAsync.when(
-                                                    data: (stats) =>
-                                                        RollingAmount(
-                                                      amount:
-                                                          stats.totalBalance,
-                                                      currencySymbol:
-                                                          currency.symbol,
-                                                      decimalPlaces: currency
-                                                          .decimalPlaces,
-                                                      style: theme.textTheme
-                                                          .displaySmall
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 4),
+                                    child: Material(
+                                      color: Colors.transparent,
+                                      child: InkWell(
+                                        onTap: hasAccounts
+                                            ? () => ref
+                                                .read(
+                                                    dashboardMainBalanceViewProvider
+                                                        .notifier)
+                                                .toggle()
+                                            : null,
+                                        borderRadius: BorderRadius.circular(12),
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                              vertical: 4),
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Row(
+                                                children: [
+                                                  Expanded(
+                                                    child: Text(
+                                                      showNetWorthOnHero
+                                                          ? l10n.netWorth
+                                                          : l10n.availableCash,
+                                                      style: theme
+                                                          .textTheme.titleSmall
                                                           ?.copyWith(
                                                         color: isDark
                                                             ? Colors.white
+                                                                .withValues(
+                                                                    alpha: 0.9)
                                                             : AppColors
-                                                                .lightText,
+                                                                .lightTextSecondary,
                                                         fontWeight:
-                                                            FontWeight.bold,
-                                                        height: 1.1,
-                                                        fontSize: AmountFormatter
-                                                            .getFontSize(
-                                                          stats.totalBalance,
-                                                          baseSize: 32,
-                                                          decimalPlaces: currency
-                                                              .decimalPlaces,
-                                                        ),
+                                                            FontWeight.w600,
                                                         shadows: isDark
-                                                            ? AppTheme
-                                                                .textShadow(
-                                                                    blurMultiplier:
-                                                                        4.0)
+                                                            ? AppTheme.textShadow(
+                                                                blurMultiplier:
+                                                                    1.0)
                                                             : null,
                                                       ),
                                                     ),
-                                                    loading: () =>
-                                                        lastStats != null
-                                                            ? RollingAmount(
-                                                                amount: lastStats
+                                                  ),
+                                                  if (hasAccounts)
+                                                    Icon(
+                                                      Icons.swap_horiz_rounded,
+                                                      size: 18,
+                                                      color: isDark
+                                                          ? Colors.white
+                                                              .withValues(
+                                                                  alpha: 0.55)
+                                                          : AppColors
+                                                              .lightTextSecondary,
+                                                    ),
+                                                ],
+                                              ),
+                                              Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceBetween,
+                                                children: [
+                                                  showNetWorthOnHero
+                                                      ? accountsWithBalanceAsync
+                                                          .when(
+                                                          data: (accounts) {
+                                                            final nw =
+                                                                dashboardNetWorthFromAccounts(
+                                                                    accounts);
+                                                            return RollingAmount(
+                                                              amount: nw,
+                                                              currencySymbol:
+                                                                  currency
+                                                                      .symbol,
+                                                              decimalPlaces:
+                                                                  currency
+                                                                      .decimalPlaces,
+                                                              style: theme
+                                                                  .textTheme
+                                                                  .displaySmall
+                                                                  ?.copyWith(
+                                                                color: isDark
+                                                                    ? Colors
+                                                                        .white
+                                                                    : AppColors
+                                                                        .lightText,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold,
+                                                                height: 1.1,
+                                                                fontSize:
+                                                                    AmountFormatter
+                                                                        .getFontSize(
+                                                                  nw,
+                                                                  baseSize: 32,
+                                                                  decimalPlaces:
+                                                                      currency
+                                                                          .decimalPlaces,
+                                                                ),
+                                                                shadows: isDark
+                                                                    ? AppTheme.textShadow(
+                                                                        blurMultiplier:
+                                                                            4.0)
+                                                                    : null,
+                                                              ),
+                                                            );
+                                                          },
+                                                          loading: () =>
+                                                              const SizedBox(
+                                                                  height: 32),
+                                                          error: (_, __) =>
+                                                              Text(
+                                                            l10n.error,
+                                                            style: TextStyle(
+                                                              color: isDark
+                                                                  ? Colors.white
+                                                                  : AppColors
+                                                                      .error,
+                                                            ),
+                                                          ),
+                                                        )
+                                                      : dashboardStatsAsync
+                                                          .when(
+                                                          data: (stats) =>
+                                                              RollingAmount(
+                                                            amount: stats
+                                                                .totalBalance,
+                                                            currencySymbol:
+                                                                currency.symbol,
+                                                            decimalPlaces: currency
+                                                                .decimalPlaces,
+                                                            style: theme
+                                                                .textTheme
+                                                                .displaySmall
+                                                                ?.copyWith(
+                                                              color: isDark
+                                                                  ? Colors.white
+                                                                  : AppColors
+                                                                      .lightText,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .bold,
+                                                              height: 1.1,
+                                                              fontSize:
+                                                                  AmountFormatter
+                                                                      .getFontSize(
+                                                                stats
                                                                     .totalBalance,
-                                                                currencySymbol:
-                                                                    currency
-                                                                        .symbol,
+                                                                baseSize: 32,
                                                                 decimalPlaces:
                                                                     currency
                                                                         .decimalPlaces,
-                                                                style: theme
-                                                                    .textTheme
-                                                                    .displaySmall
-                                                                    ?.copyWith(
-                                                                  color: isDark
-                                                                      ? Colors
-                                                                          .white
-                                                                      : AppColors
-                                                                          .lightText,
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .bold,
-                                                                  height: 1.1,
-                                                                  fontSize: AmountFormatter
-                                                                      .getFontSize(
-                                                                    lastStats
-                                                                        .totalBalance,
-                                                                    baseSize:
-                                                                        32,
-                                                                    decimalPlaces:
-                                                                        currency
-                                                                            .decimalPlaces,
-                                                                  ),
-                                                                  shadows: isDark
-                                                                      ? AppTheme.textShadow(
-                                                                          blurMultiplier:
-                                                                              4.0)
-                                                                      : null,
-                                                                ),
-                                                              )
-                                                            : const SizedBox(
-                                                                height: 32),
-                                                    error: (_, __) => Text(
-                                                      l10n.error,
-                                                      style: TextStyle(
-                                                        color: isDark
-                                                            ? Colors.white
-                                                            : AppColors.error,
-                                                      ),
-                                                    ),
-                                                  ),
-                                            _buildFilterChip(
-                                                context, ref, filter, isDark),
-                                          ],
+                                                              ),
+                                                              shadows: isDark
+                                                                  ? AppTheme.textShadow(
+                                                                      blurMultiplier:
+                                                                          4.0)
+                                                                  : null,
+                                                            ),
+                                                          ),
+                                                          loading: () =>
+                                                              lastStats != null
+                                                                  ? RollingAmount(
+                                                                      amount: lastStats
+                                                                          .totalBalance,
+                                                                      currencySymbol:
+                                                                          currency
+                                                                              .symbol,
+                                                                      decimalPlaces:
+                                                                          currency
+                                                                              .decimalPlaces,
+                                                                      style: theme
+                                                                          .textTheme
+                                                                          .displaySmall
+                                                                          ?.copyWith(
+                                                                        color: isDark
+                                                                            ? Colors.white
+                                                                            : AppColors.lightText,
+                                                                        fontWeight:
+                                                                            FontWeight.bold,
+                                                                        height:
+                                                                            1.1,
+                                                                        fontSize:
+                                                                            AmountFormatter.getFontSize(
+                                                                          lastStats
+                                                                              .totalBalance,
+                                                                          baseSize:
+                                                                              32,
+                                                                          decimalPlaces:
+                                                                              currency.decimalPlaces,
+                                                                        ),
+                                                                        shadows: isDark
+                                                                            ? AppTheme.textShadow(blurMultiplier: 4.0)
+                                                                            : null,
+                                                                      ),
+                                                                    )
+                                                                  : const SizedBox(
+                                                                      height:
+                                                                          32),
+                                                          error: (_, __) =>
+                                                              Text(
+                                                            l10n.error,
+                                                            style: TextStyle(
+                                                              color: isDark
+                                                                  ? Colors.white
+                                                                  : AppColors
+                                                                      .error,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                  _buildFilterChip(context, ref,
+                                                      filter, isDark),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
                                         ),
-                                      ],
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
+                                const SizedBox(height: 16),
 
-                          // Stats Grid: stable layout; .when() per value so only amounts update
-                          Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Showcase(
-                                key: TourService.cashFlowStatsKey,
-                                title: l10n.tourCashFlowTitle,
-                                description: l10n.tourCashFlowDesc,
-                                targetShapeBorder:
-                                    const RoundedRectangleBorder(
-                                  borderRadius:
-                                      BorderRadius.all(Radius.circular(12)),
+                                // Stats Grid: stable layout; .when() per value so only amounts update
+                                Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Showcase(
+                                      key: TourService.cashFlowStatsKey,
+                                      title: l10n.tourCashFlowTitle,
+                                      description: l10n.tourCashFlowDesc,
+                                      targetShapeBorder:
+                                          const RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.all(
+                                            Radius.circular(12)),
+                                      ),
+                                      tooltipBackgroundColor: activeColor,
+                                      textColor: Colors.white,
+                                      targetBorderRadius:
+                                          BorderRadius.circular(12),
+                                      child: _buildSummaryRow(
+                                        context,
+                                        isDark: isDark,
+                                        title: l10n.cashFlow,
+                                        items: [
+                                          _SummaryItem(
+                                            label: l10n.income,
+                                            amountContent:
+                                                dashboardStatsAsync.when(
+                                              data: (s) =>
+                                                  _buildSummaryAmountContent(
+                                                context,
+                                                amount: s.income(filter),
+                                                currency: currency,
+                                                isDark: isDark,
+                                              ),
+                                              loading: () => lastStats != null
+                                                  ? _buildSummaryAmountContent(
+                                                      context,
+                                                      amount: lastStats
+                                                          .income(filter),
+                                                      currency: currency,
+                                                      isDark: isDark,
+                                                    )
+                                                  : _buildAmountPlaceholder(
+                                                      context,
+                                                      currency,
+                                                      isDark),
+                                              error: (_, __) =>
+                                                  _buildAmountPlaceholder(
+                                                      context,
+                                                      currency,
+                                                      isDark),
+                                            ),
+                                            color: AppColors.incomeColor,
+                                            icon: Icons.south_west,
+                                            onTap: () {
+                                              final isMonthly = filter ==
+                                                  DashboardFilter.monthly;
+                                              final now = DateTime.now();
+                                              final startDate = isMonthly
+                                                  ? DateTime(
+                                                      now.year, now.month, 1)
+                                                  : null;
+                                              final endDate = isMonthly
+                                                  ? DateTime(now.year,
+                                                      now.month + 1, 0)
+                                                  : null;
+                                              ref
+                                                  .read(
+                                                      transactionsPaginatedProvider
+                                                          .notifier)
+                                                  .applyFilters(
+                                                    TransactionFilters(
+                                                      type: 'INCOME',
+                                                      startDate: startDate,
+                                                      endDate: endDate,
+                                                    ),
+                                                  );
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      const TransactionsListScreen(),
+                                                ),
+                                              );
+                                            },
+                                          ),
+                                          _SummaryItem(
+                                            label: l10n.expense,
+                                            amountContent:
+                                                dashboardStatsAsync.when(
+                                              data: (s) =>
+                                                  _buildSummaryAmountContent(
+                                                context,
+                                                amount: s.expense(filter),
+                                                currency: currency,
+                                                isDark: isDark,
+                                              ),
+                                              loading: () => lastStats != null
+                                                  ? _buildSummaryAmountContent(
+                                                      context,
+                                                      amount: lastStats
+                                                          .expense(filter),
+                                                      currency: currency,
+                                                      isDark: isDark,
+                                                    )
+                                                  : _buildAmountPlaceholder(
+                                                      context,
+                                                      currency,
+                                                      isDark),
+                                              error: (_, __) =>
+                                                  _buildAmountPlaceholder(
+                                                      context,
+                                                      currency,
+                                                      isDark),
+                                            ),
+                                            color: AppColors.expenseColor,
+                                            icon: Icons.north_east,
+                                            onTap: () {
+                                              final isMonthly = filter ==
+                                                  DashboardFilter.monthly;
+                                              final now = DateTime.now();
+                                              final startDate = isMonthly
+                                                  ? DateTime(
+                                                      now.year, now.month, 1)
+                                                  : null;
+                                              final endDate = isMonthly
+                                                  ? DateTime(now.year,
+                                                      now.month + 1, 0)
+                                                  : null;
+                                              ref
+                                                  .read(
+                                                      transactionsPaginatedProvider
+                                                          .notifier)
+                                                  .applyFilters(
+                                                    TransactionFilters(
+                                                      type: 'EXPENSE',
+                                                      startDate: startDate,
+                                                      endDate: endDate,
+                                                    ),
+                                                  );
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      const TransactionsListScreen(),
+                                                ),
+                                              );
+                                            },
+                                          ),
+                                          _SummaryItem(
+                                            label: l10n.netCash,
+                                            amountContent:
+                                                dashboardStatsAsync.when(
+                                              data: (s) =>
+                                                  _buildSummaryAmountContent(
+                                                context,
+                                                amount: s.netCash(filter),
+                                                currency: currency,
+                                                isDark: isDark,
+                                              ),
+                                              loading: () => lastStats != null
+                                                  ? _buildSummaryAmountContent(
+                                                      context,
+                                                      amount: lastStats
+                                                          .netCash(filter),
+                                                      currency: currency,
+                                                      isDark: isDark,
+                                                    )
+                                                  : _buildAmountPlaceholder(
+                                                      context,
+                                                      currency,
+                                                      isDark),
+                                              error: (_, __) =>
+                                                  _buildAmountPlaceholder(
+                                                      context,
+                                                      currency,
+                                                      isDark),
+                                            ),
+                                            color: activeForeColor,
+                                            icon: Icons.account_balance_wallet,
+                                            onTap: () {
+                                              final isMonthly = filter ==
+                                                  DashboardFilter.monthly;
+                                              final now = DateTime.now();
+                                              final startDate = isMonthly
+                                                  ? DateTime(
+                                                      now.year, now.month, 1)
+                                                  : null;
+                                              final endDate = isMonthly
+                                                  ? DateTime(now.year,
+                                                      now.month + 1, 0)
+                                                  : null;
+                                              ref
+                                                  .read(
+                                                      transactionsPaginatedProvider
+                                                          .notifier)
+                                                  .applyFilters(
+                                                    TransactionFilters(
+                                                      startDate: startDate,
+                                                      endDate: endDate,
+                                                    ),
+                                                  );
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      const TransactionsListScreen(),
+                                                ),
+                                              );
+                                            },
+                                          ),
+                                        ],
+                                        currency: currency,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 12),
+                                    Showcase(
+                                      key: TourService.lendingStatsKey,
+                                      title: l10n.tourLendingTitle,
+                                      description: l10n.tourLendingDesc,
+                                      targetShapeBorder:
+                                          const RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.all(
+                                            Radius.circular(12)),
+                                      ),
+                                      tooltipBackgroundColor: activeColor,
+                                      textColor: Colors.white,
+                                      targetBorderRadius:
+                                          BorderRadius.circular(12),
+                                      child: _buildSummaryRow(
+                                        context,
+                                        isDark: isDark,
+                                        title: l10n.lendingCredit,
+                                        items: [
+                                          _SummaryItem(
+                                            label: l10n.receivableTag,
+                                            amountContent:
+                                                dashboardStatsAsync.when(
+                                              data: (s) =>
+                                                  _buildSummaryAmountContent(
+                                                context,
+                                                amount: s.receivable(filter),
+                                                currency: currency,
+                                                isDark: isDark,
+                                                overdue: s.overdueReceivable,
+                                              ),
+                                              loading: () => lastStats != null
+                                                  ? _buildSummaryAmountContent(
+                                                      context,
+                                                      amount: lastStats
+                                                          .receivable(filter),
+                                                      currency: currency,
+                                                      isDark: isDark,
+                                                      overdue: lastStats
+                                                          .overdueReceivable,
+                                                    )
+                                                  : _buildAmountPlaceholder(
+                                                      context,
+                                                      currency,
+                                                      isDark),
+                                              error: (_, __) =>
+                                                  _buildAmountPlaceholder(
+                                                      context,
+                                                      currency,
+                                                      isDark),
+                                            ),
+                                            color: AppColors.receivableColor,
+                                            icon: Icons.call_received,
+                                            onTap: () {
+                                              final isMonthly = filter ==
+                                                  DashboardFilter.monthly;
+                                              final now = DateTime.now();
+                                              final startDate = isMonthly
+                                                  ? DateTime(
+                                                      now.year, now.month, 1)
+                                                  : null;
+                                              final endDate = isMonthly
+                                                  ? DateTime(now.year,
+                                                      now.month + 1, 0)
+                                                  : null;
+                                              ref
+                                                  .read(
+                                                      receivablesPaginatedProvider(
+                                                              'PENDING')
+                                                          .notifier)
+                                                  .applyFilters(
+                                                    ReceivableFilters(
+                                                      startDate: startDate,
+                                                      endDate: endDate,
+                                                    ),
+                                                  );
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      const ReceivablesListScreen(),
+                                                ),
+                                              );
+                                            },
+                                          ),
+                                          _SummaryItem(
+                                            label: l10n.payableTag,
+                                            amountContent:
+                                                dashboardStatsAsync.when(
+                                              data: (s) =>
+                                                  _buildSummaryAmountContent(
+                                                context,
+                                                amount: s.payable(filter),
+                                                currency: currency,
+                                                isDark: isDark,
+                                                overdue: s.overduePayable,
+                                              ),
+                                              loading: () => lastStats != null
+                                                  ? _buildSummaryAmountContent(
+                                                      context,
+                                                      amount: lastStats
+                                                          .payable(filter),
+                                                      currency: currency,
+                                                      isDark: isDark,
+                                                      overdue: lastStats
+                                                          .overduePayable,
+                                                    )
+                                                  : _buildAmountPlaceholder(
+                                                      context,
+                                                      currency,
+                                                      isDark),
+                                              error: (_, __) =>
+                                                  _buildAmountPlaceholder(
+                                                      context,
+                                                      currency,
+                                                      isDark),
+                                            ),
+                                            color: AppColors.payableColor,
+                                            icon: Icons.call_made,
+                                            onTap: () {
+                                              final isMonthly = filter ==
+                                                  DashboardFilter.monthly;
+                                              final now = DateTime.now();
+                                              final startDate = isMonthly
+                                                  ? DateTime(
+                                                      now.year, now.month, 1)
+                                                  : null;
+                                              final endDate = isMonthly
+                                                  ? DateTime(now.year,
+                                                      now.month + 1, 0)
+                                                  : null;
+                                              ref
+                                                  .read(
+                                                      payablesPaginatedProvider(
+                                                              'PENDING')
+                                                          .notifier)
+                                                  .applyFilters(
+                                                    PayableFilters(
+                                                      startDate: startDate,
+                                                      endDate: endDate,
+                                                    ),
+                                                  );
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      const PayablesListScreen(),
+                                                ),
+                                              );
+                                            },
+                                          ),
+                                          _SummaryItem(
+                                            label: l10n.netCredit,
+                                            amountContent:
+                                                dashboardStatsAsync.when(
+                                              data: (s) =>
+                                                  _buildSummaryAmountContent(
+                                                context,
+                                                amount: s.netCredit(filter),
+                                                currency: currency,
+                                                isDark: isDark,
+                                              ),
+                                              loading: () => lastStats != null
+                                                  ? _buildSummaryAmountContent(
+                                                      context,
+                                                      amount: lastStats
+                                                          .netCredit(filter),
+                                                      currency: currency,
+                                                      isDark: isDark,
+                                                    )
+                                                  : _buildAmountPlaceholder(
+                                                      context,
+                                                      currency,
+                                                      isDark),
+                                              error: (_, __) =>
+                                                  _buildAmountPlaceholder(
+                                                      context,
+                                                      currency,
+                                                      isDark),
+                                            ),
+                                            color: activeForeColor,
+                                            icon: Icons.swap_horiz,
+                                          ),
+                                        ],
+                                        currency: currency,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 12),
+                                  ],
                                 ),
-                                tooltipBackgroundColor: activeColor,
-                                textColor: Colors.white,
-                                targetBorderRadius: BorderRadius.circular(12),
-                                child: _buildSummaryRow(
-                                    context,
-                                    isDark: isDark,
-                                    title: l10n.cashFlow,
-                                    items: [
-                                      _SummaryItem(
-                                        label: l10n.income,
-                                        amountContent:
-                                            dashboardStatsAsync.when(
-                                          data: (s) =>
-                                              _buildSummaryAmountContent(
-                                            context,
-                                            amount: s.income(filter),
-                                            currency: currency,
-                                            isDark: isDark,
-                                          ),
-                                          loading: () => lastStats != null
-                                              ? _buildSummaryAmountContent(
-                                                context,
-                                                amount:
-                                                    lastStats.income(filter),
-                                                currency: currency,
-                                                isDark: isDark,
-                                              )
-                                              : _buildAmountPlaceholder(
-                                                  context, currency, isDark),
-                                          error: (_, __) =>
-                                              _buildAmountPlaceholder(
-                                                  context, currency, isDark),
-                                        ),
-                                        color: AppColors.incomeColor,
-                                        icon: Icons.south_west,
-                                        onTap: () {
-                                          final isMonthly = filter ==
-                                              DashboardFilter.monthly;
-                                          final now = DateTime.now();
-                                          final startDate = isMonthly
-                                              ? DateTime(
-                                                  now.year, now.month, 1)
-                                              : null;
-                                          final endDate = isMonthly
-                                              ? DateTime(now.year,
-                                                  now.month + 1, 0)
-                                              : null;
-                                          ref
-                                              .read(
-                                                  transactionsPaginatedProvider
-                                                      .notifier)
-                                              .applyFilters(
-                                                TransactionFilters(
-                                                  type: 'INCOME',
-                                                  startDate: startDate,
-                                                  endDate: endDate,
-                                                ),
-                                              );
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  const TransactionsListScreen(),
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                      _SummaryItem(
-                                        label: l10n.expense,
-                                        amountContent:
-                                            dashboardStatsAsync.when(
-                                          data: (s) =>
-                                              _buildSummaryAmountContent(
-                                            context,
-                                            amount: s.expense(filter),
-                                            currency: currency,
-                                            isDark: isDark,
-                                          ),
-                                          loading: () => lastStats != null
-                                              ? _buildSummaryAmountContent(
-                                                context,
-                                                amount:
-                                                    lastStats.expense(filter),
-                                                currency: currency,
-                                                isDark: isDark,
-                                              )
-                                              : _buildAmountPlaceholder(
-                                                  context, currency, isDark),
-                                          error: (_, __) =>
-                                              _buildAmountPlaceholder(
-                                                  context, currency, isDark),
-                                        ),
-                                        color: AppColors.expenseColor,
-                                        icon: Icons.north_east,
-                                        onTap: () {
-                                          final isMonthly = filter ==
-                                              DashboardFilter.monthly;
-                                          final now = DateTime.now();
-                                          final startDate = isMonthly
-                                              ? DateTime(
-                                                  now.year, now.month, 1)
-                                              : null;
-                                          final endDate = isMonthly
-                                              ? DateTime(now.year,
-                                                  now.month + 1, 0)
-                                              : null;
-                                          ref
-                                              .read(
-                                                  transactionsPaginatedProvider
-                                                      .notifier)
-                                              .applyFilters(
-                                                TransactionFilters(
-                                                  type: 'EXPENSE',
-                                                  startDate: startDate,
-                                                  endDate: endDate,
-                                                ),
-                                              );
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  const TransactionsListScreen(),
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                      _SummaryItem(
-                                        label: l10n.netCash,
-                                        amountContent:
-                                            dashboardStatsAsync.when(
-                                          data: (s) =>
-                                              _buildSummaryAmountContent(
-                                            context,
-                                            amount: s.netCash(filter),
-                                            currency: currency,
-                                            isDark: isDark,
-                                          ),
-                                          loading: () => lastStats != null
-                                              ? _buildSummaryAmountContent(
-                                                context,
-                                                amount:
-                                                    lastStats.netCash(filter),
-                                                currency: currency,
-                                                isDark: isDark,
-                                              )
-                                              : _buildAmountPlaceholder(
-                                                  context, currency, isDark),
-                                          error: (_, __) =>
-                                              _buildAmountPlaceholder(
-                                                  context, currency, isDark),
-                                        ),
-                                        color: activeForeColor,
-                                        icon: Icons.account_balance_wallet,
-                                        onTap: () {
-                                          final isMonthly = filter ==
-                                              DashboardFilter.monthly;
-                                          final now = DateTime.now();
-                                          final startDate = isMonthly
-                                              ? DateTime(
-                                                  now.year, now.month, 1)
-                                              : null;
-                                          final endDate = isMonthly
-                                              ? DateTime(now.year,
-                                                  now.month + 1, 0)
-                                              : null;
-                                          ref
-                                              .read(
-                                                  transactionsPaginatedProvider
-                                                      .notifier)
-                                              .applyFilters(
-                                                TransactionFilters(
-                                                  startDate: startDate,
-                                                  endDate: endDate,
-                                                ),
-                                              );
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  const TransactionsListScreen(),
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                    ],
-                                    currency: currency,
-                                  ),
-                              ),
-                              const SizedBox(height: 12),
-                              Showcase(
-                                key: TourService.lendingStatsKey,
-                                title: l10n.tourLendingTitle,
-                                description: l10n.tourLendingDesc,
-                                targetShapeBorder:
-                                    const RoundedRectangleBorder(
-                                  borderRadius:
-                                      BorderRadius.all(Radius.circular(12)),
-                                ),
-                                tooltipBackgroundColor: activeColor,
-                                textColor: Colors.white,
-                                targetBorderRadius: BorderRadius.circular(12),
-                                child: _buildSummaryRow(
-                                    context,
-                                    isDark: isDark,
-                                    title: l10n.lendingCredit,
-                                    items: [
-                                      _SummaryItem(
-                                        label: l10n.receivableTag,
-                                        amountContent:
-                                            dashboardStatsAsync.when(
-                                          data: (s) =>
-                                              _buildSummaryAmountContent(
-                                            context,
-                                            amount: s.receivable(filter),
-                                            currency: currency,
-                                            isDark: isDark,
-                                            overdue: s.overdueReceivable,
-                                          ),
-                                          loading: () => lastStats != null
-                                              ? _buildSummaryAmountContent(
-                                                context,
-                                                amount: lastStats
-                                                    .receivable(filter),
-                                                currency: currency,
-                                                isDark: isDark,
-                                                overdue:
-                                                    lastStats.overdueReceivable,
-                                              )
-                                              : _buildAmountPlaceholder(
-                                                  context, currency, isDark),
-                                          error: (_, __) =>
-                                              _buildAmountPlaceholder(
-                                                  context, currency, isDark),
-                                        ),
-                                        color: AppColors.receivableColor,
-                                        icon: Icons.call_received,
-                                        onTap: () {
-                                          final isMonthly = filter ==
-                                              DashboardFilter.monthly;
-                                          final now = DateTime.now();
-                                          final startDate = isMonthly
-                                              ? DateTime(
-                                                  now.year, now.month, 1)
-                                              : null;
-                                          final endDate = isMonthly
-                                              ? DateTime(now.year,
-                                                  now.month + 1, 0)
-                                              : null;
-                                          ref
-                                              .read(
-                                                  receivablesPaginatedProvider(
-                                                          'PENDING')
-                                                      .notifier)
-                                              .applyFilters(
-                                                ReceivableFilters(
-                                                  startDate: startDate,
-                                                  endDate: endDate,
-                                                ),
-                                              );
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  const ReceivablesListScreen(),
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                      _SummaryItem(
-                                        label: l10n.payableTag,
-                                        amountContent:
-                                            dashboardStatsAsync.when(
-                                          data: (s) =>
-                                              _buildSummaryAmountContent(
-                                            context,
-                                            amount: s.payable(filter),
-                                            currency: currency,
-                                            isDark: isDark,
-                                            overdue: s.overduePayable,
-                                          ),
-                                          loading: () => lastStats != null
-                                              ? _buildSummaryAmountContent(
-                                                context,
-                                                amount:
-                                                    lastStats.payable(filter),
-                                                currency: currency,
-                                                isDark: isDark,
-                                                overdue:
-                                                    lastStats.overduePayable,
-                                              )
-                                              : _buildAmountPlaceholder(
-                                                  context, currency, isDark),
-                                          error: (_, __) =>
-                                              _buildAmountPlaceholder(
-                                                  context, currency, isDark),
-                                        ),
-                                        color: AppColors.payableColor,
-                                        icon: Icons.call_made,
-                                        onTap: () {
-                                          final isMonthly = filter ==
-                                              DashboardFilter.monthly;
-                                          final now = DateTime.now();
-                                          final startDate = isMonthly
-                                              ? DateTime(
-                                                  now.year, now.month, 1)
-                                              : null;
-                                          final endDate = isMonthly
-                                              ? DateTime(now.year,
-                                                  now.month + 1, 0)
-                                              : null;
-                                          ref
-                                              .read(payablesPaginatedProvider(
-                                                      'PENDING')
-                                                  .notifier)
-                                              .applyFilters(
-                                                PayableFilters(
-                                                  startDate: startDate,
-                                                  endDate: endDate,
-                                                ),
-                                              );
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  const PayablesListScreen(),
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                      _SummaryItem(
-                                        label: l10n.netCredit,
-                                        amountContent:
-                                            dashboardStatsAsync.when(
-                                          data: (s) =>
-                                              _buildSummaryAmountContent(
-                                            context,
-                                            amount: s.netCredit(filter),
-                                            currency: currency,
-                                            isDark: isDark,
-                                          ),
-                                          loading: () => lastStats != null
-                                              ? _buildSummaryAmountContent(
-                                                context,
-                                                amount:
-                                                    lastStats.netCredit(filter),
-                                                currency: currency,
-                                                isDark: isDark,
-                                              )
-                                              : _buildAmountPlaceholder(
-                                                  context, currency, isDark),
-                                          error: (_, __) =>
-                                              _buildAmountPlaceholder(
-                                                  context, currency, isDark),
-                                        ),
-                                        color: activeForeColor,
-                                        icon: Icons.swap_horiz,
-                                      ),
-                                    ],
-                                    currency: currency,
-                                  ),
-                              ),
-                              const SizedBox(height: 12),
-                            ],
-                          ),
                               ],
                             ),
                           ),
@@ -1940,13 +1988,11 @@ class _DashboardTab extends ConsumerWidget {
                         ref.watch(effectiveDashboardWidgetLayoutProvider);
                     final reorderMode = ref.watch(dashboardReorderModeProvider);
                     return layoutAsync.when(
-                      data: (configs) =>
-                          _buildDashboardWidgetsSection(
-                              context, ref, theme, l10n, configs, reorderMode),
+                      data: (configs) => _buildDashboardWidgetsSection(
+                          context, ref, theme, l10n, configs, reorderMode),
                       loading: () {
-                        final configs = ref
-                            .read(dashboardWidgetLayoutProvider)
-                            .value;
+                        final configs =
+                            ref.read(dashboardWidgetLayoutProvider).value;
                         if (configs == null || configs.isEmpty) {
                           return const SizedBox.shrink();
                         }
@@ -2062,8 +2108,8 @@ class _DashboardTab extends ConsumerWidget {
                     IconButton(
                       icon: const Icon(Icons.checklist_rtl_outlined),
                       tooltip: l10n.addToDashboard,
-                      onPressed: () => _showAddWidgetSheet(
-                          context, ref, theme, l10n),
+                      onPressed: () =>
+                          _showAddWidgetSheet(context, ref, theme, l10n),
                     ),
                 ],
               ),
@@ -2090,8 +2136,8 @@ class _DashboardTab extends ConsumerWidget {
                     ),
                     const SizedBox(height: 8),
                     TextButton.icon(
-                      onPressed: () => _showAddWidgetSheet(
-                          context, ref, theme, l10n),
+                      onPressed: () =>
+                          _showAddWidgetSheet(context, ref, theme, l10n),
                       icon: const Icon(Icons.add),
                       label: Text(l10n.addToDashboard),
                     ),
@@ -2102,107 +2148,130 @@ class _DashboardTab extends ConsumerWidget {
           else
             reorderMode
                 ? ReorderableListView(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  buildDefaultDragHandles: false,
-                  onReorder: (oldIndex, newIndex) {
-                    if (newIndex > oldIndex) newIndex--;
-                    ref
-                        .read(dashboardWidgetLayoutProvider.notifier)
-                        .reorder(oldIndex, newIndex);
-                  },
-                  children: [
-                    for (var i = 0; i < configs.length; i++)
-                      KeyedSubtree(
-                        key: configs[i].kind.isEntity
-                            ? ValueKey(
-                                'entity-$i-${configs[i].entityUuid}')
-                            : ValueKey(
-                                'summary-$i-${configs[i].kind.name}'),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                ReorderableDragStartListener(
-                                  index: i,
-                                  child: Padding(
-                                    padding: const EdgeInsets.only(
-                                        right: 8, top: 16),
-                                    child: Icon(
-                                      Icons.drag_handle,
-                                      color: theme.iconTheme.color
-                                          ?.withValues(alpha: 0.7),
-                                      size: 24,
-                                    ),
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    buildDefaultDragHandles: false,
+                    onReorder: (oldIndex, newIndex) {
+                      if (newIndex > oldIndex) newIndex--;
+                      ref
+                          .read(dashboardWidgetLayoutProvider.notifier)
+                          .reorder(oldIndex, newIndex);
+                    },
+                    children: [
+                      for (var i = 0; i < configs.length; i++)
+                        KeyedSubtree(
+                          key: configs[i].kind.isEntity
+                              ? ValueKey('entity-$i-${configs[i].entityUuid}')
+                              : ValueKey('summary-$i-${configs[i].kind.name}'),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              ReorderableDragStartListener(
+                                index: i,
+                                child: Padding(
+                                  padding:
+                                      const EdgeInsets.only(right: 8, top: 16),
+                                  child: Container(
+                                  width: 36,
+                                  height: 36,
+                                  decoration: BoxDecoration(
+                                    color: theme.colorScheme.primary,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                        color: Colors.white, width: 2),
+                                    boxShadow: const [
+                                      BoxShadow(
+                                        color: Colors.black26,
+                                        blurRadius: 4,
+                                        offset: Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Icon(
+                                    Icons.drag_handle,
+                                    color: theme.colorScheme.onPrimary,
+                                    size: 20,
+                                  ),
                                   ),
                                 ),
-                                const SizedBox(height: 24),
-                                IconButton(
-                                  padding: const EdgeInsets.only(right: 8),
-                                  constraints: const BoxConstraints(),
-                                  icon: const Icon(Icons.close,
-                                      size: 20, color: Colors.red),
-                                  onPressed: () => ref
-                                      .read(dashboardWidgetLayoutProvider
-                                          .notifier)
-                                      .removeAt(i),
-                                ),
-                              ],
-                            ),
-                            Expanded(
-                              child: configs[i].kind.isEntity
-                                  ? DashboardEntityWidgetCard(
-                                      config: configs[i],
-                                      layoutIndex: i,
-                                    )
-                                  : DashboardSummaryWidgetCard(
-                                      config: configs[i],
-                                      layoutIndex: i,
-                                      reorderKey: ValueKey(
-                                          'summary-$i-${configs[i].kind.name}'),
-                                    ),
-                            ),
-                          ],
+                              ),
+                              Expanded(
+                                child: configs[i].kind.isEntity
+                                    ? DashboardEntityWidgetCard(
+                                        config: configs[i],
+                                        layoutIndex: i,
+                                      )
+                                    : DashboardSummaryWidgetCard(
+                                        config: configs[i],
+                                        layoutIndex: i,
+                                        reorderKey: ValueKey(
+                                            'summary-$i-${configs[i].kind.name}'),
+                                      ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                  ],
-                )
-              : Column(
-                  children: [
-                    for (var i = 0; i < configs.length; i++)
-                      configs[i].kind.isEntity
-                          ? DashboardEntityWidgetCard(
-                              config: configs[i],
-                              layoutIndex: i,
-                            )
-                          : DashboardSummaryWidgetCard(
-                              config: configs[i],
-                              layoutIndex: i,
-                              reorderKey: ValueKey(
-                                  'summary-$i-${configs[i].kind.name}'),
-                            ),
-                  ],
-                ),
+                    ],
+                  )
+                : Column(
+                    children: [
+                      for (var i = 0; i < configs.length; i++)
+                        configs[i].kind.isEntity
+                            ? DashboardEntityWidgetCard(
+                                config: configs[i],
+                                layoutIndex: i,
+                              )
+                            : DashboardSummaryWidgetCard(
+                                config: configs[i],
+                                layoutIndex: i,
+                                reorderKey: ValueKey(
+                                    'summary-$i-${configs[i].kind.name}'),
+                              ),
+                    ],
+                  ),
         ],
       ),
     );
   }
 
-  static void _showAddWidgetSheet(
-      BuildContext context, WidgetRef ref, ThemeData theme, AppLocalizations l10n) {
+  static void _showAddWidgetSheet(BuildContext context, WidgetRef ref,
+      ThemeData theme, AppLocalizations l10n) {
     final summaryKinds = [
-      (DashboardWidgetKind.balance, l10n.availableCash, Icons.account_balance_wallet_outlined),
+      (
+        DashboardWidgetKind.balance,
+        l10n.availableCash,
+        Icons.account_balance_wallet_outlined
+      ),
       (DashboardWidgetKind.cashFlow, l10n.cashFlow, Icons.trending_up),
+      (
+        DashboardWidgetKind.netCredit,
+        l10n.netCredit,
+        Icons.account_balance_wallet_outlined
+      ),
       (DashboardWidgetKind.incomeSummary, l10n.income, Icons.trending_up),
       (DashboardWidgetKind.expenseSummary, l10n.expense, Icons.trending_down),
-      (DashboardWidgetKind.receivablesSummary, l10n.receivableTag, Icons.call_received),
+      (
+        DashboardWidgetKind.receivablesSummary,
+        l10n.receivableTag,
+        Icons.call_received
+      ),
       (DashboardWidgetKind.payablesSummary, l10n.payableTag, Icons.call_made),
-      (DashboardWidgetKind.contactsSummary, l10n.contacts, Icons.people_outline),
-      (DashboardWidgetKind.categoriesSummary, l10n.categories, Icons.category_outlined),
+      (
+        DashboardWidgetKind.contactsSummary,
+        l10n.contacts,
+        Icons.people_outline
+      ),
+      (
+        DashboardWidgetKind.categoriesSummary,
+        l10n.categories,
+        Icons.category_outlined
+      ),
       (DashboardWidgetKind.netWorth, l10n.netWorth, Icons.pie_chart_outline),
-      (DashboardWidgetKind.quickActions, l10n.quickActions, Icons.grid_view_rounded),
+      (
+        DashboardWidgetKind.quickActions,
+        l10n.quickActions,
+        Icons.grid_view_rounded
+      ),
     ];
     showModalBottomSheet<void>(
       context: context,
@@ -2211,8 +2280,7 @@ class _DashboardTab extends ConsumerWidget {
         child: Consumer(
           builder: (context, ref, _) {
             final layoutAsync = ref.watch(dashboardWidgetLayoutProvider);
-            final configs =
-                layoutAsync.value ?? defaultDashboardWidgetLayout;
+            final configs = layoutAsync.value ?? defaultDashboardWidgetLayout;
             return SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -3113,8 +3181,8 @@ class _DashboardTab extends ConsumerWidget {
     }
 
     return GestureDetector(
-      onLongPress: () => _showQuickActionSelectionSheetForBottomBar(
-          context, ref, theme, l10n),
+      onLongPress: () =>
+          _showQuickActionSelectionSheetForBottomBar(context, ref, theme, l10n),
       child: FloatingActionButton(
         onPressed: onTap,
         backgroundColor: activeColor,
