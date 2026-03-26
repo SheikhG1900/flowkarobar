@@ -13,6 +13,8 @@ enum DashboardWidgetKind {
   categoriesSummary,
   netWorth,
   quickActions,
+  incomeSummary,
+  expenseSummary,
   // Entity widgets
   transaction,
   category,

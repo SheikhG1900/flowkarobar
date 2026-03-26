@@ -29,6 +29,7 @@ class TransactionScenarios {
       icon: Icons.payments,
       sortOrder: 3,
     ),
+/*	
     TransactionScenario(
       id: 'scenarioPaidBillForSomeone',
       type: 'EXPENSE',
@@ -36,6 +37,7 @@ class TransactionScenarios {
       icon: Icons.receipt,
       sortOrder: 4,
     ),
+*/
     TransactionScenario(
       id: 'scenarioSplitYouPaid',
       type: 'EXPENSE',
@@ -44,6 +46,7 @@ class TransactionScenarios {
       sortOrder: 5,
     ),
     // --- Expense + Payable (PAID_BY) ---
+/*    
     TransactionScenario(
       id: 'scenarioFriendPaidMeal',
       type: 'EXPENSE',
@@ -51,6 +54,7 @@ class TransactionScenarios {
       icon: Icons.restaurant,
       sortOrder: 10,
     ),
+*/
     TransactionScenario(
       id: 'scenarioSomeonePaidBill',
       type: 'EXPENSE',
@@ -58,6 +62,7 @@ class TransactionScenarios {
       icon: Icons.receipt,
       sortOrder: 11,
     ),
+/*
     TransactionScenario(
       id: 'scenarioColleaguePaidForYou',
       type: 'EXPENSE',
@@ -65,6 +70,7 @@ class TransactionScenarios {
       icon: Icons.payments,
       sortOrder: 12,
     ),
+*/
     TransactionScenario(
       id: 'scenarioSplitTheyPaid',
       type: 'EXPENSE',
@@ -80,6 +86,7 @@ class TransactionScenarios {
       sortOrder: 14,
     ),
     // --- Income + Payable (RECEIVED_FROM) ---
+/*
     TransactionScenario(
       id: 'scenarioBorrowedCash',
       type: 'INCOME',
@@ -87,6 +94,7 @@ class TransactionScenarios {
       icon: Icons.account_balance_wallet,
       sortOrder: 20,
     ),
+*/
     TransactionScenario(
       id: 'scenarioLoanReceived',
       type: 'INCOME',
@@ -94,6 +102,7 @@ class TransactionScenarios {
       icon: Icons.handshake,
       sortOrder: 21,
     ),
+/*
     TransactionScenario(
       id: 'scenarioBorrowedFromContact',
       type: 'INCOME',
@@ -101,6 +110,7 @@ class TransactionScenarios {
       icon: Icons.person,
       sortOrder: 22,
     ),
+*/
     TransactionScenario(
       id: 'scenarioSalaryAdvance',
       type: 'INCOME',
@@ -108,6 +118,7 @@ class TransactionScenarios {
       icon: Icons.work,
       sortOrder: 23,
     ),
+/*
     TransactionScenario(
       id: 'scenarioReceivedToRepay',
       type: 'INCOME',
@@ -115,7 +126,9 @@ class TransactionScenarios {
       icon: Icons.reply,
       sortOrder: 24,
     ),
+*/
     // --- Income + Receivable (WILL_RECEIVE) ---
+/*
     TransactionScenario(
       id: 'scenarioSalaryPending',
       type: 'INCOME',
@@ -123,6 +136,7 @@ class TransactionScenarios {
       icon: Icons.work,
       sortOrder: 30,
     ),
+*/
     TransactionScenario(
       id: 'scenarioClientPaymentPending',
       type: 'INCOME',
@@ -151,6 +165,7 @@ class TransactionScenarios {
       icon: Icons.sell,
       sortOrder: 34,
     ),
+/*
     TransactionScenario(
       id: 'scenarioInvoicePending',
       type: 'INCOME',
@@ -158,6 +173,7 @@ class TransactionScenarios {
       icon: Icons.description,
       sortOrder: 35,
     ),
+*/
     // --- Expense only ---
     TransactionScenario(
       id: 'scenarioPersonalExpense',
@@ -188,6 +204,7 @@ class TransactionScenarios {
       icon: Icons.payments,
       sortOrder: 50,
     ),
+/*
     TransactionScenario(
       id: 'scenarioFreelanceIncome',
       type: 'INCOME',
@@ -195,6 +212,7 @@ class TransactionScenarios {
       icon: Icons.work,
       sortOrder: 51,
     ),
+
     TransactionScenario(
       id: 'scenarioGiftReceived',
       type: 'INCOME',
@@ -202,6 +220,7 @@ class TransactionScenarios {
       icon: Icons.card_giftcard,
       sortOrder: 52,
     ),
+
     TransactionScenario(
       id: 'scenarioRefundReceived',
       type: 'INCOME',
@@ -209,5 +228,6 @@ class TransactionScenarios {
       icon: Icons.replay,
       sortOrder: 53,
     ),
+*/
   ];
 }

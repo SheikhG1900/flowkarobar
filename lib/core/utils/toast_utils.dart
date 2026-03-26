@@ -97,6 +97,7 @@ class ToastUtils {
     scaffoldMessenger.hideCurrentSnackBar();
     scaffoldMessenger.showSnackBar(
       SnackBar(
+        dismissDirection: DismissDirection.horizontal,
         content: TweenAnimationBuilder<Offset>(
           tween: Tween(begin: const Offset(0.2, 0), end: Offset.zero),
           duration: const Duration(milliseconds: 600),

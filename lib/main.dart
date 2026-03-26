@@ -2195,6 +2195,8 @@ class _DashboardTab extends ConsumerWidget {
     final summaryKinds = [
       (DashboardWidgetKind.balance, l10n.availableCash, Icons.account_balance_wallet_outlined),
       (DashboardWidgetKind.cashFlow, l10n.cashFlow, Icons.trending_up),
+      (DashboardWidgetKind.incomeSummary, l10n.income, Icons.trending_up),
+      (DashboardWidgetKind.expenseSummary, l10n.expense, Icons.trending_down),
       (DashboardWidgetKind.receivablesSummary, l10n.receivableTag, Icons.call_received),
       (DashboardWidgetKind.payablesSummary, l10n.payableTag, Icons.call_made),
       (DashboardWidgetKind.contactsSummary, l10n.contacts, Icons.people_outline),

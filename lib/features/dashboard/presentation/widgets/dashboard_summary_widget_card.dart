@@ -32,6 +32,9 @@ import 'package:flowpaisa/features/transactions/presentation/screens/add_transac
 import 'package:flowpaisa/features/settings/presentation/screens/user_guide_screen.dart';
 import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
 import 'package:flowpaisa/core/utils/category_helper.dart';
+import 'package:flowpaisa/features/categories/presentation/widgets/category_budget_progress_bar.dart';
+import 'package:flowpaisa/core/utils/category_budget_utils.dart';
+import 'package:flowpaisa/shared/widgets/dual_amount_progress_bar.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:flowpaisa/features/tour/domain/tour_service.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -206,9 +209,352 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
         );
       case DashboardWidgetKind.quickActions:
         return _buildQuickActions(context, ref, l10n, isPremium, reorderMode);
+      case DashboardWidgetKind.incomeSummary:
+        return _buildIncomeExpenseSummary(
+          context,
+          ref,
+          theme,
+          l10n,
+          currency,
+          filter,
+          isIncome: true,
+          onRemove: () => _removeAt(ref, layoutIndex),
+          reorderKey: reorderKey,
+        );
+      case DashboardWidgetKind.expenseSummary:
+        return _buildIncomeExpenseSummary(
+          context,
+          ref,
+          theme,
+          l10n,
+          currency,
+          filter,
+          isIncome: false,
+          onRemove: () => _removeAt(ref, layoutIndex),
+          reorderKey: reorderKey,
+        );
       default:
         return const SizedBox.shrink();
     }
+  }
+
+  Widget _buildIncomeExpenseSummary(
+    BuildContext context,
+    WidgetRef ref,
+    ThemeData theme,
+    AppLocalizations l10n,
+    dynamic currency,
+    DashboardFilter filter, {
+    required bool isIncome,
+    required VoidCallback onRemove,
+    Key? reorderKey,
+  }) {
+    final type = isIncome ? 'INCOME' : 'EXPENSE';
+    final categoriesAsync = ref.watch(categoriesByTypeProvider(type));
+    final range = ref.watch(categoryBudgetDateRangeProvider);
+    final netsAsync = ref.watch(categoryNetAmountsForListProvider(type));
+    final includeAsync =
+        ref.watch(includeUncategorizedInCategorySummaryProvider);
+    final uncategorizedAsync =
+        ref.watch(uncategorizedNetForCategoryPeriodProvider);
+
+    final symbol = currency?.symbol ?? '';
+    final decimals = currency?.decimalPlaces ?? 2;
+    final color = isIncome ? AppColors.incomeColor : AppColors.expenseColor;
+
+    return categoriesAsync.when(
+      data: (categories) {
+        return netsAsync.when(
+          data: (nets) {
+            final includeUncategorized = includeAsync.value ?? false;
+            final uncategorizedAmt = uncategorizedAsync.value ?? 0.0;
+
+            double categorizedNet = 0;
+            double totalBudgetCap = 0;
+            for (final c in categories) {
+              categorizedNet += nets[c.uuid] ?? 0;
+              final b = budgetAmountForPeriod(c, range);
+              if (b != null && b > 0) {
+                totalBudgetCap += b;
+              }
+            }
+
+            final totalNet =
+                categorizedNet + (includeUncategorized ? uncategorizedAmt : 0.0);
+
+            final hasBudget = totalBudgetCap > 0;
+            final pr = hasBudget ? totalNet / totalBudgetCap : 0.0;
+            final over = hasBudget && pr > 1.0;
+            final barFillColor = over ? AppColors.expenseColor : color;
+
+            final netStr = AmountFormatter.formatWithCurrency(
+              totalNet,
+              symbol,
+              decimals,
+            );
+            final budgetStr = AmountFormatter.formatWithCurrency(
+              totalBudgetCap,
+              symbol,
+              decimals,
+            );
+            final uncategorizedStr = AmountFormatter.formatWithCurrency(
+              uncategorizedAmt,
+              symbol,
+              decimals,
+            );
+
+            final gradientCardDecoration = BoxDecoration(
+              gradient: LinearGradient(
+                colors: [color, color.withValues(alpha: 0.82)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: color.withValues(alpha: 0.28),
+                  blurRadius: 8,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            );
+
+            final isDarkForChip = theme.brightness == Brightness.dark;
+            const chipLabelLight = Color(0xFF0F172A);
+
+            return _wrapCard(
+              reorderKey: reorderKey,
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Container(
+                      clipBehavior: Clip.antiAlias,
+                      decoration: gradientCardDecoration,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => CategoriesListScreen(
+                                      initialIndex: isIncome ? 1 : 0,
+                                    ),
+                                  ),
+                                );
+                              },
+                              onLongPress: () => _showSummaryActionsSheet(
+                                context,
+                                ref,
+                                onRemove,
+                                l10n,
+                              ),
+                              child: Padding(
+                                padding:
+                                    const EdgeInsets.fromLTRB(12, 10, 12, 10),
+                                child: Stack(
+                                  alignment: Alignment.center,
+                                  children: [
+                                    Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          isIncome
+                                              ? l10n.netIncome
+                                              : l10n.netExpenses,
+                                          style: theme.textTheme.labelMedium
+                                              ?.copyWith(
+                                            color: Colors.white
+                                                .withValues(alpha: 0.88),
+                                            fontWeight: FontWeight.w500,
+                                            fontSize: 11,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          netStr,
+                                          style: theme.textTheme.titleLarge
+                                              ?.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 20,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                        if (hasBudget) ...[
+                                          const SizedBox(height: 6),
+                                          Text(
+                                            budgetStr,
+                                            style: theme.textTheme.labelLarge
+                                                ?.copyWith(
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 12,
+                                              color: Colors.white
+                                                  .withValues(alpha: 0.92),
+                                            ),
+                                          ),
+                                        ],
+                                      ],
+                                    ),
+                                    PositionedDirectional(
+                                      end: 0,
+                                      child: Container(
+                                        padding: const EdgeInsets.all(7),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white
+                                              .withValues(alpha: 0.2),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: const Icon(
+                                          Icons.arrow_forward_ios,
+                                          size: 14,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                          Divider(
+                            height: 1,
+                            thickness: 1,
+                            color: Colors.white.withValues(alpha: 0.22),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        l10n.uncategorized,
+                                        style: theme.textTheme.labelSmall
+                                            ?.copyWith(
+                                          color: Colors.white
+                                              .withValues(alpha: 0.78),
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 10,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        uncategorizedStr,
+                                        style: theme.textTheme.titleSmall
+                                            ?.copyWith(
+                                          fontWeight: FontWeight.w700,
+                                          color: Colors.white,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                FilterChip(
+                                  showCheckmark: true,
+                                  selected: includeUncategorized,
+                                  label: Text(
+                                    l10n.categoriesSummaryIncludeInTotal,
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                      color: isDarkForChip
+                                          ? Colors.white.withValues(
+                                              alpha: includeUncategorized
+                                                  ? 1.0
+                                                  : 0.92,
+                                            )
+                                          : (includeUncategorized
+                                              ? color
+                                              : chipLabelLight),
+                                    ),
+                                  ),
+                                  selectedColor: isDarkForChip
+                                      ? Colors.white.withValues(alpha: 0.28)
+                                      : Colors.white.withValues(alpha: 0.92),
+                                  backgroundColor: isDarkForChip
+                                      ? Colors.white.withValues(alpha: 0.12)
+                                      : Colors.white.withValues(alpha: 0.55),
+                                  disabledColor: isDarkForChip
+                                      ? Colors.white.withValues(alpha: 0.08)
+                                      : Colors.white.withValues(alpha: 0.35),
+                                  checkmarkColor:
+                                      isDarkForChip ? Colors.white : color,
+                                  side: BorderSide(
+                                    color: isDarkForChip
+                                        ? Colors.white.withValues(
+                                            alpha: includeUncategorized
+                                                ? 0.5
+                                                : 0.32,
+                                          )
+                                        : Colors.white.withValues(
+                                            alpha: includeUncategorized
+                                                ? 0.75
+                                                : 0.5,
+                                          ),
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 0,
+                                  ),
+                                  materialTapTargetSize:
+                                      MaterialTapTargetSize.shrinkWrap,
+                                  visualDensity: VisualDensity.compact,
+                                  onSelected: (selected) {
+                                    ref
+                                        .read(
+                                          includeUncategorizedInCategorySummaryProvider
+                                              .notifier,
+                                        )
+                                        .setInclude(selected);
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (hasBudget) ...[
+                      const SizedBox(height: 8),
+                      DualAmountProgressBar(
+                        leftLabel: isIncome
+                            ? l10n.budgetBarProgress
+                            : l10n.budgetBarUsed,
+                        leftAmount: totalNet > 0 ? totalNet : 0.0,
+                        rightLabel: l10n.remaining,
+                        rightAmount: (totalBudgetCap - totalNet) > 0
+                            ? (totalBudgetCap - totalNet)
+                            : 0.0,
+                        symbol: symbol,
+                        decimals: decimals,
+                        filledColor: barFillColor,
+                        compact: true,
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            );
+          },
+          loading: () => _buildCardPlaceholder(theme, reorderKey),
+          error: (_, __) => const SizedBox.shrink(),
+        );
+      },
+      loading: () => _buildCardPlaceholder(theme, reorderKey),
+      error: (_, __) => const SizedBox.shrink(),
+    );
   }
 
   Widget _buildFromStats(

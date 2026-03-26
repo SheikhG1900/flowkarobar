@@ -199,76 +199,107 @@ class _ScheduleSelectionDrawerState extends State<ScheduleSelectionDrawer> {
       l10n.saturday
     ];
 
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: List.generate(7, (index) {
-        final isSelected = _selectedDaysOfWeek.contains(index);
-        return FilterChip(
-          label: Text(days[index]),
-          selected: isSelected,
-          onSelected: (selected) {
-            setState(() {
-              if (selected) {
-                _selectedDaysOfWeek.add(index);
-                _isDailySelected = false;
-                _selectedDaysOfMonth.clear();
-              } else {
-                _selectedDaysOfWeek.remove(index);
-              }
-            });
-          },
-          selectedColor: theme.colorScheme.primary.withValues(alpha: 0.2),
-          checkmarkColor: theme.colorScheme.primary,
-          labelStyle: TextStyle(
-            color: isSelected
-                ? theme.colorScheme.primary
-                : theme.colorScheme.onSurface,
-          ),
-          side: BorderSide(
-            color: isSelected ? theme.colorScheme.primary : theme.dividerColor,
-            width: isSelected ? 2 : 1,
-          ),
-        );
-      }),
-    );
+    return LayoutBuilder(builder: (context, constraints) {
+      // Calculate width for 4 chips per row with spacing
+      final chipWidth = (constraints.maxWidth - (3 * 8)) / 4;
+
+      return Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: List.generate(7, (index) {
+          final isSelected = _selectedDaysOfWeek.contains(index);
+          return SizedBox(
+            width: chipWidth,
+            child: FilterChip(
+              label: Center(
+                child: Text(
+                  days[index],
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              selected: isSelected,
+              showCheckmark: false,
+              onSelected: (selected) {
+                setState(() {
+                  if (selected) {
+                    _selectedDaysOfWeek.add(index);
+                    _isDailySelected = false;
+                    _selectedDaysOfMonth.clear();
+                  } else {
+                    _selectedDaysOfWeek.remove(index);
+                  }
+                });
+              },
+              selectedColor: theme.colorScheme.primary.withValues(alpha: 0.2),
+              labelStyle: TextStyle(
+                color: isSelected
+                    ? theme.colorScheme.primary
+                    : theme.colorScheme.onSurface,
+                fontSize: 12,
+              ),
+              padding: EdgeInsets.zero,
+              labelPadding: const EdgeInsets.symmetric(horizontal: 4),
+              side: BorderSide(
+                color: isSelected
+                    ? theme.colorScheme.primary
+                    : theme.dividerColor,
+                width: isSelected ? 2 : 1,
+              ),
+            ),
+          );
+        }),
+      );
+    });
   }
 
   Widget _buildDaysOfMonthChips(ThemeData theme) {
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: List.generate(31, (index) {
-        final day = index + 1;
-        final isSelected = _selectedDaysOfMonth.contains(day);
-        return FilterChip(
-          label: Text('$day'),
-          selected: isSelected,
-          onSelected: (selected) {
-            setState(() {
-              if (selected) {
-                _selectedDaysOfMonth.add(day);
-                _isDailySelected = false;
-                _selectedDaysOfWeek.clear();
-              } else {
-                _selectedDaysOfMonth.remove(day);
-              }
-            });
-          },
-          selectedColor: theme.colorScheme.primary.withValues(alpha: 0.2),
-          checkmarkColor: theme.colorScheme.primary,
-          labelStyle: TextStyle(
-            color: isSelected
-                ? theme.colorScheme.primary
-                : theme.colorScheme.onSurface,
-          ),
-          side: BorderSide(
-            color: isSelected ? theme.colorScheme.primary : theme.dividerColor,
-            width: isSelected ? 2 : 1,
-          ),
-        );
-      }),
-    );
+    return LayoutBuilder(builder: (context, constraints) {
+      // 7 chips per row for days of month
+      final chipWidth = (constraints.maxWidth - (6 * 8)) / 7;
+
+      return Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: List.generate(31, (index) {
+          final day = index + 1;
+          final isSelected = _selectedDaysOfMonth.contains(day);
+          return SizedBox(
+            width: chipWidth,
+            child: FilterChip(
+              label: Center(child: Text('$day')),
+              selected: isSelected,
+              showCheckmark: false,
+              onSelected: (selected) {
+                setState(() {
+                  if (selected) {
+                    _selectedDaysOfMonth.add(day);
+                    _isDailySelected = false;
+                    _selectedDaysOfWeek.clear();
+                  } else {
+                    _selectedDaysOfMonth.remove(day);
+                  }
+                });
+              },
+              selectedColor: theme.colorScheme.primary.withValues(alpha: 0.2),
+              labelStyle: TextStyle(
+                color: isSelected
+                    ? theme.colorScheme.primary
+                    : theme.colorScheme.onSurface,
+                fontSize: 12,
+              ),
+              padding: EdgeInsets.zero,
+              labelPadding: EdgeInsets.zero,
+              side: BorderSide(
+                color: isSelected
+                    ? theme.colorScheme.primary
+                    : theme.dividerColor,
+                width: isSelected ? 2 : 1,
+              ),
+            ),
+          );
+        }),
+      );
+    });
   }
 
   bool _canConfirm() {

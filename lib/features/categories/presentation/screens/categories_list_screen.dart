@@ -25,7 +25,8 @@ import 'package:flowpaisa/features/transactions/presentation/providers/transacti
 import 'package:flowpaisa/features/transactions/presentation/screens/transactions_list_screen.dart';
 
 class CategoriesListScreen extends ConsumerStatefulWidget {
-  const CategoriesListScreen({super.key});
+  final int initialIndex;
+  const CategoriesListScreen({super.key, this.initialIndex = 0});
 
   @override
   ConsumerState<CategoriesListScreen> createState() =>
@@ -39,7 +40,11 @@ class _CategoriesListScreenState extends ConsumerState<CategoriesListScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(
+      length: 2,
+      vsync: this,
+      initialIndex: widget.initialIndex,
+    );
   }
 
   @override
