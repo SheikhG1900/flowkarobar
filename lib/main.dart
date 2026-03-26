@@ -3398,7 +3398,7 @@ class _SettingsTab extends ConsumerWidget {
                 ),
                 ListTile(
                   leading: const Icon(Icons.font_download_outlined),
-                  title: const Text('Font Selection'),
+                  title: Text(l10n.fontSelection),
                   subtitle: Consumer(
                     builder: (context, ref, child) {
                       final font = ref.watch(currentFontProvider);
