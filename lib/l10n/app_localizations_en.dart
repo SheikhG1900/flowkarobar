@@ -4032,4 +4032,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noWidgetsOnDashboard => 'No widgets on dashboard';
+
+  @override
+  String get switchCashbook => 'Switch Cashbook';
+
+  @override
+  String get switchText => 'Switch';
 }

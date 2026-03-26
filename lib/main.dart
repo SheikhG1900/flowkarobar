@@ -280,6 +280,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       final currencySymbol = ref.read(currencySymbolProvider);
       final decimals = ref.read(currencyDecimalPlacesProvider);
 
+      final activeCashbook = ref.read(activeCashbookProvider);
       final service = CreditCardNotificationService(accountsRepo);
       await service.checkAndNotify(
         currencySymbol: currencySymbol,
@@ -289,12 +290,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           required String message,
           required NotificationType type,
           required bool isUrgent,
+          String? cashbookUuid,
+          String? entityId,
+          String? titleKey,
+          String? messageKey,
+          Map<String, String>? parameters,
         }) {
           notifier.addNotification(
             title: title,
             message: message,
             type: type,
             isUrgent: isUrgent,
+            cashbookUuid: cashbookUuid ?? activeCashbook.id,
+            entityId: entityId,
+            titleKey: titleKey,
+            messageKey: messageKey,
+            parameters: parameters,
           );
         },
       );

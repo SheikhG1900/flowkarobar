@@ -7384,6 +7384,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No widgets on dashboard'**
   String get noWidgetsOnDashboard;
+
+  /// No description provided for @switchCashbook.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch Cashbook'**
+  String get switchCashbook;
+
+  /// No description provided for @switchText.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch'**
+  String get switchText;
 }
 
 class _AppLocalizationsDelegate

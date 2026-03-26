@@ -4047,4 +4047,10 @@ class AppLocalizationsUr extends AppLocalizations {
 
   @override
   String get noWidgetsOnDashboard => 'ڈیش بورڈ پر کوئی ویجٹ نہیں ہے';
+
+  @override
+  String get switchCashbook => 'کیش بک تبدیل کریں';
+
+  @override
+  String get switchText => 'تبدیل کریں';
 }

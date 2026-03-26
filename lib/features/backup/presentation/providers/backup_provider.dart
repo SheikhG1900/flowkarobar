@@ -1338,6 +1338,12 @@ class BackupNotifier extends Notifier<BackupState> {
           title: l10n.notificationBackupSuccessTitle,
           message: l10n.notificationBackupSuccessMessage(cashbook.name),
           type: NotificationType.backup,
+          cashbookUuid: cashbook.id,
+          titleKey: 'notificationBackupSuccessTitle',
+          messageKey: 'notificationBackupSuccessMessage',
+          parameters: {
+            'name': cashbook.name,
+          },
         );
         // Also update the active notifier if it exists
         ref.read(notificationProvider.notifier).refresh();

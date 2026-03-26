@@ -4042,4 +4042,10 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get noWidgetsOnDashboard => 'डैशबोर्ड पर कोई विजेट नहीं है';
+
+  @override
+  String get switchCashbook => 'कैशबुक बदलें';
+
+  @override
+  String get switchText => 'बदलें';
 }

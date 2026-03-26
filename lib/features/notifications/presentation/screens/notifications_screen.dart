@@ -4,6 +4,13 @@ import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/core/utils/date_formatter.dart';
 import 'package:flowpaisa/features/notifications/presentation/providers/notification_provider.dart';
+import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
+import 'package:flowpaisa/features/receivables/presentation/screens/edit_receivable_screen.dart';
+import 'package:flowpaisa/features/receivables/presentation/screens/receivables_list_screen.dart';
+import 'package:flowpaisa/features/payables/presentation/screens/edit_payable_screen.dart';
+import 'package:flowpaisa/features/payables/presentation/screens/payables_list_screen.dart';
+import 'package:flowpaisa/features/accounts/presentation/screens/account_detail_screen.dart';
+import 'package:flowpaisa/features/backup/presentation/screens/backup_screen.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/shared/widgets/app_floating_action_button.dart';
 
@@ -36,7 +43,7 @@ class NotificationsScreen extends ConsumerWidget {
       ),
       body: notifications.isEmpty
           ? _buildEmptyState(context, theme, l10n)
-          : _buildNotificationsList(context, theme, notifications, notifier),
+          : _buildNotificationsList(context, ref, theme, notifications, notifier),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: notifications.isNotEmpty
           ? AppFloatingActionButton(
@@ -133,6 +140,7 @@ class NotificationsScreen extends ConsumerWidget {
 
   Widget _buildNotificationsList(
     BuildContext context,
+    WidgetRef ref,
     ThemeData theme,
     List<NotificationItem> notifications,
     NotificationNotifier notifier,
@@ -144,10 +152,99 @@ class NotificationsScreen extends ConsumerWidget {
         final notification = notifications[index];
         return _NotificationCard(
           notification: notification,
-          onTap: () => notifier.markAsRead(notification.id),
+          onTap: () async {
+            await ref.read(notificationProvider.notifier).markAsRead(notification.id);
+            if (context.mounted) {
+              _handleNavigation(context, ref, notification);
+            }
+          },
         );
       },
     );
+  }
+
+  Future<void> _handleNavigation(
+      BuildContext context, WidgetRef ref, NotificationItem notification) async {
+    // If notification is for a specific cashbook, check if it's active
+    if (notification.cashbookUuid != null) {
+      final activeId = ref.read(activeCashbookIdProvider);
+      if (activeId != notification.cashbookUuid) {
+        final cashbooks = ref.read(cashbooksProvider);
+        final targetCashbook = cashbooks.firstWhere(
+            (c) => c.id == notification.cashbookUuid,
+            orElse: () => cashbooks.first);
+
+        final l10n = AppLocalizations.of(context)!;
+        final proceed = await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: Text(l10n.switchCashbook),
+            content: Text(
+                'This notification is for "${targetCashbook.name}". Would you like to switch to this cashbook?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: Text(l10n.cancel),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                child: Text(l10n.switchText),
+              ),
+            ],
+          ),
+        );
+
+        if (proceed == true) {
+          await ref
+              .read(activeCashbookIdProvider.notifier)
+              .setActive(notification.cashbookUuid!);
+          // After switching, we need to wait for the app to rebuild/refresh
+          // Since we use Phoenix.rebirth in setActive (indirectly via main.dart listener or similar)
+          // we might just let it restart. But let's try to navigate after switch if possible.
+          // Actually, setActive usually triggers a rebirth in this app.
+          return;
+        } else {
+          return; // User cancelled switch
+        }
+      }
+    }
+
+    // Navigate to the specific screen
+    Widget? screen;
+    switch (notification.type) {
+      case NotificationType.receivable:
+        if (notification.entityId != null) {
+          screen = EditReceivableScreen(receivableUuid: notification.entityId!);
+        } else {
+          screen = const ReceivablesListScreen();
+        }
+        break;
+      case NotificationType.payable:
+        if (notification.entityId != null) {
+          screen = EditPayableScreen(payableUuid: notification.entityId!);
+        } else {
+          screen = const PayablesListScreen();
+        }
+        break;
+      case NotificationType.creditCard:
+        if (notification.entityId != null) {
+          screen = AccountDetailScreen(accountUuid: notification.entityId!);
+        }
+        break;
+      case NotificationType.sync:
+      case NotificationType.backup:
+        screen = const BackupScreen();
+        break;
+      default:
+        break;
+    }
+
+    if (screen != null && context.mounted) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => screen!),
+      );
+    }
   }
 
   void _showClearConfirmation(
@@ -228,11 +325,77 @@ class _NotificationCard extends ConsumerWidget {
     }
   }
 
+  String _getLocalizedTitle(AppLocalizations l10n) {
+    if (notification.titleKey == null) return notification.title;
+
+    switch (notification.titleKey) {
+      case 'notificationSyncCompleteTitle':
+        return l10n.notificationSyncCompleteTitle;
+      case 'payableOverdue':
+        return l10n.payableOverdue;
+      case 'receivableOverdue':
+        return l10n.receivableOverdue;
+      case 'upcomingPayable':
+        return l10n.upcomingPayable;
+      case 'upcomingReceivable':
+        return l10n.upcomingReceivable;
+      case 'notificationBackupSuccessTitle':
+        return l10n.notificationBackupSuccessTitle;
+      case 'creditCard':
+        return l10n.creditCard;
+      default:
+        return notification.title;
+    }
+  }
+
+  String _getLocalizedMessage(AppLocalizations l10n) {
+    if (notification.messageKey == null) return notification.message;
+
+    final params = notification.parameters ?? {};
+    switch (notification.messageKey) {
+      case 'payableOverdueMessage':
+        return l10n.payableOverdueMessage(
+            params['description'] ?? '', params['date'] ?? '');
+      case 'receivableOverdueMessage':
+        return l10n.receivableOverdueMessage(
+            params['description'] ?? '', params['date'] ?? '');
+      case 'upcomingPayableMessage':
+        return l10n.upcomingPayableMessage(
+            params['description'] ?? '', params['date'] ?? '');
+      case 'upcomingReceivableMessage':
+        return l10n.upcomingReceivableMessage(
+            params['description'] ?? '', params['date'] ?? '');
+      case 'notificationSyncCompleteMessage':
+        return l10n.notificationSyncCompleteMessage(
+            int.tryParse(params['count'] ?? '0') ?? 0);
+      case 'notificationBackupSuccessMessage':
+        return l10n.notificationBackupSuccessMessage(params['name'] ?? '');
+      case 'paymentOverdueNotification':
+        return l10n.paymentOverdueNotification(
+            params['amount'] ?? '', int.tryParse(params['days'] ?? '0') ?? 0);
+      case 'paymentDueTodayNotification':
+        return l10n.paymentDueTodayNotification(params['amount'] ?? '');
+      case 'paymentDueNotification':
+        return l10n.paymentDueNotification(
+            params['amount'] ?? '', int.tryParse(params['days'] ?? '0') ?? 0);
+      default:
+        return notification.message;
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
     final color = _getColor(theme);
+
+    final cashbooks = ref.watch(cashbooksProvider);
+    final cashbookName = notification.cashbookUuid != null
+        ? cashbooks
+            .firstWhere((c) => c.id == notification.cashbookUuid,
+                orElse: () => cashbooks.first)
+            .name
+        : null;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -272,9 +435,7 @@ class _NotificationCard extends ConsumerWidget {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () {
-            onTap();
-          },
+          onTap: onTap,
           borderRadius: BorderRadius.circular(16),
           child: Stack(
             children: [
@@ -338,7 +499,7 @@ class _NotificationCard extends ConsumerWidget {
                             children: [
                               Expanded(
                                 child: Text(
-                                  notification.title,
+                                  _getLocalizedTitle(l10n),
                                   style: theme.textTheme.titleMedium?.copyWith(
                                     fontWeight: FontWeight.bold,
                                     color: theme.colorScheme.onSurface,
@@ -357,9 +518,19 @@ class _NotificationCard extends ConsumerWidget {
                                 ),
                             ],
                           ),
+                          if (cashbookName != null) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              cashbookName,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: color.withValues(alpha: 0.7),
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
                           const SizedBox(height: 4),
                           Text(
-                            notification.message,
+                            _getLocalizedMessage(l10n),
                             style: theme.textTheme.bodyMedium?.copyWith(
                               color: theme.colorScheme.onSurface,
                               fontWeight: (notification.isUrgent == true) &&
@@ -419,3 +590,4 @@ class _NotificationCard extends ConsumerWidget {
     }
   }
 }
+

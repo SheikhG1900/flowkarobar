@@ -1553,5 +1553,7 @@
   "showQuickActionButtonDesc": "नीचे की पट्टी में केंद्र बटन प्रदर्शित करें",
   "showDashboardWidgetArea": "डैशबोर्ड विजेट दिखाएं",
   "showDashboardWidgetAreaDesc": "डैशबोर्ड पर अनुकूलन योग्य विजेट अनुभाग प्रदर्शित करें",
-  "noWidgetsOnDashboard": "डैशबोर्ड पर कोई विजेट नहीं है"
+  "noWidgetsOnDashboard": "डैशबोर्ड पर कोई विजेट नहीं है",
+  "switchCashbook": "कैशबुक बदलें",
+  "switchText": "बदलें"
 }

@@ -2104,5 +2104,7 @@
   "showQuickActionButtonDesc": "Display the center button in the bottom bar",
   "showDashboardWidgetArea": "Show Dashboard Widgets",
   "showDashboardWidgetAreaDesc": "Display the customizable widget section on the dashboard",
-  "noWidgetsOnDashboard": "No widgets on dashboard"
+  "noWidgetsOnDashboard": "No widgets on dashboard",
+  "switchCashbook": "Switch Cashbook",
+  "switchText": "Switch"
 }

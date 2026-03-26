@@ -22,6 +22,11 @@ class CreditCardNotificationService {
       required String message,
       required NotificationType type,
       required bool isUrgent,
+      String? cashbookUuid,
+      String? entityId,
+      String? titleKey,
+      String? messageKey,
+      Map<String, String>? parameters,
     }) addNotification,
   }) async {
     final accounts = await _repo.getAllAccounts();
@@ -48,6 +53,10 @@ class CreditCardNotificationService {
       String title;
       String message;
       bool isUrgent;
+      String messageKey;
+      Map<String, String> parameters = {
+        'amount': amountText,
+      };
 
       if (daysOverdue > 0) {
         // Overdue
@@ -55,17 +64,22 @@ class CreditCardNotificationService {
         message =
             'Payment of $amountText is overdue by $daysOverdue day${daysOverdue == 1 ? '' : 's'}';
         isUrgent = true;
+        messageKey = 'paymentOverdueNotification';
+        parameters['days'] = daysOverdue.toString();
       } else if (daysUntilDue == 0) {
         // Due today
         title = card.name;
         message = 'Payment of $amountText is due today!';
         isUrgent = true;
+        messageKey = 'paymentDueTodayNotification';
       } else if (daysUntilDue <= (card.paymentDueDays ?? 5)) {
         // Upcoming
         title = card.name;
         message =
             'Payment of $amountText is due in $daysUntilDue day${daysUntilDue == 1 ? '' : 's'}';
         isUrgent = daysUntilDue <= 2;
+        messageKey = 'paymentDueNotification';
+        parameters['days'] = daysUntilDue.toString();
       } else {
         continue; // Not yet time to notify
       }
@@ -75,6 +89,10 @@ class CreditCardNotificationService {
         message: message,
         type: NotificationType.creditCard,
         isUrgent: isUrgent,
+        entityId: card.uuid,
+        titleKey: 'creditCard',
+        messageKey: messageKey,
+        parameters: parameters,
       );
     }
   }

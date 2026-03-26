@@ -162,6 +162,14 @@ Future<bool> handleSyncTask(String task, Map<String, dynamic>? inputData) async 
                 : 'Payment for ${p.description ?? 'Payable'} was due on ${p.dueDate}',
             type: NotificationType.payable,
             isUrgent: true,
+            cashbookUuid: cashbook.id,
+            entityId: p.uuid,
+            titleKey: 'payableOverdue',
+            messageKey: 'payableOverdueMessage',
+            parameters: {
+              'description': p.description ?? (l10n?.payable ?? 'Payable'),
+              'date': p.dueDate?.toString() ?? '',
+            },
           );
         }
 
@@ -177,6 +185,14 @@ Future<bool> handleSyncTask(String task, Map<String, dynamic>? inputData) async 
                 : 'Payment for ${r.description ?? 'Receivable'} was due on ${r.dueDate}',
             type: NotificationType.receivable,
             isUrgent: true,
+            cashbookUuid: cashbook.id,
+            entityId: r.uuid,
+            titleKey: 'receivableOverdue',
+            messageKey: 'receivableOverdueMessage',
+            parameters: {
+              'description': r.description ?? (l10n?.receivable ?? 'Receivable'),
+              'date': r.dueDate?.toString() ?? '',
+            },
           );
         }
 
@@ -190,6 +206,14 @@ Future<bool> handleSyncTask(String task, Map<String, dynamic>? inputData) async 
                     p.description ?? (l10n.payable), p.dueDate?.toString() ?? '')
                 : 'Payment for ${p.description ?? 'Payable'} is due tomorrow (${p.dueDate})',
             type: NotificationType.payable,
+            cashbookUuid: cashbook.id,
+            entityId: p.uuid,
+            titleKey: 'upcomingPayable',
+            messageKey: 'upcomingPayableMessage',
+            parameters: {
+              'description': p.description ?? (l10n?.payable ?? 'Payable'),
+              'date': p.dueDate?.toString() ?? '',
+            },
           );
         }
 
@@ -205,6 +229,14 @@ Future<bool> handleSyncTask(String task, Map<String, dynamic>? inputData) async 
                     r.dueDate?.toString() ?? '')
                 : 'Payment for ${r.description ?? 'Receivable'} is due tomorrow (${r.dueDate})',
             type: NotificationType.receivable,
+            cashbookUuid: cashbook.id,
+            entityId: r.uuid,
+            titleKey: 'upcomingReceivable',
+            messageKey: 'upcomingReceivableMessage',
+            parameters: {
+              'description': r.description ?? (l10n?.receivable ?? 'Receivable'),
+              'date': r.dueDate?.toString() ?? '',
+            },
           );
         }
       } catch (e) {
@@ -251,6 +283,11 @@ Future<bool> handleSyncTask(String task, Map<String, dynamic>? inputData) async 
         message: l10n?.notificationSyncCompleteMessage(syncedCount) ??
             'Successfully synced $syncedCount cashbook(s) in the background.',
         type: NotificationType.sync,
+        titleKey: 'notificationSyncCompleteTitle',
+        messageKey: 'notificationSyncCompleteMessage',
+        parameters: {
+          'count': syncedCount.toString(),
+        },
       );
     }
 

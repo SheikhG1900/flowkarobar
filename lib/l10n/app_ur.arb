@@ -1553,5 +1553,7 @@
   "showQuickActionButtonDesc": "نیچے والی پٹی میں مرکزی بٹن دکھائیں",
   "showDashboardWidgetArea": "ڈیش بورڈ ویجٹ دکھائیں",
   "showDashboardWidgetAreaDesc": "ڈیش بورڈ پر حسب ضرورت ویجٹ سیکشن دکھائیں",
-  "noWidgetsOnDashboard": "ڈیش بورڈ پر کوئی ویجٹ نہیں ہے"
+  "noWidgetsOnDashboard": "ڈیش بورڈ پر کوئی ویجٹ نہیں ہے",
+  "switchCashbook": "کیش بک تبدیل کریں",
+  "switchText": "تبدیل کریں"
 }
