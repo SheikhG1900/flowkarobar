@@ -58,6 +58,14 @@ class DashboardWidgetLayoutNotifier
     await setLayout(next);
   }
 
+  Future<void> updateWidget(int index, DashboardWidgetConfig config) async {
+    final current = state.value ?? defaultDashboardWidgetLayout;
+    if (index < 0 || index >= current.length) return;
+    final next = List<DashboardWidgetConfig>.from(current);
+    next[index] = config;
+    await setLayout(next);
+  }
+
   Future<void> removeConfigs(Iterable<DashboardWidgetConfig> configs) async {
     final current = state.value ?? defaultDashboardWidgetLayout;
     final toRemove = configs.toSet();

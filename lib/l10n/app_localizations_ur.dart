@@ -2632,7 +2632,7 @@ class AppLocalizationsUr extends AppLocalizations {
   String get removeFromDashboard => 'ڈیش بورڈ سے ہٹائیں';
 
   @override
-  String get onDashboard => 'ڈیش بورڈ پر';
+  String get onDashboard => 'وجیٹس';
 
   @override
   String get pinToDashboard => 'ڈیش بورڈ پر پن کریں';
@@ -4037,4 +4037,14 @@ class AppLocalizationsUr extends AppLocalizations {
 
   @override
   String get showQuickActionButtonDesc => 'نیچے والی پٹی میں مرکزی بٹن دکھائیں';
+
+  @override
+  String get showDashboardWidgetArea => 'ڈیش بورڈ ویجٹ دکھائیں';
+
+  @override
+  String get showDashboardWidgetAreaDesc =>
+      'ڈیش بورڈ پر حسب ضرورت ویجٹ سیکشن دکھائیں';
+
+  @override
+  String get noWidgetsOnDashboard => 'ڈیش بورڈ پر کوئی ویجٹ نہیں ہے';
 }

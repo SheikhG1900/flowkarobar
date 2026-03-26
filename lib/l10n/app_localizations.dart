@@ -4825,7 +4825,7 @@ abstract class AppLocalizations {
   /// No description provided for @onDashboard.
   ///
   /// In en, this message translates to:
-  /// **'On dashboard'**
+  /// **'Widgets'**
   String get onDashboard;
 
   /// No description provided for @pinToDashboard.
@@ -7366,6 +7366,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Display the center button in the bottom bar'**
   String get showQuickActionButtonDesc;
+
+  /// No description provided for @showDashboardWidgetArea.
+  ///
+  /// In en, this message translates to:
+  /// **'Show Dashboard Widgets'**
+  String get showDashboardWidgetArea;
+
+  /// No description provided for @showDashboardWidgetAreaDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Display the customizable widget section on the dashboard'**
+  String get showDashboardWidgetAreaDesc;
+
+  /// No description provided for @noWidgetsOnDashboard.
+  ///
+  /// In en, this message translates to:
+  /// **'No widgets on dashboard'**
+  String get noWidgetsOnDashboard;
 }
 
 class _AppLocalizationsDelegate

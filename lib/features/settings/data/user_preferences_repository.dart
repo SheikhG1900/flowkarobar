@@ -27,6 +27,7 @@ class UserPreferencesRepository {
   static const String keyBottomBarQuickAction = 'bottom_bar_quick_action';
   static const String keyShowBottomBarQuickButton =
       'show_bottom_bar_quick_button';
+  static const String keyShowDashboardWidgetArea = 'show_dashboard_widget_area';
 
   // Get a preference value by key (excludes soft-deleted rows so they sync correctly)
   Future<String?> getPreference(String key) async {
@@ -259,5 +260,15 @@ class UserPreferencesRepository {
 
   Future<void> setShowBottomBarQuickButton(bool show) async {
     await setPreference(keyShowBottomBarQuickButton, show ? 'true' : 'false');
+  }
+
+  // Show Dashboard Widget Area
+  Future<bool> getShowDashboardWidgetArea() async {
+    final value = await getPreference(keyShowDashboardWidgetArea);
+    return value != 'false'; // Default to true
+  }
+
+  Future<void> setShowDashboardWidgetArea(bool show) async {
+    await setPreference(keyShowDashboardWidgetArea, show ? 'true' : 'false');
   }
 }

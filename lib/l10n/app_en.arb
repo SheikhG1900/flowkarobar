@@ -1369,7 +1369,7 @@
   "addToDashboard": "Add to dashboard",
   "addedToDashboard": "Added to dashboard",
   "removeFromDashboard": "Remove from dashboard",
-  "onDashboard": "On dashboard",
+  "onDashboard": "Widgets",
   "pinToDashboard": "Pin to dashboard",
   "unpinFromDashboard": "Unpin from dashboard",
   "pinnedToDashboard": "Pinned to dashboard",
@@ -2101,5 +2101,8 @@
   "budgetBarProgress": "Progress",
   "categoryRefund": "Refund",
   "showQuickActionButton": "Show Quick Action Button",
-  "showQuickActionButtonDesc": "Display the center button in the bottom bar"
+  "showQuickActionButtonDesc": "Display the center button in the bottom bar",
+  "showDashboardWidgetArea": "Show Dashboard Widgets",
+  "showDashboardWidgetAreaDesc": "Display the customizable widget section on the dashboard",
+  "noWidgetsOnDashboard": "No widgets on dashboard"
 }

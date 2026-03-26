@@ -62,6 +62,7 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
     final currency = currencyAsync.value;
     final filter = ref.watch(dashboardFilterProvider);
     final isPremium = PremiumGate.isPremium(ref);
+    final reorderMode = ref.watch(dashboardReorderModeProvider);
 
     switch (config.kind) {
       case DashboardWidgetKind.balance:
@@ -204,7 +205,7 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
           error: (_, __) => const SizedBox.shrink(),
         );
       case DashboardWidgetKind.quickActions:
-        return _buildQuickActions(context, ref, l10n, isPremium);
+        return _buildQuickActions(context, ref, l10n, isPremium, reorderMode);
       default:
         return const SizedBox.shrink();
     }
@@ -492,6 +493,117 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
     await ref.read(dashboardWidgetLayoutProvider.notifier).removeAt(index);
   }
 
+  static Future<void> _showQuickActionSelectionSheetForWidget(
+      BuildContext context,
+      WidgetRef ref,
+      AppLocalizations l10n,
+      ThemeData theme,
+      DashboardWidgetConfig config,
+      int layoutIndex) async {
+    final actions = [
+      ('voice_add', l10n.voiceAdd, Icons.mic_none_rounded),
+      ('add_transaction', l10n.add, Icons.add),
+      ('scan_receipt', l10n.scan, Icons.document_scanner_outlined),
+      ('accounts', l10n.accounts, Symbols.account_balance),
+      ('contacts', l10n.contacts, Icons.people_outline_rounded),
+      ('receivables', l10n.receivableTag, Symbols.account_balance_wallet),
+      ('payables', l10n.payables, Icons.payment_outlined),
+      ('categories', l10n.categories, Icons.category_outlined),
+      ('analytics', l10n.analytics, Icons.bar_chart_rounded),
+      ('user_guide', l10n.userGuide, Icons.help_outline_rounded),
+      ('app_tour', l10n.appTour, Icons.tour_outlined),
+    ];
+
+    final layoutAsync = ref.read(dashboardWidgetLayoutProvider);
+    final allConfigs = layoutAsync.value ?? [];
+
+    // Summary widgets that are already on dashboard (excluding THIS widget)
+    final existingSummaryKinds = allConfigs
+        .where((c) => !c.kind.isEntity && c != config)
+        .map((c) => c.kind)
+        .toSet();
+
+    final actionToKind = {
+      'accounts': DashboardWidgetKind.netWorth,
+      'contacts': DashboardWidgetKind.contactsSummary,
+      'receivables': DashboardWidgetKind.receivablesSummary,
+      'payables': DashboardWidgetKind.payablesSummary,
+      'categories': DashboardWidgetKind.categoriesSummary,
+    };
+
+    // Filter out actions that are already used as individual summary widgets elsewhere
+    final availableActions = actions.where((a) {
+      final kind = actionToKind[a.$1];
+      if (kind != null && existingSummaryKinds.contains(kind)) return false;
+      return true;
+    }).toList();
+
+    final currentActions = config.quickActionCodes?.toSet() ??
+        actions.map((e) => e.$1).toSet(); // Default to all if null
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setState) => SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  l10n.quickActions,
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Flexible(
+                  child: ListView(
+                    shrinkWrap: true,
+                    children: availableActions.map((e) {
+                      final isSelected = currentActions.contains(e.$1);
+                      return CheckboxListTile(
+                        secondary: Icon(e.$3),
+                        title: Text(e.$2),
+                        value: isSelected,
+                        onChanged: (v) {
+                          setState(() {
+                            if (v == true) {
+                              currentActions.add(e.$1);
+                            } else {
+                              currentActions.remove(e.$1);
+                            }
+                          });
+                        },
+                      );
+                    }).toList(),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                FilledButton(
+                  onPressed: () async {
+                    await ref
+                        .read(dashboardWidgetLayoutProvider.notifier)
+                        .updateWidget(
+                          layoutIndex,
+                          config.copyWith(
+                              quickActionCodes: currentActions.toList()),
+                        );
+                    if (context.mounted) Navigator.pop(ctx);
+                  },
+                  child: Text(l10n.save),
+                ),
+                const SizedBox(height: 20),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   void _openTransactionsFiltered(
       WidgetRef ref, BuildContext context, DashboardFilter filter) {
     final isMonthly = filter == DashboardFilter.monthly;
@@ -547,7 +659,7 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
   }
 
   Widget _buildQuickActions(BuildContext context, WidgetRef ref,
-      AppLocalizations l10n, bool isPremium) {
+      AppLocalizations l10n, bool isPremium, bool reorderMode) {
     final theme = Theme.of(context);
     final activeCashbook = ref.watch(activeCashbookProvider);
     final activeColor = activeCashbook.color;
@@ -556,30 +668,33 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  l10n.quickActions,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.more_vert, size: 20),
-                  onPressed: () => _showSummaryActionsSheet(
-                    context,
-                    ref,
-                    () => _removeAt(ref, layoutIndex),
-                    l10n,
+          if (reorderMode)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    l10n.quickActions,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                   ),
-                ),
-              ],
+                  IconButton(
+                    icon: const Icon(Icons.add_circle_outline, size: 20),
+                    onPressed: () => _showQuickActionSelectionSheetForWidget(
+                      context,
+                      ref,
+                      l10n,
+                      theme,
+                      config,
+                      layoutIndex,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 12),
+          if (reorderMode) const SizedBox(height: 12),
           // Grid layout for quick actions (responsive)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),

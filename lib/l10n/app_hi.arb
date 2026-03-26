@@ -889,7 +889,7 @@
   "addToDashboard": "डैशबोर्ड में जोड़ें",
   "addedToDashboard": "डैशबोर्ड में जोड़ दिया गया",
   "removeFromDashboard": "डैशबोर्ड से हटाएं",
-  "onDashboard": "डैशबोर्ड पर",
+  "onDashboard": "विजेट",
   "pinToDashboard": "डैशबोर्ड पर पिन करें",
   "unpinFromDashboard": "डैशबोर्ड से अनपिन करें",
   "pinnedToDashboard": "डैशबोर्ड पर पिन किया गया",
@@ -1550,5 +1550,8 @@
   "budgetBarProgress": "प्रगति",
   "categoryRefund": "रिफंड",
   "showQuickActionButton": "त्वरित कार्य बटन दिखाएं",
-  "showQuickActionButtonDesc": "नीचे की पट्टी में केंद्र बटन प्रदर्शित करें"
+  "showQuickActionButtonDesc": "नीचे की पट्टी में केंद्र बटन प्रदर्शित करें",
+  "showDashboardWidgetArea": "डैशबोर्ड विजेट दिखाएं",
+  "showDashboardWidgetAreaDesc": "डैशबोर्ड पर अनुकूलन योग्य विजेट अनुभाग प्रदर्शित करें",
+  "noWidgetsOnDashboard": "डैशबोर्ड पर कोई विजेट नहीं है"
 }

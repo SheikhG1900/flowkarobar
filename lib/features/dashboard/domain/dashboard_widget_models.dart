@@ -73,6 +73,28 @@ class DashboardWidgetConfig {
     }
   }
 
+  DashboardWidgetConfig copyWith({
+    DashboardWidgetKind? kind,
+    String? transactionUuid,
+    String? categoryUuid,
+    String? contactUuid,
+    String? payableUuid,
+    String? receivableUuid,
+    String? accountUuid,
+    List<String>? quickActionCodes,
+  }) {
+    return DashboardWidgetConfig(
+      kind: kind ?? this.kind,
+      transactionUuid: transactionUuid ?? this.transactionUuid,
+      categoryUuid: categoryUuid ?? this.categoryUuid,
+      contactUuid: contactUuid ?? this.contactUuid,
+      payableUuid: payableUuid ?? this.payableUuid,
+      receivableUuid: receivableUuid ?? this.receivableUuid,
+      accountUuid: accountUuid ?? this.accountUuid,
+      quickActionCodes: quickActionCodes ?? this.quickActionCodes,
+    );
+  }
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||

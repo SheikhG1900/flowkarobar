@@ -845,6 +845,7 @@ class _DashboardTab extends ConsumerWidget {
     // Watch dashboard statistics and filter
     final dashboardStatsAsync = ref.watch(dashboardStatsProvider);
     final filter = ref.watch(dashboardFilterProvider);
+    final showWidgetArea = ref.watch(showDashboardWidgetAreaProvider);
 
     // Cache last stats so we can show them while loading (e.g. after invalidation)
     ref.listen(dashboardStatsProvider, (prev, next) {
@@ -1920,31 +1921,32 @@ class _DashboardTab extends ConsumerWidget {
             ),
 
             // Dashboard widgets (summary + entity) with reorder and add
-            SliverToBoxAdapter(
-              child: Consumer(
-                builder: (context, ref, _) {
-                  final layoutAsync =
-                      ref.watch(effectiveDashboardWidgetLayoutProvider);
-                  final reorderMode = ref.watch(dashboardReorderModeProvider);
-                  return layoutAsync.when(
-                    data: (configs) =>
-                        _buildDashboardWidgetsSection(
-                            context, ref, theme, l10n, configs, reorderMode),
-                    loading: () {
-                      final configs = ref
-                          .read(dashboardWidgetLayoutProvider)
-                          .value;
-                      if (configs == null || configs.isEmpty) {
-                        return const SizedBox.shrink();
-                      }
-                      return _buildDashboardWidgetsSection(
-                          context, ref, theme, l10n, configs, reorderMode);
-                    },
-                    error: (_, __) => const SizedBox.shrink(),
-                  );
-                },
+            if (showWidgetArea)
+              SliverToBoxAdapter(
+                child: Consumer(
+                  builder: (context, ref, _) {
+                    final layoutAsync =
+                        ref.watch(effectiveDashboardWidgetLayoutProvider);
+                    final reorderMode = ref.watch(dashboardReorderModeProvider);
+                    return layoutAsync.when(
+                      data: (configs) =>
+                          _buildDashboardWidgetsSection(
+                              context, ref, theme, l10n, configs, reorderMode),
+                      loading: () {
+                        final configs = ref
+                            .read(dashboardWidgetLayoutProvider)
+                            .value;
+                        if (configs == null || configs.isEmpty) {
+                          return const SizedBox.shrink();
+                        }
+                        return _buildDashboardWidgetsSection(
+                            context, ref, theme, l10n, configs, reorderMode);
+                      },
+                      error: (_, __) => const SizedBox.shrink(),
+                    );
+                  },
+                ),
               ),
-            ),
 
             // Recent Transactions Header
             SliverToBoxAdapter(
@@ -2014,7 +2016,6 @@ class _DashboardTab extends ConsumerWidget {
     List<DashboardWidgetConfig> configs,
     bool reorderMode,
   ) {
-    if (configs.isEmpty) return const SizedBox.shrink();
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 24, 16, 0),
       child: Column(
@@ -2034,7 +2035,7 @@ class _DashboardTab extends ConsumerWidget {
                 children: [
                   IconButton(
                     icon: Icon(
-                      Icons.reorder,
+                      reorderMode ? Icons.check : Icons.edit_outlined,
                       color: reorderMode
                           ? theme.colorScheme.primary
                           : theme.iconTheme.color?.withValues(alpha: 0.7),
@@ -2046,19 +2047,50 @@ class _DashboardTab extends ConsumerWidget {
                       ref.read(dashboardReorderModeProvider.notifier).toggle();
                     },
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.add_circle_outline),
-                    tooltip: l10n.addToDashboard,
-                    onPressed: () => _showAddWidgetSheet(
-                        context, ref, theme, l10n),
-                  ),
+                  if (reorderMode)
+                    IconButton(
+                      icon: const Icon(Icons.checklist_rtl_outlined),
+                      tooltip: l10n.addToDashboard,
+                      onPressed: () => _showAddWidgetSheet(
+                          context, ref, theme, l10n),
+                    ),
                 ],
               ),
             ],
           ),
           const SizedBox(height: 12),
-          reorderMode
-              ? ReorderableListView(
+          if (configs.isEmpty)
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 32),
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.dashboard_customize_outlined,
+                      size: 48,
+                      color: theme.colorScheme.outline.withValues(alpha: 0.5),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      l10n.noWidgetsOnDashboard,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    TextButton.icon(
+                      onPressed: () => _showAddWidgetSheet(
+                          context, ref, theme, l10n),
+                      icon: const Icon(Icons.add),
+                      label: Text(l10n.addToDashboard),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          else
+            reorderMode
+                ? ReorderableListView(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   buildDefaultDragHandles: false,
@@ -2079,18 +2111,34 @@ class _DashboardTab extends ConsumerWidget {
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            ReorderableDragStartListener(
-                              index: i,
-                              child: Padding(
-                                padding: const EdgeInsets.only(
-                                    right: 8, top: 16),
-                                child: Icon(
-                                  Icons.drag_handle,
-                                  color: theme.iconTheme.color
-                                      ?.withValues(alpha: 0.7),
-                                  size: 24,
+                            Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                ReorderableDragStartListener(
+                                  index: i,
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(
+                                        right: 8, top: 16),
+                                    child: Icon(
+                                      Icons.drag_handle,
+                                      color: theme.iconTheme.color
+                                          ?.withValues(alpha: 0.7),
+                                      size: 24,
+                                    ),
+                                  ),
                                 ),
-                              ),
+                                const SizedBox(height: 24),
+                                IconButton(
+                                  padding: const EdgeInsets.only(right: 8),
+                                  constraints: const BoxConstraints(),
+                                  icon: const Icon(Icons.close,
+                                      size: 20, color: Colors.red),
+                                  onPressed: () => ref
+                                      .read(dashboardWidgetLayoutProvider
+                                          .notifier)
+                                      .removeAt(i),
+                                ),
+                              ],
                             ),
                             Expanded(
                               child: configs[i].kind.isEntity
@@ -2239,7 +2287,7 @@ class _DashboardTab extends ConsumerWidget {
       ('app_tour', l10n.appTour, Icons.tour_outlined),
     ];
 
-    final selected = <String>{};
+    final selected = actions.map((e) => e.$1).toSet();
     return showModalBottomSheet<List<String>>(
       context: context,
       isScrollControlled: true,
@@ -3394,23 +3442,6 @@ class _SettingsTab extends ConsumerWidget {
                     );
                   },
                 ),
-                Consumer(
-                  builder: (context, ref, child) {
-                    final showQuickButton =
-                        ref.watch(showBottomBarQuickButtonProvider);
-                    return SwitchListTile(
-                      secondary: const Icon(Icons.add_circle_outline),
-                      title: Text(l10n.showQuickActionButton),
-                      subtitle: Text(l10n.showQuickActionButtonDesc),
-                      value: showQuickButton,
-                      onChanged: (value) {
-                        ref
-                            .read(showBottomBarQuickButtonProvider.notifier)
-                            .setVisibility(value);
-                      },
-                    );
-                  },
-                ),
               ],
             ),
           ),
@@ -3607,6 +3638,46 @@ class _SettingsTab extends ConsumerWidget {
                 MaterialPageRoute(
                   builder: (context) => const AboutScreen(),
                 ),
+              );
+            },
+          ),
+          const Divider(),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Text(
+              l10n.appearance,
+              style: theme.textTheme.titleSmall?.copyWith(
+                color: theme.colorScheme.primary,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          Consumer(
+            builder: (context, ref, child) {
+              final showQuickButton =
+                  ref.watch(showBottomBarQuickButtonProvider);
+              return SwitchListTile(
+                secondary: const Icon(Icons.add_circle_outline),
+                title: Text(l10n.showQuickActionButton),
+                subtitle: Text(l10n.showQuickActionButtonDesc),
+                value: showQuickButton,
+                onChanged: (v) => ref
+                    .read(showBottomBarQuickButtonProvider.notifier)
+                    .setVisibility(v),
+              );
+            },
+          ),
+          Consumer(
+            builder: (context, ref, child) {
+              final showWidgetArea = ref.watch(showDashboardWidgetAreaProvider);
+              return SwitchListTile(
+                secondary: const Icon(Icons.dashboard_customize_outlined),
+                title: Text(l10n.showDashboardWidgetArea),
+                subtitle: Text(l10n.showDashboardWidgetAreaDesc),
+                value: showWidgetArea,
+                onChanged: (v) => ref
+                    .read(showDashboardWidgetAreaProvider.notifier)
+                    .setVisibility(v),
               );
             },
           ),

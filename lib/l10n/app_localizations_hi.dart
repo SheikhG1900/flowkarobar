@@ -2624,7 +2624,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get removeFromDashboard => 'डैशबोर्ड से हटाएं';
 
   @override
-  String get onDashboard => 'डैशबोर्ड पर';
+  String get onDashboard => 'विजेट';
 
   @override
   String get pinToDashboard => 'डैशबोर्ड पर पिन करें';
@@ -4032,4 +4032,14 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get showQuickActionButtonDesc =>
       'नीचे की पट्टी में केंद्र बटन प्रदर्शित करें';
+
+  @override
+  String get showDashboardWidgetArea => 'डैशबोर्ड विजेट दिखाएं';
+
+  @override
+  String get showDashboardWidgetAreaDesc =>
+      'डैशबोर्ड पर अनुकूलन योग्य विजेट अनुभाग प्रदर्शित करें';
+
+  @override
+  String get noWidgetsOnDashboard => 'डैशबोर्ड पर कोई विजेट नहीं है';
 }

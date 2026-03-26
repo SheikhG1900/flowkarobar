@@ -2617,7 +2617,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get removeFromDashboard => 'Remove from dashboard';
 
   @override
-  String get onDashboard => 'On dashboard';
+  String get onDashboard => 'Widgets';
 
   @override
   String get pinToDashboard => 'Pin to dashboard';
@@ -4022,4 +4022,14 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get showQuickActionButtonDesc =>
       'Display the center button in the bottom bar';
+
+  @override
+  String get showDashboardWidgetArea => 'Show Dashboard Widgets';
+
+  @override
+  String get showDashboardWidgetAreaDesc =>
+      'Display the customizable widget section on the dashboard';
+
+  @override
+  String get noWidgetsOnDashboard => 'No widgets on dashboard';
 }

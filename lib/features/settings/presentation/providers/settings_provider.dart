@@ -291,6 +291,32 @@ final showBottomBarQuickButtonProvider =
   return ShowBottomBarQuickButtonNotifier();
 });
 
+// Show Dashboard Widget Area Notifier
+class ShowDashboardWidgetAreaNotifier extends Notifier<bool> {
+  late UserPreferencesRepository _repository;
+
+  @override
+  bool build() {
+    _repository = ref.watch(userPreferencesRepositoryProvider);
+    _loadVisibility();
+    return true; // Default initial state
+  }
+
+  Future<void> _loadVisibility() async {
+    state = await _repository.getShowDashboardWidgetArea();
+  }
+
+  Future<void> setVisibility(bool show) async {
+    await _repository.setShowDashboardWidgetArea(show);
+    state = show;
+  }
+}
+
+final showDashboardWidgetAreaProvider =
+    NotifierProvider<ShowDashboardWidgetAreaNotifier, bool>(() {
+  return ShowDashboardWidgetAreaNotifier();
+});
+
 // Helper provider to get the font for the CURRENT language
 final currentFontProvider = Provider<String>((ref) {
   final fonts = ref.watch(fontProvider);

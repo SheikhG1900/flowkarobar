@@ -889,7 +889,7 @@
   "addToDashboard": "ڈیش بورڈ میں شامل کریں",
   "addedToDashboard": "ڈیش بورڈ میں شامل کر دیا گیا",
   "removeFromDashboard": "ڈیش بورڈ سے ہٹائیں",
-  "onDashboard": "ڈیش بورڈ پر",
+  "onDashboard": "وجیٹس",
   "pinToDashboard": "ڈیش بورڈ پر پن کریں",
   "unpinFromDashboard": "ڈیش بورڈ سے ان پن کریں",
   "pinnedToDashboard": "ڈیش بورڈ پر پن ہو گیا",
@@ -1550,5 +1550,8 @@
   "budgetBarProgress": "پیشرفت",
   "categoryRefund": "رقم کی واپسی",
   "showQuickActionButton": "فوری کارروائی کا بٹن دکھائیں",
-  "showQuickActionButtonDesc": "نیچے والی پٹی میں مرکزی بٹن دکھائیں"
+  "showQuickActionButtonDesc": "نیچے والی پٹی میں مرکزی بٹن دکھائیں",
+  "showDashboardWidgetArea": "ڈیش بورڈ ویجٹ دکھائیں",
+  "showDashboardWidgetAreaDesc": "ڈیش بورڈ پر حسب ضرورت ویجٹ سیکشن دکھائیں",
+  "noWidgetsOnDashboard": "ڈیش بورڈ پر کوئی ویجٹ نہیں ہے"
 }
