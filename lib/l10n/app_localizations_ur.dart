@@ -4059,4 +4059,18 @@ class AppLocalizationsUr extends AppLocalizations {
 
   @override
   String get totalExpenses => 'کل اخراجات';
+
+  @override
+  String get featureUnlimitedAccountsTitle => 'لامحدود اکاؤنٹس';
+
+  @override
+  String get featureUnlimitedAccountsDesc =>
+      'اپنے تمام بیلنس کو ایک جگہ پر ٹریک کرنے کے لیے متعدد بینک اکاؤنٹس، کیش والٹس اور کریڈٹ کارڈز شامل کریں۔';
+
+  @override
+  String get featureCategoryBudgetsTitle => 'زمرہ بجٹ';
+
+  @override
+  String get featureCategoryBudgetsDesc =>
+      'کسی بھی زمرے کے لیے ماہانہ، سہ ماہی یا سالانہ خرچ کی حد اور بچت کے اہداف مقرر کریں۔';
 }

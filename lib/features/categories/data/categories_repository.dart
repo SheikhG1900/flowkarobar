@@ -18,6 +18,14 @@ class CategoriesRepository {
         .watch();
   }
 
+  /// Get all categories (excluding soft-deleted)
+  Future<List<Category>> getAllCategories() {
+    return (_database.select(_database.categories)
+          ..where((c) => c.isDeleted.equals(false))
+          ..orderBy([(c) => OrderingTerm.asc(c.name)]))
+        .get();
+  }
+
   /// Watch categories by type (EXPENSE or INCOME, excluding soft-deleted)
   Stream<List<Category>> watchCategoriesByType(String type) {
     return (_database.select(_database.categories)

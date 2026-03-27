@@ -1557,5 +1557,9 @@
   "switchCashbook": "कैशबुक बदलें",
   "switchText": "बदलें",
   "totalIncome": "कुल आय",
-  "totalExpenses": "कुल खर्च"
+  "totalExpenses": "कुल खर्च",
+  "featureUnlimitedAccountsTitle": "असीमित खाते",
+  "featureUnlimitedAccountsDesc": "एक ही स्थान पर अपने सभी बैलेंस को ट्रैक करने के लिए कई बैंक खाते, नकद वॉलेट और क्रेडिट कार्ड जोड़ें।",
+  "featureCategoryBudgetsTitle": "श्रेणी बजट",
+  "featureCategoryBudgetsDesc": "किसी भी श्रेणी के लिए मासिक, त्रैमासिक या वार्षिक खर्च सीमा और बचत लक्ष्य निर्धारित करें।"
 }

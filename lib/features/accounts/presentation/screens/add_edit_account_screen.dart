@@ -15,6 +15,8 @@ import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
+import 'package:flowpaisa/shared/widgets/limit_countdown_badge.dart';
 import 'package:uuid/uuid.dart';
 
 class AddEditAccountScreen extends ConsumerStatefulWidget {
@@ -82,6 +84,19 @@ class _AddEditAccountScreenState extends ConsumerState<AddEditAccountScreen> {
     setState(() => _isLoading = true);
 
     try {
+      if (!_isEditing) {
+        final isPremium = PremiumGate.isPremium(ref);
+        if (!isPremium) {
+          final limits = await PremiumGate.getAccountLimits(ref);
+          if (!limits.canAdd) {
+            if (mounted) {
+              PremiumGate.showPremiumDialog(context);
+            }
+            return;
+          }
+        }
+      }
+
       final repo = ref.read(accountsRepositoryProvider);
       final now = DateTime.now();
       final name = _nameController.text.trim();
@@ -373,11 +388,55 @@ class _AddEditAccountScreenState extends ConsumerState<AddEditAccountScreen> {
 
               const SizedBox(height: 28),
 
+              // Countdown Badge (show until limit reached)
+              if (!_isEditing)
+                FutureBuilder<TotalLimits>(
+                  future: PremiumGate.getAccountLimits(ref),
+                  builder: (context, snapshot) {
+                    final limits = snapshot.data;
+                    if (limits != null && !limits.isUnlimited && limits.canAdd) {
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: Center(
+                          child: LimitCountdownBadge(
+                            totalUsed: limits.used,
+                            totalLimit: limits.total,
+                          ),
+                        ),
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  },
+                ),
+
               // Save button
-              GradientButton(
-                label: _isEditing ? l10n.saveChanges : l10n.addAccount,
-                isLoading: _isLoading,
-                onPressed: _save,
+              Stack(
+                alignment: Alignment.topRight,
+                children: [
+                  GradientButton(
+                    label: _isEditing ? l10n.saveChanges : l10n.addAccount,
+                    isLoading: _isLoading,
+                    onPressed: _save,
+                    width: double.infinity,
+                  ),
+                  if (!_isEditing)
+                    FutureBuilder<TotalLimits>(
+                      future: PremiumGate.getAccountLimits(ref),
+                      builder: (context, snapshot) {
+                        final limits = snapshot.data;
+                        if (limits != null &&
+                            !limits.isUnlimited &&
+                            !limits.canAdd) {
+                          return const Padding(
+                            padding: EdgeInsets.only(top: 8, right: 8),
+                            child:
+                                Icon(Icons.lock, size: 16, color: Colors.white),
+                          );
+                        }
+                        return const SizedBox.shrink();
+                      },
+                    ),
+                ],
               ),
             ],
           ),

@@ -1557,5 +1557,9 @@
   "switchCashbook": "کیش بک تبدیل کریں",
   "switchText": "تبدیل کریں",
   "totalIncome": "کل آمدنی",
-  "totalExpenses": "کل اخراجات"
+  "totalExpenses": "کل اخراجات",
+  "featureUnlimitedAccountsTitle": "لامحدود اکاؤنٹس",
+  "featureUnlimitedAccountsDesc": "اپنے تمام بیلنس کو ایک جگہ پر ٹریک کرنے کے لیے متعدد بینک اکاؤنٹس، کیش والٹس اور کریڈٹ کارڈز شامل کریں۔",
+  "featureCategoryBudgetsTitle": "زمرہ بجٹ",
+  "featureCategoryBudgetsDesc": "کسی بھی زمرے کے لیے ماہانہ، سہ ماہی یا سالانہ خرچ کی حد اور بچت کے اہداف مقرر کریں۔"
 }

@@ -379,6 +379,26 @@ class _PremiumScreenState extends ConsumerState<PremiumScreen> {
                   // Feature list (what's included)
                   _buildFeatureCard(
                     context,
+                    icon: Icons.account_balance_wallet_outlined,
+                    title: l10n.featureUnlimitedAccountsTitle,
+                    description: l10n.featureUnlimitedAccountsDesc,
+                    color: Colors.blue,
+                    isPremium: premiumState.isPremium,
+                  ),
+                  const SizedBox(height: 12),
+
+                  _buildFeatureCard(
+                    context,
+                    icon: Icons.track_changes,
+                    title: l10n.featureCategoryBudgetsTitle,
+                    description: l10n.featureCategoryBudgetsDesc,
+                    color: Colors.orange,
+                    isPremium: premiumState.isPremium,
+                  ),
+                  const SizedBox(height: 12),
+
+                  _buildFeatureCard(
+                    context,
                     icon: Icons.message_outlined,
                     title: l10n.featureTemplatesTitle,
                     description: l10n.featureTemplatesDesc,

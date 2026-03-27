@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/features/premium/domain/premium_provider.dart';
 import 'package:flowpaisa/features/premium/data/usage_tracker_repository.dart';
 import 'package:flowpaisa/shared/providers/shared_preferences_provider.dart';
@@ -9,6 +10,7 @@ import 'package:flowpaisa/features/contacts/presentation/providers/contacts_prov
 import 'package:flowpaisa/features/categories/presentation/providers/categories_provider.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
 import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
+import 'package:flowpaisa/features/accounts/presentation/providers/accounts_provider.dart';
 
 // Providers for dependencies
 final usageTrackerRepositoryProvider = Provider<UsageTrackerRepository>((ref) {
@@ -156,6 +158,8 @@ class PremiumGate {
   static const int _scheduleTotalLimit = 2;
   static const int _cashbookTotalLimit = 2; // 1 default + 1 extra
   static const int _smartParsingMonthlyLimit = 10;
+  static const int _accountTotalLimit = 1;
+  static const int _categoryBudgetTotalLimit = 1;
 
   // Helper to check premium status (using read for callbacks)
   static bool isPremium(WidgetRef ref) {
@@ -293,6 +297,62 @@ class PremiumGate {
 
     return _calculateLimits(_smartParsingMonthlyLimit,
         _smartParsingMonthlyLimit, monthlyUsed, monthlyUsed);
+  }
+
+  static Future<TotalLimits> getAccountLimits(WidgetRef ref) async {
+    if (isPremium(ref)) {
+      return TotalLimits.unlimited();
+    }
+
+    final accountsAsync = ref.read(accountsStreamProvider);
+    final List accounts;
+    if (accountsAsync.hasValue) {
+      accounts = accountsAsync.value!;
+    } else {
+      accounts = await ref.read(accountsStreamProvider.future);
+    }
+    final used = accounts.length;
+
+    return TotalLimits(
+      remaining: max(0, _accountTotalLimit - used),
+      canAdd: used < _accountTotalLimit,
+      total: _accountTotalLimit,
+      used: used,
+    );
+  }
+
+  static Future<TotalLimits> getCategoryBudgetLimits(WidgetRef ref) async {
+    if (isPremium(ref)) {
+      return TotalLimits.unlimited();
+    }
+
+    try {
+      // Fetch categories directly from repository to avoid stream hanging issues
+      final repo = ref.read(categoriesRepositoryProvider);
+      final categories = await repo.getAllCategories();
+
+      final used = categories
+          .where((c) =>
+              c.monthlyBudget != null ||
+              c.quarterlyBudget != null ||
+              c.yearlyBudget != null)
+          .length;
+
+      return TotalLimits(
+        remaining: max(0, _categoryBudgetTotalLimit - used),
+        canAdd: used < _categoryBudgetTotalLimit,
+        total: _categoryBudgetTotalLimit,
+        used: used,
+      );
+    } catch (e) {
+      // Fallback to allowing if check fails to avoid blocking user
+      return TotalLimits(
+        remaining: 0,
+        canAdd: true,
+        total: _categoryBudgetTotalLimit,
+        used: 0,
+      );
+    }
   }
 
   // --- Internal Calculation Logic ---

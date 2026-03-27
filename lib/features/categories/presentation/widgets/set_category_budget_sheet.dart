@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/categories/presentation/providers/categories_provider.dart';
+import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
+import 'package:flowpaisa/shared/widgets/limit_countdown_badge.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 
 Future<void> showSetCategoryBudgetSheet(
@@ -80,6 +82,26 @@ class _SetCategoryBudgetSheetContentState
     final m = _parseAmount(_monthlyController.text);
     final q = _parseAmount(_quarterlyController.text);
     final y = _parseAmount(_yearlyController.text);
+
+    // Check limits if setting a NEW budget (all were null before)
+    final wasBudgetSet = widget.category.monthlyBudget != null ||
+        widget.category.quarterlyBudget != null ||
+        widget.category.yearlyBudget != null;
+    final isSettingNewBudget = !wasBudgetSet && (m != null || q != null || y != null);
+
+    if (isSettingNewBudget) {
+      final isPremium = PremiumGate.isPremium(ref);
+      if (!isPremium) {
+        final limits = await PremiumGate.getCategoryBudgetLimits(ref);
+        if (!limits.canAdd) {
+          if (mounted) {
+            PremiumGate.showPremiumDialog(context);
+          }
+          return;
+        }
+      }
+    }
+
     try {
       await repo.updateCategoryBudgetFields(
         widget.category,
@@ -198,10 +220,67 @@ class _SetCategoryBudgetSheetContentState
               ],
             ),
             const SizedBox(height: 20),
-            FilledButton.icon(
-              icon: const Icon(Icons.save_outlined, size: 20),
-              label: Text(l10n.save),
-              onPressed: _onSave,
+
+            // Countdown Badge (show until limit reached)
+            FutureBuilder<TotalLimits>(
+              future: PremiumGate.getCategoryBudgetLimits(ref),
+              builder: (context, snapshot) {
+                final limits = snapshot.data;
+                final wasBudgetSet = widget.category.monthlyBudget != null ||
+                    widget.category.quarterlyBudget != null ||
+                    widget.category.yearlyBudget != null;
+
+                if (!wasBudgetSet &&
+                    limits != null &&
+                    !limits.isUnlimited &&
+                    limits.canAdd) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Center(
+                      child: LimitCountdownBadge(
+                        totalUsed: limits.used,
+                        totalLimit: limits.total,
+                      ),
+                    ),
+                  );
+                }
+                return const SizedBox.shrink();
+              },
+            ),
+
+            // Save button with lock icon
+            Stack(
+              alignment: Alignment.topRight,
+              children: [
+                FilledButton.icon(
+                  icon: const Icon(Icons.save_outlined, size: 20),
+                  label: Text(l10n.save),
+                  onPressed: _onSave,
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size(double.infinity, 48),
+                  ),
+                ),
+                FutureBuilder<TotalLimits>(
+                  future: PremiumGate.getCategoryBudgetLimits(ref),
+                  builder: (context, snapshot) {
+                    final limits = snapshot.data;
+                    final wasBudgetSet = widget.category.monthlyBudget != null ||
+                        widget.category.quarterlyBudget != null ||
+                        widget.category.yearlyBudget != null;
+
+                    if (!wasBudgetSet &&
+                        limits != null &&
+                        !limits.isUnlimited &&
+                        !limits.canAdd) {
+                      return const Padding(
+                        padding: EdgeInsets.only(top: 8, right: 8),
+                        child: Icon(Icons.lock, size: 16, color: Colors.white),
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  },
+                ),
+              ],
             ),
           ],
         ),

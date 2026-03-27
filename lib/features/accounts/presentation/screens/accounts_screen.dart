@@ -7,6 +7,7 @@ import 'package:flowpaisa/core/utils/date_formatter.dart';
 import 'package:flowpaisa/core/utils/icon_helper.dart';
 import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
 import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
+import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/features/accounts/domain/models/account_models.dart';
 import 'package:flowpaisa/features/accounts/presentation/providers/accounts_provider.dart';
 import 'package:flowpaisa/features/accounts/presentation/screens/account_detail_screen.dart';
@@ -43,7 +44,7 @@ class AccountsScreen extends ConsumerWidget {
           data: (accounts) {
             if (accounts.isEmpty) {
               return _EmptyAccountsView(
-                  onAddTap: () => _goToAddAccount(context));
+                  onAddTap: () => _goToAddAccount(context, ref));
             }
 
             final regularAccounts = accounts
@@ -94,7 +95,7 @@ class AccountsScreen extends ConsumerWidget {
                   AppLocalizations.of(context)!.errorOccurred(e.toString()))),
         ),
       floatingActionButton: AppFloatingActionButton(
-        onPressed: () => _goToAddAccount(context),
+        onPressed: () => _goToAddAccount(context, ref),
         tooltip: l10n.addAccount,
         child: Icon(
           Icons.add,
@@ -104,11 +105,21 @@ class AccountsScreen extends ConsumerWidget {
     );
   }
 
-  void _goToAddAccount(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const AddEditAccountScreen()),
-    );
+  Future<void> _goToAddAccount(BuildContext context, WidgetRef ref) async {
+    final limits = await PremiumGate.getAccountLimits(ref);
+    if (!limits.canAdd) {
+      if (context.mounted) {
+        PremiumGate.showPremiumDialog(context);
+      }
+      return;
+    }
+
+    if (context.mounted) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const AddEditAccountScreen()),
+      );
+    }
   }
 
   void _goToDetail(BuildContext context, Account account) {

@@ -8,6 +8,7 @@ import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/accounts/domain/models/account_models.dart';
 import 'package:flowpaisa/features/accounts/presentation/providers/accounts_provider.dart';
 import 'package:flowpaisa/features/accounts/presentation/screens/add_edit_account_screen.dart';
+import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
 import 'package:flowpaisa/shared/widgets/dual_amount_progress_bar.dart';
@@ -29,6 +30,17 @@ Future<void> navigateToAddAccountAndSelect({
   required bool excludeCreditCard,
   required void Function(Account account) onCreated,
 }) async {
+  // Check limits before allowing navigation to add account
+  final limits = await PremiumGate.getAccountLimits(ref);
+  if (!limits.canAdd) {
+    if (context.mounted) {
+      PremiumGate.showPremiumDialog(context);
+    }
+    return;
+  }
+
+  if (!context.mounted) return;
+
   final newAccount = await Navigator.of(context).push<Account?>(
     MaterialPageRoute(
       fullscreenDialog: true,

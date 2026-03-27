@@ -7408,6 +7408,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Total Expenses'**
   String get totalExpenses;
+
+  /// No description provided for @featureUnlimitedAccountsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlimited Accounts'**
+  String get featureUnlimitedAccountsTitle;
+
+  /// No description provided for @featureUnlimitedAccountsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Add multiple bank accounts, cash wallets, and credit cards to track all your balances in one place.'**
+  String get featureUnlimitedAccountsDesc;
+
+  /// No description provided for @featureCategoryBudgetsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Category Budgets'**
+  String get featureCategoryBudgetsTitle;
+
+  /// No description provided for @featureCategoryBudgetsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Set monthly, quarterly, or yearly spending limits and savings targets for any category.'**
+  String get featureCategoryBudgetsDesc;
 }
 
 class _AppLocalizationsDelegate

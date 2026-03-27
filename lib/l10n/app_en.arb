@@ -2108,5 +2108,9 @@
   "switchCashbook": "Switch Cashbook",
   "switchText": "Switch",
   "totalIncome": "Total Income",
-  "totalExpenses": "Total Expenses"
+  "totalExpenses": "Total Expenses",
+  "featureUnlimitedAccountsTitle": "Unlimited Accounts",
+  "featureUnlimitedAccountsDesc": "Add multiple bank accounts, cash wallets, and credit cards to track all your balances in one place.",
+  "featureCategoryBudgetsTitle": "Category Budgets",
+  "featureCategoryBudgetsDesc": "Set monthly, quarterly, or yearly spending limits and savings targets for any category."
 }

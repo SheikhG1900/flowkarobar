@@ -7,6 +7,8 @@ import 'package:flowpaisa/features/categories/presentation/providers/categories_
 import 'package:flowpaisa/shared/widgets/dual_amount_progress_bar.dart';
 import 'package:flowpaisa/features/categories/presentation/widgets/category_budget_date_range_selector.dart';
 import 'package:flowpaisa/features/categories/presentation/widgets/set_category_budget_sheet.dart';
+import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
+import 'package:flowpaisa/features/premium/presentation/screens/premium_screen.dart';
 import 'package:flowpaisa/features/categories/presentation/screens/edit_category_screen.dart';
 import 'package:flowpaisa/features/transactions/domain/models.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
@@ -46,300 +48,316 @@ class CategoryDetailsScreen extends ConsumerWidget {
             : (isExpense ? AppColors.expenseColor : AppColors.incomeColor);
 
         return Scaffold(
-            appBar: AppBar(
-              title: Text(l10n.categoryDetails),
-              actions: [
-                IconButton(
-                  icon: const Icon(Icons.link),
-                  tooltip: l10n.copyLink,
-                  onPressed: () {
-                    final link = DeepLinkService()
-                        .generateEntityOpenLinkHttps('category', category.uuid);
-                    Clipboard.setData(ClipboardData(text: link));
-                    ToastUtils.showSuccessToast(context, ref, l10n.linkCopied);
-                  },
-                ),
-                Builder(
-                  builder: (context) {
-                    ref.watch(dashboardWidgetLayoutProvider);
-                    final notifier =
-                        ref.read(dashboardWidgetLayoutProvider.notifier);
-                    final isPinned = notifier.isPinned(
-                        DashboardWidgetKind.category, category.uuid);
-                    return IconButton(
-                      icon: Icon(
-                        isPinned ? Icons.push_pin : Icons.push_pin_outlined,
-                        color: isPinned
-                            ? Theme.of(context).colorScheme.primary
-                            : null,
-                      ),
-                      tooltip: isPinned
-                          ? l10n.unpinFromDashboard
-                          : l10n.pinToDashboard,
-                      onPressed: () async {
-                        if (isPinned) {
-                          final layout = ref
-                                  .read(dashboardWidgetLayoutProvider)
-                                  .value ??
-                              [];
-                          final idx = layout.indexWhere((c) =>
-                              c.kind == DashboardWidgetKind.category &&
-                              c.categoryUuid == category.uuid);
-                          if (idx >= 0) {
-                            await ref
-                                .read(dashboardWidgetLayoutProvider.notifier)
-                                .removeAt(idx);
-                            if (context.mounted) {
-                              ToastUtils.showSuccessToast(context, ref,
-                                  l10n.unpinnedFromDashboard);
-                            }
-                          }
-                        } else {
+          appBar: AppBar(
+            title: Text(l10n.categoryDetails),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.link),
+                tooltip: l10n.copyLink,
+                onPressed: () {
+                  final link = DeepLinkService()
+                      .generateEntityOpenLinkHttps('category', category.uuid);
+                  Clipboard.setData(ClipboardData(text: link));
+                  ToastUtils.showSuccessToast(context, ref, l10n.linkCopied);
+                },
+              ),
+              Builder(
+                builder: (context) {
+                  ref.watch(dashboardWidgetLayoutProvider);
+                  final notifier =
+                      ref.read(dashboardWidgetLayoutProvider.notifier);
+                  final isPinned = notifier.isPinned(
+                      DashboardWidgetKind.category, category.uuid);
+                  return IconButton(
+                    icon: Icon(
+                      isPinned ? Icons.push_pin : Icons.push_pin_outlined,
+                      color: isPinned
+                          ? Theme.of(context).colorScheme.primary
+                          : null,
+                    ),
+                    tooltip: isPinned
+                        ? l10n.unpinFromDashboard
+                        : l10n.pinToDashboard,
+                    onPressed: () async {
+                      if (isPinned) {
+                        final layout =
+                            ref.read(dashboardWidgetLayoutProvider).value ?? [];
+                        final idx = layout.indexWhere((c) =>
+                            c.kind == DashboardWidgetKind.category &&
+                            c.categoryUuid == category.uuid);
+                        if (idx >= 0) {
                           await ref
                               .read(dashboardWidgetLayoutProvider.notifier)
-                              .addWidget(DashboardWidgetConfig(
-                                  kind: DashboardWidgetKind.category,
-                                  categoryUuid: category.uuid));
+                              .removeAt(idx);
                           if (context.mounted) {
                             ToastUtils.showSuccessToast(
-                                context, ref, l10n.pinnedToDashboard);
+                                context, ref, l10n.unpinnedFromDashboard);
                           }
                         }
-                      },
-                    );
-                  },
-                ),
-                IconButton(
-                  icon: const Icon(Icons.edit_outlined),
-                  onPressed: () async {
-                    final updated = await Navigator.push<bool>(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            EditCategoryScreen(category: category),
-                      ),
-                    );
-                    if (updated == true) {
-                      ref.invalidate(categoryDetailBudgetProvider(categoryUuid));
-                      ref.invalidate(categoriesByTypeProvider);
-                    }
-                  },
-                ),
-              ],
-            ),
-            body: CustomScrollView(
-              slivers: [
-                SliverToBoxAdapter(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 24),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          color.withValues(alpha: 0.1),
-                          theme.scaffoldBackgroundColor,
-                        ],
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                      ),
+                      } else {
+                        await ref
+                            .read(dashboardWidgetLayoutProvider.notifier)
+                            .addWidget(DashboardWidgetConfig(
+                                kind: DashboardWidgetKind.category,
+                                categoryUuid: category.uuid));
+                        if (context.mounted) {
+                          ToastUtils.showSuccessToast(
+                              context, ref, l10n.pinnedToDashboard);
+                        }
+                      }
+                    },
+                  );
+                },
+              ),
+              IconButton(
+                icon: const Icon(Icons.edit_outlined),
+                onPressed: () async {
+                  final updated = await Navigator.push<bool>(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          EditCategoryScreen(category: category),
                     ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Hero(
-                          tag: 'category_icon_${category.uuid}',
-                          child: Container(
-                            width: 80,
-                            height: 80,
-                            decoration: BoxDecoration(
-                              color: color.withValues(alpha: 0.15),
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: color.withValues(alpha: 0.3),
-                                width: 2,
-                              ),
-                            ),
-                            alignment: Alignment.center,
-                            child: CategoryHelper.buildCategoryIcon(
-                                category.icon, color, isExpense,
-                                size: 40),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          LocalizationHelper.getLocalizedCategoryName(
-                              context, category.name),
-                          style: theme.textTheme.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: color.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            isExpense ? l10n.expense : l10n.income,
-                            style: TextStyle(
-                              color: color,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ),
+                  );
+                  if (updated == true) {
+                    ref.invalidate(categoryDetailBudgetProvider(categoryUuid));
+                    ref.invalidate(categoriesByTypeProvider);
+                  }
+                },
+              ),
+            ],
+          ),
+          body: CustomScrollView(
+            slivers: [
+              SliverToBoxAdapter(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 24),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        color.withValues(alpha: 0.1),
+                        theme.scaffoldBackgroundColor,
                       ],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
                     ),
                   ),
-                ),
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        CategoryBudgetDateRangeSelector(
-                          selectedDateRange: selectedDateRange,
-                          onDateRangeChanged: (dateRange) {
-                            ref
-                                .read(categoryBudgetDateRangeProvider.notifier)
-                                .updateRange(dateRange);
-                          },
-                          onNextPeriod: () {
-                            ref
-                                .read(categoryBudgetDateRangeProvider.notifier)
-                                .nextPeriod();
-                          },
-                          onPreviousPeriod: () {
-                            ref
-                                .read(categoryBudgetDateRangeProvider.notifier)
-                                .previousPeriod();
-                          },
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Hero(
+                        tag: 'category_icon_${category.uuid}',
+                        child: Container(
+                          width: 80,
+                          height: 80,
+                          decoration: BoxDecoration(
+                            color: color.withValues(alpha: 0.15),
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: color.withValues(alpha: 0.3),
+                              width: 2,
+                            ),
+                          ),
+                          alignment: Alignment.center,
+                          child: CategoryHelper.buildCategoryIcon(
+                              category.icon, color, isExpense,
+                              size: 40),
                         ),
-                        const SizedBox(height: 24),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        LocalizationHelper.getLocalizedCategoryName(
+                            context, category.name),
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: color.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          isExpense ? l10n.expense : l10n.income,
+                          style: TextStyle(
+                            color: color,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CategoryBudgetDateRangeSelector(
+                        selectedDateRange: selectedDateRange,
+                        onDateRangeChanged: (dateRange) {
+                          ref
+                              .read(categoryBudgetDateRangeProvider.notifier)
+                              .updateRange(dateRange);
+                        },
+                        onNextPeriod: () {
+                          ref
+                              .read(categoryBudgetDateRangeProvider.notifier)
+                              .nextPeriod();
+                        },
+                        onPreviousPeriod: () {
+                          ref
+                              .read(categoryBudgetDateRangeProvider.notifier)
+                              .previousPeriod();
+                        },
+                      ),
+                      const SizedBox(height: 24),
 
-                        // Summary / budget card
-                        _CategoryBudgetSummarySection(
-                          snapshot: snapshot,
-                          categoryUuid: categoryUuid,
-                          selectedDateRange: selectedDateRange,
-                          color: color,
-                          isExpense: isExpense,
-                          currencySymbol: currencySymbol,
-                          decimalPlaces: decimalPlaces,
-                          l10n: l10n,
-                          onOpenTransactions: () async {
-                            ref
-                                .read(transactionsPaginatedProvider.notifier)
-                                .applyFilters(
-                                  TransactionFilters(
-                                    categoryUuids: [categoryUuid],
-                                    startDate: selectedDateRange.startDate,
-                                    endDate: selectedDateRange.endDate,
-                                  ),
-                                );
-                            await Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    const TransactionsListScreen(),
-                              ),
-                            );
-                            ref.invalidate(
-                                categoryDetailBudgetProvider(categoryUuid));
-                          },
-                          onSetBudget: () {
+                      // Summary / budget card
+                      _CategoryBudgetSummarySection(
+                        snapshot: snapshot,
+                        categoryUuid: categoryUuid,
+                        selectedDateRange: selectedDateRange,
+                        color: color,
+                        isExpense: isExpense,
+                        currencySymbol: currencySymbol,
+                        decimalPlaces: decimalPlaces,
+                        l10n: l10n,
+                        onOpenTransactions: () async {
+                          ref
+                              .read(transactionsPaginatedProvider.notifier)
+                              .applyFilters(
+                                TransactionFilters(
+                                  categoryUuids: [categoryUuid],
+                                  startDate: selectedDateRange.startDate,
+                                  endDate: selectedDateRange.endDate,
+                                ),
+                              );
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  const TransactionsListScreen(),
+                            ),
+                          );
+                          ref.invalidate(
+                              categoryDetailBudgetProvider(categoryUuid));
+                        },
+                        onSetBudget: () async {
+                          final nav = Navigator.of(context);
+                          // Check limits before showing the sheet
+                          final wasBudgetSet =
+                              snapshot.category.monthlyBudget != null ||
+                                  snapshot.category.quarterlyBudget != null ||
+                                  snapshot.category.yearlyBudget != null;
+
+                          if (!wasBudgetSet) {
+                            final limits =
+                                await PremiumGate.getCategoryBudgetLimits(ref);
+                            if (!limits.canAdd) {
+                              PremiumGate.showPremiumDialog(context);
+                              return;
+                            }
+                          }
+
+                          if (context.mounted) {
                             showSetCategoryBudgetSheet(
                               context,
-                              category: category,
+                              category: snapshot.category,
                             );
-                          },
-                        ),
-                        const SizedBox(height: 16),
+                          }
+                        },
+                      ),
+                      const SizedBox(height: 16),
 
-                        // Transaction Count Card - same tap as summary: open filtered transactions list
-                        InkWell(
-                          onTap: () async {
-                            ref
-                                .read(transactionsPaginatedProvider.notifier)
-                                .applyFilters(
-                                  TransactionFilters(
-                                    categoryUuids: [categoryUuid],
-                                    startDate: selectedDateRange.startDate,
-                                    endDate: selectedDateRange.endDate,
-                                  ),
-                                );
-                            await Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    const TransactionsListScreen(),
-                              ),
-                            );
-                            ref.invalidate(
-                                categoryDetailBudgetProvider(categoryUuid));
-                          },
-                          borderRadius: BorderRadius.circular(16),
-                          child: Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: theme.cardColor,
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(
-                                color: theme.dividerColor.withValues(alpha: 0.5),
-                              ),
+                      // Transaction Count Card - same tap as summary: open filtered transactions list
+                      InkWell(
+                        onTap: () async {
+                          ref
+                              .read(transactionsPaginatedProvider.notifier)
+                              .applyFilters(
+                                TransactionFilters(
+                                  categoryUuids: [categoryUuid],
+                                  startDate: selectedDateRange.startDate,
+                                  endDate: selectedDateRange.endDate,
+                                ),
+                              );
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  const TransactionsListScreen(),
                             ),
-                            child: Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(10),
-                                  decoration: BoxDecoration(
-                                    color: color.withValues(alpha: 0.1),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Icon(Icons.receipt_long_outlined,
-                                      color: color, size: 24),
-                                ),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        l10n.transactions,
-                                        style:
-                                            theme.textTheme.bodySmall?.copyWith(
-                                          color:
-                                              theme.colorScheme.onSurfaceVariant,
-                                        ),
-                                      ),
-                                      Text(
-                                        '${snapshot.transactionCount} ${l10n.transactions.toLowerCase()}',
-                                        style:
-                                            theme.textTheme.titleMedium?.copyWith(
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Icon(
-                                  Icons.arrow_forward_ios,
-                                  size: 16,
-                                  color: theme.colorScheme.onSurfaceVariant,
-                                ),
-                              ],
+                          );
+                          ref.invalidate(
+                              categoryDetailBudgetProvider(categoryUuid));
+                        },
+                        borderRadius: BorderRadius.circular(16),
+                        child: Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: theme.cardColor,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: theme.dividerColor.withValues(alpha: 0.5),
                             ),
                           ),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: color.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Icon(Icons.receipt_long_outlined,
+                                    color: color, size: 24),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      l10n.transactions,
+                                      style:
+                                          theme.textTheme.bodySmall?.copyWith(
+                                        color:
+                                            theme.colorScheme.onSurfaceVariant,
+                                      ),
+                                    ),
+                                    Text(
+                                      '${snapshot.transactionCount} ${l10n.transactions.toLowerCase()}',
+                                      style:
+                                          theme.textTheme.titleMedium?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Icon(
+                                Icons.arrow_forward_ios,
+                                size: 16,
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ],
+                          ),
                         ),
-                        const SizedBox(height: 80),
-                      ],
-                    ),
+                      ),
+                      const SizedBox(height: 80),
+                    ],
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
+          ),
         );
       },
       loading: () => Scaffold(
@@ -472,10 +490,9 @@ class _CategoryBudgetSummarySection extends StatelessWidget {
                                         ? l10n.netExpenses
                                         : l10n.netIncome,
                                     textAlign: TextAlign.center,
-                                    style:
-                                        theme.textTheme.bodyMedium?.copyWith(
-                                      color: Colors.white
-                                          .withValues(alpha: 0.85),
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      color:
+                                          Colors.white.withValues(alpha: 0.85),
                                       fontWeight: FontWeight.w500,
                                     ),
                                   ),
@@ -483,8 +500,8 @@ class _CategoryBudgetSummarySection extends StatelessWidget {
                                   Text(
                                     netStr,
                                     textAlign: TextAlign.center,
-                                    style: theme.textTheme.headlineLarge
-                                        ?.copyWith(
+                                    style:
+                                        theme.textTheme.headlineLarge?.copyWith(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 32,
                                       height: 1.1,
@@ -516,9 +533,7 @@ class _CategoryBudgetSummarySection extends StatelessWidget {
                       if (hasBudget) ...[
                         const SizedBox(height: 16),
                         Text(
-                          isExpense
-                              ? l10n.spendingBudget
-                              : l10n.savingsTarget,
+                          isExpense ? l10n.spendingBudget : l10n.savingsTarget,
                           textAlign: TextAlign.center,
                           style: theme.textTheme.labelSmall?.copyWith(
                             color: Colors.white.withValues(alpha: 0.75),
@@ -567,8 +582,7 @@ class _CategoryBudgetSummarySection extends StatelessWidget {
         if (hasBudget) ...[
           const SizedBox(height: 12),
           DualAmountProgressBar(
-            leftLabel:
-                isExpense ? l10n.budgetBarUsed : l10n.budgetBarProgress,
+            leftLabel: isExpense ? l10n.budgetBarUsed : l10n.budgetBarProgress,
             leftAmount: net > 0 ? net : 0.0,
             rightLabel: l10n.remaining,
             rightAmount: barRightAmount,

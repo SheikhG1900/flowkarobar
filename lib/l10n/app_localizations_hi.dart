@@ -4054,4 +4054,18 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get totalExpenses => 'कुल खर्च';
+
+  @override
+  String get featureUnlimitedAccountsTitle => 'असीमित खाते';
+
+  @override
+  String get featureUnlimitedAccountsDesc =>
+      'एक ही स्थान पर अपने सभी बैलेंस को ट्रैक करने के लिए कई बैंक खाते, नकद वॉलेट और क्रेडिट कार्ड जोड़ें।';
+
+  @override
+  String get featureCategoryBudgetsTitle => 'श्रेणी बजट';
+
+  @override
+  String get featureCategoryBudgetsDesc =>
+      'किसी भी श्रेणी के लिए मासिक, त्रैमासिक या वार्षिक खर्च सीमा और बचत लक्ष्य निर्धारित करें।';
 }

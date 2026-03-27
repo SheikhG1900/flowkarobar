@@ -4044,4 +4044,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get totalExpenses => 'Total Expenses';
+
+  @override
+  String get featureUnlimitedAccountsTitle => 'Unlimited Accounts';
+
+  @override
+  String get featureUnlimitedAccountsDesc =>
+      'Add multiple bank accounts, cash wallets, and credit cards to track all your balances in one place.';
+
+  @override
+  String get featureCategoryBudgetsTitle => 'Category Budgets';
+
+  @override
+  String get featureCategoryBudgetsDesc =>
+      'Set monthly, quarterly, or yearly spending limits and savings targets for any category.';
 }
