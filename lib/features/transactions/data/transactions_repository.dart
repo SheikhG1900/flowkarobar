@@ -11,6 +11,16 @@ class TransactionsRepository {
 
   TransactionsRepository(this._database);
 
+  // Get total transaction count
+  Future<int> getTotalTransactionCount() async {
+    final countExp = _database.transactions.uuid.count();
+    final query = _database.selectOnly(_database.transactions)
+      ..addColumns([countExp])
+      ..where(_database.transactions.isDeleted.equals(false));
+    final result = await query.getSingle();
+    return result.read(countExp) ?? 0;
+  }
+
   // Get all transactions
   Stream<List<Transaction>> watchAllTransactions() {
     return (_database.select(_database.transactions)
