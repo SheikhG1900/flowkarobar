@@ -1706,55 +1706,73 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
       builder: (ctx) => StatefulBuilder(
         builder: (context, setState) => SafeArea(
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(
-                  l10n.quickActions,
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(0, 20, 0, 16),
+                  child: Text(
+                    l10n.quickActions,
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
-                const SizedBox(height: 16),
-                Flexible(
-                  child: ListView(
-                    shrinkWrap: true,
-                    children: availableActions.map((e) {
-                      final isSelected = currentActions.contains(e.$1);
-                      return CheckboxListTile(
-                        secondary: Icon(e.$3),
-                        title: Text(e.$2),
-                        value: isSelected,
-                        onChanged: (v) {
-                          setState(() {
-                            if (v == true) {
-                              currentActions.add(e.$1);
-                            } else {
-                              currentActions.remove(e.$1);
-                            }
-                          });
-                        },
-                      );
-                    }).toList(),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: availableActions.map((e) {
+                    final isSelected = currentActions.contains(e.$1);
+                    return FilterChip(
+                      label: Text(e.$2),
+                      avatar: Icon(
+                        e.$3,
+                        size: 16,
+                        color: isSelected
+                            ? theme.colorScheme.onPrimaryContainer
+                            : theme.colorScheme.onSurfaceVariant,
+                      ),
+                      selected: isSelected,
+                      labelStyle: TextStyle(
+                        color: isSelected
+                            ? theme.colorScheme.onPrimaryContainer
+                            : theme.colorScheme.onSurface,
+                        fontWeight:
+                            isSelected ? FontWeight.bold : FontWeight.normal,
+                      ),
+                      selectedColor: theme.colorScheme.primaryContainer,
+                      checkmarkColor: theme.colorScheme.onPrimaryContainer,
+                      onSelected: (v) {
+                        setState(() {
+                          if (v) {
+                            currentActions.add(e.$1);
+                          } else {
+                            currentActions.remove(e.$1);
+                          }
+                        });
+                      },
+                    );
+                  }).toList(),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 24),
+                  child: FilledButton(
+                    onPressed: () async {
+                      await ref
+                          .read(dashboardWidgetLayoutProvider.notifier)
+                          .updateWidget(
+                            layoutIndex,
+                            config.copyWith(
+                                quickActionCodes: currentActions.toList()),
+                          );
+                      if (context.mounted) Navigator.pop(ctx);
+                    },
+                    child: Text(l10n.save),
                   ),
                 ),
-                const SizedBox(height: 16),
-                FilledButton(
-                  onPressed: () async {
-                    await ref
-                        .read(dashboardWidgetLayoutProvider.notifier)
-                        .updateWidget(
-                          layoutIndex,
-                          config.copyWith(
-                              quickActionCodes: currentActions.toList()),
-                        );
-                    if (context.mounted) Navigator.pop(ctx);
-                  },
-                  child: Text(l10n.save),
-                ),
-                const SizedBox(height: 20),
+                SizedBox(height: MediaQuery.paddingOf(context).bottom),
               ],
             ),
           ),
