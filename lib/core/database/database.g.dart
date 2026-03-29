@@ -101,6 +101,17 @@ class $CategoriesTable extends Categories
   late final GeneratedColumn<double> yearlyBudget = GeneratedColumn<double>(
       'yearly_budget', aliasedName, true,
       type: DriftSqlType.double, requiredDuringInsert: false);
+  static const VerificationMeta _addSeqMeta = const VerificationMeta('addSeq');
+  @override
+  late final GeneratedColumn<int> addSeq = GeneratedColumn<int>(
+      'add_seq', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _budgetSeqMeta =
+      const VerificationMeta('budgetSeq');
+  @override
+  late final GeneratedColumn<int> budgetSeq = GeneratedColumn<int>(
+      'budget_seq', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
   @override
   List<GeneratedColumn> get $columns => [
         uuid,
@@ -115,7 +126,9 @@ class $CategoriesTable extends Categories
         isNotSynced,
         monthlyBudget,
         quarterlyBudget,
-        yearlyBudget
+        yearlyBudget,
+        addSeq,
+        budgetSeq
       ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -193,6 +206,14 @@ class $CategoriesTable extends Categories
           yearlyBudget.isAcceptableOrUnknown(
               data['yearly_budget']!, _yearlyBudgetMeta));
     }
+    if (data.containsKey('add_seq')) {
+      context.handle(_addSeqMeta,
+          addSeq.isAcceptableOrUnknown(data['add_seq']!, _addSeqMeta));
+    }
+    if (data.containsKey('budget_seq')) {
+      context.handle(_budgetSeqMeta,
+          budgetSeq.isAcceptableOrUnknown(data['budget_seq']!, _budgetSeqMeta));
+    }
     return context;
   }
 
@@ -228,6 +249,10 @@ class $CategoriesTable extends Categories
           DriftSqlType.double, data['${effectivePrefix}quarterly_budget']),
       yearlyBudget: attachedDatabase.typeMapping
           .read(DriftSqlType.double, data['${effectivePrefix}yearly_budget']),
+      addSeq: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}add_seq']),
+      budgetSeq: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}budget_seq']),
     );
   }
 
@@ -248,9 +273,13 @@ class Category extends DataClass implements Insertable<Category> {
   final DateTime createdAt;
   final DateTime updatedAt;
   final bool isNotSynced;
+
+  /// Spending cap (expense) or savings target (income); null = not set.
   final double? monthlyBudget;
   final double? quarterlyBudget;
   final double? yearlyBudget;
+  final int? addSeq;
+  final int? budgetSeq;
   const Category(
       {required this.uuid,
       required this.name,
@@ -264,7 +293,9 @@ class Category extends DataClass implements Insertable<Category> {
       required this.isNotSynced,
       this.monthlyBudget,
       this.quarterlyBudget,
-      this.yearlyBudget});
+      this.yearlyBudget,
+      this.addSeq,
+      this.budgetSeq});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -291,6 +322,12 @@ class Category extends DataClass implements Insertable<Category> {
     if (!nullToAbsent || yearlyBudget != null) {
       map['yearly_budget'] = Variable<double>(yearlyBudget);
     }
+    if (!nullToAbsent || addSeq != null) {
+      map['add_seq'] = Variable<int>(addSeq);
+    }
+    if (!nullToAbsent || budgetSeq != null) {
+      map['budget_seq'] = Variable<int>(budgetSeq);
+    }
     return map;
   }
 
@@ -316,6 +353,11 @@ class Category extends DataClass implements Insertable<Category> {
       yearlyBudget: yearlyBudget == null && nullToAbsent
           ? const Value.absent()
           : Value(yearlyBudget),
+      addSeq:
+          addSeq == null && nullToAbsent ? const Value.absent() : Value(addSeq),
+      budgetSeq: budgetSeq == null && nullToAbsent
+          ? const Value.absent()
+          : Value(budgetSeq),
     );
   }
 
@@ -336,6 +378,8 @@ class Category extends DataClass implements Insertable<Category> {
       monthlyBudget: serializer.fromJson<double?>(json['monthlyBudget']),
       quarterlyBudget: serializer.fromJson<double?>(json['quarterlyBudget']),
       yearlyBudget: serializer.fromJson<double?>(json['yearlyBudget']),
+      addSeq: serializer.fromJson<int?>(json['addSeq']),
+      budgetSeq: serializer.fromJson<int?>(json['budgetSeq']),
     );
   }
   @override
@@ -355,6 +399,8 @@ class Category extends DataClass implements Insertable<Category> {
       'monthlyBudget': serializer.toJson<double?>(monthlyBudget),
       'quarterlyBudget': serializer.toJson<double?>(quarterlyBudget),
       'yearlyBudget': serializer.toJson<double?>(yearlyBudget),
+      'addSeq': serializer.toJson<int?>(addSeq),
+      'budgetSeq': serializer.toJson<int?>(budgetSeq),
     };
   }
 
@@ -371,7 +417,9 @@ class Category extends DataClass implements Insertable<Category> {
           bool? isNotSynced,
           Value<double?> monthlyBudget = const Value.absent(),
           Value<double?> quarterlyBudget = const Value.absent(),
-          Value<double?> yearlyBudget = const Value.absent()}) =>
+          Value<double?> yearlyBudget = const Value.absent(),
+          Value<int?> addSeq = const Value.absent(),
+          Value<int?> budgetSeq = const Value.absent()}) =>
       Category(
         uuid: uuid ?? this.uuid,
         name: name ?? this.name,
@@ -390,6 +438,8 @@ class Category extends DataClass implements Insertable<Category> {
             : this.quarterlyBudget,
         yearlyBudget:
             yearlyBudget.present ? yearlyBudget.value : this.yearlyBudget,
+        addSeq: addSeq.present ? addSeq.value : this.addSeq,
+        budgetSeq: budgetSeq.present ? budgetSeq.value : this.budgetSeq,
       );
   Category copyWithCompanion(CategoriesCompanion data) {
     return Category(
@@ -413,6 +463,8 @@ class Category extends DataClass implements Insertable<Category> {
       yearlyBudget: data.yearlyBudget.present
           ? data.yearlyBudget.value
           : this.yearlyBudget,
+      addSeq: data.addSeq.present ? data.addSeq.value : this.addSeq,
+      budgetSeq: data.budgetSeq.present ? data.budgetSeq.value : this.budgetSeq,
     );
   }
 
@@ -431,7 +483,9 @@ class Category extends DataClass implements Insertable<Category> {
           ..write('isNotSynced: $isNotSynced, ')
           ..write('monthlyBudget: $monthlyBudget, ')
           ..write('quarterlyBudget: $quarterlyBudget, ')
-          ..write('yearlyBudget: $yearlyBudget')
+          ..write('yearlyBudget: $yearlyBudget, ')
+          ..write('addSeq: $addSeq, ')
+          ..write('budgetSeq: $budgetSeq')
           ..write(')'))
         .toString();
   }
@@ -450,7 +504,9 @@ class Category extends DataClass implements Insertable<Category> {
       isNotSynced,
       monthlyBudget,
       quarterlyBudget,
-      yearlyBudget);
+      yearlyBudget,
+      addSeq,
+      budgetSeq);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -467,7 +523,9 @@ class Category extends DataClass implements Insertable<Category> {
           other.isNotSynced == this.isNotSynced &&
           other.monthlyBudget == this.monthlyBudget &&
           other.quarterlyBudget == this.quarterlyBudget &&
-          other.yearlyBudget == this.yearlyBudget);
+          other.yearlyBudget == this.yearlyBudget &&
+          other.addSeq == this.addSeq &&
+          other.budgetSeq == this.budgetSeq);
 }
 
 class CategoriesCompanion extends UpdateCompanion<Category> {
@@ -484,6 +542,8 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
   final Value<double?> monthlyBudget;
   final Value<double?> quarterlyBudget;
   final Value<double?> yearlyBudget;
+  final Value<int?> addSeq;
+  final Value<int?> budgetSeq;
   final Value<int> rowid;
   const CategoriesCompanion({
     this.uuid = const Value.absent(),
@@ -499,6 +559,8 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
     this.monthlyBudget = const Value.absent(),
     this.quarterlyBudget = const Value.absent(),
     this.yearlyBudget = const Value.absent(),
+    this.addSeq = const Value.absent(),
+    this.budgetSeq = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   CategoriesCompanion.insert({
@@ -515,6 +577,8 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
     this.monthlyBudget = const Value.absent(),
     this.quarterlyBudget = const Value.absent(),
     this.yearlyBudget = const Value.absent(),
+    this.addSeq = const Value.absent(),
+    this.budgetSeq = const Value.absent(),
     this.rowid = const Value.absent(),
   })  : uuid = Value(uuid),
         name = Value(name),
@@ -533,6 +597,8 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
     Expression<double>? monthlyBudget,
     Expression<double>? quarterlyBudget,
     Expression<double>? yearlyBudget,
+    Expression<int>? addSeq,
+    Expression<int>? budgetSeq,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -549,6 +615,8 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
       if (monthlyBudget != null) 'monthly_budget': monthlyBudget,
       if (quarterlyBudget != null) 'quarterly_budget': quarterlyBudget,
       if (yearlyBudget != null) 'yearly_budget': yearlyBudget,
+      if (addSeq != null) 'add_seq': addSeq,
+      if (budgetSeq != null) 'budget_seq': budgetSeq,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -567,6 +635,8 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
       Value<double?>? monthlyBudget,
       Value<double?>? quarterlyBudget,
       Value<double?>? yearlyBudget,
+      Value<int?>? addSeq,
+      Value<int?>? budgetSeq,
       Value<int>? rowid}) {
     return CategoriesCompanion(
       uuid: uuid ?? this.uuid,
@@ -582,6 +652,8 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
       monthlyBudget: monthlyBudget ?? this.monthlyBudget,
       quarterlyBudget: quarterlyBudget ?? this.quarterlyBudget,
       yearlyBudget: yearlyBudget ?? this.yearlyBudget,
+      addSeq: addSeq ?? this.addSeq,
+      budgetSeq: budgetSeq ?? this.budgetSeq,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -628,6 +700,12 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
     if (yearlyBudget.present) {
       map['yearly_budget'] = Variable<double>(yearlyBudget.value);
     }
+    if (addSeq.present) {
+      map['add_seq'] = Variable<int>(addSeq.value);
+    }
+    if (budgetSeq.present) {
+      map['budget_seq'] = Variable<int>(budgetSeq.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -650,6 +728,8 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
           ..write('monthlyBudget: $monthlyBudget, ')
           ..write('quarterlyBudget: $quarterlyBudget, ')
           ..write('yearlyBudget: $yearlyBudget, ')
+          ..write('addSeq: $addSeq, ')
+          ..write('budgetSeq: $budgetSeq, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -725,6 +805,11 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
       defaultConstraints: GeneratedColumn.constraintIsAlways(
           'CHECK ("is_not_synced" IN (0, 1))'),
       defaultValue: const Constant(true));
+  static const VerificationMeta _addSeqMeta = const VerificationMeta('addSeq');
+  @override
+  late final GeneratedColumn<int> addSeq = GeneratedColumn<int>(
+      'add_seq', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
   @override
   List<GeneratedColumn> get $columns => [
         uuid,
@@ -735,7 +820,8 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
         createdAt,
         updatedAt,
         isDeleted,
-        isNotSynced
+        isNotSynced,
+        addSeq
       ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -789,6 +875,10 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
           isNotSynced.isAcceptableOrUnknown(
               data['is_not_synced']!, _isNotSyncedMeta));
     }
+    if (data.containsKey('add_seq')) {
+      context.handle(_addSeqMeta,
+          addSeq.isAcceptableOrUnknown(data['add_seq']!, _addSeqMeta));
+    }
     return context;
   }
 
@@ -816,6 +906,8 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
           .read(DriftSqlType.bool, data['${effectivePrefix}is_deleted'])!,
       isNotSynced: attachedDatabase.typeMapping
           .read(DriftSqlType.bool, data['${effectivePrefix}is_not_synced'])!,
+      addSeq: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}add_seq']),
     );
   }
 
@@ -835,6 +927,7 @@ class Contact extends DataClass implements Insertable<Contact> {
   final DateTime updatedAt;
   final bool isDeleted;
   final bool isNotSynced;
+  final int? addSeq;
   const Contact(
       {required this.uuid,
       required this.name,
@@ -844,7 +937,8 @@ class Contact extends DataClass implements Insertable<Contact> {
       required this.createdAt,
       required this.updatedAt,
       required this.isDeleted,
-      required this.isNotSynced});
+      required this.isNotSynced,
+      this.addSeq});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -863,6 +957,9 @@ class Contact extends DataClass implements Insertable<Contact> {
     map['updated_at'] = Variable<DateTime>(updatedAt);
     map['is_deleted'] = Variable<bool>(isDeleted);
     map['is_not_synced'] = Variable<bool>(isNotSynced);
+    if (!nullToAbsent || addSeq != null) {
+      map['add_seq'] = Variable<int>(addSeq);
+    }
     return map;
   }
 
@@ -880,6 +977,8 @@ class Contact extends DataClass implements Insertable<Contact> {
       updatedAt: Value(updatedAt),
       isDeleted: Value(isDeleted),
       isNotSynced: Value(isNotSynced),
+      addSeq:
+          addSeq == null && nullToAbsent ? const Value.absent() : Value(addSeq),
     );
   }
 
@@ -896,6 +995,7 @@ class Contact extends DataClass implements Insertable<Contact> {
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       isDeleted: serializer.fromJson<bool>(json['isDeleted']),
       isNotSynced: serializer.fromJson<bool>(json['isNotSynced']),
+      addSeq: serializer.fromJson<int?>(json['addSeq']),
     );
   }
   @override
@@ -911,6 +1011,7 @@ class Contact extends DataClass implements Insertable<Contact> {
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'isDeleted': serializer.toJson<bool>(isDeleted),
       'isNotSynced': serializer.toJson<bool>(isNotSynced),
+      'addSeq': serializer.toJson<int?>(addSeq),
     };
   }
 
@@ -923,7 +1024,8 @@ class Contact extends DataClass implements Insertable<Contact> {
           DateTime? createdAt,
           DateTime? updatedAt,
           bool? isDeleted,
-          bool? isNotSynced}) =>
+          bool? isNotSynced,
+          Value<int?> addSeq = const Value.absent()}) =>
       Contact(
         uuid: uuid ?? this.uuid,
         name: name ?? this.name,
@@ -934,6 +1036,7 @@ class Contact extends DataClass implements Insertable<Contact> {
         updatedAt: updatedAt ?? this.updatedAt,
         isDeleted: isDeleted ?? this.isDeleted,
         isNotSynced: isNotSynced ?? this.isNotSynced,
+        addSeq: addSeq.present ? addSeq.value : this.addSeq,
       );
   Contact copyWithCompanion(ContactsCompanion data) {
     return Contact(
@@ -947,6 +1050,7 @@ class Contact extends DataClass implements Insertable<Contact> {
       isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
       isNotSynced:
           data.isNotSynced.present ? data.isNotSynced.value : this.isNotSynced,
+      addSeq: data.addSeq.present ? data.addSeq.value : this.addSeq,
     );
   }
 
@@ -961,14 +1065,15 @@ class Contact extends DataClass implements Insertable<Contact> {
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('isDeleted: $isDeleted, ')
-          ..write('isNotSynced: $isNotSynced')
+          ..write('isNotSynced: $isNotSynced, ')
+          ..write('addSeq: $addSeq')
           ..write(')'))
         .toString();
   }
 
   @override
   int get hashCode => Object.hash(uuid, name, phone, email, notes, createdAt,
-      updatedAt, isDeleted, isNotSynced);
+      updatedAt, isDeleted, isNotSynced, addSeq);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -981,7 +1086,8 @@ class Contact extends DataClass implements Insertable<Contact> {
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.isDeleted == this.isDeleted &&
-          other.isNotSynced == this.isNotSynced);
+          other.isNotSynced == this.isNotSynced &&
+          other.addSeq == this.addSeq);
 }
 
 class ContactsCompanion extends UpdateCompanion<Contact> {
@@ -994,6 +1100,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
   final Value<DateTime> updatedAt;
   final Value<bool> isDeleted;
   final Value<bool> isNotSynced;
+  final Value<int?> addSeq;
   final Value<int> rowid;
   const ContactsCompanion({
     this.uuid = const Value.absent(),
@@ -1005,6 +1112,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     this.updatedAt = const Value.absent(),
     this.isDeleted = const Value.absent(),
     this.isNotSynced = const Value.absent(),
+    this.addSeq = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   ContactsCompanion.insert({
@@ -1017,6 +1125,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     this.updatedAt = const Value.absent(),
     this.isDeleted = const Value.absent(),
     this.isNotSynced = const Value.absent(),
+    this.addSeq = const Value.absent(),
     this.rowid = const Value.absent(),
   })  : uuid = Value(uuid),
         name = Value(name);
@@ -1030,6 +1139,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     Expression<DateTime>? updatedAt,
     Expression<bool>? isDeleted,
     Expression<bool>? isNotSynced,
+    Expression<int>? addSeq,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -1042,6 +1152,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
       if (updatedAt != null) 'updated_at': updatedAt,
       if (isDeleted != null) 'is_deleted': isDeleted,
       if (isNotSynced != null) 'is_not_synced': isNotSynced,
+      if (addSeq != null) 'add_seq': addSeq,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -1056,6 +1167,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
       Value<DateTime>? updatedAt,
       Value<bool>? isDeleted,
       Value<bool>? isNotSynced,
+      Value<int?>? addSeq,
       Value<int>? rowid}) {
     return ContactsCompanion(
       uuid: uuid ?? this.uuid,
@@ -1067,6 +1179,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
       updatedAt: updatedAt ?? this.updatedAt,
       isDeleted: isDeleted ?? this.isDeleted,
       isNotSynced: isNotSynced ?? this.isNotSynced,
+      addSeq: addSeq ?? this.addSeq,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -1101,6 +1214,9 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     if (isNotSynced.present) {
       map['is_not_synced'] = Variable<bool>(isNotSynced.value);
     }
+    if (addSeq.present) {
+      map['add_seq'] = Variable<int>(addSeq.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -1119,6 +1235,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
           ..write('updatedAt: $updatedAt, ')
           ..write('isDeleted: $isDeleted, ')
           ..write('isNotSynced: $isNotSynced, ')
+          ..write('addSeq: $addSeq, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -1244,6 +1361,11 @@ class $AccountsTable extends Accounts with TableInfo<$AccountsTable, Account> {
       defaultConstraints: GeneratedColumn.constraintIsAlways(
           'CHECK ("is_not_synced" IN (0, 1))'),
       defaultValue: const Constant(true));
+  static const VerificationMeta _addSeqMeta = const VerificationMeta('addSeq');
+  @override
+  late final GeneratedColumn<int> addSeq = GeneratedColumn<int>(
+      'add_seq', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
   @override
   List<GeneratedColumn> get $columns => [
         uuid,
@@ -1261,7 +1383,8 @@ class $AccountsTable extends Accounts with TableInfo<$AccountsTable, Account> {
         createdAt,
         updatedAt,
         isDeleted,
-        isNotSynced
+        isNotSynced,
+        addSeq
       ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1357,6 +1480,10 @@ class $AccountsTable extends Accounts with TableInfo<$AccountsTable, Account> {
           isNotSynced.isAcceptableOrUnknown(
               data['is_not_synced']!, _isNotSyncedMeta));
     }
+    if (data.containsKey('add_seq')) {
+      context.handle(_addSeqMeta,
+          addSeq.isAcceptableOrUnknown(data['add_seq']!, _addSeqMeta));
+    }
     return context;
   }
 
@@ -1398,6 +1525,8 @@ class $AccountsTable extends Accounts with TableInfo<$AccountsTable, Account> {
           .read(DriftSqlType.bool, data['${effectivePrefix}is_deleted'])!,
       isNotSynced: attachedDatabase.typeMapping
           .read(DriftSqlType.bool, data['${effectivePrefix}is_not_synced'])!,
+      addSeq: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}add_seq']),
     );
   }
 
@@ -1424,6 +1553,7 @@ class Account extends DataClass implements Insertable<Account> {
   final DateTime updatedAt;
   final bool isDeleted;
   final bool isNotSynced;
+  final int? addSeq;
   const Account(
       {required this.uuid,
       required this.name,
@@ -1440,7 +1570,8 @@ class Account extends DataClass implements Insertable<Account> {
       required this.createdAt,
       required this.updatedAt,
       required this.isDeleted,
-      required this.isNotSynced});
+      required this.isNotSynced,
+      this.addSeq});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -1472,6 +1603,9 @@ class Account extends DataClass implements Insertable<Account> {
     map['updated_at'] = Variable<DateTime>(updatedAt);
     map['is_deleted'] = Variable<bool>(isDeleted);
     map['is_not_synced'] = Variable<bool>(isNotSynced);
+    if (!nullToAbsent || addSeq != null) {
+      map['add_seq'] = Variable<int>(addSeq);
+    }
     return map;
   }
 
@@ -1502,6 +1636,8 @@ class Account extends DataClass implements Insertable<Account> {
       updatedAt: Value(updatedAt),
       isDeleted: Value(isDeleted),
       isNotSynced: Value(isNotSynced),
+      addSeq:
+          addSeq == null && nullToAbsent ? const Value.absent() : Value(addSeq),
     );
   }
 
@@ -1526,6 +1662,7 @@ class Account extends DataClass implements Insertable<Account> {
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       isDeleted: serializer.fromJson<bool>(json['isDeleted']),
       isNotSynced: serializer.fromJson<bool>(json['isNotSynced']),
+      addSeq: serializer.fromJson<int?>(json['addSeq']),
     );
   }
   @override
@@ -1548,6 +1685,7 @@ class Account extends DataClass implements Insertable<Account> {
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'isDeleted': serializer.toJson<bool>(isDeleted),
       'isNotSynced': serializer.toJson<bool>(isNotSynced),
+      'addSeq': serializer.toJson<int?>(addSeq),
     };
   }
 
@@ -1567,7 +1705,8 @@ class Account extends DataClass implements Insertable<Account> {
           DateTime? createdAt,
           DateTime? updatedAt,
           bool? isDeleted,
-          bool? isNotSynced}) =>
+          bool? isNotSynced,
+          Value<int?> addSeq = const Value.absent()}) =>
       Account(
         uuid: uuid ?? this.uuid,
         name: name ?? this.name,
@@ -1590,6 +1729,7 @@ class Account extends DataClass implements Insertable<Account> {
         updatedAt: updatedAt ?? this.updatedAt,
         isDeleted: isDeleted ?? this.isDeleted,
         isNotSynced: isNotSynced ?? this.isNotSynced,
+        addSeq: addSeq.present ? addSeq.value : this.addSeq,
       );
   Account copyWithCompanion(AccountsCompanion data) {
     return Account(
@@ -1620,6 +1760,7 @@ class Account extends DataClass implements Insertable<Account> {
       isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
       isNotSynced:
           data.isNotSynced.present ? data.isNotSynced.value : this.isNotSynced,
+      addSeq: data.addSeq.present ? data.addSeq.value : this.addSeq,
     );
   }
 
@@ -1641,7 +1782,8 @@ class Account extends DataClass implements Insertable<Account> {
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('isDeleted: $isDeleted, ')
-          ..write('isNotSynced: $isNotSynced')
+          ..write('isNotSynced: $isNotSynced, ')
+          ..write('addSeq: $addSeq')
           ..write(')'))
         .toString();
   }
@@ -1663,7 +1805,8 @@ class Account extends DataClass implements Insertable<Account> {
       createdAt,
       updatedAt,
       isDeleted,
-      isNotSynced);
+      isNotSynced,
+      addSeq);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1683,7 +1826,8 @@ class Account extends DataClass implements Insertable<Account> {
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.isDeleted == this.isDeleted &&
-          other.isNotSynced == this.isNotSynced);
+          other.isNotSynced == this.isNotSynced &&
+          other.addSeq == this.addSeq);
 }
 
 class AccountsCompanion extends UpdateCompanion<Account> {
@@ -1703,6 +1847,7 @@ class AccountsCompanion extends UpdateCompanion<Account> {
   final Value<DateTime> updatedAt;
   final Value<bool> isDeleted;
   final Value<bool> isNotSynced;
+  final Value<int?> addSeq;
   final Value<int> rowid;
   const AccountsCompanion({
     this.uuid = const Value.absent(),
@@ -1721,6 +1866,7 @@ class AccountsCompanion extends UpdateCompanion<Account> {
     this.updatedAt = const Value.absent(),
     this.isDeleted = const Value.absent(),
     this.isNotSynced = const Value.absent(),
+    this.addSeq = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   AccountsCompanion.insert({
@@ -1740,6 +1886,7 @@ class AccountsCompanion extends UpdateCompanion<Account> {
     this.updatedAt = const Value.absent(),
     this.isDeleted = const Value.absent(),
     this.isNotSynced = const Value.absent(),
+    this.addSeq = const Value.absent(),
     this.rowid = const Value.absent(),
   })  : uuid = Value(uuid),
         name = Value(name),
@@ -1761,6 +1908,7 @@ class AccountsCompanion extends UpdateCompanion<Account> {
     Expression<DateTime>? updatedAt,
     Expression<bool>? isDeleted,
     Expression<bool>? isNotSynced,
+    Expression<int>? addSeq,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -1780,6 +1928,7 @@ class AccountsCompanion extends UpdateCompanion<Account> {
       if (updatedAt != null) 'updated_at': updatedAt,
       if (isDeleted != null) 'is_deleted': isDeleted,
       if (isNotSynced != null) 'is_not_synced': isNotSynced,
+      if (addSeq != null) 'add_seq': addSeq,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -1801,6 +1950,7 @@ class AccountsCompanion extends UpdateCompanion<Account> {
       Value<DateTime>? updatedAt,
       Value<bool>? isDeleted,
       Value<bool>? isNotSynced,
+      Value<int?>? addSeq,
       Value<int>? rowid}) {
     return AccountsCompanion(
       uuid: uuid ?? this.uuid,
@@ -1819,6 +1969,7 @@ class AccountsCompanion extends UpdateCompanion<Account> {
       updatedAt: updatedAt ?? this.updatedAt,
       isDeleted: isDeleted ?? this.isDeleted,
       isNotSynced: isNotSynced ?? this.isNotSynced,
+      addSeq: addSeq ?? this.addSeq,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -1874,6 +2025,9 @@ class AccountsCompanion extends UpdateCompanion<Account> {
     if (isNotSynced.present) {
       map['is_not_synced'] = Variable<bool>(isNotSynced.value);
     }
+    if (addSeq.present) {
+      map['add_seq'] = Variable<int>(addSeq.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -1899,6 +2053,7 @@ class AccountsCompanion extends UpdateCompanion<Account> {
           ..write('updatedAt: $updatedAt, ')
           ..write('isDeleted: $isDeleted, ')
           ..write('isNotSynced: $isNotSynced, ')
+          ..write('addSeq: $addSeq, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -3551,6 +3706,11 @@ class $ReceivablesTable extends Receivables
       defaultConstraints: GeneratedColumn.constraintIsAlways(
           'CHECK ("is_not_synced" IN (0, 1))'),
       defaultValue: const Constant(true));
+  static const VerificationMeta _addSeqMeta = const VerificationMeta('addSeq');
+  @override
+  late final GeneratedColumn<int> addSeq = GeneratedColumn<int>(
+      'add_seq', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
   @override
   List<GeneratedColumn> get $columns => [
         uuid,
@@ -3569,7 +3729,8 @@ class $ReceivablesTable extends Receivables
         createdAt,
         updatedAt,
         isDeleted,
-        isNotSynced
+        isNotSynced,
+        addSeq
       ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -3675,6 +3836,10 @@ class $ReceivablesTable extends Receivables
           isNotSynced.isAcceptableOrUnknown(
               data['is_not_synced']!, _isNotSyncedMeta));
     }
+    if (data.containsKey('add_seq')) {
+      context.handle(_addSeqMeta,
+          addSeq.isAcceptableOrUnknown(data['add_seq']!, _addSeqMeta));
+    }
     return context;
   }
 
@@ -3718,6 +3883,8 @@ class $ReceivablesTable extends Receivables
           .read(DriftSqlType.bool, data['${effectivePrefix}is_deleted'])!,
       isNotSynced: attachedDatabase.typeMapping
           .read(DriftSqlType.bool, data['${effectivePrefix}is_not_synced'])!,
+      addSeq: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}add_seq']),
     );
   }
 
@@ -3745,6 +3912,7 @@ class Receivable extends DataClass implements Insertable<Receivable> {
   final DateTime updatedAt;
   final bool isDeleted;
   final bool isNotSynced;
+  final int? addSeq;
   const Receivable(
       {required this.uuid,
       required this.contactUuid,
@@ -3762,7 +3930,8 @@ class Receivable extends DataClass implements Insertable<Receivable> {
       required this.createdAt,
       required this.updatedAt,
       required this.isDeleted,
-      required this.isNotSynced});
+      required this.isNotSynced,
+      this.addSeq});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -3795,6 +3964,9 @@ class Receivable extends DataClass implements Insertable<Receivable> {
     map['updated_at'] = Variable<DateTime>(updatedAt);
     map['is_deleted'] = Variable<bool>(isDeleted);
     map['is_not_synced'] = Variable<bool>(isNotSynced);
+    if (!nullToAbsent || addSeq != null) {
+      map['add_seq'] = Variable<int>(addSeq);
+    }
     return map;
   }
 
@@ -3829,6 +4001,8 @@ class Receivable extends DataClass implements Insertable<Receivable> {
       updatedAt: Value(updatedAt),
       isDeleted: Value(isDeleted),
       isNotSynced: Value(isNotSynced),
+      addSeq:
+          addSeq == null && nullToAbsent ? const Value.absent() : Value(addSeq),
     );
   }
 
@@ -3854,6 +4028,7 @@ class Receivable extends DataClass implements Insertable<Receivable> {
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       isDeleted: serializer.fromJson<bool>(json['isDeleted']),
       isNotSynced: serializer.fromJson<bool>(json['isNotSynced']),
+      addSeq: serializer.fromJson<int?>(json['addSeq']),
     );
   }
   @override
@@ -3877,6 +4052,7 @@ class Receivable extends DataClass implements Insertable<Receivable> {
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'isDeleted': serializer.toJson<bool>(isDeleted),
       'isNotSynced': serializer.toJson<bool>(isNotSynced),
+      'addSeq': serializer.toJson<int?>(addSeq),
     };
   }
 
@@ -3897,7 +4073,8 @@ class Receivable extends DataClass implements Insertable<Receivable> {
           DateTime? createdAt,
           DateTime? updatedAt,
           bool? isDeleted,
-          bool? isNotSynced}) =>
+          bool? isNotSynced,
+          Value<int?> addSeq = const Value.absent()}) =>
       Receivable(
         uuid: uuid ?? this.uuid,
         contactUuid: contactUuid ?? this.contactUuid,
@@ -3922,6 +4099,7 @@ class Receivable extends DataClass implements Insertable<Receivable> {
         updatedAt: updatedAt ?? this.updatedAt,
         isDeleted: isDeleted ?? this.isDeleted,
         isNotSynced: isNotSynced ?? this.isNotSynced,
+        addSeq: addSeq.present ? addSeq.value : this.addSeq,
       );
   Receivable copyWithCompanion(ReceivablesCompanion data) {
     return Receivable(
@@ -3956,6 +4134,7 @@ class Receivable extends DataClass implements Insertable<Receivable> {
       isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
       isNotSynced:
           data.isNotSynced.present ? data.isNotSynced.value : this.isNotSynced,
+      addSeq: data.addSeq.present ? data.addSeq.value : this.addSeq,
     );
   }
 
@@ -3978,7 +4157,8 @@ class Receivable extends DataClass implements Insertable<Receivable> {
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('isDeleted: $isDeleted, ')
-          ..write('isNotSynced: $isNotSynced')
+          ..write('isNotSynced: $isNotSynced, ')
+          ..write('addSeq: $addSeq')
           ..write(')'))
         .toString();
   }
@@ -4001,7 +4181,8 @@ class Receivable extends DataClass implements Insertable<Receivable> {
       createdAt,
       updatedAt,
       isDeleted,
-      isNotSynced);
+      isNotSynced,
+      addSeq);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -4022,7 +4203,8 @@ class Receivable extends DataClass implements Insertable<Receivable> {
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.isDeleted == this.isDeleted &&
-          other.isNotSynced == this.isNotSynced);
+          other.isNotSynced == this.isNotSynced &&
+          other.addSeq == this.addSeq);
 }
 
 class ReceivablesCompanion extends UpdateCompanion<Receivable> {
@@ -4043,6 +4225,7 @@ class ReceivablesCompanion extends UpdateCompanion<Receivable> {
   final Value<DateTime> updatedAt;
   final Value<bool> isDeleted;
   final Value<bool> isNotSynced;
+  final Value<int?> addSeq;
   final Value<int> rowid;
   const ReceivablesCompanion({
     this.uuid = const Value.absent(),
@@ -4062,6 +4245,7 @@ class ReceivablesCompanion extends UpdateCompanion<Receivable> {
     this.updatedAt = const Value.absent(),
     this.isDeleted = const Value.absent(),
     this.isNotSynced = const Value.absent(),
+    this.addSeq = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   ReceivablesCompanion.insert({
@@ -4082,6 +4266,7 @@ class ReceivablesCompanion extends UpdateCompanion<Receivable> {
     this.updatedAt = const Value.absent(),
     this.isDeleted = const Value.absent(),
     this.isNotSynced = const Value.absent(),
+    this.addSeq = const Value.absent(),
     this.rowid = const Value.absent(),
   })  : uuid = Value(uuid),
         contactUuid = Value(contactUuid),
@@ -4105,6 +4290,7 @@ class ReceivablesCompanion extends UpdateCompanion<Receivable> {
     Expression<DateTime>? updatedAt,
     Expression<bool>? isDeleted,
     Expression<bool>? isNotSynced,
+    Expression<int>? addSeq,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -4125,6 +4311,7 @@ class ReceivablesCompanion extends UpdateCompanion<Receivable> {
       if (updatedAt != null) 'updated_at': updatedAt,
       if (isDeleted != null) 'is_deleted': isDeleted,
       if (isNotSynced != null) 'is_not_synced': isNotSynced,
+      if (addSeq != null) 'add_seq': addSeq,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -4147,6 +4334,7 @@ class ReceivablesCompanion extends UpdateCompanion<Receivable> {
       Value<DateTime>? updatedAt,
       Value<bool>? isDeleted,
       Value<bool>? isNotSynced,
+      Value<int?>? addSeq,
       Value<int>? rowid}) {
     return ReceivablesCompanion(
       uuid: uuid ?? this.uuid,
@@ -4166,6 +4354,7 @@ class ReceivablesCompanion extends UpdateCompanion<Receivable> {
       updatedAt: updatedAt ?? this.updatedAt,
       isDeleted: isDeleted ?? this.isDeleted,
       isNotSynced: isNotSynced ?? this.isNotSynced,
+      addSeq: addSeq ?? this.addSeq,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -4224,6 +4413,9 @@ class ReceivablesCompanion extends UpdateCompanion<Receivable> {
     if (isNotSynced.present) {
       map['is_not_synced'] = Variable<bool>(isNotSynced.value);
     }
+    if (addSeq.present) {
+      map['add_seq'] = Variable<int>(addSeq.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -4250,6 +4442,7 @@ class ReceivablesCompanion extends UpdateCompanion<Receivable> {
           ..write('updatedAt: $updatedAt, ')
           ..write('isDeleted: $isDeleted, ')
           ..write('isNotSynced: $isNotSynced, ')
+          ..write('addSeq: $addSeq, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -7862,6 +8055,11 @@ class $TransactionSchedulesTable extends TransactionSchedules
       defaultConstraints: GeneratedColumn.constraintIsAlways(
           'CHECK ("is_not_synced" IN (0, 1))'),
       defaultValue: const Constant(true));
+  static const VerificationMeta _addSeqMeta = const VerificationMeta('addSeq');
+  @override
+  late final GeneratedColumn<int> addSeq = GeneratedColumn<int>(
+      'add_seq', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
   @override
   List<GeneratedColumn> get $columns => [
         uuid,
@@ -7884,7 +8082,8 @@ class $TransactionSchedulesTable extends TransactionSchedules
         createdAt,
         updatedAt,
         isDeleted,
-        isNotSynced
+        isNotSynced,
+        addSeq
       ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -7926,6 +8125,12 @@ class $TransactionSchedulesTable extends TransactionSchedules
           _contactUuidMeta,
           contactUuid.isAcceptableOrUnknown(
               data['contact_uuid']!, _contactUuidMeta));
+    }
+    if (data.containsKey('account_uuid')) {
+      context.handle(
+          _accountUuidMeta,
+          accountUuid.isAcceptableOrUnknown(
+              data['account_uuid']!, _accountUuidMeta));
     }
     if (data.containsKey('description')) {
       context.handle(
@@ -8005,6 +8210,10 @@ class $TransactionSchedulesTable extends TransactionSchedules
           isNotSynced.isAcceptableOrUnknown(
               data['is_not_synced']!, _isNotSyncedMeta));
     }
+    if (data.containsKey('add_seq')) {
+      context.handle(_addSeqMeta,
+          addSeq.isAcceptableOrUnknown(data['add_seq']!, _addSeqMeta));
+    }
     return context;
   }
 
@@ -8057,6 +8266,8 @@ class $TransactionSchedulesTable extends TransactionSchedules
           .read(DriftSqlType.bool, data['${effectivePrefix}is_deleted'])!,
       isNotSynced: attachedDatabase.typeMapping
           .read(DriftSqlType.bool, data['${effectivePrefix}is_not_synced'])!,
+      addSeq: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}add_seq']),
     );
   }
 
@@ -8089,6 +8300,7 @@ class TransactionSchedule extends DataClass
   final DateTime updatedAt;
   final bool isDeleted;
   final bool isNotSynced;
+  final int? addSeq;
   const TransactionSchedule(
       {required this.uuid,
       required this.amount,
@@ -8110,7 +8322,8 @@ class TransactionSchedule extends DataClass
       required this.createdAt,
       required this.updatedAt,
       required this.isDeleted,
-      required this.isNotSynced});
+      required this.isNotSynced,
+      this.addSeq});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -8159,6 +8372,9 @@ class TransactionSchedule extends DataClass
     map['updated_at'] = Variable<DateTime>(updatedAt);
     map['is_deleted'] = Variable<bool>(isDeleted);
     map['is_not_synced'] = Variable<bool>(isNotSynced);
+    if (!nullToAbsent || addSeq != null) {
+      map['add_seq'] = Variable<int>(addSeq);
+    }
     return map;
   }
 
@@ -8173,6 +8389,9 @@ class TransactionSchedule extends DataClass
       contactUuid: contactUuid == null && nullToAbsent
           ? const Value.absent()
           : Value(contactUuid),
+      accountUuid: accountUuid == null && nullToAbsent
+          ? const Value.absent()
+          : Value(accountUuid),
       description: description == null && nullToAbsent
           ? const Value.absent()
           : Value(description),
@@ -8206,6 +8425,8 @@ class TransactionSchedule extends DataClass
       updatedAt: Value(updatedAt),
       isDeleted: Value(isDeleted),
       isNotSynced: Value(isNotSynced),
+      addSeq:
+          addSeq == null && nullToAbsent ? const Value.absent() : Value(addSeq),
     );
   }
 
@@ -8237,6 +8458,7 @@ class TransactionSchedule extends DataClass
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       isDeleted: serializer.fromJson<bool>(json['isDeleted']),
       isNotSynced: serializer.fromJson<bool>(json['isNotSynced']),
+      addSeq: serializer.fromJson<int?>(json['addSeq']),
     );
   }
   @override
@@ -8264,6 +8486,7 @@ class TransactionSchedule extends DataClass
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'isDeleted': serializer.toJson<bool>(isDeleted),
       'isNotSynced': serializer.toJson<bool>(isNotSynced),
+      'addSeq': serializer.toJson<int?>(addSeq),
     };
   }
 
@@ -8288,7 +8511,8 @@ class TransactionSchedule extends DataClass
           DateTime? createdAt,
           DateTime? updatedAt,
           bool? isDeleted,
-          bool? isNotSynced}) =>
+          bool? isNotSynced,
+          Value<int?> addSeq = const Value.absent()}) =>
       TransactionSchedule(
         uuid: uuid ?? this.uuid,
         amount: amount ?? this.amount,
@@ -8321,6 +8545,7 @@ class TransactionSchedule extends DataClass
         updatedAt: updatedAt ?? this.updatedAt,
         isDeleted: isDeleted ?? this.isDeleted,
         isNotSynced: isNotSynced ?? this.isNotSynced,
+        addSeq: addSeq.present ? addSeq.value : this.addSeq,
       );
   TransactionSchedule copyWithCompanion(TransactionSchedulesCompanion data) {
     return TransactionSchedule(
@@ -8332,6 +8557,8 @@ class TransactionSchedule extends DataClass
           : this.categoryUuid,
       contactUuid:
           data.contactUuid.present ? data.contactUuid.value : this.contactUuid,
+      accountUuid:
+          data.accountUuid.present ? data.accountUuid.value : this.accountUuid,
       description:
           data.description.present ? data.description.value : this.description,
       paidRelationship: data.paidRelationship.present
@@ -8361,6 +8588,7 @@ class TransactionSchedule extends DataClass
       isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
       isNotSynced:
           data.isNotSynced.present ? data.isNotSynced.value : this.isNotSynced,
+      addSeq: data.addSeq.present ? data.addSeq.value : this.addSeq,
     );
   }
 
@@ -8372,6 +8600,7 @@ class TransactionSchedule extends DataClass
           ..write('type: $type, ')
           ..write('categoryUuid: $categoryUuid, ')
           ..write('contactUuid: $contactUuid, ')
+          ..write('accountUuid: $accountUuid, ')
           ..write('description: $description, ')
           ..write('paidRelationship: $paidRelationship, ')
           ..write('dueDate: $dueDate, ')
@@ -8386,33 +8615,37 @@ class TransactionSchedule extends DataClass
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('isDeleted: $isDeleted, ')
-          ..write('isNotSynced: $isNotSynced')
+          ..write('isNotSynced: $isNotSynced, ')
+          ..write('addSeq: $addSeq')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(
-      uuid,
-      amount,
-      type,
-      categoryUuid,
-      contactUuid,
-      description,
-      paidRelationship,
-      dueDate,
-      scheduleType,
-      selectedDaysOfWeek,
-      selectedDaysOfMonth,
-      dueDateOffset,
-      isPaused,
-      lastGeneratedDate,
-      startDate,
-      endDate,
-      createdAt,
-      updatedAt,
-      isDeleted,
-      isNotSynced);
+  int get hashCode => Object.hashAll([
+        uuid,
+        amount,
+        type,
+        categoryUuid,
+        contactUuid,
+        accountUuid,
+        description,
+        paidRelationship,
+        dueDate,
+        scheduleType,
+        selectedDaysOfWeek,
+        selectedDaysOfMonth,
+        dueDateOffset,
+        isPaused,
+        lastGeneratedDate,
+        startDate,
+        endDate,
+        createdAt,
+        updatedAt,
+        isDeleted,
+        isNotSynced,
+        addSeq
+      ]);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -8422,6 +8655,7 @@ class TransactionSchedule extends DataClass
           other.type == this.type &&
           other.categoryUuid == this.categoryUuid &&
           other.contactUuid == this.contactUuid &&
+          other.accountUuid == this.accountUuid &&
           other.description == this.description &&
           other.paidRelationship == this.paidRelationship &&
           other.dueDate == this.dueDate &&
@@ -8436,7 +8670,8 @@ class TransactionSchedule extends DataClass
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.isDeleted == this.isDeleted &&
-          other.isNotSynced == this.isNotSynced);
+          other.isNotSynced == this.isNotSynced &&
+          other.addSeq == this.addSeq);
 }
 
 class TransactionSchedulesCompanion
@@ -8462,6 +8697,7 @@ class TransactionSchedulesCompanion
   final Value<DateTime> updatedAt;
   final Value<bool> isDeleted;
   final Value<bool> isNotSynced;
+  final Value<int?> addSeq;
   final Value<int> rowid;
   const TransactionSchedulesCompanion({
     this.uuid = const Value.absent(),
@@ -8485,6 +8721,7 @@ class TransactionSchedulesCompanion
     this.updatedAt = const Value.absent(),
     this.isDeleted = const Value.absent(),
     this.isNotSynced = const Value.absent(),
+    this.addSeq = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   TransactionSchedulesCompanion.insert({
@@ -8509,6 +8746,7 @@ class TransactionSchedulesCompanion
     this.updatedAt = const Value.absent(),
     this.isDeleted = const Value.absent(),
     this.isNotSynced = const Value.absent(),
+    this.addSeq = const Value.absent(),
     this.rowid = const Value.absent(),
   })  : uuid = Value(uuid),
         amount = Value(amount),
@@ -8520,6 +8758,7 @@ class TransactionSchedulesCompanion
     Expression<String>? type,
     Expression<String>? categoryUuid,
     Expression<String>? contactUuid,
+    Expression<String>? accountUuid,
     Expression<String>? description,
     Expression<String>? paidRelationship,
     Expression<DateTime>? dueDate,
@@ -8535,6 +8774,7 @@ class TransactionSchedulesCompanion
     Expression<DateTime>? updatedAt,
     Expression<bool>? isDeleted,
     Expression<bool>? isNotSynced,
+    Expression<int>? addSeq,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -8543,6 +8783,7 @@ class TransactionSchedulesCompanion
       if (type != null) 'type': type,
       if (categoryUuid != null) 'category_uuid': categoryUuid,
       if (contactUuid != null) 'contact_uuid': contactUuid,
+      if (accountUuid != null) 'account_uuid': accountUuid,
       if (description != null) 'description': description,
       if (paidRelationship != null) 'paid_relationship': paidRelationship,
       if (dueDate != null) 'due_date': dueDate,
@@ -8560,6 +8801,7 @@ class TransactionSchedulesCompanion
       if (updatedAt != null) 'updated_at': updatedAt,
       if (isDeleted != null) 'is_deleted': isDeleted,
       if (isNotSynced != null) 'is_not_synced': isNotSynced,
+      if (addSeq != null) 'add_seq': addSeq,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -8586,6 +8828,7 @@ class TransactionSchedulesCompanion
       Value<DateTime>? updatedAt,
       Value<bool>? isDeleted,
       Value<bool>? isNotSynced,
+      Value<int?>? addSeq,
       Value<int>? rowid}) {
     return TransactionSchedulesCompanion(
       uuid: uuid ?? this.uuid,
@@ -8609,6 +8852,7 @@ class TransactionSchedulesCompanion
       updatedAt: updatedAt ?? this.updatedAt,
       isDeleted: isDeleted ?? this.isDeleted,
       isNotSynced: isNotSynced ?? this.isNotSynced,
+      addSeq: addSeq ?? this.addSeq,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -8680,6 +8924,9 @@ class TransactionSchedulesCompanion
     if (isNotSynced.present) {
       map['is_not_synced'] = Variable<bool>(isNotSynced.value);
     }
+    if (addSeq.present) {
+      map['add_seq'] = Variable<int>(addSeq.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -8694,6 +8941,7 @@ class TransactionSchedulesCompanion
           ..write('type: $type, ')
           ..write('categoryUuid: $categoryUuid, ')
           ..write('contactUuid: $contactUuid, ')
+          ..write('accountUuid: $accountUuid, ')
           ..write('description: $description, ')
           ..write('paidRelationship: $paidRelationship, ')
           ..write('dueDate: $dueDate, ')
@@ -8709,6 +8957,7 @@ class TransactionSchedulesCompanion
           ..write('updatedAt: $updatedAt, ')
           ..write('isDeleted: $isDeleted, ')
           ..write('isNotSynced: $isNotSynced, ')
+          ..write('addSeq: $addSeq, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -9141,6 +9390,8 @@ typedef $$CategoriesTableCreateCompanionBuilder = CategoriesCompanion Function({
   Value<double?> monthlyBudget,
   Value<double?> quarterlyBudget,
   Value<double?> yearlyBudget,
+  Value<int?> addSeq,
+  Value<int?> budgetSeq,
   Value<int> rowid,
 });
 typedef $$CategoriesTableUpdateCompanionBuilder = CategoriesCompanion Function({
@@ -9157,6 +9408,8 @@ typedef $$CategoriesTableUpdateCompanionBuilder = CategoriesCompanion Function({
   Value<double?> monthlyBudget,
   Value<double?> quarterlyBudget,
   Value<double?> yearlyBudget,
+  Value<int?> addSeq,
+  Value<int?> budgetSeq,
   Value<int> rowid,
 });
 
@@ -9267,6 +9520,12 @@ class $$CategoriesTableFilterComposer
 
   ColumnFilters<double> get yearlyBudget => $composableBuilder(
       column: $table.yearlyBudget, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get addSeq => $composableBuilder(
+      column: $table.addSeq, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get budgetSeq => $composableBuilder(
+      column: $table.budgetSeq, builder: (column) => ColumnFilters(column));
 
   Expression<bool> transactionsRefs(
       Expression<bool> Function($$TransactionsTableFilterComposer f) f) {
@@ -9381,7 +9640,14 @@ class $$CategoriesTableOrderingComposer
       builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<double> get yearlyBudget => $composableBuilder(
-      column: $table.yearlyBudget, builder: (column) => ColumnOrderings(column));
+      column: $table.yearlyBudget,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get addSeq => $composableBuilder(
+      column: $table.addSeq, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get budgetSeq => $composableBuilder(
+      column: $table.budgetSeq, builder: (column) => ColumnOrderings(column));
 }
 
 class $$CategoriesTableAnnotationComposer
@@ -9431,6 +9697,12 @@ class $$CategoriesTableAnnotationComposer
 
   GeneratedColumn<double> get yearlyBudget => $composableBuilder(
       column: $table.yearlyBudget, builder: (column) => column);
+
+  GeneratedColumn<int> get addSeq =>
+      $composableBuilder(column: $table.addSeq, builder: (column) => column);
+
+  GeneratedColumn<int> get budgetSeq =>
+      $composableBuilder(column: $table.budgetSeq, builder: (column) => column);
 
   Expression<T> transactionsRefs<T extends Object>(
       Expression<T> Function($$TransactionsTableAnnotationComposer a) f) {
@@ -9538,6 +9810,8 @@ class $$CategoriesTableTableManager extends RootTableManager<
             Value<double?> monthlyBudget = const Value.absent(),
             Value<double?> quarterlyBudget = const Value.absent(),
             Value<double?> yearlyBudget = const Value.absent(),
+            Value<int?> addSeq = const Value.absent(),
+            Value<int?> budgetSeq = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               CategoriesCompanion(
@@ -9554,6 +9828,8 @@ class $$CategoriesTableTableManager extends RootTableManager<
             monthlyBudget: monthlyBudget,
             quarterlyBudget: quarterlyBudget,
             yearlyBudget: yearlyBudget,
+            addSeq: addSeq,
+            budgetSeq: budgetSeq,
             rowid: rowid,
           ),
           createCompanionCallback: ({
@@ -9570,6 +9846,8 @@ class $$CategoriesTableTableManager extends RootTableManager<
             Value<double?> monthlyBudget = const Value.absent(),
             Value<double?> quarterlyBudget = const Value.absent(),
             Value<double?> yearlyBudget = const Value.absent(),
+            Value<int?> addSeq = const Value.absent(),
+            Value<int?> budgetSeq = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               CategoriesCompanion.insert(
@@ -9586,6 +9864,8 @@ class $$CategoriesTableTableManager extends RootTableManager<
             monthlyBudget: monthlyBudget,
             quarterlyBudget: quarterlyBudget,
             yearlyBudget: yearlyBudget,
+            addSeq: addSeq,
+            budgetSeq: budgetSeq,
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0
@@ -9679,6 +9959,7 @@ typedef $$ContactsTableCreateCompanionBuilder = ContactsCompanion Function({
   Value<DateTime> updatedAt,
   Value<bool> isDeleted,
   Value<bool> isNotSynced,
+  Value<int?> addSeq,
   Value<int> rowid,
 });
 typedef $$ContactsTableUpdateCompanionBuilder = ContactsCompanion Function({
@@ -9691,6 +9972,7 @@ typedef $$ContactsTableUpdateCompanionBuilder = ContactsCompanion Function({
   Value<DateTime> updatedAt,
   Value<bool> isDeleted,
   Value<bool> isNotSynced,
+  Value<int?> addSeq,
   Value<int> rowid,
 });
 
@@ -9835,6 +10117,9 @@ class $$ContactsTableFilterComposer
 
   ColumnFilters<bool> get isNotSynced => $composableBuilder(
       column: $table.isNotSynced, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get addSeq => $composableBuilder(
+      column: $table.addSeq, builder: (column) => ColumnFilters(column));
 
   Expression<bool> transactionsRefs(
       Expression<bool> Function($$TransactionsTableFilterComposer f) f) {
@@ -9999,6 +10284,9 @@ class $$ContactsTableOrderingComposer
 
   ColumnOrderings<bool> get isNotSynced => $composableBuilder(
       column: $table.isNotSynced, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get addSeq => $composableBuilder(
+      column: $table.addSeq, builder: (column) => ColumnOrderings(column));
 }
 
 class $$ContactsTableAnnotationComposer
@@ -10036,6 +10324,9 @@ class $$ContactsTableAnnotationComposer
 
   GeneratedColumn<bool> get isNotSynced => $composableBuilder(
       column: $table.isNotSynced, builder: (column) => column);
+
+  GeneratedColumn<int> get addSeq =>
+      $composableBuilder(column: $table.addSeq, builder: (column) => column);
 
   Expression<T> transactionsRefs<T extends Object>(
       Expression<T> Function($$TransactionsTableAnnotationComposer a) f) {
@@ -10205,6 +10496,7 @@ class $$ContactsTableTableManager extends RootTableManager<
             Value<DateTime> updatedAt = const Value.absent(),
             Value<bool> isDeleted = const Value.absent(),
             Value<bool> isNotSynced = const Value.absent(),
+            Value<int?> addSeq = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               ContactsCompanion(
@@ -10217,6 +10509,7 @@ class $$ContactsTableTableManager extends RootTableManager<
             updatedAt: updatedAt,
             isDeleted: isDeleted,
             isNotSynced: isNotSynced,
+            addSeq: addSeq,
             rowid: rowid,
           ),
           createCompanionCallback: ({
@@ -10229,6 +10522,7 @@ class $$ContactsTableTableManager extends RootTableManager<
             Value<DateTime> updatedAt = const Value.absent(),
             Value<bool> isDeleted = const Value.absent(),
             Value<bool> isNotSynced = const Value.absent(),
+            Value<int?> addSeq = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               ContactsCompanion.insert(
@@ -10241,6 +10535,7 @@ class $$ContactsTableTableManager extends RootTableManager<
             updatedAt: updatedAt,
             isDeleted: isDeleted,
             isNotSynced: isNotSynced,
+            addSeq: addSeq,
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0
@@ -10386,6 +10681,7 @@ typedef $$AccountsTableCreateCompanionBuilder = AccountsCompanion Function({
   Value<DateTime> updatedAt,
   Value<bool> isDeleted,
   Value<bool> isNotSynced,
+  Value<int?> addSeq,
   Value<int> rowid,
 });
 typedef $$AccountsTableUpdateCompanionBuilder = AccountsCompanion Function({
@@ -10405,6 +10701,7 @@ typedef $$AccountsTableUpdateCompanionBuilder = AccountsCompanion Function({
   Value<DateTime> updatedAt,
   Value<bool> isDeleted,
   Value<bool> isNotSynced,
+  Value<int?> addSeq,
   Value<int> rowid,
 });
 
@@ -10444,6 +10741,26 @@ final class $$AccountsTableReferences
 
     final cache =
         $_typedResult.readTableOrNull(_incomingTransfersRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
+  static MultiTypedResultKey<$TransactionSchedulesTable,
+      List<TransactionSchedule>> _transactionSchedulesRefsTable(
+          _$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(db.transactionSchedules,
+          aliasName: $_aliasNameGenerator(
+              db.accounts.uuid, db.transactionSchedules.accountUuid));
+
+  $$TransactionSchedulesTableProcessedTableManager
+      get transactionSchedulesRefs {
+    final manager = $$TransactionSchedulesTableTableManager(
+            $_db, $_db.transactionSchedules)
+        .filter(
+            (f) => f.accountUuid.uuid.sqlEquals($_itemColumn<String>('uuid')!));
+
+    final cache =
+        $_typedResult.readTableOrNull(_transactionSchedulesRefsTable($_db));
     return ProcessedTableManager(
         manager.$state.copyWith(prefetchedData: cache));
   }
@@ -10510,6 +10827,9 @@ class $$AccountsTableFilterComposer
   ColumnFilters<bool> get isNotSynced => $composableBuilder(
       column: $table.isNotSynced, builder: (column) => ColumnFilters(column));
 
+  ColumnFilters<int> get addSeq => $composableBuilder(
+      column: $table.addSeq, builder: (column) => ColumnFilters(column));
+
   Expression<bool> outgoingTransfersRefs(
       Expression<bool> Function($$AccountTransfersTableFilterComposer f) f) {
     final $$AccountTransfersTableFilterComposer composer = $composerBuilder(
@@ -10544,6 +10864,28 @@ class $$AccountsTableFilterComposer
             $$AccountTransfersTableFilterComposer(
               $db: $db,
               $table: $db.accountTransfers,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<bool> transactionSchedulesRefs(
+      Expression<bool> Function($$TransactionSchedulesTableFilterComposer f)
+          f) {
+    final $$TransactionSchedulesTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.uuid,
+        referencedTable: $db.transactionSchedules,
+        getReferencedColumn: (t) => t.accountUuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$TransactionSchedulesTableFilterComposer(
+              $db: $db,
+              $table: $db.transactionSchedules,
               $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
               joinBuilder: joinBuilder,
               $removeJoinBuilderFromRootComposer:
@@ -10613,6 +10955,9 @@ class $$AccountsTableOrderingComposer
 
   ColumnOrderings<bool> get isNotSynced => $composableBuilder(
       column: $table.isNotSynced, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get addSeq => $composableBuilder(
+      column: $table.addSeq, builder: (column) => ColumnOrderings(column));
 }
 
 class $$AccountsTableAnnotationComposer
@@ -10672,6 +11017,9 @@ class $$AccountsTableAnnotationComposer
   GeneratedColumn<bool> get isNotSynced => $composableBuilder(
       column: $table.isNotSynced, builder: (column) => column);
 
+  GeneratedColumn<int> get addSeq =>
+      $composableBuilder(column: $table.addSeq, builder: (column) => column);
+
   Expression<T> outgoingTransfersRefs<T extends Object>(
       Expression<T> Function($$AccountTransfersTableAnnotationComposer a) f) {
     final $$AccountTransfersTableAnnotationComposer composer = $composerBuilder(
@@ -10713,6 +11061,29 @@ class $$AccountsTableAnnotationComposer
             ));
     return f(composer);
   }
+
+  Expression<T> transactionSchedulesRefs<T extends Object>(
+      Expression<T> Function($$TransactionSchedulesTableAnnotationComposer a)
+          f) {
+    final $$TransactionSchedulesTableAnnotationComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.uuid,
+            referencedTable: $db.transactionSchedules,
+            getReferencedColumn: (t) => t.accountUuid,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$TransactionSchedulesTableAnnotationComposer(
+                  $db: $db,
+                  $table: $db.transactionSchedules,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
 }
 
 class $$AccountsTableTableManager extends RootTableManager<
@@ -10727,7 +11098,9 @@ class $$AccountsTableTableManager extends RootTableManager<
     (Account, $$AccountsTableReferences),
     Account,
     PrefetchHooks Function(
-        {bool outgoingTransfersRefs, bool incomingTransfersRefs})> {
+        {bool outgoingTransfersRefs,
+        bool incomingTransfersRefs,
+        bool transactionSchedulesRefs})> {
   $$AccountsTableTableManager(_$AppDatabase db, $AccountsTable table)
       : super(TableManagerState(
           db: db,
@@ -10755,6 +11128,7 @@ class $$AccountsTableTableManager extends RootTableManager<
             Value<DateTime> updatedAt = const Value.absent(),
             Value<bool> isDeleted = const Value.absent(),
             Value<bool> isNotSynced = const Value.absent(),
+            Value<int?> addSeq = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               AccountsCompanion(
@@ -10774,6 +11148,7 @@ class $$AccountsTableTableManager extends RootTableManager<
             updatedAt: updatedAt,
             isDeleted: isDeleted,
             isNotSynced: isNotSynced,
+            addSeq: addSeq,
             rowid: rowid,
           ),
           createCompanionCallback: ({
@@ -10793,6 +11168,7 @@ class $$AccountsTableTableManager extends RootTableManager<
             Value<DateTime> updatedAt = const Value.absent(),
             Value<bool> isDeleted = const Value.absent(),
             Value<bool> isNotSynced = const Value.absent(),
+            Value<int?> addSeq = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               AccountsCompanion.insert(
@@ -10812,6 +11188,7 @@ class $$AccountsTableTableManager extends RootTableManager<
             updatedAt: updatedAt,
             isDeleted: isDeleted,
             isNotSynced: isNotSynced,
+            addSeq: addSeq,
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0
@@ -10819,12 +11196,15 @@ class $$AccountsTableTableManager extends RootTableManager<
                   (e.readTable(table), $$AccountsTableReferences(db, table, e)))
               .toList(),
           prefetchHooksCallback: (
-              {outgoingTransfersRefs = false, incomingTransfersRefs = false}) {
+              {outgoingTransfersRefs = false,
+              incomingTransfersRefs = false,
+              transactionSchedulesRefs = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [
                 if (outgoingTransfersRefs) db.accountTransfers,
-                if (incomingTransfersRefs) db.accountTransfers
+                if (incomingTransfersRefs) db.accountTransfers,
+                if (transactionSchedulesRefs) db.transactionSchedules
               ],
               addJoins: null,
               getPrefetchedDataCallback: (items) async {
@@ -10854,6 +11234,19 @@ class $$AccountsTableTableManager extends RootTableManager<
                         referencedItemsForCurrentItem:
                             (item, referencedItems) => referencedItems
                                 .where((e) => e.toAccountUuid == item.uuid),
+                        typedResults: items),
+                  if (transactionSchedulesRefs)
+                    await $_getPrefetchedData<Account, $AccountsTable,
+                            TransactionSchedule>(
+                        currentTable: table,
+                        referencedTable: $$AccountsTableReferences
+                            ._transactionSchedulesRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$AccountsTableReferences(db, table, p0)
+                                .transactionSchedulesRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.accountUuid == item.uuid),
                         typedResults: items)
                 ];
               },
@@ -10874,7 +11267,9 @@ typedef $$AccountsTableProcessedTableManager = ProcessedTableManager<
     (Account, $$AccountsTableReferences),
     Account,
     PrefetchHooks Function(
-        {bool outgoingTransfersRefs, bool incomingTransfersRefs})>;
+        {bool outgoingTransfersRefs,
+        bool incomingTransfersRefs,
+        bool transactionSchedulesRefs})>;
 typedef $$TransactionsTableCreateCompanionBuilder = TransactionsCompanion
     Function({
   required String uuid,
@@ -11915,6 +12310,7 @@ typedef $$ReceivablesTableCreateCompanionBuilder = ReceivablesCompanion
   Value<DateTime> updatedAt,
   Value<bool> isDeleted,
   Value<bool> isNotSynced,
+  Value<int?> addSeq,
   Value<int> rowid,
 });
 typedef $$ReceivablesTableUpdateCompanionBuilder = ReceivablesCompanion
@@ -11936,6 +12332,7 @@ typedef $$ReceivablesTableUpdateCompanionBuilder = ReceivablesCompanion
   Value<DateTime> updatedAt,
   Value<bool> isDeleted,
   Value<bool> isNotSynced,
+  Value<int?> addSeq,
   Value<int> rowid,
 });
 
@@ -12041,6 +12438,9 @@ class $$ReceivablesTableFilterComposer
 
   ColumnFilters<bool> get isNotSynced => $composableBuilder(
       column: $table.isNotSynced, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get addSeq => $composableBuilder(
+      column: $table.addSeq, builder: (column) => ColumnFilters(column));
 
   $$ContactsTableFilterComposer get contactUuid {
     final $$ContactsTableFilterComposer composer = $composerBuilder(
@@ -12157,6 +12557,9 @@ class $$ReceivablesTableOrderingComposer
   ColumnOrderings<bool> get isNotSynced => $composableBuilder(
       column: $table.isNotSynced, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<int> get addSeq => $composableBuilder(
+      column: $table.addSeq, builder: (column) => ColumnOrderings(column));
+
   $$ContactsTableOrderingComposer get contactUuid {
     final $$ContactsTableOrderingComposer composer = $composerBuilder(
         composer: this,
@@ -12269,6 +12672,9 @@ class $$ReceivablesTableAnnotationComposer
   GeneratedColumn<bool> get isNotSynced => $composableBuilder(
       column: $table.isNotSynced, builder: (column) => column);
 
+  GeneratedColumn<int> get addSeq =>
+      $composableBuilder(column: $table.addSeq, builder: (column) => column);
+
   $$ContactsTableAnnotationComposer get contactUuid {
     final $$ContactsTableAnnotationComposer composer = $composerBuilder(
         composer: this,
@@ -12371,6 +12777,7 @@ class $$ReceivablesTableTableManager extends RootTableManager<
             Value<DateTime> updatedAt = const Value.absent(),
             Value<bool> isDeleted = const Value.absent(),
             Value<bool> isNotSynced = const Value.absent(),
+            Value<int?> addSeq = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               ReceivablesCompanion(
@@ -12391,6 +12798,7 @@ class $$ReceivablesTableTableManager extends RootTableManager<
             updatedAt: updatedAt,
             isDeleted: isDeleted,
             isNotSynced: isNotSynced,
+            addSeq: addSeq,
             rowid: rowid,
           ),
           createCompanionCallback: ({
@@ -12411,6 +12819,7 @@ class $$ReceivablesTableTableManager extends RootTableManager<
             Value<DateTime> updatedAt = const Value.absent(),
             Value<bool> isDeleted = const Value.absent(),
             Value<bool> isNotSynced = const Value.absent(),
+            Value<int?> addSeq = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               ReceivablesCompanion.insert(
@@ -12431,6 +12840,7 @@ class $$ReceivablesTableTableManager extends RootTableManager<
             updatedAt: updatedAt,
             isDeleted: isDeleted,
             isNotSynced: isNotSynced,
+            addSeq: addSeq,
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0
@@ -14786,6 +15196,7 @@ typedef $$TransactionSchedulesTableCreateCompanionBuilder
   required String type,
   Value<String?> categoryUuid,
   Value<String?> contactUuid,
+  Value<String?> accountUuid,
   Value<String?> description,
   Value<String?> paidRelationship,
   Value<DateTime?> dueDate,
@@ -14801,6 +15212,7 @@ typedef $$TransactionSchedulesTableCreateCompanionBuilder
   Value<DateTime> updatedAt,
   Value<bool> isDeleted,
   Value<bool> isNotSynced,
+  Value<int?> addSeq,
   Value<int> rowid,
 });
 typedef $$TransactionSchedulesTableUpdateCompanionBuilder
@@ -14810,6 +15222,7 @@ typedef $$TransactionSchedulesTableUpdateCompanionBuilder
   Value<String> type,
   Value<String?> categoryUuid,
   Value<String?> contactUuid,
+  Value<String?> accountUuid,
   Value<String?> description,
   Value<String?> paidRelationship,
   Value<DateTime?> dueDate,
@@ -14825,6 +15238,7 @@ typedef $$TransactionSchedulesTableUpdateCompanionBuilder
   Value<DateTime> updatedAt,
   Value<bool> isDeleted,
   Value<bool> isNotSynced,
+  Value<int?> addSeq,
   Value<int> rowid,
 });
 
@@ -14858,6 +15272,21 @@ final class $$TransactionSchedulesTableReferences extends BaseReferences<
     final manager = $$ContactsTableTableManager($_db, $_db.contacts)
         .filter((f) => f.uuid.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_contactUuidTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static $AccountsTable _accountUuidTable(_$AppDatabase db) =>
+      db.accounts.createAlias($_aliasNameGenerator(
+          db.transactionSchedules.accountUuid, db.accounts.uuid));
+
+  $$AccountsTableProcessedTableManager? get accountUuid {
+    final $_column = $_itemColumn<String>('account_uuid');
+    if ($_column == null) return null;
+    final manager = $$AccountsTableTableManager($_db, $_db.accounts)
+        .filter((f) => f.uuid.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_accountUuidTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
         manager.$state.copyWith(prefetchedData: [item]));
@@ -14931,6 +15360,9 @@ class $$TransactionSchedulesTableFilterComposer
   ColumnFilters<bool> get isNotSynced => $composableBuilder(
       column: $table.isNotSynced, builder: (column) => ColumnFilters(column));
 
+  ColumnFilters<int> get addSeq => $composableBuilder(
+      column: $table.addSeq, builder: (column) => ColumnFilters(column));
+
   $$CategoriesTableFilterComposer get categoryUuid {
     final $$CategoriesTableFilterComposer composer = $composerBuilder(
         composer: this,
@@ -14963,6 +15395,26 @@ class $$TransactionSchedulesTableFilterComposer
             $$ContactsTableFilterComposer(
               $db: $db,
               $table: $db.contacts,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$AccountsTableFilterComposer get accountUuid {
+    final $$AccountsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.accountUuid,
+        referencedTable: $db.accounts,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$AccountsTableFilterComposer(
+              $db: $db,
+              $table: $db.accounts,
               $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
               joinBuilder: joinBuilder,
               $removeJoinBuilderFromRootComposer:
@@ -15041,6 +15493,9 @@ class $$TransactionSchedulesTableOrderingComposer
   ColumnOrderings<bool> get isNotSynced => $composableBuilder(
       column: $table.isNotSynced, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<int> get addSeq => $composableBuilder(
+      column: $table.addSeq, builder: (column) => ColumnOrderings(column));
+
   $$CategoriesTableOrderingComposer get categoryUuid {
     final $$CategoriesTableOrderingComposer composer = $composerBuilder(
         composer: this,
@@ -15073,6 +15528,26 @@ class $$TransactionSchedulesTableOrderingComposer
             $$ContactsTableOrderingComposer(
               $db: $db,
               $table: $db.contacts,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$AccountsTableOrderingComposer get accountUuid {
+    final $$AccountsTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.accountUuid,
+        referencedTable: $db.accounts,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$AccountsTableOrderingComposer(
+              $db: $db,
+              $table: $db.accounts,
               $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
               joinBuilder: joinBuilder,
               $removeJoinBuilderFromRootComposer:
@@ -15145,6 +15620,9 @@ class $$TransactionSchedulesTableAnnotationComposer
   GeneratedColumn<bool> get isNotSynced => $composableBuilder(
       column: $table.isNotSynced, builder: (column) => column);
 
+  GeneratedColumn<int> get addSeq =>
+      $composableBuilder(column: $table.addSeq, builder: (column) => column);
+
   $$CategoriesTableAnnotationComposer get categoryUuid {
     final $$CategoriesTableAnnotationComposer composer = $composerBuilder(
         composer: this,
@@ -15184,6 +15662,26 @@ class $$TransactionSchedulesTableAnnotationComposer
             ));
     return composer;
   }
+
+  $$AccountsTableAnnotationComposer get accountUuid {
+    final $$AccountsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.accountUuid,
+        referencedTable: $db.accounts,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$AccountsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.accounts,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
 }
 
 class $$TransactionSchedulesTableTableManager extends RootTableManager<
@@ -15197,7 +15695,8 @@ class $$TransactionSchedulesTableTableManager extends RootTableManager<
     $$TransactionSchedulesTableUpdateCompanionBuilder,
     (TransactionSchedule, $$TransactionSchedulesTableReferences),
     TransactionSchedule,
-    PrefetchHooks Function({bool categoryUuid, bool contactUuid})> {
+    PrefetchHooks Function(
+        {bool categoryUuid, bool contactUuid, bool accountUuid})> {
   $$TransactionSchedulesTableTableManager(
       _$AppDatabase db, $TransactionSchedulesTable table)
       : super(TableManagerState(
@@ -15217,6 +15716,7 @@ class $$TransactionSchedulesTableTableManager extends RootTableManager<
             Value<String> type = const Value.absent(),
             Value<String?> categoryUuid = const Value.absent(),
             Value<String?> contactUuid = const Value.absent(),
+            Value<String?> accountUuid = const Value.absent(),
             Value<String?> description = const Value.absent(),
             Value<String?> paidRelationship = const Value.absent(),
             Value<DateTime?> dueDate = const Value.absent(),
@@ -15232,6 +15732,7 @@ class $$TransactionSchedulesTableTableManager extends RootTableManager<
             Value<DateTime> updatedAt = const Value.absent(),
             Value<bool> isDeleted = const Value.absent(),
             Value<bool> isNotSynced = const Value.absent(),
+            Value<int?> addSeq = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               TransactionSchedulesCompanion(
@@ -15240,6 +15741,7 @@ class $$TransactionSchedulesTableTableManager extends RootTableManager<
             type: type,
             categoryUuid: categoryUuid,
             contactUuid: contactUuid,
+            accountUuid: accountUuid,
             description: description,
             paidRelationship: paidRelationship,
             dueDate: dueDate,
@@ -15255,6 +15757,7 @@ class $$TransactionSchedulesTableTableManager extends RootTableManager<
             updatedAt: updatedAt,
             isDeleted: isDeleted,
             isNotSynced: isNotSynced,
+            addSeq: addSeq,
             rowid: rowid,
           ),
           createCompanionCallback: ({
@@ -15263,6 +15766,7 @@ class $$TransactionSchedulesTableTableManager extends RootTableManager<
             required String type,
             Value<String?> categoryUuid = const Value.absent(),
             Value<String?> contactUuid = const Value.absent(),
+            Value<String?> accountUuid = const Value.absent(),
             Value<String?> description = const Value.absent(),
             Value<String?> paidRelationship = const Value.absent(),
             Value<DateTime?> dueDate = const Value.absent(),
@@ -15278,6 +15782,7 @@ class $$TransactionSchedulesTableTableManager extends RootTableManager<
             Value<DateTime> updatedAt = const Value.absent(),
             Value<bool> isDeleted = const Value.absent(),
             Value<bool> isNotSynced = const Value.absent(),
+            Value<int?> addSeq = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               TransactionSchedulesCompanion.insert(
@@ -15286,6 +15791,7 @@ class $$TransactionSchedulesTableTableManager extends RootTableManager<
             type: type,
             categoryUuid: categoryUuid,
             contactUuid: contactUuid,
+            accountUuid: accountUuid,
             description: description,
             paidRelationship: paidRelationship,
             dueDate: dueDate,
@@ -15301,6 +15807,7 @@ class $$TransactionSchedulesTableTableManager extends RootTableManager<
             updatedAt: updatedAt,
             isDeleted: isDeleted,
             isNotSynced: isNotSynced,
+            addSeq: addSeq,
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0
@@ -15309,7 +15816,10 @@ class $$TransactionSchedulesTableTableManager extends RootTableManager<
                     $$TransactionSchedulesTableReferences(db, table, e)
                   ))
               .toList(),
-          prefetchHooksCallback: ({categoryUuid = false, contactUuid = false}) {
+          prefetchHooksCallback: (
+              {categoryUuid = false,
+              contactUuid = false,
+              accountUuid = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [],
@@ -15348,6 +15858,17 @@ class $$TransactionSchedulesTableTableManager extends RootTableManager<
                         .uuid,
                   ) as T;
                 }
+                if (accountUuid) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.accountUuid,
+                    referencedTable: $$TransactionSchedulesTableReferences
+                        ._accountUuidTable(db),
+                    referencedColumn: $$TransactionSchedulesTableReferences
+                        ._accountUuidTable(db)
+                        .uuid,
+                  ) as T;
+                }
 
                 return state;
               },
@@ -15371,7 +15892,8 @@ typedef $$TransactionSchedulesTableProcessedTableManager
         $$TransactionSchedulesTableUpdateCompanionBuilder,
         (TransactionSchedule, $$TransactionSchedulesTableReferences),
         TransactionSchedule,
-        PrefetchHooks Function({bool categoryUuid, bool contactUuid})>;
+        PrefetchHooks Function(
+            {bool categoryUuid, bool contactUuid, bool accountUuid})>;
 typedef $$SyncMetadataTableCreateCompanionBuilder = SyncMetadataCompanion
     Function({
   required String deviceId,

@@ -8,6 +8,8 @@ import 'package:flowpaisa/core/utils/icon_helper.dart';
 import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
 import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
+import 'package:flowpaisa/features/premium/domain/premium_provider.dart';
+import 'package:flowpaisa/features/premium/presentation/screens/premium_screen.dart';
 import 'package:flowpaisa/features/accounts/domain/models/account_models.dart';
 import 'package:flowpaisa/features/accounts/presentation/providers/accounts_provider.dart';
 import 'package:flowpaisa/features/accounts/presentation/screens/account_detail_screen.dart';
@@ -28,6 +30,7 @@ class AccountsScreen extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final accountsAsync = ref.watch(accountsWithBalanceProvider);
+    final isPremium = ref.watch(premiumProvider).isPremium;
 
     return Scaffold(
       appBar: AppBar(
@@ -69,20 +72,32 @@ class AccountsScreen extends ConsumerWidget {
                 if (regularAccounts.isNotEmpty) ...[
                   _SectionHeader(title: l10n.accounts),
                   const SizedBox(height: 8),
-                  ...regularAccounts.map((awb) => _AccountCard(
-                        awb: awb,
-                        onTap: () => _goToDetail(context, awb.account),
-                      )),
+                  ...regularAccounts.map((awb) {
+                    final isLocked = !isPremium && (awb.account.addSeq ?? 0) > PremiumGate.accountTotalLimit;
+                    return _AccountCard(
+                      awb: awb,
+                      isLocked: isLocked,
+                      onTap: isLocked 
+                          ? () => PremiumGate.showPremiumDialog(context)
+                          : () => _goToDetail(context, awb.account),
+                    );
+                  }),
                 ],
 
                 if (creditCardAccounts.isNotEmpty) ...[
                   const SizedBox(height: 8),
                   _SectionHeader(title: l10n.creditCards),
                   const SizedBox(height: 8),
-                  ...creditCardAccounts.map((awb) => _AccountCard(
-                        awb: awb,
-                        onTap: () => _goToDetail(context, awb.account),
-                      )),
+                  ...creditCardAccounts.map((awb) {
+                    final isLocked = !isPremium && (awb.account.addSeq ?? 0) > PremiumGate.accountTotalLimit;
+                    return _AccountCard(
+                      awb: awb,
+                      isLocked: isLocked,
+                      onTap: isLocked 
+                          ? () => PremiumGate.showPremiumDialog(context)
+                          : () => _goToDetail(context, awb.account),
+                    );
+                  }),
                 ],
                 const SizedBox(height: 20),
                 _RecentTransfersSection(),
@@ -392,8 +407,13 @@ class _SectionHeader extends StatelessWidget {
 class _AccountCard extends ConsumerWidget {
   final AccountWithBalance awb;
   final VoidCallback onTap;
+  final bool isLocked;
 
-  const _AccountCard({required this.awb, required this.onTap});
+  const _AccountCard({
+    required this.awb,
+    required this.onTap,
+    this.isLocked = false,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -430,87 +450,117 @@ class _AccountCard extends ConsumerWidget {
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(20),
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: AppColors.transactionListItemDecoration(
-            theme,
-            accountColor,
-          ),
-          child: Row(
-            children: [
-              // Account icon
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: accountColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(14),
+        child: Stack(
+          children: [
+            Opacity(
+              opacity: isLocked ? 0.5 : 1.0,
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: AppColors.transactionListItemDecoration(
+                  theme,
+                  accountColor,
                 ),
-                alignment: Alignment.center,
-                child: Icon(iconData, color: accountColor, size: 24),
-              ),
-              const SizedBox(width: 16),
-
-              // Name & type
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: Row(
                   children: [
-                    Text(
-                      acc.name,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
+                    // Account icon
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: accountColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(14),
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                      alignment: Alignment.center,
+                      child: Icon(iconData, color: accountColor, size: 24),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      _typeLabel(l10n, type),
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
+                    const SizedBox(width: 16),
+
+                    // Name & type
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            acc.name,
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            _typeLabel(l10n, type),
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                          if (type.isCreditCard && (awb.dueAmount ?? 0.0) > 0) ...[
+                            const SizedBox(height: 4),
+                            _DueBadge(
+                                dueAmount: awb.dueAmount ?? 0.0,
+                                symbol: symbol,
+                                decimals: decimals),
+                          ],
+                        ],
                       ),
                     ),
-                    if (type.isCreditCard && (awb.dueAmount ?? 0.0) > 0) ...[
-                      const SizedBox(height: 4),
-                      _DueBadge(
-                          dueAmount: awb.dueAmount ?? 0.0,
-                          symbol: symbol,
-                          decimals: decimals),
-                    ],
+
+                    // Balance
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          balanceText,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            color: balanceColor,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        if (type.isCreditCard &&
+                            (acc.creditLimit ?? 0) > 0 &&
+                            awb.availableCredit != null) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            '${AmountFormatter.formatWithCurrency(awb.availableCredit!, symbol, decimals)} ${l10n.available}',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: AppColors.incomeColor,
+                            ),
+                          ),
+                        ],
+                        const SizedBox(height: 4),
+                        Icon(Icons.chevron_right,
+                            size: 18, color: theme.colorScheme.onSurfaceVariant),
+                      ],
+                    ),
                   ],
                 ),
               ),
-
-              // Balance
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    balanceText,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      color: balanceColor,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  if (type.isCreditCard &&
-                      (acc.creditLimit ?? 0) > 0 &&
-                      awb.availableCredit != null) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      '${AmountFormatter.formatWithCurrency(awb.availableCredit!, symbol, decimals)} ${l10n.available}',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: AppColors.incomeColor,
+            ),
+            if (isLocked)
+              Positioned(
+                top: 6,
+                right: 6,
+                child: Container(
+                  padding: const EdgeInsets.all(2),
+                  decoration: BoxDecoration(
+                    color: theme.scaffoldBackgroundColor,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.08),
+                        blurRadius: 2,
                       ),
-                    ),
-                  ],
-                  const SizedBox(height: 4),
-                  Icon(Icons.chevron_right,
-                      size: 18, color: theme.colorScheme.onSurfaceVariant),
-                ],
+                    ],
+                  ),
+                  child: Icon(
+                    Icons.lock,
+                    size: 14,
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
               ),
-            ],
-          ),
+          ],
         ),
       ),
     );

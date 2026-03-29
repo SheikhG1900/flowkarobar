@@ -7,6 +7,9 @@ import 'package:flowpaisa/features/contacts/presentation/providers/contacts_prov
 import 'package:flowpaisa/features/contacts/presentation/screens/add_contact_screen.dart';
 import 'package:flowpaisa/features/contacts/presentation/screens/contact_details_screen.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
+import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
+import 'package:flowpaisa/features/premium/domain/premium_provider.dart';
+import 'package:flowpaisa/features/premium/presentation/screens/premium_screen.dart';
 import 'package:flowpaisa/shared/widgets/swipeable_list_item.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/shared/widgets/app_floating_action_button.dart';
@@ -143,7 +146,14 @@ class _ContactsListScreenState extends ConsumerState<ContactsListScreen> {
             itemCount: contacts.length,
             itemBuilder: (context, index) {
               final contact = contacts[index];
-              return _ContactCard(contact: contact);
+              final isPremium = ref.watch(premiumProvider).isPremium;
+              final isLocked =
+                  !isPremium && (contact.addSeq ?? 0) > PremiumGate.contactTotalLimit;
+
+              return _ContactCard(
+                contact: contact,
+                isLocked: isLocked,
+              );
             },
           );
         },
@@ -170,8 +180,12 @@ class _ContactsListScreenState extends ConsumerState<ContactsListScreen> {
 
 class _ContactCard extends ConsumerWidget {
   final dynamic contact;
+  final bool isLocked;
 
-  const _ContactCard({required this.contact});
+  const _ContactCard({
+    required this.contact,
+    this.isLocked = false,
+  });
 
   Future<void> _deleteContact(BuildContext context, WidgetRef ref) async {
     final l10n = AppLocalizations.of(context)!;
@@ -197,23 +211,28 @@ class _ContactCard extends ConsumerWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: SwipeableListItem(
-        enableEdit: true,
-        enableDelete: true,
+        enableEdit: !isLocked,
+        enableDelete: !isLocked,
         editBackgroundColor: AppColors.getContactColor(contact.name),
         deleteBackgroundColor: AppColors.error,
         borderRadius: 16,
         backgroundMargin: const EdgeInsets.only(bottom: 12),
-        onEdit: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => AddContactScreen(contactToEdit: contact),
-            ),
-          );
-        },
-        onDelete: () async {
-          await _deleteContact(context, ref);
-        },
+        onEdit: isLocked
+            ? null
+            : () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        AddContactScreen(contactToEdit: contact),
+                  ),
+                );
+              },
+        onDelete: isLocked
+            ? null
+            : () async {
+                await _deleteContact(context, ref);
+              },
         child: Container(
           decoration: BoxDecoration(
             color: theme.cardColor,
@@ -232,119 +251,158 @@ class _ContactCard extends ConsumerWidget {
           child: Material(
             color: Colors.transparent,
             child: InkWell(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) =>
-                        ContactDetailsScreen(contactUuid: contact.uuid),
-                  ),
-                );
-              },
+              onTap: isLocked
+                  ? () => PremiumGate.showPremiumDialog(context)
+                  : () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              ContactDetailsScreen(contactUuid: contact.uuid),
+                        ),
+                      );
+                    },
               borderRadius: BorderRadius.circular(16),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    // Avatar
-                    Container(
-                      width: 56,
-                      height: 56,
-                      decoration: BoxDecoration(
-                        gradient: AppColors.getContactGradient(contact.name),
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.getContactColor(contact.name)
-                                .withValues(alpha: 0.3),
-                            blurRadius: 8,
-                            offset: const Offset(0, 4),
+              child: Stack(
+                children: [
+                  Opacity(
+                    opacity: isLocked ? 0.5 : 1.0,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Row(
+                        children: [
+                          // Avatar
+                          Container(
+                            width: 56,
+                            height: 56,
+                            decoration: BoxDecoration(
+                              gradient:
+                                  AppColors.getContactGradient(contact.name),
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.getContactColor(contact.name)
+                                      .withValues(alpha: 0.3),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            alignment: Alignment.center,
+                            child: Text(
+                              NameUtils.getInitials(contact.name),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 24,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+
+                          // Details
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  contact.name,
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                                if (contact.phone != null &&
+                                    contact.phone!.isNotEmpty) ...[
+                                  const SizedBox(height: 4),
+                                  Row(
+                                    children: [
+                                      Icon(
+                                        Icons.phone_iphone,
+                                        size: 14,
+                                        color:
+                                            theme.colorScheme.onSurfaceVariant,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        contact.phone!,
+                                        style:
+                                            theme.textTheme.bodyMedium?.copyWith(
+                                          color:
+                                              theme.colorScheme.onSurfaceVariant,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ] else if (contact.email != null &&
+                                    contact.email!.isNotEmpty) ...[
+                                  const SizedBox(height: 4),
+                                  Row(
+                                    children: [
+                                      Icon(
+                                        Icons.email_outlined,
+                                        size: 14,
+                                        color:
+                                            theme.colorScheme.onSurfaceVariant,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        contact.email!,
+                                        style:
+                                            theme.textTheme.bodyMedium?.copyWith(
+                                          color:
+                                              theme.colorScheme.onSurfaceVariant,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+
+                          // Arrow
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.surfaceContainerHighest
+                                  .withValues(alpha: 0.5),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.chevron_right,
+                              size: 20,
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
                           ),
                         ],
                       ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        NameUtils.getInitials(contact.name),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 24,
+                    ),
+                  ),
+                  if (isLocked)
+                    Positioned(
+                      top: 6,
+                      right: 6,
+                      child: Container(
+                        padding: const EdgeInsets.all(2),
+                        decoration: BoxDecoration(
+                          color: theme.scaffoldBackgroundColor,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.08),
+                              blurRadius: 2,
+                            ),
+                          ],
+                        ),
+                        child: Icon(
+                          Icons.lock,
+                          size: 14,
+                          color: theme.colorScheme.primary,
                         ),
                       ),
                     ),
-                    const SizedBox(width: 16),
-
-                    // Details
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            contact.name,
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                          if (contact.phone != null &&
-                              contact.phone!.isNotEmpty) ...[
-                            const SizedBox(height: 4),
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.phone_iphone,
-                                  size: 14,
-                                  color: theme.colorScheme.onSurfaceVariant,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  contact.phone!,
-                                  style: theme.textTheme.bodyMedium?.copyWith(
-                                    color: theme.colorScheme.onSurfaceVariant,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ] else if (contact.email != null &&
-                              contact.email!.isNotEmpty) ...[
-                            const SizedBox(height: 4),
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.email_outlined,
-                                  size: 14,
-                                  color: theme.colorScheme.onSurfaceVariant,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  contact.email!,
-                                  style: theme.textTheme.bodyMedium?.copyWith(
-                                    color: theme.colorScheme.onSurfaceVariant,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-
-                    // Arrow
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.surfaceContainerHighest
-                            .withValues(alpha: 0.5),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.chevron_right,
-                        size: 20,
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
+                ],
               ),
             ),
           ),

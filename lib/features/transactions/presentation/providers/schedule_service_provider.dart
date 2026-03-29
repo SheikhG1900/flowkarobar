@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/database/database.dart';
+import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/features/transactions/data/schedules_repository.dart';
 import 'package:flowpaisa/features/transactions/data/transactions_repository.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transaction_service_provider.dart';
@@ -96,10 +97,22 @@ class ScheduleService {
 
   /// Generate transactions from a schedule for missed dates
   Future<int> generateTransactionsFromSchedule(String scheduleUuid,
-      {DateTime? customDate}) async {
+      {DateTime? customDate, bool isPremium = false}) async {
     final schedule = await schedulesRepository.getScheduleByUuid(scheduleUuid);
     if (schedule == null) {
       throw Exception('Schedule not found');
+    }
+
+    // Check premium limits for free users
+    if (!isPremium) {
+      final seq = schedule.addSeq ?? 0;
+      if (seq > PremiumGate.scheduleTotalLimit) {
+        if (kDebugMode) {
+          debugPrint(
+              'Schedule $scheduleUuid is locked (seq: $seq > limit: ${PremiumGate.scheduleTotalLimit}), skipping generation.');
+        }
+        return 0;
+      }
     }
 
     if (schedule.isPaused && customDate == null) {
@@ -191,9 +204,9 @@ class ScheduleService {
     final transactionUuid = "${schedule.uuid}_$dateStr";
 
     if (kDebugMode) {
-      debugPrint('DEBUG: Generating transaction for schedule: ${schedule.uuid}');
-      debugPrint('DEBUG: Target date: $date');
-      debugPrint('DEBUG: Generated transaction ID: $transactionUuid');
+      debugPrint('Generating transaction for schedule: ${schedule.uuid}');
+      debugPrint('Target date: $date');
+      debugPrint('Generated transaction ID: $transactionUuid');
     }
 
     // Calculate dynamic due date based on offset if available
@@ -231,7 +244,7 @@ class ScheduleService {
         // Ignore unique constraint violations (already generated)
         if (kDebugMode) {
           final msg = 'Transaction for $date already exists (ID: $transactionUuid), skipping.';
-          debugPrint('DEBUG: $msg');
+          debugPrint(msg);
         }
         // Also show in toast if possible via a callback or just log it
         return ''; // Return empty string to satisfy Future<String> return type
@@ -345,9 +358,9 @@ class ScheduleService {
     DateTime? endDate,
   }) async {
     if (kDebugMode) {
-      debugPrint('DEBUG: Service updating schedule $scheduleUuid');
-      debugPrint('DEBUG: Service categoryUuid: $categoryUuid');
-      debugPrint('DEBUG: Service contactUuid: $contactUuid');
+      debugPrint('Service updating schedule $scheduleUuid');
+      debugPrint('Service categoryUuid: $categoryUuid');
+      debugPrint('Service contactUuid: $contactUuid');
     }
 
     String? daysOfWeekJson;

@@ -7,6 +7,7 @@ import 'package:flowpaisa/features/categories/presentation/providers/categories_
 import 'package:flowpaisa/shared/widgets/dual_amount_progress_bar.dart';
 import 'package:flowpaisa/features/categories/presentation/widgets/category_budget_date_range_selector.dart';
 import 'package:flowpaisa/features/categories/presentation/widgets/set_category_budget_sheet.dart';
+import 'package:flowpaisa/features/premium/domain/premium_provider.dart';
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/features/premium/presentation/screens/premium_screen.dart';
 import 'package:flowpaisa/features/categories/presentation/screens/edit_category_screen.dart';
@@ -33,6 +34,7 @@ class CategoryDetailsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
+    final isPremium = ref.watch(premiumProvider).isPremium;
     final budgetAsync = ref.watch(categoryDetailBudgetProvider(categoryUuid));
     final currencySymbol = ref.watch(currencySymbolProvider);
     final decimalPlaces = ref.watch(currencyDecimalPlacesProvider);
@@ -42,6 +44,12 @@ class CategoryDetailsScreen extends ConsumerWidget {
       skipLoadingOnReload: true,
       data: (snapshot) {
         final category = snapshot.category;
+        final isLocked = !isPremium &&
+            !category.isDefault &&
+            (category.addSeq ?? 0) > PremiumGate.categoryTotalLimit;
+        final isBudgetLocked = !isPremium &&
+            (category.budgetSeq ?? 0) > PremiumGate.categoryBudgetTotalLimit;
+
         final isExpense = category.type == 'EXPENSE';
         final color = category.color != null
             ? Color(int.parse(category.color!.replaceAll('#', '0xFF')))
@@ -78,52 +86,58 @@ class CategoryDetailsScreen extends ConsumerWidget {
                     tooltip: isPinned
                         ? l10n.unpinFromDashboard
                         : l10n.pinToDashboard,
-                    onPressed: () async {
-                      if (isPinned) {
-                        final layout =
-                            ref.read(dashboardWidgetLayoutProvider).value ?? [];
-                        final idx = layout.indexWhere((c) =>
-                            c.kind == DashboardWidgetKind.category &&
-                            c.categoryUuid == category.uuid);
-                        if (idx >= 0) {
-                          await ref
-                              .read(dashboardWidgetLayoutProvider.notifier)
-                              .removeAt(idx);
-                          if (context.mounted) {
-                            ToastUtils.showSuccessToast(
-                                context, ref, l10n.unpinnedFromDashboard);
-                          }
-                        }
-                      } else {
-                        await ref
-                            .read(dashboardWidgetLayoutProvider.notifier)
-                            .addWidget(DashboardWidgetConfig(
-                                kind: DashboardWidgetKind.category,
-                                categoryUuid: category.uuid));
-                        if (context.mounted) {
-                          ToastUtils.showSuccessToast(
-                              context, ref, l10n.pinnedToDashboard);
-                        }
-                      }
-                    },
+                    onPressed: isLocked
+                        ? () => PremiumGate.showPremiumDialog(context)
+                        : () async {
+                            if (isPinned) {
+                              final layout =
+                                  ref.read(dashboardWidgetLayoutProvider).value ??
+                                      [];
+                              final idx = layout.indexWhere((c) =>
+                                  c.kind == DashboardWidgetKind.category &&
+                                  c.categoryUuid == category.uuid);
+                              if (idx >= 0) {
+                                await ref
+                                    .read(dashboardWidgetLayoutProvider.notifier)
+                                    .removeAt(idx);
+                                if (context.mounted) {
+                                  ToastUtils.showSuccessToast(
+                                      context, ref, l10n.unpinnedFromDashboard);
+                                }
+                              }
+                            } else {
+                              await ref
+                                  .read(dashboardWidgetLayoutProvider.notifier)
+                                  .addWidget(DashboardWidgetConfig(
+                                      kind: DashboardWidgetKind.category,
+                                      categoryUuid: category.uuid));
+                              if (context.mounted) {
+                                ToastUtils.showSuccessToast(
+                                    context, ref, l10n.pinnedToDashboard);
+                              }
+                            }
+                          },
                   );
                 },
               ),
               IconButton(
                 icon: const Icon(Icons.edit_outlined),
-                onPressed: () async {
-                  final updated = await Navigator.push<bool>(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) =>
-                          EditCategoryScreen(category: category),
-                    ),
-                  );
-                  if (updated == true) {
-                    ref.invalidate(categoryDetailBudgetProvider(categoryUuid));
-                    ref.invalidate(categoriesByTypeProvider);
-                  }
-                },
+                onPressed: isLocked
+                    ? () => PremiumGate.showPremiumDialog(context)
+                    : () async {
+                        final updated = await Navigator.push<bool>(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                EditCategoryScreen(category: category),
+                          ),
+                        );
+                        if (updated == true) {
+                          ref.invalidate(
+                              categoryDetailBudgetProvider(categoryUuid));
+                          ref.invalidate(categoriesByTypeProvider);
+                        }
+                      },
               ),
             ],
           ),
@@ -229,6 +243,8 @@ class CategoryDetailsScreen extends ConsumerWidget {
                         currencySymbol: currencySymbol,
                         decimalPlaces: decimalPlaces,
                         l10n: l10n,
+                        isLocked: isLocked,
+                        isBudgetLocked: isBudgetLocked,
                         onOpenTransactions: () async {
                           ref
                               .read(transactionsPaginatedProvider.notifier)
@@ -250,6 +266,10 @@ class CategoryDetailsScreen extends ConsumerWidget {
                               categoryDetailBudgetProvider(categoryUuid));
                         },
                         onSetBudget: () async {
+                          if (isBudgetLocked) {
+                            PremiumGate.showPremiumDialog(context);
+                            return;
+                          }
                           final nav = Navigator.of(context);
                           // Check limits before showing the sheet
                           final wasBudgetSet =
@@ -389,6 +409,8 @@ class _CategoryBudgetSummarySection extends StatelessWidget {
   final String currencySymbol;
   final int decimalPlaces;
   final AppLocalizations l10n;
+  final bool isLocked;
+  final bool isBudgetLocked;
   final Future<void> Function() onOpenTransactions;
   final VoidCallback onSetBudget;
 
@@ -401,6 +423,8 @@ class _CategoryBudgetSummarySection extends StatelessWidget {
     required this.currencySymbol,
     required this.decimalPlaces,
     required this.l10n,
+    required this.isLocked,
+    required this.isBudgetLocked,
     required this.onOpenTransactions,
     required this.onSetBudget,
   });
@@ -413,7 +437,7 @@ class _CategoryBudgetSummarySection extends StatelessWidget {
       currencySymbol,
       decimalPlaces,
     );
-    final budgetStr = snapshot.budgetAmount != null
+    final budgetStr = !isBudgetLocked && snapshot.budgetAmount != null
         ? AmountFormatter.formatWithCurrency(
             snapshot.budgetAmount!,
             currencySymbol,
@@ -437,7 +461,7 @@ class _CategoryBudgetSummarySection extends StatelessWidget {
       ],
     );
 
-    final hasBudget = snapshot.hasBudget;
+    final hasBudget = !isBudgetLocked && snapshot.hasBudget;
     final pr = hasBudget ? snapshot.progressRatio : 0.0;
     final over = hasBudget && pr > 1.0;
     final barFillColor = over ? AppColors.expenseColor : color;

@@ -12,6 +12,7 @@ class Cashbook {
   /// When accessing the physical file, append the appropriate extension ('.db').
   final String dbPath;
   final DateTime createdAt;
+  final int? addSeq;
   Color? _color;
   Cashbook({
     required this.id,
@@ -20,6 +21,7 @@ class Cashbook {
     this.iconCodePoint,
     required this.dbPath,
     required this.createdAt,
+    this.addSeq,
   });
 
   Color get color =>
@@ -52,6 +54,7 @@ class Cashbook {
       'iconCodePoint': iconCodePoint,
       'dbPath': dbPath,
       'createdAt': createdAt.toIso8601String(),
+      'addSeq': addSeq,
     };
   }
 
@@ -69,6 +72,7 @@ class Cashbook {
       dbPath: sanitizedPath,
       createdAt:
           DateTime.parse(map['createdAt'] ?? DateTime.now().toIso8601String()),
+      addSeq: map['addSeq'],
     );
   }
 
@@ -84,6 +88,7 @@ class Cashbook {
     String? iconCodePoint,
     String? dbPath,
     DateTime? createdAt,
+    int? addSeq,
   }) {
     return Cashbook(
       id: id ?? this.id,
@@ -92,6 +97,7 @@ class Cashbook {
       iconCodePoint: iconCodePoint ?? this.iconCodePoint,
       dbPath: dbPath ?? this.dbPath,
       createdAt: createdAt ?? this.createdAt,
+      addSeq: addSeq ?? this.addSeq,
     );
   }
 

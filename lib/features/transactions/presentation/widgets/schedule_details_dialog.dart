@@ -10,6 +10,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/core/utils/date_formatter.dart';
+import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/features/transactions/domain/models.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/schedule_service_provider.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
@@ -1355,9 +1356,11 @@ class ScheduleDetailsDialog extends ConsumerWidget {
                 Navigator.pop(context);
                 try {
                   final scheduleService = ref.read(scheduleServiceProvider);
+                  final isPremium = PremiumGate.isPremium(ref);
                   await scheduleService.generateTransactionsFromSchedule(
                     schedule.uuid,
                     customDate: selectedDate,
+                    isPremium: isPremium,
                   );
 
                   if (context.mounted) {

@@ -11,6 +11,8 @@ import 'package:flowpaisa/features/categories/presentation/providers/categories_
 import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
 import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
 import 'package:flowpaisa/features/accounts/presentation/providers/accounts_provider.dart';
+import 'package:flowpaisa/features/categories/data/categories_repository.dart';
+import 'package:flowpaisa/features/transactions/data/schedules_repository.dart';
 
 // Providers for dependencies
 final usageTrackerRepositoryProvider = Provider<UsageTrackerRepository>((ref) {
@@ -31,8 +33,9 @@ final transactionLimitsProvider =
   final dailyUsed = await tracker.getTransactionCountToday();
   final monthlyUsed = await tracker.getTransactionCountThisMonth();
 
-  return PremiumGate._calculateLimits(PremiumGate._transactionDailyLimit,
-      PremiumGate._transactionMonthlyLimit, dailyUsed, monthlyUsed);
+  final config = PremiumGate.featureRegistry['transactions']!;
+  return PremiumGate._calculateLimits(config.dailyLimit!, config.monthlyLimit!,
+      dailyUsed, monthlyUsed);
 });
 
 final receivableLimitsProvider =
@@ -44,8 +47,9 @@ final receivableLimitsProvider =
   final dailyUsed = await tracker.getReceivableCountToday();
   final monthlyUsed = await tracker.getReceivableCountThisMonth();
 
-  return PremiumGate._calculateLimits(PremiumGate._receivableDailyLimit,
-      PremiumGate._receivableMonthlyLimit, dailyUsed, monthlyUsed);
+  final config = PremiumGate.featureRegistry['receivables']!;
+  return PremiumGate._calculateLimits(config.dailyLimit!, config.monthlyLimit!,
+      dailyUsed, monthlyUsed);
 });
 
 final payableLimitsProvider =
@@ -57,8 +61,9 @@ final payableLimitsProvider =
   final dailyUsed = await tracker.getPayableCountToday();
   final monthlyUsed = await tracker.getPayableCountThisMonth();
 
-  return PremiumGate._calculateLimits(PremiumGate._payableDailyLimit,
-      PremiumGate._payableMonthlyLimit, dailyUsed, monthlyUsed);
+  final config = PremiumGate.featureRegistry['payables']!;
+  return PremiumGate._calculateLimits(config.dailyLimit!, config.monthlyLimit!,
+      dailyUsed, monthlyUsed);
 });
 
 final contactLimitsProvider =
@@ -68,12 +73,13 @@ final contactLimitsProvider =
 
   // Watch contacts list
   final contacts = await ref.watch(contactsListProvider.future);
+  final config = PremiumGate.featureRegistry['contacts']!;
   final used = contacts.length;
 
   return TotalLimits(
-    remaining: max<int>(0, PremiumGate._contactTotalLimit - used),
-    canAdd: used < PremiumGate._contactTotalLimit,
-    total: PremiumGate._contactTotalLimit,
+    remaining: max<int>(0, config.totalLimit! - used),
+    canAdd: used < config.totalLimit!,
+    total: config.totalLimit!,
     used: used,
   );
 });
@@ -91,10 +97,11 @@ final categoryLimitsProvider =
   final customIncomes = incomes.where((c) => !c.isDefault).toList();
   final used = customExpenses.length + customIncomes.length;
 
+  final config = PremiumGate.featureRegistry['categories']!;
   return TotalLimits(
-    remaining: max<int>(0, PremiumGate._categoryTotalLimit - used),
-    canAdd: used < PremiumGate._categoryTotalLimit,
-    total: PremiumGate._categoryTotalLimit,
+    remaining: max<int>(0, config.totalLimit! - used),
+    canAdd: used < config.totalLimit!,
+    total: config.totalLimit!,
     used: used,
   );
 });
@@ -107,10 +114,11 @@ final scheduleLimitsProvider =
   final repository = ref.read(schedulesRepositoryProvider);
   final used = await repository.getScheduleCount();
 
+  final config = PremiumGate.featureRegistry['schedules']!;
   return TotalLimits(
-    remaining: max<int>(0, PremiumGate._scheduleTotalLimit - used),
-    canAdd: used < PremiumGate._scheduleTotalLimit,
-    total: PremiumGate._scheduleTotalLimit,
+    remaining: max<int>(0, config.totalLimit! - used),
+    canAdd: used < config.totalLimit!,
+    total: config.totalLimit!,
     used: used,
   );
 });
@@ -122,10 +130,11 @@ final cashbookLimitsProvider = Provider.autoDispose<TotalLimits>((ref) {
   final cashbooks = ref.watch(cashbooksProvider);
   final used = cashbooks.length;
 
+  final config = PremiumGate.featureRegistry['cashbooks']!;
   return TotalLimits(
-    remaining: max<int>(0, PremiumGate._cashbookTotalLimit - used),
-    canAdd: used < PremiumGate._cashbookTotalLimit,
-    total: PremiumGate._cashbookTotalLimit,
+    remaining: max<int>(0, config.totalLimit! - used),
+    canAdd: used < config.totalLimit!,
+    total: config.totalLimit!,
     used: used,
   );
 });
@@ -138,28 +147,120 @@ final smartParsingLimitsProvider =
   final tracker = ref.read(usageTrackerRepositoryProvider);
   final monthlyUsed = tracker.getSmartParsingCountThisMonth();
 
-  return PremiumGate._calculateLimits(PremiumGate._smartParsingMonthlyLimit,
-      PremiumGate._smartParsingMonthlyLimit, monthlyUsed, monthlyUsed);
+  final config = PremiumGate.featureRegistry['smart_parsing']!;
+  return PremiumGate._calculateLimits(config.monthlyLimit!, config.monthlyLimit!,
+      monthlyUsed, monthlyUsed);
 });
 
+/// Defines the type of limit enforcement for a feature
+enum LimitType {
+  total, // Uses addSeq for "soft locking" (e.g., max 5 categories)
+  usage  // Uses daily/monthly counters (e.g., 10 transactions/day)
+}
+
+/// Configuration for a premium feature
+class PremiumFeatureConfig {
+  final String name;
+  final LimitType limitType;
+  final int? totalLimit;
+  final int? dailyLimit;
+  final int? monthlyLimit;
+  final String? seqFieldName; // e.g., 'addSeq' or 'budgetSeq'
+
+  const PremiumFeatureConfig({
+    required this.name,
+    required this.limitType,
+    this.totalLimit,
+    this.dailyLimit,
+    this.monthlyLimit,
+    this.seqFieldName,
+  });
+}
+
 class PremiumGate {
-  // Limits Configuration
-  static const int _transactionDailyLimit = 10;
-  static const int _transactionMonthlyLimit = 30;
+  // Central Registry of Premium Features and their enforcement logic
+  static const Map<String, PremiumFeatureConfig> featureRegistry = {
+    'contacts': PremiumFeatureConfig(
+      name: 'Contacts',
+      limitType: LimitType.total,
+      totalLimit: 10,
+      seqFieldName: 'addSeq',
+    ),
+    'categories': PremiumFeatureConfig(
+      name: 'Categories',
+      limitType: LimitType.total,
+      totalLimit: 5,
+      seqFieldName: 'addSeq',
+    ),
+    'category_budgets': PremiumFeatureConfig(
+      name: 'Category Budgets',
+      limitType: LimitType.total,
+      totalLimit: 1,
+      seqFieldName: 'budgetSeq',
+    ),
+    'accounts': PremiumFeatureConfig(
+      name: 'Accounts',
+      limitType: LimitType.total,
+      totalLimit: 1,
+      seqFieldName: 'addSeq',
+    ),
+    'schedules': PremiumFeatureConfig(
+      name: 'Transaction Schedules',
+      limitType: LimitType.total,
+      totalLimit: 2,
+      seqFieldName: 'addSeq',
+    ),
+    'cashbooks': PremiumFeatureConfig(
+      name: 'Cashbooks',
+      limitType: LimitType.total,
+      totalLimit: 2,
+      seqFieldName: 'addSeq',
+    ),
+    'transactions': PremiumFeatureConfig(
+      name: 'Transactions',
+      limitType: LimitType.usage,
+      dailyLimit: 10,
+      monthlyLimit: 30,
+    ),
+    'receivables': PremiumFeatureConfig(
+      name: 'Receivables',
+      limitType: LimitType.usage,
+      dailyLimit: 3,
+      monthlyLimit: 10,
+    ),
+    'payables': PremiumFeatureConfig(
+      name: 'Payables',
+      limitType: LimitType.usage,
+      dailyLimit: 3,
+      monthlyLimit: 10,
+    ),
+    'smart_parsing': PremiumFeatureConfig(
+      name: 'Smart Parsing',
+      limitType: LimitType.usage,
+      monthlyLimit: 10,
+    ),
+  };
 
-  static const int _receivableDailyLimit = 3;
-  static const int _receivableMonthlyLimit = 10;
+  // Legacy constants maintained for UI compatibility (pointing to registry)
+  static int get contactTotalLimit => featureRegistry['contacts']!.totalLimit!;
+  static int get categoryTotalLimit => featureRegistry['categories']!.totalLimit!;
+  static int get scheduleTotalLimit => featureRegistry['schedules']!.totalLimit!;
+  static int get cashbookTotalLimit => featureRegistry['cashbooks']!.totalLimit!;
+  static int get smartParsingMonthlyLimit => featureRegistry['smart_parsing']!.monthlyLimit!;
+  static int get accountTotalLimit => featureRegistry['accounts']!.totalLimit!;
+  static int get categoryBudgetTotalLimit => featureRegistry['category_budgets']!.totalLimit!;
 
-  static const int _payableDailyLimit = 3;
-  static const int _payableMonthlyLimit = 10;
+  // Internal usage limits (pointing to registry)
+  static int get _transactionDailyLimit => featureRegistry['transactions']!.dailyLimit!;
+  static int get _transactionMonthlyLimit => featureRegistry['transactions']!.monthlyLimit!;
+  static int get _receivableDailyLimit => featureRegistry['receivables']!.dailyLimit!;
+  static int get _receivableMonthlyLimit => featureRegistry['receivables']!.monthlyLimit!;
+  static int get _payableDailyLimit => featureRegistry['payables']!.dailyLimit!;
+  static int get _payableMonthlyLimit => featureRegistry['payables']!.monthlyLimit!;
 
-  static const int _contactTotalLimit = 10;
-  static const int _categoryTotalLimit = 5;
-  static const int _scheduleTotalLimit = 2;
-  static const int _cashbookTotalLimit = 2; // 1 default + 1 extra
-  static const int _smartParsingMonthlyLimit = 10;
-  static const int _accountTotalLimit = 1;
-  static const int _categoryBudgetTotalLimit = 1;
+  // Helper to check if a feature uses sequence-based locking
+  static bool usesSequenceLocking(String featureKey) => 
+      featureRegistry[featureKey]?.limitType == LimitType.total;
 
   // Helper to check premium status (using read for callbacks)
   static bool isPremium(WidgetRef ref) {
@@ -225,12 +326,12 @@ class PremiumGate {
     }
 
     final contacts = await ref.read(contactsListProvider.future);
-    final used = contacts.length;
+    final used = contacts.where((c) => (c.addSeq ?? 0) <= contactTotalLimit).length;
 
     return TotalLimits(
-      remaining: max<int>(0, _contactTotalLimit - used),
-      canAdd: used < _contactTotalLimit,
-      total: _contactTotalLimit,
+      remaining: max<int>(0, contactTotalLimit - used),
+      canAdd: used < contactTotalLimit,
+      total: contactTotalLimit,
       used: used,
     );
   }
@@ -242,15 +343,15 @@ class PremiumGate {
 
     final expenses = await ref.read(categoriesByTypeProvider('EXPENSE').future);
     final incomes = await ref.read(categoriesByTypeProvider('INCOME').future);
-    // Only count custom categories (isDefault == false)
-    final customExpenses = expenses.where((c) => !c.isDefault).toList();
-    final customIncomes = incomes.where((c) => !c.isDefault).toList();
+    // Only count custom categories (isDefault == false) that are within the limit
+    final customExpenses = expenses.where((c) => !c.isDefault && (c.addSeq ?? 0) <= categoryTotalLimit).toList();
+    final customIncomes = incomes.where((c) => !c.isDefault && (c.addSeq ?? 0) <= categoryTotalLimit).toList();
     final used = customExpenses.length + customIncomes.length;
 
     return TotalLimits(
-      remaining: max<int>(0, _categoryTotalLimit - used),
-      canAdd: used < _categoryTotalLimit,
-      total: _categoryTotalLimit,
+      remaining: max<int>(0, categoryTotalLimit - used),
+      canAdd: used < categoryTotalLimit,
+      total: categoryTotalLimit,
       used: used,
     );
   }
@@ -261,12 +362,13 @@ class PremiumGate {
     }
 
     final repository = ref.read(schedulesRepositoryProvider);
-    final used = await repository.getScheduleCount();
+    final schedules = await repository.getAllSchedules();
+    final used = schedules.where((s) => (s.addSeq ?? 0) <= scheduleTotalLimit).length;
 
     return TotalLimits(
-      remaining: max<int>(0, _scheduleTotalLimit - used),
-      canAdd: used < _scheduleTotalLimit,
-      total: _scheduleTotalLimit,
+      remaining: max<int>(0, scheduleTotalLimit - used),
+      canAdd: used < scheduleTotalLimit,
+      total: scheduleTotalLimit,
       used: used,
     );
   }
@@ -277,12 +379,12 @@ class PremiumGate {
     }
 
     final cashbooks = ref.read(cashbooksProvider);
-    final used = cashbooks.length;
+    final used = cashbooks.where((c) => (c.addSeq ?? 0) <= cashbookTotalLimit).length;
 
     return TotalLimits(
-      remaining: max<int>(0, _cashbookTotalLimit - used),
-      canAdd: used < _cashbookTotalLimit,
-      total: _cashbookTotalLimit,
+      remaining: max<int>(0, cashbookTotalLimit - used),
+      canAdd: used < cashbookTotalLimit,
+      total: cashbookTotalLimit,
       used: used,
     );
   }
@@ -295,8 +397,8 @@ class PremiumGate {
     final tracker = ref.read(usageTrackerRepositoryProvider);
     final monthlyUsed = tracker.getSmartParsingCountThisMonth();
 
-    return _calculateLimits(_smartParsingMonthlyLimit,
-        _smartParsingMonthlyLimit, monthlyUsed, monthlyUsed);
+    return _calculateLimits(smartParsingMonthlyLimit,
+        smartParsingMonthlyLimit, monthlyUsed, monthlyUsed);
   }
 
   static Future<TotalLimits> getAccountLimits(WidgetRef ref) async {
@@ -305,18 +407,18 @@ class PremiumGate {
     }
 
     final accountsAsync = ref.read(accountsStreamProvider);
-    final List accounts;
+    final List<Account> accounts;
     if (accountsAsync.hasValue) {
       accounts = accountsAsync.value!;
     } else {
       accounts = await ref.read(accountsStreamProvider.future);
     }
-    final used = accounts.length;
+    final used = accounts.where((a) => (a.addSeq ?? 0) <= accountTotalLimit).length;
 
     return TotalLimits(
-      remaining: max(0, _accountTotalLimit - used),
-      canAdd: used < _accountTotalLimit,
-      total: _accountTotalLimit,
+      remaining: max(0, accountTotalLimit - used),
+      canAdd: used < accountTotalLimit,
+      total: accountTotalLimit,
       used: used,
     );
   }
@@ -333,15 +435,16 @@ class PremiumGate {
 
       final used = categories
           .where((c) =>
-              c.monthlyBudget != null ||
-              c.quarterlyBudget != null ||
-              c.yearlyBudget != null)
+              (c.monthlyBudget != null ||
+                  c.quarterlyBudget != null ||
+                  c.yearlyBudget != null) &&
+              (c.budgetSeq ?? 0) <= categoryBudgetTotalLimit)
           .length;
 
       return TotalLimits(
-        remaining: max(0, _categoryBudgetTotalLimit - used),
-        canAdd: used < _categoryBudgetTotalLimit,
-        total: _categoryBudgetTotalLimit,
+        remaining: max(0, categoryBudgetTotalLimit - used),
+        canAdd: used < categoryBudgetTotalLimit,
+        total: categoryBudgetTotalLimit,
         used: used,
       );
     } catch (e) {
@@ -349,7 +452,7 @@ class PremiumGate {
       return TotalLimits(
         remaining: 0,
         canAdd: true,
-        total: _categoryBudgetTotalLimit,
+        total: categoryBudgetTotalLimit,
         used: 0,
       );
     }

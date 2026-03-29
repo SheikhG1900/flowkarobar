@@ -12,6 +12,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/features/cashbooks/domain/models/cashbook.dart';
 import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
 
@@ -48,6 +49,8 @@ Future<void> processSchedules() async {
       cashbooks = jsonList.map((json) => Cashbook.fromJson(json)).toList();
     }
 
+    final isPremium = prefs.getBool('is_premium_user') ?? false;
+
     for (final cashbook in cashbooks) {
       try {
         final database = AppDatabase(fileName: '${cashbook.dbPath}.db');
@@ -72,7 +75,8 @@ Future<void> processSchedules() async {
         // Process each schedule
         for (final schedule in activeSchedules) {
           try {
-            await scheduleService.generateTransactionsFromSchedule(schedule.uuid);
+            await scheduleService.generateTransactionsFromSchedule(schedule.uuid,
+                isPremium: isPremium);
           } catch (e) {
             print(
                 'Error processing schedule ${schedule.uuid} in ${cashbook.name}: $e');
@@ -119,10 +123,12 @@ Future<void> processSchedulesFromContext(WidgetRef ref) async {
       );
 
       final activeSchedules = await schedulesRepository.getActiveSchedules();
+      final isPremium = PremiumGate.isPremium(ref);
 
       for (final schedule in activeSchedules) {
         try {
-          await scheduleService.generateTransactionsFromSchedule(schedule.uuid);
+          await scheduleService.generateTransactionsFromSchedule(schedule.uuid,
+              isPremium: isPremium);
         } catch (e) {
           print(
               'Error processing schedule ${schedule.uuid} in ${cashbook.name}: $e');

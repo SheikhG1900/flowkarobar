@@ -137,8 +137,10 @@ Future<bool> handleSyncTask(String task, Map<String, dynamic>? inputData) async 
           ),
         );
         final activeSchedules = await schedulesRepository.getActiveSchedules();
+        final isPremium = prefs.getBool('is_premium_user') ?? false;
         for (final schedule in activeSchedules) {
-          await scheduleService.generateTransactionsFromSchedule(schedule.uuid);
+          await scheduleService.generateTransactionsFromSchedule(schedule.uuid,
+              isPremium: isPremium);
         }
       } catch (e) {
         if (kDebugMode) {

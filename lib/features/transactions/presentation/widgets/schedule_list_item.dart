@@ -1,3 +1,5 @@
+import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
+import 'package:flowpaisa/features/premium/domain/premium_provider.dart';
 import 'package:flowpaisa/core/utils/category_helper.dart';
 import 'package:flowpaisa/core/utils/localization_helper.dart';
 import 'package:flowpaisa/features/transactions/domain/models.dart';
@@ -27,6 +29,9 @@ class ScheduleListItem extends ConsumerWidget {
     final currency = ref.watch(currentCurrencyProvider).value;
     final isDark = theme.brightness == Brightness.dark;
     final isExpense = schedule.type == 'EXPENSE';
+
+    final isPremium = ref.watch(premiumProvider).isPremium;
+    final isLocked = !isPremium && (schedule.addSeq ?? 0) > PremiumGate.scheduleTotalLimit;
 
     if (currency == null) return const SizedBox.shrink();
 
@@ -268,6 +273,10 @@ class ScheduleListItem extends ConsumerWidget {
           ),
         ),
         onTap: () {
+          if (isLocked) {
+            PremiumGate.showPremiumDialog(context);
+            return;
+          }
           Navigator.push(
             context,
             MaterialPageRoute(

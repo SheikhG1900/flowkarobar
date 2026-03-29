@@ -19,6 +19,7 @@ import 'package:flowpaisa/features/contacts/presentation/providers/contacts_prov
 import 'package:flowpaisa/features/contacts/presentation/screens/add_contact_screen.dart';
 import 'package:flowpaisa/features/transactions/presentation/screens/add_transaction_screen.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
+import 'package:flowpaisa/features/premium/domain/premium_provider.dart';
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/shared/widgets/limit_countdown_badge.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
@@ -543,42 +544,81 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
                         itemCount: contacts.length,
                         itemBuilder: (context, index) {
                           final contact = contacts[index];
-                          return ListTile(
-                            leading: Container(
-                              width: 40,
-                              height: 40,
-                              decoration: BoxDecoration(
-                                gradient:
-                                    AppColors.getContactGradient(contact.name),
-                                shape: BoxShape.circle,
+                          final isPremium = ref.watch(premiumProvider).isPremium;
+                          final isLocked = !isPremium &&
+                              (contact.addSeq ?? 0) >
+                                  PremiumGate.contactTotalLimit;
+                          final theme = Theme.of(context);
+
+                          return Opacity(
+                            opacity: isLocked ? 0.5 : 1.0,
+                            child: ListTile(
+                              leading: Stack(
+                                children: [
+                                  Container(
+                                    width: 40,
+                                    height: 40,
+                                    decoration: BoxDecoration(
+                                      gradient:
+                                          AppColors.getContactGradient(contact.name),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    alignment: Alignment.center,
+                                    child: Text(
+                                      contact.name.isNotEmpty
+                                          ? contact.name[0].toUpperCase()
+                                          : '?',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                  if (isLocked)
+                                    Positioned(
+                                      right: 0,
+                                      bottom: 0,
+                                      child: Container(
+                                        padding: const EdgeInsets.all(2),
+                                        decoration: BoxDecoration(
+                                          color: theme.scaffoldBackgroundColor,
+                                          shape: BoxShape.circle,
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.black
+                                                  .withValues(alpha: 0.08),
+                                              blurRadius: 2,
+                                            ),
+                                          ],
+                                        ),
+                                        child: Icon(
+                                          Icons.lock,
+                                          size: 10,
+                                          color: theme.colorScheme.primary,
+                                        ),
+                                      ),
+                                    ),
+                                ],
                               ),
-                              alignment: Alignment.center,
-                              child: Text(
-                                contact.name.isNotEmpty
-                                    ? contact.name[0].toUpperCase()
-                                    : '?',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
+                              title: Text(contact.name),
+                              subtitle: contact.phone != null
+                                  ? Text(contact.phone!)
+                                  : null,
+                              onTap: isLocked
+                                  ? () => PremiumGate.showPremiumDialog(context)
+                                  : () {
+                                      setState(() {
+                                        _selectedContact = contact;
+                                        _selectedContactUuid = contact.uuid;
+                                      });
+                                      Navigator.pop(context);
+                                    },
+                              selected: _selectedContactUuid == contact.uuid,
+                              trailing: _selectedContactUuid == contact.uuid
+                                  ? const Icon(Icons.check_circle,
+                                      color: AppColors.receivableColor)
+                                  : null,
                             ),
-                            title: Text(contact.name),
-                            subtitle: contact.phone != null
-                                ? Text(contact.phone!)
-                                : null,
-                            onTap: () {
-                              setState(() {
-                                _selectedContact = contact;
-                                _selectedContactUuid = contact.uuid;
-                              });
-                              Navigator.pop(context);
-                            },
-                            selected: _selectedContactUuid == contact.uuid,
-                            trailing: _selectedContactUuid == contact.uuid
-                                ? const Icon(Icons.check_circle,
-                                    color: AppColors.receivableColor)
-                                : null,
                           );
                         },
                       );

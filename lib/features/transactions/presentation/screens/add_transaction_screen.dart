@@ -28,6 +28,7 @@ import 'package:flowpaisa/features/categories/presentation/screens/add_category_
 import 'package:flowpaisa/features/contacts/presentation/screens/add_contact_screen.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
+import 'package:flowpaisa/features/premium/domain/premium_provider.dart';
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/shared/widgets/limit_countdown_badge.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
@@ -823,6 +824,12 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                           final category = item.category;
                           final usage = item.usageCount;
 
+                          final isPremium = ref.watch(premiumProvider).isPremium;
+                          final isLocked = !isPremium &&
+                              !category.isDefault &&
+                              (category.addSeq ?? 0) >
+                                  PremiumGate.categoryTotalLimit;
+
                           final color = category.color != null
                               ? Color(int.parse(
                                   category.color!.replaceAll('#', '0xFF')))
@@ -830,59 +837,93 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                                   ? AppColors.expenseColor
                                   : AppColors.incomeColor);
 
-                          return ListTile(
-                            leading: Container(
-                              width: 40,
-                              height: 40,
-                              decoration: BoxDecoration(
-                                color: color.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(
-                                    color: color.withValues(alpha: 0.3)),
-                              ),
-                              alignment: Alignment.center,
-                              child: Icon(
-                                IconHelper.getIconData(category.icon) ??
-                                    Symbols.category,
-                                color: color,
-                                size: 24,
-                              ),
-                            ),
-                            title: Text(
-                                CategoryHelper.getCategoryName(category, l10n)),
-                            trailing: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                // Show "Frequent" tag for top used categories if usage > 0
-                                if (actualIndex < 3 && usage > 0)
+                          return Opacity(
+                            opacity: isLocked ? 0.5 : 1.0,
+                            child: ListTile(
+                              leading: Stack(
+                                children: [
                                   Container(
-                                    margin: const EdgeInsets.only(right: 8),
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 6, vertical: 2),
+                                    width: 40,
+                                    height: 40,
                                     decoration: BoxDecoration(
                                       color: color.withValues(alpha: 0.1),
-                                      borderRadius: BorderRadius.circular(4),
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(
+                                          color: color.withValues(alpha: 0.3)),
                                     ),
-                                    child: Text(
-                                      l10n.frequent,
-                                      style: TextStyle(
-                                        fontSize: 10,
-                                        color: color,
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                                    alignment: Alignment.center,
+                                    child: Icon(
+                                      IconHelper.getIconData(category.icon) ??
+                                          Symbols.category,
+                                      color: color,
+                                      size: 24,
                                     ),
                                   ),
-                                if (_selectedCategory?.uuid == category.uuid)
-                                  Icon(Icons.check_circle, color: color),
-                              ],
+                                  if (isLocked)
+                                    Positioned(
+                                      right: -2,
+                                      bottom: -2,
+                                      child: Container(
+                                        padding: const EdgeInsets.all(2),
+                                        decoration: BoxDecoration(
+                                          color: theme.scaffoldBackgroundColor,
+                                          shape: BoxShape.circle,
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.black
+                                                  .withValues(alpha: 0.08),
+                                              blurRadius: 2,
+                                            ),
+                                          ],
+                                        ),
+                                        child: Icon(
+                                          Icons.lock,
+                                          size: 10,
+                                          color: theme.colorScheme.primary,
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                              title: Text(CategoryHelper.getCategoryName(
+                                  category, l10n)),
+                              trailing: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  // Show "Frequent" tag for top used categories if usage > 0
+                                  if (actualIndex < 3 && usage > 0)
+                                    Container(
+                                      margin: const EdgeInsets.only(right: 8),
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: color.withValues(alpha: 0.1),
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: Text(
+                                        l10n.frequent,
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          color: color,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  if (_selectedCategory?.uuid == category.uuid)
+                                    Icon(Icons.check_circle, color: color),
+                                ],
+                              ),
+                              onTap: isLocked
+                                  ? () => PremiumGate.showPremiumDialog(context)
+                                  : () {
+                                      setState(() {
+                                        _selectedCategory = category;
+                                      });
+                                      Navigator.pop(context);
+                                    },
+                              selected:
+                                  _selectedCategory?.uuid == category.uuid,
                             ),
-                            onTap: () {
-                              setState(() {
-                                _selectedCategory = category;
-                              });
-                              Navigator.pop(context);
-                            },
-                            selected: _selectedCategory?.uuid == category.uuid,
                           );
                         },
                       );
@@ -976,63 +1017,101 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                           final contact = item.contact;
                           final usage = item.usageCount;
 
-                          return ListTile(
-                            leading: Container(
-                              width: 40,
-                              height: 40,
-                              decoration: BoxDecoration(
-                                gradient:
-                                    AppColors.getContactGradient(contact.name),
-                                shape: BoxShape.circle,
-                              ),
-                              alignment: Alignment.center,
-                              child: Text(
-                                contact.name.isNotEmpty
-                                    ? contact.name[0].toUpperCase()
-                                    : '?',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                            title: Text(contact.name),
-                            subtitle: contact.phone != null
-                                ? Text(contact.phone!)
-                                : null,
-                            trailing: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                // Show "Frequent" tag for top used contacts if usage > 0
-                                if (index < 3 && usage > 0)
+                          final isPremium = ref.watch(premiumProvider).isPremium;
+                          final isLocked = !isPremium &&
+                              (contact.addSeq ?? 0) >
+                                  PremiumGate.contactTotalLimit;
+
+                          return Opacity(
+                            opacity: isLocked ? 0.5 : 1.0,
+                            child: ListTile(
+                              leading: Stack(
+                                children: [
                                   Container(
-                                    margin: const EdgeInsets.only(right: 8),
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 6, vertical: 2),
+                                    width: 40,
+                                    height: 40,
                                     decoration: BoxDecoration(
-                                      color: theme.colorScheme.primary
-                                          .withValues(alpha: 0.1),
-                                      borderRadius: BorderRadius.circular(4),
+                                      gradient:
+                                          AppColors.getContactGradient(contact.name),
+                                      shape: BoxShape.circle,
                                     ),
+                                    alignment: Alignment.center,
                                     child: Text(
-                                      l10n.frequent,
-                                      style: TextStyle(
-                                        fontSize: 10,
-                                        color: theme.colorScheme.primary,
+                                      contact.name.isNotEmpty
+                                          ? contact.name[0].toUpperCase()
+                                          : '?',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 16,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
                                   ),
-                                if (_selectedContactUuid == contact.uuid)
-                                  Icon(Icons.check_circle,
-                                      color: theme.colorScheme.primary),
-                              ],
+                                  if (isLocked)
+                                    Positioned(
+                                      right: 0,
+                                      bottom: 0,
+                                      child: Container(
+                                        padding: const EdgeInsets.all(2),
+                                        decoration: BoxDecoration(
+                                          color: theme.scaffoldBackgroundColor,
+                                          shape: BoxShape.circle,
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.black
+                                                  .withValues(alpha: 0.08),
+                                              blurRadius: 2,
+                                            ),
+                                          ],
+                                        ),
+                                        child: Icon(
+                                          Icons.lock,
+                                          size: 10,
+                                          color: theme.colorScheme.primary,
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                              title: Text(contact.name),
+                              subtitle: contact.phone != null
+                                  ? Text(contact.phone!)
+                                  : null,
+                              trailing: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  // Show "Frequent" tag for top used contacts if usage > 0
+                                  if (index < 3 && usage > 0)
+                                    Container(
+                                      margin: const EdgeInsets.only(right: 8),
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: theme.colorScheme.primary
+                                            .withValues(alpha: 0.1),
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: Text(
+                                        l10n.frequent,
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          color: theme.colorScheme.primary,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  if (_selectedContactUuid == contact.uuid)
+                                    Icon(Icons.check_circle,
+                                        color: theme.colorScheme.primary),
+                                ],
+                              ),
+                              onTap: isLocked
+                                  ? () => PremiumGate.showPremiumDialog(context)
+                                  : () {
+                                      Navigator.pop(context, contact);
+                                    },
+                              selected: _selectedContactUuid == contact.uuid,
                             ),
-                            onTap: () {
-                              Navigator.pop(context, contact);
-                            },
-                            selected: _selectedContactUuid == contact.uuid,
                           );
                         },
                       );
@@ -1669,15 +1748,13 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                     backgroundColor:
                         isExpense ? AppColors.expenseColor : AppColors.incomeColor,
                     foregroundColor: Colors.white,
-                    onPressed: (_isLoading ||
-                            (scheduleLimitsAsync.asData?.value != null &&
-                                !scheduleLimitsAsync.asData!.value.canAdd))
+                    onPressed: _isLoading
                         ? null
-                        : _scheduleTransaction,
-                    child: (scheduleLimitsAsync.asData?.value != null &&
-                            !scheduleLimitsAsync.asData!.value.canAdd)
-                        ? const Icon(Icons.lock)
-                        : const Icon(Icons.schedule),
+                        : (scheduleLimitsAsync.asData?.value != null &&
+                                !scheduleLimitsAsync.asData!.value.canAdd)
+                            ? () => PremiumGate.showPremiumDialog(context)
+                            : _scheduleTransaction,
+                    child: const Icon(Icons.schedule),
                   ),
                   const SizedBox(height: 8),
                 ],

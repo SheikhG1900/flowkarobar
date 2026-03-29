@@ -23,6 +23,9 @@ import 'package:flowpaisa/shared/widgets/dual_amount_progress_bar.dart';
 import 'package:flowpaisa/features/transactions/domain/models.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
 import 'package:flowpaisa/features/transactions/presentation/screens/transactions_list_screen.dart';
+import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
+import 'package:flowpaisa/features/premium/domain/premium_provider.dart';
+import 'package:flowpaisa/features/premium/presentation/screens/premium_screen.dart';
 
 class CategoriesListScreen extends ConsumerStatefulWidget {
   final int initialIndex;
@@ -206,11 +209,21 @@ class _CategoryListBody extends ConsumerWidget {
                   (context, index) {
                     final category = categories[index];
                     final net = nets[category.uuid] ?? 0.0;
+                    final isPremium = ref.watch(premiumProvider).isPremium;
+                    final isLocked = !isPremium &&
+                        !category.isDefault &&
+                        (category.addSeq ?? 0) > PremiumGate.categoryTotalLimit;
+                    final isBudgetLocked = !isPremium &&
+                        (category.budgetSeq ?? 0) >
+                            PremiumGate.categoryBudgetTotalLimit;
+
                     return _CategoryCard(
                       key: ValueKey(category.uuid),
                       category: category,
                       netAmount: net,
                       dateRange: range,
+                      isLocked: isLocked,
+                      isBudgetLocked: isBudgetLocked,
                     );
                   },
                   childCount: categories.length,
@@ -280,11 +293,20 @@ class _CategoriesAggregateSummary extends ConsumerWidget {
 
     double categorizedNet = 0;
     double totalBudgetCap = 0;
+    final isPremium = ref.watch(premiumProvider).isPremium;
     for (final c in categories) {
       categorizedNet += nets[c.uuid] ?? 0;
-      final b = budgetAmountForPeriod(c, range);
-      if (b != null && b > 0) {
-        totalBudgetCap += b;
+      final isCatLocked = !isPremium &&
+          !c.isDefault &&
+          (c.addSeq ?? 0) > PremiumGate.categoryTotalLimit;
+      final isBudgetLocked = !isPremium &&
+          (c.budgetSeq ?? 0) > PremiumGate.categoryBudgetTotalLimit;
+
+      if (!isCatLocked && !isBudgetLocked) {
+        final b = budgetAmountForPeriod(c, range);
+        if (b != null && b > 0) {
+          totalBudgetCap += b;
+        }
       }
     }
 
@@ -568,12 +590,16 @@ class _CategoryCard extends ConsumerWidget {
   final Category category;
   final double netAmount;
   final DateRangeState dateRange;
+  final bool isLocked;
+  final bool isBudgetLocked;
 
   const _CategoryCard({
     super.key,
     required this.category,
     required this.netAmount,
     required this.dateRange,
+    this.isLocked = false,
+    this.isBudgetLocked = false,
   });
 
   Future<void> _deleteCategory(BuildContext context, WidgetRef ref) async {
@@ -615,7 +641,7 @@ class _CategoryCard extends ConsumerWidget {
         : (isExpense ? AppColors.expenseColor : AppColors.incomeColor);
     final symbol = ref.watch(currencySymbolProvider);
     final decimals = ref.watch(currencyDecimalPlacesProvider);
-    final budget = budgetAmountForPeriod(category, dateRange);
+    final budget = (isLocked || isBudgetLocked) ? null : budgetAmountForPeriod(category, dateRange);
     final hasBudget = budget != null && budget > 0;
     final pr = hasBudget ? netAmount / budget : 0.0;
     final fillColor =
@@ -643,129 +669,157 @@ class _CategoryCard extends ConsumerWidget {
             invalidateCategoryPeriodNets(ref, category.type);
           }
         },
-        onDelete: category.isDefault
+        onDelete: category.isDefault || isLocked
             ? null
             : () async {
                 await _deleteCategory(context, ref);
               },
         child: InkWell(
-          onTap: () async {
-            await Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) =>
-                    CategoryDetailsScreen(categoryUuid: category.uuid),
-              ),
-            );
-            invalidateCategoryPeriodNets(ref, category.type);
-          },
+          onTap: isLocked
+              ? () => PremiumGate.showPremiumDialog(context)
+              : () async {
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          CategoryDetailsScreen(categoryUuid: category.uuid),
+                    ),
+                  );
+                  invalidateCategoryPeriodNets(ref, category.type);
+                },
           borderRadius: BorderRadius.circular(16),
           child: Stack(
             clipBehavior: Clip.none,
             children: [
-              Container(
-                clipBehavior: Clip.antiAlias,
-                decoration: BoxDecoration(
-                  color: theme.cardColor,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: theme.dividerColor.withValues(alpha: 0.5),
-                    width: 1,
+              Opacity(
+                opacity: isLocked ? 0.5 : 1.0,
+                child: Container(
+                  clipBehavior: Clip.antiAlias,
+                  decoration: BoxDecoration(
+                    color: theme.cardColor,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: theme.dividerColor.withValues(alpha: 0.5),
+                      width: 1,
+                    ),
                   ),
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Hero(
-                            tag: 'category_icon_${category.uuid}',
-                            child: Container(
-                              width: 48,
-                              height: 48,
-                              decoration: BoxDecoration(
-                                color: color.withValues(
-                                    alpha: theme.brightness == Brightness.dark
-                                        ? 0.1
-                                        : 0.15),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: color.withValues(alpha: 0.3),
-                                  width: 1,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Hero(
+                              tag: 'category_icon_${category.uuid}',
+                              child: Container(
+                                width: 48,
+                                height: 48,
+                                decoration: BoxDecoration(
+                                  color: color.withValues(
+                                      alpha: theme.brightness == Brightness.dark
+                                          ? 0.1
+                                          : 0.15),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: color.withValues(alpha: 0.3),
+                                    width: 1,
+                                  ),
                                 ),
-                              ),
-                              alignment: Alignment.center,
-                              child: CategoryHelper.buildCategoryIcon(
-                                  category.icon, color, isExpense),
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Text(
-                              LocalizationHelper.getLocalizedCategoryName(
-                                  context, category.name),
-                              overflow: TextOverflow.ellipsis,
-                              style: theme.textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.w600,
+                                alignment: Alignment.center,
+                                child: CategoryHelper.buildCategoryIcon(
+                                    category.icon, color, isExpense),
                               ),
                             ),
-                          ),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                AmountFormatter.formatWithCurrency(
-                                  netAmount,
-                                  symbol,
-                                  decimals,
-                                ),
-                                style: theme.textTheme.titleSmall?.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                  color: theme.colorScheme.onSurface,
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Text(
+                                LocalizationHelper.getLocalizedCategoryName(
+                                    context, category.name),
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
-                              if (hasBudget) ...[
-                                const SizedBox(height: 2),
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
                                 Text(
                                   AmountFormatter.formatWithCurrency(
-                                    budget!,
+                                    netAmount,
                                     symbol,
                                     decimals,
                                   ),
-                                  style: theme.textTheme.labelSmall?.copyWith(
-                                    color: theme.colorScheme.onSurfaceVariant,
-                                    fontWeight: FontWeight.w300,
-                                    fontSize: 10,
-                                    height: 1.2,
+                                  style: theme.textTheme.titleSmall?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                    color: theme.colorScheme.onSurface,
                                   ),
-                                  textAlign: TextAlign.end,
                                 ),
+                                if (hasBudget) ...[
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    AmountFormatter.formatWithCurrency(
+                                      budget!,
+                                      symbol,
+                                      decimals,
+                                    ),
+                                    style: theme.textTheme.labelSmall?.copyWith(
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                      fontWeight: FontWeight.w300,
+                                      fontSize: 10,
+                                      height: 1.2,
+                                    ),
+                                    textAlign: TextAlign.end,
+                                  ),
+                                ],
                               ],
-                            ],
-                          ),
-                          const SizedBox(width: 8),
-                          Icon(
-                            Icons.arrow_forward_ios,
-                            size: 14,
-                            color: theme.colorScheme.onSurfaceVariant
-                                .withValues(alpha: 0.5),
-                          ),
-                        ],
+                            ),
+                            const SizedBox(width: 8),
+                            Icon(
+                              Icons.arrow_forward_ios,
+                              size: 14,
+                              color: theme.colorScheme.onSurfaceVariant
+                                  .withValues(alpha: 0.5),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                    if (hasBudget)
-                      CategoryBudgetProgressBar(
-                        progress: pr,
-                        fillColor: fillColor,
-                      ),
-                  ],
+                      if (hasBudget)
+                        CategoryBudgetProgressBar(
+                          progress: pr,
+                          fillColor: fillColor,
+                        ),
+                    ],
+                  ),
                 ),
               ),
-              if (!category.isDefault)
+                  if (isLocked)
+                    Positioned(
+                      top: 6,
+                      right: 6,
+                      child: Container(
+                        padding: const EdgeInsets.all(2),
+                        decoration: BoxDecoration(
+                          color: theme.scaffoldBackgroundColor,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.08),
+                              blurRadius: 2,
+                            ),
+                          ],
+                        ),
+                    child: Icon(
+                      Icons.lock,
+                      size: 14,
+                      color: theme.colorScheme.primary,
+                    ),
+                      ),
+                    ),
+                  if (!category.isDefault && !isLocked)
                 Positioned(
                   top: 6,
                   right: 6,

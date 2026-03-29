@@ -94,9 +94,9 @@ class TransactionService {
       }
 
       if (kDebugMode) {
-        debugPrint('DEBUG: Transaction Service creating transaction');
-        debugPrint('DEBUG: Is Import: $isImport');
-        debugPrint('DEBUG: linkedGroupId: $sharedLinkedGroupId');
+        debugPrint('Transaction Service creating transaction');
+        debugPrint('Is Import: $isImport');
+        debugPrint('linkedGroupId: $sharedLinkedGroupId');
       }
 
       // Determine actual amounts for contact and user

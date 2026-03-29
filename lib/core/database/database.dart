@@ -27,6 +27,9 @@ class Categories extends Table {
   RealColumn get quarterlyBudget => real().nullable()();
   RealColumn get yearlyBudget => real().nullable()();
 
+  IntColumn get addSeq => integer().nullable()();
+  IntColumn get budgetSeq => integer().nullable()();
+
   @override
   Set<Column> get primaryKey => {uuid};
 }
@@ -41,6 +44,8 @@ class Contacts extends Table {
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
   BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
   BoolColumn get isNotSynced => boolean().withDefault(const Constant(true))();
+
+  IntColumn get addSeq => integer().nullable()();
 
   @override
   Set<Column> get primaryKey => {uuid};
@@ -121,6 +126,8 @@ class Receivables extends Table {
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
   BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
   BoolColumn get isNotSynced => boolean().withDefault(const Constant(true))();
+
+  IntColumn get addSeq => integer().nullable()();
 
   @override
   Set<Column> get primaryKey => {uuid};
@@ -273,6 +280,8 @@ class TransactionSchedules extends Table {
   BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
   BoolColumn get isNotSynced => boolean().withDefault(const Constant(true))();
 
+  IntColumn get addSeq => integer().nullable()();
+
   @override
   Set<Column> get primaryKey => {uuid};
 }
@@ -310,6 +319,8 @@ class Accounts extends Table {
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
   BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
   BoolColumn get isNotSynced => boolean().withDefault(const Constant(true))();
+
+  IntColumn get addSeq => integer().nullable()();
 
   @override
   Set<Column> get primaryKey => {uuid};
@@ -356,7 +367,7 @@ class AppDatabase extends _$AppDatabase {
       : super(executor ?? openConnection(fileName));
 
   @override
-  int get schemaVersion => 21;
+  int get schemaVersion => 22;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -381,6 +392,7 @@ class AppDatabase extends _$AppDatabase {
           }
           await insertDefaultData();
           await _backfillLinkedGroupId();
+          await _backfillSequenceNumbers();
         },
         onCreate: (Migrator m) async {
           await m.createAll();
@@ -392,6 +404,11 @@ class AppDatabase extends _$AppDatabase {
           if (from <= 10) {
             await m.addColumn(
                 transactionSchedules, transactionSchedules.dueDateOffset);
+          }
+          // Migration from version 11 to 12: Add isScheduled to Receivables and Payables
+          if (from <= 11) {
+            await m.addColumn(receivables, receivables.isScheduled);
+            await m.addColumn(payables, payables.isScheduled);
           }
           // Migration from version 11 to 12: Add isScheduled to Receivables and Payables
           if (from <= 11) {
@@ -557,6 +574,21 @@ class AppDatabase extends _$AppDatabase {
               }
             }
           }
+
+          // Migration from version 21 to 22: sequence numbers for premium limits
+          if (from <= 21) {
+            try {
+              await m.addColumn(categories, categories.addSeq as GeneratedColumn<int>);
+              await m.addColumn(categories, categories.budgetSeq as GeneratedColumn<int>);
+              await m.addColumn(accounts, accounts.addSeq as GeneratedColumn<int>);
+              await m.addColumn(transactionSchedules, transactionSchedules.addSeq as GeneratedColumn<int>);
+              await m.addColumn(contacts, contacts.addSeq as GeneratedColumn<int>);
+            } catch (e) {
+              if (kDebugMode) {
+                print('Migration: sequence columns might already exist: $e');
+              }
+            }
+          }
         },
       );
 
@@ -593,6 +625,96 @@ class AppDatabase extends _$AppDatabase {
     } catch (e) {
       if (kDebugMode) {
         print('Database: _backfillLinkedGroupId failed: $e');
+      }
+    }
+  }
+
+  Future<void> _backfillSequenceNumbers() async {
+    try {
+      // Check if backfill is already done
+      final backfillDone = await (select(userPreferences)
+            ..where((u) => u.key.equals('sequence_backfill_done')))
+          .getSingleOrNull();
+      if (backfillDone?.value == 'true') return;
+
+      await transaction(() async {
+        // 1. Categories addSeq: Default categories = 0, Custom categories = 1, 2, 3...
+        // First, set all default categories to 0
+        await (update(categories)..where((c) => c.isDefault.equals(true)))
+            .write(const CategoriesCompanion(addSeq: Value(0)));
+
+        // Then, assign sequence to non-deleted custom categories
+        final cats = await (select(categories)
+              ..where((c) => c.isDefault.equals(false) & c.isDeleted.equals(false))
+              ..orderBy([(c) => OrderingTerm.asc(c.createdAt)]))
+            .get();
+        for (int i = 0; i < cats.length; i++) {
+          await (update(categories)..where((c) => c.uuid.equals(cats[i].uuid)))
+              .write(CategoriesCompanion(addSeq: Value(i + 1)));
+        }
+
+        // 2. Categories budgetSeq: 1, 2, 3... (only for non-deleted with budget)
+        final budgetCats = await (select(categories)
+              ..where((c) =>
+                  c.isDeleted.equals(false) &
+                  (c.monthlyBudget.isNotNull() |
+                      c.quarterlyBudget.isNotNull() |
+                      c.yearlyBudget.isNotNull()))
+              ..orderBy([(c) => OrderingTerm.asc(c.createdAt)]))
+            .get();
+        // First, reset all budgetSeq to null to avoid conflicts during reassignment
+        await (update(categories)).write(const CategoriesCompanion(budgetSeq: Value(null)));
+        
+        for (int i = 0; i < budgetCats.length; i++) {
+          await (update(categories)
+                ..where((c) => c.uuid.equals(budgetCats[i].uuid)))
+              .write(CategoriesCompanion(budgetSeq: Value(i + 1)));
+        }
+
+        // 3. Accounts addSeq: 1, 2, 3... (only for non-deleted)
+        final accs = await (select(accounts)
+              ..where((a) => a.isDeleted.equals(false))
+              ..orderBy([(a) => OrderingTerm.asc(a.createdAt)]))
+            .get();
+        for (int i = 0; i < accs.length; i++) {
+          await (update(accounts)..where((a) => a.uuid.equals(accs[i].uuid)))
+              .write(AccountsCompanion(addSeq: Value(i + 1)));
+        }
+
+        // 4. Schedules addSeq: 1, 2, 3... (only for non-deleted)
+        final scheds = await (select(transactionSchedules)
+              ..where((s) => s.isDeleted.equals(false))
+              ..orderBy([(s) => OrderingTerm.asc(s.createdAt)]))
+            .get();
+        for (int i = 0; i < scheds.length; i++) {
+          await (update(transactionSchedules)
+                ..where((s) => s.uuid.equals(scheds[i].uuid)))
+              .write(TransactionSchedulesCompanion(addSeq: Value(i + 1)));
+        }
+
+        // 5. Contacts addSeq: 1, 2, 3... (only for non-deleted)
+        final conts = await (select(contacts)
+              ..where((c) => c.isDeleted.equals(false))
+              ..orderBy([(c) => OrderingTerm.asc(c.createdAt)]))
+            .get();
+        for (int i = 0; i < conts.length; i++) {
+          await (update(contacts)..where((c) => c.uuid.equals(conts[i].uuid)))
+              .write(ContactsCompanion(addSeq: Value(i + 1)));
+        }
+
+        // Mark backfill as done (though we are ignoring the check for now)
+        await into(userPreferences).insert(
+          UserPreferencesCompanion.insert(
+            key: 'sequence_backfill_done',
+            value: 'true',
+            updatedAt: Value(DateTime.now()),
+          ),
+          mode: InsertMode.insertOrReplace,
+        );
+      });
+    } catch (e) {
+      if (kDebugMode) {
+        print('Database: _backfillSequenceNumbers failed: $e');
       }
     }
   }

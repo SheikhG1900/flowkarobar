@@ -8,6 +8,33 @@ class ContactsRepository {
 
   ContactsRepository(this._database);
 
+  Future<int> getNextAvailableSeq<T extends HasResultSet>(
+      ResultSetImplementation<T, dynamic> table, GeneratedColumn<int> seqColumn) async {
+    // Get isDeleted column from the table
+    final isDeletedColumn = table.columnsByName['is_deleted'] as GeneratedColumn<bool>?;
+
+    final query = _database.selectOnly(table)
+      ..addColumns([seqColumn])
+      ..where(seqColumn.isNotNull());
+
+    // Filter out deleted records if the column exists
+    if (isDeletedColumn != null) {
+      query.where(isDeletedColumn.equals(false));
+    }
+
+    query.orderBy([OrderingTerm.asc(seqColumn)]);
+
+    final rows = await query.get();
+    final usedSeqs = rows.map((r) => r.read(seqColumn)!).toSet();
+
+    // Start from 1 for new records (0 is reserved for defaults)
+    int nextSeq = 1;
+    while (usedSeqs.contains(nextSeq)) {
+      nextSeq++;
+    }
+    return nextSeq;
+  }
+
   /// Watch all contacts
   Stream<List<Contact>> watchAllContacts() {
     return (_database.select(_database.contacts)
@@ -69,10 +96,12 @@ class ContactsRepository {
   /// Create contact
   Future<String> createContact(ContactsCompanion contact) async {
     final uuid = contact.uuid.present ? contact.uuid.value : const Uuid().v4();
+    final nextSeq = await getNextAvailableSeq(_database.contacts, _database.contacts.addSeq);
     await _database.into(_database.contacts).insert(
           contact.copyWith(
             uuid: Value(uuid),
             isNotSynced: const Value(true),
+            addSeq: Value(nextSeq),
           ),
         );
     return uuid;

@@ -10,6 +10,33 @@ class CategoriesRepository {
 
   CategoriesRepository(this._database);
 
+  Future<int> getNextAvailableSeq<T extends HasResultSet>(
+      ResultSetImplementation<T, dynamic> table, GeneratedColumn<int> seqColumn) async {
+    // Get isDeleted column from the table
+    final isDeletedColumn = table.columnsByName['is_deleted'] as GeneratedColumn<bool>?;
+
+    final query = _database.selectOnly(table)
+      ..addColumns([seqColumn])
+      ..where(seqColumn.isNotNull());
+
+    // Filter out deleted records if the column exists
+    if (isDeletedColumn != null) {
+      query.where(isDeletedColumn.equals(false));
+    }
+
+    query.orderBy([OrderingTerm.asc(seqColumn)]);
+
+    final rows = await query.get();
+    final usedSeqs = rows.map((r) => r.read(seqColumn)!).toSet();
+
+    // Start from 1 for new records (0 is reserved for defaults)
+    int nextSeq = 1;
+    while (usedSeqs.contains(nextSeq)) {
+      nextSeq++;
+    }
+    return nextSeq;
+  }
+
   /// Watch all categories (excluding soft-deleted)
   Stream<List<Category>> watchAllCategories() {
     return (_database.select(_database.categories)
@@ -76,10 +103,14 @@ class CategoriesRepository {
   /// Create category
   Future<String> createCategory(CategoriesCompanion category) async {
     final uuid = category.uuid.present ? category.uuid.value : Uuid().v4();
+    final nextSeq = await getNextAvailableSeq(
+        _database.categories, _database.categories.addSeq);
+
     await _database.into(_database.categories).insert(
           category.copyWith(
             uuid: Value(uuid),
             isNotSynced: const Value(true),
+            addSeq: Value(nextSeq),
           ),
         );
     return uuid;
@@ -409,11 +440,31 @@ class CategoriesRepository {
     Value<double?> quarterlyBudget = const Value.absent(),
     Value<double?> yearlyBudget = const Value.absent(),
   }) async {
+    Value<int?> budgetSeq = const Value.absent();
+
+    // If we are setting a budget for the first time
+    final isSettingNewBudget = (monthlyBudget.present &&
+            monthlyBudget.value != null &&
+            category.monthlyBudget == null) ||
+        (quarterlyBudget.present &&
+            quarterlyBudget.value != null &&
+            category.quarterlyBudget == null) ||
+        (yearlyBudget.present &&
+            yearlyBudget.value != null &&
+            category.yearlyBudget == null);
+
+    if (isSettingNewBudget && category.budgetSeq == null) {
+      final nextBudgetSeq = await getNextAvailableSeq(
+          _database.categories, _database.categories.budgetSeq);
+      budgetSeq = Value(nextBudgetSeq);
+    }
+
     return updateCategory(
       category.copyWith(
         monthlyBudget: monthlyBudget,
         quarterlyBudget: quarterlyBudget,
         yearlyBudget: yearlyBudget,
+        budgetSeq: budgetSeq,
         updatedAt: DateTime.now(),
       ),
     );

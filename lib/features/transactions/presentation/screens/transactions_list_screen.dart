@@ -28,6 +28,7 @@ import 'package:flowpaisa/features/transactions/presentation/widgets/transaction
 import 'package:flowpaisa/features/transactions/presentation/widgets/schedule_list_item.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/schedule_service_provider.dart';
 import 'package:flowpaisa/features/transactions/presentation/screens/bulk_import_screen.dart';
+import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/features/premium/domain/premium_provider.dart';
 import 'package:flowpaisa/features/premium/presentation/screens/premium_screen.dart';
 import 'package:flowpaisa/features/transactions/presentation/screens/edit_schedule_screen.dart';
@@ -37,6 +38,7 @@ import 'package:flowpaisa/shared/widgets/collapsible_list_summary.dart';
 import 'package:flowpaisa/features/analytics/presentation/providers/analytics_provider.dart';
 import 'package:flowpaisa/shared/widgets/app_floating_action_button.dart';
 
+import 'package:flowpaisa/features/transactions/presentation/widgets/schedule_details_dialog.dart';
 import 'package:flowpaisa/features/tour/domain/tour_service.dart';
 import 'package:flowpaisa/features/tour/presentation/providers/tour_provider.dart';
 import 'package:showcaseview/showcaseview.dart';
@@ -975,6 +977,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
 
   Widget _buildSchedulesTab(List<ScheduleWithDetails> schedules) {
     final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
     if (schedules.isEmpty) {
       return Center(
         child: Text(l10n.noSchedulesFound),
@@ -987,36 +990,89 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
       itemBuilder: (context, index) {
         final item = schedules[index];
         final schedule = item.schedule;
+        final isPremium = ref.watch(premiumProvider).isPremium;
+        final isLocked = !isPremium &&
+            (schedule.addSeq ?? 0) > PremiumGate.scheduleTotalLimit;
+
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 6),
           child: SwipeableListItem(
-            enableEdit: true,
-            enableDelete: true,
+            enableEdit: !isLocked,
+            enableDelete: !isLocked,
             borderRadius: 20,
-            onEdit: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => EditScheduleScreen(
-                    schedule: schedule,
+            onEdit: isLocked
+                ? null
+                : () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => EditScheduleScreen(
+                          schedule: schedule,
+                        ),
+                      ),
+                    ).then((updated) {
+                      if (updated == true) {
+                        ref.invalidate(allSchedulesWithDetailsProvider);
+                      }
+                    });
+                  },
+            onDelete: isLocked
+                ? null
+                : () async {
+                    final service = ref.read(scheduleServiceProvider);
+                    await service.deleteSchedule(schedule.uuid);
+                    if (context.mounted) {
+                      ToastUtils.showSuccessToast(
+                          context, ref, l10n.scheduleDeleted);
+                    }
+                    ref.invalidate(allSchedulesWithDetailsProvider);
+                  },
+            child: InkWell(
+              onTap: isLocked
+                  ? () => PremiumGate.showPremiumDialog(context)
+                  : () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ScheduleDetailsDialog(
+                              scheduleUuid: schedule.uuid),
+                        ),
+                      );
+                    },
+              borderRadius: BorderRadius.circular(20),
+              child: Stack(
+                children: [
+                  Opacity(
+                    opacity: isLocked ? 0.5 : 1.0,
+                    child: ScheduleListItem(
+                      item: item,
+                    ),
                   ),
-                ),
-              ).then((updated) {
-                if (updated == true) {
-                  ref.invalidate(allSchedulesWithDetailsProvider);
-                }
-              });
-            },
-            onDelete: () async {
-              final service = ref.read(scheduleServiceProvider);
-              await service.deleteSchedule(schedule.uuid);
-              if (context.mounted) {
-                ToastUtils.showSuccessToast(context, ref, l10n.scheduleDeleted);
-              }
-              ref.invalidate(allSchedulesWithDetailsProvider);
-            },
-            child: ScheduleListItem(
-              item: item,
+                  if (isLocked)
+                    Positioned(
+                      top: 6,
+                      right: 6,
+                      child: Container(
+                        padding: const EdgeInsets.all(2),
+                        decoration: BoxDecoration(
+                          color: theme.scaffoldBackgroundColor,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.08),
+                              blurRadius: 2,
+                            ),
+                          ],
+                        ),
+                        child: Icon(
+                          Icons.lock,
+                          size: 14,
+                          color: theme.colorScheme.primary,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
             ),
           ),
         );

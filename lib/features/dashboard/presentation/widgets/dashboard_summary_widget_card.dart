@@ -386,9 +386,17 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
             double totalBudgetCap = 0;
             for (final c in categories) {
               categorizedNet += nets[c.uuid] ?? 0;
-              final b = budgetAmountForPeriod(c, range);
-              if (b != null && b > 0) {
-                totalBudgetCap += b;
+              final isCatLocked = !PremiumGate.isPremium(ref) &&
+                  !c.isDefault &&
+                  (c.addSeq ?? 0) > PremiumGate.categoryTotalLimit;
+              final isBudgetLocked = !PremiumGate.isPremium(ref) &&
+                  (c.budgetSeq ?? 0) > PremiumGate.categoryBudgetTotalLimit;
+
+              if (!isCatLocked && !isBudgetLocked) {
+                final b = budgetAmountForPeriod(c, range);
+                if (b != null && b > 0) {
+                  totalBudgetCap += b;
+                }
               }
             }
 

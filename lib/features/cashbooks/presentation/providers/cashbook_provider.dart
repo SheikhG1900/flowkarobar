@@ -75,6 +75,14 @@ class CashbookNotifier extends Notifier<List<Cashbook>> {
     required String iconCodePoint,
   }) async {
     final id = const Uuid().v4();
+
+    // Get next sequence
+    int nextSeq = 1;
+    final usedSeqs = state.map((c) => c.addSeq).whereType<int>().toSet();
+    while (usedSeqs.contains(nextSeq)) {
+      nextSeq++;
+    }
+
     final newCashbook = Cashbook(
       id: id,
       name: name,
@@ -82,6 +90,7 @@ class CashbookNotifier extends Notifier<List<Cashbook>> {
       iconCodePoint: iconCodePoint,
       dbPath: 'cashbook_$id',
       createdAt: DateTime.now(),
+      addSeq: nextSeq,
     );
 
     final newList = [...state, newCashbook];

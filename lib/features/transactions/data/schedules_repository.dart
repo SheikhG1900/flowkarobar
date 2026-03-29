@@ -8,6 +8,33 @@ class SchedulesRepository {
 
   SchedulesRepository(this._database);
 
+  Future<int> getNextAvailableSeq<T extends HasResultSet>(
+      ResultSetImplementation<T, dynamic> table, GeneratedColumn<int> seqColumn) async {
+    // Get isDeleted column from the table
+    final isDeletedColumn = table.columnsByName['is_deleted'] as GeneratedColumn<bool>?;
+
+    final query = _database.selectOnly(table)
+      ..addColumns([seqColumn])
+      ..where(seqColumn.isNotNull());
+
+    // Filter out deleted records if the column exists
+    if (isDeletedColumn != null) {
+      query.where(isDeletedColumn.equals(false));
+    }
+
+    query.orderBy([OrderingTerm.asc(seqColumn)]);
+
+    final rows = await query.get();
+    final usedSeqs = rows.map((r) => r.read(seqColumn)!).toSet();
+
+    // Start from 1 for new records (0 is reserved for defaults)
+    int nextSeq = 1;
+    while (usedSeqs.contains(nextSeq)) {
+      nextSeq++;
+    }
+    return nextSeq;
+  }
+
   // Get all schedules
   Stream<List<TransactionSchedule>> watchAllSchedules() {
     return (_database.select(_database.transactionSchedules)
@@ -120,10 +147,13 @@ class SchedulesRepository {
   Future<String> createSchedule(TransactionSchedulesCompanion schedule) async {
     final uuid =
         schedule.uuid.present ? schedule.uuid.value : const Uuid().v4();
+    final nextSeq = await getNextAvailableSeq(
+        _database.transactionSchedules, _database.transactionSchedules.addSeq);
     await _database.into(_database.transactionSchedules).insert(
           schedule.copyWith(
             uuid: Value(uuid),
             isNotSynced: const Value(true),
+            addSeq: Value(nextSeq),
           ),
         );
     return uuid;

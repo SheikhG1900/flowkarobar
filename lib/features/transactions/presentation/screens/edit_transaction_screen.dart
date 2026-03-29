@@ -1288,15 +1288,13 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                 backgroundColor:
                     isExpense ? AppColors.expenseColor : AppColors.incomeColor,
                 foregroundColor: Colors.white,
-                onPressed: (_isLoading ||
-                        (scheduleLimitsAsync.asData?.value != null &&
-                            !scheduleLimitsAsync.asData!.value.canAdd))
+                onPressed: _isLoading
                     ? null
-                    : _scheduleTransaction,
-                child: (scheduleLimitsAsync.asData?.value != null &&
-                        !scheduleLimitsAsync.asData!.value.canAdd)
-                    ? const Icon(Icons.lock)
-                    : const Icon(Icons.schedule),
+                    : (scheduleLimitsAsync.asData?.value != null &&
+                            !scheduleLimitsAsync.asData!.value.canAdd)
+                        ? () => PremiumGate.showPremiumDialog(context)
+                        : _scheduleTransaction,
+                child: const Icon(Icons.schedule),
               ),
               const SizedBox(height: 8),
             ],

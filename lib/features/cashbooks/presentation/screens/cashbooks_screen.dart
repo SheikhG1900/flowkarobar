@@ -13,6 +13,8 @@ import 'package:flowpaisa/core/utils/date_formatter.dart';
 import 'package:flowpaisa/features/backup/data/local_backup_service.dart';
 import 'package:flowpaisa/features/backup/presentation/providers/backup_provider.dart';
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
+import 'package:flowpaisa/features/premium/domain/premium_provider.dart';
+import 'package:flowpaisa/features/premium/presentation/screens/premium_screen.dart';
 import 'package:flowpaisa/shared/widgets/premium_badge.dart';
 import 'package:flowpaisa/shared/widgets/app_loading_indicator.dart';
 import 'package:file_selector/file_selector.dart' as selector;
@@ -98,6 +100,10 @@ class CashbooksScreen extends ConsumerWidget {
                 final isActive = cashbook.id == activeId;
                 final color = cashbook.color;
                 final iconData = cashbook.icon;
+                final isPremium = ref.watch(premiumProvider).isPremium;
+                final isLocked = !isPremium &&
+                    cashbook.id != 'default' &&
+                    (cashbook.addSeq ?? 0) > PremiumGate.cashbookTotalLimit;
 
                 return Container(
                   margin: const EdgeInsets.only(bottom: 12),
@@ -119,122 +125,180 @@ class CashbooksScreen extends ConsumerWidget {
                         ),
                     ],
                   ),
-                  child: ListTile(
-                    contentPadding: const EdgeInsets.all(16),
-                    leading: Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: color.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(iconData, color: color, size: 28),
-                    ),
-                    title: Text(
-                      cashbook.name,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight:
-                            isActive ? FontWeight.bold : FontWeight.normal,
-                      ),
-                    ),
-                    subtitle: Text(
-                      l10n.createdLabel(
-                          AppDateFormatter.formatDate(cashbook.createdAt)),
-                      style: theme.textTheme.bodySmall,
-                    ),
-                    trailing: PopupMenuButton<String>(
-                      onSelected: (value) =>
-                          _handleAction(context, ref, value, cashbook),
-                      itemBuilder: (context) => [
-                        PopupMenuItem(
-                          value: 'edit',
-                          child: Row(
-                            children: [
-                              const Icon(Icons.edit_outlined, size: 20),
-                              const SizedBox(width: 8),
-                              Text(l10n.edit),
-                            ],
+                  child: Stack(
+                    children: [
+                      Opacity(
+                        opacity: isLocked ? 0.5 : 1.0,
+                        child: ListTile(
+                          contentPadding: const EdgeInsets.all(16),
+                          leading: Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: color.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(iconData, color: color, size: 28),
                           ),
-                        ),
-                        PopupMenuItem(
-                          value: 'backup',
-                          child: Row(
-                            children: [
-                              const Icon(Icons.backup_outlined, size: 20),
-                              const SizedBox(width: 8),
-                              Text(l10n.takeBackup),
-                              const SizedBox(width: 8),
-                              const PremiumBadge(isSmall: true),
-                            ],
-                          ),
-                        ),
-                        PopupMenuItem(
-                          value: 'restore_local',
-                          child: Row(
-                            children: [
-                              const Icon(Icons.restore, size: 20),
-                              const SizedBox(width: 8),
-                              Text(l10n.restore),
-                              const SizedBox(width: 8),
-                              const PremiumBadge(isSmall: true),
-                            ],
-                          ),
-                        ),
-                        PopupMenuItem(
-                          value: 'copy_preferences',
-                          child: Row(
-                            children: [
-                              const Icon(Icons.copy_outlined, size: 20),
-                              const SizedBox(width: 8),
-                              Text(l10n.copyPreferences),
-                              const SizedBox(width: 8),
-                              const PremiumBadge(isSmall: true),
-                            ],
-                          ),
-                        ),
-                        PopupMenuItem(
-                          value: 'clear',
-                          child: Row(
-                            children: [
-                              const Icon(Icons.cleaning_services_outlined,
-                                  size: 20, color: Colors.orange),
-                              const SizedBox(width: 8),
-                              Text(l10n.clearData,
-                                  style: const TextStyle(color: Colors.orange)),
-                            ],
-                          ),
-                        ),
-                        PopupMenuItem(
-                          value: 'clear_cloud',
-                          child: Row(
-                            children: [
-                              const Icon(Icons.cloud_off_outlined,
-                                  size: 20, color: Colors.orange),
-                              const SizedBox(width: 8),
-                              Text(l10n.clearCloud,
-                                  style: const TextStyle(color: Colors.orange)),
-                              const SizedBox(width: 8),
-                              const PremiumBadge(isSmall: true),
-                            ],
-                          ),
-                        ),
-                        if (cashbook.id != 'default')
-                          PopupMenuItem(
-                            value: 'delete',
-                            child: Row(
-                              children: [
-                                const Icon(Icons.delete_outline,
-                                    size: 20, color: Colors.red),
-                                const SizedBox(width: 8),
-                                Text(l10n.delete,
-                                    style: const TextStyle(color: Colors.red)),
-                              ],
+                          title: Text(
+                            cashbook.name,
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: isActive
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
                             ),
                           ),
-                      ],
-                    ),
-                    onTap: isActive
-                        ? null
-                        : () => _switchCashbook(context, ref, cashbook),
+                          subtitle: Text(
+                            l10n.createdLabel(AppDateFormatter.formatDate(
+                                cashbook.createdAt)),
+                            style: theme.textTheme.bodySmall,
+                          ),
+                          trailing: isLocked
+                              ? null
+                              : PopupMenuButton<String>(
+                                  onSelected: (value) => _handleAction(
+                                      context, ref, value, cashbook),
+                                  itemBuilder: (context) => [
+                                    PopupMenuItem(
+                                      value: 'edit',
+                                      child: Row(
+                                        children: [
+                                          const Icon(Icons.edit_outlined,
+                                              size: 20),
+                                          const SizedBox(width: 8),
+                                          Text(l10n.edit),
+                                        ],
+                                      ),
+                                    ),
+                                    PopupMenuItem(
+                                      value: 'backup',
+                                      child: Row(
+                                        children: [
+                                          const Icon(Icons.backup_outlined,
+                                              size: 20),
+                                          const SizedBox(width: 8),
+                                          Text(l10n.takeBackup),
+                                          const SizedBox(width: 8),
+                                          const PremiumBadge(isSmall: true),
+                                        ],
+                                      ),
+                                    ),
+                                    PopupMenuItem(
+                                      value: 'restore_local',
+                                      child: Row(
+                                        children: [
+                                          const Icon(Icons.restore, size: 20),
+                                          const SizedBox(width: 8),
+                                          Text(l10n.restore),
+                                          const SizedBox(width: 8),
+                                          const PremiumBadge(isSmall: true),
+                                        ],
+                                      ),
+                                    ),
+                                    PopupMenuItem(
+                                      value: 'copy_preferences',
+                                      child: Row(
+                                        children: [
+                                          const Icon(Icons.copy_outlined,
+                                              size: 20),
+                                          const SizedBox(width: 8),
+                                          Text(l10n.copyPreferences),
+                                          const SizedBox(width: 8),
+                                          const PremiumBadge(isSmall: true),
+                                        ],
+                                      ),
+                                    ),
+                                    PopupMenuItem(
+                                      value: 'clear',
+                                      child: Row(
+                                        children: [
+                                          const Icon(
+                                              Icons.cleaning_services_outlined,
+                                              size: 20,
+                                              color: Colors.orange),
+                                          const SizedBox(width: 8),
+                                          Text(l10n.clearData,
+                                              style: const TextStyle(
+                                                  color: Colors.orange)),
+                                        ],
+                                      ),
+                                    ),
+                                    PopupMenuItem(
+                                      value: 'clear_cloud',
+                                      child: Row(
+                                        children: [
+                                          const Icon(Icons.cloud_off_outlined,
+                                              size: 20, color: Colors.orange),
+                                          const SizedBox(width: 8),
+                                          Text(l10n.clearCloud,
+                                              style: const TextStyle(
+                                                  color: Colors.orange)),
+                                          const SizedBox(width: 8),
+                                          const PremiumBadge(isSmall: true),
+                                        ],
+                                      ),
+                                    ),
+                                    if (cashbook.id != 'default')
+                                      PopupMenuItem(
+                                        value: 'delete',
+                                        child: Row(
+                                          children: [
+                                            const Icon(Icons.delete_outline,
+                                                size: 20, color: Colors.red),
+                                            const SizedBox(width: 8),
+                                            Text(l10n.delete,
+                                                style: const TextStyle(
+                                                    color: Colors.red)),
+                                          ],
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                          onTap: isLocked
+                              ? () => PremiumGate.showPremiumDialog(context)
+                              : (isActive
+                                  ? null
+                                  : () =>
+                                      _switchCashbook(context, ref, cashbook)),
+                        ),
+                      ),
+                      if (isLocked)
+                        Positioned.fill(
+                          child: Center(
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.surfaceContainerHighest
+                                    .withValues(alpha: 0.9),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: theme.colorScheme.outlineVariant,
+                                  width: 1,
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.lock_outline,
+                                    size: 14,
+                                    color: theme.colorScheme.primary,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    'PREMIUM',
+                                    style: theme.textTheme.labelSmall?.copyWith(
+                                      color: theme.colorScheme.primary,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 1.2,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                 );
               },

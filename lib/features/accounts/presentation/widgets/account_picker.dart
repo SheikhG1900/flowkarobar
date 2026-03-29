@@ -8,6 +8,7 @@ import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/accounts/domain/models/account_models.dart';
 import 'package:flowpaisa/features/accounts/presentation/providers/accounts_provider.dart';
 import 'package:flowpaisa/features/accounts/presentation/screens/add_edit_account_screen.dart';
+import 'package:flowpaisa/features/premium/domain/premium_provider.dart';
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
@@ -432,6 +433,7 @@ class AccountPickerSheet extends ConsumerWidget {
                         .toList();
                   }
 
+                  final isPremium = ref.watch(premiumProvider).isPremium;
                   return ListView(
                     controller: scrollController,
                     children: [
@@ -478,12 +480,20 @@ class AccountPickerSheet extends ConsumerWidget {
                           ),
                         )
                       else
-                        ...filtered.map((awb) => _AccountWithBalanceTile(
-                              awb: awb,
-                              isSelected:
-                                  selectedAccount?.uuid == awb.account.uuid,
-                              onTap: () => pick(awb.account),
-                            )),
+                        ...filtered.map((awb) {
+                          final isLocked = !isPremium &&
+                              (awb.account.addSeq ?? 0) >
+                                  PremiumGate.accountTotalLimit;
+                          return _AccountWithBalanceTile(
+                            awb: awb,
+                            isSelected:
+                                selectedAccount?.uuid == awb.account.uuid,
+                            isLocked: isLocked,
+                            onTap: isLocked
+                                ? () => PremiumGate.showPremiumDialog(context)
+                                : () => pick(awb.account),
+                          );
+                        }),
                       if (infoMessage != null)
                         Padding(
                           padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
@@ -573,11 +583,13 @@ class _AccountSheetTile extends StatelessWidget {
 class _AccountWithBalanceTile extends ConsumerWidget {
   final AccountWithBalance awb;
   final bool isSelected;
+  final bool isLocked;
   final VoidCallback onTap;
 
   const _AccountWithBalanceTile({
     required this.awb,
     required this.isSelected,
+    this.isLocked = false,
     required this.onTap,
   });
 
@@ -611,47 +623,77 @@ class _AccountWithBalanceTile extends ConsumerWidget {
 
     return Column(
       children: [
-        ListTile(
-          leading: Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: accountColor.withValues(alpha: 0.1),
-              shape: BoxShape.circle,
-            ),
-            alignment: Alignment.center,
-            child: Icon(iconData, color: accountColor, size: 20),
-          ),
-          title: Text(
-            acc.name,
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          subtitle: Text(
-            _typeLabel(context, type),
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                balanceText,
-                style: theme.textTheme.titleSmall?.copyWith(
-                  color: balanceColor,
-                  fontWeight: FontWeight.w600,
+        Opacity(
+          opacity: isLocked ? 0.5 : 1.0,
+          child: ListTile(
+            leading: Stack(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: accountColor.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  alignment: Alignment.center,
+                  child: Icon(iconData, color: accountColor, size: 20),
                 ),
-              ),
-              if (isSelected) ...[
-                const SizedBox(width: 8),
-                Icon(Icons.check_circle,
-                    color: theme.colorScheme.primary, size: 22),
+                if (isLocked)
+                  Positioned(
+                    right: 0,
+                    bottom: 0,
+                    child: Container(
+                      padding: const EdgeInsets.all(2),
+                      decoration: BoxDecoration(
+                        color: theme.scaffoldBackgroundColor,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.08),
+                            blurRadius: 2,
+                          ),
+                        ],
+                      ),
+                      child: Icon(
+                        Icons.lock,
+                        size: 10,
+                        color: theme.colorScheme.primary,
+                      ),
+                    ),
+                  ),
               ],
-            ],
+            ),
+            title: Text(
+              acc.name,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            subtitle: Text(
+              _typeLabel(context, type),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  balanceText,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    color: balanceColor,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                if (isSelected) ...[
+                  const SizedBox(width: 8),
+                  Icon(Icons.check_circle,
+                      color: theme.colorScheme.primary, size: 22),
+                ],
+              ],
+            ),
+            onTap: onTap,
           ),
-          onTap: onTap,
         ),
         const Divider(height: 1, indent: 20),
       ],

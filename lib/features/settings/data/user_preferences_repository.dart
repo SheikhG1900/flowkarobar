@@ -28,6 +28,7 @@ class UserPreferencesRepository {
   static const String keyShowBottomBarQuickButton =
       'show_bottom_bar_quick_button';
   static const String keyShowDashboardWidgetArea = 'show_dashboard_widget_area';
+  static const String keySequenceBackfillDone = 'sequence_backfill_done';
 
   // Get a preference value by key (excludes soft-deleted rows so they sync correctly)
   Future<String?> getPreference(String key) async {
