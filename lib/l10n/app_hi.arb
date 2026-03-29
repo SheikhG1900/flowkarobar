@@ -889,7 +889,6 @@
   "addToDashboard": "डैशबोर्ड में जोड़ें",
   "addedToDashboard": "डैशबोर्ड में जोड़ दिया गया",
   "removeFromDashboard": "डैशबोर्ड से हटाएं",
-  "onDashboard": "विजेट",
   "pinToDashboard": "डैशबोर्ड पर पिन करें",
   "unpinFromDashboard": "डैशबोर्ड से अनपिन करें",
   "pinnedToDashboard": "डैशबोर्ड पर पिन किया गया",
@@ -1561,5 +1560,8 @@
   "featureUnlimitedAccountsTitle": "असीमित खाते",
   "featureUnlimitedAccountsDesc": "एक ही स्थान पर अपने सभी बैलेंस को ट्रैक करने के लिए कई बैंक खाते, नकद वॉलेट और क्रेडिट कार्ड जोड़ें।",
   "featureCategoryBudgetsTitle": "श्रेणी बजट",
-  "featureCategoryBudgetsDesc": "किसी भी श्रेणी के लिए मासिक, त्रैमासिक या वार्षिक खर्च सीमा और बचत लक्ष्य निर्धारित करें।"
+  "featureCategoryBudgetsDesc": "किसी भी श्रेणी के लिए मासिक, त्रैमासिक या वार्षिक खर्च सीमा और बचत लक्ष्य निर्धारित करें।",
+  "onDashboard": "डैशबोर्ड पर",
+  "widgets": "विजेट",
+  "others": "अन्य"
 }

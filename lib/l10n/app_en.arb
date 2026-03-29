@@ -1369,7 +1369,6 @@
   "addToDashboard": "Add to dashboard",
   "addedToDashboard": "Added to dashboard",
   "removeFromDashboard": "Remove from dashboard",
-  "onDashboard": "Widgets",
   "pinToDashboard": "Pin to dashboard",
   "unpinFromDashboard": "Unpin from dashboard",
   "pinnedToDashboard": "Pinned to dashboard",
@@ -2112,5 +2111,8 @@
   "featureUnlimitedAccountsTitle": "Unlimited Accounts",
   "featureUnlimitedAccountsDesc": "Add multiple bank accounts, cash wallets, and credit cards to track all your balances in one place.",
   "featureCategoryBudgetsTitle": "Category Budgets",
-  "featureCategoryBudgetsDesc": "Set monthly, quarterly, or yearly spending limits and savings targets for any category."
+  "featureCategoryBudgetsDesc": "Set monthly, quarterly, or yearly spending limits and savings targets for any category.",
+  "onDashboard": "On Dashboard",
+  "widgets": "Widgets",
+  "others": "Others"
 }

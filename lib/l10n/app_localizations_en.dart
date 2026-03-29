@@ -2617,9 +2617,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get removeFromDashboard => 'Remove from dashboard';
 
   @override
-  String get onDashboard => 'Widgets';
-
-  @override
   String get pinToDashboard => 'Pin to dashboard';
 
   @override
@@ -4058,4 +4055,13 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get featureCategoryBudgetsDesc =>
       'Set monthly, quarterly, or yearly spending limits and savings targets for any category.';
+
+  @override
+  String get onDashboard => 'On Dashboard';
+
+  @override
+  String get widgets => 'Widgets';
+
+  @override
+  String get others => 'Others';
 }

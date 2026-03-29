@@ -2632,9 +2632,6 @@ class AppLocalizationsUr extends AppLocalizations {
   String get removeFromDashboard => 'ڈیش بورڈ سے ہٹائیں';
 
   @override
-  String get onDashboard => 'وجیٹس';
-
-  @override
   String get pinToDashboard => 'ڈیش بورڈ پر پن کریں';
 
   @override
@@ -4073,4 +4070,13 @@ class AppLocalizationsUr extends AppLocalizations {
   @override
   String get featureCategoryBudgetsDesc =>
       'کسی بھی زمرے کے لیے ماہانہ، سہ ماہی یا سالانہ خرچ کی حد اور بچت کے اہداف مقرر کریں۔';
+
+  @override
+  String get onDashboard => 'ڈیش بورڈ پر';
+
+  @override
+  String get widgets => 'وجیٹس';
+
+  @override
+  String get others => 'دیگر';
 }

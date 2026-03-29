@@ -920,13 +920,14 @@ class _DashboardBodyScrollState extends ConsumerState<_DashboardBodyScroll> {
                     child: EntranceAnimation(
                       index: 3,
                       child: Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 24, 16, 0),
+                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
                         child: Column(
                           children: [
                             const SyncStatusSection(),
                             if (showPrivacyHighlight) ...[
-                              const SizedBox(height: 16),
+                              const SizedBox(height: 2),
                               const _DashboardPrivacyHighlight(),
+                              const SizedBox(height: 12),
                             ],
                           ],
                         ),
@@ -1044,50 +1045,45 @@ class _DashboardTab extends ConsumerWidget {
   ) {
     return RepaintBoundary(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 24, 16, 0),
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  l10n.onDashboard,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      icon: Icon(
-                        reorderMode ? Icons.check : Icons.edit_outlined,
-                        color: reorderMode
-                            ? theme.colorScheme.primary
-                            : theme.iconTheme.color?.withValues(alpha: 0.7),
-                      ),
-                      tooltip: reorderMode
-                          ? l10n.reorderWidgetsOff
-                          : l10n.reorderWidgetsOn,
-                      onPressed: () {
-                        ref
-                            .read(dashboardReorderModeProvider.notifier)
-                            .toggle();
-                      },
+            if (reorderMode) ...[
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    l10n.onDashboard,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
                     ),
-                    if (reorderMode)
+                  ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.check),
+                        color: theme.colorScheme.primary,
+                        tooltip: l10n.reorderWidgetsOff,
+                        onPressed: () {
+                          ref
+                              .read(dashboardReorderModeProvider.notifier)
+                              .set(false);
+                        },
+                      ),
                       IconButton(
                         icon: const Icon(Icons.checklist_rtl_outlined),
                         tooltip: l10n.addToDashboard,
                         onPressed: () =>
                             _showAddWidgetSheet(context, ref, theme, l10n),
                       ),
-                  ],
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
+                    ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+            ],
             if (configs.isEmpty)
               Center(
                 child: Padding(
@@ -1260,13 +1256,18 @@ class _DashboardTab extends ConsumerWidget {
           builder: (context, ref, _) {
             final layoutAsync = ref.watch(dashboardWidgetLayoutProvider);
             final configs = layoutAsync.value ?? defaultDashboardWidgetLayout;
+            final showPrivacy =
+                ref.watch(showDashboardPrivacyHighlightProvider);
+            final showFinancial =
+                ref.watch(showDashboardFinancialSummaryProvider);
+
             return SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                    padding: const EdgeInsets.fromLTRB(16, 20, 16, 12),
                     child: Text(
                       l10n.onDashboard,
                       style: theme.textTheme.titleLarge?.copyWith(
@@ -1274,99 +1275,160 @@ class _DashboardTab extends ConsumerWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  ...summaryKinds.map((e) {
-                    final checked = configs.any((c) => c.kind == e.$1);
-                    final busy = layoutAsync.isLoading;
-                    Future<void> apply(bool v) async {
-                      if (e.$1 == DashboardWidgetKind.quickActions && v) {
-                        // Show quick action selection sheet
-                        final selected = await _showQuickActionSelectionSheet(
-                            context, theme, l10n);
-                        if (selected != null) {
-                          await ref
-                              .read(dashboardWidgetLayoutProvider.notifier)
-                              .addWidget(DashboardWidgetConfig(
-                                kind: DashboardWidgetKind.quickActions,
-                                quickActionCodes: selected,
-                              ));
-                        }
-                        return;
-                      }
-                      await ref
-                          .read(dashboardWidgetLayoutProvider.notifier)
-                          .setSummaryKindOnDashboard(e.$1, v);
-                    }
-
-                    return ListTile(
-                      leading: Icon(e.$3),
-                      title: Text(e.$2),
-                      trailing: Checkbox(
-                        value: checked,
-                        onChanged: busy
-                            ? null
-                            : (v) async {
-                                if (v == null) return;
-                                await apply(v);
-                              },
-                      ),
-                      onTap: busy
-                          ? null
-                          : () async {
-                              await apply(!checked);
-                            },
-                      contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 4),
-                    );
-                  }),
-                  const Divider(),
+                  // Widgets Section
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
                     child: Text(
-                      l10n.tourDashboardHeaderTitle,
-                      style: theme.textTheme.titleMedium?.copyWith(
+                      l10n.widgets,
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        color: theme.colorScheme.primary,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),
-                  Consumer(
-                    builder: (context, ref, _) {
-                      final showPrivacy =
-                          ref.watch(showDashboardPrivacyHighlightProvider);
-                      final showFinancial =
-                          ref.watch(showDashboardFinancialSummaryProvider);
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: summaryKinds.map((e) {
+                        final checked = configs.any((c) => c.kind == e.$1);
+                        final busy = layoutAsync.isLoading;
 
-                      return Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          SwitchListTile(
-                            secondary: const Icon(Icons.security_outlined),
-                            title: Text(l10n.privacyHighlight),
-                            value: showPrivacy,
-                            onChanged: (v) {
-                              ref
-                                  .read(showDashboardPrivacyHighlightProvider
-                                      .notifier)
-                                  .setVisibility(v);
-                            },
+                        return FilterChip(
+                          label: Text(e.$2),
+                          avatar: Icon(
+                            e.$3,
+                            size: 16,
+                            color: checked
+                                ? theme.colorScheme.onPrimaryContainer
+                                : theme.colorScheme.onSurfaceVariant,
                           ),
-                          SwitchListTile(
-                            secondary: const Icon(Icons.summarize_outlined),
-                            title: Text(l10n.financialSummary),
-                            value: showFinancial,
-                            onChanged: (v) {
-                              ref
-                                  .read(showDashboardFinancialSummaryProvider
-                                      .notifier)
-                                  .setVisibility(v);
-                            },
+                          selected: checked,
+                          labelStyle: TextStyle(
+                            color: checked
+                                ? theme.colorScheme.onPrimaryContainer
+                                : theme.colorScheme.onSurface,
+                            fontWeight:
+                                checked ? FontWeight.bold : FontWeight.normal,
                           ),
-                        ],
+                          selectedColor: theme.colorScheme.primaryContainer,
+                          checkmarkColor: theme.colorScheme.onPrimaryContainer,
+                          onSelected: busy
+                              ? null
+                              : (v) async {
+                                  if (e.$1 ==
+                                          DashboardWidgetKind.quickActions &&
+                                      v) {
+                                    final selected =
+                                        await _showQuickActionSelectionSheet(
+                                            context, theme, l10n);
+                                    if (selected != null) {
+                                      await ref
+                                          .read(dashboardWidgetLayoutProvider
+                                              .notifier)
+                                          .addWidget(DashboardWidgetConfig(
+                                            kind: DashboardWidgetKind
+                                                .quickActions,
+                                            quickActionCodes: selected,
+                                          ));
+                                    }
+                                    return;
+                                  }
+                                  await ref
+                                      .read(dashboardWidgetLayoutProvider
+                                          .notifier)
+                                      .setSummaryKindOnDashboard(e.$1, v);
+                                },
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  const Divider(),
+                  // Others Section
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                    child: Text(
+                      l10n.others,
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        color: theme.colorScheme.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  SwitchListTile(
+                    secondary: Icon(
+                      Icons.security_outlined,
+                      color: showPrivacy
+                          ? theme.colorScheme.primary
+                          : theme.colorScheme.onSurfaceVariant,
+                    ),
+                    title: Text(
+                      l10n.privacyHighlight,
+                      style: TextStyle(
+                        color: showPrivacy
+                            ? theme.colorScheme.onSurface
+                            : theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    value: showPrivacy,
+                    onChanged: (v) {
+                      ref
+                          .read(showDashboardPrivacyHighlightProvider.notifier)
+                          .setVisibility(v);
+                    },
+                  ),
+                  SwitchListTile(
+                    secondary: Icon(
+                      Icons.summarize_outlined,
+                      color: showFinancial
+                          ? theme.colorScheme.primary
+                          : theme.colorScheme.onSurfaceVariant,
+                    ),
+                    title: Text(
+                      l10n.financialSummary,
+                      style: TextStyle(
+                        color: showFinancial
+                            ? theme.colorScheme.onSurface
+                            : theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    value: showFinancial,
+                    onChanged: (v) {
+                      ref
+                          .read(showDashboardFinancialSummaryProvider.notifier)
+                          .setVisibility(v);
+                    },
+                  ),
+                  Consumer(
+                    builder: (context, ref, child) {
+                      final showQuickButton =
+                          ref.watch(showBottomBarQuickButtonProvider);
+                      return SwitchListTile(
+                        secondary: Icon(
+                          Icons.add_circle_outline,
+                          color: showQuickButton
+                              ? theme.colorScheme.primary
+                              : theme.colorScheme.onSurfaceVariant,
+                        ),
+                        title: Text(
+                          l10n.showQuickActionButton,
+                          style: TextStyle(
+                            color: showQuickButton
+                                ? theme.colorScheme.onSurface
+                                : theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                        value: showQuickButton,
+                        onChanged: (v) => ref
+                            .read(showBottomBarQuickButtonProvider.notifier)
+                            .setVisibility(v),
                       );
                     },
                   ),
                   SizedBox(
-                    height: 8 + MediaQuery.paddingOf(context).bottom,
+                    height: 16 + MediaQuery.paddingOf(context).bottom,
                   ),
                 ],
               ),
@@ -1399,31 +1461,48 @@ class _DashboardTab extends ConsumerWidget {
       isScrollControlled: true,
       builder: (ctx) => StatefulBuilder(
         builder: (context, setState) => SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                child: Text(
-                  l10n.quickActions,
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(0, 20, 0, 16),
+                  child: Text(
+                    l10n.quickActions,
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
-              ),
-              Flexible(
-                child: ListView(
-                  shrinkWrap: true,
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
                   children: actions.map((e) {
                     final isSelected = selected.contains(e.$1);
-                    return CheckboxListTile(
-                      secondary: Icon(e.$3),
-                      title: Text(e.$2),
-                      value: isSelected,
-                      onChanged: (v) {
+                    return FilterChip(
+                      label: Text(e.$2),
+                      avatar: Icon(
+                        e.$3,
+                        size: 16,
+                        color: isSelected
+                            ? theme.colorScheme.onPrimaryContainer
+                            : theme.colorScheme.onSurfaceVariant,
+                      ),
+                      selected: isSelected,
+                      labelStyle: TextStyle(
+                        color: isSelected
+                            ? theme.colorScheme.onPrimaryContainer
+                            : theme.colorScheme.onSurface,
+                        fontWeight:
+                            isSelected ? FontWeight.bold : FontWeight.normal,
+                      ),
+                      selectedColor: theme.colorScheme.primaryContainer,
+                      checkmarkColor: theme.colorScheme.onPrimaryContainer,
+                      onSelected: (v) {
                         setState(() {
-                          if (v == true) {
+                          if (v) {
                             selected.add(e.$1);
                           } else {
                             selected.remove(e.$1);
@@ -1433,17 +1512,18 @@ class _DashboardTab extends ConsumerWidget {
                     );
                   }).toList(),
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: FilledButton(
-                  onPressed: selected.isEmpty
-                      ? null
-                      : () => Navigator.pop(ctx, selected.toList()),
-                  child: Text(l10n.add),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 24),
+                  child: FilledButton(
+                    onPressed: selected.isEmpty
+                        ? null
+                        : () => Navigator.pop(ctx, selected.toList()),
+                    child: Text(l10n.add),
+                  ),
                 ),
-              ),
-            ],
+                SizedBox(height: MediaQuery.paddingOf(context).bottom),
+              ],
+            ),
           ),
         ),
       ),
@@ -2722,25 +2802,32 @@ class _DashboardHeader extends ConsumerWidget {
             );
           },
         ),
-        IconButton(
-          icon: Icon(
-            Icons.refresh,
-            color: theme.colorScheme.onSurface,
-          ),
-          onPressed: () {
-            try {
-              final showcaseState = ShowCaseWidget.of(context);
-              showcaseState.dismiss();
-            } catch (e) {
-              if (kDebugMode) {
-                debugPrint('No active showcase to dismiss: $e');
-              }
-            }
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              Phoenix.rebirth(context);
-            });
+        Consumer(
+          builder: (context, ref, child) {
+            final showWidgetArea = ref.watch(showDashboardWidgetAreaProvider);
+            return IconButton(
+              icon: Icon(
+                showWidgetArea
+                    ? Icons.dashboard_customize
+                    : Icons.dashboard_customize_outlined,
+                color: showWidgetArea
+                    ? theme.colorScheme.primary
+                    : theme.colorScheme.onSurface,
+              ),
+              onPressed: () {
+                final next = !showWidgetArea;
+                ref
+                    .read(showDashboardWidgetAreaProvider.notifier)
+                    .setVisibility(next);
+                if (next) {
+                  ref.read(dashboardReorderModeProvider.notifier).set(true);
+                } else {
+                  ref.read(dashboardReorderModeProvider.notifier).set(false);
+                }
+              },
+              tooltip: l10n.addToDashboard,
+            );
           },
-          tooltip: 'Restart App',
         ),
         Consumer(
           builder: (context, ref, child) {
@@ -3746,46 +3833,6 @@ class _SettingsTab extends ConsumerWidget {
                 MaterialPageRoute(
                   builder: (context) => const AboutScreen(),
                 ),
-              );
-            },
-          ),
-          const Divider(),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Text(
-              l10n.appearance,
-              style: theme.textTheme.titleSmall?.copyWith(
-                color: theme.colorScheme.primary,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-          Consumer(
-            builder: (context, ref, child) {
-              final showQuickButton =
-                  ref.watch(showBottomBarQuickButtonProvider);
-              return SwitchListTile(
-                secondary: const Icon(Icons.add_circle_outline),
-                title: Text(l10n.showQuickActionButton),
-                subtitle: Text(l10n.showQuickActionButtonDesc),
-                value: showQuickButton,
-                onChanged: (v) => ref
-                    .read(showBottomBarQuickButtonProvider.notifier)
-                    .setVisibility(v),
-              );
-            },
-          ),
-          Consumer(
-            builder: (context, ref, child) {
-              final showWidgetArea = ref.watch(showDashboardWidgetAreaProvider);
-              return SwitchListTile(
-                secondary: const Icon(Icons.dashboard_customize_outlined),
-                title: Text(l10n.showDashboardWidgetArea),
-                subtitle: Text(l10n.showDashboardWidgetAreaDesc),
-                value: showWidgetArea,
-                onChanged: (v) => ref
-                    .read(showDashboardWidgetAreaProvider.notifier)
-                    .setVisibility(v),
               );
             },
           ),

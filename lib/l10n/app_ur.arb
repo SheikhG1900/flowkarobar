@@ -889,7 +889,6 @@
   "addToDashboard": "ڈیش بورڈ میں شامل کریں",
   "addedToDashboard": "ڈیش بورڈ میں شامل کر دیا گیا",
   "removeFromDashboard": "ڈیش بورڈ سے ہٹائیں",
-  "onDashboard": "وجیٹس",
   "pinToDashboard": "ڈیش بورڈ پر پن کریں",
   "unpinFromDashboard": "ڈیش بورڈ سے ان پن کریں",
   "pinnedToDashboard": "ڈیش بورڈ پر پن ہو گیا",
@@ -1561,5 +1560,8 @@
   "featureUnlimitedAccountsTitle": "لامحدود اکاؤنٹس",
   "featureUnlimitedAccountsDesc": "اپنے تمام بیلنس کو ایک جگہ پر ٹریک کرنے کے لیے متعدد بینک اکاؤنٹس، کیش والٹس اور کریڈٹ کارڈز شامل کریں۔",
   "featureCategoryBudgetsTitle": "زمرہ بجٹ",
-  "featureCategoryBudgetsDesc": "کسی بھی زمرے کے لیے ماہانہ، سہ ماہی یا سالانہ خرچ کی حد اور بچت کے اہداف مقرر کریں۔"
+  "featureCategoryBudgetsDesc": "کسی بھی زمرے کے لیے ماہانہ، سہ ماہی یا سالانہ خرچ کی حد اور بچت کے اہداف مقرر کریں۔",
+  "onDashboard": "ڈیش بورڈ پر",
+  "widgets": "وجیٹس",
+  "others": "دیگر"
 }

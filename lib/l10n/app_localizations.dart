@@ -4822,12 +4822,6 @@ abstract class AppLocalizations {
   /// **'Remove from dashboard'**
   String get removeFromDashboard;
 
-  /// No description provided for @onDashboard.
-  ///
-  /// In en, this message translates to:
-  /// **'Widgets'**
-  String get onDashboard;
-
   /// No description provided for @pinToDashboard.
   ///
   /// In en, this message translates to:
@@ -7432,6 +7426,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Set monthly, quarterly, or yearly spending limits and savings targets for any category.'**
   String get featureCategoryBudgetsDesc;
+
+  /// No description provided for @onDashboard.
+  ///
+  /// In en, this message translates to:
+  /// **'On Dashboard'**
+  String get onDashboard;
+
+  /// No description provided for @widgets.
+  ///
+  /// In en, this message translates to:
+  /// **'Widgets'**
+  String get widgets;
+
+  /// No description provided for @others.
+  ///
+  /// In en, this message translates to:
+  /// **'Others'**
+  String get others;
 }
 
 class _AppLocalizationsDelegate

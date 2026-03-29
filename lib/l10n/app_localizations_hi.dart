@@ -2624,9 +2624,6 @@ class AppLocalizationsHi extends AppLocalizations {
   String get removeFromDashboard => 'डैशबोर्ड से हटाएं';
 
   @override
-  String get onDashboard => 'विजेट';
-
-  @override
   String get pinToDashboard => 'डैशबोर्ड पर पिन करें';
 
   @override
@@ -4068,4 +4065,13 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get featureCategoryBudgetsDesc =>
       'किसी भी श्रेणी के लिए मासिक, त्रैमासिक या वार्षिक खर्च सीमा और बचत लक्ष्य निर्धारित करें।';
+
+  @override
+  String get onDashboard => 'डैशबोर्ड पर';
+
+  @override
+  String get widgets => 'विजेट';
+
+  @override
+  String get others => 'अन्य';
 }

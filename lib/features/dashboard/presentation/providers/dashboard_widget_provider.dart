@@ -122,6 +122,8 @@ class DashboardReorderModeNotifier extends Notifier<bool> {
   bool build() => false;
 
   void toggle() => state = !state;
+
+  void set(bool value) => state = value;
 }
 
 final dashboardReorderModeProvider =
