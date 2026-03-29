@@ -28,6 +28,10 @@ class UserPreferencesRepository {
   static const String keyShowBottomBarQuickButton =
       'show_bottom_bar_quick_button';
   static const String keyShowDashboardWidgetArea = 'show_dashboard_widget_area';
+  static const String keyShowDashboardPrivacyHighlight =
+      'show_dashboard_privacy_highlight';
+  static const String keyShowDashboardFinancialSummary =
+      'show_dashboard_financial_summary';
   static const String keySequenceBackfillDone = 'sequence_backfill_done';
 
   // Get a preference value by key (excludes soft-deleted rows so they sync correctly)
@@ -271,5 +275,27 @@ class UserPreferencesRepository {
 
   Future<void> setShowDashboardWidgetArea(bool show) async {
     await setPreference(keyShowDashboardWidgetArea, show ? 'true' : 'false');
+  }
+
+  // Show Dashboard Privacy Highlight
+  Future<bool> getShowDashboardPrivacyHighlight() async {
+    final value = await getPreference(keyShowDashboardPrivacyHighlight);
+    return value != 'false'; // Default to true
+  }
+
+  Future<void> setShowDashboardPrivacyHighlight(bool show) async {
+    await setPreference(
+        keyShowDashboardPrivacyHighlight, show ? 'true' : 'false');
+  }
+
+  // Show Dashboard Financial Summary
+  Future<bool> getShowDashboardFinancialSummary() async {
+    final value = await getPreference(keyShowDashboardFinancialSummary);
+    return value != 'false'; // Default to true
+  }
+
+  Future<void> setShowDashboardFinancialSummary(bool show) async {
+    await setPreference(
+        keyShowDashboardFinancialSummary, show ? 'true' : 'false');
   }
 }

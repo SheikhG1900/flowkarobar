@@ -905,6 +905,8 @@ class _DashboardBodyScrollState extends ConsumerState<_DashboardBodyScroll> {
                   final l10n = AppLocalizations.of(context)!;
                   final activeColor =
                       ref.watch(activeCashbookProvider.select((c) => c.color));
+                  final showPrivacyHighlight =
+                      ref.watch(showDashboardPrivacyHighlightProvider);
                   return Showcase(
                     key: TourService.quickActionsKey,
                     title: l10n.tourQuickActionsTitle,
@@ -922,8 +924,10 @@ class _DashboardBodyScrollState extends ConsumerState<_DashboardBodyScroll> {
                         child: Column(
                           children: [
                             const SyncStatusSection(),
-                            const SizedBox(height: 16),
-                            const _DashboardPrivacyHighlight(),
+                            if (showPrivacyHighlight) ...[
+                              const SizedBox(height: 16),
+                              const _DashboardPrivacyHighlight(),
+                            ],
                           ],
                         ),
                       ),
@@ -1315,6 +1319,52 @@ class _DashboardTab extends ConsumerWidget {
                           horizontal: 16, vertical: 4),
                     );
                   }),
+                  const Divider(),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                    child: Text(
+                      l10n.tourDashboardHeaderTitle,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  Consumer(
+                    builder: (context, ref, _) {
+                      final showPrivacy =
+                          ref.watch(showDashboardPrivacyHighlightProvider);
+                      final showFinancial =
+                          ref.watch(showDashboardFinancialSummaryProvider);
+
+                      return Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SwitchListTile(
+                            secondary: const Icon(Icons.security_outlined),
+                            title: Text(l10n.privacyHighlight),
+                            value: showPrivacy,
+                            onChanged: (v) {
+                              ref
+                                  .read(showDashboardPrivacyHighlightProvider
+                                      .notifier)
+                                  .setVisibility(v);
+                            },
+                          ),
+                          SwitchListTile(
+                            secondary: const Icon(Icons.summarize_outlined),
+                            title: Text(l10n.financialSummary),
+                            value: showFinancial,
+                            onChanged: (v) {
+                              ref
+                                  .read(showDashboardFinancialSummaryProvider
+                                      .notifier)
+                                  .setVisibility(v);
+                            },
+                          ),
+                        ],
+                      );
+                    },
+                  ),
                   SizedBox(
                     height: 8 + MediaQuery.paddingOf(context).bottom,
                   ),
@@ -2312,10 +2362,20 @@ class _DashboardHeader extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final isPremium = PremiumGate.isPremium(ref);
 
+    final showPrivacyHighlight =
+        ref.watch(showDashboardPrivacyHighlightProvider);
+    final showFinancialSummary =
+        ref.watch(showDashboardFinancialSummaryProvider);
+
     final reveal = logoRevealPull.clamp(0.0, _kLogoSlotHeight).toDouble();
 
+    double expandedHeight = 392;
+    if (!showFinancialSummary) {
+      expandedHeight -= 220;
+    } // Increased reduction to hide the empty space better
+
     return SliverAppBar(
-      expandedHeight: 392,
+      expandedHeight: expandedHeight,
       floating: false,
       pinned: true,
       stretch: true,
@@ -2485,7 +2545,7 @@ class _DashboardHeader extends ConsumerWidget {
                   ),
                   const SizedBox(height: 2),
                   const _DashboardHeroContent(),
-                  const _DashboardStatsGrid(),
+                  if (showFinancialSummary) const _DashboardStatsGrid(),
                 ],
               ),
             ),

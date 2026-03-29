@@ -317,6 +317,58 @@ final showDashboardWidgetAreaProvider =
   return ShowDashboardWidgetAreaNotifier();
 });
 
+// Show Dashboard Privacy Highlight Notifier
+class ShowDashboardPrivacyHighlightNotifier extends Notifier<bool> {
+  late UserPreferencesRepository _repository;
+
+  @override
+  bool build() {
+    _repository = ref.watch(userPreferencesRepositoryProvider);
+    _loadVisibility();
+    return true; // Default initial state
+  }
+
+  Future<void> _loadVisibility() async {
+    state = await _repository.getShowDashboardPrivacyHighlight();
+  }
+
+  Future<void> setVisibility(bool show) async {
+    await _repository.setShowDashboardPrivacyHighlight(show);
+    state = show;
+  }
+}
+
+final showDashboardPrivacyHighlightProvider =
+    NotifierProvider<ShowDashboardPrivacyHighlightNotifier, bool>(() {
+  return ShowDashboardPrivacyHighlightNotifier();
+});
+
+// Show Dashboard Financial Summary Notifier
+class ShowDashboardFinancialSummaryNotifier extends Notifier<bool> {
+  late UserPreferencesRepository _repository;
+
+  @override
+  bool build() {
+    _repository = ref.watch(userPreferencesRepositoryProvider);
+    _loadVisibility();
+    return true; // Default initial state
+  }
+
+  Future<void> _loadVisibility() async {
+    state = await _repository.getShowDashboardFinancialSummary();
+  }
+
+  Future<void> setVisibility(bool show) async {
+    await _repository.setShowDashboardFinancialSummary(show);
+    state = show;
+  }
+}
+
+final showDashboardFinancialSummaryProvider =
+    NotifierProvider<ShowDashboardFinancialSummaryNotifier, bool>(() {
+  return ShowDashboardFinancialSummaryNotifier();
+});
+
 // Helper provider to get the font for the CURRENT language
 final currentFontProvider = Provider<String>((ref) {
   final fonts = ref.watch(fontProvider);
