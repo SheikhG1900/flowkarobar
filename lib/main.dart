@@ -841,67 +841,56 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 }
 
 // Placeholder tabs
-class _DashboardTab extends ConsumerWidget {
+
+/// Dashboard scroll area; tracks top overscroll to reveal the large logo.
+class _DashboardBodyScroll extends ConsumerStatefulWidget {
+  const _DashboardBodyScroll({
+    super.key,
+    required this.activeColor,
+    required this.showWidgetArea,
+  });
+
+  final Color activeColor;
+  final bool showWidgetArea;
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context)!;
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    final isPremium = PremiumGate.isPremium(ref);
-    final currencyAsync = ref.watch(currentCurrencyProvider);
-    final currency = currencyAsync.value;
-    final activeCashbook = ref.watch(activeCashbookProvider);
-    final activeColor = activeCashbook.color;
-    final activeIcon = activeCashbook.icon;
-    final activeForeColor = activeCashbook.foreColor(context);
-    // Only watch currentUser so sync-status polling does not rebuild the whole dashboard
-    final currentUser = ref.watch(backupProvider.select((s) => s.currentUser));
+  ConsumerState<_DashboardBodyScroll> createState() =>
+      _DashboardBodyScrollState();
+}
 
-    // Watch dashboard statistics and filter
-    final dashboardStatsAsync = ref.watch(dashboardStatsProvider);
-    final filter = ref.watch(dashboardFilterProvider);
-    final showWidgetArea = ref.watch(showDashboardWidgetAreaProvider);
+class _DashboardBodyScrollState extends ConsumerState<_DashboardBodyScroll> {
+  /// Pull distance (px) to fully reveal the logo (matches header slot height).
+  static const double _kLogoRevealMax = 118.0;
 
-    // Cache last stats so we can show them while loading (e.g. after invalidation)
-    ref.listen(dashboardStatsProvider, (prev, next) {
-      if (next.hasValue) {
-        ref.read(lastDashboardStatsProvider.notifier).setLast(next.value);
-      }
-    });
+  double _logoRevealPull = 0.0;
 
-    final lastStats = ref.watch(lastDashboardStatsProvider);
-    final hasAccounts = ref.watch(hasAccountsProvider);
-    final mainBalanceView = ref.watch(dashboardMainBalanceViewProvider);
-    final accountsWithBalanceAsync = ref.watch(accountsWithBalanceProvider);
-    final showNetWorthOnHero =
-        hasAccounts && mainBalanceView == DashboardMainBalanceView.netWorth;
-
-    // Show loading if currency is not yet loaded
-    if (currency == null) {
-      return const AppLoadingIndicator(isFullPage: true, size: 80);
+  bool _onScrollNotification(ScrollNotification n) {
+    if (n.metrics.axis != Axis.vertical) return false;
+    final next = n.metrics.pixels < 0
+        ? (-n.metrics.pixels).clamp(0.0, _kLogoRevealMax)
+        : 0.0;
+    if (next != _logoRevealPull) {
+      setState(() => _logoRevealPull = next);
     }
+    return false;
+  }
 
-    return Scaffold(
-      body: RefreshIndicator(
-        color: activeColor,
+  @override
+  Widget build(BuildContext context) {
+    return NotificationListener<ScrollNotification>(
+      onNotification: _onScrollNotification,
+      child: RefreshIndicator(
+        color: widget.activeColor,
         onRefresh: () async {
-          // Dismiss any active showcase overlay before restarting
           try {
             final showcaseState = ShowCaseWidget.of(context);
             showcaseState.dismiss();
-          } catch (e) {
-            // Showcase might not be active, ignore
-          }
+          } catch (_) {}
 
-          // Use post-frame callback to ensure showcase is dismissed before restart
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            // Phoenix.rebirth re-initializes the entire application
-            // including all Riverpod providers and database connections.
             Phoenix.rebirth(context);
           });
 
-          // Return a future that never completes or completes after a short delay
-          // since Phoenix.rebirth will restart the app anyway.
           await Future.delayed(const Duration(milliseconds: 500));
         },
         child: CustomScrollView(
@@ -909,1094 +898,60 @@ class _DashboardTab extends ConsumerWidget {
             parent: BouncingScrollPhysics(),
           ),
           slivers: [
-            // App Bar with gradient
-            SliverAppBar(
-              expandedHeight: 420, // Reduced height for more compact header
-              floating: false,
-              pinned: true,
-              stretch: true,
-              elevation: 0,
-              backgroundColor: theme.scaffoldBackgroundColor
-                  .withValues(alpha: 0.9 / 1.0), // Adapts to light/dark mode
-              flexibleSpace: FlexibleSpaceBar(
-                background: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    // Gradient Background with Beveled Corner (bottom-right for LTR, bottom-left for RTL)
-                    Container(
-                      decoration: ShapeDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            activeColor.withValues(alpha: 0.4),
-                            activeColor.withValues(alpha: 0.1),
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        shape: BeveledRectangleBorder(
-                          side: BorderSide(
-                              color: activeColor.withValues(alpha: 0.3),
-                              width: 1),
-                          borderRadius: BorderRadiusDirectional.only(
-                            bottomEnd: Radius.circular(40),
-                          ),
-                        ),
-                      ),
-                    ),
-                    // Overlay for Contrast
-                    Container(
-                      decoration: ShapeDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            isDark
-                                ? Colors.black.withValues(alpha: 0.4)
-                                : Colors.white.withValues(alpha: 0.8),
-                            isDark
-                                ? Colors.black.withValues(alpha: 0.1)
-                                : Colors.white.withValues(alpha: 0.4),
-                          ],
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                        ),
-                        shape: const BeveledRectangleBorder(
-                          borderRadius: BorderRadiusDirectional.only(
-                            bottomEnd: Radius.circular(40),
-                          ),
-                        ),
-                      ),
-                    ),
-                    // Main Content
-                    Positioned(
-                      left: 8,
-                      right: 8,
-                      top: MediaQuery.of(context).padding.top,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          // App Title & Cashbook Selector
-                          Showcase(
-                            key: TourService.dashboardHeaderKey,
-                            title: l10n.tourDashboardHeaderTitle,
-                            description: l10n.tourDashboardHeaderDesc,
-                            targetShapeBorder: const RoundedRectangleBorder(
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(12)),
-                            ),
-                            tooltipBackgroundColor: activeColor,
-                            textColor: Colors.white,
-                            targetBorderRadius: BorderRadius.circular(12),
-                            child: InkWell(
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        const CashbooksScreen(),
-                                  ),
-                                );
-                              },
-                              borderRadius: BorderRadius.circular(12),
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                    vertical: 8, horizontal: 4),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Row(
-                                          textDirection: TextDirection.ltr,
-                                          children: [
-                                            SvgPicture.asset(
-                                                'assets/images/logo_square.svg',
-                                                fit: BoxFit.contain,
-                                                height: 40,
-                                                colorFilter: ColorFilter.mode(
-                                                    Color.lerp(
-                                                            theme.colorScheme
-                                                                .onSurface,
-                                                            theme.colorScheme
-                                                                .primary,
-                                                            .5) ??
-                                                        theme.colorScheme
-                                                            .onSurface,
-                                                    BlendMode.srcIn)),
-                                            Transform.translate(
-                                              offset: const Offset(-4, 0),
-                                              child: Text(
-                                                'lowpaisa',
-                                                style: theme
-                                                    .textTheme.displaySmall
-                                                    ?.copyWith(
-                                                  fontSize: 24,
-                                                  fontWeight: FontWeight.w800,
-                                                  color: Color.lerp(
-                                                          theme.colorScheme
-                                                              .onSurface,
-                                                          theme.colorScheme
-                                                              .primary,
-                                                          .5) ??
-                                                      theme.colorScheme
-                                                          .onSurface,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Row(
-                                      children: [
-                                        Icon(
-                                          activeIcon,
-                                          size: 14,
-                                          color: activeForeColor,
-                                        ),
-                                        const SizedBox(width: 4),
-                                        Text(
-                                          activeCashbook.name,
-                                          style: TextStyle(
-                                            color: activeForeColor,
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 4),
-                                        Icon(
-                                          Icons.keyboard_arrow_down,
-                                          size: 14,
-                                          color: isDark
-                                              ? Colors.white54
-                                              : Colors.black54,
-                                        ),
-                                        if (isPremium) ...[
-                                          const SizedBox(width: 4),
-                                          const PremiumBadge(isSmall: true),
-                                        ],
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-
-                          // Balance + Stats: RepaintBoundary to limit sliver repaint flicker
-                          RepaintBoundary(
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                // Balance Section
-                                Showcase(
-                                  key: TourService.balanceKey,
-                                  title: l10n.tourBalanceTitle,
-                                  description: l10n.tourBalanceDesc,
-                                  targetShapeBorder:
-                                      const RoundedRectangleBorder(
-                                    borderRadius:
-                                        BorderRadius.all(Radius.circular(12)),
-                                  ),
-                                  tooltipBackgroundColor: activeColor,
-                                  textColor: Colors.white,
-                                  targetBorderRadius: BorderRadius.circular(12),
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 4),
-                                    child: Material(
-                                      color: Colors.transparent,
-                                      child: InkWell(
-                                        onTap: hasAccounts
-                                            ? () => ref
-                                                .read(
-                                                    dashboardMainBalanceViewProvider
-                                                        .notifier)
-                                                .toggle()
-                                            : null,
-                                        borderRadius: BorderRadius.circular(12),
-                                        child: Padding(
-                                          padding: const EdgeInsets.symmetric(
-                                              vertical: 4),
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Row(
-                                                children: [
-                                                  Expanded(
-                                                    child: Text(
-                                                      showNetWorthOnHero
-                                                          ? l10n.netWorth
-                                                          : l10n.availableCash,
-                                                      style: theme
-                                                          .textTheme.titleSmall
-                                                          ?.copyWith(
-                                                        color: isDark
-                                                            ? Colors.white
-                                                                .withValues(
-                                                                    alpha: 0.9)
-                                                            : AppColors
-                                                                .lightTextSecondary,
-                                                        fontWeight:
-                                                            FontWeight.w600,
-                                                        shadows: isDark
-                                                            ? AppTheme.textShadow(
-                                                                blurMultiplier:
-                                                                    1.0)
-                                                            : null,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                  if (hasAccounts)
-                                                    Icon(
-                                                      Icons.swap_horiz_rounded,
-                                                      size: 18,
-                                                      color: isDark
-                                                          ? Colors.white
-                                                              .withValues(
-                                                                  alpha: 0.55)
-                                                          : AppColors
-                                                              .lightTextSecondary,
-                                                    ),
-                                                ],
-                                              ),
-                                              Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceBetween,
-                                                children: [
-                                                  showNetWorthOnHero
-                                                      ? accountsWithBalanceAsync
-                                                          .when(
-                                                          data: (accounts) {
-                                                            final nw =
-                                                                dashboardNetWorthFromAccounts(
-                                                                    accounts);
-                                                            return RollingAmount(
-                                                              amount: nw,
-                                                              currencySymbol:
-                                                                  currency
-                                                                      .symbol,
-                                                              decimalPlaces:
-                                                                  currency
-                                                                      .decimalPlaces,
-                                                              style: theme
-                                                                  .textTheme
-                                                                  .displaySmall
-                                                                  ?.copyWith(
-                                                                color: isDark
-                                                                    ? Colors
-                                                                        .white
-                                                                    : AppColors
-                                                                        .lightText,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .bold,
-                                                                height: 1.1,
-                                                                fontSize:
-                                                                    AmountFormatter
-                                                                        .getFontSize(
-                                                                  nw,
-                                                                  baseSize: 32,
-                                                                  decimalPlaces:
-                                                                      currency
-                                                                          .decimalPlaces,
-                                                                ),
-                                                                shadows: isDark
-                                                                    ? AppTheme.textShadow(
-                                                                        blurMultiplier:
-                                                                            4.0)
-                                                                    : null,
-                                                              ),
-                                                            );
-                                                          },
-                                                          loading: () =>
-                                                              const SizedBox(
-                                                                  height: 32),
-                                                          error: (_, __) =>
-                                                              Text(
-                                                            l10n.error,
-                                                            style: TextStyle(
-                                                              color: isDark
-                                                                  ? Colors.white
-                                                                  : AppColors
-                                                                      .error,
-                                                            ),
-                                                          ),
-                                                        )
-                                                      : dashboardStatsAsync
-                                                          .when(
-                                                          data: (stats) =>
-                                                              RollingAmount(
-                                                            amount: stats
-                                                                .totalBalance,
-                                                            currencySymbol:
-                                                                currency.symbol,
-                                                            decimalPlaces: currency
-                                                                .decimalPlaces,
-                                                            style: theme
-                                                                .textTheme
-                                                                .displaySmall
-                                                                ?.copyWith(
-                                                              color: isDark
-                                                                  ? Colors.white
-                                                                  : AppColors
-                                                                      .lightText,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .bold,
-                                                              height: 1.1,
-                                                              fontSize:
-                                                                  AmountFormatter
-                                                                      .getFontSize(
-                                                                stats
-                                                                    .totalBalance,
-                                                                baseSize: 32,
-                                                                decimalPlaces:
-                                                                    currency
-                                                                        .decimalPlaces,
-                                                              ),
-                                                              shadows: isDark
-                                                                  ? AppTheme.textShadow(
-                                                                      blurMultiplier:
-                                                                          4.0)
-                                                                  : null,
-                                                            ),
-                                                          ),
-                                                          loading: () =>
-                                                              lastStats != null
-                                                                  ? RollingAmount(
-                                                                      amount: lastStats
-                                                                          .totalBalance,
-                                                                      currencySymbol:
-                                                                          currency
-                                                                              .symbol,
-                                                                      decimalPlaces:
-                                                                          currency
-                                                                              .decimalPlaces,
-                                                                      style: theme
-                                                                          .textTheme
-                                                                          .displaySmall
-                                                                          ?.copyWith(
-                                                                        color: isDark
-                                                                            ? Colors.white
-                                                                            : AppColors.lightText,
-                                                                        fontWeight:
-                                                                            FontWeight.bold,
-                                                                        height:
-                                                                            1.1,
-                                                                        fontSize:
-                                                                            AmountFormatter.getFontSize(
-                                                                          lastStats
-                                                                              .totalBalance,
-                                                                          baseSize:
-                                                                              32,
-                                                                          decimalPlaces:
-                                                                              currency.decimalPlaces,
-                                                                        ),
-                                                                        shadows: isDark
-                                                                            ? AppTheme.textShadow(blurMultiplier: 4.0)
-                                                                            : null,
-                                                                      ),
-                                                                    )
-                                                                  : const SizedBox(
-                                                                      height:
-                                                                          32),
-                                                          error: (_, __) =>
-                                                              Text(
-                                                            l10n.error,
-                                                            style: TextStyle(
-                                                              color: isDark
-                                                                  ? Colors.white
-                                                                  : AppColors
-                                                                      .error,
-                                                            ),
-                                                          ),
-                                                        ),
-                                                  _buildFilterChip(context, ref,
-                                                      filter, isDark),
-                                                ],
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 16),
-
-                                // Stats Grid: stable layout; .when() per value so only amounts update
-                                Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Showcase(
-                                      key: TourService.cashFlowStatsKey,
-                                      title: l10n.tourCashFlowTitle,
-                                      description: l10n.tourCashFlowDesc,
-                                      targetShapeBorder:
-                                          const RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.all(
-                                            Radius.circular(12)),
-                                      ),
-                                      tooltipBackgroundColor: activeColor,
-                                      textColor: Colors.white,
-                                      targetBorderRadius:
-                                          BorderRadius.circular(12),
-                                      child: _buildSummaryRow(
-                                        context,
-                                        isDark: isDark,
-                                        title: l10n.cashFlow,
-                                        items: [
-                                          _SummaryItem(
-                                            label: l10n.income,
-                                            amountContent:
-                                                dashboardStatsAsync.when(
-                                              data: (s) =>
-                                                  _buildSummaryAmountContent(
-                                                context,
-                                                amount: s.income(filter),
-                                                currency: currency,
-                                                isDark: isDark,
-                                              ),
-                                              loading: () => lastStats != null
-                                                  ? _buildSummaryAmountContent(
-                                                      context,
-                                                      amount: lastStats
-                                                          .income(filter),
-                                                      currency: currency,
-                                                      isDark: isDark,
-                                                    )
-                                                  : _buildAmountPlaceholder(
-                                                      context,
-                                                      currency,
-                                                      isDark),
-                                              error: (_, __) =>
-                                                  _buildAmountPlaceholder(
-                                                      context,
-                                                      currency,
-                                                      isDark),
-                                            ),
-                                            color: AppColors.incomeColor,
-                                            icon: Icons.south_west,
-                                            onTap: () {
-                                              final isMonthly = filter ==
-                                                  DashboardFilter.monthly;
-                                              final now = DateTime.now();
-                                              final startDate = isMonthly
-                                                  ? DateTime(
-                                                      now.year, now.month, 1)
-                                                  : null;
-                                              final endDate = isMonthly
-                                                  ? DateTime(now.year,
-                                                      now.month + 1, 0)
-                                                  : null;
-                                              ref
-                                                  .read(
-                                                      transactionsPaginatedProvider
-                                                          .notifier)
-                                                  .applyFilters(
-                                                    TransactionFilters(
-                                                      type: 'INCOME',
-                                                      startDate: startDate,
-                                                      endDate: endDate,
-                                                    ),
-                                                  );
-                                              Navigator.push(
-                                                context,
-                                                MaterialPageRoute(
-                                                  builder: (context) =>
-                                                      const TransactionsListScreen(),
-                                                ),
-                                              );
-                                            },
-                                          ),
-                                          _SummaryItem(
-                                            label: l10n.expense,
-                                            amountContent:
-                                                dashboardStatsAsync.when(
-                                              data: (s) =>
-                                                  _buildSummaryAmountContent(
-                                                context,
-                                                amount: s.expense(filter),
-                                                currency: currency,
-                                                isDark: isDark,
-                                              ),
-                                              loading: () => lastStats != null
-                                                  ? _buildSummaryAmountContent(
-                                                      context,
-                                                      amount: lastStats
-                                                          .expense(filter),
-                                                      currency: currency,
-                                                      isDark: isDark,
-                                                    )
-                                                  : _buildAmountPlaceholder(
-                                                      context,
-                                                      currency,
-                                                      isDark),
-                                              error: (_, __) =>
-                                                  _buildAmountPlaceholder(
-                                                      context,
-                                                      currency,
-                                                      isDark),
-                                            ),
-                                            color: AppColors.expenseColor,
-                                            icon: Icons.north_east,
-                                            onTap: () {
-                                              final isMonthly = filter ==
-                                                  DashboardFilter.monthly;
-                                              final now = DateTime.now();
-                                              final startDate = isMonthly
-                                                  ? DateTime(
-                                                      now.year, now.month, 1)
-                                                  : null;
-                                              final endDate = isMonthly
-                                                  ? DateTime(now.year,
-                                                      now.month + 1, 0)
-                                                  : null;
-                                              ref
-                                                  .read(
-                                                      transactionsPaginatedProvider
-                                                          .notifier)
-                                                  .applyFilters(
-                                                    TransactionFilters(
-                                                      type: 'EXPENSE',
-                                                      startDate: startDate,
-                                                      endDate: endDate,
-                                                    ),
-                                                  );
-                                              Navigator.push(
-                                                context,
-                                                MaterialPageRoute(
-                                                  builder: (context) =>
-                                                      const TransactionsListScreen(),
-                                                ),
-                                              );
-                                            },
-                                          ),
-                                          _SummaryItem(
-                                            label: l10n.netCash,
-                                            amountContent:
-                                                dashboardStatsAsync.when(
-                                              data: (s) =>
-                                                  _buildSummaryAmountContent(
-                                                context,
-                                                amount: s.netCash(filter),
-                                                currency: currency,
-                                                isDark: isDark,
-                                              ),
-                                              loading: () => lastStats != null
-                                                  ? _buildSummaryAmountContent(
-                                                      context,
-                                                      amount: lastStats
-                                                          .netCash(filter),
-                                                      currency: currency,
-                                                      isDark: isDark,
-                                                    )
-                                                  : _buildAmountPlaceholder(
-                                                      context,
-                                                      currency,
-                                                      isDark),
-                                              error: (_, __) =>
-                                                  _buildAmountPlaceholder(
-                                                      context,
-                                                      currency,
-                                                      isDark),
-                                            ),
-                                            color: activeForeColor,
-                                            icon: Icons.account_balance_wallet,
-                                            onTap: () {
-                                              final isMonthly = filter ==
-                                                  DashboardFilter.monthly;
-                                              final now = DateTime.now();
-                                              final startDate = isMonthly
-                                                  ? DateTime(
-                                                      now.year, now.month, 1)
-                                                  : null;
-                                              final endDate = isMonthly
-                                                  ? DateTime(now.year,
-                                                      now.month + 1, 0)
-                                                  : null;
-                                              ref
-                                                  .read(
-                                                      transactionsPaginatedProvider
-                                                          .notifier)
-                                                  .applyFilters(
-                                                    TransactionFilters(
-                                                      startDate: startDate,
-                                                      endDate: endDate,
-                                                    ),
-                                                  );
-                                              Navigator.push(
-                                                context,
-                                                MaterialPageRoute(
-                                                  builder: (context) =>
-                                                      const TransactionsListScreen(),
-                                                ),
-                                              );
-                                            },
-                                          ),
-                                        ],
-                                        currency: currency,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 12),
-                                    Showcase(
-                                      key: TourService.lendingStatsKey,
-                                      title: l10n.tourLendingTitle,
-                                      description: l10n.tourLendingDesc,
-                                      targetShapeBorder:
-                                          const RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.all(
-                                            Radius.circular(12)),
-                                      ),
-                                      tooltipBackgroundColor: activeColor,
-                                      textColor: Colors.white,
-                                      targetBorderRadius:
-                                          BorderRadius.circular(12),
-                                      child: _buildSummaryRow(
-                                        context,
-                                        isDark: isDark,
-                                        title: l10n.lendingCredit,
-                                        items: [
-                                          _SummaryItem(
-                                            label: l10n.receivableTag,
-                                            amountContent:
-                                                dashboardStatsAsync.when(
-                                              data: (s) =>
-                                                  _buildSummaryAmountContent(
-                                                context,
-                                                amount: s.receivable(filter),
-                                                currency: currency,
-                                                isDark: isDark,
-                                                overdue: s.overdueReceivable,
-                                              ),
-                                              loading: () => lastStats != null
-                                                  ? _buildSummaryAmountContent(
-                                                      context,
-                                                      amount: lastStats
-                                                          .receivable(filter),
-                                                      currency: currency,
-                                                      isDark: isDark,
-                                                      overdue: lastStats
-                                                          .overdueReceivable,
-                                                    )
-                                                  : _buildAmountPlaceholder(
-                                                      context,
-                                                      currency,
-                                                      isDark),
-                                              error: (_, __) =>
-                                                  _buildAmountPlaceholder(
-                                                      context,
-                                                      currency,
-                                                      isDark),
-                                            ),
-                                            color: AppColors.receivableColor,
-                                            icon: Icons.call_received,
-                                            onTap: () {
-                                              final isMonthly = filter ==
-                                                  DashboardFilter.monthly;
-                                              final now = DateTime.now();
-                                              final startDate = isMonthly
-                                                  ? DateTime(
-                                                      now.year, now.month, 1)
-                                                  : null;
-                                              final endDate = isMonthly
-                                                  ? DateTime(now.year,
-                                                      now.month + 1, 0)
-                                                  : null;
-                                              ref
-                                                  .read(
-                                                      receivablesPaginatedProvider(
-                                                              'PENDING')
-                                                          .notifier)
-                                                  .applyFilters(
-                                                    ReceivableFilters(
-                                                      startDate: startDate,
-                                                      endDate: endDate,
-                                                    ),
-                                                  );
-                                              Navigator.push(
-                                                context,
-                                                MaterialPageRoute(
-                                                  builder: (context) =>
-                                                      const ReceivablesListScreen(),
-                                                ),
-                                              );
-                                            },
-                                          ),
-                                          _SummaryItem(
-                                            label: l10n.payableTag,
-                                            amountContent:
-                                                dashboardStatsAsync.when(
-                                              data: (s) =>
-                                                  _buildSummaryAmountContent(
-                                                context,
-                                                amount: s.payable(filter),
-                                                currency: currency,
-                                                isDark: isDark,
-                                                overdue: s.overduePayable,
-                                              ),
-                                              loading: () => lastStats != null
-                                                  ? _buildSummaryAmountContent(
-                                                      context,
-                                                      amount: lastStats
-                                                          .payable(filter),
-                                                      currency: currency,
-                                                      isDark: isDark,
-                                                      overdue: lastStats
-                                                          .overduePayable,
-                                                    )
-                                                  : _buildAmountPlaceholder(
-                                                      context,
-                                                      currency,
-                                                      isDark),
-                                              error: (_, __) =>
-                                                  _buildAmountPlaceholder(
-                                                      context,
-                                                      currency,
-                                                      isDark),
-                                            ),
-                                            color: AppColors.payableColor,
-                                            icon: Icons.call_made,
-                                            onTap: () {
-                                              final isMonthly = filter ==
-                                                  DashboardFilter.monthly;
-                                              final now = DateTime.now();
-                                              final startDate = isMonthly
-                                                  ? DateTime(
-                                                      now.year, now.month, 1)
-                                                  : null;
-                                              final endDate = isMonthly
-                                                  ? DateTime(now.year,
-                                                      now.month + 1, 0)
-                                                  : null;
-                                              ref
-                                                  .read(
-                                                      payablesPaginatedProvider(
-                                                              'PENDING')
-                                                          .notifier)
-                                                  .applyFilters(
-                                                    PayableFilters(
-                                                      startDate: startDate,
-                                                      endDate: endDate,
-                                                    ),
-                                                  );
-                                              Navigator.push(
-                                                context,
-                                                MaterialPageRoute(
-                                                  builder: (context) =>
-                                                      const PayablesListScreen(),
-                                                ),
-                                              );
-                                            },
-                                          ),
-                                          _SummaryItem(
-                                            label: l10n.netCredit,
-                                            amountContent:
-                                                dashboardStatsAsync.when(
-                                              data: (s) =>
-                                                  _buildSummaryAmountContent(
-                                                context,
-                                                amount: s.netCredit(filter),
-                                                currency: currency,
-                                                isDark: isDark,
-                                              ),
-                                              loading: () => lastStats != null
-                                                  ? _buildSummaryAmountContent(
-                                                      context,
-                                                      amount: lastStats
-                                                          .netCredit(filter),
-                                                      currency: currency,
-                                                      isDark: isDark,
-                                                    )
-                                                  : _buildAmountPlaceholder(
-                                                      context,
-                                                      currency,
-                                                      isDark),
-                                              error: (_, __) =>
-                                                  _buildAmountPlaceholder(
-                                                      context,
-                                                      currency,
-                                                      isDark),
-                                            ),
-                                            color: activeForeColor,
-                                            icon: Icons.swap_horiz,
-                                          ),
-                                        ],
-                                        currency: currency,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 12),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 25),
-                          // App Logo in Rounded Circle
-                          Center(
-                            child: EntranceAnimation(
-                              index: 3,
-                              child: Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: theme.scaffoldBackgroundColor,
-                                  shape: BoxShape.circle,
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: activeColor.withValues(alpha: 0.2),
-                                      blurRadius: 10,
-                                      spreadRadius: 2,
-                                    ),
-                                  ],
-                                ),
-                                child: SvgPicture.asset(
-                                  'assets/images/logo_square.svg',
-                                  height: 120,
-                                  width: 120,
-                                  fit: BoxFit.contain,
-                                  colorFilter: ColorFilter.mode(
-                                    activeColor,
-                                    BlendMode.srcIn,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                titlePadding: EdgeInsets.zero,
-                title: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final settings = context.dependOnInheritedWidgetOfExactType<
-                        FlexibleSpaceBarSettings>();
-                    final deltaExtent =
-                        settings!.maxExtent - settings.minExtent;
-                    final t = (1.0 -
-                            (settings.currentExtent - settings.minExtent) /
-                                deltaExtent)
-                        .clamp(0.0, 1.0);
-
-                    if (t < 0.8) return const SizedBox.shrink();
-
-                    return FadeTransition(
-                      opacity: AlwaysStoppedAnimation(t),
-                      child: Padding(
-                        padding: const EdgeInsets.only(
-                            top:
-                                40), // Added top padding to push it down to middle
-                        child: Container(
-                          alignment: AlignmentDirectional.centerStart,
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: Row(
-                            textDirection: TextDirection.ltr,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              SvgPicture.asset('assets/images/logo_square.svg',
-                                  height: 24,
-                                  fit: BoxFit.contain,
-                                  colorFilter: ColorFilter.mode(
-                                      Color.lerp(theme.colorScheme.onSurface,
-                                              theme.colorScheme.primary, .3) ??
-                                          theme.colorScheme.onSurface,
-                                      BlendMode.srcIn)),
-                              Transform.translate(
-                                offset: const Offset(-2, 0),
-                                child: Text(
-                                  'lowpaisa',
-                                  style: theme.textTheme.titleMedium?.copyWith(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w800,
-                                    color: Color.lerp(
-                                            theme.colorScheme.onSurface,
-                                            theme.colorScheme.primary,
-                                            .3) ??
-                                        theme.colorScheme.onSurface,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-              actions: [
-                Consumer(
-                  builder: (context, ref, child) {
-                    final notifications = ref.watch(notificationProvider);
-                    final unreadCount =
-                        notifications.where((n) => (n.isRead == false)).length;
-                    final hasUrgent = notifications.any(
-                        (n) => (n.isRead == false) && (n.isUrgent == true));
-
-                    return Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        IconButton(
-                          icon: Icon(
-                            unreadCount > 0
-                                ? Icons.notifications_active_outlined
-                                : Icons.notifications_outlined,
-                            color: theme.colorScheme.onSurface,
-                          ),
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    const NotificationsScreen(),
-                              ),
-                            );
-                          },
-                        ),
-                        if (unreadCount > 0)
-                          Positioned(
-                            right: 8,
-                            top: 8,
-                            child: Container(
-                              padding: const EdgeInsets.all(2),
-                              decoration: BoxDecoration(
-                                color: hasUrgent
-                                    ? AppColors.error
-                                    : theme.colorScheme.primary,
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: theme.scaffoldBackgroundColor,
-                                  width: 1.5,
-                                ),
-                                boxShadow: [
-                                  if (hasUrgent)
-                                    BoxShadow(
-                                      color: AppColors.error
-                                          .withValues(alpha: 0.5),
-                                      blurRadius: 4,
-                                      spreadRadius: 1,
-                                    ),
-                                ],
-                              ),
-                              constraints: const BoxConstraints(
-                                minWidth: 16,
-                                minHeight: 16,
-                              ),
-                              child: Text(
-                                unreadCount > 9 ? '9+' : unreadCount.toString(),
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                            ),
-                          ),
-                      ],
-                    );
-                  },
-                ),
-                IconButton(
-                  icon: Icon(
-                    Icons.refresh,
-                    color: theme.colorScheme.onSurface,
-                  ),
-                  onPressed: () {
-                    // Dismiss any active showcase overlay before restarting
-                    try {
-                      final showcaseState = ShowCaseWidget.of(context);
-                      showcaseState.dismiss();
-                    } catch (e) {
-                      // Showcase might not be active, ignore
-                      if (kDebugMode) {
-                        debugPrint('No active showcase to dismiss: $e');
-                      }
-                    }
-
-                    // Use post-frame callback to ensure showcase is dismissed before restart
-                    WidgetsBinding.instance.addPostFrameCallback((_) {
-                      // Phoenix.rebirth re-initializes the entire application
-                      // including all Riverpod providers and database connections.
-                      Phoenix.rebirth(context);
-                    });
-                  },
-                  tooltip: 'Restart App',
-                ),
-                IconButton(
-                  icon: UserAvatar(
-                    user: currentUser,
-                    size: 24,
-                  ),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const ProfileScreen(),
-                      ),
-                    );
-                  },
-                ),
-                const SizedBox(width: 4),
-              ],
-            ),
-
-            // Quick Actions Section
+            _DashboardHeader(logoRevealPull: _logoRevealPull),
             SliverToBoxAdapter(
-              child: Showcase(
-                key: TourService.quickActionsKey,
-                title: l10n.tourQuickActionsTitle,
-                description: l10n.tourQuickActionsDesc,
-                targetShapeBorder: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(20)),
-                ),
-                tooltipBackgroundColor: activeColor,
-                textColor: Colors.white,
-                targetBorderRadius: BorderRadius.circular(20),
-                child: EntranceAnimation(
-                  index: 3,
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 24, 16, 0),
-                    child: Column(
-                      children: [
-                        // Sync Status Section
-                        const SyncStatusSection(),
-                        const SizedBox(height: 16),
-                        _buildPrivacyHighlight(context, ref, l10n, isDark),
-                      ],
+              child: Consumer(
+                builder: (context, ref, child) {
+                  final l10n = AppLocalizations.of(context)!;
+                  final activeColor =
+                      ref.watch(activeCashbookProvider.select((c) => c.color));
+                  return Showcase(
+                    key: TourService.quickActionsKey,
+                    title: l10n.tourQuickActionsTitle,
+                    description: l10n.tourQuickActionsDesc,
+                    targetShapeBorder: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(20)),
                     ),
-                  ),
-                ),
+                    tooltipBackgroundColor: activeColor,
+                    textColor: Colors.white,
+                    targetBorderRadius: BorderRadius.circular(20),
+                    child: EntranceAnimation(
+                      index: 3,
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 24, 16, 0),
+                        child: Column(
+                          children: [
+                            const SyncStatusSection(),
+                            const SizedBox(height: 16),
+                            const _DashboardPrivacyHighlight(),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
-
-            // Dashboard widgets (summary + entity) with reorder and add
-            if (showWidgetArea)
+            if (widget.showWidgetArea)
               SliverToBoxAdapter(
                 child: Consumer(
                   builder: (context, ref, _) {
                     final layoutAsync =
                         ref.watch(effectiveDashboardWidgetLayoutProvider);
                     final reorderMode = ref.watch(dashboardReorderModeProvider);
+                    final theme = Theme.of(context);
+                    final l10n = AppLocalizations.of(context)!;
                     return layoutAsync.when(
-                      data: (configs) => _buildDashboardWidgetsSection(
-                          context, ref, theme, l10n, configs, reorderMode),
+                      data: (configs) =>
+                          _DashboardTab._buildDashboardWidgetsSection(
+                              context, ref, theme, l10n, configs, reorderMode),
                       loading: () {
                         final configs =
                             ref.read(dashboardWidgetLayoutProvider).value;
                         if (configs == null || configs.isEmpty) {
                           return const SizedBox.shrink();
                         }
-                        return _buildDashboardWidgetsSection(
+                        return _DashboardTab._buildDashboardWidgetsSection(
                             context, ref, theme, l10n, configs, reorderMode);
                       },
                       error: (_, __) => const SizedBox.shrink(),
@@ -2004,64 +959,74 @@ class _DashboardTab extends ConsumerWidget {
                   },
                 ),
               ),
-
-            // Recent Transactions Header
             SliverToBoxAdapter(
               child: EntranceAnimation(
                 index: 4,
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
-                  child: _buildRecentTransactionsHeader(context, l10n),
-                ),
-              ),
-            ),
-            // Recent Transactions List
-            SliverToBoxAdapter(
-              child: Showcase(
-                key: TourService.recentTransactionsKey,
-                title: l10n.tourRecentTransactionsTitle,
-                description: l10n.tourRecentTransactionsDesc,
-                targetShapeBorder: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(16)),
-                ),
-                tooltipBackgroundColor: activeColor,
-                textColor: Colors.white,
-                targetBorderRadius: BorderRadius.circular(16),
-                child: EntranceAnimation(
-                  index: 5,
-                  child: _buildRecentTransactions(context, ref),
-                ),
-              ),
-            ),
-            // Bottom Padding with Logo
-            SliverToBoxAdapter(
-              child: Column(
-                children: [
-                  const SizedBox(height: 40),
-                  Opacity(
-                    opacity: 0.1,
-                    child: SvgPicture.asset(
-                      'assets/images/logo_square.svg',
-                      height: 60,
-                      colorFilter: ColorFilter.mode(
-                        activeColor,
-                        BlendMode.srcIn,
-                      ),
+                  child: Builder(
+                    builder: (context) => _DashboardRecentTransactionsHeader(
+                      l10n: AppLocalizations.of(context)!,
                     ),
                   ),
-                  const SizedBox(height: 100),
-                ],
+                ),
               ),
             ),
-            // Add an empty sliver to ensure the scroll view is always scrollable
-            // This allows pull-to-refresh to work even when there's little content
-            const SliverFillRemaining(
-              hasScrollBody: false,
-              child: SizedBox.shrink(),
+            const SliverToBoxAdapter(
+              child: _DashboardRecentTransactionsShowcase(),
+            ),
+            SliverToBoxAdapter(
+              child: Consumer(
+                builder: (context, ref, child) {
+                  final activeColor =
+                      ref.watch(activeCashbookProvider.select((c) => c.color));
+                  return RepaintBoundary(
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 40),
+                        Opacity(
+                          opacity: 0.1,
+                          child: SvgPicture.asset(
+                            'assets/images/logo_square.svg',
+                            height: 60,
+                            colorFilter: ColorFilter.mode(
+                              activeColor,
+                              BlendMode.srcIn,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 100),
+                      ],
+                    ),
+                  );
+                },
+              ),
             ),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _DashboardTab extends ConsumerWidget {
+  const _DashboardTab({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final activeColor =
+        ref.watch(activeCashbookProvider.select((c) => c.color));
+    final currencyAsync = ref.watch(currentCurrencyProvider);
+    final currency = currencyAsync.value;
+    final showWidgetArea = ref.watch(showDashboardWidgetAreaProvider);
+
+    if (currency == null) {
+      return const AppLoadingIndicator(isFullPage: true, size: 80);
+    }
+
+    return _DashboardBodyScroll(
+      activeColor: activeColor,
+      showWidgetArea: showWidgetArea,
     );
   }
 
@@ -2073,163 +1038,168 @@ class _DashboardTab extends ConsumerWidget {
     List<DashboardWidgetConfig> configs,
     bool reorderMode,
   ) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 24, 16, 0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                l10n.onDashboard,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    icon: Icon(
-                      reorderMode ? Icons.check : Icons.edit_outlined,
-                      color: reorderMode
-                          ? theme.colorScheme.primary
-                          : theme.iconTheme.color?.withValues(alpha: 0.7),
-                    ),
-                    tooltip: reorderMode
-                        ? l10n.reorderWidgetsOff
-                        : l10n.reorderWidgetsOn,
-                    onPressed: () {
-                      ref.read(dashboardReorderModeProvider.notifier).toggle();
-                    },
+    return RepaintBoundary(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 24, 16, 0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  l10n.onDashboard,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
                   ),
-                  if (reorderMode)
-                    IconButton(
-                      icon: const Icon(Icons.checklist_rtl_outlined),
-                      tooltip: l10n.addToDashboard,
-                      onPressed: () =>
-                          _showAddWidgetSheet(context, ref, theme, l10n),
-                    ),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          if (configs.isEmpty)
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 32),
-                child: Column(
+                ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
-                      Icons.dashboard_customize_outlined,
-                      size: 48,
-                      color: theme.colorScheme.outline.withValues(alpha: 0.5),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      l10n.noWidgetsOnDashboard,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
+                    IconButton(
+                      icon: Icon(
+                        reorderMode ? Icons.check : Icons.edit_outlined,
+                        color: reorderMode
+                            ? theme.colorScheme.primary
+                            : theme.iconTheme.color?.withValues(alpha: 0.7),
                       ),
+                      tooltip: reorderMode
+                          ? l10n.reorderWidgetsOff
+                          : l10n.reorderWidgetsOn,
+                      onPressed: () {
+                        ref
+                            .read(dashboardReorderModeProvider.notifier)
+                            .toggle();
+                      },
                     ),
-                    const SizedBox(height: 8),
-                    TextButton.icon(
-                      onPressed: () =>
-                          _showAddWidgetSheet(context, ref, theme, l10n),
-                      icon: const Icon(Icons.add),
-                      label: Text(l10n.addToDashboard),
-                    ),
+                    if (reorderMode)
+                      IconButton(
+                        icon: const Icon(Icons.checklist_rtl_outlined),
+                        tooltip: l10n.addToDashboard,
+                        onPressed: () =>
+                            _showAddWidgetSheet(context, ref, theme, l10n),
+                      ),
                   ],
                 ),
-              ),
-            )
-          else
-            reorderMode
-                ? ReorderableListView(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    buildDefaultDragHandles: false,
-                    onReorder: (oldIndex, newIndex) {
-                      if (newIndex > oldIndex) newIndex--;
-                      ref
-                          .read(dashboardWidgetLayoutProvider.notifier)
-                          .reorder(oldIndex, newIndex);
-                    },
+              ],
+            ),
+            const SizedBox(height: 12),
+            if (configs.isEmpty)
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 32),
+                  child: Column(
                     children: [
-                      for (var i = 0; i < configs.length; i++)
-                        KeyedSubtree(
-                          key: configs[i].kind.isEntity
-                              ? ValueKey('entity-$i-${configs[i].entityUuid}')
-                              : ValueKey('summary-$i-${configs[i].kind.name}'),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              ReorderableDragStartListener(
-                                index: i,
-                                child: Padding(
-                                  padding:
-                                      const EdgeInsets.only(right: 8, top: 16),
-                                  child: Container(
-                                  width: 36,
-                                  height: 36,
-                                  decoration: BoxDecoration(
-                                    color: theme.colorScheme.primary,
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                        color: Colors.white, width: 2),
-                                    boxShadow: const [
-                                      BoxShadow(
-                                        color: Colors.black26,
-                                        blurRadius: 4,
-                                        offset: Offset(0, 2),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Icon(
-                                    Icons.drag_handle,
-                                    color: theme.colorScheme.onPrimary,
-                                    size: 20,
-                                  ),
-                                  ),
-                                ),
-                              ),
-                              Expanded(
-                                child: configs[i].kind.isEntity
-                                    ? DashboardEntityWidgetCard(
-                                        config: configs[i],
-                                        layoutIndex: i,
-                                      )
-                                    : DashboardSummaryWidgetCard(
-                                        config: configs[i],
-                                        layoutIndex: i,
-                                        reorderKey: ValueKey(
-                                            'summary-$i-${configs[i].kind.name}'),
-                                      ),
-                              ),
-                            ],
-                          ),
+                      Icon(
+                        Icons.dashboard_customize_outlined,
+                        size: 48,
+                        color: theme.colorScheme.outline.withValues(alpha: 0.5),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        l10n.noWidgetsOnDashboard,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
                         ),
-                    ],
-                  )
-                : Column(
-                    children: [
-                      for (var i = 0; i < configs.length; i++)
-                        configs[i].kind.isEntity
-                            ? DashboardEntityWidgetCard(
-                                config: configs[i],
-                                layoutIndex: i,
-                              )
-                            : DashboardSummaryWidgetCard(
-                                config: configs[i],
-                                layoutIndex: i,
-                                reorderKey: ValueKey(
-                                    'summary-$i-${configs[i].kind.name}'),
-                              ),
+                      ),
+                      const SizedBox(height: 8),
+                      TextButton.icon(
+                        onPressed: () =>
+                            _showAddWidgetSheet(context, ref, theme, l10n),
+                        icon: const Icon(Icons.add),
+                        label: Text(l10n.addToDashboard),
+                      ),
                     ],
                   ),
-        ],
+                ),
+              )
+            else
+              reorderMode
+                  ? ReorderableListView(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      buildDefaultDragHandles: false,
+                      onReorder: (oldIndex, newIndex) {
+                        if (newIndex > oldIndex) newIndex--;
+                        ref
+                            .read(dashboardWidgetLayoutProvider.notifier)
+                            .reorder(oldIndex, newIndex);
+                      },
+                      children: [
+                        for (var i = 0; i < configs.length; i++)
+                          KeyedSubtree(
+                            key: configs[i].kind.isEntity
+                                ? ValueKey('entity-$i-${configs[i].entityUuid}')
+                                : ValueKey(
+                                    'summary-$i-${configs[i].kind.name}'),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                ReorderableDragStartListener(
+                                  index: i,
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(
+                                        right: 8, top: 16),
+                                    child: Container(
+                                      width: 36,
+                                      height: 36,
+                                      decoration: BoxDecoration(
+                                        color: theme.colorScheme.primary,
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                            color: Colors.white, width: 2),
+                                        boxShadow: const [
+                                          BoxShadow(
+                                            color: Colors.black26,
+                                            blurRadius: 4,
+                                            offset: Offset(0, 2),
+                                          ),
+                                        ],
+                                      ),
+                                      child: Icon(
+                                        Icons.drag_handle,
+                                        color: theme.colorScheme.onPrimary,
+                                        size: 20,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                Expanded(
+                                  child: configs[i].kind.isEntity
+                                      ? DashboardEntityWidgetCard(
+                                          config: configs[i],
+                                          layoutIndex: i,
+                                        )
+                                      : DashboardSummaryWidgetCard(
+                                          config: configs[i],
+                                          layoutIndex: i,
+                                          reorderKey: ValueKey(
+                                              'summary-$i-${configs[i].kind.name}'),
+                                        ),
+                                ),
+                              ],
+                            ),
+                          ),
+                      ],
+                    )
+                  : Column(
+                      children: [
+                        for (var i = 0; i < configs.length; i++)
+                          configs[i].kind.isEntity
+                              ? DashboardEntityWidgetCard(
+                                  config: configs[i],
+                                  layoutIndex: i,
+                                )
+                              : DashboardSummaryWidgetCard(
+                                  config: configs[i],
+                                  layoutIndex: i,
+                                  reorderKey: ValueKey(
+                                      'summary-$i-${configs[i].kind.name}'),
+                                ),
+                      ],
+                    ),
+          ],
+        ),
       ),
     );
   }
@@ -2425,7 +1395,7 @@ class _DashboardTab extends ConsumerWidget {
     );
   }
 
-  Widget _buildFilterChip(BuildContext context, WidgetRef ref,
+  static Widget _buildFilterChip(BuildContext context, WidgetRef ref,
       DashboardFilter currentFilter, bool isDark) {
     final l10n = AppLocalizations.of(context)!;
     final activeCashbook = ref.watch(activeCashbookProvider);
@@ -2469,7 +1439,7 @@ class _DashboardTab extends ConsumerWidget {
   }
 
   /// Placeholder for summary amount when loading; keeps layout stable.
-  Widget _buildAmountPlaceholder(
+  static Widget _buildAmountPlaceholder(
       BuildContext context, dynamic currency, bool isDark) {
     return Text(
       '—',
@@ -2484,7 +1454,7 @@ class _DashboardTab extends ConsumerWidget {
   }
 
   /// Builds amount (and optional overdue) content for a summary card.
-  Widget _buildSummaryAmountContent(
+  static Widget _buildSummaryAmountContent(
     BuildContext context, {
     required double amount,
     required dynamic currency,
@@ -2543,7 +1513,7 @@ class _DashboardTab extends ConsumerWidget {
     );
   }
 
-  Widget _buildSummaryRow(
+  static Widget _buildSummaryRow(
     BuildContext context, {
     required String title,
     required List<_SummaryItem> items,
@@ -2555,7 +1525,7 @@ class _DashboardTab extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.only(left: 4, bottom: 8),
+          padding: const EdgeInsets.only(left: 4, bottom: 5),
           child: Text(
             title,
             style: TextStyle(
@@ -2579,7 +1549,7 @@ class _DashboardTab extends ConsumerWidget {
                 child: Container(
                   margin: EdgeInsetsDirectional.only(end: isLast ? 0 : 8),
                   padding:
-                      const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+                      const EdgeInsets.symmetric(vertical: 7, horizontal: 8),
                   decoration: BoxDecoration(
                     gradient: AppColors.glassGradient(isDark),
                     borderRadius: BorderRadius.circular(12),
@@ -2620,7 +1590,7 @@ class _DashboardTab extends ConsumerWidget {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 3),
                       item.amountContent,
                     ],
                   ),
@@ -2630,69 +1600,6 @@ class _DashboardTab extends ConsumerWidget {
           }).toList(),
         ),
       ],
-    );
-  }
-
-  Widget _buildPrivacyHighlight(
-      BuildContext context, WidgetRef ref, AppLocalizations l10n, bool isDark) {
-    final theme = Theme.of(context);
-    final activeCashbook = ref.watch(activeCashbookProvider);
-    final activeForeColor = activeCashbook.foreColor(context);
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            activeCashbook.color.withValues(alpha: 0.15),
-            activeCashbook.color.withValues(alpha: 0.05),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: activeCashbook.color.withValues(alpha: 0.3),
-          width: 1,
-        ),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: activeCashbook.color.withValues(alpha: 0.2),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.security_rounded,
-              color: activeForeColor,
-              size: 24,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l10n.privacyHighlight,
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: activeForeColor,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  l10n.privacyHighlightDesc,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -2935,179 +1842,6 @@ class _DashboardTab extends ConsumerWidget {
     );
   }
 
-  Widget _buildRecentTransactionsHeader(
-      BuildContext context, AppLocalizations l10n) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          l10n.recentTransactions,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-        ),
-        TextButton(
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const TransactionsListScreen(),
-              ),
-            );
-          },
-          child: Text(l10n.viewAll),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildRecentTransactions(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context)!;
-    final transactionsAsync = ref.watch(transactionsWithDetailsProvider);
-    final currencyAsync = ref.watch(currentCurrencyProvider);
-    final currency = currencyAsync.value;
-
-    if (currency == null) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    return transactionsAsync.when(
-      data: (transactions) {
-        if (transactions.isEmpty) {
-          return Padding(
-            padding: const EdgeInsets.all(32),
-            child: Center(
-              child: Column(
-                children: [
-                  Icon(
-                    Icons.receipt_long_outlined,
-                    size: 64,
-                    color: Colors.grey[300],
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    l10n.noTransactionsYet,
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: Colors.grey,
-                        ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    l10n.tapToAddFirst,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.grey,
-                        ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        }
-
-        // Show only recent 5 transactions
-        final recentTransactions = transactions.take(5).toList();
-
-        return ListView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: recentTransactions.length,
-          padding: EdgeInsets.zero,
-          itemBuilder: (context, index) {
-            final item = recentTransactions[index];
-            final transaction = item.transaction;
-            final category = item.category;
-            final isExpense = transaction.type == 'EXPENSE';
-            final theme = Theme.of(context);
-            final isDark = theme.brightness == Brightness.dark;
-            final userProfile = ref.watch(userProfileProvider);
-
-            // Resolve category color
-            Color categoryColor;
-            if (category?.color != null) {
-              try {
-                categoryColor =
-                    Color(int.parse(category!.color!.replaceAll('#', '0xFF')));
-              } catch (_) {
-                categoryColor =
-                    isExpense ? AppColors.expenseColor : AppColors.incomeColor;
-              }
-            } else {
-              categoryColor =
-                  isExpense ? AppColors.expenseColor : AppColors.incomeColor;
-            }
-
-            return _AnimatedPressScale(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => TransactionDetailsDialog(
-                        transactionUuid: transaction.uuid),
-                  ),
-                );
-              },
-              child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                decoration: BoxDecoration(
-                  color: theme.cardColor,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: categoryColor.withValues(alpha: isDark ? 0.2 : 0.1),
-                    width: 1,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color:
-                          categoryColor.withValues(alpha: isDark ? 0.05 : 0.08),
-                      blurRadius: 8,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
-                ),
-                child: ListTile(
-                  contentPadding: const EdgeInsets.all(12),
-                  leading: Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: categoryColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    alignment: Alignment.center,
-                    child: CategoryHelper.buildCategoryIcon(
-                        category?.icon, categoryColor, isExpense),
-                  ),
-                  title: Text(
-                    transaction.description ??
-                        (isExpense ? l10n.expense : l10n.income),
-                    style: const TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                  subtitle: Text(AppDateFormatter.formatDate(transaction.date,
-                      pattern: userProfile.dateFormat)),
-                  trailing: Text(
-                    '${isExpense ? '\u200E-' : '\u200E+'} ${AmountFormatter.formatWithCurrency(transaction.amount, currency.symbol, currency.decimalPlaces)}',
-                    style: TextStyle(
-                      color: isExpense
-                          ? AppColors.expenseColor
-                          : AppColors.incomeColor,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
-              ),
-            );
-          },
-        );
-      },
-      loading: () => const AppLoadingIndicator(size: 60),
-      error: (error, stack) => Padding(
-        padding: const EdgeInsets.all(32),
-        child: Text(l10n.errorOccurred(error.toString())),
-      ),
-    );
-  }
-
   Widget _buildCenterQuickButton(
     BuildContext context,
     WidgetRef ref,
@@ -3245,6 +1979,1234 @@ class _DashboardTab extends ConsumerWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _DashboardPrivacyHighlight extends ConsumerWidget {
+  const _DashboardPrivacyHighlight({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final activeCashbook = ref.watch(activeCashbookProvider);
+    final activeForeColor = activeCashbook.foreColor(context);
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            activeCashbook.color.withValues(alpha: 0.15),
+            activeCashbook.color.withValues(alpha: 0.05),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: activeCashbook.color.withValues(alpha: 0.3),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: activeCashbook.color.withValues(alpha: 0.2),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.security_rounded,
+              color: activeForeColor,
+              size: 24,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.privacyHighlight,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: activeForeColor,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  l10n.privacyHighlightDesc,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DashboardRecentTransactionsShowcase extends ConsumerWidget {
+  const _DashboardRecentTransactionsShowcase({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final activeColor =
+        ref.watch(activeCashbookProvider.select((c) => c.color));
+    return Showcase(
+      key: TourService.recentTransactionsKey,
+      title: l10n.tourRecentTransactionsTitle,
+      description: l10n.tourRecentTransactionsDesc,
+      targetShapeBorder: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(Radius.circular(16)),
+      ),
+      tooltipBackgroundColor: activeColor,
+      textColor: Colors.white,
+      targetBorderRadius: BorderRadius.circular(16),
+      child: EntranceAnimation(
+        index: 5,
+        child: const _DashboardRecentTransactionsBody(),
+      ),
+    );
+  }
+}
+
+class _DashboardRecentTransactionsHeader extends StatelessWidget {
+  const _DashboardRecentTransactionsHeader({super.key, required this.l10n});
+
+  final AppLocalizations l10n;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          l10n.recentTransactions,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+        ),
+        TextButton(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const TransactionsListScreen(),
+              ),
+            );
+          },
+          child: Text(l10n.viewAll),
+        ),
+      ],
+    );
+  }
+}
+
+/// Isolated from the rest of the dashboard so transaction stream updates do not
+/// rebuild hero, stats, or header providers.
+class _DashboardRecentTransactionsBody extends ConsumerWidget {
+  const _DashboardRecentTransactionsBody({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final dateFormat =
+        ref.watch(userProfileProvider.select((p) => p.dateFormat));
+    final transactionsAsync = ref.watch(transactionsWithDetailsProvider);
+    final currencyAsync = ref.watch(currentCurrencyProvider);
+    final currency = currencyAsync.value;
+
+    if (currency == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    return transactionsAsync.when(
+      data: (transactions) {
+        if (transactions.isEmpty) {
+          return Padding(
+            padding: const EdgeInsets.all(32),
+            child: Center(
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.receipt_long_outlined,
+                    size: 64,
+                    color: Colors.grey[300],
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    l10n.noTransactionsYet,
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          color: Colors.grey,
+                        ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    l10n.tapToAddFirst,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Colors.grey,
+                        ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        final recentTransactions = transactions.take(5).toList();
+        final theme = Theme.of(context);
+        final isDark = theme.brightness == Brightness.dark;
+
+        return RepaintBoundary(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              for (final item in recentTransactions)
+                _DashboardRecentTransactionTile(
+                  key: ValueKey(item.transaction.uuid),
+                  item: item,
+                  currencySymbol: currency.symbol,
+                  currencyDecimals: currency.decimalPlaces,
+                  dateFormat: dateFormat,
+                  l10n: l10n,
+                  theme: theme,
+                  isDark: isDark,
+                ),
+            ],
+          ),
+        );
+      },
+      loading: () => const AppLoadingIndicator(size: 60),
+      error: (error, stack) => Padding(
+        padding: const EdgeInsets.all(32),
+        child: Text(l10n.errorOccurred(error.toString())),
+      ),
+    );
+  }
+}
+
+class _DashboardRecentTransactionTile extends StatelessWidget {
+  const _DashboardRecentTransactionTile({
+    super.key,
+    required this.item,
+    required this.currencySymbol,
+    required this.currencyDecimals,
+    required this.dateFormat,
+    required this.l10n,
+    required this.theme,
+    required this.isDark,
+  });
+
+  final TransactionWithDetails item;
+  final String currencySymbol;
+  final int currencyDecimals;
+  final String dateFormat;
+  final AppLocalizations l10n;
+  final ThemeData theme;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    final transaction = item.transaction;
+    final category = item.category;
+    final isExpense = transaction.type == 'EXPENSE';
+
+    Color categoryColor =
+        isExpense ? AppColors.expenseColor : AppColors.incomeColor;
+    if (category?.color != null) {
+      try {
+        categoryColor =
+            Color(int.parse(category!.color!.replaceAll('#', '0xFF')));
+      } catch (_) {}
+    }
+
+    return _AnimatedPressScale(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) =>
+                TransactionDetailsDialog(transactionUuid: transaction.uuid),
+          ),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        decoration: BoxDecoration(
+          color: theme.cardColor,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: categoryColor.withValues(alpha: isDark ? 0.2 : 0.1),
+            width: 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: categoryColor.withValues(alpha: isDark ? 0.05 : 0.08),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: ListTile(
+          contentPadding: const EdgeInsets.all(12),
+          leading: Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: categoryColor.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            alignment: Alignment.center,
+            child: CategoryHelper.buildCategoryIcon(
+                category?.icon, categoryColor, isExpense),
+          ),
+          title: Text(
+            transaction.description ?? (isExpense ? l10n.expense : l10n.income),
+            style: const TextStyle(fontWeight: FontWeight.w600),
+          ),
+          subtitle: Text(AppDateFormatter.formatDate(transaction.date,
+              pattern: dateFormat)),
+          trailing: Text(
+            '${isExpense ? '\u200E-' : '\u200E+'} ${AmountFormatter.formatWithCurrency(transaction.amount, currencySymbol, currencyDecimals)}',
+            style: TextStyle(
+              color: isExpense ? AppColors.expenseColor : AppColors.incomeColor,
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DashboardHeader extends ConsumerWidget {
+  const _DashboardHeader({super.key, required this.logoRevealPull});
+
+  /// Must match [_DashboardBodyScrollState._kLogoRevealMax] (pull to fully show).
+  static const double _kLogoSlotHeight = 118.0;
+
+  final double logoRevealPull;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final activeCashbook = ref.watch(activeCashbookProvider);
+    final activeColor = activeCashbook.color;
+    final activeIcon = activeCashbook.icon;
+    final activeForeColor = activeCashbook.foreColor(context);
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context)!;
+    final isPremium = PremiumGate.isPremium(ref);
+
+    final reveal = logoRevealPull.clamp(0.0, _kLogoSlotHeight).toDouble();
+
+    return SliverAppBar(
+      expandedHeight: 392,
+      floating: false,
+      pinned: true,
+      stretch: true,
+      elevation: 0,
+      backgroundColor: theme.scaffoldBackgroundColor.withValues(alpha: 0.9),
+      flexibleSpace: FlexibleSpaceBar(
+        stretchModes: const [StretchMode.zoomBackground],
+        background: Stack(
+          clipBehavior: Clip.hardEdge,
+          fit: StackFit.expand,
+          children: [
+            Container(
+              decoration: ShapeDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    activeColor.withValues(alpha: 0.4),
+                    activeColor.withValues(alpha: 0.1),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                shape: BeveledRectangleBorder(
+                  side: BorderSide(
+                      color: activeColor.withValues(alpha: 0.3), width: 1),
+                  borderRadius: BorderRadiusDirectional.only(
+                    bottomEnd: Radius.circular(40),
+                  ),
+                ),
+              ),
+            ),
+            Container(
+              decoration: ShapeDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    isDark
+                        ? Colors.black.withValues(alpha: 0.4)
+                        : Colors.white.withValues(alpha: 0.8),
+                    isDark
+                        ? Colors.black.withValues(alpha: 0.1)
+                        : Colors.white.withValues(alpha: 0.4),
+                  ],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
+                shape: const BeveledRectangleBorder(
+                  borderRadius: BorderRadiusDirectional.only(
+                    bottomEnd: Radius.circular(40),
+                  ),
+                ),
+              ),
+            ),
+            Positioned.fill(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  SizedBox(height: MediaQuery.paddingOf(context).top),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    child: Showcase(
+                      key: TourService.dashboardHeaderKey,
+                      title: l10n.tourDashboardHeaderTitle,
+                      description: l10n.tourDashboardHeaderDesc,
+                      targetShapeBorder: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(12)),
+                      ),
+                      tooltipBackgroundColor: activeColor,
+                      textColor: Colors.white,
+                      targetBorderRadius: BorderRadius.circular(12),
+                      child: InkWell(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const CashbooksScreen(),
+                            ),
+                          );
+                        },
+                        borderRadius: BorderRadius.circular(12),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 4, horizontal: 4),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Align(
+                                alignment: AlignmentDirectional.centerStart,
+                                child: Directionality(
+                                  textDirection: TextDirection.ltr,
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      SvgPicture.asset(
+                                        'assets/images/logo_square.svg',
+                                        fit: BoxFit.contain,
+                                        height: 36,
+                                        colorFilter: ColorFilter.mode(
+                                          Color.lerp(
+                                                theme.colorScheme.onSurface,
+                                                theme.colorScheme.primary,
+                                                .5,
+                                              ) ??
+                                              theme.colorScheme.onSurface,
+                                          BlendMode.srcIn,
+                                        ),
+                                      ),
+                                      Transform.translate(
+                                        offset: const Offset(-4, 0),
+                                        child: Text(
+                                          'lowpaisa',
+                                          style: theme.textTheme.displaySmall
+                                              ?.copyWith(
+                                            fontSize: 22,
+                                            fontWeight: FontWeight.w800,
+                                            color: Color.lerp(
+                                                  theme.colorScheme.onSurface,
+                                                  theme.colorScheme.primary,
+                                                  .5,
+                                                ) ??
+                                                theme.colorScheme.onSurface,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Align(
+                                alignment: AlignmentDirectional.centerStart,
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      activeIcon,
+                                      size: 14,
+                                      color: activeForeColor,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      activeCashbook.name,
+                                      style: TextStyle(
+                                        color: activeForeColor,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Icon(
+                                      Icons.keyboard_arrow_down,
+                                      size: 14,
+                                      color: isDark
+                                          ? Colors.white54
+                                          : Colors.black54,
+                                    ),
+                                    if (isPremium) ...[
+                                      const SizedBox(width: 4),
+                                      const PremiumBadge(isSmall: true),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  const _DashboardHeroContent(),
+                  const _DashboardStatsGrid(),
+                ],
+              ),
+            ),
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: -_kLogoSlotHeight + reveal,
+              height: _kLogoSlotHeight,
+              child: Center(
+                child: EntranceAnimation(
+                  index: 3,
+                  child: RepaintBoundary(
+                    child: Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: theme.scaffoldBackgroundColor,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: activeColor.withValues(alpha: 0.2),
+                            blurRadius: 8,
+                            spreadRadius: 1,
+                          ),
+                        ],
+                      ),
+                      child: SvgPicture.asset(
+                        'assets/images/logo_square.svg',
+                        height: 88,
+                        width: 88,
+                        fit: BoxFit.contain,
+                        colorFilter: ColorFilter.mode(
+                          activeColor,
+                          BlendMode.srcIn,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+        titlePadding: EdgeInsets.zero,
+        title: LayoutBuilder(
+          builder: (context, constraints) {
+            final settings = context
+                .dependOnInheritedWidgetOfExactType<FlexibleSpaceBarSettings>();
+            final deltaExtent = settings!.maxExtent - settings.minExtent;
+            final t = (1.0 -
+                    (settings.currentExtent - settings.minExtent) / deltaExtent)
+                .clamp(0.0, 1.0);
+
+            if (t < 0.8) return const SizedBox.shrink();
+
+            return FadeTransition(
+              opacity: AlwaysStoppedAnimation(t),
+              child: Padding(
+                padding: const EdgeInsets.only(top: 40),
+                child: Container(
+                  alignment: AlignmentDirectional.centerStart,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Directionality(
+                    textDirection: TextDirection.ltr,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SvgPicture.asset(
+                          'assets/images/logo_square.svg',
+                          height: 24,
+                          fit: BoxFit.contain,
+                          colorFilter: ColorFilter.mode(
+                            Color.lerp(
+                                  theme.colorScheme.onSurface,
+                                  theme.colorScheme.primary,
+                                  .3,
+                                ) ??
+                                theme.colorScheme.onSurface,
+                            BlendMode.srcIn,
+                          ),
+                        ),
+                        Transform.translate(
+                          offset: const Offset(-2, 0),
+                          child: Text(
+                            'lowpaisa',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                              color: Color.lerp(
+                                    theme.colorScheme.onSurface,
+                                    theme.colorScheme.primary,
+                                    .3,
+                                  ) ??
+                                  theme.colorScheme.onSurface,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+      actions: [
+        Consumer(
+          builder: (context, ref, child) {
+            final notifications = ref.watch(notificationProvider);
+            final unreadCount =
+                notifications.where((n) => (n.isRead == false)).length;
+            final hasUrgent = notifications
+                .any((n) => (n.isRead == false) && (n.isUrgent == true));
+
+            return Stack(
+              alignment: Alignment.center,
+              children: [
+                IconButton(
+                  icon: Icon(
+                    unreadCount > 0
+                        ? Icons.notifications_active_outlined
+                        : Icons.notifications_outlined,
+                    color: theme.colorScheme.onSurface,
+                  ),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const NotificationsScreen(),
+                      ),
+                    );
+                  },
+                ),
+                if (unreadCount > 0)
+                  Positioned(
+                    right: 8,
+                    top: 8,
+                    child: Container(
+                      padding: const EdgeInsets.all(2),
+                      decoration: BoxDecoration(
+                        color: hasUrgent
+                            ? AppColors.error
+                            : theme.colorScheme.primary,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: theme.scaffoldBackgroundColor,
+                          width: 1.5,
+                        ),
+                        boxShadow: [
+                          if (hasUrgent)
+                            BoxShadow(
+                              color: AppColors.error.withValues(alpha: 0.5),
+                              blurRadius: 4,
+                              spreadRadius: 1,
+                            ),
+                        ],
+                      ),
+                      constraints: const BoxConstraints(
+                        minWidth: 16,
+                        minHeight: 16,
+                      ),
+                      child: Text(
+                        unreadCount > 9 ? '9+' : unreadCount.toString(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+              ],
+            );
+          },
+        ),
+        IconButton(
+          icon: Icon(
+            Icons.refresh,
+            color: theme.colorScheme.onSurface,
+          ),
+          onPressed: () {
+            try {
+              final showcaseState = ShowCaseWidget.of(context);
+              showcaseState.dismiss();
+            } catch (e) {
+              if (kDebugMode) {
+                debugPrint('No active showcase to dismiss: $e');
+              }
+            }
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              Phoenix.rebirth(context);
+            });
+          },
+          tooltip: 'Restart App',
+        ),
+        Consumer(
+          builder: (context, ref, child) {
+            final currentUser =
+                ref.watch(backupProvider.select((s) => s.currentUser));
+            return IconButton(
+              icon: UserAvatar(
+                user: currentUser,
+                size: 24,
+              ),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ProfileScreen(),
+                  ),
+                );
+              },
+            );
+          },
+        ),
+        const SizedBox(width: 4),
+      ],
+    );
+  }
+}
+
+class _DashboardHeroContent extends ConsumerWidget {
+  const _DashboardHeroContent();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final activeCashbook = ref.watch(activeCashbookProvider);
+    final activeColor = activeCashbook.color;
+    final currencyAsync = ref.watch(currentCurrencyProvider);
+    final currency = currencyAsync.value!;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context)!;
+
+    final dashboardStatsAsync = ref.watch(dashboardStatsProvider);
+    final filter = ref.watch(dashboardFilterProvider);
+    final lastStats = ref.watch(lastDashboardStatsProvider);
+    final hasAccounts = ref.watch(hasAccountsProvider);
+    final mainBalanceView = ref.watch(dashboardMainBalanceViewProvider);
+    final accountsWithBalanceAsync = ref.watch(accountsWithBalanceProvider);
+    final showNetWorthOnHero =
+        hasAccounts && mainBalanceView == DashboardMainBalanceView.netWorth;
+
+    return Showcase(
+      key: TourService.balanceKey,
+      title: l10n.tourBalanceTitle,
+      description: l10n.tourBalanceDesc,
+      targetShapeBorder: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(Radius.circular(12)),
+      ),
+      tooltipBackgroundColor: activeColor,
+      textColor: Colors.white,
+      targetBorderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: hasAccounts
+                ? () =>
+                    ref.read(dashboardMainBalanceViewProvider.notifier).toggle()
+                : null,
+            borderRadius: BorderRadius.circular(12),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          showNetWorthOnHero
+                              ? l10n.netWorth
+                              : l10n.availableCash,
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            color: isDark
+                                ? Colors.white.withValues(alpha: 0.9)
+                                : AppColors.lightTextSecondary,
+                            fontWeight: FontWeight.w600,
+                            shadows: isDark
+                                ? AppTheme.textShadow(blurMultiplier: 1.0)
+                                : null,
+                          ),
+                        ),
+                      ),
+                      if (hasAccounts)
+                        Icon(
+                          Icons.swap_horiz_rounded,
+                          size: 18,
+                          color: isDark
+                              ? Colors.white.withValues(alpha: 0.55)
+                              : AppColors.lightTextSecondary,
+                        ),
+                    ],
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      showNetWorthOnHero
+                          ? accountsWithBalanceAsync.when(
+                              data: (accounts) {
+                                final nw =
+                                    dashboardNetWorthFromAccounts(accounts);
+                                return RollingAmount(
+                                  amount: nw,
+                                  currencySymbol: currency.symbol,
+                                  decimalPlaces: currency.decimalPlaces,
+                                  style: theme.textTheme.displaySmall?.copyWith(
+                                    color: isDark
+                                        ? Colors.white
+                                        : AppColors.lightText,
+                                    fontWeight: FontWeight.bold,
+                                    height: 1.1,
+                                    fontSize: AmountFormatter.getFontSize(
+                                      nw,
+                                      baseSize: 28,
+                                      decimalPlaces: currency.decimalPlaces,
+                                    ),
+                                    shadows: isDark
+                                        ? AppTheme.textShadow(
+                                            blurMultiplier: 4.0)
+                                        : null,
+                                  ),
+                                );
+                              },
+                              loading: () => const SizedBox(height: 26),
+                              error: (_, __) => Text(
+                                l10n.error,
+                                style: TextStyle(
+                                  color:
+                                      isDark ? Colors.white : AppColors.error,
+                                ),
+                              ),
+                            )
+                          : dashboardStatsAsync.when(
+                              data: (stats) => RollingAmount(
+                                amount: stats.totalBalance,
+                                currencySymbol: currency.symbol,
+                                decimalPlaces: currency.decimalPlaces,
+                                style: theme.textTheme.displaySmall?.copyWith(
+                                  color: isDark
+                                      ? Colors.white
+                                      : AppColors.lightText,
+                                  fontWeight: FontWeight.bold,
+                                  height: 1.1,
+                                  fontSize: AmountFormatter.getFontSize(
+                                    stats.totalBalance,
+                                    baseSize: 28,
+                                    decimalPlaces: currency.decimalPlaces,
+                                  ),
+                                  shadows: isDark
+                                      ? AppTheme.textShadow(blurMultiplier: 4.0)
+                                      : null,
+                                ),
+                              ),
+                              loading: () => lastStats != null
+                                  ? RollingAmount(
+                                      amount: lastStats.totalBalance,
+                                      currencySymbol: currency.symbol,
+                                      decimalPlaces: currency.decimalPlaces,
+                                      style: theme.textTheme.displaySmall
+                                          ?.copyWith(
+                                        color: isDark
+                                            ? Colors.white
+                                            : AppColors.lightText,
+                                        fontWeight: FontWeight.bold,
+                                        height: 1.1,
+                                        fontSize: AmountFormatter.getFontSize(
+                                          lastStats.totalBalance,
+                                          baseSize: 28,
+                                          decimalPlaces: currency.decimalPlaces,
+                                        ),
+                                        shadows: isDark
+                                            ? AppTheme.textShadow(
+                                                blurMultiplier: 4.0)
+                                            : null,
+                                      ),
+                                    )
+                                  : const SizedBox(height: 26),
+                              error: (_, __) => Text(
+                                l10n.error,
+                                style: TextStyle(
+                                  color:
+                                      isDark ? Colors.white : AppColors.error,
+                                ),
+                              ),
+                            ),
+                      _DashboardTab._buildFilterChip(
+                          context, ref, filter, isDark),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DashboardStatsGrid extends ConsumerWidget {
+  const _DashboardStatsGrid();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final activeCashbook = ref.watch(activeCashbookProvider);
+    final activeColor = activeCashbook.color;
+    final activeForeColor = activeCashbook.foreColor(context);
+    final currencyAsync = ref.watch(currentCurrencyProvider);
+    final currency = currencyAsync.value!;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context)!;
+
+    final dashboardStatsAsync = ref.watch(dashboardStatsProvider);
+    final filter = ref.watch(dashboardFilterProvider);
+    final lastStats = ref.watch(lastDashboardStatsProvider);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Showcase(
+            key: TourService.cashFlowStatsKey,
+            title: l10n.tourCashFlowTitle,
+            description: l10n.tourCashFlowDesc,
+            targetShapeBorder: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(12)),
+            ),
+            tooltipBackgroundColor: activeColor,
+            textColor: Colors.white,
+            targetBorderRadius: BorderRadius.circular(12),
+            child: _DashboardTab._buildSummaryRow(
+              context,
+              isDark: isDark,
+              title: l10n.cashFlow,
+              items: [
+                _SummaryItem(
+                  label: l10n.income,
+                  amountContent: dashboardStatsAsync.when(
+                    data: (s) => _DashboardTab._buildSummaryAmountContent(
+                      context,
+                      amount: s.income(filter),
+                      currency: currency,
+                      isDark: isDark,
+                    ),
+                    loading: () => lastStats != null
+                        ? _DashboardTab._buildSummaryAmountContent(
+                            context,
+                            amount: lastStats.income(filter),
+                            currency: currency,
+                            isDark: isDark,
+                          )
+                        : _DashboardTab._buildAmountPlaceholder(
+                            context, currency, isDark),
+                    error: (_, __) => _DashboardTab._buildAmountPlaceholder(
+                        context, currency, isDark),
+                  ),
+                  color: AppColors.incomeColor,
+                  icon: Icons.south_west,
+                  onTap: () {
+                    final isMonthly = filter == DashboardFilter.monthly;
+                    final now = DateTime.now();
+                    final startDate =
+                        isMonthly ? DateTime(now.year, now.month, 1) : null;
+                    final endDate =
+                        isMonthly ? DateTime(now.year, now.month + 1, 0) : null;
+                    ref
+                        .read(transactionsPaginatedProvider.notifier)
+                        .applyFilters(
+                          TransactionFilters(
+                            type: 'INCOME',
+                            startDate: startDate,
+                            endDate: endDate,
+                          ),
+                        );
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const TransactionsListScreen(),
+                      ),
+                    );
+                  },
+                ),
+                _SummaryItem(
+                  label: l10n.expense,
+                  amountContent: dashboardStatsAsync.when(
+                    data: (s) => _DashboardTab._buildSummaryAmountContent(
+                      context,
+                      amount: s.expense(filter),
+                      currency: currency,
+                      isDark: isDark,
+                    ),
+                    loading: () => lastStats != null
+                        ? _DashboardTab._buildSummaryAmountContent(
+                            context,
+                            amount: lastStats.expense(filter),
+                            currency: currency,
+                            isDark: isDark,
+                          )
+                        : _DashboardTab._buildAmountPlaceholder(
+                            context, currency, isDark),
+                    error: (_, __) => _DashboardTab._buildAmountPlaceholder(
+                        context, currency, isDark),
+                  ),
+                  color: AppColors.expenseColor,
+                  icon: Icons.north_east,
+                  onTap: () {
+                    final isMonthly = filter == DashboardFilter.monthly;
+                    final now = DateTime.now();
+                    final startDate =
+                        isMonthly ? DateTime(now.year, now.month, 1) : null;
+                    final endDate =
+                        isMonthly ? DateTime(now.year, now.month + 1, 0) : null;
+                    ref
+                        .read(transactionsPaginatedProvider.notifier)
+                        .applyFilters(
+                          TransactionFilters(
+                            type: 'EXPENSE',
+                            startDate: startDate,
+                            endDate: endDate,
+                          ),
+                        );
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const TransactionsListScreen(),
+                      ),
+                    );
+                  },
+                ),
+                _SummaryItem(
+                  label: l10n.netCash,
+                  amountContent: dashboardStatsAsync.when(
+                    data: (s) => _DashboardTab._buildSummaryAmountContent(
+                      context,
+                      amount: s.netCash(filter),
+                      currency: currency,
+                      isDark: isDark,
+                    ),
+                    loading: () => lastStats != null
+                        ? _DashboardTab._buildSummaryAmountContent(
+                            context,
+                            amount: lastStats.netCash(filter),
+                            currency: currency,
+                            isDark: isDark,
+                          )
+                        : _DashboardTab._buildAmountPlaceholder(
+                            context, currency, isDark),
+                    error: (_, __) => _DashboardTab._buildAmountPlaceholder(
+                        context, currency, isDark),
+                  ),
+                  color: activeForeColor,
+                  icon: Icons.account_balance_wallet,
+                  onTap: () {
+                    final isMonthly = filter == DashboardFilter.monthly;
+                    final now = DateTime.now();
+                    final startDate =
+                        isMonthly ? DateTime(now.year, now.month, 1) : null;
+                    final endDate =
+                        isMonthly ? DateTime(now.year, now.month + 1, 0) : null;
+                    ref
+                        .read(transactionsPaginatedProvider.notifier)
+                        .applyFilters(
+                          TransactionFilters(
+                            startDate: startDate,
+                            endDate: endDate,
+                          ),
+                        );
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const TransactionsListScreen(),
+                      ),
+                    );
+                  },
+                ),
+              ],
+              currency: currency,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Showcase(
+            key: TourService.lendingStatsKey,
+            title: l10n.tourLendingTitle,
+            description: l10n.tourLendingDesc,
+            targetShapeBorder: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(12)),
+            ),
+            tooltipBackgroundColor: activeColor,
+            textColor: Colors.white,
+            targetBorderRadius: BorderRadius.circular(12),
+            child: _DashboardTab._buildSummaryRow(
+              context,
+              isDark: isDark,
+              title: l10n.lendingCredit,
+              items: [
+                _SummaryItem(
+                  label: l10n.receivableTag,
+                  amountContent: dashboardStatsAsync.when(
+                    data: (s) => _DashboardTab._buildSummaryAmountContent(
+                      context,
+                      amount: s.receivable(filter),
+                      currency: currency,
+                      isDark: isDark,
+                      overdue: s.overdueReceivable,
+                    ),
+                    loading: () => lastStats != null
+                        ? _DashboardTab._buildSummaryAmountContent(
+                            context,
+                            amount: lastStats.receivable(filter),
+                            currency: currency,
+                            isDark: isDark,
+                            overdue: lastStats.overdueReceivable,
+                          )
+                        : _DashboardTab._buildAmountPlaceholder(
+                            context, currency, isDark),
+                    error: (_, __) => _DashboardTab._buildAmountPlaceholder(
+                        context, currency, isDark),
+                  ),
+                  color: AppColors.receivableColor,
+                  icon: Icons.call_received,
+                  onTap: () {
+                    final isMonthly = filter == DashboardFilter.monthly;
+                    final now = DateTime.now();
+                    final startDate =
+                        isMonthly ? DateTime(now.year, now.month, 1) : null;
+                    final endDate =
+                        isMonthly ? DateTime(now.year, now.month + 1, 0) : null;
+                    ref
+                        .read(receivablesPaginatedProvider('PENDING').notifier)
+                        .applyFilters(
+                          ReceivableFilters(
+                            startDate: startDate,
+                            endDate: endDate,
+                          ),
+                        );
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ReceivablesListScreen(),
+                      ),
+                    );
+                  },
+                ),
+                _SummaryItem(
+                  label: l10n.payableTag,
+                  amountContent: dashboardStatsAsync.when(
+                    data: (s) => _DashboardTab._buildSummaryAmountContent(
+                      context,
+                      amount: s.payable(filter),
+                      currency: currency,
+                      isDark: isDark,
+                      overdue: s.overduePayable,
+                    ),
+                    loading: () => lastStats != null
+                        ? _DashboardTab._buildSummaryAmountContent(
+                            context,
+                            amount: lastStats.payable(filter),
+                            currency: currency,
+                            isDark: isDark,
+                            overdue: lastStats.overduePayable,
+                          )
+                        : _DashboardTab._buildAmountPlaceholder(
+                            context, currency, isDark),
+                    error: (_, __) => _DashboardTab._buildAmountPlaceholder(
+                        context, currency, isDark),
+                  ),
+                  color: AppColors.payableColor,
+                  icon: Icons.call_made,
+                  onTap: () {
+                    final isMonthly = filter == DashboardFilter.monthly;
+                    final now = DateTime.now();
+                    final startDate =
+                        isMonthly ? DateTime(now.year, now.month, 1) : null;
+                    final endDate =
+                        isMonthly ? DateTime(now.year, now.month + 1, 0) : null;
+                    ref
+                        .read(payablesPaginatedProvider('PENDING').notifier)
+                        .applyFilters(
+                          PayableFilters(
+                            startDate: startDate,
+                            endDate: endDate,
+                          ),
+                        );
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const PayablesListScreen(),
+                      ),
+                    );
+                  },
+                ),
+                _SummaryItem(
+                  label: l10n.netCredit,
+                  amountContent: dashboardStatsAsync.when(
+                    data: (s) => _DashboardTab._buildSummaryAmountContent(
+                      context,
+                      amount: s.netCredit(filter),
+                      currency: currency,
+                      isDark: isDark,
+                    ),
+                    loading: () => lastStats != null
+                        ? _DashboardTab._buildSummaryAmountContent(
+                            context,
+                            amount: lastStats.netCredit(filter),
+                            currency: currency,
+                            isDark: isDark,
+                          )
+                        : _DashboardTab._buildAmountPlaceholder(
+                            context, currency, isDark),
+                    error: (_, __) => _DashboardTab._buildAmountPlaceholder(
+                        context, currency, isDark),
+                  ),
+                  color: activeForeColor,
+                  icon: Icons.swap_horiz,
+                ),
+              ],
+              currency: currency,
+            ),
+          ),
+        ],
       ),
     );
   }
