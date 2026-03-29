@@ -52,6 +52,13 @@ Future<void> processSchedules() async {
     final isPremium = prefs.getBool('is_premium_user') ?? false;
 
     for (final cashbook in cashbooks) {
+      // Skip locked cashbooks for free users
+      if (!isPremium &&
+          cashbook.id != 'default' &&
+          (cashbook.addSeq ?? 0) >= PremiumGate.cashbookTotalLimit) {
+        continue;
+      }
+
       try {
         final database = AppDatabase(fileName: '${cashbook.dbPath}.db');
         final schedulesRepository = SchedulesRepository(database);
@@ -99,7 +106,15 @@ Future<void> processSchedulesFromContext(WidgetRef ref) async {
   try {
     final cashbooks = ref.read(cashbooksProvider);
 
+    final isPremium = PremiumGate.isPremium(ref);
     for (final cashbook in cashbooks) {
+      // Skip locked cashbooks for free users
+      if (!isPremium &&
+          cashbook.id != 'default' &&
+          (cashbook.addSeq ?? 0) >= PremiumGate.cashbookTotalLimit) {
+        continue;
+      }
+
       // For each cashbook, we need a separate database instance and services
       // except if it's the active one, we might want to use the providers
       final isActive = cashbook.id == ref.read(activeCashbookIdProvider);
@@ -123,7 +138,6 @@ Future<void> processSchedulesFromContext(WidgetRef ref) async {
       );
 
       final activeSchedules = await schedulesRepository.getActiveSchedules();
-      final isPremium = PremiumGate.isPremium(ref);
 
       for (final schedule in activeSchedules) {
         try {

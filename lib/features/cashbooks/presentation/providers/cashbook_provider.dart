@@ -40,6 +40,7 @@ class CashbookNotifier extends Notifier<List<Cashbook>> {
         iconCodePoint: Symbols.water_drop.codePoint.toString(),
         dbPath: 'flowpaisa',
         createdAt: DateTime.now(),
+        addSeq: 0,
       );
       _saveCashbooks([defaultCashbook]);
       return [defaultCashbook];
@@ -48,17 +49,60 @@ class CashbookNotifier extends Notifier<List<Cashbook>> {
     // Load and migrate legacy icon names if any
     final cashbooks = jsonList.map((json) => Cashbook.fromJson(json)).toList();
     bool needsSave = false;
+
+    // Check if backfill is already done
+    final backfillDone = _prefs.getBool('cashbook_sequence_backfill_done') ?? false;
+
+    // Smart migration for addSeq
     final migrated = cashbooks.map((c) {
+      bool modified = false;
+      String? newIconCodePoint = c.iconCodePoint;
+      int? newAddSeq = c.addSeq;
+
       if (c.iconCodePoint == 'water_drop') {
+        newIconCodePoint = Symbols.water_drop.codePoint.toString();
+        modified = true;
+      }
+
+      // Assign or fix addSeq (Only if not already backfilled or if seq is missing)
+      if (!backfillDone || newAddSeq == null) {
+        if (c.id == 'default') {
+          if (newAddSeq != 0) {
+            newAddSeq = 0;
+            modified = true;
+          }
+        } else {
+          if (newAddSeq == null || newAddSeq == 0) {
+            int nextSeq = 1;
+            final usedSeqs = cashbooks
+                .map((cb) => cb.addSeq)
+                .whereType<int>()
+                .where((s) => s > 0)
+                .toSet();
+            while (usedSeqs.contains(nextSeq)) {
+              nextSeq++;
+            }
+            newAddSeq = nextSeq;
+            modified = true;
+          }
+        }
+      }
+
+      if (modified) {
         needsSave = true;
         return c.copyWith(
-            iconCodePoint: Symbols.water_drop.codePoint.toString());
+          iconCodePoint: newIconCodePoint,
+          addSeq: newAddSeq,
+        );
       }
       return c;
     }).toList();
 
-    if (needsSave) {
+    if (needsSave || !backfillDone) {
       _saveCashbooks(migrated);
+      if (!backfillDone) {
+        _prefs.setBool('cashbook_sequence_backfill_done', true);
+      }
     }
 
     return migrated;

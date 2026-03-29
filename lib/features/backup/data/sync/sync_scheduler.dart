@@ -1,3 +1,4 @@
+import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:workmanager/workmanager.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flowpaisa/core/database/database.dart';
@@ -105,8 +106,20 @@ Future<bool> handleSyncTask(String task, Map<String, dynamic>? inputData) async 
     await prefs.reload();
 
     int syncedCount = 0;
+    final isPremium = prefs.getBool('is_premium_user') ?? false;
 
     for (final cashbook in cashbooks) {
+      // Skip locked cashbooks for free users
+      if (!isPremium &&
+          cashbook.id != 'default' &&
+          (cashbook.addSeq ?? 0) >= PremiumGate.cashbookTotalLimit) {
+        if (kDebugMode) {
+          print(
+              'SyncScheduler: Skipping locked cashbook: ${cashbook.name} (seq: ${cashbook.addSeq})');
+        }
+        continue;
+      }
+
       if (kDebugMode) {
         print(
             'SyncScheduler: Background sync starting for: ${cashbook.name} (DB: ${cashbook.dbPath})');

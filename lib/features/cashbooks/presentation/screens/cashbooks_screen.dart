@@ -103,7 +103,7 @@ class CashbooksScreen extends ConsumerWidget {
                 final isPremium = ref.watch(premiumProvider).isPremium;
                 final isLocked = !isPremium &&
                     cashbook.id != 'default' &&
-                    (cashbook.addSeq ?? 0) > PremiumGate.cashbookTotalLimit;
+                    (cashbook.addSeq ?? 0) >= PremiumGate.cashbookTotalLimit;
 
                 return Container(
                   margin: const EdgeInsets.only(bottom: 12),
@@ -131,13 +131,38 @@ class CashbooksScreen extends ConsumerWidget {
                         opacity: isLocked ? 0.5 : 1.0,
                         child: ListTile(
                           contentPadding: const EdgeInsets.all(16),
-                          leading: Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: color.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Icon(iconData, color: color, size: 28),
+                          leading: Stack(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: color.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Icon(iconData, color: color, size: 28),
+                              ),
+                              if (isLocked)
+                                Positioned(
+                                  right: 0,
+                                  bottom: 0,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(2),
+                                    decoration: BoxDecoration(
+                                      color: theme.colorScheme.surface,
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: theme.colorScheme.outlineVariant,
+                                        width: 1,
+                                      ),
+                                    ),
+                                    child: Icon(
+                                      Icons.lock,
+                                      size: 10,
+                                      color: theme.colorScheme.primary,
+                                    ),
+                                  ),
+                                ),
+                            ],
                           ),
                           title: Text(
                             cashbook.name,
@@ -261,43 +286,6 @@ class CashbooksScreen extends ConsumerWidget {
                                       _switchCashbook(context, ref, cashbook)),
                         ),
                       ),
-                      if (isLocked)
-                        Positioned.fill(
-                          child: Center(
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 6),
-                              decoration: BoxDecoration(
-                                color: theme.colorScheme.surfaceContainerHighest
-                                    .withValues(alpha: 0.9),
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(
-                                  color: theme.colorScheme.outlineVariant,
-                                  width: 1,
-                                ),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    Icons.lock_outline,
-                                    size: 14,
-                                    color: theme.colorScheme.primary,
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    'PREMIUM',
-                                    style: theme.textTheme.labelSmall?.copyWith(
-                                      color: theme.colorScheme.primary,
-                                      fontWeight: FontWeight.bold,
-                                      letterSpacing: 1.2,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
                     ],
                   ),
                 );
