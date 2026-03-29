@@ -1238,6 +1238,11 @@ class _DashboardTab extends ConsumerWidget {
       ),
       (DashboardWidgetKind.netWorth, l10n.netWorth, Icons.pie_chart_outline),
       (
+        DashboardWidgetKind.financialSummary,
+        l10n.financialSummary,
+        Icons.summarize_outlined
+      ),
+      (
         DashboardWidgetKind.quickActions,
         l10n.quickActions,
         Icons.grid_view_rounded

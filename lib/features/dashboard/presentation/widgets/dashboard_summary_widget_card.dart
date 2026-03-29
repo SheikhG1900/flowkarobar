@@ -234,6 +234,19 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
           ),
           () => _removeAt(ref, layoutIndex),
         );
+      case DashboardWidgetKind.financialSummary:
+        return wrapRemove(
+          _buildFinancialSummaryWidget(
+            context,
+            ref,
+            theme,
+            l10n,
+            currency,
+            filter,
+            onRemove: () => _removeAt(ref, layoutIndex),
+          ),
+          () => _removeAt(ref, layoutIndex),
+        );
       case DashboardWidgetKind.recentTransactions:
         return wrapRemove(
           _buildRecentTransactions(
@@ -249,6 +262,209 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
       default:
         return const SizedBox.shrink();
     }
+  }
+
+  Widget _buildFinancialSummaryWidget(
+    BuildContext context,
+    WidgetRef ref,
+    ThemeData theme,
+    AppLocalizations l10n,
+    dynamic currency,
+    DashboardFilter filter, {
+    required VoidCallback onRemove,
+    Key? reorderKey,
+  }) {
+    final async = ref.watch(dashboardStatsProvider);
+    final symbol = currency?.symbol ?? '';
+    final decimals = currency?.decimalPlaces ?? 2;
+
+    return async.when(
+      data: (s) {
+        final income = s.income(filter);
+        final expense = s.expense(filter);
+        final receivable = s.receivable(filter);
+        final payable = s.payable(filter);
+
+        return _wrapCard(
+          reorderKey: reorderKey,
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Material(
+              color: theme.cardColor,
+              borderRadius: BorderRadius.circular(16),
+              clipBehavior: Clip.antiAlias,
+              child: InkWell(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => const TransactionsListScreen()),
+                  );
+                },
+                onLongPress: () => _showSummaryActionsSheet(
+                  context,
+                  ref,
+                  onRemove,
+                  l10n,
+                ),
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                        color: theme.dividerColor.withValues(alpha: 0.1),
+                        width: 1),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildSmallStatItem(
+                              theme: theme,
+                              color: AppColors.payableColor,
+                              icon: Symbols.trending_down,
+                              label: l10n.payableTag,
+                              amount: payable,
+                              symbol: symbol,
+                              decimals: decimals,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: _buildSmallStatItem(
+                              theme: theme,
+                              color: AppColors.receivableColor,
+                              icon: Symbols.trending_up,
+                              label: l10n.receivableTag,
+                              amount: receivable,
+                              symbol: symbol,
+                              decimals: decimals,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildSmallStatItem(
+                              theme: theme,
+                              color: AppColors.expenseColor,
+                              icon: Symbols.trending_down,
+                              label: l10n.expenses,
+                              amount: expense,
+                              symbol: symbol,
+                              decimals: decimals,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: _buildSmallStatItem(
+                              theme: theme,
+                              color: AppColors.incomeColor,
+                              icon: Symbols.trending_up,
+                              label: l10n.income,
+                              amount: income,
+                              symbol: symbol,
+                              decimals: decimals,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      _buildBalanceRow(
+                        theme: theme,
+                        currencySymbol: symbol,
+                        decimalPlaces: decimals,
+                        isReceivableHigher: receivable >= payable,
+                        amount: (receivable - payable).abs(),
+                        labelWhenHigher: l10n.netReceivable,
+                        labelWhenLower: l10n.netPayable,
+                        gradientWhenHigher: AppColors.receivableGradient,
+                        gradientWhenLower: AppColors.payableGradient,
+                      ),
+                      const SizedBox(height: 8),
+                      _buildBalanceRow(
+                        theme: theme,
+                        currencySymbol: symbol,
+                        decimalPlaces: decimals,
+                        isReceivableHigher: income >= expense,
+                        amount: (income - expense).abs(),
+                        labelWhenHigher: l10n.netIncome,
+                        labelWhenLower: l10n.netExpenses,
+                        gradientWhenHigher: AppColors.incomeGradient,
+                        gradientWhenLower: AppColors.expenseGradient,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+      loading: () => _buildCardPlaceholder(theme),
+      error: (_, __) => const SizedBox.shrink(),
+    );
+  }
+
+  Widget _buildBalanceRow({
+    required ThemeData theme,
+    required String currencySymbol,
+    required int decimalPlaces,
+    required bool isReceivableHigher,
+    required double amount,
+    required String labelWhenHigher,
+    required String labelWhenLower,
+    required LinearGradient gradientWhenHigher,
+    required LinearGradient gradientWhenLower,
+  }) {
+    final isHigher = isReceivableHigher;
+    final label = isHigher ? labelWhenHigher : labelWhenLower;
+    final gradient = isHigher ? gradientWhenHigher : gradientWhenLower;
+
+    final transparentGradient = LinearGradient(
+      colors: gradient.colors.map((c) => c.withValues(alpha: .8)).toList(),
+      begin: gradient.begin,
+      end: gradient.end,
+      stops: gradient.stops,
+    );
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        gradient: transparentGradient,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: gradient.colors.first.withValues(alpha: 0.1),
+          width: .5,
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: theme.textTheme.labelMedium?.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+              fontSize: 10,
+            ),
+          ),
+          Text(
+            AmountFormatter.formatWithCurrency(
+                amount, currencySymbol, decimalPlaces),
+            style: theme.textTheme.titleSmall?.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 12,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildRecentTransactions(
