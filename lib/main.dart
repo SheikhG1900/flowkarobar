@@ -862,13 +862,22 @@ class _DashboardBodyScrollState extends ConsumerState<_DashboardBodyScroll> {
   /// Pull distance (px) to fully reveal the logo (matches header slot height).
   static const double _kLogoRevealMax = 118.0;
 
+  /// Extra distance (px) user must drag BEFORE the logo starts to reveal.
+  static const double _kLogoRevealThreshold = 20.0;
+
   double _logoRevealPull = 0.0;
 
   bool _onScrollNotification(ScrollNotification n) {
     if (n.metrics.axis != Axis.vertical) return false;
-    final next = n.metrics.pixels < 0
-        ? (-n.metrics.pixels).clamp(0.0, _kLogoRevealMax)
+
+    // Calculate how much the user has overscrolled
+    final overscroll = n.metrics.pixels < 0 ? -n.metrics.pixels : 0.0;
+
+    // Only start revealing the logo after passing the threshold
+    final next = overscroll > _kLogoRevealThreshold
+        ? (overscroll - _kLogoRevealThreshold).clamp(0.0, _kLogoRevealMax)
         : 0.0;
+
     if (next != _logoRevealPull) {
       setState(() => _logoRevealPull = next);
     }
@@ -2452,7 +2461,7 @@ class _DashboardHeader extends ConsumerWidget {
     double expandedHeight = 392;
     if (!showFinancialSummary) {
       expandedHeight -= 220;
-    } // Increased reduction to hide the empty space better
+    }
 
     return SliverAppBar(
       expandedHeight: expandedHeight,
