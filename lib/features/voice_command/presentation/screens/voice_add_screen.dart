@@ -57,6 +57,13 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
     super.initState();
     _transcriptController = TextEditingController();
     _checkModelStatus();
+    
+    // Auto-start listening when screen opens
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _listen();
+      }
+    });
   }
 
   Future<void> _checkModelStatus() async {
