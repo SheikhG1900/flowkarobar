@@ -31,6 +31,8 @@ import 'package:flowpaisa/shared/widgets/dual_amount_progress_bar.dart';
 import 'package:flowpaisa/features/transactions/presentation/widgets/schedule_selection_drawer.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/schedule_service_provider.dart';
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
+import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
+import 'package:flowpaisa/features/premium/domain/premium_provider.dart';
 import 'package:flowpaisa/features/transactions/presentation/screens/edit_split_transaction_screen.dart';
 import 'package:flowpaisa/features/transactions/presentation/widgets/transaction_scenario_picker.dart';
 import 'package:flowpaisa/features/transactions/presentation/widgets/split_bill_multi_contact_picker_sheet.dart';
@@ -1606,6 +1608,15 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                               if (snap == null || !snap.hasBudget) {
                                 return const SizedBox.shrink();
                               }
+                              final isPremium = ref.watch(premiumProvider).isPremium;
+                              final isBudgetLocked = !isPremium &&
+                                  (_selectedCategory?.budgetSeq ?? 0) >
+                                      PremiumGate.categoryBudgetTotalLimit;
+
+                              if (isBudgetLocked) {
+                                return const SizedBox.shrink();
+                              }
+
                               final catColor = _selectedCategory?.color != null
                                   ? Color(int.parse(_selectedCategory!.color!
                                       .replaceAll('#', '0xFF')))

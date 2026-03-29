@@ -2130,6 +2130,15 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                                     if (snap == null || !snap.hasBudget) {
                                       return const SizedBox.shrink();
                                     }
+                                    final isPremium = ref.watch(premiumProvider).isPremium;
+                                    final isBudgetLocked = !isPremium &&
+                                        (_selectedCategory?.budgetSeq ?? 0) >
+                                            PremiumGate.categoryBudgetTotalLimit;
+
+                                    if (isBudgetLocked) {
+                                      return const SizedBox.shrink();
+                                    }
+
                                     final catColor = _selectedCategory
                                                 ?.color !=
                                             null

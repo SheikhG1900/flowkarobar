@@ -19,6 +19,8 @@ import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/features/categories/presentation/screens/add_category_screen.dart';
 import 'package:flowpaisa/features/contacts/presentation/screens/add_contact_screen.dart';
 import 'package:flowpaisa/shared/widgets/dual_amount_progress_bar.dart';
+import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
+import 'package:flowpaisa/features/premium/domain/premium_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -352,6 +354,15 @@ class _EditSplitTransactionScreenState
                                     if (snap == null || !snap.hasBudget) {
                                       return const SizedBox.shrink();
                                     }
+                                    final isPremium = ref.watch(premiumProvider).isPremium;
+                                    final isBudgetLocked = !isPremium &&
+                                        (_selectedCategory!.budgetSeq ?? 0) >
+                                            PremiumGate.categoryBudgetTotalLimit;
+
+                                    if (isBudgetLocked) {
+                                      return const SizedBox.shrink();
+                                    }
+
                                     final catColor = Color(int.parse(
                                         _selectedCategory!.color!
                                             .replaceAll('#', '0xFF')));
