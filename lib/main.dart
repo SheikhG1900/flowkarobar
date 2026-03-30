@@ -934,7 +934,7 @@ class _DashboardBodyScrollState extends ConsumerState<_DashboardBodyScroll> {
                           children: [
                             const SyncStatusSection(),
                             if (showPrivacyHighlight) ...[
-                              const SizedBox(height: 2),
+                              const SizedBox(height: 12),
                               const _DashboardPrivacyHighlight(),
                               const SizedBox(height: 12),
                             ],
