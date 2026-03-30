@@ -3706,11 +3706,6 @@ class $ReceivablesTable extends Receivables
       defaultConstraints: GeneratedColumn.constraintIsAlways(
           'CHECK ("is_not_synced" IN (0, 1))'),
       defaultValue: const Constant(true));
-  static const VerificationMeta _addSeqMeta = const VerificationMeta('addSeq');
-  @override
-  late final GeneratedColumn<int> addSeq = GeneratedColumn<int>(
-      'add_seq', aliasedName, true,
-      type: DriftSqlType.int, requiredDuringInsert: false);
   @override
   List<GeneratedColumn> get $columns => [
         uuid,
@@ -3729,8 +3724,7 @@ class $ReceivablesTable extends Receivables
         createdAt,
         updatedAt,
         isDeleted,
-        isNotSynced,
-        addSeq
+        isNotSynced
       ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -3836,10 +3830,6 @@ class $ReceivablesTable extends Receivables
           isNotSynced.isAcceptableOrUnknown(
               data['is_not_synced']!, _isNotSyncedMeta));
     }
-    if (data.containsKey('add_seq')) {
-      context.handle(_addSeqMeta,
-          addSeq.isAcceptableOrUnknown(data['add_seq']!, _addSeqMeta));
-    }
     return context;
   }
 
@@ -3883,8 +3873,6 @@ class $ReceivablesTable extends Receivables
           .read(DriftSqlType.bool, data['${effectivePrefix}is_deleted'])!,
       isNotSynced: attachedDatabase.typeMapping
           .read(DriftSqlType.bool, data['${effectivePrefix}is_not_synced'])!,
-      addSeq: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}add_seq']),
     );
   }
 
@@ -3912,7 +3900,6 @@ class Receivable extends DataClass implements Insertable<Receivable> {
   final DateTime updatedAt;
   final bool isDeleted;
   final bool isNotSynced;
-  final int? addSeq;
   const Receivable(
       {required this.uuid,
       required this.contactUuid,
@@ -3930,8 +3917,7 @@ class Receivable extends DataClass implements Insertable<Receivable> {
       required this.createdAt,
       required this.updatedAt,
       required this.isDeleted,
-      required this.isNotSynced,
-      this.addSeq});
+      required this.isNotSynced});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -3964,9 +3950,6 @@ class Receivable extends DataClass implements Insertable<Receivable> {
     map['updated_at'] = Variable<DateTime>(updatedAt);
     map['is_deleted'] = Variable<bool>(isDeleted);
     map['is_not_synced'] = Variable<bool>(isNotSynced);
-    if (!nullToAbsent || addSeq != null) {
-      map['add_seq'] = Variable<int>(addSeq);
-    }
     return map;
   }
 
@@ -4001,8 +3984,6 @@ class Receivable extends DataClass implements Insertable<Receivable> {
       updatedAt: Value(updatedAt),
       isDeleted: Value(isDeleted),
       isNotSynced: Value(isNotSynced),
-      addSeq:
-          addSeq == null && nullToAbsent ? const Value.absent() : Value(addSeq),
     );
   }
 
@@ -4028,7 +4009,6 @@ class Receivable extends DataClass implements Insertable<Receivable> {
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       isDeleted: serializer.fromJson<bool>(json['isDeleted']),
       isNotSynced: serializer.fromJson<bool>(json['isNotSynced']),
-      addSeq: serializer.fromJson<int?>(json['addSeq']),
     );
   }
   @override
@@ -4052,7 +4032,6 @@ class Receivable extends DataClass implements Insertable<Receivable> {
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'isDeleted': serializer.toJson<bool>(isDeleted),
       'isNotSynced': serializer.toJson<bool>(isNotSynced),
-      'addSeq': serializer.toJson<int?>(addSeq),
     };
   }
 
@@ -4073,8 +4052,7 @@ class Receivable extends DataClass implements Insertable<Receivable> {
           DateTime? createdAt,
           DateTime? updatedAt,
           bool? isDeleted,
-          bool? isNotSynced,
-          Value<int?> addSeq = const Value.absent()}) =>
+          bool? isNotSynced}) =>
       Receivable(
         uuid: uuid ?? this.uuid,
         contactUuid: contactUuid ?? this.contactUuid,
@@ -4099,7 +4077,6 @@ class Receivable extends DataClass implements Insertable<Receivable> {
         updatedAt: updatedAt ?? this.updatedAt,
         isDeleted: isDeleted ?? this.isDeleted,
         isNotSynced: isNotSynced ?? this.isNotSynced,
-        addSeq: addSeq.present ? addSeq.value : this.addSeq,
       );
   Receivable copyWithCompanion(ReceivablesCompanion data) {
     return Receivable(
@@ -4134,7 +4111,6 @@ class Receivable extends DataClass implements Insertable<Receivable> {
       isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
       isNotSynced:
           data.isNotSynced.present ? data.isNotSynced.value : this.isNotSynced,
-      addSeq: data.addSeq.present ? data.addSeq.value : this.addSeq,
     );
   }
 
@@ -4157,8 +4133,7 @@ class Receivable extends DataClass implements Insertable<Receivable> {
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('isDeleted: $isDeleted, ')
-          ..write('isNotSynced: $isNotSynced, ')
-          ..write('addSeq: $addSeq')
+          ..write('isNotSynced: $isNotSynced')
           ..write(')'))
         .toString();
   }
@@ -4181,8 +4156,7 @@ class Receivable extends DataClass implements Insertable<Receivable> {
       createdAt,
       updatedAt,
       isDeleted,
-      isNotSynced,
-      addSeq);
+      isNotSynced);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -4203,8 +4177,7 @@ class Receivable extends DataClass implements Insertable<Receivable> {
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.isDeleted == this.isDeleted &&
-          other.isNotSynced == this.isNotSynced &&
-          other.addSeq == this.addSeq);
+          other.isNotSynced == this.isNotSynced);
 }
 
 class ReceivablesCompanion extends UpdateCompanion<Receivable> {
@@ -4225,7 +4198,6 @@ class ReceivablesCompanion extends UpdateCompanion<Receivable> {
   final Value<DateTime> updatedAt;
   final Value<bool> isDeleted;
   final Value<bool> isNotSynced;
-  final Value<int?> addSeq;
   final Value<int> rowid;
   const ReceivablesCompanion({
     this.uuid = const Value.absent(),
@@ -4245,7 +4217,6 @@ class ReceivablesCompanion extends UpdateCompanion<Receivable> {
     this.updatedAt = const Value.absent(),
     this.isDeleted = const Value.absent(),
     this.isNotSynced = const Value.absent(),
-    this.addSeq = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   ReceivablesCompanion.insert({
@@ -4266,7 +4237,6 @@ class ReceivablesCompanion extends UpdateCompanion<Receivable> {
     this.updatedAt = const Value.absent(),
     this.isDeleted = const Value.absent(),
     this.isNotSynced = const Value.absent(),
-    this.addSeq = const Value.absent(),
     this.rowid = const Value.absent(),
   })  : uuid = Value(uuid),
         contactUuid = Value(contactUuid),
@@ -4290,7 +4260,6 @@ class ReceivablesCompanion extends UpdateCompanion<Receivable> {
     Expression<DateTime>? updatedAt,
     Expression<bool>? isDeleted,
     Expression<bool>? isNotSynced,
-    Expression<int>? addSeq,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -4311,7 +4280,6 @@ class ReceivablesCompanion extends UpdateCompanion<Receivable> {
       if (updatedAt != null) 'updated_at': updatedAt,
       if (isDeleted != null) 'is_deleted': isDeleted,
       if (isNotSynced != null) 'is_not_synced': isNotSynced,
-      if (addSeq != null) 'add_seq': addSeq,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -4334,7 +4302,6 @@ class ReceivablesCompanion extends UpdateCompanion<Receivable> {
       Value<DateTime>? updatedAt,
       Value<bool>? isDeleted,
       Value<bool>? isNotSynced,
-      Value<int?>? addSeq,
       Value<int>? rowid}) {
     return ReceivablesCompanion(
       uuid: uuid ?? this.uuid,
@@ -4354,7 +4321,6 @@ class ReceivablesCompanion extends UpdateCompanion<Receivable> {
       updatedAt: updatedAt ?? this.updatedAt,
       isDeleted: isDeleted ?? this.isDeleted,
       isNotSynced: isNotSynced ?? this.isNotSynced,
-      addSeq: addSeq ?? this.addSeq,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -4413,9 +4379,6 @@ class ReceivablesCompanion extends UpdateCompanion<Receivable> {
     if (isNotSynced.present) {
       map['is_not_synced'] = Variable<bool>(isNotSynced.value);
     }
-    if (addSeq.present) {
-      map['add_seq'] = Variable<int>(addSeq.value);
-    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -4442,7 +4405,6 @@ class ReceivablesCompanion extends UpdateCompanion<Receivable> {
           ..write('updatedAt: $updatedAt, ')
           ..write('isDeleted: $isDeleted, ')
           ..write('isNotSynced: $isNotSynced, ')
-          ..write('addSeq: $addSeq, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -12310,7 +12272,6 @@ typedef $$ReceivablesTableCreateCompanionBuilder = ReceivablesCompanion
   Value<DateTime> updatedAt,
   Value<bool> isDeleted,
   Value<bool> isNotSynced,
-  Value<int?> addSeq,
   Value<int> rowid,
 });
 typedef $$ReceivablesTableUpdateCompanionBuilder = ReceivablesCompanion
@@ -12332,7 +12293,6 @@ typedef $$ReceivablesTableUpdateCompanionBuilder = ReceivablesCompanion
   Value<DateTime> updatedAt,
   Value<bool> isDeleted,
   Value<bool> isNotSynced,
-  Value<int?> addSeq,
   Value<int> rowid,
 });
 
@@ -12438,9 +12398,6 @@ class $$ReceivablesTableFilterComposer
 
   ColumnFilters<bool> get isNotSynced => $composableBuilder(
       column: $table.isNotSynced, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<int> get addSeq => $composableBuilder(
-      column: $table.addSeq, builder: (column) => ColumnFilters(column));
 
   $$ContactsTableFilterComposer get contactUuid {
     final $$ContactsTableFilterComposer composer = $composerBuilder(
@@ -12557,9 +12514,6 @@ class $$ReceivablesTableOrderingComposer
   ColumnOrderings<bool> get isNotSynced => $composableBuilder(
       column: $table.isNotSynced, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get addSeq => $composableBuilder(
-      column: $table.addSeq, builder: (column) => ColumnOrderings(column));
-
   $$ContactsTableOrderingComposer get contactUuid {
     final $$ContactsTableOrderingComposer composer = $composerBuilder(
         composer: this,
@@ -12672,9 +12626,6 @@ class $$ReceivablesTableAnnotationComposer
   GeneratedColumn<bool> get isNotSynced => $composableBuilder(
       column: $table.isNotSynced, builder: (column) => column);
 
-  GeneratedColumn<int> get addSeq =>
-      $composableBuilder(column: $table.addSeq, builder: (column) => column);
-
   $$ContactsTableAnnotationComposer get contactUuid {
     final $$ContactsTableAnnotationComposer composer = $composerBuilder(
         composer: this,
@@ -12777,7 +12728,6 @@ class $$ReceivablesTableTableManager extends RootTableManager<
             Value<DateTime> updatedAt = const Value.absent(),
             Value<bool> isDeleted = const Value.absent(),
             Value<bool> isNotSynced = const Value.absent(),
-            Value<int?> addSeq = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               ReceivablesCompanion(
@@ -12798,7 +12748,6 @@ class $$ReceivablesTableTableManager extends RootTableManager<
             updatedAt: updatedAt,
             isDeleted: isDeleted,
             isNotSynced: isNotSynced,
-            addSeq: addSeq,
             rowid: rowid,
           ),
           createCompanionCallback: ({
@@ -12819,7 +12768,6 @@ class $$ReceivablesTableTableManager extends RootTableManager<
             Value<DateTime> updatedAt = const Value.absent(),
             Value<bool> isDeleted = const Value.absent(),
             Value<bool> isNotSynced = const Value.absent(),
-            Value<int?> addSeq = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               ReceivablesCompanion.insert(
@@ -12840,7 +12788,6 @@ class $$ReceivablesTableTableManager extends RootTableManager<
             updatedAt: updatedAt,
             isDeleted: isDeleted,
             isNotSynced: isNotSynced,
-            addSeq: addSeq,
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0

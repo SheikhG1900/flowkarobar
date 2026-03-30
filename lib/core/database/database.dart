@@ -127,8 +127,6 @@ class Receivables extends Table {
   BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
   BoolColumn get isNotSynced => boolean().withDefault(const Constant(true))();
 
-  IntColumn get addSeq => integer().nullable()();
-
   @override
   Set<Column> get primaryKey => {uuid};
 }
@@ -367,7 +365,7 @@ class AppDatabase extends _$AppDatabase {
       : super(executor ?? openConnection(fileName));
 
   @override
-  int get schemaVersion => 22;
+  int get schemaVersion => 23;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -586,6 +584,20 @@ class AppDatabase extends _$AppDatabase {
             } catch (e) {
               if (kDebugMode) {
                 print('Migration: sequence columns might already exist: $e');
+              }
+            }
+          }
+
+          // Migration from version 22 to 23: Remove add_seq from Receivables if it was added
+          if (from <= 22) {
+            try {
+              // SQLite doesn't support DROP COLUMN easily in older versions, 
+              // but we can try it for newer versions or just ignore if it fails.
+              // Since we're using Drift, we'll use a raw statement.
+              await customStatement('ALTER TABLE receivables DROP COLUMN add_seq;');
+            } catch (e) {
+              if (kDebugMode) {
+                print('Migration: Failed to drop add_seq from receivables (likely not supported or column missing): $e');
               }
             }
           }
