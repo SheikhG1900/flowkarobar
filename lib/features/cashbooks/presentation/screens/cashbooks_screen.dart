@@ -760,6 +760,8 @@ class CashbooksScreen extends ConsumerWidget {
                         child: Text(l10n.cancel),
                       ),
                       FilledButton(
+                        style: FilledButton.styleFrom(
+                            foregroundColor: theme.colorScheme.onPrimary),
                         onPressed: () => Navigator.pop(dialogContext, true),
                         child: Text(l10n.restore),
                       ),
@@ -1094,21 +1096,26 @@ class CashbooksScreen extends ConsumerWidget {
       final confirmed = await showDialog<bool>(
         context: rootContext,
         barrierDismissible: false,
-        builder: (context) => AlertDialog(
-          title: Text(l10n.restore),
-          content: Text(l10n.restoreBackupMessage),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: Text(l10n.cancel),
-            ),
-            FilledButton(
-              style: FilledButton.styleFrom(foregroundColor: Colors.white),
-              onPressed: () => Navigator.pop(context, true),
-              child: Text(l10n.restore),
-            ),
-          ],
-        ),
+        builder: (dialogContext) {
+          final activeColor = ref.watch(activeCashbookProvider).color;
+          final theme = Theme.of(dialogContext);
+          return AlertDialog(
+            title: Text(l10n.restore),
+            content: Text(l10n.restoreBackupMessage),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext, false),
+                child: Text(l10n.cancel),
+              ),
+              FilledButton(
+                style: FilledButton.styleFrom(
+                    foregroundColor: theme.colorScheme.onPrimary),
+                onPressed: () => Navigator.pop(dialogContext, true),
+                child: Text(l10n.restore),
+              ),
+            ],
+          );
+        },
       );
 
       if (kDebugMode)
