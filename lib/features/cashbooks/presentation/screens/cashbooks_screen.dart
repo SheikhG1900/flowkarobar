@@ -92,8 +92,7 @@ class CashbooksScreen extends ConsumerWidget {
           ? const Center(child: CircularProgressIndicator())
           : ListView.builder(
               padding: const EdgeInsets.all(16).copyWith(
-                  bottom:
-                      80), // Added bottom padding to ensure FABs don't block
+                  bottom: 80 + MediaQuery.of(context).padding.bottom),
               itemCount: cashbooks.length,
               itemBuilder: (context, index) {
                 final cashbook = cashbooks[index];

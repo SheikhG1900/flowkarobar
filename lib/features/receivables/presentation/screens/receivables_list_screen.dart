@@ -667,8 +667,8 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
             ),
           ),
         // Bottom padding
-        const SliverToBoxAdapter(
-          child: SizedBox(height: 80),
+        SliverToBoxAdapter(
+          child: SizedBox(height: 80 + MediaQuery.of(context).padding.bottom),
         ),
       ],
     );
