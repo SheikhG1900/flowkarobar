@@ -5,13 +5,13 @@ import 'package:flutter/material.dart';
 class AppColors {
   // Primary Brand Gradients (GermGuard-inspired - Professional Cyan/Blue)
   static const primaryGradient = LinearGradient(
-    colors: [Color(0xFF00D4FF), Color(0xFF0088CC)], // Bright Cyan to Deep Blue
+    colors: [Color(0xFF00B8E6), Color(0xFF006699)], // Darker Cyan to Darker Deep Blue
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   static const secondaryGradient = LinearGradient(
-    colors: [Color(0xFF00B8FF), Color(0xFF0066FF)], // Electric Blue gradient
+    colors: [Color(0xFF0099CC), Color(0xFF0044CC)], // Darker Electric Blue gradient
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
@@ -61,7 +61,7 @@ class AppColors {
   );
 
   static const receivableGradient = LinearGradient(
-    colors: [Color(0xFF22D3EE), Color(0xFF0EA5E9)], // Cyan to Sky Blue
+    colors: [Color(0xFF00ACC1), Color(0xFF0288D1)], // Darker Cyan to Darker Sky Blue
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
@@ -96,10 +96,10 @@ class AppColors {
   }
 
   // Solid Brand Colors (extracted from GermGuard palette)
-  static const brightCyan = Color(0xFF00D4FF);
-  static const deepBlue = Color(0xFF0088CC);
-  static const electricBlue = Color(0xFF00B8FF);
-  static const secondaryColor = Color(0xFF00B8FF); // Secondary brand color
+  static const brightCyan = Color(0xFF00B8E6);
+  static const deepBlue = Color(0xFF006699);
+  static const electricBlue = Color(0xFF0099CC);
+  static const secondaryColor = Color(0xFF0099CC); // Secondary brand color
   static const teal = Color(0xFF00B8A3);
   static const successGreen = Color(0xFF10B981);
   static const warningOrange = Color(0xFFFF9A76);
@@ -138,7 +138,7 @@ class AppColors {
   static const incomeColor = Color(0xFF10B981);
   static const expenseColor =
       Color(0xFFFF7043); // Warm orange instead of shocking pink
-  static const receivableColor = Color(0xFF22D3EE); // Cyan
+  static const receivableColor = Color(0xFF00ACC1); // Darker Cyan
   static const payableColor = Color(0xFFFBBF24); // Amber
 
   /// [FilledButton] for marking a linked payable as paid (transaction details, split list, etc.).
@@ -150,28 +150,28 @@ class AppColors {
       FilledButton.styleFrom(backgroundColor: receivableColor);
 
   // Section Colors (for FABs, tabs, and quick actions)
-  static const dashboardSectionColor = Color(0xFF00D4FF); // Bright Cyan
-  static const transactionsSectionColor = Color(0xFF00B8FF); // Electric Blue
-  static const receivablesSectionColor = Color(0xFF22D3EE); // Cyan
+  static const dashboardSectionColor = Color(0xFF00B8E6); // Darker Cyan
+  static const transactionsSectionColor = Color(0xFF0099CC); // Darker Electric Blue
+  static const receivablesSectionColor = Color(0xFF00ACC1); // Darker Cyan
   static const payablesSectionColor = Color(0xFFFBBF24); // Amber
   static const analyticsSectionColor = Color(0xFF8B5CF6); // Purple
   static const settingsSectionColor = Color(0xFF64748B); // Slate Gray
 
   // Section Gradients
   static const dashboardSectionGradient = LinearGradient(
-    colors: [Color(0xFF0088CC), Color(0xFF00D4FF)], // Primary gradient
+    colors: [Color(0xFF006699), Color(0xFF00B8E6)], // Primary gradient
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   static const transactionsSectionGradient = LinearGradient(
-    colors: [Color(0xFF0088CC), Color(0xFF00D4FF)], // Primary gradient
+    colors: [Color(0xFF006699), Color(0xFF00B8E6)], // Primary gradient
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   static const receivablesSectionGradient = LinearGradient(
-    colors: [Color(0xFF0EA5E9), Color(0xFF22D3EE)], // Cyan gradient
+    colors: [Color(0xFF0288D1), Color(0xFF00ACC1)], // Cyan gradient
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );

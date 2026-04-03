@@ -1,5 +1,4 @@
 import 'package:flutter/foundation.dart';
-import 'package:google_mlkit_entity_extraction/google_mlkit_entity_extraction.dart';
 import 'package:flowpaisa/features/transactions/domain/models/parsed_transaction_input.dart';
 
 /// Base contract for text-to-transaction parsers.
@@ -10,124 +9,139 @@ abstract class TransactionTextParser {
   });
 }
 
+/// Internal Entity Types to replace ML Kit types
+enum InternalEntityType {
+  dateTime,
+  money,
+  phone,
+  email,
+  url,
+  unknown
+}
+
+/// Internal Entity Annotation to replace ML Kit's version
+class InternalEntityAnnotation {
+  final int start;
+  final int end;
+  final String text;
+  final List<InternalEntity> entities;
+
+  const InternalEntityAnnotation({
+    required this.start,
+    required this.end,
+    required this.text,
+    required this.entities,
+  });
+}
+
+abstract class InternalEntity {
+  InternalEntityType get type;
+}
+
+class InternalMoneyEntity extends InternalEntity {
+  @override
+  InternalEntityType get type => InternalEntityType.money;
+  final int integerPart;
+  final int fractionPart;
+  InternalMoneyEntity({required this.integerPart, required this.fractionPart});
+}
+
+class InternalDateTimeEntity extends InternalEntity {
+  @override
+  InternalEntityType get type => InternalEntityType.dateTime;
+  final int timestamp; // milliseconds
+  InternalDateTimeEntity({required this.timestamp});
+}
+
+class InternalOtherEntity extends InternalEntity {
+  final InternalEntityType _type;
+  @override
+  InternalEntityType get type => _type;
+  InternalOtherEntity(this._type);
+}
+
 /// Result of entity extraction: raw annotations plus processed data.
 class ExtractResult {
-  final List<EntityAnnotation> annotations;
+  final List<InternalEntityAnnotation> annotations;
   final Map<String, dynamic> data;
 
   const ExtractResult({required this.annotations, required this.data});
 }
 
-/// Shared ML Kit based entity extraction. Receipt- and voice-agnostic.
+/// Shared Regex-based entity extraction. Receipt- and voice-agnostic.
+/// Replaces google_mlkit_entity_extraction to maintain SDK 24 compatibility.
 abstract class BaseTransactionAiParser implements TransactionTextParser {
-  final EntityExtractor _extractor =
-      EntityExtractor(language: EntityExtractorLanguage.english);
-
+  
   Future<void> close() async {
-    await _extractor.close();
+    // No-op now that ML Kit is removed
   }
 
-  /// Extracts a numeric amount from an entity when it's a number type or rawValue parses as number.
-  /// Use when MoneyEntity is not found; supports NumberEntity when API provides it, else rawValue.
-  static double? _numberFromEntity(dynamic entity) {
-    // When google_mlkit_entity_extraction adds EntityType.number and NumberEntity, add:
-    // if (entity.type == EntityType.number) return (entity as NumberEntity).value.toDouble();
-    final raw = entity.rawValue?.replaceAll(',', '') ?? '';
-    final val = double.tryParse(raw);
-    if (val != null && val > 0 && val <= 1000000) return val;
-    return null;
-  }
-
-  /// Runs annotateText once and returns both annotations and processed data.
+  /// Runs regex-based extraction and returns both annotations and processed data.
   @protected
   Future<ExtractResult> extractEntitiesWithAnnotations(String text) async {
-    final List<EntityAnnotation> annotations =
-        await _extractor.annotateText(text);
-
+    final List<InternalEntityAnnotation> annotations = [];
     final Map<String, dynamic> extractedData = {
       'amount': <double>[],
       'date': <DateTime>[],
       'phone': <String>[],
     };
 
-    for (final annotation in annotations) {
-      bool amountFoundInAnnotation = false;
-      bool hasNoiseEntity = false;
-
-      // 1. Identify all entities in this span and handle non-amount ones.
-      for (final entity in annotation.entities) {
-        switch (entity.type) {
-          case EntityType.dateTime:
-            final dateEntity = entity as DateTimeEntity;
-            (extractedData['date'] as List<DateTime>).add(
-                DateTime.fromMillisecondsSinceEpoch(dateEntity.timestamp));
-            hasNoiseEntity = true;
-            break;
-          case EntityType.phone:
-            (extractedData['phone'] as List<String>).add(annotation.text);
-            hasNoiseEntity = true;
-            break;
-          case EntityType.address:
-          case EntityType.email:
-          case EntityType.url:
-          case EntityType.trackingNumber:
-          case EntityType.isbn:
-          case EntityType.iban:
-          case EntityType.flightNumber:
-          case EntityType.paymentCard:
-            hasNoiseEntity = true;
-            break;
-          case EntityType.money:
-            amountFoundInAnnotation = true;
-            final moneyEntity = entity as MoneyEntity;
-            double val = (moneyEntity.integerPart).toDouble() +
-                ((moneyEntity.fractionPart) / 100.0);
-            if (val > 0) {
-              (extractedData['amount'] as List<double>).add(val);
-            }
-            break;
-          default:
-            // Could be unknown or a future type.
-            break;
+    // 1. Extract Dates
+    final dateRegex = RegExp(r'\b(\d{1,2})[-/](\d{1,2})[-/](\d{2,4})\b');
+    for (final match in dateRegex.allMatches(text)) {
+      try {
+        int p1 = int.parse(match.group(1)!);
+        int p2 = int.parse(match.group(2)!);
+        int p3 = int.parse(match.group(3)!);
+        int year = p3 > 100 ? p3 : 2000 + p3;
+        int month = p1 > 12 ? p2 : p1;
+        int day = p1 > 12 ? p1 : p2;
+        
+        final date = DateTime(year, month, day);
+        if (date.year > 2020 && date.year < 2100) {
+          final annotation = InternalEntityAnnotation(
+            start: match.start,
+            end: match.end,
+            text: match.group(0)!,
+            entities: [InternalDateTimeEntity(timestamp: date.millisecondsSinceEpoch)],
+          );
+          annotations.add(annotation);
+          (extractedData['date'] as List<DateTime>).add(date);
         }
+      } catch (_) {}
+    }
+
+    // 2. Extract Money/Amounts
+    // Look for currency symbols or keywords followed by numbers
+    final moneyRegex = RegExp(r'(?:rs|₹|pkr|\$|€|£|total|amount|net|paid)[\s\.:]*(\d+(?:[.,]\d{2})?)', caseSensitive: false);
+    for (final match in moneyRegex.allMatches(text)) {
+      final amountStr = match.group(1)!.replaceAll(',', '');
+      final val = double.tryParse(amountStr);
+      if (val != null && val > 0 && val <= 1000000) {
+        final parts = amountStr.split('.');
+        final integerPart = int.parse(parts[0]);
+        final fractionPart = parts.length > 1 ? int.parse(parts[1].padRight(2, '0').substring(0, 2)) : 0;
+
+        annotations.add(InternalEntityAnnotation(
+          start: match.start,
+          end: match.end,
+          text: match.group(0)!,
+          entities: [InternalMoneyEntity(integerPart: integerPart, fractionPart: fractionPart)],
+        ));
+        (extractedData['amount'] as List<double>).add(val);
       }
+    }
 
-      // 2. Fallback to numeric extraction ONLY if no noise entities were found
-      // and no MoneyEntity was already processed for this span.
-      if (!hasNoiseEntity && !amountFoundInAnnotation) {
-        // Check for plain numbers in annotation text. This helps both receipts and voice.
-        final cleanText = annotation.text.replaceAll(',', '');
-        final numericMatch = RegExp(r'(\d+(?:\.\d+)?)').firstMatch(cleanText);
-        if (numericMatch != null) {
-          final val = double.tryParse(numericMatch.group(1)!);
-          if (val != null && val > 0 && val <= 1000000) {
-            if (!(extractedData['amount'] as List<double>).contains(val)) {
-              (extractedData['amount'] as List<double>).add(val);
-            }
-          }
-        }
-
-        // Also check entities that didn't match the switch (e.g. unknown or future types)
-        for (final entity in annotation.entities) {
-          if (entity.type != EntityType.money &&
-              entity.type != EntityType.dateTime &&
-              entity.type != EntityType.phone) {
-            final numberVal = _numberFromEntity(entity);
-            if (numberVal != null) {
-              if (!(extractedData['amount'] as List<double>).contains(numberVal)) {
-                (extractedData['amount'] as List<double>).add(numberVal);
-              }
-            }
-          }
-        }
-      }
-
-      if (kDebugMode) {
-        for (final entity in annotation.entities) {
-          debugPrint(
-              'ML Kit Found Entity: ${entity.type} -> ${annotation.text}');
-        }
-      }
+    // 3. Extract Phone Numbers (Simple 10+ digit check)
+    final phoneRegex = RegExp(r'\b(?:\+?\d{1,3}[- ]?)?\d{10,12}\b');
+    for (final match in phoneRegex.allMatches(text)) {
+      annotations.add(InternalEntityAnnotation(
+        start: match.start,
+        end: match.end,
+        text: match.group(0)!,
+        entities: [InternalOtherEntity(InternalEntityType.phone)],
+      ));
+      (extractedData['phone'] as List<String>).add(match.group(0)!);
     }
 
     return ExtractResult(annotations: annotations, data: extractedData);

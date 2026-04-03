@@ -1,7 +1,6 @@
 import 'dart:ui' show Rect;
 
 import 'package:flutter/foundation.dart';
-import 'package:google_mlkit_entity_extraction/google_mlkit_entity_extraction.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:flowpaisa/core/entity_extraction/entity_extraction_base.dart';
 import 'package:flowpaisa/features/transactions/domain/models/parsed_transaction_input.dart';
@@ -252,14 +251,14 @@ class ReceiptAiParser extends BaseTransactionAiParser {
   }
 
   /// Logs ML Kit entity annotations (text span and entity types/values) for review.
-  void _logMlKitAnnotations(List<EntityAnnotation> annotations) {
+  void _logMlKitAnnotations(List<InternalEntityAnnotation> annotations) {
     debugPrint(
         '[ReceiptAmount] ML Kit annotations: ${annotations.length} span(s)');
     for (int i = 0; i < annotations.length; i++) {
       final a = annotations[i];
       final entitySummary = a.entities.map((e) {
-        if (e.type == EntityType.money) {
-          final m = e as MoneyEntity;
+        if (e.type == InternalEntityType.money) {
+          final m = e as InternalMoneyEntity;
           final val = (m.integerPart).toDouble() + (m.fractionPart / 100.0);
           return 'Money($val)';
         }
@@ -497,7 +496,7 @@ class ReceiptAiParser extends BaseTransactionAiParser {
   /// Prefers MoneyEntity on the same logical line as "total" (by character offset),
   /// then the first MoneyEntity anywhere. Uses annotation.start to map to line index.
   double? _getBestAmountFromMoneyEntities(
-      String rawText, List<EntityAnnotation> annotations) {
+      String rawText, List<InternalEntityAnnotation> annotations) {
     if (annotations.isEmpty) return null;
 
     final lines = rawText.split(RegExp(r'[\n\r]+'));
@@ -532,7 +531,7 @@ class ReceiptAiParser extends BaseTransactionAiParser {
       return lineIndex >= totalLineIndex && lineIndex <= totalLineIndex + 1;
     }
 
-    double? fromMoney(MoneyEntity e) {
+    double? fromMoney(InternalMoneyEntity e) {
       final val = (e.integerPart).toDouble() + (e.fractionPart / 100.0);
       if (val > 0 && val <= 1000000) return val;
       return null;
@@ -543,8 +542,8 @@ class ReceiptAiParser extends BaseTransactionAiParser {
       final lineIndex = lineIndexFor(annotation.start);
       if (!isOnTotalLineOrNext(lineIndex)) continue;
       for (final entity in annotation.entities) {
-        if (entity.type == EntityType.money) {
-          final amount = fromMoney(entity as MoneyEntity);
+        if (entity.type == InternalEntityType.money) {
+          final amount = fromMoney(entity as InternalMoneyEntity);
           if (amount != null) return amount;
         }
       }
@@ -553,8 +552,8 @@ class ReceiptAiParser extends BaseTransactionAiParser {
     // 2) First MoneyEntity anywhere.
     for (final annotation in annotations) {
       for (final entity in annotation.entities) {
-        if (entity.type == EntityType.money) {
-          final amount = fromMoney(entity as MoneyEntity);
+        if (entity.type == InternalEntityType.money) {
+          final amount = fromMoney(entity as InternalMoneyEntity);
           if (amount != null) return amount;
         }
       }

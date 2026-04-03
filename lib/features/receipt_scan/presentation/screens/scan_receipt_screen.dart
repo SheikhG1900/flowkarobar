@@ -27,7 +27,6 @@ import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/core/utils/category_helper.dart';
 import 'package:flowpaisa/core/utils/string_similarity.dart';
-import 'package:google_mlkit_entity_extraction/google_mlkit_entity_extraction.dart';
 
 class ScanReceiptScreen extends ConsumerStatefulWidget {
   const ScanReceiptScreen({super.key});
@@ -40,14 +39,10 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
   final ImagePicker _picker = ImagePicker();
   final ReceiptParser _parser = ReceiptParser();
   final ReceiptAiParser _aiParser = ReceiptAiParser();
-  final EntityExtractorModelManager _modelManager =
-      EntityExtractorModelManager();
 
   File? _image;
   bool _isScanning = false;
   bool _usedAi = false;
-  bool _isDownloading = false;
-  bool _modelDownloaded = false;
   bool _showRuleBasedCandidates = false;
   ReceiptData? _receiptData;
   ReceiptData? _aiRawResult;
@@ -70,20 +65,8 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
     _dateController = TextEditingController();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
-      await _checkModelDownloaded();
-      if (!mounted) return;
       _dateController.text = AppDateFormatter.formatDate(_selectedDate);
-      // Start downloading the AI model immediately when screen opens (if not already present)
-      if (!_modelDownloaded && !_isDownloading) {
-        _startDownload();
-      }
     });
-  }
-
-  Future<void> _checkModelDownloaded() async {
-    final downloaded = await _modelManager
-        .isModelDownloaded(EntityExtractorLanguage.english.name);
-    if (mounted) setState(() => _modelDownloaded = downloaded);
   }
 
   @override
@@ -93,30 +76,6 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
     _dateController.dispose();
     _aiParser.close();
     super.dispose();
-  }
-
-  Future<void> _startDownload() async {
-    setState(() {
-      _isDownloading = true;
-    });
-    try {
-      final success = await _modelManager
-          .downloadModel(EntityExtractorLanguage.english.name);
-      if (success && mounted) {
-        await _checkModelDownloaded();
-      } else if (mounted && !success) {
-        ToastUtils.showErrorToast(context, ref,
-            "Failed to download AI model. Please check your connection.");
-      }
-    } catch (e) {
-      if (mounted) {
-        ToastUtils.showErrorToast(context, ref, e.toString());
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isDownloading = false);
-      }
-    }
   }
 
   Future<void> _pickImage(ImageSource source) async {
@@ -188,17 +147,10 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
       ParsedTransactionInput? aiResult;
       bool usedAi = false;
 
-      // Check if model is downloaded and limit not reached
-      final isModelReady = await _modelManager
-          .isModelDownloaded(EntityExtractorLanguage.english.name);
+      // Check if limit not reached
       final limits = await PremiumGate.getSmartParsingLimits(ref);
 
-      // On first scan, download ML Kit model in background for next time (no explicit button).
-      if (!isModelReady && !_isDownloading) {
-        _startDownload();
-      }
-
-      if (isModelReady && limits.canAdd) {
+      if (limits.canAdd) {
         aiResult = await _aiParser.parse(
           recognizedText.text,
           customSymbols: dbSymbols,
@@ -211,7 +163,7 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
               .read(usageTrackerRepositoryProvider)
               .incrementSmartParsingCount();
         }
-      } else if (isModelReady && !limits.canAdd) {
+      } else {
         if (mounted) {
           ToastUtils.showWarningToast(
               context, ref, l10n.smartParsingLimitReached);
@@ -605,24 +557,6 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
                                       ),
                                   ],
                                 ),
-
-                                if (_isDownloading) ...[
-                                  const SizedBox(height: 24),
-                                  Text(
-                                    "Downloading Smart AI Model...",
-                                    style: theme.textTheme.bodySmall,
-                                  ),
-                                  const SizedBox(height: 8),
-                                  SizedBox(
-                                    width: double.infinity,
-                                    child: LinearProgressIndicator(
-                                      backgroundColor: activeCashbookBackColor
-                                          .withValues(alpha: 0.1),
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                          activeCashbookForeColor),
-                                    ),
-                                  ),
-                                ],
 
                                 // Amount candidates grouped by label (one card per label)
                                 if (_receiptData?.amountCandidates.isNotEmpty ==
@@ -1032,49 +966,71 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
     required VoidCallback onPressed,
   }) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    // Elegant colors for chips
+    final Color selectedBg = activeBackColor;
+    // Determine foreground color based on background luminance for better contrast
+    final Color selectedText = selectedBg.computeLuminance() > 0.5 ? Colors.black : Colors.white;
+
+    final Color unselectedBg = isDark
+        ? theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4)
+        : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.6);
+    final Color unselectedText = theme.colorScheme.onSurfaceVariant;
+
     if (useFilterStyle) {
       return FilterChip(
-        avatar: avatar,
+        avatar: avatar != null 
+          ? IconTheme(
+              data: IconThemeData(color: isSelected ? selectedText : unselectedText),
+              child: avatar,
+            )
+          : null,
         label: Text(
           label,
           style: TextStyle(
-            color: isSelected ? Colors.white : theme.colorScheme.onSurface,
+            color: isSelected ? selectedText : unselectedText,
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
             fontSize: 12,
           ),
         ),
         selected: isSelected,
         onSelected: (_) => onPressed(),
-        selectedColor: activeBackColor,
-        checkmarkColor: Colors.white,
+        selectedColor: selectedBg,
+        checkmarkColor: selectedText,
         showCheckmark: false,
-        backgroundColor: theme.colorScheme.surface,
+        backgroundColor: unselectedBg,
         side: BorderSide(
-          color: isSelected ? Colors.transparent : theme.dividerColor,
-          width: 1.5,
+          color: isSelected ? Colors.transparent : theme.dividerColor.withValues(alpha: 0.5),
+          width: 1,
         ),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(12),
         ),
       );
     }
     return ActionChip(
-      avatar: avatar,
+      avatar: avatar != null 
+        ? IconTheme(
+            data: IconThemeData(color: isSelected ? selectedText : unselectedText),
+            child: avatar,
+          )
+        : null,
       label: Text(
         label,
         style: TextStyle(
-          color:
-              isSelected ? activeForeColor : theme.colorScheme.onSurfaceVariant,
+          color: isSelected ? selectedText : unselectedText,
           fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
           fontSize: 12,
         ),
       ),
-      backgroundColor: isSelected ? activeBackColor : theme.colorScheme.surface,
+      backgroundColor: isSelected ? selectedBg : unselectedBg,
       side: BorderSide(
-        color: isSelected ? activeForeColor : theme.dividerColor,
+        color: isSelected ? Colors.transparent : theme.dividerColor.withValues(alpha: 0.5),
+        width: 1,
       ),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(12),
       ),
       onPressed: onPressed,
     );
@@ -1117,44 +1073,53 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
           width: double.infinity,
           child: Card(
             margin: const EdgeInsets.only(top: 12),
+            elevation: 0,
+            color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.2),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.3)),
             ),
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              child: Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                alignment: WrapAlignment.start,
-                crossAxisAlignment: WrapCrossAlignment.center,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Padding(
-                    padding: const EdgeInsets.only(right: 4),
+                    padding: const EdgeInsets.only(bottom: 10),
                     child: Text(
                       displayLabel,
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        color: theme.colorScheme.primary,
-                        fontWeight: FontWeight.w600,
+                      style: theme.textTheme.labelMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.5,
                       ),
                     ),
                   ),
-                  ...uniqueInGroup.map((candidate) {
-                    final formatted = AmountFormatter.formatAmount(
-                        candidate.value, decimalPlaces);
-                    final controllerVal = double.tryParse(
-                        _amountController.text.replaceAll(',', ''));
-                    final isSelected = controllerVal != null &&
-                        (controllerVal - candidate.value).abs() < 0.001;
-                    return _buildSuggestionChip(
-                      label: '$currencySymbol$formatted',
-                      isSelected: isSelected,
-                      activeBackColor: activeCashbookForeColor,
-                      activeForeColor: activeCashbookBackColor,
-                      isDark: isDark,
-                      onPressed: () =>
-                          setState(() => _amountController.text = formatted),
-                    );
-                  }),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    alignment: WrapAlignment.start,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      ...uniqueInGroup.map((candidate) {
+                        final formatted = AmountFormatter.formatAmount(
+                            candidate.value, decimalPlaces);
+                        final controllerVal = double.tryParse(
+                            _amountController.text.replaceAll(',', ''));
+                        final isSelected = controllerVal != null &&
+                            (controllerVal - candidate.value).abs() < 0.001;
+                        return _buildSuggestionChip(
+                          label: '$currencySymbol$formatted',
+                          isSelected: isSelected,
+                          activeBackColor: activeCashbookForeColor,
+                          activeForeColor: activeCashbookBackColor,
+                          isDark: isDark,
+                          onPressed: () =>
+                              setState(() => _amountController.text = formatted),
+                        );
+                      }),
+                    ],
+                  ),
                 ],
               ),
             ),

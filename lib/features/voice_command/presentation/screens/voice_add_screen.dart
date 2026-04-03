@@ -21,7 +21,6 @@ import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/features/voice_command/domain/voice_ai_parser.dart';
 import 'package:flowpaisa/shared/widgets/app_loading_indicator.dart';
 import 'package:flowpaisa/features/premium/presentation/screens/premium_screen.dart';
-import 'package:google_mlkit_entity_extraction/google_mlkit_entity_extraction.dart';
 
 class VoiceAddScreen extends ConsumerStatefulWidget {
   const VoiceAddScreen({super.key});
@@ -34,16 +33,12 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
   final stt.SpeechToText _speech = stt.SpeechToText();
   final VoiceCommandParser _fallbackParser = VoiceCommandParser();
   final VoiceAiParser _aiParser = VoiceAiParser();
-  final EntityExtractorModelManager _modelManager =
-      EntityExtractorModelManager();
 
   bool _isListening = false;
   String _text = '';
   ParsedTransactionInput? _parsedResult;
   bool _isProcessing = false;
   bool _usedAi = false;
-  bool _isDownloading = false;
-  bool _modelDownloaded = false;
   bool _includeTextAsDescription = true;
   String? _selectedCategoryName;
   String? _selectedCategoryColor;
@@ -56,7 +51,6 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
   void initState() {
     super.initState();
     _transcriptController = TextEditingController();
-    _checkModelStatus();
     
     // Auto-start listening when screen opens
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -66,20 +60,6 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
     });
   }
 
-  Future<void> _checkModelStatus() async {
-    final downloaded = await _modelManager
-        .isModelDownloaded(EntityExtractorLanguage.english.name);
-    if (mounted) {
-      setState(() {
-        _modelDownloaded = downloaded;
-      });
-      // Start download immediately when screen opens (model is not big); other screens keep their triggers.
-      if (!downloaded && !_isDownloading) {
-        _startDownload();
-      }
-    }
-  }
-
   @override
   void dispose() {
     _transcriptController.dispose();
@@ -87,36 +67,7 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
     super.dispose();
   }
 
-  Future<void> _startDownload() async {
-    setState(() {
-      _isDownloading = true;
-    });
-    try {
-      final success = await _modelManager
-          .downloadModel(EntityExtractorLanguage.english.name);
-      if (success && mounted) {
-        await _checkModelStatus();
-      } else if (mounted && !success) {
-        ToastUtils.showErrorToast(context, ref,
-            "Failed to download AI model. Please check your connection.");
-      }
-    } catch (e) {
-      if (mounted) {
-        ToastUtils.showErrorToast(context, ref, e.toString());
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isDownloading = false);
-      }
-    }
-  }
-
   Future<void> _listen() async {
-    // Auto-start download if not downloaded and not already downloading
-    if (!_modelDownloaded && !_isDownloading) {
-      _startDownload();
-    }
-
     if (!_isListening) {
       bool available = await _speech.initialize(
         onStatus: (val) {
@@ -157,8 +108,6 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
       ParsedTransactionInput? result;
       bool usedAi = false;
 
-      final isModelReady = await _modelManager
-          .isModelDownloaded(EntityExtractorLanguage.english.name);
       final limits = await PremiumGate.getSmartParsingLimits(ref);
 
       // Get all active currency symbols from database
@@ -166,7 +115,7 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
           await ref.read(currenciesRepositoryProvider).getAllCurrencies();
       final dbSymbols = currencies.map((c) => c.symbol).toList();
 
-      if (isModelReady && limits.canAdd) {
+      if (limits.canAdd) {
         result = await _aiParser.parse(
           text,
           customSymbols: dbSymbols,
@@ -174,7 +123,7 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
         if (result != null && !result.isEmpty) {
           usedAi = true;
         }
-      } else if (isModelReady && !limits.canAdd) {
+      } else {
         if (mounted) {
           ToastUtils.showWarningToast(context, ref,
               "Monthly smart parsing limit reached. Using basic extraction.");
@@ -201,10 +150,6 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
   }
 
   Future<bool> _isSmartModeActive() async {
-    final isModelReady = await _modelManager
-        .isModelDownloaded(EntityExtractorLanguage.english.name);
-    if (!isModelReady) return false;
-
     final limits = await PremiumGate.getSmartParsingLimits(ref);
     return limits.canAdd;
   }
@@ -523,17 +468,17 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
                       ),
 
                       const SizedBox(height: 20),
-                      // Instruction card: reflect actual mode (Smart only when model + quota)
+                      // Instruction card: reflect actual mode (Smart only when quota)
                       Consumer(
                         builder: (context, ref, _) {
                           final limitsAsync =
                               ref.watch(smartParsingLimitsProvider);
-                          final effectiveSmartMode = _modelDownloaded &&
+                          final effectiveSmartMode =
                               limitsAsync.maybeWhen(
                                 data: (limits) => limits.canAdd,
                                 orElse: () => false,
                               );
-                          final simpleDueToQuota = _modelDownloaded &&
+                          final simpleDueToQuota =
                               limitsAsync.maybeWhen(
                                 data: (limits) => !limits.canAdd,
                                 orElse: () => false,
@@ -640,24 +585,6 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
                           );
                         },
                       ),
-
-                      if (_isDownloading) ...[
-                        const SizedBox(height: 24),
-                        Text(
-                          "Downloading Smart AI Model...",
-                          style: theme.textTheme.bodySmall,
-                        ),
-                        const SizedBox(height: 8),
-                        SizedBox(
-                          width: 200,
-                          child: LinearProgressIndicator(
-                            backgroundColor:
-                                activeCashbookBackColor.withValues(alpha: 0.1),
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                                activeCashbookForeColor),
-                          ),
-                        ),
-                      ],
 
                       const SizedBox(height: 32),
 
