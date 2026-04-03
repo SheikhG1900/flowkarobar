@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:device_info_plus/device_info_plus.dart';
+import 'dart:io';
 
 class DevScreen extends ConsumerStatefulWidget {
   const DevScreen({super.key});
@@ -11,6 +13,7 @@ class DevScreen extends ConsumerStatefulWidget {
 
 class _DevScreenState extends ConsumerState<DevScreen> {
   Map<String, String> _prefsEntries = {};
+  Map<String, String> _deviceInfo = {};
   bool _loading = true;
   String? _error;
 
@@ -66,6 +69,23 @@ class _DevScreenState extends ConsumerState<DevScreen> {
       _error = null;
     });
     try {
+      // Load Device Info
+      final Map<String, String> deviceInfo = {};
+      final deviceInfoPlugin = DeviceInfoPlugin();
+      
+      if (Platform.isAndroid) {
+        final androidInfo = await deviceInfoPlugin.androidInfo;
+        deviceInfo['Model'] = androidInfo.model;
+        deviceInfo['Manufacturer'] = androidInfo.manufacturer;
+        deviceInfo['Android Version'] = androidInfo.version.release;
+        deviceInfo['SDK Int'] = androidInfo.version.sdkInt.toString();
+      } else if (Platform.isIOS) {
+        final iosInfo = await deviceInfoPlugin.iosInfo;
+        deviceInfo['Model'] = iosInfo.model;
+        deviceInfo['System Name'] = iosInfo.systemName;
+        deviceInfo['System Version'] = iosInfo.systemVersion;
+      }
+
       final prefs = await SharedPreferences.getInstance();
       // Reload from disk so we see latest values written by background isolate (e.g. sync task).
       await prefs.reload();
@@ -96,6 +116,7 @@ class _DevScreenState extends ConsumerState<DevScreen> {
       if (mounted) {
         setState(() {
           _prefsEntries = entries;
+          _deviceInfo = deviceInfo;
           _loading = false;
         });
       }
@@ -145,6 +166,48 @@ class _DevScreenState extends ConsumerState<DevScreen> {
                   : ListView(
                       padding: const EdgeInsets.all(16),
                       children: [
+                        if (_deviceInfo.isNotEmpty) ...[
+                          Text(
+                            'Device Information',
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Card(
+                            margin: const EdgeInsets.only(bottom: 24),
+                            child: Padding(
+                              padding: const EdgeInsets.all(12),
+                              child: Column(
+                                children: _deviceInfo.entries.map((e) => Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 4),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Expanded(
+                                        flex: 2,
+                                        child: Text(
+                                          e.key,
+                                          style: theme.textTheme.labelMedium?.copyWith(
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        flex: 3,
+                                        child: Text(
+                                          e.value,
+                                          style: theme.textTheme.bodySmall,
+                                          textAlign: TextAlign.end,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                )).toList(),
+                              ),
+                            ),
+                          ),
+                        ],
                         Text(
                           'SharedPreferences (${_prefsEntries.length} keys)',
                           style: theme.textTheme.titleSmall?.copyWith(
