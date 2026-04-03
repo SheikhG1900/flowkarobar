@@ -1004,6 +1004,7 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
                     true,
                     size: 18,
                   ),
+                  useFilterStyle: true,
                   onPressed: () => setState(() {
                     _selectedCategoryName = c.name;
                     _selectedCategoryColor = c.color;
@@ -1027,9 +1028,36 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
     required Color activeBackColor,
     required bool isDark,
     Widget? avatar,
+    bool useFilterStyle = false,
     required VoidCallback onPressed,
   }) {
     final theme = Theme.of(context);
+    if (useFilterStyle) {
+      return FilterChip(
+        avatar: avatar,
+        label: Text(
+          label,
+          style: TextStyle(
+            color: isSelected ? Colors.white : theme.colorScheme.onSurface,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+            fontSize: 12,
+          ),
+        ),
+        selected: isSelected,
+        onSelected: (_) => onPressed(),
+        selectedColor: activeBackColor,
+        checkmarkColor: Colors.white,
+        showCheckmark: false,
+        backgroundColor: theme.colorScheme.surface,
+        side: BorderSide(
+          color: isSelected ? Colors.transparent : theme.dividerColor,
+          width: 1.5,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+      );
+    }
     return ActionChip(
       avatar: avatar,
       label: Text(

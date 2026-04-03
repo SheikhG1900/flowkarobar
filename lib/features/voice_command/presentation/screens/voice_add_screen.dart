@@ -862,7 +862,7 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
 
                                       // Contact selection
                                       _buildContactSuggestions(
-                                          theme, activeCashbook, l10n),
+                                          theme, l10n),
 
                                       const SizedBox(height: 24),
                                       SizedBox(
@@ -1019,7 +1019,6 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
 
   Widget _buildCategorySuggestions(
       ThemeData theme, Cashbook activeCashbook, AppLocalizations l10n) {
-    final activeCashbookBackColor = activeCashbook.backColor(context);
     final activeCashbookForeColor = activeCashbook.foreColor(context);
 
     final type = _parsedResult?.type ?? 'EXPENSE';
@@ -1086,8 +1085,7 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
                             _selectedCategoryColor = null;
                             _selectedCategoryIcon = null;
                           }),
-                      activeForeColor: activeCashbookBackColor,
-                      activeBackColor: activeCashbookForeColor),
+                      selectedColor: AppColors.brightCyan),
                 // Suggested ones from list
                 ...suggested.map((c) {
                   final isSelected = _selectedCategoryName == c.name;
@@ -1107,8 +1105,7 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
                       _selectedCategoryColor = c.color;
                       _selectedCategoryIcon = c.icon;
                     }),
-                    activeBackColor: chipColor,
-                    activeForeColor: isSelected ? Colors.white : chipColor,
+                    selectedColor: chipColor,
                     avatar: c.icon != null
                         ? Icon(
                             IconHelper.getIconData(c.icon),
@@ -1128,11 +1125,8 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
     );
   }
 
-  Widget _buildContactSuggestions(
-      ThemeData theme, Cashbook activeCashbook, AppLocalizations l10n) {
+  Widget _buildContactSuggestions(ThemeData theme, AppLocalizations l10n) {
     final contactsAsync = ref.watch(contactsListProvider);
-    final activeCashbookBackColor = activeCashbook.backColor(context);
-    final activeCashbookForeColor = activeCashbook.foreColor(context);
 
     return contactsAsync.when(
       data: (contacts) {
@@ -1191,13 +1185,13 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
                     onPressed: () => setState(() {
                       _selectedContactName = _parsedResult!.contactName;
                     }),
-                    activeBackColor: activeCashbookForeColor,
-                    activeForeColor: activeCashbookBackColor,
+                    selectedColor:
+                        AppColors.getContactColor(_parsedResult!.contactName!),
                   ),
                 // Suggested ones
                 ...suggested.map((c) {
                   final isSelected = _selectedContactName == c.name;
-                  Color contactColor = activeCashbookForeColor;
+                  final contactColor = AppColors.getContactColor(c.name);
 
                   return _buildSuggestionChip(
                     label: c.name,
@@ -1205,19 +1199,16 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
                     onPressed: () => setState(() {
                       _selectedContactName = c.name;
                     }),
-                    activeBackColor: contactColor,
-                    activeForeColor: activeCashbookBackColor,
+                    selectedColor: contactColor,
                     avatar: CircleAvatar(
-                      radius: 8,
-                      backgroundColor: isSelected
-                          ? Colors.white.withValues(alpha: 0.3)
-                          : contactColor.withValues(alpha: 0.1),
+                      radius: 10,
+                      backgroundColor: isSelected ? Colors.white : contactColor,
                       child: Text(
                         c.name[0].toUpperCase(),
                         style: TextStyle(
-                          fontSize: 8,
+                          fontSize: 10,
                           fontWeight: FontWeight.bold,
-                          color: isSelected ? Colors.white : contactColor,
+                          color: isSelected ? contactColor : Colors.white,
                         ),
                       ),
                     ),
@@ -1237,33 +1228,31 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
     required String label,
     required bool isSelected,
     required VoidCallback onPressed,
-    required Color activeBackColor,
-    required Color activeForeColor,
+    required Color selectedColor,
     Widget? avatar,
   }) {
-    return ActionChip(
+    final theme = Theme.of(context);
+    return FilterChip(
+      selected: isSelected,
       avatar: avatar,
       label: Text(
         label,
         style: TextStyle(
           fontSize: 12,
-          color: isSelected ? activeForeColor : activeForeColor,
-          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+          color: isSelected ? Colors.white : theme.colorScheme.onSurface,
+          fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
         ),
       ),
-      onPressed: onPressed,
-      backgroundColor: isSelected
-          ? activeBackColor
-          : activeBackColor.withValues(alpha: 0.05),
+      onSelected: (_) => onPressed(),
+      selectedColor: selectedColor,
+      checkmarkColor: Colors.white,
+      showCheckmark: false,
+      backgroundColor: theme.colorScheme.surface,
       side: BorderSide(
-        color: isSelected
-            ? activeForeColor
-            : activeForeColor.withValues(alpha: 0.2),
-        width: 1,
+        color: isSelected ? Colors.transparent : theme.dividerColor,
+        width: 1.5,
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
-      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
     );
   }
 }
