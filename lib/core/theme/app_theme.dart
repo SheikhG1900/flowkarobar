@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 
@@ -166,6 +167,11 @@ class AppTheme {
         scrolledUnderElevation: 0,
         centerTitle: false,
         backgroundColor: Colors.transparent,
+        systemOverlayStyle: const SystemUiOverlayStyle(
+          statusBarIconBrightness: Brightness.dark, // For Android (dark icons)
+          statusBarBrightness: Brightness.light, // For iOS (dark icons)
+          systemNavigationBarIconBrightness: Brightness.dark,
+        ),
         foregroundColor:
             Color.lerp(AppColors.lightText, primary, .1) ?? AppColors.lightText,
         titleTextStyle: textTheme.headlineSmall?.copyWith(
@@ -354,6 +360,11 @@ class AppTheme {
         scrolledUnderElevation: 0,
         centerTitle: false,
         backgroundColor: Colors.transparent,
+        systemOverlayStyle: const SystemUiOverlayStyle(
+          statusBarIconBrightness: Brightness.light, // For Android (light icons)
+          statusBarBrightness: Brightness.dark, // For iOS (light icons)
+          systemNavigationBarIconBrightness: Brightness.light,
+        ),
         foregroundColor: AppColors.darkText,
         titleTextStyle: textTheme.headlineSmall?.copyWith(
           color: AppColors.darkText,
