@@ -3,6 +3,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_undraw/flutter_undraw.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_sticky_header/flutter_sticky_header.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
@@ -40,6 +41,10 @@ import 'package:flowpaisa/shared/widgets/app_floating_action_button.dart';
 
 import 'package:flowpaisa/features/transactions/presentation/widgets/schedule_details_dialog.dart';
 
+import 'package:flowpaisa/features/onboarding/presentation/providers/onboarding_provider.dart';
+import 'package:flowpaisa/shared/widgets/contextual_guide.dart';
+import 'package:material_symbols_icons/symbols.dart';
+
 class TransactionsListScreen extends ConsumerStatefulWidget {
   final bool startTour;
   const TransactionsListScreen({super.key, this.startTour = false});
@@ -66,6 +71,44 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
       if (mounted) setState(() {});
     });
     _searchController = TextEditingController();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkAndShowGuide();
+    });
+  }
+
+  void _checkAndShowGuide() {
+    // Show always for testing as requested
+    final l10n = AppLocalizations.of(context)!;
+    ContextualGuide.show(
+      context,
+      title: l10n.transactions,
+      items: [
+        GuideItem(
+          illustration: UndrawIllustration.fileBundle,
+          title: l10n.guideBulkImportTitle,
+          description: l10n.guideBulkImportBody,
+        ),
+        GuideItem(
+          illustration: UndrawIllustration.cloudSync,
+          title: l10n.guideAutoSettleTitle,
+          description: l10n.guideAutoSettleBody,
+        ),
+        GuideItem(
+          illustration: UndrawIllustration.teamCollaboration,
+          title: l10n.guideSplitSettleTitle,
+          description: l10n.guideSplitSettleBody,
+        ),
+        GuideItem(
+          illustration: UndrawIllustration.activeOptions,
+          title: l10n.guideBudgetsTitle,
+          description: l10n.guideBudgetsBody,
+        ),
+      ],
+      onDismiss: () {
+        ref.read(transactionsGuideSeenProvider.notifier).setSeen();
+      },
+    );
   }
 
   @override

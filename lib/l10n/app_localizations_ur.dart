@@ -4125,4 +4125,46 @@ class AppLocalizationsUr extends AppLocalizations {
   @override
   String get onboardingSyncBody =>
       'گھر یا کاروبار کے لیے علیحدہ کیش بکس بنائیں۔ کسٹم وجیٹس کے ساتھ اپنے ڈیش بورڈ کو اپنی مرضی کے مطابق بنائیں، اور تمام آلات پر ڈیٹا سنک رکھیں۔';
+
+  @override
+  String get guideAccountsTitle => 'اپنے تمام اکاؤنٹس کا نظم کریں';
+
+  @override
+  String get guideAccountsBody =>
+      'نقد، بینک اور بچت کے کھاتوں کو ایک جگہ ٹریک کریں۔ اپنے اثاثوں اور واجبات سے خودکار طور پر حساب کی گئی اپنی کل مالیت دیکھیں۔';
+
+  @override
+  String get guideCreditCardsTitle => 'کریڈٹ کارڈ مینجمنٹ';
+
+  @override
+  String get guideCreditCardsBody =>
+      'کریڈٹ کی حدیں اور بلنگ سائیکل سیٹ کریں۔ Flowpaisa آپ کو مقررہ تاریخ سے پہلے مطلع کرے گا تاکہ آپ کی ادائیگی کبھی نہ چھوٹے-';
+
+  @override
+  String get guideBulkImportTitle => 'بلک امپورٹ ٹرانزیکشنز';
+
+  @override
+  String get guideBulkImportBody =>
+      'CSV فائلوں یا اپنے کلپ بورڈ (Google Sheets) سے سینکڑوں لین دین فوری طور پر درآمد کر کے وقت بچائیں۔';
+
+  @override
+  String get guideBudgetsTitle => 'سمارٹ زمرہ بجٹ';
+
+  @override
+  String get guideBudgetsBody =>
+      'کسی بھی زمرے کے لیے ماہانہ خرچ کی حدیں مقرر کریں۔ ٹریک پر رہنے اور زیادہ بچت کرنے کے لیے استعمال کے اشارے استعمال کریں۔';
+
+  @override
+  String get guideAutoSettleTitle => 'خودکار طور پر تیار کردہ لین دین';
+
+  @override
+  String get guideAutoSettleBody =>
+      'وصولی کو \'وصول شدہ\' کے طور پر نشان زد کرنے سے خود بخود آمدنی کا اندراج ہو جاتا ہے۔ بل کی ادائیگی فوری طور پر خرچ کو لاگ کرتی ہے—آپ کے ریکارڈ کو مکمل طور پر منسلک رکھتی ہے۔';
+
+  @override
+  String get guideSplitSettleTitle => 'بل تقسیم کریں اور بلک سیٹل کریں';
+
+  @override
+  String get guideSplitSettleBody =>
+      'متعدد رابطوں کے ساتھ اخراجات کو آسانی سے تقسیم کریں۔ ایک ہی رابطے کے ساتھ تمام بقایا واجبات کو ایک ہی نل میں صاف کرنے کے لیے بلک سیٹلمنٹ کا استعمال کریں۔';
 }

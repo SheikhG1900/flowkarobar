@@ -144,6 +144,13 @@ flutter:
     - packages/flutter_undraw/assets/undraw/digital_artwork.svg
     - packages/flutter_undraw/assets/undraw/chatting.svg
     - packages/flutter_undraw/assets/undraw/cloud_sync.svg
+    - packages/flutter_undraw/assets/undraw/personal_finance.svg
+    - packages/flutter_undraw/assets/undraw/data_processing.svg
+    - packages/flutter_undraw/assets/undraw/credit_card.svg
+    - packages/flutter_undraw/assets/undraw/data_report.svg
+    - packages/flutter_undraw/assets/undraw/file_bundle.svg
+    - packages/flutter_undraw/assets/undraw/team_collaboration.svg
+    - packages/flutter_undraw/assets/undraw/active_options.svg
 
 
 

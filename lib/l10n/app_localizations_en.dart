@@ -4109,4 +4109,46 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get onboardingSyncBody =>
       'Create separate Cashbooks for Home or Business. Personalize your Dashboard with custom widgets, and keep everything synced across all your devices.';
+
+  @override
+  String get guideAccountsTitle => 'Manage All Your Accounts';
+
+  @override
+  String get guideAccountsBody =>
+      'Track Cash, Bank, and Savings accounts in one place. See your total Net Worth automatically calculated from your assets and liabilities.';
+
+  @override
+  String get guideCreditCardsTitle => 'Credit Card Management';
+
+  @override
+  String get guideCreditCardsBody =>
+      'Set credit limits and billing cycles. Flowpaisa will notify you before your due date so you never miss a payment.';
+
+  @override
+  String get guideBulkImportTitle => 'Bulk Import Transactions';
+
+  @override
+  String get guideBulkImportBody =>
+      'Save time by importing hundreds of transactions instantly from CSV files or your clipboard (Google Sheets).';
+
+  @override
+  String get guideBudgetsTitle => 'Smart Category Budgets';
+
+  @override
+  String get guideBudgetsBody =>
+      'Set monthly spending limits for any category. Use the consumption indicators to stay on track and save more.';
+
+  @override
+  String get guideAutoSettleTitle => 'Auto-Generated Transactions';
+
+  @override
+  String get guideAutoSettleBody =>
+      'Marking a Receivable as \'Received\' automatically creates an Income entry. Paying a bill instantly logs an Expense—keeping your records perfectly linked.';
+
+  @override
+  String get guideSplitSettleTitle => 'Split Bills & Bulk Settle';
+
+  @override
+  String get guideSplitSettleBody =>
+      'Easily split expenses with multiple contacts. Use Bulk Settlement to clear all outstanding dues with a single contact in one tap.';
 }

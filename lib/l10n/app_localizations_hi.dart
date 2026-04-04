@@ -4120,4 +4120,46 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get onboardingSyncBody =>
       'घर या व्यवसाय के लिए अलग कैशबुक बनाएं। कस्टम विजेट्स के साथ अपने डैशबोर्ड को व्यक्तिगत बनाएं, और सब कुछ अपने सभी उपकरणों पर सिंक रखें।';
+
+  @override
+  String get guideAccountsTitle => 'अपने सभी खातों का प्रबंधन करें';
+
+  @override
+  String get guideAccountsBody =>
+      'एक ही स्थान पर नकद, बैंक और बचत खातों को ट्रैक करें। अपनी संपत्ति और देनदारियों से स्वचालित रूप से गणना की गई अपनी कुल संपत्ति देखें।';
+
+  @override
+  String get guideCreditCardsTitle => 'क्रेडिट कार्ड प्रबंधन';
+
+  @override
+  String get guideCreditCardsBody =>
+      'क्रेडिट सीमा और बिलिंग चक्र निर्धारित करें। Flowpaisa आपको देय तिथि से पहले सूचित करेगा ताकि आप कभी भी भुगतान न चूकें।';
+
+  @override
+  String get guideBulkImportTitle => 'बल्क इंपोर्ट लेनदेन';
+
+  @override
+  String get guideBulkImportBody =>
+      'CSV फ़ाइलों या अपने क्लिपबोर्ड (Google शीट्स) से सैकड़ों लेनदेन तुरंत इंपोर्ट करके समय बचाएं।';
+
+  @override
+  String get guideBudgetsTitle => 'स्मार्ट श्रेणी बजट';
+
+  @override
+  String get guideBudgetsBody =>
+      'किसी भी श्रेणी के लिए मासिक खर्च सीमा निर्धारित करें। ट्रैक पर रहने और अधिक बचत करने के लिए खपत संकेतकों का उपयोग करें।';
+
+  @override
+  String get guideAutoSettleTitle => 'स्वचालित रूप से उत्पन्न लेनदेन';
+
+  @override
+  String get guideAutoSettleBody =>
+      'प्राप्य को \'प्राप्त\' के रूप में चिह्नित करने से स्वचालित रूप से एक आय प्रविष्टि बन जाती है। बिल का भुगतान करने से तुरंत एक खर्च दर्ज हो जाता है—आपके रिकॉर्ड को पूरी तरह से लिंक रखता है।';
+
+  @override
+  String get guideSplitSettleTitle => 'बिल विभाजित करें और बल्क सेटल करें';
+
+  @override
+  String get guideSplitSettleBody =>
+      'आसानी से कई संपर्कों के साथ खर्चों को विभाजित करें। एक ही टैप में एक ही संपर्क के साथ सभी बकाया देय राशि को स्पष्ट करने के लिए बल्क सेटलमेंट का उपयोग करें।';
 }

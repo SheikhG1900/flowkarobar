@@ -41,3 +41,49 @@ final dashboardCustomizationSeenProvider =
     NotifierProvider<DashboardCustomizationSeenNotifier, bool>(
   DashboardCustomizationSeenNotifier.new,
 );
+
+/// Tracks whether the user has seen the accounts guide.
+class AccountsGuideSeenNotifier extends Notifier<bool> {
+  static const String key = 'has_seen_accounts_guide_v1';
+
+  @override
+  bool build() {
+    final prefs = ref.watch(sharedPreferencesProvider);
+    return prefs.getBool(key) ?? false;
+  }
+
+  Future<void> setSeen() async {
+    if (state) return;
+    final prefs = ref.read(sharedPreferencesProvider);
+    await prefs.setBool(key, true);
+    state = true;
+  }
+}
+
+final accountsGuideSeenProvider =
+    NotifierProvider<AccountsGuideSeenNotifier, bool>(
+  AccountsGuideSeenNotifier.new,
+);
+
+/// Tracks whether the user has seen the transactions guide.
+class TransactionsGuideSeenNotifier extends Notifier<bool> {
+  static const String key = 'has_seen_transactions_guide_v1';
+
+  @override
+  bool build() {
+    final prefs = ref.watch(sharedPreferencesProvider);
+    return prefs.getBool(key) ?? false;
+  }
+
+  Future<void> setSeen() async {
+    if (state) return;
+    final prefs = ref.read(sharedPreferencesProvider);
+    await prefs.setBool(key, true);
+    state = true;
+  }
+}
+
+final transactionsGuideSeenProvider =
+    NotifierProvider<TransactionsGuideSeenNotifier, bool>(
+  TransactionsGuideSeenNotifier.new,
+);

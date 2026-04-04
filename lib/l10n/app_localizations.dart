@@ -7522,6 +7522,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Create separate Cashbooks for Home or Business. Personalize your Dashboard with custom widgets, and keep everything synced across all your devices.'**
   String get onboardingSyncBody;
+
+  /// No description provided for @guideAccountsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage All Your Accounts'**
+  String get guideAccountsTitle;
+
+  /// No description provided for @guideAccountsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Track Cash, Bank, and Savings accounts in one place. See your total Net Worth automatically calculated from your assets and liabilities.'**
+  String get guideAccountsBody;
+
+  /// No description provided for @guideCreditCardsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit Card Management'**
+  String get guideCreditCardsTitle;
+
+  /// No description provided for @guideCreditCardsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Set credit limits and billing cycles. Flowpaisa will notify you before your due date so you never miss a payment.'**
+  String get guideCreditCardsBody;
+
+  /// No description provided for @guideBulkImportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Bulk Import Transactions'**
+  String get guideBulkImportTitle;
+
+  /// No description provided for @guideBulkImportBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Save time by importing hundreds of transactions instantly from CSV files or your clipboard (Google Sheets).'**
+  String get guideBulkImportBody;
+
+  /// No description provided for @guideBudgetsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Smart Category Budgets'**
+  String get guideBudgetsTitle;
+
+  /// No description provided for @guideBudgetsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Set monthly spending limits for any category. Use the consumption indicators to stay on track and save more.'**
+  String get guideBudgetsBody;
+
+  /// No description provided for @guideAutoSettleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-Generated Transactions'**
+  String get guideAutoSettleTitle;
+
+  /// No description provided for @guideAutoSettleBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Marking a Receivable as \'Received\' automatically creates an Income entry. Paying a bill instantly logs an Expense—keeping your records perfectly linked.'**
+  String get guideAutoSettleBody;
+
+  /// No description provided for @guideSplitSettleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Split Bills & Bulk Settle'**
+  String get guideSplitSettleTitle;
+
+  /// No description provided for @guideSplitSettleBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Easily split expenses with multiple contacts. Use Bulk Settlement to clear all outstanding dues with a single contact in one tap.'**
+  String get guideSplitSettleBody;
 }
 
 class _AppLocalizationsDelegate

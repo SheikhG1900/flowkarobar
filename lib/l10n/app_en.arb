@@ -2127,5 +2127,17 @@
   "onboardingCollaborationTitle": "Real-time Collaboration",
   "onboardingCollaborationBody": "Track Receivables and Payables by contact. Send professional WhatsApp reminders using customized message templates to ensure you always get paid on time.",
   "onboardingSyncTitle": "Organized & Personalized",
-  "onboardingSyncBody": "Create separate Cashbooks for Home or Business. Personalize your Dashboard with custom widgets, and keep everything synced across all your devices."
+  "onboardingSyncBody": "Create separate Cashbooks for Home or Business. Personalize your Dashboard with custom widgets, and keep everything synced across all your devices.",
+  "guideAccountsTitle": "Manage All Your Accounts",
+  "guideAccountsBody": "Track Cash, Bank, and Savings accounts in one place. See your total Net Worth automatically calculated from your assets and liabilities.",
+  "guideCreditCardsTitle": "Credit Card Management",
+  "guideCreditCardsBody": "Set credit limits and billing cycles. Flowpaisa will notify you before your due date so you never miss a payment.",
+  "guideBulkImportTitle": "Bulk Import Transactions",
+  "guideBulkImportBody": "Save time by importing hundreds of transactions instantly from CSV files or your clipboard (Google Sheets).",
+  "guideBudgetsTitle": "Smart Category Budgets",
+  "guideBudgetsBody": "Set monthly spending limits for any category. Use the consumption indicators to stay on track and save more.",
+  "guideAutoSettleTitle": "Auto-Generated Transactions",
+  "guideAutoSettleBody": "Marking a Receivable as 'Received' automatically creates an Income entry. Paying a bill instantly logs an Expense—keeping your records perfectly linked.",
+  "guideSplitSettleTitle": "Split Bills & Bulk Settle",
+  "guideSplitSettleBody": "Easily split expenses with multiple contacts. Use Bulk Settlement to clear all outstanding dues with a single contact in one tap."
 }

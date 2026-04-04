@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_undraw/flutter_undraw.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
@@ -22,11 +23,57 @@ import 'package:flowpaisa/shared/widgets/app_floating_action_button.dart';
 import 'package:flowpaisa/shared/widgets/app_loading_indicator.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
-class AccountsScreen extends ConsumerWidget {
+import 'package:flowpaisa/features/onboarding/presentation/providers/onboarding_provider.dart';
+import 'package:flowpaisa/shared/widgets/contextual_guide.dart';
+import 'package:material_symbols_icons/symbols.dart';
+
+class AccountsScreen extends ConsumerStatefulWidget {
   const AccountsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AccountsScreen> createState() => _AccountsScreenState();
+}
+
+class _AccountsScreenState extends ConsumerState<AccountsScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkAndShowGuide();
+    });
+  }
+
+  void _checkAndShowGuide() {
+    // Show always for testing as requested
+    final l10n = AppLocalizations.of(context)!;
+    ContextualGuide.show(
+      context,
+      title: l10n.accountsOverview,
+      items: [
+        GuideItem(
+          illustration: UndrawIllustration.personalFinance,
+          title: l10n.guideAccountsTitle,
+          description: l10n.guideAccountsBody,
+        ),
+        GuideItem(
+          illustration: UndrawIllustration.creditCard,
+          title: l10n.guideCreditCardsTitle,
+          description: l10n.guideCreditCardsBody,
+        ),
+        GuideItem(
+          illustration: UndrawIllustration.dataReport,
+          title: l10n.financialSummary,
+          description: l10n.guideBudgetsBody,
+        ),
+      ],
+      onDismiss: () {
+        ref.read(accountsGuideSeenProvider.notifier).setSeen();
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final accountsAsync = ref.watch(accountsWithBalanceProvider);
