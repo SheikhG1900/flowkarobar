@@ -2992,6 +2992,24 @@ abstract class AppLocalizations {
   /// **'App Tour'**
   String get appTour;
 
+  /// No description provided for @resetOnboardingSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset the app tour to see it again'**
+  String get resetOnboardingSubtitle;
+
+  /// No description provided for @resetOnboardingConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to reset the app tour? You will see the onboarding screens again on next restart.'**
+  String get resetOnboardingConfirmation;
+
+  /// No description provided for @onboardingResetSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'App tour reset successfully'**
+  String get onboardingResetSuccess;
+
   /// No description provided for @tourWelcome.
   ///
   /// In en, this message translates to:
@@ -3385,7 +3403,7 @@ abstract class AppLocalizations {
   /// No description provided for @tourShowMeHow.
   ///
   /// In en, this message translates to:
-  /// **'Show me how'**
+  /// **'Let\'s try'**
   String get tourShowMeHow;
 
   /// No description provided for @messageTemplatesDesc.
@@ -7444,6 +7462,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Others'**
   String get others;
+
+  /// No description provided for @onboardingWelcomeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to Flowpaisa'**
+  String get onboardingWelcomeTitle;
+
+  /// No description provided for @onboardingWelcomeBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your complete personal finance and cash flow manager. Take control of your money with ease, precision, and the peace of mind that your data is fully secured and private.'**
+  String get onboardingWelcomeBody;
+
+  /// No description provided for @onboardingScanTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan or Speak'**
+  String get onboardingScanTitle;
+
+  /// No description provided for @onboardingScanBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Save time with Smart Scanning and Voice commands. Just snap a photo of your receipt or tell the app what you spent—it handles the details for you.'**
+  String get onboardingScanBody;
+
+  /// No description provided for @onboardingTransactionsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Smart Linked Transactions'**
+  String get onboardingTransactionsTitle;
+
+  /// No description provided for @onboardingTransactionsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Experience a truly connected system. When you mark a debt as Received, the app automatically records it as Income. When you Pay a bill, it’s instantly logged as an Expense.'**
+  String get onboardingTransactionsBody;
+
+  /// No description provided for @onboardingCollaborationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Real-time Collaboration'**
+  String get onboardingCollaborationTitle;
+
+  /// No description provided for @onboardingCollaborationBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Track Receivables and Payables by contact. Send professional WhatsApp reminders using customized message templates to ensure you always get paid on time.'**
+  String get onboardingCollaborationBody;
+
+  /// No description provided for @onboardingSyncTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Organized & Personalized'**
+  String get onboardingSyncTitle;
+
+  /// No description provided for @onboardingSyncBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Create separate Cashbooks for Home or Business. Personalize your Dashboard with custom widgets, and keep everything synced across all your devices.'**
+  String get onboardingSyncBody;
 }
 
 class _AppLocalizationsDelegate

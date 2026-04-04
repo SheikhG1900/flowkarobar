@@ -1601,6 +1601,17 @@ class AppLocalizationsHi extends AppLocalizations {
   String get appTour => 'ऐप टूर';
 
   @override
+  String get resetOnboardingSubtitle =>
+      'इसे फिर से देखने के लिए ऐप टूर को रीसेट करें';
+
+  @override
+  String get resetOnboardingConfirmation =>
+      'क्या आप वाकई ऐप टूर को रीसेट करना चाहते हैं? अगली बार शुरू करने पर आपको ऑनबोर्डिंग स्क्रीन फिर से दिखाई देंगी।';
+
+  @override
+  String get onboardingResetSuccess => 'ऐप टूर सफलतापूर्वक रीसेट हो गया';
+
+  @override
   String get tourWelcome => 'Cashbook में आपका स्वागत है!';
 
   @override
@@ -1826,7 +1837,7 @@ class AppLocalizationsHi extends AppLocalizations {
       'आपके द्वारा दूसरों को दिए जाने वाले सभी पैसे देखें। प्रबंधित करने के लिए टैप करें।';
 
   @override
-  String get tourShowMeHow => 'मुझे दिखाओ कैसे';
+  String get tourShowMeHow => 'कोशिश करें';
 
   @override
   String get messageTemplatesDesc =>
@@ -4074,4 +4085,39 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get others => 'अन्य';
+
+  @override
+  String get onboardingWelcomeTitle => 'Flowpaisa में आपका स्वागत है';
+
+  @override
+  String get onboardingWelcomeBody =>
+      'आपका संपूर्ण व्यक्तिगत वित्त और नकदी प्रवाह प्रबंधक। आसानी, सटीकता और इस मानसिक शांति के साथ अपने पैसे पर नियंत्रण रखें कि आपका डेटा पूरी तरह से सुरक्षित और निजी है।';
+
+  @override
+  String get onboardingScanTitle => 'स्कैन करें या बोलें';
+
+  @override
+  String get onboardingScanBody =>
+      'स्मार्ट स्कैनिंग और वॉयस कमांड के साथ समय बचाएं। बस अपनी रसीद की एक फोटो लें या ऐप को बताएं कि आपने क्या खर्च किया—यह आपके लिए विवरण संभाल लेगा।';
+
+  @override
+  String get onboardingTransactionsTitle => 'स्मार्ट लिंक्ड लेनदेन';
+
+  @override
+  String get onboardingTransactionsBody =>
+      'वास्तव में जुड़े हुए सिस्टम का अनुभव करें। जब आप किसी कर्ज को \'प्राप्त\' के रूप में चिह्नित करते हैं, तो ऐप स्वचालित रूप से इसे आय के रूप में रिकॉर्ड करता है। जब आप बिल का भुगतान करते हैं, तो यह तुरंत खर्च के रूप में दर्ज हो जाता है।';
+
+  @override
+  String get onboardingCollaborationTitle => 'रीयल-टाइम सहयोग';
+
+  @override
+  String get onboardingCollaborationBody =>
+      'संपर्क द्वारा प्राप्य और देय राशि को ट्रैक करें। यह सुनिश्चित करने के लिए कि आपको हमेशा समय पर भुगतान मिले, अनुकूलित संदेश टेम्पलेट्स का उपयोग करके पेशेवर व्हाट्सएप रिमाइंडर भेजें।';
+
+  @override
+  String get onboardingSyncTitle => 'व्यवस्थित और व्यक्तिगत';
+
+  @override
+  String get onboardingSyncBody =>
+      'घर या व्यवसाय के लिए अलग कैशबुक बनाएं। कस्टम विजेट्स के साथ अपने डैशबोर्ड को व्यक्तिगत बनाएं, और सब कुछ अपने सभी उपकरणों पर सिंक रखें।';
 }

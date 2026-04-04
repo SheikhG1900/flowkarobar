@@ -48,6 +48,8 @@ import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/shared/widgets/premium_badge.dart';
 import 'package:flowpaisa/shared/widgets/user_avatar.dart';
 import 'package:flowpaisa/features/cashbooks/presentation/screens/cashbooks_screen.dart';
+import 'package:flowpaisa/features/onboarding/presentation/providers/onboarding_provider.dart';
+import 'package:flowpaisa/features/onboarding/presentation/screens/onboarding_screen.dart';
 import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
 import 'package:flowpaisa/features/accounts/presentation/screens/accounts_screen.dart';
 import 'package:flowpaisa/features/accounts/presentation/providers/accounts_provider.dart';
@@ -74,10 +76,7 @@ import 'package:flowpaisa/features/backup/data/sync/sync_scheduler.dart';
 
 import 'package:flutter_phoenix/flutter_phoenix.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:showcaseview/showcaseview.dart';
-import 'package:flowpaisa/features/tour/presentation/providers/tour_provider.dart';
 import 'package:flowpaisa/features/voice_command/presentation/screens/voice_add_screen.dart';
-import 'package:flowpaisa/features/tour/domain/tour_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -206,6 +205,7 @@ class _FlowpaisaAppState extends ConsumerState<FlowpaisaApp>
     final currentThemeMode = ref.watch(themeModeProvider);
     final activeCashbook = ref.watch(activeCashbookProvider);
     final activeColor = activeCashbook.color;
+    final onboardingCompleted = ref.watch(onboardingCompletedProvider);
 
     return MaterialApp(
       title: AppConstants.appName,
@@ -243,7 +243,7 @@ class _FlowpaisaAppState extends ConsumerState<FlowpaisaApp>
       themeMode: currentThemeMode,
 
       // Home
-      home: const HomeScreen(),
+      home: onboardingCompleted ? const HomeScreen() : const OnboardingScreen(),
     );
   }
 }
@@ -266,9 +266,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       if (mounted) {
         final deepLinkHandler = ref.read(deepLinkHandlerProvider);
         deepLinkHandler.initialize(context, ref);
-
-        // Check if tour should be shown on first launch
-        _checkAndShowTour();
 
         // Check credit card payment due dates
         _checkCreditCardNotifications();
@@ -314,23 +311,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       );
     } catch (e) {
       debugPrint('Credit card notification check failed: $e');
-    }
-  }
-
-  Future<void> _checkAndShowTour() async {
-    final tourNotifier = ref.read(tourNotifierProvider);
-    if (!tourNotifier.isTourCompleted(tourNotifier.dashboardKey) && mounted) {
-      // Wait a bit for UI to settle, then start tour
-      await Future.delayed(const Duration(seconds: 1));
-      if (mounted && _selectedIndex == 0) {
-        // Only show tour if on dashboard tab
-        try {
-          final showcaseState = ShowCaseWidget.of(context);
-          showcaseState.startShowCase(TourService.dashboardTourKeys);
-        } catch (e) {
-          debugPrint('Error starting tour: $e');
-        }
-      }
     }
   }
 
@@ -400,22 +380,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       _SettingsTab(),
     ];
 
-    return ShowCaseWidget(
-      enableAutoScroll: true,
-      blurValue: 3,
-      onStart: (index, key) {
-        debugPrint('Tour step $index started');
-      },
-      onComplete: (index, key) {
-        debugPrint('Tour step $index completed');
-      },
-      onFinish: () {
-        debugPrint('Tour finished');
-        // Mark dashboard tour as completed
-        final tourNotifier = ref.read(tourNotifierProvider);
-        tourNotifier.markTourCompleted(tourNotifier.dashboardKey);
-      },
-      builder: (context) => Scaffold(
+    return Scaffold(
         body: LayoutBuilder(
           builder: (context, constraints) {
             if (constraints.maxWidth < 600) {
@@ -455,11 +420,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         notifier.search('');
                         notifier.applyFilters(TransactionFilters());
                       }
-                      // Unfocus and dismiss overlay before tab switch to avoid FocusScope assertion
+                      // Unfocus before tab switch to avoid FocusScope assertion
                       FocusManager.instance.primaryFocus?.unfocus();
-                      try {
-                        ShowCaseWidget.of(context).dismiss();
-                      } catch (_) {}
                       setState(() {
                         _selectedIndex = index;
                       });
@@ -575,17 +537,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     final showQuickButton =
                         ref.watch(showBottomBarQuickButtonProvider);
 
-                    return Showcase(
-                      key: TourService.bottomNavKey,
-                      title: l10n.tourBottomNavTitle,
-                      description: l10n.tourBottomNavDesc,
-                      targetShapeBorder: const RoundedRectangleBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(20)),
-                      ),
-                      tooltipBackgroundColor: activeColor,
-                      textColor: Colors.white,
-                      targetBorderRadius: BorderRadius.circular(20),
-                      child: Stack(
+                    return Stack(
                         alignment: Alignment.bottomCenter,
                         clipBehavior: Clip.none,
                         children: [
@@ -599,61 +551,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                     transactionsPaginatedProvider.notifier);
                                 notifier.search('');
                                 notifier.applyFilters(TransactionFilters());
-
-                                // Start transactions tour if not shown before
-                                Future.delayed(
-                                    const Duration(milliseconds: 800), () {
-                                  if (context.mounted) {
-                                    final tourNotifier =
-                                        ref.read(tourNotifierProvider);
-                                    if (!tourNotifier.isTourCompleted(
-                                        tourNotifier.transactionsKey)) {
-                                      TourService.startTransactionsTour(
-                                          context);
-                                      tourNotifier.markTourCompleted(
-                                          tourNotifier.transactionsKey);
-                                    }
-                                  }
-                                });
-                              } else if (index == 2) {
-                                // Start analytics tour if not shown before and premium is active
-                                Future.delayed(
-                                    const Duration(milliseconds: 800), () {
-                                  if (context.mounted) {
-                                    final tourNotifier =
-                                        ref.read(tourNotifierProvider);
-                                    final isPremium =
-                                        PremiumGate.isPremium(ref);
-                                    if (!tourNotifier.isTourCompleted(
-                                            tourNotifier.analyticsKey) &&
-                                        isPremium) {
-                                      TourService.startAnalyticsTour(context);
-                                      tourNotifier.markTourCompleted(
-                                          tourNotifier.analyticsKey);
-                                    }
-                                  }
-                                });
-                              } else if (index == 3) {
-                                // Start settings tour if not shown before
-                                Future.delayed(
-                                    const Duration(milliseconds: 800), () {
-                                  if (context.mounted) {
-                                    final tourNotifier =
-                                        ref.read(tourNotifierProvider);
-                                    if (!tourNotifier.isTourCompleted(
-                                        tourNotifier.settingsKey)) {
-                                      TourService.startSettingsTour(context);
-                                      tourNotifier.markTourCompleted(
-                                          tourNotifier.settingsKey);
-                                    }
-                                  }
-                                });
                               }
                               // Unfocus and dismiss overlay before tab switch to avoid FocusScope assertion
                               FocusManager.instance.primaryFocus?.unfocus();
-                              try {
-                                ShowCaseWidget.of(context).dismiss();
-                              } catch (_) {}
                               setState(() {
                                 _selectedIndex = index;
                               });
@@ -691,13 +591,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               ),
                             ),
                         ],
-                      ),
-                    );
+                      );
                   },
                 ),
               )
             : null,
-      ),
     );
   }
 
@@ -894,11 +792,6 @@ class _DashboardBodyScrollState extends ConsumerState<_DashboardBodyScroll> {
       child: RefreshIndicator(
         color: widget.activeColor,
         onRefresh: () async {
-          try {
-            final showcaseState = ShowCaseWidget.of(context);
-            showcaseState.dismiss();
-          } catch (_) {}
-
           WidgetsBinding.instance.addPostFrameCallback((_) {
             Phoenix.rebirth(context);
           });
@@ -914,35 +807,23 @@ class _DashboardBodyScrollState extends ConsumerState<_DashboardBodyScroll> {
             SliverToBoxAdapter(
               child: Consumer(
                 builder: (context, ref, child) {
-                  final l10n = AppLocalizations.of(context)!;
                   final activeColor =
                       ref.watch(activeCashbookProvider.select((c) => c.color));
                   final showPrivacyHighlight =
                       ref.watch(showDashboardPrivacyHighlightProvider);
-                  return Showcase(
-                    key: TourService.quickActionsKey,
-                    title: l10n.tourQuickActionsTitle,
-                    description: l10n.tourQuickActionsDesc,
-                    targetShapeBorder: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(20)),
-                    ),
-                    tooltipBackgroundColor: activeColor,
-                    textColor: Colors.white,
-                    targetBorderRadius: BorderRadius.circular(20),
-                    child: EntranceAnimation(
-                      index: 3,
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
-                        child: Column(
-                          children: [
-                            const SyncStatusSection(),
-                            if (showPrivacyHighlight) ...[
-                              const SizedBox(height: 12),
-                              const _DashboardPrivacyHighlight(),
-                              const SizedBox(height: 12),
-                            ],
+                  return EntranceAnimation(
+                    index: 3,
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+                      child: Column(
+                        children: [
+                          const SyncStatusSection(),
+                          if (showPrivacyHighlight) ...[
+                            const SizedBox(height: 12),
+                            const _DashboardPrivacyHighlight(),
+                            const SizedBox(height: 12),
                           ],
-                        ),
+                        ],
                       ),
                     ),
                   );
@@ -990,7 +871,7 @@ class _DashboardBodyScrollState extends ConsumerState<_DashboardBodyScroll> {
               ),
             ),
             const SliverToBoxAdapter(
-              child: _DashboardRecentTransactionsShowcase(),
+              child: _DashboardRecentTransactionsSection(),
             ),
             SliverToBoxAdapter(
               child: Consumer(
@@ -1969,14 +1850,9 @@ class _DashboardTab extends ConsumerWidget {
                       label: l10n.appTour,
                       gradient: AppColors.getPrimaryGradient(activeColor),
                       onTap: () {
-                        // Start the dashboard tour
-                        try {
-                          final showcaseState = ShowCaseWidget.of(context);
-                          showcaseState
-                              .startShowCase(TourService.dashboardTourKeys);
-                        } catch (e) {
-                          debugPrint('Error starting tour: $e');
-                        }
+                        ref
+                            .read(onboardingCompletedProvider.notifier)
+                            .setCompleted(false);
                       },
                     ),
                   ],
@@ -2199,28 +2075,14 @@ class _DashboardPrivacyHighlight extends ConsumerWidget {
   }
 }
 
-class _DashboardRecentTransactionsShowcase extends ConsumerWidget {
-  const _DashboardRecentTransactionsShowcase({super.key});
+class _DashboardRecentTransactionsSection extends ConsumerWidget {
+  const _DashboardRecentTransactionsSection({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context)!;
-    final activeColor =
-        ref.watch(activeCashbookProvider.select((c) => c.color));
-    return Showcase(
-      key: TourService.recentTransactionsKey,
-      title: l10n.tourRecentTransactionsTitle,
-      description: l10n.tourRecentTransactionsDesc,
-      targetShapeBorder: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.all(Radius.circular(16)),
-      ),
-      tooltipBackgroundColor: activeColor,
-      textColor: Colors.white,
-      targetBorderRadius: BorderRadius.circular(16),
-      child: EntranceAnimation(
-        index: 5,
-        child: const _DashboardRecentTransactionsBody(),
-      ),
+    return EntranceAnimation(
+      index: 5,
+      child: const _DashboardRecentTransactionsBody(),
     );
   }
 }
@@ -2526,17 +2388,7 @@ class _DashboardHeader extends ConsumerWidget {
                   SizedBox(height: MediaQuery.paddingOf(context).top),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 8),
-                    child: Showcase(
-                      key: TourService.dashboardHeaderKey,
-                      title: l10n.tourDashboardHeaderTitle,
-                      description: l10n.tourDashboardHeaderDesc,
-                      targetShapeBorder: const RoundedRectangleBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(12)),
-                      ),
-                      tooltipBackgroundColor: activeColor,
-                      textColor: Colors.white,
-                      targetBorderRadius: BorderRadius.circular(12),
-                      child: InkWell(
+                    child: InkWell(
                         onTap: () {
                           Navigator.push(
                             context,
@@ -2633,7 +2485,6 @@ class _DashboardHeader extends ConsumerWidget {
                           ),
                         ),
                       ),
-                    ),
                   ),
                   const SizedBox(height: 2),
                   const _DashboardHeroContent(),
@@ -2817,27 +2668,55 @@ class _DashboardHeader extends ConsumerWidget {
         Consumer(
           builder: (context, ref, child) {
             final showWidgetArea = ref.watch(showDashboardWidgetAreaProvider);
-            return IconButton(
-              icon: Icon(
-                showWidgetArea
-                    ? Icons.dashboard_customize
-                    : Icons.dashboard_customize_outlined,
-                color: showWidgetArea
-                    ? theme.colorScheme.primary
-                    : theme.colorScheme.onSurface,
-              ),
-              onPressed: () {
-                final next = !showWidgetArea;
-                ref
-                    .read(showDashboardWidgetAreaProvider.notifier)
-                    .setVisibility(next);
-                if (next) {
-                  ref.read(dashboardReorderModeProvider.notifier).set(true);
-                } else {
-                  ref.read(dashboardReorderModeProvider.notifier).set(false);
-                }
-              },
-              tooltip: l10n.addToDashboard,
+            final hasSeenCustomization =
+                ref.watch(dashboardCustomizationSeenProvider);
+            return Stack(
+              alignment: Alignment.topRight,
+              children: [
+                IconButton(
+                  icon: Icon(
+                    showWidgetArea
+                        ? Icons.dashboard_customize
+                        : Icons.dashboard_customize_outlined,
+                    color: showWidgetArea
+                        ? theme.colorScheme.primary
+                        : theme.colorScheme.onSurface,
+                  ),
+                  onPressed: () {
+                    final next = !showWidgetArea;
+                    ref
+                        .read(showDashboardWidgetAreaProvider.notifier)
+                        .setVisibility(next);
+                    if (next) {
+                      ref.read(dashboardReorderModeProvider.notifier).set(true);
+                      // Mark as seen when opened
+                      ref
+                          .read(dashboardCustomizationSeenProvider.notifier)
+                          .setSeen();
+                    } else {
+                      ref.read(dashboardReorderModeProvider.notifier).set(false);
+                    }
+                  },
+                  tooltip: l10n.addToDashboard,
+                ),
+                if (!hasSeenCustomization)
+                  Positioned(
+                    top: 10,
+                    right: 10,
+                    child: Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.error,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: theme.colorScheme.surface,
+                          width: 1.5,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
             );
           },
         ),
@@ -2872,8 +2751,6 @@ class _DashboardHeroContent extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final activeCashbook = ref.watch(activeCashbookProvider);
-    final activeColor = activeCashbook.color;
     final currencyAsync = ref.watch(currentCurrencyProvider);
     final currency = currencyAsync.value!;
     final theme = Theme.of(context);
@@ -2889,17 +2766,7 @@ class _DashboardHeroContent extends ConsumerWidget {
     final showNetWorthOnHero =
         hasAccounts && mainBalanceView == DashboardMainBalanceView.netWorth;
 
-    return Showcase(
-      key: TourService.balanceKey,
-      title: l10n.tourBalanceTitle,
-      description: l10n.tourBalanceDesc,
-      targetShapeBorder: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.all(Radius.circular(12)),
-      ),
-      tooltipBackgroundColor: activeColor,
-      textColor: Colors.white,
-      targetBorderRadius: BorderRadius.circular(12),
-      child: Padding(
+    return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
         child: Material(
           color: Colors.transparent,
@@ -3043,7 +2910,6 @@ class _DashboardHeroContent extends ConsumerWidget {
             ),
           ),
         ),
-      ),
     );
   }
 }
@@ -3054,7 +2920,6 @@ class _DashboardStatsGrid extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final activeCashbook = ref.watch(activeCashbookProvider);
-    final activeColor = activeCashbook.color;
     final activeForeColor = activeCashbook.foreColor(context);
     final currencyAsync = ref.watch(currentCurrencyProvider);
     final currency = currencyAsync.value!;
@@ -3071,17 +2936,7 @@ class _DashboardStatsGrid extends ConsumerWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Showcase(
-            key: TourService.cashFlowStatsKey,
-            title: l10n.tourCashFlowTitle,
-            description: l10n.tourCashFlowDesc,
-            targetShapeBorder: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.all(Radius.circular(12)),
-            ),
-            tooltipBackgroundColor: activeColor,
-            textColor: Colors.white,
-            targetBorderRadius: BorderRadius.circular(12),
-            child: _DashboardTab._buildSummaryRow(
+          _DashboardTab._buildSummaryRow(
               context,
               isDark: isDark,
               title: l10n.cashFlow,
@@ -3229,19 +3084,8 @@ class _DashboardStatsGrid extends ConsumerWidget {
               ],
               currency: currency,
             ),
-          ),
           const SizedBox(height: 8),
-          Showcase(
-            key: TourService.lendingStatsKey,
-            title: l10n.tourLendingTitle,
-            description: l10n.tourLendingDesc,
-            targetShapeBorder: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.all(Radius.circular(12)),
-            ),
-            tooltipBackgroundColor: activeColor,
-            textColor: Colors.white,
-            targetBorderRadius: BorderRadius.circular(12),
-            child: _DashboardTab._buildSummaryRow(
+          _DashboardTab._buildSummaryRow(
               context,
               isDark: isDark,
               title: l10n.lendingCredit,
@@ -3369,7 +3213,6 @@ class _DashboardStatsGrid extends ConsumerWidget {
               ],
               currency: currency,
             ),
-          ),
         ],
       ),
     );
@@ -3523,27 +3366,19 @@ class _SettingsTab extends ConsumerWidget {
       appBar: AppBar(
         title: Text(l10n.settings),
         actions: [
-          Showcase(
-            key: TourService.settingsProfileKey,
-            title: l10n.tourSettingsProfileTitle,
-            description: l10n.tourSettingsProfileDesc,
-            targetShapeBorder: const CircleBorder(),
-            tooltipBackgroundColor: theme.colorScheme.primary,
-            textColor: theme.colorScheme.onPrimary,
-            child: IconButton(
-              icon: UserAvatar(
-                user: backupState.currentUser,
-                size: 24,
-              ),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const ProfileScreen(),
-                  ),
-                );
-              },
+          IconButton(
+            icon: UserAvatar(
+              user: backupState.currentUser,
+              size: 24,
             ),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const ProfileScreen(),
+                ),
+              );
+            },
           ),
         ],
       ),
@@ -3565,17 +3400,8 @@ class _SettingsTab extends ConsumerWidget {
             },
           ),
           const Divider(),
-          Showcase(
-            key: TourService.settingsAppPreferencesKey,
-            title: l10n.tourSettingsAppPreferencesTitle,
-            description: l10n.tourSettingsAppPreferencesDesc,
-            targetShapeBorder: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.all(Radius.circular(12)),
-            ),
-            tooltipBackgroundColor: theme.colorScheme.primary,
-            textColor: theme.colorScheme.onPrimary,
-            child: Column(
-              children: [
+          Column(
+            children: [
                 ListTile(
                   leading: const Icon(Icons.language),
                   title: Text(l10n.language),
@@ -3649,20 +3475,10 @@ class _SettingsTab extends ConsumerWidget {
                     );
                   },
                 ),
-              ],
-            ),
+            ],
           ),
           const Divider(),
-          Showcase(
-            key: TourService.settingsBackupKey,
-            title: l10n.tourSettingsBackupTitle,
-            description: l10n.tourSettingsBackupDesc,
-            targetShapeBorder: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.all(Radius.circular(12)),
-            ),
-            tooltipBackgroundColor: theme.colorScheme.primary,
-            textColor: theme.colorScheme.onPrimary,
-            child: ListTile(
+          ListTile(
               leading: const Icon(Icons.backup),
               title: Row(
                 children: [
@@ -3683,18 +3499,8 @@ class _SettingsTab extends ConsumerWidget {
                 );
               },
             ),
-          ),
           const Divider(),
-          Showcase(
-            key: TourService.settingsPremiumKey,
-            title: l10n.tourSettingsPremiumTitle,
-            description: l10n.tourSettingsPremiumDesc,
-            targetShapeBorder: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.all(Radius.circular(12)),
-            ),
-            tooltipBackgroundColor: theme.colorScheme.primary,
-            textColor: theme.colorScheme.onPrimary,
-            child: Container(
+          Container(
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
@@ -3729,7 +3535,6 @@ class _SettingsTab extends ConsumerWidget {
                 },
               ),
             ),
-          ),
           const Divider(),
           ListTile(
             leading: const Icon(Icons.account_balance_wallet_outlined),

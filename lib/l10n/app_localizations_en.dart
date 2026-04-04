@@ -1594,6 +1594,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appTour => 'App Tour';
 
   @override
+  String get resetOnboardingSubtitle => 'Reset the app tour to see it again';
+
+  @override
+  String get resetOnboardingConfirmation =>
+      'Are you sure you want to reset the app tour? You will see the onboarding screens again on next restart.';
+
+  @override
+  String get onboardingResetSuccess => 'App tour reset successfully';
+
+  @override
   String get tourWelcome => 'Welcome to Cashbook!';
 
   @override
@@ -1818,7 +1828,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tourPayablesListDesc => 'View all money you owe. Tap to manage.';
 
   @override
-  String get tourShowMeHow => 'Show me how';
+  String get tourShowMeHow => 'Let\'s try';
 
   @override
   String get messageTemplatesDesc =>
@@ -4064,4 +4074,39 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get others => 'Others';
+
+  @override
+  String get onboardingWelcomeTitle => 'Welcome to Flowpaisa';
+
+  @override
+  String get onboardingWelcomeBody =>
+      'Your complete personal finance and cash flow manager. Take control of your money with ease, precision, and the peace of mind that your data is fully secured and private.';
+
+  @override
+  String get onboardingScanTitle => 'Scan or Speak';
+
+  @override
+  String get onboardingScanBody =>
+      'Save time with Smart Scanning and Voice commands. Just snap a photo of your receipt or tell the app what you spent—it handles the details for you.';
+
+  @override
+  String get onboardingTransactionsTitle => 'Smart Linked Transactions';
+
+  @override
+  String get onboardingTransactionsBody =>
+      'Experience a truly connected system. When you mark a debt as Received, the app automatically records it as Income. When you Pay a bill, it’s instantly logged as an Expense.';
+
+  @override
+  String get onboardingCollaborationTitle => 'Real-time Collaboration';
+
+  @override
+  String get onboardingCollaborationBody =>
+      'Track Receivables and Payables by contact. Send professional WhatsApp reminders using customized message templates to ensure you always get paid on time.';
+
+  @override
+  String get onboardingSyncTitle => 'Organized & Personalized';
+
+  @override
+  String get onboardingSyncBody =>
+      'Create separate Cashbooks for Home or Business. Personalize your Dashboard with custom widgets, and keep everything synced across all your devices.';
 }

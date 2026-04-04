@@ -13,9 +13,6 @@ import 'package:flowpaisa/shared/widgets/swipeable_list_item.dart';
 import 'package:flowpaisa/shared/widgets/app_loading_indicator.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
-import 'package:flowpaisa/features/tour/domain/tour_service.dart';
-import 'package:flowpaisa/features/tour/presentation/providers/tour_provider.dart';
-import 'package:showcaseview/showcaseview.dart';
 import 'package:intl/intl.dart';
 import 'package:googleapis/drive/v3.dart' as drive;
 import 'package:material_symbols_icons/symbols.dart';
@@ -39,8 +36,6 @@ class BackupScreen extends ConsumerStatefulWidget {
 }
 
 class _BackupScreenState extends ConsumerState<BackupScreen> {
-  bool _tourStarted = false;
-
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(backupProvider);
@@ -62,74 +57,50 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
       }
     });
 
-    return ShowCaseWidget(
-      enableAutoScroll: true,
-      onFinish: () {
-        final tourNotifier = ref.read(tourNotifierProvider);
-        tourNotifier.markTourCompleted(tourNotifier.backupKey);
-      },
-      builder: (context) {
-        // Start tour if requested and we haven't started it yet
-        if (widget.startTour && !_tourStarted) {
-          _tourStarted = true;
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted) {
-              try {
-                final showcaseState = ShowCaseWidget.of(context);
-                showcaseState.startShowCase(TourService.backupTourKeys);
-              } catch (e) {
-                debugPrint('Error starting backup tour: $e');
-              }
-            }
-          });
-        }
-        return Builder(
-          builder: (context) => Scaffold(
-            appBar: AppBar(
-              title: Text(l10n.googleDriveBackupRestore),
-              actions: [
-                if (state.currentUser != null)
-                  IconButton(
-                    onPressed: () => _showClearAllCloudDataDialog(context),
-                    icon: const Icon(Icons.delete_forever, color: Colors.red),
-                    tooltip: l10n.clearAllCloudData,
-                  ),
-                const SizedBox(width: 12),
-              ],
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(l10n.googleDriveBackupRestore),
+        actions: [
+          if (state.currentUser != null)
+            IconButton(
+              onPressed: () => _showClearAllCloudDataDialog(context),
+              icon: const Icon(Icons.delete_forever, color: Colors.red),
+              tooltip: l10n.clearAllCloudData,
             ),
-            body: LayoutBuilder(
-              builder: (context, constraints) {
-                return Stack(
-                  children: [
-                    SafeArea(
-                      child: SingleChildScrollView(
-                        padding: const EdgeInsets.all(16),
-                        child: ConstrainedBox(
-                          constraints: BoxConstraints(
-                            minHeight:
-                                constraints.maxHeight - 32, // Subtract padding
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              // Auth Section
-                              _buildAuthSection(context, state, notifier, l10n),
-
-                              if (state.currentUser != null) ...[
-                                const SizedBox(height: 24),
-                                _buildCashbookHeader(context, theme),
-                                const SizedBox(height: 24),
-                                _buildSyncSection(
-                                    context, state, notifier, l10n),
-                                const SizedBox(height: 24),
-                                _buildBackupSection(
-                                    context, state, notifier, l10n),
-                              ],
-                            ],
-                          ),
-                        ),
-                      ),
+          const SizedBox(width: 12),
+        ],
+      ),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          return Stack(
+            children: [
+              SafeArea(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(16),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight:
+                          constraints.maxHeight - 32, // Subtract padding
                     ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // Auth Section
+                        _buildAuthSection(context, state, notifier, l10n),
+
+                        if (state.currentUser != null) ...[
+                          const SizedBox(height: 24),
+                          _buildCashbookHeader(context, theme),
+                          const SizedBox(height: 24),
+                          _buildSyncSection(context, state, notifier, l10n),
+                          const SizedBox(height: 24),
+                          _buildBackupSection(context, state, notifier, l10n),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+              ),
 
                     // Loading Overlay
                     if (state.isLoading)
@@ -253,13 +224,10 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                           ),
                         ),
                       ),
-                  ],
-                );
-              },
-            ),
-          ),
-        );
-      },
+                    ],
+                  );
+                },
+              ),
     );
   }
 
@@ -271,77 +239,67 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
   ) {
     final theme = Theme.of(context);
 
-    return Showcase(
-      key: TourService.backupAuthKey,
-      title: l10n.tourBackupAuthTitle,
-      description: l10n.tourBackupAuthDesc,
-      targetShapeBorder: RoundedRectangleBorder(
+    return Card(
+      elevation: 0,
+      margin: EdgeInsets.zero,
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: theme.dividerColor),
       ),
-      tooltipBackgroundColor: theme.colorScheme.primary,
-      textColor: Colors.white,
-      child: Card(
-        elevation: 0,
-        margin: EdgeInsets.zero,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: theme.dividerColor),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            children: [
-              if (state.currentUser == null) ...[
-                const Icon(Icons.cloud_off, size: 48, color: Colors.grey),
-                const SizedBox(height: 16),
-                Text(
-                  l10n.googleDriveBackup,
-                  style: theme.textTheme.titleMedium,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  l10n.signInGoogleToBackup,
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.bodySmall,
-                ),
-                const SizedBox(height: 16),
-                ElevatedButton.icon(
-                  onPressed: state.isLoading ? null : () => notifier.signIn(),
-                  icon: const Icon(Icons.login),
-                  label: Text(l10n.signInGoogle),
-                ),
-              ] else ...[
-                Row(
-                  children: [
-                    UserAvatar(
-                      user: state.currentUser,
-                      size: 40,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            if (state.currentUser == null) ...[
+              const Icon(Icons.cloud_off, size: 48, color: Colors.grey),
+              const SizedBox(height: 16),
+              Text(
+                l10n.googleDriveBackup,
+                style: theme.textTheme.titleMedium,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                l10n.signInGoogleToBackup,
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodySmall,
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton.icon(
+                onPressed: state.isLoading ? null : () => notifier.signIn(),
+                icon: const Icon(Icons.login),
+                label: Text(l10n.signInGoogle),
+              ),
+            ] else ...[
+              Row(
+                children: [
+                  UserAvatar(
+                    user: state.currentUser,
+                    size: 40,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          state.currentUser!.displayName ?? '',
+                          style: theme.textTheme.titleSmall,
+                        ),
+                        Text(
+                          state.currentUser!.email,
+                          style: theme.textTheme.bodySmall,
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            state.currentUser!.displayName ?? '',
-                            style: theme.textTheme.titleSmall,
-                          ),
-                          Text(
-                            state.currentUser!.email,
-                            style: theme.textTheme.bodySmall,
-                          ),
-                        ],
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () => notifier.signOut(),
-                      child: Text(l10n.signOut),
-                    ),
-                  ],
-                ),
-              ],
+                  ),
+                  TextButton(
+                    onPressed: () => notifier.signOut(),
+                    child: Text(l10n.signOut),
+                  ),
+                ],
+              ),
             ],
-          ),
+          ],
         ),
       ),
     );
@@ -413,28 +371,19 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
   ) {
     final theme = Theme.of(context);
 
-    return Showcase(
-      key: TourService.backupSyncKey,
-      title: l10n.tourBackupSyncTitle,
-      description: l10n.tourBackupSyncDesc,
-      targetShapeBorder: RoundedRectangleBorder(
+    return Card(
+      elevation: 0,
+      margin: EdgeInsets.zero,
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: theme.dividerColor),
       ),
-      tooltipBackgroundColor: theme.colorScheme.primary,
-      textColor: Colors.white,
-      child: Card(
-        elevation: 0,
-        margin: EdgeInsets.zero,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: theme.dividerColor),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -841,7 +790,6 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                 ),
               ),
             ],
-          ),
         ),
       ),
     );
@@ -1001,38 +949,28 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
             ),
           SizedBox(
             height: 56,
-            child: Showcase(
-              key: TourService.backupNowKey,
-              title: l10n.tourBackupNowTitle,
-              description: l10n.tourBackupNowDesc,
-              targetShapeBorder: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              tooltipBackgroundColor: theme.colorScheme.primary,
-              textColor: Colors.white,
-              child: GradientButton(
-                label: state.isBackingUp ? l10n.processing : l10n.backupNow,
-                gradient:
-                    AppColors.getSecondaryGradient(theme.colorScheme.primary),
-                icon: state.isBackingUp ? Icons.sync : Icons.backup,
-                onPressed: state.isBackingUp
-                    ? null
-                    : () {
-                        if (context.mounted) {
-                          ToastUtils.showInfoToast(
-                              context, ref, l10n.backgroundBackupStarted);
-                        }
+            child: GradientButton(
+              label: state.isBackingUp ? l10n.processing : l10n.backupNow,
+              gradient:
+                  AppColors.getSecondaryGradient(theme.colorScheme.primary),
+              icon: state.isBackingUp ? Icons.sync : Icons.backup,
+              onPressed: state.isBackingUp
+                  ? null
+                  : () {
+                      if (context.mounted) {
+                        ToastUtils.showInfoToast(
+                            context, ref, l10n.backgroundBackupStarted);
+                      }
 
-                        // Use a separate async block to handle the completion and toast
-                        () async {
-                          try {
-                            await notifier.backup(l10n);
-                          } catch (e) {
-                            // Error is already handled in the provider state
-                          }
-                        }();
-                      },
-              ),
+                      // Use a separate async block to handle the completion and toast
+                      () async {
+                        try {
+                          await notifier.backup(l10n);
+                        } catch (e) {
+                          // Error is already handled in the provider state
+                        }
+                      }();
+                    },
             ),
           ),
         ],

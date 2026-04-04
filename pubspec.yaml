@@ -61,7 +61,8 @@ dependencies:
   
   # UI & Charts
   fl_chart: ^1.1.1
-  showcaseview: ^3.0.0
+  introduction_screen: ^4.0.0
+  flutter_undraw: ^0.2.1
   
   # Export
   csv: ^6.0.0
@@ -139,6 +140,10 @@ flutter:
   assets:
     - assets/fonts/MaterialSymbolsOutlined.ttf
     - assets/images/
+    - packages/flutter_undraw/assets/undraw/mobile_site.svg
+    - packages/flutter_undraw/assets/undraw/digital_artwork.svg
+    - packages/flutter_undraw/assets/undraw/chatting.svg
+    - packages/flutter_undraw/assets/undraw/cloud_sync.svg
 
 
 

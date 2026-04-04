@@ -39,9 +39,6 @@ import 'package:flowpaisa/features/analytics/presentation/providers/analytics_pr
 import 'package:flowpaisa/shared/widgets/app_floating_action_button.dart';
 
 import 'package:flowpaisa/features/transactions/presentation/widgets/schedule_details_dialog.dart';
-import 'package:flowpaisa/features/tour/domain/tour_service.dart';
-import 'package:flowpaisa/features/tour/presentation/providers/tour_provider.dart';
-import 'package:showcaseview/showcaseview.dart';
 
 class TransactionsListScreen extends ConsumerStatefulWidget {
   final bool startTour;
@@ -58,7 +55,6 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
   late TabController _tabController;
   late TextEditingController _searchController;
   bool _isSearching = false;
-  bool _tourStarted = false;
 
   @override
   void initState() {
@@ -70,21 +66,6 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
       if (mounted) setState(() {});
     });
     _searchController = TextEditingController();
-
-    // Auto-start tour on first visit to this screen
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _checkAndStartTour();
-    });
-  }
-
-  Future<void> _checkAndStartTour() async {
-    // We can add a delay to ensure the screen is fully rendered
-    await Future.delayed(const Duration(milliseconds: 500));
-    if (mounted) {
-      // For now, we'll just provide a way to start it manually or auto-start once
-      // In a real app, you might want to track if THIS specific tour was shown
-      // TourService.startTransactionsTour(context);
-    }
   }
 
   @override
@@ -234,28 +215,8 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
         ref.watch(transactionsPaginatedProvider.notifier).currentFilters;
     final hasActiveFilters = !currentFilters.isEmpty;
 
-    return ShowCaseWidget(
-      onFinish: () {
-        final tourNotifier = ref.read(tourNotifierProvider);
-        tourNotifier.markTourCompleted(tourNotifier.transactionsKey);
-      },
-      builder: (context) {
-        // Start tour if requested and we haven't started it yet
-        if (widget.startTour && !_tourStarted) {
-          _tourStarted = true;
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted) {
-              try {
-                final showcaseState = ShowCaseWidget.of(context);
-                showcaseState.startShowCase(TourService.transactionsTourKeys);
-              } catch (e) {
-                debugPrint('Error starting transactions tour: $e');
-              }
-            }
-          });
-        }
-        return Scaffold(
-          appBar: AppBar(
+    return Scaffold(
+      appBar: AppBar(
             title: _isSearching
                 ? TextField(
                     controller: _searchController,
@@ -286,63 +247,45 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                   )
                 : null,
             actions: [
-              Showcase(
-                key: TourService.transactionsFilterKey,
-                title: l10n.tourTransactionsFilterTitle,
-                description: l10n.tourTransactionsFilterDesc,
-                targetShapeBorder: const CircleBorder(),
-                tooltipBackgroundColor: AppColors.transactionsSectionColor,
-                textColor: Colors.white,
-                tooltipPosition: TooltipPosition.bottom,
-                child: IconButton(
-                  icon: Stack(
-                    children: [
-                      const Icon(Icons.filter_list),
-                      if (hasActiveFilters)
-                        Positioned(
-                          right: 0,
-                          top: 0,
-                          child: Container(
-                            padding: const EdgeInsets.all(2),
-                            decoration: const BoxDecoration(
-                              color: Colors.red,
-                              shape: BoxShape.circle,
-                            ),
-                            constraints: const BoxConstraints(
-                              minWidth: 8,
-                              minHeight: 8,
-                            ),
+              IconButton(
+                icon: Stack(
+                  children: [
+                    const Icon(Icons.filter_list),
+                    if (hasActiveFilters)
+                      Positioned(
+                        right: 0,
+                        top: 0,
+                        child: Container(
+                          padding: const EdgeInsets.all(2),
+                          decoration: const BoxDecoration(
+                            color: Colors.red,
+                            shape: BoxShape.circle,
+                          ),
+                          constraints: const BoxConstraints(
+                            minWidth: 8,
+                            minHeight: 8,
                           ),
                         ),
-                    ],
-                  ),
-                  onPressed: _showFilterBottomSheet,
+                      ),
+                  ],
                 ),
+                onPressed: _showFilterBottomSheet,
               ),
-              Showcase(
-                key: TourService.transactionsSearchKey,
-                title: l10n.tourTransactionsSearchTitle,
-                description: l10n.tourTransactionsSearchDesc,
-                targetShapeBorder: const CircleBorder(),
-                tooltipBackgroundColor: AppColors.transactionsSectionColor,
-                textColor: Colors.white,
-                tooltipPosition: TooltipPosition.bottom,
-                child: IconButton(
-                  icon: Icon(_isSearching ? Icons.close : Icons.search),
-                  onPressed: () {
-                    setState(() {
-                      if (_isSearching) {
-                        _isSearching = false;
-                        _searchController.clear();
-                        ref
-                            .read(transactionsPaginatedProvider.notifier)
-                            .search('');
-                      } else {
-                        _isSearching = true;
-                      }
-                    });
-                  },
-                ),
+              IconButton(
+                icon: Icon(_isSearching ? Icons.close : Icons.search),
+                onPressed: () {
+                  setState(() {
+                    if (_isSearching) {
+                      _isSearching = false;
+                      _searchController.clear();
+                      ref
+                          .read(transactionsPaginatedProvider.notifier)
+                          .search('');
+                    } else {
+                      _isSearching = true;
+                    }
+                  });
+                },
               ),
               if (!_isSearching)
                 IconButton(
@@ -397,32 +340,21 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                   ],
                 )
               : _buildBody(paginatedState, theme),
-          floatingActionButton: Showcase(
-            key: TourService.transactionsFabKey,
-            title: l10n.tourTransactionsFabTitle,
-            description: l10n.tourTransactionsFabDesc,
-            targetShapeBorder: const CircleBorder(),
-            tooltipBackgroundColor: AppColors.transactionsSectionColor,
-            textColor: Colors.white,
-            tooltipPosition: TooltipPosition.top,
-            child: AppFloatingActionButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const AddTransactionScreen(),
-                  ),
-                );
-              },
-              backgroundColor: AppColors.transactionsSectionColor,
-              foregroundColor: Colors.white,
-              child:
-                  Icon(_tabController.index == 1 ? Icons.more_time : Icons.add),
-            ),
+          floatingActionButton: AppFloatingActionButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const AddTransactionScreen(),
+                ),
+              );
+            },
+            backgroundColor: AppColors.transactionsSectionColor,
+            foregroundColor: Colors.white,
+            child:
+                Icon(_tabController.index == 1 ? Icons.more_time : Icons.add),
           ),
         );
-      },
-    );
   }
 
   Widget _buildBody(
@@ -531,20 +463,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
         // Date sections with sticky headers
         for (int i = 0; i < keys.length; i++)
           SliverStickyHeader(
-            header: i == 0
-                ? Showcase(
-                    key: TourService.transactionsListKey,
-                    title: l10n.tourTransactionsListTitle,
-                    description: l10n.tourTransactionsListDesc,
-                    targetShapeBorder: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(20)),
-                    ),
-                    tooltipBackgroundColor: AppColors.transactionsSectionColor,
-                    textColor: Colors.white,
-                    tooltipPosition: TooltipPosition.bottom,
-                    child: _buildDateHeader(theme, keys[i]),
-                  )
-                : _buildDateHeader(theme, keys[i]),
+            header: _buildDateHeader(theme, keys[i]),
             sliver: SliverList(
               delegate: SliverChildBuilderDelegate(
                 (context, itemIndex) {

@@ -1,7 +1,4 @@
 import 'package:flowpaisa/l10n/app_localizations.dart';
-import 'package:flowpaisa/features/tour/domain/tour_service.dart';
-import 'package:flowpaisa/features/tour/presentation/providers/tour_provider.dart';
-import 'package:showcaseview/showcaseview.dart';
 import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -43,7 +40,6 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
   late ScrollController _scrollController;
   int _previousOverdueCount = -1;
   bool _isSearching = false;
-  bool _tourStarted = false;
 
   @override
   void initState() {
@@ -221,29 +217,9 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
     final currentFilters = paginatedNotifier.currentFilters;
     final hasActiveFilters = !currentFilters.isEmpty;
 
-    return ShowCaseWidget(
-      onFinish: () {
-        final tourNotifier = ref.read(tourNotifierProvider);
-        tourNotifier.markTourCompleted(tourNotifier.receivablesKey);
-      },
-      builder: (context) {
-        // Start tour if requested and we haven't started it yet
-        if (widget.startTour && !_tourStarted) {
-          _tourStarted = true;
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted) {
-              try {
-                final showcaseState = ShowCaseWidget.of(context);
-                showcaseState.startShowCase(TourService.receivablesTourKeys);
-              } catch (e) {
-                debugPrint('Error starting receivables tour: $e');
-              }
-            }
-          });
-        }
-        return Scaffold(
-          appBar: AppBar(
-            title: _isSearching
+    return Scaffold(
+      appBar: AppBar(
+        title: _isSearching
                 ? TextField(
                     autofocus: true,
                     decoration: InputDecoration(
@@ -396,28 +372,18 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
                     ],
                   ),
           ),
-          body: Showcase(
-            key: TourService.receivablesListKey,
-            title: l10n.tourReceivablesListTitle,
-            description: l10n.tourReceivablesListDesc,
-            targetShapeBorder: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            tooltipBackgroundColor: AppColors.receivableColor,
-            textColor: Colors.white,
-            child: _tabController == null ||
-                    _tabController!.length != tabCount ||
-                    _tabController!.index >= tabCount
-                ? const AppLoadingIndicator(size: 60)
-                : TabBarView(
-                    controller: _tabController,
-                    children: [
-                      _buildReceivablesList('PENDING'),
-                      if (hasOverdueTab) _buildReceivablesList('OVERDUE'),
-                      _buildReceivablesList('RECEIVED'),
-                    ],
-                  ),
-          ),
+          body: _tabController == null ||
+                  _tabController!.length != tabCount ||
+                  _tabController!.index >= tabCount
+              ? const AppLoadingIndicator(size: 60)
+              : TabBarView(
+                  controller: _tabController,
+                  children: [
+                    _buildReceivablesList('PENDING'),
+                    if (hasOverdueTab) _buildReceivablesList('OVERDUE'),
+                    _buildReceivablesList('RECEIVED'),
+                  ],
+                ),
           floatingActionButton: AppFloatingActionButton(
             onPressed: () {
               Navigator.push(
@@ -431,8 +397,6 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
             foregroundColor: Colors.white,
             child: const Icon(Icons.add),
           ),
-        );
-      },
     );
   }
 

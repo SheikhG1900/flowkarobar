@@ -8,6 +8,7 @@ import 'package:flowpaisa/features/dashboard/domain/dashboard_widget_models.dart
 import 'package:flowpaisa/features/dashboard/domain/models.dart';
 import 'package:flowpaisa/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:flowpaisa/features/dashboard/presentation/providers/dashboard_widget_provider.dart';
+import 'package:flowpaisa/features/onboarding/presentation/providers/onboarding_provider.dart';
 import 'package:flowpaisa/features/transactions/domain/models.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
 import 'package:flowpaisa/features/transactions/presentation/screens/transactions_list_screen.dart';
@@ -35,8 +36,6 @@ import 'package:flowpaisa/core/utils/category_helper.dart';
 import 'package:flowpaisa/features/categories/presentation/widgets/category_budget_progress_bar.dart';
 import 'package:flowpaisa/core/utils/category_budget_utils.dart';
 import 'package:flowpaisa/shared/widgets/dual_amount_progress_bar.dart';
-import 'package:showcaseview/showcaseview.dart';
-import 'package:flowpaisa/features/tour/domain/tour_service.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flowpaisa/features/whatsapp/domain/deep_link_service.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
@@ -2122,14 +2121,10 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
                         label: l10n.appTour,
                         gradient: AppColors.getPrimaryGradient(activeColor),
                         onTap: () {
-                          // Start the dashboard tour
-                          try {
-                            final showcaseState = ShowCaseWidget.of(context);
-                            showcaseState.startShowCase(
-                                TourService.dashboardTourKeys);
-                          } catch (e) {
-                            debugPrint('Error starting tour: $e');
-                          }
+                          // Start the onboarding screen again
+                          ref
+                              .read(onboardingCompletedProvider.notifier)
+                              .setCompleted(false);
                         },
                       ),
                   ],

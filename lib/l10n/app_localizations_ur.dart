@@ -1605,6 +1605,17 @@ class AppLocalizationsUr extends AppLocalizations {
   String get appTour => 'ایپ ٹور';
 
   @override
+  String get resetOnboardingSubtitle =>
+      'اسے دوبارہ دیکھنے کے لیے ایپ ٹور کو ری سیٹ کریں';
+
+  @override
+  String get resetOnboardingConfirmation =>
+      'کیا آپ واقعی ایپ ٹور کو ری سیٹ کرنا چاہتے ہیں؟ اگلی بار شروع کرنے پر آپ کو آن بورڈنگ اسکرینز دوبارہ نظر آئیں گی۔';
+
+  @override
+  String get onboardingResetSuccess => 'ایپ ٹور کامیابی سے ری سیٹ ہو گیا';
+
+  @override
   String get tourWelcome => 'Cashbook میں خوش آمدید!';
 
   @override
@@ -1830,7 +1841,7 @@ class AppLocalizationsUr extends AppLocalizations {
       'آپ کے ذمے تمام رقم دیکھیں۔ انتظام کرنے کے لیے ٹیپ کریں۔';
 
   @override
-  String get tourShowMeHow => 'مجھے دکھائیں کیسے';
+  String get tourShowMeHow => 'آئیے کوشش کریں';
 
   @override
   String get messageTemplatesDesc =>
@@ -4079,4 +4090,39 @@ class AppLocalizationsUr extends AppLocalizations {
 
   @override
   String get others => 'دیگر';
+
+  @override
+  String get onboardingWelcomeTitle => 'Flowpaisa میں خوش آمدید';
+
+  @override
+  String get onboardingWelcomeBody =>
+      'آپ کا مکمل ذاتی مالیات اور کیش فلو مینیجر۔ آسانی، درستگی اور اس ذہنی سکون کے ساتھ اپنے پیسوں پر قابو پائیں کہ آپ کا ڈیٹا مکمل طور پر محفوظ اور نجی ہے۔';
+
+  @override
+  String get onboardingScanTitle => 'اسکین کریں یا بولیں';
+
+  @override
+  String get onboardingScanBody =>
+      'اسمارٹ اسکیننگ اور وائس کمانڈز کے ساتھ وقت بچائیں۔ بس اپنی رسید کی تصویر لیں یا ایپ کو بتائیں کہ آپ نے کیا خرچ کیا—یہ آپ کے لیے تفصیلات سنبھال لے گی۔';
+
+  @override
+  String get onboardingTransactionsTitle => 'اسمارٹ لنکڈ ٹرانزیکشنز';
+
+  @override
+  String get onboardingTransactionsBody =>
+      'ایک حقیقی مربوط نظام کا تجربہ کریں۔ جب آپ کسی قرض کو \'وصول شدہ\' کے طور پر نشان زد کرتے ہیں، تو ایپ خود بخود اسے آمدنی کے طور پر ریکارڈ کر لیتی ہے۔ جب آپ بل ادا کرتے ہیں، تو یہ فوری طور پر خرچ کے طور पर درج ہو جاتا ہے۔';
+
+  @override
+  String get onboardingCollaborationTitle => 'ریئل ٹائم تعاون';
+
+  @override
+  String get onboardingCollaborationBody =>
+      'رابطے کے لحاظ سے وصولی اور واجب الادا رقوم کو ٹریک کریں۔ پیشہ ورانہ واٹس ایپ ریمائنڈرز بھیجیں تاکہ یہ یقینی بنایا جا سکے کہ آپ کو ہمیشہ وقت پر ادائیگی ملے۔';
+
+  @override
+  String get onboardingSyncTitle => 'منظم اور ذاتی نوعیت کا';
+
+  @override
+  String get onboardingSyncBody =>
+      'گھر یا کاروبار کے لیے علیحدہ کیش بکس بنائیں۔ کسٹم وجیٹس کے ساتھ اپنے ڈیش بورڈ کو اپنی مرضی کے مطابق بنائیں، اور تمام آلات پر ڈیٹا سنک رکھیں۔';
 }

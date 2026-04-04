@@ -11,6 +11,7 @@ import 'package:flowpaisa/shared/providers/currency_provider.dart';
 import 'package:flowpaisa/features/backup/presentation/providers/backup_provider.dart';
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
+import 'package:flowpaisa/features/onboarding/presentation/providers/onboarding_provider.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -674,6 +675,63 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   subtitle: Text(profile.dateFormat),
                   trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                   onTap: _showDateFormatSelector,
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              // Reset Onboarding Preference
+              Container(
+                decoration: BoxDecoration(
+                  color: theme.cardColor,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: theme.dividerColor.withValues(alpha: 0.1),
+                  ),
+                ),
+                child: ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      Icons.tour_outlined,
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                  title: Text(l10n.appTour),
+                  subtitle: Text(l10n.resetOnboardingSubtitle),
+                  trailing: const Icon(Icons.refresh, size: 16),
+                  onTap: () async {
+                    final confirmed = await showDialog<bool>(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: Text(l10n.appTour),
+                        content: Text(l10n.resetOnboardingConfirmation),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, false),
+                            child: Text(l10n.cancel),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, true),
+                            child: Text(l10n.reset),
+                          ),
+                        ],
+                      ),
+                    );
+
+                    if (confirmed == true) {
+                      ref
+                          .read(onboardingCompletedProvider.notifier)
+                          .setCompleted(false);
+                      if (mounted) {
+                        ToastUtils.showSuccessToast(
+                            context, ref, l10n.onboardingResetSuccess);
+                      }
+                    }
+                  },
                 ),
               ),
               const SizedBox(height: 32),

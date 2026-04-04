@@ -34,8 +34,6 @@ import 'package:path_provider/path_provider.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flowpaisa/features/analytics/presentation/widgets/account_analytics_widgets.dart';
-import 'package:showcaseview/showcaseview.dart';
-import 'package:flowpaisa/features/tour/domain/tour_service.dart';
 
 final exportServiceProvider = Provider<ExportService>((ref) {
   final db = ref.watch(databaseProvider);
@@ -182,11 +180,10 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
     final hiddenSections = ref.watch(analyticsSectionsProvider);
     bool visible(AnalyticsSection s) => !hiddenSections.contains(s);
 
-    return ShowCaseWidget(
-        builder: (context) => Scaffold(
-              body: Stack(
-                children: [
-                  RefreshIndicator(
+    return Scaffold(
+      body: Stack(
+        children: [
+          RefreshIndicator(
                     onRefresh: () async {
                       // Invalidate all analytics providers to refresh data
                       ref.invalidate(financialSummaryProvider);
@@ -233,19 +230,10 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                           ),
                           centerTitle: true,
                           actions: [
-                            Showcase(
-                              key: TourService.analyticsExportPdfKey,
-                              title: l10n.tourAnalyticsExportPdfTitle,
-                              description: l10n.tourAnalyticsExportPdfDesc,
-                              targetShapeBorder: const CircleBorder(),
-                              tooltipBackgroundColor: theme.colorScheme.primary,
-                              textColor: theme.colorScheme.onPrimary,
-                              tooltipPosition: TooltipPosition.bottom,
-                              child: IconButton(
-                                icon: const Icon(Symbols.picture_as_pdf),
-                                onPressed: _exportAnalyticsToPDF,
-                                tooltip: l10n.exportAnalyticsPDF,
-                              ),
+                            IconButton(
+                              icon: const Icon(Symbols.picture_as_pdf),
+                              onPressed: _exportAnalyticsToPDF,
+                              tooltip: l10n.exportAnalyticsPDF,
                             ),
                             IconButton(
                               icon: const Icon(Symbols.tune),
@@ -256,35 +244,23 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                           ],
                           bottom: PreferredSize(
                             preferredSize: const Size.fromHeight(107),
-                            child: Showcase(
-                              key: TourService.analyticsDateRangeKey,
-                              title: l10n.tourAnalyticsDateRangeTitle,
-                              description: l10n.tourAnalyticsDateRangeDesc,
-                              targetShapeBorder: const RoundedRectangleBorder(
-                                borderRadius:
-                                    BorderRadius.all(Radius.circular(12)),
-                              ),
-                              tooltipBackgroundColor: theme.colorScheme.primary,
-                              textColor: theme.colorScheme.onPrimary,
-                              tooltipPosition: TooltipPosition.bottom,
-                              child: _DateRangeSelector(
-                                selectedDateRange: selectedDateRange,
-                                onDateRangeChanged: (dateRange) {
-                                  ref
-                                      .read(selectedDateRangeProvider.notifier)
-                                      .updateRange(dateRange);
-                                },
-                                onNextPeriod: () {
-                                  ref
-                                      .read(selectedDateRangeProvider.notifier)
-                                      .nextPeriod();
-                                },
-                                onPreviousPeriod: () {
-                                  ref
-                                      .read(selectedDateRangeProvider.notifier)
-                                      .previousPeriod();
-                                },
-                              ),
+                            child: _DateRangeSelector(
+                              selectedDateRange: selectedDateRange,
+                              onDateRangeChanged: (dateRange) {
+                                ref
+                                    .read(selectedDateRangeProvider.notifier)
+                                    .updateRange(dateRange);
+                              },
+                              onNextPeriod: () {
+                                ref
+                                    .read(selectedDateRangeProvider.notifier)
+                                    .nextPeriod();
+                              },
+                              onPreviousPeriod: () {
+                                ref
+                                    .read(selectedDateRangeProvider.notifier)
+                                    .previousPeriod();
+                              },
                             ),
                           ),
                         ),
@@ -299,27 +275,10 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                                 // Financial Summary (Combined)
                                 if (visible(AnalyticsSection.financialSummary))
                                   RepaintBoundary(
-                                    child: Showcase(
-                                      key: TourService
-                                          .analyticsFinancialSummaryKey,
-                                      title: l10n
-                                          .tourAnalyticsFinancialSummaryTitle,
-                                      description: l10n
-                                          .tourAnalyticsFinancialSummaryDesc,
-                                      targetShapeBorder:
-                                          const RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.all(
-                                            Radius.circular(12)),
-                                      ),
-                                      tooltipBackgroundColor:
-                                          theme.colorScheme.primary,
-                                      textColor: theme.colorScheme.onPrimary,
-                                      tooltipPosition: TooltipPosition.bottom,
-                                      child: _CollapsibleSection(
-                                        title: l10n.financialSummary,
-                                        sectionIndex: 0,
-                                        child: const _FinancialSummaryCard(),
-                                      ),
+                                    child: _CollapsibleSection(
+                                      title: l10n.financialSummary,
+                                      sectionIndex: 0,
+                                      child: const _FinancialSummaryCard(),
                                     ),
                                   ),
 
@@ -336,24 +295,10 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                                 // Pie Chart Section
                                 if (visible(AnalyticsSection.expensesByCategory))
                                   RepaintBoundary(
-                                    child: Showcase(
-                                      key: TourService.analyticsChartsKey,
-                                      title: l10n.tourAnalyticsChartsTitle,
-                                      description: l10n.tourAnalyticsChartsDesc,
-                                      targetShapeBorder:
-                                          const RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.all(
-                                            Radius.circular(12)),
-                                      ),
-                                      tooltipBackgroundColor:
-                                          theme.colorScheme.primary,
-                                      textColor: theme.colorScheme.onPrimary,
-                                      tooltipPosition: TooltipPosition.bottom,
-                                      child: _CollapsibleSection(
-                                        title: l10n.expensesByCategory,
-                                        sectionIndex: 2,
-                                        child: const _ExpensesPieChart(),
-                                      ),
+                                    child: _CollapsibleSection(
+                                      title: l10n.expensesByCategory,
+                                      sectionIndex: 2,
+                                      child: const _ExpensesPieChart(),
                                     ),
                                   ),
 
@@ -599,9 +544,9 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                         ),
                       ),
                     ),
-                ],
-              ),
-            ));
+        ],
+      ),
+    );
   }
 }
 

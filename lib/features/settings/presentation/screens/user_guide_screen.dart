@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
-import 'package:flowpaisa/features/tour/domain/tour_service.dart';
+import 'package:flowpaisa/features/onboarding/presentation/providers/onboarding_provider.dart';
 import 'package:flowpaisa/features/transactions/presentation/screens/add_transaction_screen.dart';
 import 'package:flowpaisa/features/receivables/presentation/screens/receivables_list_screen.dart';
 import 'package:flowpaisa/features/payables/presentation/screens/payables_list_screen.dart';
@@ -84,7 +85,7 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const AddTransactionScreen(startTour: true),
+                            builder: (context) => const AddTransactionScreen(),
                           ),
                         );
                       },
@@ -93,12 +94,12 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
                       question: l10n.guideSwitchCashbook,
                       answer: l10n.guideSwitchCashbookStep,
                       tourAction: (context) {
+                        final container = ProviderScope.containerOf(context);
                         Navigator.popUntil(context, (route) => route.isFirst);
-                        // Dashboard is the first screen
-                        Future.delayed(const Duration(milliseconds: 500), () {
-                          if (context.mounted) {
-                            TourService.startDashboardTour(context);
-                          }
+                        Future.delayed(const Duration(milliseconds: 300), () {
+                          container
+                              .read(onboardingCompletedProvider.notifier)
+                              .setCompleted(false);
                         });
                       },
                     ),
@@ -117,7 +118,7 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const ReceivablesListScreen(startTour: true),
+                            builder: (context) => const ReceivablesListScreen(),
                           ),
                         );
                       },
@@ -129,7 +130,7 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const PayablesListScreen(startTour: true),
+                            builder: (context) => const PayablesListScreen(),
                           ),
                         );
                       },
@@ -189,7 +190,7 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const BackupScreen(startTour: true),
+                            builder: (context) => const BackupScreen(),
                           ),
                         );
                       },
@@ -330,7 +331,7 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
                 const SizedBox(height: 12),
                 OutlinedButton.icon(
                   onPressed: () => item.tourAction!(context),
-                  icon: const Icon(Icons.play_circle_outline, size: 18),
+                  icon: const Icon(Icons.rocket_launch_outlined, size: 18),
                   label: Text(AppLocalizations.of(context)!.tourShowMeHow),
                   style: OutlinedButton.styleFrom(
                     visualDensity: VisualDensity.compact,

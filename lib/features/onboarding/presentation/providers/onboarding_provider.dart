@@ -1,0 +1,43 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flowpaisa/shared/providers/shared_preferences_provider.dart';
+import 'package:flowpaisa/features/onboarding/presentation/screens/onboarding_screen.dart';
+
+/// Tracks whether the marketing intro wizard has been completed (persisted in prefs).
+class OnboardingCompletedNotifier extends Notifier<bool> {
+  @override
+  bool build() {
+    final prefs = ref.watch(sharedPreferencesProvider);
+    return prefs.getBool(OnboardingScreen.onboardingKey) ?? false;
+  }
+
+  /// Updates in-memory tour flag (call after persisting prefs when needed).
+  void setCompleted(bool value) => state = value;
+}
+
+final onboardingCompletedProvider =
+    NotifierProvider<OnboardingCompletedNotifier, bool>(
+  OnboardingCompletedNotifier.new,
+);
+
+/// Tracks whether the user has interacted with the dashboard customization feature.
+class DashboardCustomizationSeenNotifier extends Notifier<bool> {
+  static const String key = 'has_seen_dashboard_customization_v1';
+
+  @override
+  bool build() {
+    final prefs = ref.watch(sharedPreferencesProvider);
+    return prefs.getBool(key) ?? false;
+  }
+
+  Future<void> setSeen() async {
+    if (state) return;
+    final prefs = ref.read(sharedPreferencesProvider);
+    await prefs.setBool(key, true);
+    state = true;
+  }
+}
+
+final dashboardCustomizationSeenProvider =
+    NotifierProvider<DashboardCustomizationSeenNotifier, bool>(
+  DashboardCustomizationSeenNotifier.new,
+);

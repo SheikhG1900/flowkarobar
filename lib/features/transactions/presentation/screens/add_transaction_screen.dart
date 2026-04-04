@@ -1,6 +1,3 @@
-import 'package:flowpaisa/features/tour/domain/tour_service.dart';
-import 'package:flowpaisa/features/tour/presentation/providers/tour_provider.dart';
-import 'package:showcaseview/showcaseview.dart';
 import 'package:flowpaisa/core/services/in_app_review_service.dart';
 import 'package:flowpaisa/core/utils/category_helper.dart';
 import 'package:flowpaisa/core/utils/localization_helper.dart';
@@ -87,7 +84,6 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
   final _amountController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _amountFocusNode = FocusNode();
-  bool _tourStarted = false;
 
   String _selectedType = 'EXPENSE';
   DateTime _selectedDate = DateTime.now();
@@ -1686,31 +1682,9 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     final limitsAsync = ref.watch(transactionLimitsProvider);
     final scheduleLimitsAsync = ref.watch(scheduleLimitsProvider);
 
-    return ShowCaseWidget(
-      enableAutoScroll: true,
-      onFinish: () {
-        // Mark add transaction tour as completed
-        final tourNotifier = ref.read(tourNotifierProvider);
-        tourNotifier.markTourCompleted(tourNotifier.addTransactionKey);
-      },
-      builder: (context) {
-        // Start tour if requested and we haven't started it yet
-        if (widget.startTour && !_tourStarted) {
-          _tourStarted = true;
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted) {
-              try {
-                final showcaseState = ShowCaseWidget.of(context);
-                showcaseState.startShowCase(TourService.addTransactionTourKeys);
-              } catch (e) {
-                debugPrint('Error starting add transaction tour: $e');
-              }
-            }
-          });
-        }
-        return Scaffold(
-          appBar: AppBar(
-            title: Text(l10n.addTransaction),
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(l10n.addTransaction),
             leading: IconButton(
               icon: const Icon(Icons.close),
               onPressed: () => Navigator.pop(context),
@@ -1759,28 +1733,18 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                   const SizedBox(height: 8),
                 ],
                 // Save chip
-                Showcase(
-                  key: TourService.addTxSaveKey,
-                  title: l10n.tourAddTxSaveTitle,
-                  description: l10n.tourAddTxSaveDesc,
-                  targetShapeBorder: const StadiumBorder(),
-                  tooltipBackgroundColor:
-                      isExpense ? AppColors.expenseColor : AppColors.incomeColor,
-                  textColor: Colors.white,
-                  tooltipPosition: TooltipPosition.top,
-                  child: _FabChip(
-                    label: _isLoading ? l10n.saving : l10n.save,
-                    icon: _isLoading
-                        ? null
-                        : (_isDuplicate ||
-                                (limitsAsync.asData?.value != null &&
-                                    !limitsAsync.asData!.value.canAdd))
-                            ? Icons.lock
-                            : Icons.check,
-                    isLoading: _isLoading,
-                    color: isExpense ? AppColors.expenseColor : AppColors.incomeColor,
-                    onPressed: (_isLoading || _isDuplicate) ? null : _saveTransaction,
-                  ),
+                _FabChip(
+                  label: _isLoading ? l10n.saving : l10n.save,
+                  icon: _isLoading
+                      ? null
+                      : (_isDuplicate ||
+                              (limitsAsync.asData?.value != null &&
+                                  !limitsAsync.asData!.value.canAdd))
+                          ? Icons.lock
+                          : Icons.check,
+                  isLoading: _isLoading,
+                  color: isExpense ? AppColors.expenseColor : AppColors.incomeColor,
+                  onPressed: (_isLoading || _isDuplicate) ? null : _saveTransaction,
                 ),
               ],
             ),
@@ -1813,18 +1777,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                 ),
                 children: [
                   // Amount Input (Large & Prominent)
-                  Showcase(
-                    key: TourService.addTxAmountKey,
-                    title: l10n.tourAddTxAmountTitle,
-                    description: l10n.tourAddTxAmountDesc,
-                    targetShapeBorder: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(20)),
-                    ),
-                    tooltipBackgroundColor: isExpense
-                        ? AppColors.expenseColor
-                        : AppColors.incomeColor,
-                    textColor: Colors.white,
-                    child: Container(
+                  Container(
                       padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
                         color: theme.cardColor,
@@ -1940,7 +1893,6 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                         ],
                       ),
                     ),
-                  ),
                   const SizedBox(height: 24),
 
                   // Type Selection (Gradient Buttons)
@@ -1984,18 +1936,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                   const SizedBox(height: 24),
 
                   // Category Selector
-                  Showcase(
-                    key: TourService.addTxCategoryKey,
-                    title: l10n.tourAddTxCategoryTitle,
-                    description: l10n.tourAddTxCategoryDesc,
-                    targetShapeBorder: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(12)),
-                    ),
-                    tooltipBackgroundColor: isExpense
-                        ? AppColors.expenseColor
-                        : AppColors.incomeColor,
-                    textColor: Colors.white,
-                    child: Consumer(
+                  Consumer(
                       builder: (context, ref, _) {
                         final hintAsync = ref.watch(
                           categoryMonthlyBudgetHintProvider(
@@ -2201,7 +2142,6 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                         );
                       },
                     ),
-                  ),
                   if (widget.initialCategoryName != null &&
                       _selectedCategory == null)
                     Padding(
@@ -2218,18 +2158,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                   const SizedBox(height: 16),
 
                   // Contact Selector (Optional)
-                  Showcase(
-                    key: TourService.addTxContactKey,
-                    title: l10n.tourAddTxContactTitle,
-                    description: l10n.tourAddTxContactDesc,
-                    targetShapeBorder: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(12)),
-                    ),
-                    tooltipBackgroundColor: isExpense
-                        ? AppColors.expenseColor
-                        : AppColors.incomeColor,
-                    textColor: Colors.white,
-                    child: InkWell(
+                  InkWell(
                       onTap: () async {
                         final contact = await _showContactPicker();
                         if (contact != null) {
@@ -2329,7 +2258,6 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                           ],
                         ),
                       ),
-                    ),
                   ),
                   if (widget.initialContactName != null &&
                       _selectedContact == null)
@@ -2397,18 +2325,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                   const SizedBox(height: 16),
 
                   // Date Selector
-                  Showcase(
-                    key: TourService.addTxDateKey,
-                    title: l10n.tourAddTxDateTitle,
-                    description: l10n.tourAddTxDateDesc,
-                    targetShapeBorder: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(12)),
-                    ),
-                    tooltipBackgroundColor: isExpense
-                        ? AppColors.expenseColor
-                        : AppColors.incomeColor,
-                    textColor: Colors.white,
-                    child: InkWell(
+                  InkWell(
                       onTap: _selectDate,
                       borderRadius: BorderRadius.circular(12),
                       child: Container(
@@ -2457,7 +2374,6 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                           ],
                         ),
                       ),
-                    ),
                   ),
                   const SizedBox(height: 16),
 
@@ -2549,8 +2465,6 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
             ),
           ),
         );
-      },
-    );
   }
 }
 
