@@ -381,221 +381,239 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     ];
 
     return Scaffold(
-        body: LayoutBuilder(
-          builder: (context, constraints) {
-            if (constraints.maxWidth < 600) {
-              // Mobile Layout
-              return AnimatedSwitcher(
-                duration: const Duration(milliseconds: 400),
-                switchInCurve: Curves.easeOutCubic,
-                switchOutCurve: Curves.easeInCubic,
-                transitionBuilder: (Widget child, Animation<double> animation) {
-                  return FadeTransition(
-                    opacity: animation,
-                    child: SlideTransition(
-                      position: Tween<Offset>(
-                        begin: const Offset(0.01, 0),
-                        end: Offset.zero,
-                      ).animate(animation),
-                      child: child,
-                    ),
-                  );
-                },
-                child: KeyedSubtree(
-                  key: ValueKey<int>(_selectedIndex),
-                  child: screens[_selectedIndex],
-                ),
-              );
-            } else {
-              // Tablet/Desktop Layout
-              return Row(
-                children: [
-                  NavigationRail(
-                    selectedIndex: _selectedIndex,
-                    onDestinationSelected: (index) {
-                      if (index == 1) {
-                        // Clear transactions filters and search when navigating via navigation rail
-                        final notifier =
-                            ref.read(transactionsPaginatedProvider.notifier);
-                        notifier.search('');
-                        notifier.applyFilters(TransactionFilters());
-                      }
-                      // Unfocus before tab switch to avoid FocusScope assertion
-                      FocusManager.instance.primaryFocus?.unfocus();
-                      setState(() {
-                        _selectedIndex = index;
-                      });
-                    },
-                    labelType: NavigationRailLabelType.all,
-                    leading: Consumer(
-                      builder: (context, ref, child) {
-                        final showQuickButton =
-                            ref.watch(showBottomBarQuickButtonProvider);
-                        if (!showQuickButton) return const SizedBox.shrink();
-
-                        final activeCashbook =
-                            ref.watch(activeCashbookProvider);
-                        final activeColor = activeCashbook.color;
-                        final quickActionCode =
-                            ref.watch(bottomBarQuickActionProvider);
-                        final isPremium = PremiumGate.isPremium(ref);
-
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          child: _buildCenterQuickButton(
-                            context,
-                            ref,
-                            quickActionCode,
-                            isPremium,
-                            l10n,
-                            activeColor,
-                          ),
-                        );
-                      },
-                    ),
-                    destinations: [
-                      NavigationRailDestination(
-                        icon: const Icon(Icons.dashboard),
-                        label: Text(l10n.dashboard),
-                      ),
-                      NavigationRailDestination(
-                        icon: const Icon(Icons.receipt_long),
-                        label: Text(l10n.transactions),
-                      ),
-                      NavigationRailDestination(
-                        icon: const Icon(Icons.analytics),
-                        label: Text(l10n.analytics),
-                      ),
-                      NavigationRailDestination(
-                        icon: const Icon(Icons.settings),
-                        label: Text(l10n.settings),
-                      ),
-                    ],
+      extendBody: true,
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          if (constraints.maxWidth < 600) {
+            // Mobile Layout
+            return AnimatedSwitcher(
+              duration: const Duration(milliseconds: 400),
+              switchInCurve: Curves.easeOutCubic,
+              switchOutCurve: Curves.easeInCubic,
+              transitionBuilder: (Widget child, Animation<double> animation) {
+                return FadeTransition(
+                  opacity: animation,
+                  child: SlideTransition(
+                    position: Tween<Offset>(
+                      begin: const Offset(0.01, 0),
+                      end: Offset.zero,
+                    ).animate(animation),
+                    child: child,
                   ),
-                  const VerticalDivider(thickness: 1, width: 1),
-                  Expanded(
-                    child: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 400),
-                      transitionBuilder:
-                          (Widget child, Animation<double> animation) {
-                        return FadeTransition(opacity: animation, child: child);
-                      },
-                      child: KeyedSubtree(
-                        key: ValueKey<int>(_selectedIndex),
-                        child: screens[_selectedIndex],
-                      ),
-                    ),
-                  ),
-                ],
-              );
-            }
-          },
-        ),
-        bottomNavigationBar: MediaQuery.of(context).size.width < 600
-            ? Theme(
-                data: Theme.of(context).copyWith(
-                  navigationBarTheme: NavigationBarThemeData(
-                    indicatorColor: _selectedIndex == -1
-                        ? Colors.transparent
-                        : _getSectionColor(_selectedIndex)
-                            .withValues(alpha: 0.15),
-                    iconTheme: WidgetStateProperty.resolveWith((states) {
-                      if (states.contains(WidgetState.selected)) {
-                        return IconThemeData(
-                            color: _selectedIndex == -1
-                                ? Theme.of(context).colorScheme.onSurfaceVariant
-                                : _getSectionColor(_selectedIndex));
-                      }
-                      return IconThemeData(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      );
-                    }),
-                    labelTextStyle: WidgetStateProperty.resolveWith((states) {
-                      if (states.contains(WidgetState.selected)) {
-                        return TextStyle(
-                          color: _selectedIndex == -1
-                              ? Theme.of(context).colorScheme.onSurfaceVariant
-                              : _getSectionColor(_selectedIndex),
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                        );
-                      }
-                      return TextStyle(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        fontSize: 12,
-                      );
-                    }),
-                  ),
-                ),
-                child: Consumer(
-                  builder: (context, ref, child) {
-                    final activeCashbook = ref.watch(activeCashbookProvider);
-                    final activeColor = activeCashbook.color;
-                    final quickActionCode =
-                        ref.watch(bottomBarQuickActionProvider);
-                    final isPremium = PremiumGate.isPremium(ref);
-                    final showQuickButton =
-                        ref.watch(showBottomBarQuickButtonProvider);
-
-                    return Stack(
-                        alignment: Alignment.bottomCenter,
-                        clipBehavior: Clip.none,
-                        children: [
-                          NavigationBar(
-                            selectedIndex:
-                                _selectedIndex == -1 ? 0 : _selectedIndex,
-                            onDestinationSelected: (index) {
-                              if (index == 1) {
-                                // Clear transactions filters and search when navigating via bottom bar
-                                final notifier = ref.read(
-                                    transactionsPaginatedProvider.notifier);
-                                notifier.search('');
-                                notifier.applyFilters(TransactionFilters());
-                              }
-                              // Unfocus and dismiss overlay before tab switch to avoid FocusScope assertion
-                              FocusManager.instance.primaryFocus?.unfocus();
-                              setState(() {
-                                _selectedIndex = index;
-                              });
-                            },
-                            destinations: [
-                              NavigationDestination(
-                                icon: const Icon(Icons.dashboard),
-                                label: l10n.dashboard,
-                              ),
-                              NavigationDestination(
-                                icon: const Icon(Icons.receipt_long),
-                                label: l10n.transactions,
-                              ),
-                              NavigationDestination(
-                                icon: const Icon(Icons.analytics),
-                                label: l10n.analytics,
-                              ),
-                              NavigationDestination(
-                                icon: const Icon(Icons.settings),
-                                label: l10n.settings,
-                              ),
-                            ],
-                          ),
-                          if (showQuickButton)
-                            Positioned(
-                              top:
-                                  -28, // Lift the button to overlap the top border
-                              child: _buildCenterQuickButton(
-                                context,
-                                ref,
-                                quickActionCode,
-                                isPremium,
-                                l10n,
-                                activeColor,
-                              ),
-                            ),
-                        ],
-                      );
+                );
+              },
+              child: KeyedSubtree(
+                key: ValueKey<int>(_selectedIndex),
+                child: screens[_selectedIndex],
+              ),
+            );
+          } else {
+            // Tablet/Desktop Layout
+            return Row(
+              children: [
+                NavigationRail(
+                  selectedIndex: _selectedIndex,
+                  onDestinationSelected: (index) {
+                    if (index == 1) {
+                      // Clear transactions filters and search when navigating via navigation rail
+                      final notifier =
+                          ref.read(transactionsPaginatedProvider.notifier);
+                      notifier.search('');
+                      notifier.applyFilters(TransactionFilters());
+                    }
+                    // Unfocus before tab switch to avoid FocusScope assertion
+                    FocusManager.instance.primaryFocus?.unfocus();
+                    setState(() {
+                      _selectedIndex = index;
+                    });
                   },
+                  labelType: NavigationRailLabelType.all,
+                  leading: Consumer(
+                    builder: (context, ref, child) {
+                      final showQuickButton =
+                          ref.watch(showBottomBarQuickButtonProvider);
+                      if (!showQuickButton) return const SizedBox.shrink();
+
+                      final activeCashbook = ref.watch(activeCashbookProvider);
+                      final activeColor = activeCashbook.color;
+                      final quickActionCode =
+                          ref.watch(bottomBarQuickActionProvider);
+                      final isPremium = PremiumGate.isPremium(ref);
+
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: _buildCenterQuickButton(
+                          context,
+                          ref,
+                          quickActionCode,
+                          isPremium,
+                          l10n,
+                          activeColor,
+                        ),
+                      );
+                    },
+                  ),
+                  destinations: [
+                    NavigationRailDestination(
+                      icon: const Icon(Icons.dashboard),
+                      label: Text(l10n.dashboard),
+                    ),
+                    NavigationRailDestination(
+                      icon: const Icon(Icons.receipt_long),
+                      label: Text(l10n.transactions),
+                    ),
+                    NavigationRailDestination(
+                      icon: const Icon(Icons.analytics),
+                      label: Text(l10n.analytics),
+                    ),
+                    NavigationRailDestination(
+                      icon: const Icon(Icons.settings),
+                      label: Text(l10n.settings),
+                    ),
+                  ],
                 ),
-              )
-            : null,
+                const VerticalDivider(thickness: 1, width: 1),
+                Expanded(
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 400),
+                    transitionBuilder:
+                        (Widget child, Animation<double> animation) {
+                      return FadeTransition(opacity: animation, child: child);
+                    },
+                    child: KeyedSubtree(
+                      key: ValueKey<int>(_selectedIndex),
+                      child: screens[_selectedIndex],
+                    ),
+                  ),
+                ),
+              ],
+            );
+          }
+        },
+      ),
+      bottomNavigationBar: MediaQuery.of(context).size.width < 600
+          ? Consumer(
+              builder: (context, ref, child) {
+                final activeCashbook = ref.watch(activeCashbookProvider);
+                final activeColor = activeCashbook.color;
+                final quickActionCode = ref.watch(bottomBarQuickActionProvider);
+                final isPremium = PremiumGate.isPremium(ref);
+                final showQuickButton =
+                    ref.watch(showBottomBarQuickButtonProvider);
+
+                return BottomAppBar(
+                  padding: EdgeInsets.zero,
+                  height: 80,
+                  notchMargin: 8.0,
+                  shape: showQuickButton ? const CircularNotchedRectangle() : null,
+                  clipBehavior: Clip.antiAlias,
+                  color: Theme.of(context).colorScheme.surface,
+                  elevation: 2,
+                  child: Theme(
+                    data: Theme.of(context).copyWith(
+                      navigationBarTheme: NavigationBarThemeData(
+                        backgroundColor: Colors.transparent,
+                        indicatorColor: _selectedIndex == -1
+                            ? Colors.transparent
+                            : _getSectionColor(_selectedIndex)
+                                .withValues(alpha: 0.15),
+                        iconTheme: WidgetStateProperty.resolveWith((states) {
+                          if (states.contains(WidgetState.selected)) {
+                            return IconThemeData(
+                                color: _selectedIndex == -1
+                                    ? Theme.of(context)
+                                        .colorScheme
+                                        .onSurfaceVariant
+                                    : _getSectionColor(_selectedIndex));
+                          }
+                          return IconThemeData(
+                            color:
+                                Theme.of(context).colorScheme.onSurfaceVariant,
+                          );
+                        }),
+                        labelTextStyle:
+                            WidgetStateProperty.resolveWith((states) {
+                          if (states.contains(WidgetState.selected)) {
+                            return TextStyle(
+                              color: _selectedIndex == -1
+                                  ? Theme.of(context)
+                                      .colorScheme
+                                      .onSurfaceVariant
+                                  : _getSectionColor(_selectedIndex),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            );
+                          }
+                          return TextStyle(
+                            color:
+                                Theme.of(context).colorScheme.onSurfaceVariant,
+                            fontSize: 12,
+                          );
+                        }),
+                      ),
+                    ),
+                    child: NavigationBar(
+                      selectedIndex: _selectedIndex == -1 ? 0 : _selectedIndex,
+                      onDestinationSelected: (index) {
+                        if (index == 1) {
+                          final notifier =
+                              ref.read(transactionsPaginatedProvider.notifier);
+                          notifier.search('');
+                          notifier.applyFilters(TransactionFilters());
+                        }
+                        FocusManager.instance.primaryFocus?.unfocus();
+                        setState(() {
+                          _selectedIndex = index;
+                        });
+                      },
+                      destinations: [
+                        NavigationDestination(
+                          icon: const Icon(Icons.dashboard),
+                          label: l10n.dashboard,
+                        ),
+                        NavigationDestination(
+                          icon: const Icon(Icons.receipt_long),
+                          label: l10n.transactions,
+                        ),
+                        NavigationDestination(
+                          icon: const Icon(Icons.analytics),
+                          label: l10n.analytics,
+                        ),
+                        NavigationDestination(
+                          icon: const Icon(Icons.settings),
+                          label: l10n.settings,
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            )
+          : null,
+      floatingActionButton: MediaQuery.of(context).size.width < 600
+          ? Consumer(
+              builder: (context, ref, child) {
+                final showQuickButton =
+                    ref.watch(showBottomBarQuickButtonProvider);
+                if (!showQuickButton) return const SizedBox.shrink();
+
+                final activeCashbook = ref.watch(activeCashbookProvider);
+                final activeColor = activeCashbook.color;
+                final quickActionCode = ref.watch(bottomBarQuickActionProvider);
+                final isPremium = PremiumGate.isPremium(ref);
+
+                return _buildCenterQuickButton(
+                  context,
+                  ref,
+                  quickActionCode,
+                  isPremium,
+                  l10n,
+                  activeColor,
+                );
+              },
+            )
+          : null,
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
     );
   }
 
@@ -2389,102 +2407,102 @@ class _DashboardHeader extends ConsumerWidget {
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 8),
                     child: InkWell(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const CashbooksScreen(),
-                            ),
-                          );
-                        },
-                        borderRadius: BorderRadius.circular(12),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 4, horizontal: 4),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              Align(
-                                alignment: AlignmentDirectional.centerStart,
-                                child: Directionality(
-                                  textDirection: TextDirection.ltr,
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      SvgPicture.asset(
-                                        'assets/images/logo_square.svg',
-                                        fit: BoxFit.contain,
-                                        height: 36,
-                                        colorFilter: ColorFilter.mode(
-                                          Color.lerp(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const CashbooksScreen(),
+                          ),
+                        );
+                      },
+                      borderRadius: BorderRadius.circular(12),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 4, horizontal: 4),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Align(
+                              alignment: AlignmentDirectional.centerStart,
+                              child: Directionality(
+                                textDirection: TextDirection.ltr,
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    SvgPicture.asset(
+                                      'assets/images/logo_square.svg',
+                                      fit: BoxFit.contain,
+                                      height: 36,
+                                      colorFilter: ColorFilter.mode(
+                                        Color.lerp(
+                                              theme.colorScheme.onSurface,
+                                              theme.colorScheme.primary,
+                                              .5,
+                                            ) ??
+                                            theme.colorScheme.onSurface,
+                                        BlendMode.srcIn,
+                                      ),
+                                    ),
+                                    Transform.translate(
+                                      offset: const Offset(-4, 0),
+                                      child: Text(
+                                        'lowpaisa',
+                                        style: theme.textTheme.displaySmall
+                                            ?.copyWith(
+                                          fontSize: 22,
+                                          fontWeight: FontWeight.w800,
+                                          color: Color.lerp(
                                                 theme.colorScheme.onSurface,
                                                 theme.colorScheme.primary,
                                                 .5,
                                               ) ??
                                               theme.colorScheme.onSurface,
-                                          BlendMode.srcIn,
                                         ),
                                       ),
-                                      Transform.translate(
-                                        offset: const Offset(-4, 0),
-                                        child: Text(
-                                          'lowpaisa',
-                                          style: theme.textTheme.displaySmall
-                                              ?.copyWith(
-                                            fontSize: 22,
-                                            fontWeight: FontWeight.w800,
-                                            color: Color.lerp(
-                                                  theme.colorScheme.onSurface,
-                                                  theme.colorScheme.primary,
-                                                  .5,
-                                                ) ??
-                                                theme.colorScheme.onSurface,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Align(
-                                alignment: AlignmentDirectional.centerStart,
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(
-                                      activeIcon,
-                                      size: 14,
-                                      color: activeForeColor,
                                     ),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      activeCashbook.name,
-                                      style: TextStyle(
-                                        color: activeForeColor,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Icon(
-                                      Icons.keyboard_arrow_down,
-                                      size: 14,
-                                      color: isDark
-                                          ? Colors.white54
-                                          : Colors.black54,
-                                    ),
-                                    if (isPremium) ...[
-                                      const SizedBox(width: 4),
-                                      const PremiumBadge(isSmall: true),
-                                    ],
                                   ],
                                 ),
                               ),
-                            ],
-                          ),
+                            ),
+                            const SizedBox(height: 4),
+                            Align(
+                              alignment: AlignmentDirectional.centerStart,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    activeIcon,
+                                    size: 14,
+                                    color: activeForeColor,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    activeCashbook.name,
+                                    style: TextStyle(
+                                      color: activeForeColor,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Icon(
+                                    Icons.keyboard_arrow_down,
+                                    size: 14,
+                                    color: isDark
+                                        ? Colors.white54
+                                        : Colors.black54,
+                                  ),
+                                  if (isPremium) ...[
+                                    const SizedBox(width: 4),
+                                    const PremiumBadge(isSmall: true),
+                                  ],
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
                       ),
+                    ),
                   ),
                   const SizedBox(height: 2),
                   const _DashboardHeroContent(),
@@ -2694,7 +2712,9 @@ class _DashboardHeader extends ConsumerWidget {
                           .read(dashboardCustomizationSeenProvider.notifier)
                           .setSeen();
                     } else {
-                      ref.read(dashboardReorderModeProvider.notifier).set(false);
+                      ref
+                          .read(dashboardReorderModeProvider.notifier)
+                          .set(false);
                     }
                   },
                   tooltip: l10n.addToDashboard,
@@ -2767,90 +2787,56 @@ class _DashboardHeroContent extends ConsumerWidget {
         hasAccounts && mainBalanceView == DashboardMainBalanceView.netWorth;
 
     return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: hasAccounts
-                ? () =>
-                    ref.read(dashboardMainBalanceViewProvider.notifier).toggle()
-                : null,
-            borderRadius: BorderRadius.circular(12),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          showNetWorthOnHero
-                              ? l10n.netWorth
-                              : l10n.availableCash,
-                          style: theme.textTheme.titleSmall?.copyWith(
-                            color: isDark
-                                ? Colors.white.withValues(alpha: 0.9)
-                                : AppColors.lightTextSecondary,
-                            fontWeight: FontWeight.w600,
-                            shadows: isDark
-                                ? AppTheme.textShadow(blurMultiplier: 1.0)
-                                : null,
-                          ),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: hasAccounts
+              ? () =>
+                  ref.read(dashboardMainBalanceViewProvider.notifier).toggle()
+              : null,
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        showNetWorthOnHero ? l10n.netWorth : l10n.availableCash,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          color: isDark
+                              ? Colors.white.withValues(alpha: 0.9)
+                              : AppColors.lightTextSecondary,
+                          fontWeight: FontWeight.w600,
+                          shadows: isDark
+                              ? AppTheme.textShadow(blurMultiplier: 1.0)
+                              : null,
                         ),
                       ),
-                      if (hasAccounts)
-                        Icon(
-                          Icons.swap_horiz_rounded,
-                          size: 18,
-                          color: isDark
-                              ? Colors.white.withValues(alpha: 0.55)
-                              : AppColors.lightTextSecondary,
-                        ),
-                    ],
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      showNetWorthOnHero
-                          ? accountsWithBalanceAsync.when(
-                              data: (accounts) {
-                                final nw =
-                                    dashboardNetWorthFromAccounts(accounts);
-                                return RollingAmount(
-                                  amount: nw,
-                                  currencySymbol: currency.symbol,
-                                  decimalPlaces: currency.decimalPlaces,
-                                  style: theme.textTheme.displaySmall?.copyWith(
-                                    color: isDark
-                                        ? Colors.white
-                                        : AppColors.lightText,
-                                    fontWeight: FontWeight.bold,
-                                    height: 1.1,
-                                    fontSize: AmountFormatter.getFontSize(
-                                      nw,
-                                      baseSize: 28,
-                                      decimalPlaces: currency.decimalPlaces,
-                                    ),
-                                    shadows: isDark
-                                        ? AppTheme.textShadow(
-                                            blurMultiplier: 4.0)
-                                        : null,
-                                  ),
-                                );
-                              },
-                              loading: () => const SizedBox(height: 26),
-                              error: (_, __) => Text(
-                                l10n.error,
-                                style: TextStyle(
-                                  color:
-                                      isDark ? Colors.white : AppColors.error,
-                                ),
-                              ),
-                            )
-                          : dashboardStatsAsync.when(
-                              data: (stats) => RollingAmount(
-                                amount: stats.totalBalance,
+                    ),
+                    if (hasAccounts)
+                      Icon(
+                        Icons.swap_horiz_rounded,
+                        size: 18,
+                        color: isDark
+                            ? Colors.white.withValues(alpha: 0.55)
+                            : AppColors.lightTextSecondary,
+                      ),
+                  ],
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    showNetWorthOnHero
+                        ? accountsWithBalanceAsync.when(
+                            data: (accounts) {
+                              final nw =
+                                  dashboardNetWorthFromAccounts(accounts);
+                              return RollingAmount(
+                                amount: nw,
                                 currencySymbol: currency.symbol,
                                 decimalPlaces: currency.decimalPlaces,
                                 style: theme.textTheme.displaySmall?.copyWith(
@@ -2860,7 +2846,7 @@ class _DashboardHeroContent extends ConsumerWidget {
                                   fontWeight: FontWeight.bold,
                                   height: 1.1,
                                   fontSize: AmountFormatter.getFontSize(
-                                    stats.totalBalance,
+                                    nw,
                                     baseSize: 28,
                                     decimalPlaces: currency.decimalPlaces,
                                   ),
@@ -2868,48 +2854,76 @@ class _DashboardHeroContent extends ConsumerWidget {
                                       ? AppTheme.textShadow(blurMultiplier: 4.0)
                                       : null,
                                 ),
-                              ),
-                              loading: () => lastStats != null
-                                  ? RollingAmount(
-                                      amount: lastStats.totalBalance,
-                                      currencySymbol: currency.symbol,
-                                      decimalPlaces: currency.decimalPlaces,
-                                      style: theme.textTheme.displaySmall
-                                          ?.copyWith(
-                                        color: isDark
-                                            ? Colors.white
-                                            : AppColors.lightText,
-                                        fontWeight: FontWeight.bold,
-                                        height: 1.1,
-                                        fontSize: AmountFormatter.getFontSize(
-                                          lastStats.totalBalance,
-                                          baseSize: 28,
-                                          decimalPlaces: currency.decimalPlaces,
-                                        ),
-                                        shadows: isDark
-                                            ? AppTheme.textShadow(
-                                                blurMultiplier: 4.0)
-                                            : null,
-                                      ),
-                                    )
-                                  : const SizedBox(height: 26),
-                              error: (_, __) => Text(
-                                l10n.error,
-                                style: TextStyle(
-                                  color:
-                                      isDark ? Colors.white : AppColors.error,
-                                ),
+                              );
+                            },
+                            loading: () => const SizedBox(height: 26),
+                            error: (_, __) => Text(
+                              l10n.error,
+                              style: TextStyle(
+                                color: isDark ? Colors.white : AppColors.error,
                               ),
                             ),
-                      _DashboardTab._buildFilterChip(
-                          context, ref, filter, isDark),
-                    ],
-                  ),
-                ],
-              ),
+                          )
+                        : dashboardStatsAsync.when(
+                            data: (stats) => RollingAmount(
+                              amount: stats.totalBalance,
+                              currencySymbol: currency.symbol,
+                              decimalPlaces: currency.decimalPlaces,
+                              style: theme.textTheme.displaySmall?.copyWith(
+                                color:
+                                    isDark ? Colors.white : AppColors.lightText,
+                                fontWeight: FontWeight.bold,
+                                height: 1.1,
+                                fontSize: AmountFormatter.getFontSize(
+                                  stats.totalBalance,
+                                  baseSize: 28,
+                                  decimalPlaces: currency.decimalPlaces,
+                                ),
+                                shadows: isDark
+                                    ? AppTheme.textShadow(blurMultiplier: 4.0)
+                                    : null,
+                              ),
+                            ),
+                            loading: () => lastStats != null
+                                ? RollingAmount(
+                                    amount: lastStats.totalBalance,
+                                    currencySymbol: currency.symbol,
+                                    decimalPlaces: currency.decimalPlaces,
+                                    style:
+                                        theme.textTheme.displaySmall?.copyWith(
+                                      color: isDark
+                                          ? Colors.white
+                                          : AppColors.lightText,
+                                      fontWeight: FontWeight.bold,
+                                      height: 1.1,
+                                      fontSize: AmountFormatter.getFontSize(
+                                        lastStats.totalBalance,
+                                        baseSize: 28,
+                                        decimalPlaces: currency.decimalPlaces,
+                                      ),
+                                      shadows: isDark
+                                          ? AppTheme.textShadow(
+                                              blurMultiplier: 4.0)
+                                          : null,
+                                    ),
+                                  )
+                                : const SizedBox(height: 26),
+                            error: (_, __) => Text(
+                              l10n.error,
+                              style: TextStyle(
+                                color: isDark ? Colors.white : AppColors.error,
+                              ),
+                            ),
+                          ),
+                    _DashboardTab._buildFilterChip(
+                        context, ref, filter, isDark),
+                  ],
+                ),
+              ],
             ),
           ),
         ),
+      ),
     );
   }
 }
@@ -2937,282 +2951,276 @@ class _DashboardStatsGrid extends ConsumerWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           _DashboardTab._buildSummaryRow(
-              context,
-              isDark: isDark,
-              title: l10n.cashFlow,
-              items: [
-                _SummaryItem(
-                  label: l10n.income,
-                  amountContent: dashboardStatsAsync.when(
-                    data: (s) => _DashboardTab._buildSummaryAmountContent(
-                      context,
-                      amount: s.income(filter),
-                      currency: currency,
-                      isDark: isDark,
-                    ),
-                    loading: () => lastStats != null
-                        ? _DashboardTab._buildSummaryAmountContent(
-                            context,
-                            amount: lastStats.income(filter),
-                            currency: currency,
-                            isDark: isDark,
-                          )
-                        : _DashboardTab._buildAmountPlaceholder(
-                            context, currency, isDark),
-                    error: (_, __) => _DashboardTab._buildAmountPlaceholder(
-                        context, currency, isDark),
+            context,
+            isDark: isDark,
+            title: l10n.cashFlow,
+            items: [
+              _SummaryItem(
+                label: l10n.income,
+                amountContent: dashboardStatsAsync.when(
+                  data: (s) => _DashboardTab._buildSummaryAmountContent(
+                    context,
+                    amount: s.income(filter),
+                    currency: currency,
+                    isDark: isDark,
                   ),
-                  color: AppColors.incomeColor,
-                  icon: Icons.south_west,
-                  onTap: () {
-                    final isMonthly = filter == DashboardFilter.monthly;
-                    final now = DateTime.now();
-                    final startDate =
-                        isMonthly ? DateTime(now.year, now.month, 1) : null;
-                    final endDate =
-                        isMonthly ? DateTime(now.year, now.month + 1, 0) : null;
-                    ref
-                        .read(transactionsPaginatedProvider.notifier)
-                        .applyFilters(
-                          TransactionFilters(
-                            type: 'INCOME',
-                            startDate: startDate,
-                            endDate: endDate,
-                          ),
-                        );
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const TransactionsListScreen(),
-                      ),
-                    );
-                  },
+                  loading: () => lastStats != null
+                      ? _DashboardTab._buildSummaryAmountContent(
+                          context,
+                          amount: lastStats.income(filter),
+                          currency: currency,
+                          isDark: isDark,
+                        )
+                      : _DashboardTab._buildAmountPlaceholder(
+                          context, currency, isDark),
+                  error: (_, __) => _DashboardTab._buildAmountPlaceholder(
+                      context, currency, isDark),
                 ),
-                _SummaryItem(
-                  label: l10n.expense,
-                  amountContent: dashboardStatsAsync.when(
-                    data: (s) => _DashboardTab._buildSummaryAmountContent(
-                      context,
-                      amount: s.expense(filter),
-                      currency: currency,
-                      isDark: isDark,
+                color: AppColors.incomeColor,
+                icon: Icons.south_west,
+                onTap: () {
+                  final isMonthly = filter == DashboardFilter.monthly;
+                  final now = DateTime.now();
+                  final startDate =
+                      isMonthly ? DateTime(now.year, now.month, 1) : null;
+                  final endDate =
+                      isMonthly ? DateTime(now.year, now.month + 1, 0) : null;
+                  ref.read(transactionsPaginatedProvider.notifier).applyFilters(
+                        TransactionFilters(
+                          type: 'INCOME',
+                          startDate: startDate,
+                          endDate: endDate,
+                        ),
+                      );
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const TransactionsListScreen(),
                     ),
-                    loading: () => lastStats != null
-                        ? _DashboardTab._buildSummaryAmountContent(
-                            context,
-                            amount: lastStats.expense(filter),
-                            currency: currency,
-                            isDark: isDark,
-                          )
-                        : _DashboardTab._buildAmountPlaceholder(
-                            context, currency, isDark),
-                    error: (_, __) => _DashboardTab._buildAmountPlaceholder(
-                        context, currency, isDark),
+                  );
+                },
+              ),
+              _SummaryItem(
+                label: l10n.expense,
+                amountContent: dashboardStatsAsync.when(
+                  data: (s) => _DashboardTab._buildSummaryAmountContent(
+                    context,
+                    amount: s.expense(filter),
+                    currency: currency,
+                    isDark: isDark,
                   ),
-                  color: AppColors.expenseColor,
-                  icon: Icons.north_east,
-                  onTap: () {
-                    final isMonthly = filter == DashboardFilter.monthly;
-                    final now = DateTime.now();
-                    final startDate =
-                        isMonthly ? DateTime(now.year, now.month, 1) : null;
-                    final endDate =
-                        isMonthly ? DateTime(now.year, now.month + 1, 0) : null;
-                    ref
-                        .read(transactionsPaginatedProvider.notifier)
-                        .applyFilters(
-                          TransactionFilters(
-                            type: 'EXPENSE',
-                            startDate: startDate,
-                            endDate: endDate,
-                          ),
-                        );
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const TransactionsListScreen(),
-                      ),
-                    );
-                  },
+                  loading: () => lastStats != null
+                      ? _DashboardTab._buildSummaryAmountContent(
+                          context,
+                          amount: lastStats.expense(filter),
+                          currency: currency,
+                          isDark: isDark,
+                        )
+                      : _DashboardTab._buildAmountPlaceholder(
+                          context, currency, isDark),
+                  error: (_, __) => _DashboardTab._buildAmountPlaceholder(
+                      context, currency, isDark),
                 ),
-                _SummaryItem(
-                  label: l10n.netCash,
-                  amountContent: dashboardStatsAsync.when(
-                    data: (s) => _DashboardTab._buildSummaryAmountContent(
-                      context,
-                      amount: s.netCash(filter),
-                      currency: currency,
-                      isDark: isDark,
+                color: AppColors.expenseColor,
+                icon: Icons.north_east,
+                onTap: () {
+                  final isMonthly = filter == DashboardFilter.monthly;
+                  final now = DateTime.now();
+                  final startDate =
+                      isMonthly ? DateTime(now.year, now.month, 1) : null;
+                  final endDate =
+                      isMonthly ? DateTime(now.year, now.month + 1, 0) : null;
+                  ref.read(transactionsPaginatedProvider.notifier).applyFilters(
+                        TransactionFilters(
+                          type: 'EXPENSE',
+                          startDate: startDate,
+                          endDate: endDate,
+                        ),
+                      );
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const TransactionsListScreen(),
                     ),
-                    loading: () => lastStats != null
-                        ? _DashboardTab._buildSummaryAmountContent(
-                            context,
-                            amount: lastStats.netCash(filter),
-                            currency: currency,
-                            isDark: isDark,
-                          )
-                        : _DashboardTab._buildAmountPlaceholder(
-                            context, currency, isDark),
-                    error: (_, __) => _DashboardTab._buildAmountPlaceholder(
-                        context, currency, isDark),
+                  );
+                },
+              ),
+              _SummaryItem(
+                label: l10n.netCash,
+                amountContent: dashboardStatsAsync.when(
+                  data: (s) => _DashboardTab._buildSummaryAmountContent(
+                    context,
+                    amount: s.netCash(filter),
+                    currency: currency,
+                    isDark: isDark,
                   ),
-                  color: activeForeColor,
-                  icon: Icons.account_balance_wallet,
-                  onTap: () {
-                    final isMonthly = filter == DashboardFilter.monthly;
-                    final now = DateTime.now();
-                    final startDate =
-                        isMonthly ? DateTime(now.year, now.month, 1) : null;
-                    final endDate =
-                        isMonthly ? DateTime(now.year, now.month + 1, 0) : null;
-                    ref
-                        .read(transactionsPaginatedProvider.notifier)
-                        .applyFilters(
-                          TransactionFilters(
-                            startDate: startDate,
-                            endDate: endDate,
-                          ),
-                        );
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const TransactionsListScreen(),
-                      ),
-                    );
-                  },
+                  loading: () => lastStats != null
+                      ? _DashboardTab._buildSummaryAmountContent(
+                          context,
+                          amount: lastStats.netCash(filter),
+                          currency: currency,
+                          isDark: isDark,
+                        )
+                      : _DashboardTab._buildAmountPlaceholder(
+                          context, currency, isDark),
+                  error: (_, __) => _DashboardTab._buildAmountPlaceholder(
+                      context, currency, isDark),
                 ),
-              ],
-              currency: currency,
-            ),
+                color: activeForeColor,
+                icon: Icons.account_balance_wallet,
+                onTap: () {
+                  final isMonthly = filter == DashboardFilter.monthly;
+                  final now = DateTime.now();
+                  final startDate =
+                      isMonthly ? DateTime(now.year, now.month, 1) : null;
+                  final endDate =
+                      isMonthly ? DateTime(now.year, now.month + 1, 0) : null;
+                  ref.read(transactionsPaginatedProvider.notifier).applyFilters(
+                        TransactionFilters(
+                          startDate: startDate,
+                          endDate: endDate,
+                        ),
+                      );
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const TransactionsListScreen(),
+                    ),
+                  );
+                },
+              ),
+            ],
+            currency: currency,
+          ),
           const SizedBox(height: 8),
           _DashboardTab._buildSummaryRow(
-              context,
-              isDark: isDark,
-              title: l10n.lendingCredit,
-              items: [
-                _SummaryItem(
-                  label: l10n.receivableTag,
-                  amountContent: dashboardStatsAsync.when(
-                    data: (s) => _DashboardTab._buildSummaryAmountContent(
-                      context,
-                      amount: s.receivable(filter),
-                      currency: currency,
-                      isDark: isDark,
-                      overdue: s.overdueReceivable,
-                    ),
-                    loading: () => lastStats != null
-                        ? _DashboardTab._buildSummaryAmountContent(
-                            context,
-                            amount: lastStats.receivable(filter),
-                            currency: currency,
-                            isDark: isDark,
-                            overdue: lastStats.overdueReceivable,
-                          )
-                        : _DashboardTab._buildAmountPlaceholder(
-                            context, currency, isDark),
-                    error: (_, __) => _DashboardTab._buildAmountPlaceholder(
-                        context, currency, isDark),
+            context,
+            isDark: isDark,
+            title: l10n.lendingCredit,
+            items: [
+              _SummaryItem(
+                label: l10n.receivableTag,
+                amountContent: dashboardStatsAsync.when(
+                  data: (s) => _DashboardTab._buildSummaryAmountContent(
+                    context,
+                    amount: s.receivable(filter),
+                    currency: currency,
+                    isDark: isDark,
+                    overdue: s.overdueReceivable,
                   ),
-                  color: AppColors.receivableColor,
-                  icon: Icons.call_received,
-                  onTap: () {
-                    final isMonthly = filter == DashboardFilter.monthly;
-                    final now = DateTime.now();
-                    final startDate =
-                        isMonthly ? DateTime(now.year, now.month, 1) : null;
-                    final endDate =
-                        isMonthly ? DateTime(now.year, now.month + 1, 0) : null;
-                    ref
-                        .read(receivablesPaginatedProvider('PENDING').notifier)
-                        .applyFilters(
-                          ReceivableFilters(
-                            startDate: startDate,
-                            endDate: endDate,
-                          ),
-                        );
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const ReceivablesListScreen(),
-                      ),
-                    );
-                  },
+                  loading: () => lastStats != null
+                      ? _DashboardTab._buildSummaryAmountContent(
+                          context,
+                          amount: lastStats.receivable(filter),
+                          currency: currency,
+                          isDark: isDark,
+                          overdue: lastStats.overdueReceivable,
+                        )
+                      : _DashboardTab._buildAmountPlaceholder(
+                          context, currency, isDark),
+                  error: (_, __) => _DashboardTab._buildAmountPlaceholder(
+                      context, currency, isDark),
                 ),
-                _SummaryItem(
-                  label: l10n.payableTag,
-                  amountContent: dashboardStatsAsync.when(
-                    data: (s) => _DashboardTab._buildSummaryAmountContent(
-                      context,
-                      amount: s.payable(filter),
-                      currency: currency,
-                      isDark: isDark,
-                      overdue: s.overduePayable,
+                color: AppColors.receivableColor,
+                icon: Icons.call_received,
+                onTap: () {
+                  final isMonthly = filter == DashboardFilter.monthly;
+                  final now = DateTime.now();
+                  final startDate =
+                      isMonthly ? DateTime(now.year, now.month, 1) : null;
+                  final endDate =
+                      isMonthly ? DateTime(now.year, now.month + 1, 0) : null;
+                  ref
+                      .read(receivablesPaginatedProvider('PENDING').notifier)
+                      .applyFilters(
+                        ReceivableFilters(
+                          startDate: startDate,
+                          endDate: endDate,
+                        ),
+                      );
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const ReceivablesListScreen(),
                     ),
-                    loading: () => lastStats != null
-                        ? _DashboardTab._buildSummaryAmountContent(
-                            context,
-                            amount: lastStats.payable(filter),
-                            currency: currency,
-                            isDark: isDark,
-                            overdue: lastStats.overduePayable,
-                          )
-                        : _DashboardTab._buildAmountPlaceholder(
-                            context, currency, isDark),
-                    error: (_, __) => _DashboardTab._buildAmountPlaceholder(
-                        context, currency, isDark),
+                  );
+                },
+              ),
+              _SummaryItem(
+                label: l10n.payableTag,
+                amountContent: dashboardStatsAsync.when(
+                  data: (s) => _DashboardTab._buildSummaryAmountContent(
+                    context,
+                    amount: s.payable(filter),
+                    currency: currency,
+                    isDark: isDark,
+                    overdue: s.overduePayable,
                   ),
-                  color: AppColors.payableColor,
-                  icon: Icons.call_made,
-                  onTap: () {
-                    final isMonthly = filter == DashboardFilter.monthly;
-                    final now = DateTime.now();
-                    final startDate =
-                        isMonthly ? DateTime(now.year, now.month, 1) : null;
-                    final endDate =
-                        isMonthly ? DateTime(now.year, now.month + 1, 0) : null;
-                    ref
-                        .read(payablesPaginatedProvider('PENDING').notifier)
-                        .applyFilters(
-                          PayableFilters(
-                            startDate: startDate,
-                            endDate: endDate,
-                          ),
-                        );
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const PayablesListScreen(),
-                      ),
-                    );
-                  },
+                  loading: () => lastStats != null
+                      ? _DashboardTab._buildSummaryAmountContent(
+                          context,
+                          amount: lastStats.payable(filter),
+                          currency: currency,
+                          isDark: isDark,
+                          overdue: lastStats.overduePayable,
+                        )
+                      : _DashboardTab._buildAmountPlaceholder(
+                          context, currency, isDark),
+                  error: (_, __) => _DashboardTab._buildAmountPlaceholder(
+                      context, currency, isDark),
                 ),
-                _SummaryItem(
-                  label: l10n.netCredit,
-                  amountContent: dashboardStatsAsync.when(
-                    data: (s) => _DashboardTab._buildSummaryAmountContent(
-                      context,
-                      amount: s.netCredit(filter),
-                      currency: currency,
-                      isDark: isDark,
+                color: AppColors.payableColor,
+                icon: Icons.call_made,
+                onTap: () {
+                  final isMonthly = filter == DashboardFilter.monthly;
+                  final now = DateTime.now();
+                  final startDate =
+                      isMonthly ? DateTime(now.year, now.month, 1) : null;
+                  final endDate =
+                      isMonthly ? DateTime(now.year, now.month + 1, 0) : null;
+                  ref
+                      .read(payablesPaginatedProvider('PENDING').notifier)
+                      .applyFilters(
+                        PayableFilters(
+                          startDate: startDate,
+                          endDate: endDate,
+                        ),
+                      );
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const PayablesListScreen(),
                     ),
-                    loading: () => lastStats != null
-                        ? _DashboardTab._buildSummaryAmountContent(
-                            context,
-                            amount: lastStats.netCredit(filter),
-                            currency: currency,
-                            isDark: isDark,
-                          )
-                        : _DashboardTab._buildAmountPlaceholder(
-                            context, currency, isDark),
-                    error: (_, __) => _DashboardTab._buildAmountPlaceholder(
-                        context, currency, isDark),
+                  );
+                },
+              ),
+              _SummaryItem(
+                label: l10n.netCredit,
+                amountContent: dashboardStatsAsync.when(
+                  data: (s) => _DashboardTab._buildSummaryAmountContent(
+                    context,
+                    amount: s.netCredit(filter),
+                    currency: currency,
+                    isDark: isDark,
                   ),
-                  color: activeForeColor,
-                  icon: Icons.swap_horiz,
+                  loading: () => lastStats != null
+                      ? _DashboardTab._buildSummaryAmountContent(
+                          context,
+                          amount: lastStats.netCredit(filter),
+                          currency: currency,
+                          isDark: isDark,
+                        )
+                      : _DashboardTab._buildAmountPlaceholder(
+                          context, currency, isDark),
+                  error: (_, __) => _DashboardTab._buildAmountPlaceholder(
+                      context, currency, isDark),
                 ),
-              ],
-              currency: currency,
-            ),
+                color: activeForeColor,
+                icon: Icons.swap_horiz,
+              ),
+            ],
+            currency: currency,
+          ),
         ],
       ),
     );
@@ -3402,139 +3410,138 @@ class _SettingsTab extends ConsumerWidget {
           const Divider(),
           Column(
             children: [
-                ListTile(
-                  leading: const Icon(Icons.language),
-                  title: Text(l10n.language),
-                  subtitle: Consumer(
-                    builder: (context, ref, child) {
-                      final currentLocale = ref.watch(languageProvider);
-                      switch (currentLocale.languageCode) {
-                        case 'hi':
-                          return Text(l10n.hindi);
-                        case 'ur':
-                          return Text(l10n.urdu);
-                        case 'en':
-                        default:
-                          return Text(l10n.english);
-                      }
-                    },
-                  ),
-                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const LanguageSelectorScreen(),
-                      ),
-                    );
+              ListTile(
+                leading: const Icon(Icons.language),
+                title: Text(l10n.language),
+                subtitle: Consumer(
+                  builder: (context, ref, child) {
+                    final currentLocale = ref.watch(languageProvider);
+                    switch (currentLocale.languageCode) {
+                      case 'hi':
+                        return Text(l10n.hindi);
+                      case 'ur':
+                        return Text(l10n.urdu);
+                      case 'en':
+                      default:
+                        return Text(l10n.english);
+                    }
                   },
                 ),
-                ListTile(
-                  leading: const Icon(Icons.font_download_outlined),
-                  title: Text(l10n.fontSelection),
-                  subtitle: Consumer(
-                    builder: (context, ref, child) {
-                      final font = ref.watch(currentFontProvider);
-                      return Text(font);
-                    },
-                  ),
-                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const FontSelectorScreen(),
-                      ),
-                    );
+                trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const LanguageSelectorScreen(),
+                    ),
+                  );
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.font_download_outlined),
+                title: Text(l10n.fontSelection),
+                subtitle: Consumer(
+                  builder: (context, ref, child) {
+                    final font = ref.watch(currentFontProvider);
+                    return Text(font);
                   },
                 ),
-                ListTile(
-                  leading: const Icon(Icons.dark_mode),
-                  title: Text(l10n.theme),
-                  subtitle: Consumer(
-                    builder: (context, ref, child) {
-                      final themeMode = ref.watch(themeModeProvider);
-                      switch (themeMode) {
-                        case ThemeMode.light:
-                          return Text(l10n.light);
-                        case ThemeMode.dark:
-                          return Text(l10n.dark);
-                        case ThemeMode.system:
-                        default:
-                          return Text(l10n.system);
-                      }
-                    },
-                  ),
-                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const ThemeSelectorScreen(),
-                      ),
-                    );
+                trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const FontSelectorScreen(),
+                    ),
+                  );
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.dark_mode),
+                title: Text(l10n.theme),
+                subtitle: Consumer(
+                  builder: (context, ref, child) {
+                    final themeMode = ref.watch(themeModeProvider);
+                    switch (themeMode) {
+                      case ThemeMode.light:
+                        return Text(l10n.light);
+                      case ThemeMode.dark:
+                        return Text(l10n.dark);
+                      case ThemeMode.system:
+                      default:
+                        return Text(l10n.system);
+                    }
                   },
                 ),
+                trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const ThemeSelectorScreen(),
+                    ),
+                  );
+                },
+              ),
             ],
           ),
           const Divider(),
           ListTile(
-              leading: const Icon(Icons.backup),
-              title: Row(
-                children: [
-                  Text(l10n.backup),
-                  const SizedBox(width: 8),
-                  if (!isPremium)
-                    const PremiumBadge(isSmall: true, showLock: true),
-                ],
-              ),
-              subtitle: Text(l10n.googleDriveBackupRestore),
-              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const BackupScreen(),
-                  ),
-                );
-              },
+            leading: const Icon(Icons.backup),
+            title: Row(
+              children: [
+                Text(l10n.backup),
+                const SizedBox(width: 8),
+                if (!isPremium)
+                  const PremiumBadge(isSmall: true, showLock: true),
+              ],
             ),
+            subtitle: Text(l10n.googleDriveBackupRestore),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const BackupScreen(),
+                ),
+              );
+            },
+          ),
           const Divider(),
           Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Color(0xFFFFD700), // Gold
-                    Color(0xFFFFA500), // Orange
-                    Color(0xFFFF8C00), // Dark Orange
-                  ],
-                ),
-              ),
-              child: ListTile(
-                leading:
-                    const Icon(Icons.workspace_premium, color: Colors.white),
-                title: Text(
-                  l10n.premium,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                subtitle: Text(
-                  l10n.unlockAdvancedAnalytics,
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.9),
-                  ),
-                ),
-                trailing:
-                    const Icon(Icons.arrow_forward_ios, color: Colors.white),
-                onTap: () {
-                  PremiumGate.showPremiumDialog(context);
-                },
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFFFFD700), // Gold
+                  Color(0xFFFFA500), // Orange
+                  Color(0xFFFF8C00), // Dark Orange
+                ],
               ),
             ),
+            child: ListTile(
+              leading: const Icon(Icons.workspace_premium, color: Colors.white),
+              title: Text(
+                l10n.premium,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              subtitle: Text(
+                l10n.unlockAdvancedAnalytics,
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.9),
+                ),
+              ),
+              trailing:
+                  const Icon(Icons.arrow_forward_ios, color: Colors.white),
+              onTap: () {
+                PremiumGate.showPremiumDialog(context);
+              },
+            ),
+          ),
           const Divider(),
           ListTile(
             leading: const Icon(Icons.account_balance_wallet_outlined),
@@ -3688,5 +3695,59 @@ class _SummaryItem {
     required this.icon,
     this.onTap,
   });
+}
+
+class _BottomBarNotchPainter extends CustomPainter {
+  final Color color;
+  final double notchRadius;
+
+  _BottomBarNotchPainter({required this.color, required this.notchRadius});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+
+    final path = Path();
+    final centerX = size.width / 2;
+    const curveWidth = 25.0; // Narrower curve for a tighter look
+
+    path.moveTo(0, 0);
+
+    // Line to the start of the notch curve
+    path.lineTo(centerX - notchRadius - curveWidth, 0);
+
+    // Smooth curve into the notch
+    path.cubicTo(
+      centerX - notchRadius - (curveWidth / 2), 0, // Control point 1
+      centerX - notchRadius, 0, // Control point 2
+      centerX - notchRadius, notchRadius * 0.2, // End point
+    );
+
+    // The notch itself (deeper arc)
+    path.arcToPoint(
+      Offset(centerX + notchRadius, notchRadius * 0.2),
+      radius: Radius.circular(notchRadius * 1.1),
+      clockwise: false,
+    );
+
+    // Smooth curve out of the notch
+    path.cubicTo(
+      centerX + notchRadius, 0, // Control point 1
+      centerX + notchRadius + (curveWidth / 2), 0, // Control point 2
+      centerX + notchRadius + curveWidth, 0, // End point
+    );
+
+    path.lineTo(size.width, 0);
+    path.lineTo(size.width, size.height);
+    path.lineTo(0, size.height);
+    path.close();
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 // Force save to disk
