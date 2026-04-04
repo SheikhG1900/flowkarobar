@@ -78,37 +78,39 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
   }
 
   void _checkAndShowGuide() {
-    // Show always for testing as requested
-    final l10n = AppLocalizations.of(context)!;
-    ContextualGuide.show(
-      context,
-      title: l10n.transactions,
-      items: [
-        GuideItem(
-          illustration: UndrawIllustration.fileBundle,
-          title: l10n.guideBulkImportTitle,
-          description: l10n.guideBulkImportBody,
-        ),
-        GuideItem(
-          illustration: UndrawIllustration.cloudSync,
-          title: l10n.guideAutoSettleTitle,
-          description: l10n.guideAutoSettleBody,
-        ),
-        GuideItem(
-          illustration: UndrawIllustration.teamCollaboration,
-          title: l10n.guideSplitSettleTitle,
-          description: l10n.guideSplitSettleBody,
-        ),
-        GuideItem(
-          illustration: UndrawIllustration.activeOptions,
-          title: l10n.guideBudgetsTitle,
-          description: l10n.guideBudgetsBody,
-        ),
-      ],
-      onDismiss: () {
-        ref.read(transactionsGuideSeenProvider.notifier).setSeen();
-      },
-    );
+    final hasSeen = ref.read(transactionsGuideSeenProvider);
+    if (!hasSeen) {
+      final l10n = AppLocalizations.of(context)!;
+      ContextualGuide.show(
+        context,
+        title: l10n.transactions,
+        items: [
+          GuideItem(
+            illustration: UndrawIllustration.fileBundle,
+            title: l10n.guideBulkImportTitle,
+            description: l10n.guideBulkImportBody,
+          ),
+          GuideItem(
+            illustration: UndrawIllustration.cloudSync,
+            title: l10n.guideAutoSettleTitle,
+            description: l10n.guideAutoSettleBody,
+          ),
+          GuideItem(
+            illustration: UndrawIllustration.teamCollaboration,
+            title: l10n.guideSplitSettleTitle,
+            description: l10n.guideSplitSettleBody,
+          ),
+          GuideItem(
+            illustration: UndrawIllustration.activeOptions,
+            title: l10n.guideBudgetsTitle,
+            description: l10n.guideBudgetsBody,
+          ),
+        ],
+        onDismiss: () {
+          ref.read(transactionsGuideSeenProvider.notifier).setSeen();
+        },
+      );
+    }
   }
 
   @override

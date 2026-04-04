@@ -44,32 +44,34 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
   }
 
   void _checkAndShowGuide() {
-    // Show always for testing as requested
-    final l10n = AppLocalizations.of(context)!;
-    ContextualGuide.show(
-      context,
-      title: l10n.accountsOverview,
-      items: [
-        GuideItem(
-          illustration: UndrawIllustration.personalFinance,
-          title: l10n.guideAccountsTitle,
-          description: l10n.guideAccountsBody,
-        ),
-        GuideItem(
-          illustration: UndrawIllustration.creditCard,
-          title: l10n.guideCreditCardsTitle,
-          description: l10n.guideCreditCardsBody,
-        ),
-        GuideItem(
-          illustration: UndrawIllustration.dataReport,
-          title: l10n.financialSummary,
-          description: l10n.guideBudgetsBody,
-        ),
-      ],
-      onDismiss: () {
-        ref.read(accountsGuideSeenProvider.notifier).setSeen();
-      },
-    );
+    final hasSeen = ref.read(accountsGuideSeenProvider);
+    if (!hasSeen) {
+      final l10n = AppLocalizations.of(context)!;
+      ContextualGuide.show(
+        context,
+        title: l10n.accountsOverview,
+        items: [
+          GuideItem(
+            illustration: UndrawIllustration.personalFinance,
+            title: l10n.guideAccountsTitle,
+            description: l10n.guideAccountsBody,
+          ),
+          GuideItem(
+            illustration: UndrawIllustration.creditCard,
+            title: l10n.guideCreditCardsTitle,
+            description: l10n.guideCreditCardsBody,
+          ),
+          GuideItem(
+            illustration: UndrawIllustration.dataReport,
+            title: l10n.financialSummary,
+            description: l10n.guideBudgetsBody,
+          ),
+        ],
+        onDismiss: () {
+          ref.read(accountsGuideSeenProvider.notifier).setSeen();
+        },
+      );
+    }
   }
 
   @override
