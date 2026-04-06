@@ -26,13 +26,13 @@ class DashboardCustomizationSeenNotifier extends Notifier<bool> {
   @override
   bool build() {
     final prefs = ref.watch(sharedPreferencesProvider);
-    return prefs.getBool(key) ?? false;
+    return prefs.getBool(DashboardCustomizationSeenNotifier.key) ?? false;
   }
 
   Future<void> setSeen() async {
     if (state) return;
     final prefs = ref.read(sharedPreferencesProvider);
-    await prefs.setBool(key, true);
+    await prefs.setBool(DashboardCustomizationSeenNotifier.key, true);
     state = true;
   }
 }
@@ -49,13 +49,13 @@ class AccountsGuideSeenNotifier extends Notifier<bool> {
   @override
   bool build() {
     final prefs = ref.watch(sharedPreferencesProvider);
-    return prefs.getBool(key) ?? false;
+    return prefs.getBool(AccountsGuideSeenNotifier.key) ?? false;
   }
 
   Future<void> setSeen() async {
     if (state) return;
     final prefs = ref.read(sharedPreferencesProvider);
-    await prefs.setBool(key, true);
+    await prefs.setBool(AccountsGuideSeenNotifier.key, true);
     state = true;
   }
 }
@@ -72,13 +72,13 @@ class TransactionsGuideSeenNotifier extends Notifier<bool> {
   @override
   bool build() {
     final prefs = ref.watch(sharedPreferencesProvider);
-    return prefs.getBool(key) ?? false;
+    return prefs.getBool(TransactionsGuideSeenNotifier.key) ?? false;
   }
 
   Future<void> setSeen() async {
     if (state) return;
     final prefs = ref.read(sharedPreferencesProvider);
-    await prefs.setBool(key, true);
+    await prefs.setBool(TransactionsGuideSeenNotifier.key, true);
     state = true;
   }
 }
