@@ -21,6 +21,7 @@ import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/features/voice_command/domain/voice_ai_parser.dart';
 import 'package:flowpaisa/shared/widgets/app_loading_indicator.dart';
 import 'package:flowpaisa/features/premium/presentation/screens/premium_screen.dart';
+import 'package:flowpaisa/shared/providers/shared_preferences_provider.dart';
 
 class VoiceAddScreen extends ConsumerStatefulWidget {
   const VoiceAddScreen({super.key});
@@ -47,16 +48,34 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
 
   late TextEditingController _transcriptController;
 
+  static const String _includeDescKey = 'voice_include_text_as_description';
+
   @override
   void initState() {
     super.initState();
     _transcriptController = TextEditingController();
+    _loadSettings();
     
     // Auto-start listening when screen opens
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         _listen();
       }
+    });
+  }
+
+  Future<void> _loadSettings() async {
+    final prefs = ref.read(sharedPreferencesProvider);
+    setState(() {
+      _includeTextAsDescription = prefs.getBool(_includeDescKey) ?? true;
+    });
+  }
+
+  Future<void> _saveSettings(bool value) async {
+    final prefs = ref.read(sharedPreferencesProvider);
+    await prefs.setBool(_includeDescKey, value);
+    setState(() {
+      _includeTextAsDescription = value;
     });
   }
 
@@ -605,8 +624,7 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
                                   scale: 0.7,
                                   child: Switch(
                                     value: _includeTextAsDescription,
-                                    onChanged: (val) => setState(
-                                        () => _includeTextAsDescription = val),
+                                    onChanged: _saveSettings,
                                     activeThumbColor: activeCashbookForeColor,
                                   ),
                                 ),
@@ -640,210 +658,7 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
                               opacity: _isProcessing ? 0.3 : 1.0,
                               child: AbsorbPointer(
                                 absorbing: _isProcessing,
-                                child: Container(
-                                  padding: const EdgeInsets.all(20),
-                                  decoration: BoxDecoration(
-                                    color: theme.cardColor,
-                                    borderRadius: BorderRadius.circular(20),
-                                    border:
-                                        Border.all(color: theme.dividerColor),
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      // Extraction badge (centered)
-                                      Center(
-                                        child: Container(
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 12, vertical: 6),
-                                          margin:
-                                              const EdgeInsets.only(bottom: 6),
-                                          decoration: BoxDecoration(
-                                            color: _usedAi
-                                                ? Colors.blue
-                                                    .withValues(alpha: 0.1)
-                                                : Colors.grey
-                                                    .withValues(alpha: 0.1),
-                                            borderRadius:
-                                                BorderRadius.circular(12),
-                                          ),
-                                          child: Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Icon(
-                                                  _usedAi
-                                                      ? Icons.auto_awesome
-                                                      : Icons.rule_rounded,
-                                                  size: 14,
-                                                  color: _usedAi
-                                                      ? Colors.blue
-                                                      : Colors.grey),
-                                              const SizedBox(width: 6),
-                                              Flexible(
-                                                child: Text(
-                                                  _usedAi
-                                                      ? l10n.smartExtraction
-                                                      : l10n.basicExtraction,
-                                                  style: theme
-                                                      .textTheme.labelSmall
-                                                      ?.copyWith(
-                                                    color: _usedAi
-                                                        ? Colors.blue
-                                                        : Colors.grey,
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                      // Quota chip (small, below badge)
-                                      Consumer(
-                                        builder: (context, ref, _) {
-                                          final limitsAsync = ref.watch(
-                                              smartParsingLimitsProvider);
-                                          return limitsAsync.when(
-                                            data: (limits) {
-                                              return Center(
-                                                child: Container(
-                                                  margin: const EdgeInsets.only(
-                                                      bottom: 16),
-                                                  padding: const EdgeInsets
-                                                      .symmetric(
-                                                    horizontal: 8,
-                                                    vertical: 4,
-                                                  ),
-                                                  decoration: BoxDecoration(
-                                                    color: theme.colorScheme
-                                                        .surfaceContainerHighest
-                                                        .withValues(alpha: 0.8),
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            8),
-                                                  ),
-                                                  child: Text(
-                                                    limits.isUnlimited
-                                                        ? l10n
-                                                            .smartExtractionUnlimited
-                                                        : l10n
-                                                            .smartExtractionQuotaLeft(
-                                                            limits
-                                                                .monthlyRemaining,
-                                                            limits.monthlyTotal,
-                                                          ),
-                                                    style: theme
-                                                        .textTheme.labelSmall
-                                                        ?.copyWith(
-                                                      color: theme.colorScheme
-                                                          .onSurfaceVariant,
-                                                      fontSize: 11,
-                                                    ),
-                                                  ),
-                                                ),
-                                              );
-                                            },
-                                            loading: () =>
-                                                const SizedBox(height: 32),
-                                            error: (_, __) =>
-                                                const SizedBox(height: 32),
-                                          );
-                                        },
-                                      ),
-
-                                      // Receivable/Payable badge centered below quota (when relationship present)
-                                      if (_parsedResult?.paidRelationship !=
-                                          null) ...[
-                                        Center(
-                                          child: _buildRelationshipBadge(
-                                              theme, l10n),
-                                        ),
-                                        const SizedBox(height: 12),
-                                      ],
-
-                                      _buildDetailRow(
-                                          l10n.amount,
-                                          "${_parsedResult?.amount ?? 0}",
-                                          theme,
-                                          valueColor:
-                                              (_parsedResult?.type == 'INCOME')
-                                                  ? AppColors.incomeColor
-                                                  : AppColors.expenseColor),
-                                      _buildDetailRow(
-                                          l10n.type,
-                                          _parsedResult?.type == "INCOME"
-                                              ? l10n.income
-                                              : l10n.expense,
-                                          theme,
-                                          valueColor:
-                                              (_parsedResult?.type == 'INCOME')
-                                                  ? AppColors.incomeColor
-                                                  : AppColors.expenseColor),
-
-                                      // Category selection
-                                      _buildCategorySuggestions(
-                                          theme, activeCashbook, l10n),
-
-                                      // Contact selection
-                                      _buildContactSuggestions(
-                                          theme, l10n),
-
-                                      const SizedBox(height: 24),
-                                      SizedBox(
-                                        width: double.infinity,
-                                        child: GradientButton(
-                                          onPressed: () async {
-                                            if (_usedAi) {
-                                              await ref
-                                                  .read(
-                                                      usageTrackerRepositoryProvider)
-                                                  .incrementSmartParsingCount();
-                                            }
-                                            if (!mounted) return;
-                                            Navigator.pushReplacement(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (context) =>
-                                                    AddTransactionScreen(
-                                                  initialAmount:
-                                                      _parsedResult?.amount,
-                                                  initialDescription:
-                                                      _includeTextAsDescription
-                                                          ? (_transcriptController
-                                                                  .text
-                                                                  .isNotEmpty
-                                                              ? _transcriptController
-                                                                  .text
-                                                              : _parsedResult
-                                                                  ?.description)
-                                                          : null,
-                                                  initialType:
-                                                      _parsedResult?.type ??
-                                                          "EXPENSE",
-                                                  initialCategoryName:
-                                                      _selectedCategoryName,
-                                                  initialCategoryColor:
-                                                      _selectedCategoryColor,
-                                                  initialCategoryIcon:
-                                                      _selectedCategoryIcon,
-                                                  initialContactName:
-                                                      _selectedContactName,
-                                                  initialRelationship:
-                                                      _parsedResult
-                                                          ?.paidRelationship,
-                                                ),
-                                              ),
-                                            );
-                                          },
-                                          label: l10n.proceed,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
+                                child: _buildExtractedResultCard(theme, l10n, activeCashbook),
                               ),
                             ),
                             if (_isProcessing)
@@ -897,23 +712,231 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
     );
   }
 
+  Widget _buildExtractedResultCard(ThemeData theme, AppLocalizations l10n, Cashbook activeCashbook) {
+    final isIncome = _parsedResult?.type == 'INCOME';
+    final baseColor = isIncome ? AppColors.incomeColor : AppColors.expenseColor;
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: baseColor.withValues(alpha: isDark ? 0.12 : 0.08),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: baseColor.withValues(alpha: 0.25),
+          width: 1.5,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header with Badge & Quota
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _buildExtractionBadge(l10n),
+                _buildQuotaChip(theme, l10n),
+              ],
+            ),
+          ),
+
+          // Main Amount & Type Section
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: baseColor.withValues(alpha: 0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    isIncome ? Icons.trending_up : Icons.trending_down,
+                    color: baseColor,
+                    size: 28,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.amount,
+                        style: theme.textTheme.labelMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                        ),
+                      ),
+                      Text(
+                        "${_parsedResult?.amount ?? 0}",
+                        style: theme.textTheme.headlineMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: baseColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (_parsedResult?.paidRelationship != null)
+                  _buildRelationshipBadge(theme, l10n),
+              ],
+            ),
+          ),
+
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            child: Divider(height: 1),
+          ),
+
+          // Details Section
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildSectionContainer(
+                  theme: theme,
+                  icon: Icons.category_outlined,
+                  label: l10n.category,
+                  child: _buildCategorySuggestions(theme, activeCashbook, l10n),
+                ),
+                const SizedBox(height: 16),
+                _buildSectionContainer(
+                  theme: theme,
+                  icon: Icons.person_outline,
+                  label: l10n.contact,
+                  child: _buildContactSuggestions(theme, l10n),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
+          // Action Button
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+            child: SizedBox(
+              width: double.infinity,
+              child: GradientButton(
+                onPressed: () async {
+                  if (_usedAi) {
+                    await ref
+                        .read(usageTrackerRepositoryProvider)
+                        .incrementSmartParsingCount();
+                  }
+                  if (!mounted) return;
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => AddTransactionScreen(
+                        initialAmount: _parsedResult?.amount,
+                        initialDescription: _includeTextAsDescription
+                            ? (_transcriptController.text.isNotEmpty
+                                ? _transcriptController.text
+                                : _parsedResult?.description)
+                            : null,
+                        initialType: _parsedResult?.type ?? "EXPENSE",
+                        initialCategoryName: _selectedCategoryName,
+                        initialCategoryColor: _selectedCategoryColor,
+                        initialCategoryIcon: _selectedCategoryIcon,
+                        initialContactName: _selectedContactName,
+                        initialRelationship: _parsedResult?.paidRelationship,
+                      ),
+                    ),
+                  );
+                },
+                label: l10n.proceed,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildExtractionBadge(AppLocalizations l10n) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: _usedAi ? Colors.blue.withValues(alpha: 0.15) : Colors.grey.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: _usedAi ? Colors.blue.withValues(alpha: 0.3) : Colors.grey.withValues(alpha: 0.3),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            _usedAi ? Icons.auto_awesome : Icons.rule_rounded,
+            size: 12,
+            color: _usedAi ? Colors.blue : Colors.grey,
+          ),
+          const SizedBox(width: 6),
+          Text(
+            _usedAi ? l10n.smartExtraction : l10n.basicExtraction,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+              color: _usedAi ? Colors.blue : Colors.grey,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuotaChip(ThemeData theme, AppLocalizations l10n) {
+    return Consumer(
+      builder: (context, ref, _) {
+        final limitsAsync = ref.watch(smartParsingLimitsProvider);
+        return limitsAsync.maybeWhen(
+          data: (limits) => Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              limits.isUnlimited
+                  ? l10n.smartExtractionUnlimited
+                  : l10n.smartExtractionQuotaLeft(
+                      limits.monthlyRemaining,
+                      limits.monthlyTotal,
+                    ),
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+                fontSize: 10,
+              ),
+            ),
+          ),
+          orElse: () => const SizedBox.shrink(),
+        );
+      },
+    );
+  }
+
   Widget _buildRelationshipBadge(ThemeData theme, AppLocalizations l10n) {
     final rel = _parsedResult?.paidRelationship;
     if (rel == null) return const SizedBox.shrink();
     final isReceivable = rel == 'PAID_FOR' || rel == 'WILL_RECEIVE';
-    final color =
-        isReceivable ? AppColors.receivableColor : AppColors.payableColor;
+    final color = isReceivable ? AppColors.receivableColor : AppColors.payableColor;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withValues(alpha: 0.5)),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.4)),
       ),
       child: Text(
         isReceivable ? l10n.receivable : l10n.payable,
-        style: theme.textTheme.labelLarge?.copyWith(
-          fontWeight: FontWeight.w600,
+        style: theme.textTheme.labelSmall?.copyWith(
+          fontWeight: FontWeight.bold,
           color: color,
         ),
       ),
@@ -939,6 +962,46 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
               color: valueColor,
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSectionContainer({
+    required ThemeData theme,
+    required IconData icon,
+    required String label,
+    required Widget child,
+  }) {
+    final isDark = theme.brightness == Brightness.dark;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface.withValues(alpha: isDark ? 0.3 : 0.5),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: theme.dividerColor.withValues(alpha: 0.1),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 16, color: theme.colorScheme.onSurfaceVariant),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: theme.textTheme.labelMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          child,
         ],
       ),
     );
@@ -970,7 +1033,10 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
         }
 
         if (suggested.isEmpty && _parsedResult?.categoryName == null) {
-          return const SizedBox.shrink();
+          return Text(
+            l10n.uncategorized,
+            style: theme.textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic),
+          );
         }
 
         // Auto-select first suggested if nothing selected yet or if selection not in suggested
@@ -985,65 +1051,66 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
           });
         }
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        return Wrap(
+          spacing: 8,
+          runSpacing: 8,
           children: [
-            const SizedBox(height: 8),
-            Text(
-              l10n.category,
-              style: theme.textTheme.labelMedium?.copyWith(color: Colors.grey),
-            ),
-            const SizedBox(height: 4),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                // Extracted one (if not in suggested)
-                if (_parsedResult?.categoryName != null &&
-                    !suggested.any((c) =>
-                        c.name.toLowerCase() ==
-                        _parsedResult!.categoryName!.toLowerCase()))
-                  _buildSuggestionChip(
-                      label: _parsedResult!.categoryName!,
-                      isSelected:
-                          _selectedCategoryName == _parsedResult!.categoryName,
-                      onPressed: () => setState(() {
-                            _selectedCategoryName = _parsedResult!.categoryName;
-                            _selectedCategoryColor = null;
-                            _selectedCategoryIcon = null;
-                          }),
-                      selectedColor: AppColors.brightCyan),
-                // Suggested ones from list
-                ...suggested.map((c) {
-                  final isSelected = _selectedCategoryName == c.name;
-                  Color chipColor = activeCashbookForeColor;
-                  if (c.color != null) {
-                    try {
-                      chipColor =
-                          Color(int.parse(c.color!.replaceFirst('#', '0xFF')));
-                    } catch (_) {}
-                  }
+            // Extracted one (if not in suggested)
+            if (_parsedResult?.categoryName != null &&
+                !suggested.any((c) =>
+                    c.name.toLowerCase() ==
+                    _parsedResult!.categoryName!.toLowerCase()))
+              _buildSuggestionChip(
+                  label: _parsedResult!.categoryName!,
+                  isSelected:
+                      _selectedCategoryName == _parsedResult!.categoryName,
+                  onPressed: () => setState(() {
+                        if (_selectedCategoryName ==
+                            _parsedResult!.categoryName) {
+                          _selectedCategoryName = null;
+                        } else {
+                          _selectedCategoryName =
+                              _parsedResult!.categoryName;
+                        }
+                        _selectedCategoryColor = null;
+                        _selectedCategoryIcon = null;
+                      }),
+                  selectedColor: AppColors.brightCyan),
+            // Suggested ones from list
+            ...suggested.map((c) {
+              final isSelected = _selectedCategoryName == c.name;
+              Color chipColor = activeCashbookForeColor;
+              if (c.color != null) {
+                try {
+                  chipColor =
+                      Color(int.parse(c.color!.replaceFirst('#', '0xFF')));
+                } catch (_) {}
+              }
 
-                  return _buildSuggestionChip(
-                    label: c.name,
-                    isSelected: isSelected,
-                    onPressed: () => setState(() {
-                      _selectedCategoryName = c.name;
-                      _selectedCategoryColor = c.color;
-                      _selectedCategoryIcon = c.icon;
-                    }),
-                    selectedColor: chipColor,
-                    avatar: c.icon != null
-                        ? Icon(
-                            IconHelper.getIconData(c.icon),
-                            size: 14,
-                            color: isSelected ? Colors.white : chipColor,
-                          )
-                        : null,
-                  );
+              return _buildSuggestionChip(
+                label: c.name,
+                isSelected: isSelected,
+                onPressed: () => setState(() {
+                  if (isSelected) {
+                    _selectedCategoryName = null;
+                    _selectedCategoryColor = null;
+                    _selectedCategoryIcon = null;
+                  } else {
+                    _selectedCategoryName = c.name;
+                    _selectedCategoryColor = c.color;
+                    _selectedCategoryIcon = c.icon;
+                  }
                 }),
-              ],
-            ),
+                selectedColor: chipColor,
+                avatar: c.icon != null
+                    ? Icon(
+                        IconHelper.getIconData(c.icon),
+                        size: 14,
+                        color: isSelected ? Colors.white : chipColor,
+                      )
+                    : null,
+              );
+            }),
           ],
         );
       },
@@ -1074,7 +1141,10 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
         }
 
         if (suggested.isEmpty && _parsedResult?.contactName == null) {
-          return const SizedBox.shrink();
+          return Text(
+            l10n.noContactsFound,
+            style: theme.textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic),
+          );
         }
 
         // Auto-select first suggested if nothing selected yet
@@ -1087,62 +1157,59 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
           });
         }
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        return Wrap(
+          spacing: 8,
+          runSpacing: 8,
           children: [
-            const SizedBox(height: 8),
-            Text(
-              l10n.contact,
-              style: theme.textTheme.labelMedium?.copyWith(color: Colors.grey),
-            ),
-            const SizedBox(height: 4),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                // Extracted one
-                if (_parsedResult?.contactName != null &&
-                    !suggested.any((c) =>
-                        c.name.toLowerCase() ==
-                        _parsedResult!.contactName!.toLowerCase()))
-                  _buildSuggestionChip(
-                    label: _parsedResult!.contactName!,
-                    isSelected:
-                        _selectedContactName == _parsedResult!.contactName,
-                    onPressed: () => setState(() {
-                      _selectedContactName = _parsedResult!.contactName;
-                    }),
-                    selectedColor:
-                        AppColors.getContactColor(_parsedResult!.contactName!),
-                  ),
-                // Suggested ones
-                ...suggested.map((c) {
-                  final isSelected = _selectedContactName == c.name;
-                  final contactColor = AppColors.getContactColor(c.name);
-
-                  return _buildSuggestionChip(
-                    label: c.name,
-                    isSelected: isSelected,
-                    onPressed: () => setState(() {
-                      _selectedContactName = c.name;
-                    }),
-                    selectedColor: contactColor,
-                    avatar: CircleAvatar(
-                      radius: 10,
-                      backgroundColor: isSelected ? Colors.white : contactColor,
-                      child: Text(
-                        c.name[0].toUpperCase(),
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                          color: isSelected ? contactColor : Colors.white,
-                        ),
-                      ),
-                    ),
-                  );
+            // Extracted one
+            if (_parsedResult?.contactName != null &&
+                !suggested.any((c) =>
+                    c.name.toLowerCase() ==
+                    _parsedResult!.contactName!.toLowerCase()))
+              _buildSuggestionChip(
+                label: _parsedResult!.contactName!,
+                isSelected:
+                    _selectedContactName == _parsedResult!.contactName,
+                onPressed: () => setState(() {
+                  if (_selectedContactName == _parsedResult!.contactName) {
+                    _selectedContactName = null;
+                  } else {
+                    _selectedContactName = _parsedResult!.contactName;
+                  }
                 }),
-              ],
-            ),
+                selectedColor:
+                    AppColors.getContactColor(_parsedResult!.contactName!),
+              ),
+            // Suggested ones
+            ...suggested.map((c) {
+              final isSelected = _selectedContactName == c.name;
+              final contactColor = AppColors.getContactColor(c.name);
+
+              return _buildSuggestionChip(
+                label: c.name,
+                isSelected: isSelected,
+                onPressed: () => setState(() {
+                  if (isSelected) {
+                    _selectedContactName = null;
+                  } else {
+                    _selectedContactName = c.name;
+                  }
+                }),
+                selectedColor: contactColor,
+                avatar: CircleAvatar(
+                  radius: 10,
+                  backgroundColor: isSelected ? Colors.white : contactColor,
+                  child: Text(
+                    c.name[0].toUpperCase(),
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: isSelected ? contactColor : Colors.white,
+                    ),
+                  ),
+                ),
+              );
+            }),
           ],
         );
       },

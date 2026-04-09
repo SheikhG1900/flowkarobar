@@ -258,14 +258,12 @@ class VoiceAiParser extends BaseTransactionAiParser {
 
     if (category == null) {
       final categoryRegex = RegExp(
-        r'\b(?:for|per|liye|on)\s+([a-z]{3,})|([a-z]{3,})\s+(?:ke liye|per|par|ka kharcha|kharch|ka|ki|ke)\b',
+        r'\b(?:for|on)\s+([a-z]{3,})|([a-z]{3,})\s+(?:ke liye|pay|pa|pe|per|par|ka kharcha|kharch|ka|ki|ke)\b',
       );
       final categoryMatch = categoryRegex.firstMatch(lowerText);
       if (categoryMatch != null) {
         final found = categoryMatch.group(1) ?? categoryMatch.group(2);
-        if (found != 'me' &&
-            found != 'the' &&
-            found != contact?.toLowerCase()) {
+        if (found != 'me' && found != 'the') {
           category = found;
         }
       }
