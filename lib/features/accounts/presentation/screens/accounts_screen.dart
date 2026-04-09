@@ -93,71 +93,72 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
         ],
       ),
       body: accountsAsync.when(
-          data: (accounts) {
-            if (accounts.isEmpty) {
-              return _EmptyAccountsView(
-                  onAddTap: () => _goToAddAccount(context, ref));
-            }
+        data: (accounts) {
+          if (accounts.isEmpty) {
+            return _EmptyAccountsView(
+                onAddTap: () => _goToAddAccount(context, ref));
+          }
 
-            final regularAccounts = accounts
-                .where((a) => a.type != AccountType.creditCard)
-                .toList();
-            final creditCardAccounts = accounts
-                .where((a) => a.type == AccountType.creditCard)
-                .toList();
+          final regularAccounts =
+              accounts.where((a) => a.type != AccountType.creditCard).toList();
+          final creditCardAccounts =
+              accounts.where((a) => a.type == AccountType.creditCard).toList();
 
-            return ListView(
-              padding: EdgeInsets.only(
-                left: 16,
-                right: 16,
-                top: 16,
-                bottom: MediaQuery.of(context).padding.bottom + 80,
+          return ListView(
+            padding: EdgeInsets.only(
+              top: 16,
+              bottom: MediaQuery.of(context).padding.bottom + 80,
+            ),
+            children: [
+              // Net Worth summary card
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: _NetWorthCard(accounts: accounts),
               ),
-              children: [
-                // Net Worth summary card
-                _NetWorthCard(accounts: accounts),
-                const SizedBox(height: 20),
+              const SizedBox(height: 24),
 
-                if (regularAccounts.isNotEmpty) ...[
-                  _SectionHeader(title: l10n.accounts),
-                  const SizedBox(height: 8),
-                  ...regularAccounts.map((awb) {
-                    final isLocked = !isPremium && (awb.account.addSeq ?? 0) > PremiumGate.accountTotalLimit;
-                    return _AccountCard(
-                      awb: awb,
-                      isLocked: isLocked,
-                      onTap: isLocked 
-                          ? () => PremiumGate.showPremiumDialog(context)
-                          : () => _goToDetail(context, awb.account),
-                    );
-                  }),
-                ],
-
-                if (creditCardAccounts.isNotEmpty) ...[
-                  const SizedBox(height: 8),
-                  _SectionHeader(title: l10n.creditCards),
-                  const SizedBox(height: 8),
-                  ...creditCardAccounts.map((awb) {
-                    final isLocked = !isPremium && (awb.account.addSeq ?? 0) > PremiumGate.accountTotalLimit;
-                    return _AccountCard(
-                      awb: awb,
-                      isLocked: isLocked,
-                      onTap: isLocked 
-                          ? () => PremiumGate.showPremiumDialog(context)
-                          : () => _goToDetail(context, awb.account),
-                    );
-                  }),
-                ],
-                const SizedBox(height: 20),
-                _RecentTransfersSection(),
+              if (accounts.isNotEmpty) ...[
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: _SectionHeader(title: l10n.accounts),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  height: 230,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.only(
+                        left: 12, right: 12, top: 10, bottom: 30),
+                    itemCount: accounts.length,
+                    itemBuilder: (context, index) {
+                      final awb = accounts[index];
+                      final isLocked = !isPremium &&
+                          (awb.account.addSeq ?? 0) >
+                              PremiumGate.accountTotalLimit;
+                      return _AccountCard(
+                        awb: awb,
+                        isLocked: isLocked,
+                        onTap: isLocked
+                            ? () => PremiumGate.showPremiumDialog(context)
+                            : () => _goToDetail(context, awb.account),
+                      );
+                    },
+                  ),
+                ),
               ],
-            );
-          },
-          loading: () => const AppLoadingIndicator(),
-          error: (e, _) => Center(
-              child: Text(
-                  AppLocalizations.of(context)!.errorOccurred(e.toString()))),
-        ),
+              const SizedBox(height: 24),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: _RecentTransfersSection(),
+              ),
+            ],
+          );
+        },
+        loading: () => const AppLoadingIndicator(),
+        error: (e, _) => Center(
+            child: Text(
+                AppLocalizations.of(context)!.errorOccurred(e.toString()))),
+      ),
       floatingActionButton: AppFloatingActionButton(
         onPressed: () => _goToAddAccount(context, ref),
         tooltip: l10n.addAccount,
@@ -477,110 +478,163 @@ class _AccountCard extends ConsumerWidget {
         ? Color(int.parse(acc.color!.replaceAll('#', '0xFF')))
         : theme.colorScheme.primary;
     final iconData = IconHelper.getIconData(acc.icon) ?? _defaultIcon(type);
+    final isDark = theme.brightness == Brightness.dark;
 
     final bool isNegative = awb.balance < 0;
-    // Credit card overpaid (balance > 0): show as income color (bank owes you)
-    // Credit card normal outstanding (balance <= 0): show as expense color
-    // Other accounts: negative = expense color, positive = income color
-    final Color balanceColor = type.isCreditCard
-        ? (awb.creditBalance > 0 ? AppColors.incomeColor : AppColors.expenseColor)
-        : (isNegative ? AppColors.expenseColor : AppColors.incomeColor);
+    final Color balanceColor = Colors.white;
 
     final String balanceText = type.isCreditCard
         ? (awb.creditBalance > 0
-            // Overpaid: show as positive credit balance
-            ? AmountFormatter.formatWithCurrency(awb.creditBalance, symbol, decimals)
-            // Normal: show outstanding as (amount)
+            ? AmountFormatter.formatWithCurrency(
+                awb.creditBalance, symbol, decimals)
             : '($symbol${AmountFormatter.formatAmount(awb.balance.abs(), decimals)})')
         : AmountFormatter.formatWithCurrency(awb.balance, symbol, decimals);
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+    return Container(
+      width: 280,
+      height: 185, // Increased height to prevent vertical overflow
+      margin: const EdgeInsets.symmetric(horizontal: 4),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(24),
         child: Stack(
           children: [
             Opacity(
               opacity: isLocked ? 0.5 : 1.0,
               child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: AppColors.transactionListItemDecoration(
-                  theme,
-                  accountColor,
-                ),
-                child: Row(
-                  children: [
-                    // Account icon
-                    Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: accountColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      alignment: Alignment.center,
-                      child: Icon(iconData, color: accountColor, size: 24),
+                decoration: BoxDecoration(
+                  gradient: _accountCardGradient(accountColor, theme),
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: accountColor.withValues(alpha: isDark ? 0.4 : 0.3),
+                      blurRadius: 16,
+                      spreadRadius: 2,
+                      offset: const Offset(0, 6),
                     ),
-                    const SizedBox(width: 16),
-
-                    // Name & type
-                    Expanded(
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.1),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Stack(
+                  children: [
+                    // Background Pattern for Credit Cards
+                    if (type.isCreditCard)
+                      Positioned.fill(
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(24),
+                          child: CustomPaint(
+                            painter: _CardPatternPainter(
+                              color: Colors.white.withValues(alpha: 0.05),
+                            ),
+                          ),
+                        ),
+                      ),
+                    
+                    Padding(
+                      padding: const EdgeInsets.all(20),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          Row(
+                            children: [
+                              Container(
+                                width: 44,
+                                height: 44,
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.2),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                alignment: Alignment.center,
+                                child: Icon(iconData, color: Colors.white, size: 24),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      acc.name,
+                                      style: theme.textTheme.titleMedium?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    Text(
+                                      _typeLabel(l10n, type),
+                                      style: theme.textTheme.bodySmall?.copyWith(
+                                        color: Colors.white.withValues(alpha: 0.8),
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              if (type.isCreditCard)
+                                Container(
+                                  width: 35,
+                                  height: 25,
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        Colors.yellow.shade700,
+                                        Colors.yellow.shade200,
+                                        Colors.yellow.shade700,
+                                      ],
+                                    ),
+                                    borderRadius: BorderRadius.circular(4),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withValues(alpha: 0.2),
+                                        blurRadius: 2,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                            ],
+                          ),
+                          const Spacer(),
                           Text(
-                            acc.name,
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
+                            type.isCreditCard
+                                ? (awb.creditBalance > 0 ? l10n.creditBalance : l10n.outstandingBalance)
+                                : l10n.currentBalance,
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: Colors.white.withValues(alpha: 0.7),
+                              letterSpacing: 0.5,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                           const SizedBox(height: 4),
-                          Text(
-                            _typeLabel(l10n, type),
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              balanceText,
+                              style: theme.textTheme.headlineSmall?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
                           if (type.isCreditCard && (awb.dueAmount ?? 0.0) > 0) ...[
-                            const SizedBox(height: 4),
+                            const SizedBox(height: 8),
                             _DueBadge(
-                                dueAmount: awb.dueAmount ?? 0.0,
-                                symbol: symbol,
-                                decimals: decimals),
+                              dueAmount: awb.dueAmount ?? 0.0,
+                              symbol: symbol,
+                              decimals: decimals,
+                              isDark: true,
+                            ),
                           ],
                         ],
                       ),
-                    ),
-
-                    // Balance
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text(
-                          balanceText,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            color: balanceColor,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        if (type.isCreditCard &&
-                            (acc.creditLimit ?? 0) > 0 &&
-                            awb.availableCredit != null) ...[
-                          const SizedBox(height: 4),
-                          Text(
-                            '${AmountFormatter.formatWithCurrency(awb.availableCredit!, symbol, decimals)} ${l10n.available}',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: AppColors.incomeColor,
-                            ),
-                          ),
-                        ],
-                        const SizedBox(height: 4),
-                        Icon(Icons.chevron_right,
-                            size: 18, color: theme.colorScheme.onSurfaceVariant),
-                      ],
                     ),
                   ],
                 ),
@@ -588,30 +642,46 @@ class _AccountCard extends ConsumerWidget {
             ),
             if (isLocked)
               Positioned(
-                top: 6,
-                right: 6,
+                top: 12,
+                right: 12,
                 child: Container(
-                  padding: const EdgeInsets.all(2),
-                  decoration: BoxDecoration(
-                    color: theme.scaffoldBackgroundColor,
+                  padding: const EdgeInsets.all(4),
+                  decoration: const BoxDecoration(
+                    color: Colors.white24,
                     shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.08),
-                        blurRadius: 2,
-                      ),
-                    ],
                   ),
-                  child: Icon(
+                  child: const Icon(
                     Icons.lock,
-                    size: 14,
-                    color: theme.colorScheme.primary,
+                    size: 16,
+                    color: Colors.white,
                   ),
                 ),
               ),
           ],
         ),
       ),
+    );
+  }
+
+  LinearGradient _accountCardGradient(Color accountColor, ThemeData theme) {
+    final isDark = theme.brightness == Brightness.dark;
+    if (isDark) {
+      return LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          accountColor,
+          Color.lerp(accountColor, theme.colorScheme.surface, 0.3)!,
+        ],
+      );
+    }
+    return LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: [
+        accountColor,
+        Color.lerp(accountColor, Colors.black, 0.1)!,
+      ],
     );
   }
 
@@ -642,15 +712,41 @@ class _AccountCard extends ConsumerWidget {
   }
 }
 
+class _CardPatternPainter extends CustomPainter {
+  final Color color;
+  _CardPatternPainter({required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = 1.5
+      ..style = PaintingStyle.stroke;
+
+    for (var i = -size.height; i < size.width; i += 15) {
+      canvas.drawLine(
+        Offset(i, 0),
+        Offset(i + size.height, size.height),
+        paint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(CustomPainter oldDelegate) => false;
+}
+
 class _DueBadge extends StatelessWidget {
   final double dueAmount;
   final String symbol;
   final int decimals;
+  final bool isDark;
 
   const _DueBadge({
     required this.dueAmount,
     required this.symbol,
     required this.decimals,
+    this.isDark = false,
   });
 
   @override
@@ -659,13 +755,15 @@ class _DueBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: AppColors.expenseColor.withValues(alpha: 0.1),
+        color: isDark
+            ? Colors.white.withValues(alpha: 0.2)
+            : AppColors.expenseColor.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(
         '${l10n.due}: ${AmountFormatter.formatWithCurrency(dueAmount, symbol, decimals)}',
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: AppColors.expenseColor,
+              color: isDark ? Colors.white : AppColors.expenseColor,
               fontWeight: FontWeight.w600,
             ),
       ),
@@ -842,7 +940,8 @@ class _TransferRow extends ConsumerWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    AmountFormatter.formatWithCurrency(t.amount, symbol, decimals),
+                    AmountFormatter.formatWithCurrency(
+                        t.amount, symbol, decimals),
                     style: theme.textTheme.titleSmall?.copyWith(
                       color: theme.colorScheme.primary,
                       fontWeight: FontWeight.w600,
