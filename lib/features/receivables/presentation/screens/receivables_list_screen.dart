@@ -578,6 +578,9 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
                       enableEdit: canEdit,
                       enableDelete: canEdit,
                       borderRadius: 20,
+                      confirmTitle: l10n.deleteReceivable,
+                      confirmMessage: l10n.deleteReceivableConfirm,
+                      deleteLabel: l10n.delete,
                       onEdit: canEdit
                           ? () {
                               Navigator.push(

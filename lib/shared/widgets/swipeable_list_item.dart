@@ -16,6 +16,8 @@ class SwipeableListItem extends StatelessWidget {
   final IconData deleteIcon;
   final String? editLabel;
   final String? deleteLabel;
+  final String? confirmTitle;
+  final String? confirmMessage;
   final double borderRadius;
   final EdgeInsetsGeometry? backgroundMargin;
 
@@ -32,6 +34,8 @@ class SwipeableListItem extends StatelessWidget {
     this.deleteIcon = Icons.delete,
     this.editLabel,
     this.deleteLabel,
+    this.confirmTitle,
+    this.confirmMessage,
     this.borderRadius = 16.0,
     this.backgroundMargin,
   });
@@ -61,9 +65,9 @@ class SwipeableListItem extends StatelessWidget {
           // Delete action (Right-to-Left in LTR, Left-to-Right in RTL)
           final confirmed = await _showConfirmDialog(
             context,
-            title: l10n.deleteItem,
-            message: l10n.confirmDeleteItem,
-            confirmText: l10n.delete,
+            title: confirmTitle ?? l10n.deleteItem,
+            message: confirmMessage ?? l10n.confirmDeleteItem,
+            confirmText: deleteLabel ?? l10n.delete,
             confirmColor: deleteBackgroundColor,
           );
 

@@ -4171,6 +4171,20 @@ class AppLocalizationsHi extends AppLocalizations {
       'क्या आप वाकई इस ट्रांसफर को हटाना चाहते हैं? इससे दोनों खातों की शेष राशि अपडेट हो जाएगी।';
 
   @override
+  String get deleteReceivable => 'प्राप्य हटाएं';
+
+  @override
+  String get deleteReceivableConfirm =>
+      'क्या आप वाकई इस प्राप्य को हटाना चाहते हैं? इस क्रिया को पूर्ववत नहीं किया जा सकता।';
+
+  @override
+  String get deletePayable => 'देय हटाएं';
+
+  @override
+  String get deletePayableConfirm =>
+      'क्या आप वाकई इस देय को हटाना चाहते हैं? इस क्रिया को पूर्ववत नहीं किया जा सकता।';
+
+  @override
   String get transferDeleted => 'ट्रांसफर सफलतापूर्वक हटा दिया गया';
 
   @override

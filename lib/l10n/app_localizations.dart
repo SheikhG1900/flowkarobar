@@ -7607,6 +7607,30 @@ abstract class AppLocalizations {
   /// **'Are you sure you want to delete this transfer? This will update the balances of both involved accounts.'**
   String get deleteTransferConfirm;
 
+  /// No description provided for @deleteReceivable.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Receivable'**
+  String get deleteReceivable;
+
+  /// No description provided for @deleteReceivableConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this receivable? This action cannot be undone.'**
+  String get deleteReceivableConfirm;
+
+  /// No description provided for @deletePayable.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Payable'**
+  String get deletePayable;
+
+  /// No description provided for @deletePayableConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this payable? This action cannot be undone.'**
+  String get deletePayableConfirm;
+
   /// No description provided for @transferDeleted.
   ///
   /// In en, this message translates to:

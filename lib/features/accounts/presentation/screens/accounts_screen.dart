@@ -512,13 +512,13 @@ class _AccountCard extends ConsumerWidget {
                   boxShadow: [
                     BoxShadow(
                       color: accountColor.withValues(alpha: isDark ? 0.4 : 0.3),
-                      blurRadius: 16,
+                      blurRadius: 8,
                       spreadRadius: 2,
-                      offset: const Offset(0, 6),
+                      offset: const Offset(0, 4),
                     ),
                     BoxShadow(
                       color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.1),
-                      blurRadius: 8,
+                      blurRadius: 6,
                       offset: const Offset(0, 2),
                     ),
                   ],
@@ -537,7 +537,7 @@ class _AccountCard extends ConsumerWidget {
                           ),
                         ),
                       ),
-                    
+
                     Padding(
                       padding: const EdgeInsets.all(20),
                       child: Column(
@@ -553,7 +553,8 @@ class _AccountCard extends ConsumerWidget {
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 alignment: Alignment.center,
-                                child: Icon(iconData, color: Colors.white, size: 24),
+                                child: Icon(iconData,
+                                    color: Colors.white, size: 24),
                               ),
                               const SizedBox(width: 12),
                               Expanded(
@@ -563,7 +564,8 @@ class _AccountCard extends ConsumerWidget {
                                   children: [
                                     Text(
                                       acc.name,
-                                      style: theme.textTheme.titleMedium?.copyWith(
+                                      style:
+                                          theme.textTheme.titleMedium?.copyWith(
                                         fontWeight: FontWeight.bold,
                                         color: Colors.white,
                                       ),
@@ -572,8 +574,10 @@ class _AccountCard extends ConsumerWidget {
                                     ),
                                     Text(
                                       _typeLabel(l10n, type),
-                                      style: theme.textTheme.bodySmall?.copyWith(
-                                        color: Colors.white.withValues(alpha: 0.8),
+                                      style:
+                                          theme.textTheme.bodySmall?.copyWith(
+                                        color:
+                                            Colors.white.withValues(alpha: 0.8),
                                       ),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
@@ -596,7 +600,8 @@ class _AccountCard extends ConsumerWidget {
                                     borderRadius: BorderRadius.circular(4),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.black.withValues(alpha: 0.2),
+                                        color:
+                                            Colors.black.withValues(alpha: 0.2),
                                         blurRadius: 2,
                                       ),
                                     ],
@@ -607,7 +612,9 @@ class _AccountCard extends ConsumerWidget {
                           const Spacer(),
                           Text(
                             type.isCreditCard
-                                ? (awb.creditBalance > 0 ? l10n.creditBalance : l10n.outstandingBalance)
+                                ? (awb.creditBalance > 0
+                                    ? l10n.creditBalance
+                                    : l10n.outstandingBalance)
                                 : l10n.currentBalance,
                             style: theme.textTheme.labelSmall?.copyWith(
                               color: Colors.white.withValues(alpha: 0.7),
@@ -628,7 +635,8 @@ class _AccountCard extends ConsumerWidget {
                               ),
                             ),
                           ),
-                          if (type.isCreditCard && (awb.dueAmount ?? 0.0) > 0) ...[
+                          if (type.isCreditCard &&
+                              (awb.dueAmount ?? 0.0) > 0) ...[
                             const SizedBox(height: 8),
                             _DueBadge(
                               dueAmount: awb.dueAmount ?? 0.0,
@@ -863,6 +871,9 @@ class _RecentTransfersSection extends ConsumerWidget {
               if (i > 0) const SizedBox(height: 12),
               SwipeableListItem(
                 borderRadius: 20,
+                confirmTitle: l10n.deleteTransfer,
+                confirmMessage: l10n.deleteTransferConfirm,
+                deleteLabel: l10n.delete,
                 onEdit: () {
                   showModalBottomSheet(
                     context: context,
@@ -874,36 +885,12 @@ class _RecentTransfersSection extends ConsumerWidget {
                   );
                 },
                 onDelete: () async {
-                  final confirmed = await showDialog<bool>(
-                    context: context,
-                    builder: (ctx) => AlertDialog(
-                      title: Text(l10n.deleteTransfer),
-                      content: Text(l10n.deleteTransferConfirm),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(ctx, false),
-                          child: Text(l10n.cancel),
-                        ),
-                        FilledButton(
-                          style: FilledButton.styleFrom(
-                            backgroundColor: AppColors.expenseColor,
-                            foregroundColor: Colors.white,
-                          ),
-                          onPressed: () => Navigator.pop(ctx, true),
-                          child: Text(l10n.delete),
-                        ),
-                      ],
-                    ),
-                  );
-
-                  if (confirmed == true) {
-                    await ref
-                        .read(accountsRepositoryProvider)
-                        .deleteTransfer(recent[i].transfer.uuid);
-                    if (context.mounted) {
-                      ToastUtils.showSuccessToast(
-                          context, ref, l10n.transferDeleted);
-                    }
+                  await ref
+                      .read(accountsRepositoryProvider)
+                      .deleteTransfer(recent[i].transfer.uuid);
+                  if (context.mounted) {
+                    ToastUtils.showSuccessToast(
+                        context, ref, l10n.transferDeleted);
                   }
                 },
                 child: Container(

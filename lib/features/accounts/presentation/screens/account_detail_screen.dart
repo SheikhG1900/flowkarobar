@@ -827,6 +827,9 @@ class _TransfersSection extends ConsumerWidget {
                   if (i > 0) const SizedBox(height: 12),
                   SwipeableListItem(
                     borderRadius: 20,
+                    confirmTitle: l10n.deleteTransfer,
+                    confirmMessage: l10n.deleteTransferConfirm,
+                    deleteLabel: l10n.delete,
                     onEdit: () {
                       showModalBottomSheet(
                         context: context,
@@ -838,36 +841,12 @@ class _TransfersSection extends ConsumerWidget {
                       );
                     },
                     onDelete: () async {
-                      final confirmed = await showDialog<bool>(
-                        context: context,
-                        builder: (ctx) => AlertDialog(
-                          title: Text(l10n.deleteTransfer),
-                          content: Text(l10n.deleteTransferConfirm),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(ctx, false),
-                              child: Text(l10n.cancel),
-                            ),
-                            FilledButton(
-                              style: FilledButton.styleFrom(
-                                backgroundColor: AppColors.expenseColor,
-                                foregroundColor: Colors.white,
-                              ),
-                              onPressed: () => Navigator.pop(ctx, true),
-                              child: Text(l10n.delete),
-                            ),
-                          ],
-                        ),
-                      );
-
-                      if (confirmed == true) {
-                        await ref
-                            .read(accountsRepositoryProvider)
-                            .deleteTransfer(list[i].transfer.uuid);
-                        if (context.mounted) {
-                          ToastUtils.showSuccessToast(
-                              context, ref, l10n.transferDeleted);
-                        }
+                      await ref
+                          .read(accountsRepositoryProvider)
+                          .deleteTransfer(list[i].transfer.uuid);
+                      if (context.mounted) {
+                        ToastUtils.showSuccessToast(
+                            context, ref, l10n.transferDeleted);
                       }
                     },
                     child: Container(

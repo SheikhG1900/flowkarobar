@@ -553,6 +553,9 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
                       enableEdit: canEdit,
                       enableDelete: canEdit,
                       borderRadius: 20,
+                      confirmTitle: l10n.deletePayable,
+                      confirmMessage: l10n.deletePayableConfirm,
+                      deleteLabel: l10n.delete,
                       onEdit: canEdit
                           ? () {
                               Navigator.push(

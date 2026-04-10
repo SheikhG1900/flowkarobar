@@ -4176,6 +4176,20 @@ class AppLocalizationsUr extends AppLocalizations {
       'کیا آپ واقعی اس ٹرانسفر کو حذف کرنا چاہتے ہیں؟ اس سے دونوں کھاتوں کا بیلنس اپ ڈیٹ ہو جائے گا۔';
 
   @override
+  String get deleteReceivable => 'وصولی حذف کریں';
+
+  @override
+  String get deleteReceivableConfirm =>
+      'کیا آپ واقعی اس وصولی کو حذف کرنا چاہتے ہیں؟ اس عمل کو واپس نہیں لیا جا سکتا۔';
+
+  @override
+  String get deletePayable => 'واجب الادا حذف کریں';
+
+  @override
+  String get deletePayableConfirm =>
+      'کیا آپ واقعی اس واجب الادا کو حذف کرنا چاہتے ہیں؟ اس عمل کو واپس نہیں لیا جا سکتا۔';
+
+  @override
   String get transferDeleted => 'ٹرانسفر کامیابی سے حذف کر دیا گیا';
 
   @override

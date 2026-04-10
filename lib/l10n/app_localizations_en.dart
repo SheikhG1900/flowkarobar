@@ -4160,6 +4160,20 @@ class AppLocalizationsEn extends AppLocalizations {
       'Are you sure you want to delete this transfer? This will update the balances of both involved accounts.';
 
   @override
+  String get deleteReceivable => 'Delete Receivable';
+
+  @override
+  String get deleteReceivableConfirm =>
+      'Are you sure you want to delete this receivable? This action cannot be undone.';
+
+  @override
+  String get deletePayable => 'Delete Payable';
+
+  @override
+  String get deletePayableConfirm =>
+      'Are you sure you want to delete this payable? This action cannot be undone.';
+
+  @override
   String get transferDeleted => 'Transfer deleted successfully';
 
   @override
