@@ -75,217 +75,238 @@ class ScheduleListItem extends ConsumerWidget {
           ),
         ],
       ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.all(16),
-        leading: Container(
-          width: 50,
-          height: 50,
-          decoration: BoxDecoration(
-            color: displayColor.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: displayColor.withValues(alpha: 0.3),
-              width: 1,
-            ),
-          ),
-          alignment: Alignment.center,
-          child: CategoryHelper.buildCategoryIcon(
-              category?.icon, displayColor, isExpense),
-        ),
-        title: Text(
-          category != null
-              ? LocalizationHelper.getLocalizedCategoryName(
-                  context, category.name)
-              : l10n.uncategorized,
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-            color: textColor,
-          ),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              schedule.description ?? (isExpense ? l10n.expense : l10n.income),
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant
-                    .withValues(alpha: isInactive ? 0.5 : 1.0),
-              ),
-              overflow: TextOverflow.ellipsis,
-            ),
-            if (contact != null) ...[
-              const SizedBox(height: 6),
-              const SizedBox(height: 4),
-              // Contact tag
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: AppColors.getContactColor(contact.name)
-                      .withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(4),
-                  border: Border.all(
-                    color: AppColors.getContactColor(contact.name)
-                        .withValues(alpha: 0.3),
-                    width: 1,
-                  ),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 12,
-                      height: 12,
-                      decoration: BoxDecoration(
-                        gradient: AppColors.getContactGradient(contact.name),
-                        shape: BoxShape.circle,
-                      ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        contact.name.isNotEmpty
-                            ? contact.name[0].toUpperCase()
-                            : '?',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 6,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    Flexible(
-                      child: Text(
-                        contact.name,
-                        style: TextStyle(
-                          fontSize: 10,
-                          color: theme.colorScheme.onSurfaceVariant,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            if (isLocked) {
+              PremiumGate.showPremiumDialog(context);
+              return;
+            }
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ScheduleDetailsDialog(
+                  scheduleUuid: schedule.uuid,
                 ),
               ),
-            ],
-          ],
-        ),
-        trailing: IntrinsicWidth(
-          child: Align(
-            alignment: Alignment.centerRight,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
+            );
+          },
+          borderRadius: BorderRadius.circular(20),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            child: Row(
               children: [
-                // Frequency badge above amount
+                // Leading
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  width: 50,
+                  height: 50,
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(4),
+                    color: displayColor.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(14),
                     border: Border.all(
-                      color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                      color: displayColor.withValues(alpha: 0.3),
                       width: 1,
                     ),
                   ),
-                  child: Row(
+                  alignment: Alignment.center,
+                  child: CategoryHelper.buildCategoryIcon(
+                      category?.icon, displayColor, isExpense),
+                ),
+                const SizedBox(width: 16),
+                // Title & Subtitle
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(
-                        _getFrequencyIcon(schedule.scheduleType),
-                        size: 10,
-                        color: theme.colorScheme.primary,
-                      ),
-                      const SizedBox(width: 4),
                       Text(
-                        _getFrequencyLabel(l10n, schedule.scheduleType),
-                        style: TextStyle(
-                          fontSize: 10,
-                          color: theme.colorScheme.primary,
+                        category != null
+                            ? LocalizationHelper.getLocalizedCategoryName(
+                                context, category.name)
+                            : l10n.uncategorized,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: textColor,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        schedule.description ??
+                            (isExpense ? l10n.expense : l10n.income),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant
+                              .withValues(alpha: isInactive ? 0.5 : 1.0),
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      if (contact != null) ...[
+                        const SizedBox(height: 8),
+                        // Contact tag
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: AppColors.getContactColor(contact.name)
+                                .withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(4),
+                            border: Border.all(
+                              color: AppColors.getContactColor(contact.name)
+                                  .withValues(alpha: 0.3),
+                              width: 1,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                width: 12,
+                                height: 12,
+                                decoration: BoxDecoration(
+                                  gradient: AppColors.getContactGradient(
+                                      contact.name),
+                                  shape: BoxShape.circle,
+                                ),
+                                alignment: Alignment.center,
+                                child: Text(
+                                  contact.name.isNotEmpty
+                                      ? contact.name[0].toUpperCase()
+                                      : '?',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 6,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              Flexible(
+                                child: Text(
+                                  contact.name,
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 16),
+                // Trailing
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // Frequency badge above amount
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(
+                          color:
+                              theme.colorScheme.primary.withValues(alpha: 0.3),
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            _getFrequencyIcon(schedule.scheduleType),
+                            size: 10,
+                            color: theme.colorScheme.primary,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            _getFrequencyLabel(l10n, schedule.scheduleType),
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: theme.colorScheme.primary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        '${isExpense ? '\u200E-' : '\u200E+'} ${AmountFormatter.formatWithCurrency(schedule.amount, currency.symbol, currency.decimalPlaces)}',
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          color: isExpense
+                              ? (isInactive
+                                  ? AppColors.expenseColor.withValues(alpha: 0.5)
+                                  : AppColors.expenseColor)
+                              : (isInactive
+                                  ? AppColors.incomeColor.withValues(alpha: 0.5)
+                                  : AppColors.incomeColor),
+                          fontWeight: FontWeight.bold,
+                          fontSize:
+                              AmountFormatter.getFontSize(schedule.amount),
+                        ),
+                      ),
+                    ),
+                    if (schedule.paidRelationship != null) ...[
+                      const SizedBox(height: 4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: AppColors.getRelationshipColor(
+                                  schedule.paidRelationship)
+                              .withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(4),
+                          border: Border.all(
+                            color: AppColors.getRelationshipColor(
+                                    schedule.paidRelationship)
+                                .withValues(alpha: 0.3),
+                            width: 1,
+                          ),
+                        ),
+                        child: Text(
+                          LocalizationHelper.localizeRelationshipShort(
+                            l10n,
+                            schedule.paidRelationship,
+                            isExpense: isExpense,
+                          ),
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: AppColors.getRelationshipColor(
+                                schedule.paidRelationship),
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                    if (isInactive) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        l10n.inactive,
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: theme.colorScheme.error.withValues(alpha: 0.7),
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                     ],
-                  ),
+                  ],
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  '${isExpense ? '\u200E-' : '\u200E+'} ${AmountFormatter.formatWithCurrency(schedule.amount, currency.symbol, currency.decimalPlaces)}',
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    color: isExpense
-                        ? (isInactive
-                            ? AppColors.expenseColor.withValues(alpha: 0.5)
-                            : AppColors.expenseColor)
-                        : (isInactive
-                            ? AppColors.incomeColor.withValues(alpha: 0.5)
-                            : AppColors.incomeColor),
-                    fontWeight: FontWeight.bold,
-                    fontSize: AmountFormatter.getFontSize(schedule.amount),
-                  ),
-                ),
-                if (schedule.paidRelationship != null) ...[
-                  const SizedBox(height: 4),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: AppColors.getRelationshipColor(
-                              schedule.paidRelationship)
-                          .withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(4),
-                      border: Border.all(
-                        color: AppColors.getRelationshipColor(
-                                schedule.paidRelationship)
-                            .withValues(alpha: 0.3),
-                        width: 1,
-                      ),
-                    ),
-                    child: Text(
-                      LocalizationHelper.localizeRelationshipShort(
-                        l10n,
-                        schedule.paidRelationship,
-                        isExpense: isExpense,
-                      ),
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: AppColors.getRelationshipColor(
-                            schedule.paidRelationship),
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
-                if (isInactive) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    l10n.inactive,
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: theme.colorScheme.error.withValues(alpha: 0.7),
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
               ],
             ),
           ),
         ),
-        onTap: () {
-          if (isLocked) {
-            PremiumGate.showPremiumDialog(context);
-            return;
-          }
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => ScheduleDetailsDialog(
-                scheduleUuid: schedule.uuid,
-              ),
-            ),
-          );
-        },
       ),
     );
   }

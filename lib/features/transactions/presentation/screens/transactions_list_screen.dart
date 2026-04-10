@@ -959,7 +959,6 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
 
   Widget _buildSchedulesTab(List<ScheduleWithDetails> schedules) {
     final l10n = AppLocalizations.of(context)!;
-    final theme = Theme.of(context);
     if (schedules.isEmpty) {
       return Center(
         child: Text(l10n.noSchedulesFound),
@@ -967,7 +966,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.only(top: 8, bottom: 100),
       itemCount: schedules.length,
       itemBuilder: (context, index) {
         final item = schedules[index];
@@ -977,7 +976,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
             (schedule.addSeq ?? 0) > PremiumGate.scheduleTotalLimit;
 
         return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 6),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
           child: SwipeableListItem(
             enableEdit: !isLocked,
             enableDelete: !isLocked,
@@ -1009,52 +1008,38 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                     }
                     ref.invalidate(allSchedulesWithDetailsProvider);
                   },
-            child: InkWell(
-              onTap: isLocked
-                  ? () => PremiumGate.showPremiumDialog(context)
-                  : () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => ScheduleDetailsDialog(
-                              scheduleUuid: schedule.uuid),
-                        ),
-                      );
-                    },
-              borderRadius: BorderRadius.circular(20),
-              child: Stack(
-                children: [
-                  Opacity(
-                    opacity: isLocked ? 0.5 : 1.0,
-                    child: ScheduleListItem(
-                      item: item,
-                    ),
+            child: Stack(
+              children: [
+                Opacity(
+                  opacity: isLocked ? 0.5 : 1.0,
+                  child: ScheduleListItem(
+                    item: item,
                   ),
-                  if (isLocked)
-                    Positioned(
-                      top: 6,
-                      right: 6,
-                      child: Container(
-                        padding: const EdgeInsets.all(2),
-                        decoration: BoxDecoration(
-                          color: theme.scaffoldBackgroundColor,
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.08),
-                              blurRadius: 2,
-                            ),
-                          ],
-                        ),
-                        child: Icon(
-                          Icons.lock,
-                          size: 14,
-                          color: theme.colorScheme.primary,
-                        ),
+                ),
+                if (isLocked)
+                  Positioned(
+                    top: 12,
+                    right: 12,
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black26,
+                            blurRadius: 4,
+                          ),
+                        ],
+                      ),
+                      child: const Icon(
+                        Icons.lock,
+                        size: 16,
+                        color: Colors.orange,
                       ),
                     ),
-                ],
-              ),
+                  ),
+              ],
             ),
           ),
         );
