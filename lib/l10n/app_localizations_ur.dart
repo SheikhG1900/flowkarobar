@@ -4167,4 +4167,23 @@ class AppLocalizationsUr extends AppLocalizations {
   @override
   String get guideSplitSettleBody =>
       'متعدد رابطوں کے ساتھ اخراجات کو آسانی سے تقسیم کریں۔ ایک ہی رابطے کے ساتھ تمام بقایا واجبات کو ایک ہی نل میں صاف کرنے کے لیے بلک سیٹلمنٹ کا استعمال کریں۔';
+
+  @override
+  String get deleteTransfer => 'ٹرانسفر حذف کریں';
+
+  @override
+  String get deleteTransferConfirm =>
+      'کیا آپ واقعی اس ٹرانسفر کو حذف کرنا چاہتے ہیں؟ اس سے دونوں کھاتوں کا بیلنس اپ ڈیٹ ہو جائے گا۔';
+
+  @override
+  String get transferDeleted => 'ٹرانسفر کامیابی سے حذف کر دیا گیا';
+
+  @override
+  String get transferUpdated => 'ٹرانسفر کامیابی سے اپ ڈیٹ کر دیا گیا';
+
+  @override
+  String get editTransfer => 'ٹرانسفر میں ترمیم کریں';
+
+  @override
+  String get updateTransfer => 'ٹرانسفر اپ ڈیٹ کریں';
 }

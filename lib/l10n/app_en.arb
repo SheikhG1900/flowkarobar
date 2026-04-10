@@ -2139,5 +2139,11 @@
   "guideAutoSettleTitle": "Auto-Generated Transactions",
   "guideAutoSettleBody": "Marking a Receivable as 'Received' automatically creates an Income entry. Paying a bill instantly logs an Expense—keeping your records perfectly linked.",
   "guideSplitSettleTitle": "Split Bills & Bulk Settle",
-  "guideSplitSettleBody": "Easily split expenses with multiple contacts. Use Bulk Settlement to clear all outstanding dues with a single contact in one tap."
+  "guideSplitSettleBody": "Easily split expenses with multiple contacts. Use Bulk Settlement to clear all outstanding dues with a single contact in one tap.",
+  "deleteTransfer": "Delete Transfer",
+  "deleteTransferConfirm": "Are you sure you want to delete this transfer? This will update the balances of both involved accounts.",
+  "transferDeleted": "Transfer deleted successfully",
+  "transferUpdated": "Transfer updated successfully",
+  "editTransfer": "Edit Transfer",
+  "updateTransfer": "Update Transfer"
 }

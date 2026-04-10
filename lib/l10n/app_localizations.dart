@@ -7594,6 +7594,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Easily split expenses with multiple contacts. Use Bulk Settlement to clear all outstanding dues with a single contact in one tap.'**
   String get guideSplitSettleBody;
+
+  /// No description provided for @deleteTransfer.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Transfer'**
+  String get deleteTransfer;
+
+  /// No description provided for @deleteTransferConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this transfer? This will update the balances of both involved accounts.'**
+  String get deleteTransferConfirm;
+
+  /// No description provided for @transferDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Transfer deleted successfully'**
+  String get transferDeleted;
+
+  /// No description provided for @transferUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Transfer updated successfully'**
+  String get transferUpdated;
+
+  /// No description provided for @editTransfer.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Transfer'**
+  String get editTransfer;
+
+  /// No description provided for @updateTransfer.
+  ///
+  /// In en, this message translates to:
+  /// **'Update Transfer'**
+  String get updateTransfer;
 }
 
 class _AppLocalizationsDelegate

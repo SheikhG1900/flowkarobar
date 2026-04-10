@@ -4162,4 +4162,23 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get guideSplitSettleBody =>
       'आसानी से कई संपर्कों के साथ खर्चों को विभाजित करें। एक ही टैप में एक ही संपर्क के साथ सभी बकाया देय राशि को स्पष्ट करने के लिए बल्क सेटलमेंट का उपयोग करें।';
+
+  @override
+  String get deleteTransfer => 'ट्रांसफर हटाएं';
+
+  @override
+  String get deleteTransferConfirm =>
+      'क्या आप वाकई इस ट्रांसफर को हटाना चाहते हैं? इससे दोनों खातों की शेष राशि अपडेट हो जाएगी।';
+
+  @override
+  String get transferDeleted => 'ट्रांसफर सफलतापूर्वक हटा दिया गया';
+
+  @override
+  String get transferUpdated => 'ट्रांसफर सफलतापूर्वक अपडेट किया गया';
+
+  @override
+  String get editTransfer => 'ट्रांसफर संपादित करें';
+
+  @override
+  String get updateTransfer => 'ट्रांसफर अपडेट करें';
 }

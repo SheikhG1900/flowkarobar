@@ -4151,4 +4151,23 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get guideSplitSettleBody =>
       'Easily split expenses with multiple contacts. Use Bulk Settlement to clear all outstanding dues with a single contact in one tap.';
+
+  @override
+  String get deleteTransfer => 'Delete Transfer';
+
+  @override
+  String get deleteTransferConfirm =>
+      'Are you sure you want to delete this transfer? This will update the balances of both involved accounts.';
+
+  @override
+  String get transferDeleted => 'Transfer deleted successfully';
+
+  @override
+  String get transferUpdated => 'Transfer updated successfully';
+
+  @override
+  String get editTransfer => 'Edit Transfer';
+
+  @override
+  String get updateTransfer => 'Update Transfer';
 }

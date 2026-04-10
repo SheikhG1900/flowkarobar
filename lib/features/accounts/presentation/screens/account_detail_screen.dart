@@ -12,6 +12,7 @@ import 'package:flowpaisa/features/accounts/presentation/screens/add_edit_accoun
 import 'package:flowpaisa/features/accounts/presentation/widgets/account_transfer_sheet.dart';
 import 'package:flowpaisa/features/accounts/presentation/widgets/pay_bill_sheet.dart';
 import 'package:flowpaisa/features/accounts/presentation/widgets/transfer_account_box.dart';
+import 'package:flowpaisa/shared/widgets/swipeable_list_item.dart';
 import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
 import 'package:flowpaisa/features/dashboard/domain/dashboard_widget_models.dart';
 import 'package:flowpaisa/features/dashboard/presentation/providers/dashboard_widget_provider.dart';
@@ -38,22 +39,28 @@ class AccountDetailScreen extends ConsumerWidget {
     final accountAsync =
         ref.watch(accountDetailWithBalanceProvider(accountUuid));
 
-    return accountAsync.when(
-      data: (awb) {
-        if (awb == null) {
-          return Scaffold(
-            appBar: AppBar(),
-            body: Center(child: Text(l10n.accountNotFound)),
-          );
-        }
-        return _AccountDetailView(awb: awb);
-      },
-      loading: () => const Scaffold(body: AppLoadingIndicator()),
-      error: (e, _) => Scaffold(
+    // Use the .value directly to keep the UI stable during refreshes
+    final awb = accountAsync.value;
+
+    if (awb == null) {
+      if (accountAsync.isLoading) {
+        return const Scaffold(body: AppLoadingIndicator());
+      }
+      if (accountAsync.hasError) {
+        return Scaffold(
+          appBar: AppBar(),
+          body: Center(
+            child: Text(l10n.errorOccurred(accountAsync.error.toString())),
+          ),
+        );
+      }
+      return Scaffold(
         appBar: AppBar(),
-        body: Center(child: Text(l10n.errorOccurred(e.toString()))),
-      ),
-    );
+        body: Center(child: Text(l10n.accountNotFound)),
+      );
+    }
+
+    return _AccountDetailView(awb: awb);
   }
 }
 
@@ -779,8 +786,26 @@ class _TransfersSection extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: 8),
-        transfersAsync.when(
-          data: (list) {
+        Builder(
+          builder: (context) {
+            final list = transfersAsync.value;
+
+            if (list == null) {
+              if (transfersAsync.isLoading) {
+                return const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 16),
+                  child: Center(
+                    child: SizedBox(
+                      height: 24,
+                      width: 24,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  ),
+                );
+              }
+              return const SizedBox.shrink();
+            }
+
             if (list.isEmpty) {
               return Padding(
                 padding: const EdgeInsets.symmetric(vertical: 16),
@@ -792,35 +817,72 @@ class _TransfersSection extends ConsumerWidget {
                 ),
               );
             }
+
             return Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 for (var i = 0; i < list.length; i++) ...[
                   if (i > 0) const SizedBox(height: 12),
-                  Container(
-                    decoration: AppColors.transactionListItemDecoration(
-                      theme,
-                      cashbookAccent,
-                    ),
-                    child: _TransferTile(
-                      details: list[i],
-                      currentAccountUuid: accountUuid,
+                  SwipeableListItem(
+                    borderRadius: 20,
+                    onEdit: () {
+                      showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        backgroundColor: Colors.transparent,
+                        builder: (_) => AccountTransferSheet(
+                          existingTransfer: list[i].transfer,
+                        ),
+                      );
+                    },
+                    onDelete: () async {
+                      final confirmed = await showDialog<bool>(
+                        context: context,
+                        builder: (ctx) => AlertDialog(
+                          title: Text(l10n.deleteTransfer),
+                          content: Text(l10n.deleteTransferConfirm),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(ctx, false),
+                              child: Text(l10n.cancel),
+                            ),
+                            FilledButton(
+                              style: FilledButton.styleFrom(
+                                backgroundColor: AppColors.expenseColor,
+                                foregroundColor: Colors.white,
+                              ),
+                              onPressed: () => Navigator.pop(ctx, true),
+                              child: Text(l10n.delete),
+                            ),
+                          ],
+                        ),
+                      );
+
+                      if (confirmed == true) {
+                        await ref
+                            .read(accountsRepositoryProvider)
+                            .deleteTransfer(list[i].transfer.uuid);
+                        if (context.mounted) {
+                          ToastUtils.showSuccessToast(
+                              context, ref, l10n.transferDeleted);
+                        }
+                      }
+                    },
+                    child: Container(
+                      decoration: AppColors.transactionListItemDecoration(
+                        theme,
+                        cashbookAccent,
+                      ),
+                      child: _TransferTile(
+                        details: list[i],
+                        currentAccountUuid: accountUuid,
+                      ),
                     ),
                   ),
                 ],
               ],
             );
           },
-          loading: () => const Padding(
-            padding: EdgeInsets.symmetric(vertical: 16),
-            child: Center(
-                child: SizedBox(
-              height: 24,
-              width: 24,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            )),
-          ),
-          error: (_, __) => const SizedBox.shrink(),
         ),
       ],
     );

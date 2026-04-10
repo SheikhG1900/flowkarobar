@@ -6,6 +6,7 @@ import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/core/utils/date_formatter.dart';
 import 'package:flowpaisa/core/utils/icon_helper.dart';
+import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
 import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
@@ -23,6 +24,7 @@ import 'package:flowpaisa/shared/widgets/app_floating_action_button.dart';
 import 'package:flowpaisa/shared/widgets/app_loading_indicator.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
+import 'package:flowpaisa/shared/widgets/swipeable_list_item.dart';
 import 'package:flowpaisa/features/onboarding/presentation/providers/onboarding_provider.dart';
 import 'package:flowpaisa/shared/widgets/contextual_guide.dart';
 import 'package:material_symbols_icons/symbols.dart';
@@ -857,12 +859,58 @@ class _RecentTransfersSection extends ConsumerWidget {
             const SizedBox(height: 8),
             for (var i = 0; i < recent.length; i++) ...[
               if (i > 0) const SizedBox(height: 12),
-              Container(
-                decoration: AppColors.transactionListItemDecoration(
-                  theme,
-                  cashbookAccent,
+              SwipeableListItem(
+                borderRadius: 20,
+                onEdit: () {
+                  showModalBottomSheet(
+                    context: context,
+                    isScrollControlled: true,
+                    backgroundColor: Colors.transparent,
+                    builder: (_) => AccountTransferSheet(
+                      existingTransfer: recent[i].transfer,
+                    ),
+                  );
+                },
+                onDelete: () async {
+                  final confirmed = await showDialog<bool>(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      title: Text(l10n.deleteTransfer),
+                      content: Text(l10n.deleteTransferConfirm),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(ctx, false),
+                          child: Text(l10n.cancel),
+                        ),
+                        FilledButton(
+                          style: FilledButton.styleFrom(
+                            backgroundColor: AppColors.expenseColor,
+                            foregroundColor: Colors.white,
+                          ),
+                          onPressed: () => Navigator.pop(ctx, true),
+                          child: Text(l10n.delete),
+                        ),
+                      ],
+                    ),
+                  );
+
+                  if (confirmed == true) {
+                    await ref
+                        .read(accountsRepositoryProvider)
+                        .deleteTransfer(recent[i].transfer.uuid);
+                    if (context.mounted) {
+                      ToastUtils.showSuccessToast(
+                          context, ref, l10n.transferDeleted);
+                    }
+                  }
+                },
+                child: Container(
+                  decoration: AppColors.transactionListItemDecoration(
+                    theme,
+                    cashbookAccent,
+                  ),
+                  child: _TransferRow(details: recent[i]),
                 ),
-                child: _TransferRow(details: recent[i]),
               ),
             ],
           ],

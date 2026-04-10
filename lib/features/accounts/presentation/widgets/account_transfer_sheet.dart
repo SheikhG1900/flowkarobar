@@ -20,12 +20,14 @@ class AccountTransferSheet extends ConsumerStatefulWidget {
   final String? preselectedFromUuid;
   final String? preselectedToUuid;
   final double? initialAmount;
+  final AccountTransfer? existingTransfer;
 
   const AccountTransferSheet({
     super.key,
     this.preselectedFromUuid,
     this.preselectedToUuid,
     this.initialAmount,
+    this.existingTransfer,
   });
 
   @override
@@ -49,19 +51,38 @@ class _AccountTransferSheetState extends ConsumerState<AccountTransferSheet> {
   void initState() {
     super.initState();
     _amountController.addListener(_onAmountChanged);
-    if (widget.initialAmount != null) {
+
+    if (widget.existingTransfer != null) {
+      final t = widget.existingTransfer!;
+      _amountController.text = t.amount.toStringAsFixed(2);
+      _descriptionController.text = t.description ?? '';
+      _selectedDate = t.date;
+    } else if (widget.initialAmount != null) {
       _amountController.text = widget.initialAmount!.toStringAsFixed(2);
     }
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final repo = ref.read(accountsRepositoryProvider);
-      if (widget.preselectedFromUuid != null) {
-        final acc = await repo.getAccountByUuid(widget.preselectedFromUuid!);
-        if (acc != null && mounted) setState(() => _fromAccount = acc);
-      }
-      if (widget.preselectedToUuid != null) {
-        final acc = await repo.getAccountByUuid(widget.preselectedToUuid!);
-        if (acc != null && mounted) setState(() => _toAccount = acc);
+      
+      if (widget.existingTransfer != null) {
+        final t = widget.existingTransfer!;
+        final from = await repo.getAccountByUuid(t.fromAccountUuid);
+        final to = await repo.getAccountByUuid(t.toAccountUuid);
+        if (mounted) {
+          setState(() {
+            _fromAccount = from;
+            _toAccount = to;
+          });
+        }
+      } else {
+        if (widget.preselectedFromUuid != null) {
+          final acc = await repo.getAccountByUuid(widget.preselectedFromUuid!);
+          if (acc != null && mounted) setState(() => _fromAccount = acc);
+        }
+        if (widget.preselectedToUuid != null) {
+          final acc = await repo.getAccountByUuid(widget.preselectedToUuid!);
+          if (acc != null && mounted) setState(() => _toAccount = acc);
+        }
       }
     });
   }
@@ -95,9 +116,9 @@ class _AccountTransferSheetState extends ConsumerState<AccountTransferSheet> {
       final repo = ref.read(accountsRepositoryProvider);
       final now = DateTime.now();
 
-      await repo.createTransfer(
-        AccountTransfersCompanion.insert(
-          uuid: const Uuid().v4(),
+      if (widget.existingTransfer != null) {
+        // Update existing
+        final updated = widget.existingTransfer!.copyWith(
           fromAccountUuid: _fromAccount!.uuid,
           toAccountUuid: _toAccount!.uuid,
           amount: amount,
@@ -105,13 +126,33 @@ class _AccountTransferSheetState extends ConsumerState<AccountTransferSheet> {
           description: drift.Value(_descriptionController.text.trim().isEmpty
               ? null
               : _descriptionController.text.trim()),
-          createdAt: drift.Value(now),
-          updatedAt: drift.Value(now),
-        ),
-      );
+          updatedAt: now,
+        );
+        await repo.updateTransfer(updated);
+      } else {
+        // Create new
+        await repo.createTransfer(
+          AccountTransfersCompanion.insert(
+            uuid: const Uuid().v4(),
+            fromAccountUuid: _fromAccount!.uuid,
+            toAccountUuid: _toAccount!.uuid,
+            amount: amount,
+            date: _selectedDate,
+            description: drift.Value(_descriptionController.text.trim().isEmpty
+                ? null
+                : _descriptionController.text.trim()),
+            createdAt: drift.Value(now),
+            updatedAt: drift.Value(now),
+          ),
+        );
+      }
 
       if (mounted) {
-        ToastUtils.showSuccessToast(context, ref, l10n.transferCreated);
+        ToastUtils.showSuccessToast(
+          context, 
+          ref, 
+          widget.existingTransfer != null ? l10n.transferUpdated : l10n.transferCreated
+        );
         Navigator.pop(context);
       }
     } catch (e) {
@@ -145,6 +186,8 @@ class _AccountTransferSheetState extends ConsumerState<AccountTransferSheet> {
     final sheetBg = isLight ? Colors.white : theme.scaffoldBackgroundColor;
     final tileFill = isLight ? Colors.white : null;
     final softBorder = theme.colorScheme.primary.withValues(alpha: 0.12);
+
+    final isEdit = widget.existingTransfer != null;
 
     return Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
@@ -180,7 +223,7 @@ class _AccountTransferSheetState extends ConsumerState<AccountTransferSheet> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      l10n.transferMoney,
+                      isEdit ? l10n.editTransfer : l10n.transferMoney,
                       style: theme.textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
@@ -232,7 +275,7 @@ class _AccountTransferSheetState extends ConsumerState<AccountTransferSheet> {
                           const SizedBox(height: 16),
                           TextFormField(
                             controller: _amountController,
-                            autofocus: true,
+                            autofocus: !isEdit,
                             textAlign: TextAlign.center,
                             style: theme.textTheme.displayLarge?.copyWith(
                               fontWeight: FontWeight.bold,
@@ -405,11 +448,11 @@ class _AccountTransferSheetState extends ConsumerState<AccountTransferSheet> {
                     SizedBox(
                       width: double.infinity,
                       child: GradientButton(
-                        label: l10n.recordTransfer,
+                        label: isEdit ? l10n.updateTransfer : l10n.recordTransfer,
                         gradient: AppColors.getPrimaryGradient(
                           theme.colorScheme.primary,
                         ),
-                        icon: Symbols.swap_horiz,
+                        icon: isEdit ? Icons.check : Symbols.swap_horiz,
                         isLoading: _isLoading,
                         onPressed: _save,
                         width: double.infinity,

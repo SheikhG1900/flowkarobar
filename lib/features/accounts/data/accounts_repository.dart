@@ -531,6 +531,15 @@ class AccountsRepository {
     ));
   }
 
+  Future<bool> updateTransfer(AccountTransfer transfer) {
+    return _db.update(_db.accountTransfers).replace(
+          transfer.copyWith(
+            updatedAt: DateTime.now(),
+            isNotSynced: true,
+          ),
+        );
+  }
+
   // ---------------------------------------------------------------------------
   // Negative Balance Check
   // ---------------------------------------------------------------------------
