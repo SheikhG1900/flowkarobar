@@ -511,16 +511,16 @@ class _AccountCard extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
                     BoxShadow(
-                      color: accountColor.withValues(alpha: isDark ? 0.4 : 0.3),
+                      color: accountColor.withValues(alpha: isDark ? 0.5 : 0.7),
                       blurRadius: 8,
                       spreadRadius: 2,
                       offset: const Offset(0, 4),
                     ),
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.1),
-                      blurRadius: 6,
-                      offset: const Offset(0, 2),
-                    ),
+                    // BoxShadow(
+                    //   color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.1),
+                    //   blurRadius: 6,
+                    //   offset: const Offset(0, 2),
+                    // ),
                   ],
                 ),
                 child: Stack(
