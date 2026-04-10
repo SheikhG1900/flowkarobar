@@ -6,6 +6,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flowpaisa/core/theme/app_theme.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/constants/app_constants.dart';
+import 'package:flowpaisa/shared/widgets/faded_bottom_logo.dart';
 import 'package:flowpaisa/features/transactions/presentation/screens/transactions_list_screen.dart';
 import 'package:flowpaisa/features/transactions/presentation/screens/add_transaction_screen.dart';
 import 'package:flowpaisa/features/receipt_scan/presentation/screens/scan_receipt_screen.dart';
@@ -891,32 +892,8 @@ class _DashboardBodyScrollState extends ConsumerState<_DashboardBodyScroll> {
             const SliverToBoxAdapter(
               child: _DashboardRecentTransactionsSection(),
             ),
-            SliverToBoxAdapter(
-              child: Consumer(
-                builder: (context, ref, child) {
-                  final activeColor =
-                      ref.watch(activeCashbookProvider.select((c) => c.color));
-                  return RepaintBoundary(
-                    child: Column(
-                      children: [
-                        const SizedBox(height: 40),
-                        Opacity(
-                          opacity: 0.1,
-                          child: SvgPicture.asset(
-                            'assets/images/logo_square.svg',
-                            height: 60,
-                            colorFilter: ColorFilter.mode(
-                              activeColor,
-                              BlendMode.srcIn,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 100),
-                      ],
-                    ),
-                  );
-                },
-              ),
+            const SliverToBoxAdapter(
+              child: FadedBottomLogo(bottomPadding: 100),
             ),
           ],
         ),

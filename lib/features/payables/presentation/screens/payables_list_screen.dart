@@ -1,3 +1,4 @@
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/foundation.dart';
 import 'package:flowpaisa/core/utils/icon_helper.dart';
@@ -9,6 +10,7 @@ import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/core/utils/date_formatter.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
+import 'package:flowpaisa/shared/widgets/faded_bottom_logo.dart';
 import 'package:flowpaisa/features/payables/presentation/providers/payables_provider.dart';
 import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 import 'package:flowpaisa/features/payables/presentation/screens/add_payable_screen.dart';
@@ -603,7 +605,9 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
           ),
         // Bottom padding
         SliverToBoxAdapter(
-          child: SizedBox(height: 80 + MediaQuery.of(context).padding.bottom),
+          child: FadedBottomLogo(
+            bottomPadding: 80 + MediaQuery.of(context).padding.bottom,
+          ),
         ),
       ],
     );

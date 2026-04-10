@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
+import 'package:flowpaisa/shared/widgets/faded_bottom_logo.dart';
 import 'package:flowpaisa/features/analytics/presentation/providers/analytics_provider.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/core/utils/date_formatter.dart';
@@ -439,21 +440,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                                     ),
                                   ),
 
-                                const SizedBox(height: 40),
-                                Center(
-                                  child: Opacity(
-                                    opacity: 0.1,
-                                    child: SvgPicture.asset(
-                                      'assets/images/logo_square.svg',
-                                      height: 60,
-                                      colorFilter: ColorFilter.mode(
-                                        theme.colorScheme.primary,
-                                        BlendMode.srcIn,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 100), // Bottom padding
+                                const FadedBottomLogo(bottomPadding: 100),
                               ],
                             ),
                           ),

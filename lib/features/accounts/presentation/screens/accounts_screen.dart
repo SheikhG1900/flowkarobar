@@ -1,3 +1,5 @@
+import 'package:flowpaisa/shared/widgets/faded_bottom_logo.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_undraw/flutter_undraw.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -913,6 +915,8 @@ class _RecentTransfersSection extends ConsumerWidget {
                 ),
               ),
             ],
+            const SizedBox(height: 40),
+            const FadedBottomLogo(bottomPadding: 40),
           ],
         );
       },

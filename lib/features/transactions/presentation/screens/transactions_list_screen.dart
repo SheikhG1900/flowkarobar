@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_undraw/flutter_undraw.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_sticky_header/flutter_sticky_header.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/core/utils/date_formatter.dart';
@@ -39,6 +40,7 @@ import 'package:flowpaisa/shared/widgets/collapsible_list_summary.dart';
 import 'package:flowpaisa/features/analytics/presentation/providers/analytics_provider.dart';
 import 'package:flowpaisa/shared/widgets/app_floating_action_button.dart';
 import 'package:flowpaisa/features/transactions/presentation/widgets/transaction_speed_dial.dart';
+import 'package:flowpaisa/shared/widgets/faded_bottom_logo.dart';
 import 'package:flowpaisa/features/receipt_scan/presentation/screens/scan_receipt_screen.dart';
 import 'package:flowpaisa/features/voice_command/presentation/screens/voice_add_screen.dart';
 
@@ -620,9 +622,10 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
               ),
             ),
           ),
-        // Bottom padding
         SliverToBoxAdapter(
-          child: SizedBox(height: 80 + MediaQuery.of(context).padding.bottom),
+          child: FadedBottomLogo(
+            bottomPadding: 100 + MediaQuery.of(context).padding.bottom,
+          ),
         ),
       ],
     );
@@ -967,8 +970,11 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
 
     return ListView.builder(
       padding: const EdgeInsets.only(top: 8, bottom: 100),
-      itemCount: schedules.length,
+      itemCount: schedules.length + 1,
       itemBuilder: (context, index) {
+        if (index == schedules.length) {
+          return const FadedBottomLogo(bottomPadding: 40);
+        }
         final item = schedules[index];
         final schedule = item.schedule;
         final isPremium = ref.watch(premiumProvider).isPremium;
