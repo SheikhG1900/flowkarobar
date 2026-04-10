@@ -146,277 +146,280 @@ class _AccountTransferSheetState extends ConsumerState<AccountTransferSheet> {
     final tileFill = isLight ? Colors.white : null;
     final softBorder = theme.colorScheme.primary.withValues(alpha: 0.12);
 
-    return Container(
-      constraints: BoxConstraints(
-        maxHeight: MediaQuery.of(context).size.height * 0.92,
-      ),
-      decoration: BoxDecoration(
-        color: sheetBg,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      child: Form(
-        key: _formKey,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Sheet handle
-            Center(
-              child: Container(
-                margin: const EdgeInsets.only(top: 12),
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: theme.dividerColor,
-                  borderRadius: BorderRadius.circular(2),
+    return Padding(
+      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      child: Container(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.92,
+        ),
+        decoration: BoxDecoration(
+          color: sheetBg,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Sheet handle
+              Center(
+                child: Container(
+                  margin: const EdgeInsets.only(top: 12),
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: theme.dividerColor,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
                 ),
               ),
-            ),
-            // Header
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    l10n.transferMoney,
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
+              // Header
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      l10n.transferMoney,
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                ],
-              ),
-            ),
-            const Divider(height: 1),
-
-            Expanded(
-              child: ListView(
-                padding: EdgeInsets.only(
-                  left: 16,
-                  right: 16,
-                  top: 16,
-                  bottom: MediaQuery.of(context).padding.bottom + 16,
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
                 ),
-                children: [
-                  // Amount card — clean white in light mode
-                  Container(
-                    padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(
-                      color: isLight ? Colors.white : theme.cardColor,
-                      borderRadius: BorderRadius.circular(20),
-                      border: isLight
-                          ? Border.all(color: softBorder, width: 1)
-                          : null,
-                      boxShadow: [
-                        BoxShadow(
-                          color: theme.colorScheme.primary
-                              .withValues(alpha: isLight ? 0.05 : 0.08),
-                          blurRadius: isLight ? 14 : 20,
-                          offset: Offset(0, isLight ? 5 : 8),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      children: [
-                        Text(
-                          l10n.howMuch,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        TextFormField(
-                          controller: _amountController,
-                          autofocus: true,
-                          textAlign: TextAlign.center,
-                          style: theme.textTheme.displayLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: theme.colorScheme.primary,
-                          ),
-                          decoration: InputDecoration(
-                            prefixText: '$currencySymbol ',
-                            prefixStyle:
-                                theme.textTheme.displayMedium?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                            ),
-                            border: InputBorder.none,
-                            hintText:
-                                AmountFormatter.formatAmount(0, decimalPlaces),
-                            hintStyle: theme.textTheme.displayLarge?.copyWith(
-                              color: Colors.grey.withValues(alpha: 0.3),
-                            ),
-                          ),
-                          keyboardType: const TextInputType.numberWithOptions(
-                              decimal: true),
-                          inputFormatters: [
-                            FilteringTextInputFormatter.allow(
-                                RegExp(r'^\d+\.?\d{0,2}')),
-                          ],
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return l10n.pleaseEnterAmount;
-                            }
-                            if (double.tryParse(value) == null) {
-                              return l10n.pleaseEnterValidAmount;
-                            }
-                            if (double.parse(value) <= 0) {
-                              return l10n.amountGreaterThanZero;
-                            }
-                            return null;
-                          },
-                        ),
-                      ],
-                    ),
+              ),
+              const Divider(height: 1),
+
+              Flexible(
+                child: ListView(
+                  padding: EdgeInsets.only(
+                    left: 16,
+                    right: 16,
+                    top: 16,
+                    bottom: MediaQuery.of(context).padding.bottom + 24,
                   ),
-
-                  const SizedBox(height: 20),
-
-                  // From account (exclude To account from list)
-                  AccountPickerField(
-                    selectedAccount: _fromAccount,
-                    label: l10n.fromAccount,
-                    excludeAccountUuid: _toAccount?.uuid,
-                    surfaceColor: tileFill,
-                    onChanged: (acc) => setState(() => _fromAccount = acc),
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  // Transfer direction indicator
-                  Center(
-                    child: Container(
-                      width: 40,
-                      height: 40,
+                  children: [
+                    // Amount card — clean white in light mode
+                    Container(
+                      padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
-                        color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                        shape: BoxShape.circle,
+                        color: isLight ? Colors.white : theme.cardColor,
+                        borderRadius: BorderRadius.circular(20),
+                        border: isLight
+                            ? Border.all(color: softBorder, width: 1)
+                            : null,
+                        boxShadow: [
+                          BoxShadow(
+                            color: theme.colorScheme.primary
+                                .withValues(alpha: isLight ? 0.05 : 0.08),
+                            blurRadius: isLight ? 14 : 20,
+                            offset: Offset(0, isLight ? 5 : 8),
+                          ),
+                        ],
                       ),
-                      child: Icon(
-                        Icons.arrow_downward_rounded,
-                        color: theme.colorScheme.primary,
-                        size: 20,
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  // To account (exclude From account from list)
-                  AccountPickerField(
-                    selectedAccount: _toAccount,
-                    label: l10n.toAccount,
-                    excludeAccountUuid: _fromAccount?.uuid,
-                    surfaceColor: tileFill,
-                    onChanged: (acc) => setState(() => _toAccount = acc),
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // Date selector
-                  InkWell(
-                    onTap: _selectDate,
-                    borderRadius: BorderRadius.circular(12),
-                    child: Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: tileFill ?? theme.colorScheme.surface,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: isLight ? softBorder : theme.dividerColor,
-                        ),
-                      ),
-                      child: Row(
+                      child: Column(
                         children: [
-                          Icon(Icons.calendar_today_outlined,
+                          Text(
+                            l10n.howMuch,
+                            style: theme.textTheme.titleMedium?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant,
-                              size: 20),
-                          const SizedBox(width: 16),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                l10n.date,
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color:
-                                      theme.colorScheme.onSurfaceVariant,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                AppDateFormatter.formatDate(
-                                  _selectedDate,
-                                  pattern: dateFormat,
-                                ),
-                                style:
-                                    theme.textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
+                            ),
                           ),
-                          const Spacer(),
-                          const Icon(Icons.arrow_forward_ios, size: 16),
+                          const SizedBox(height: 16),
+                          TextFormField(
+                            controller: _amountController,
+                            autofocus: true,
+                            textAlign: TextAlign.center,
+                            style: theme.textTheme.displayLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: theme.colorScheme.primary,
+                            ),
+                            decoration: InputDecoration(
+                              prefixText: '$currencySymbol ',
+                              prefixStyle:
+                                  theme.textTheme.displayMedium?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                              border: InputBorder.none,
+                              hintText:
+                                  AmountFormatter.formatAmount(0, decimalPlaces),
+                              hintStyle: theme.textTheme.displayLarge?.copyWith(
+                                color: Colors.grey.withValues(alpha: 0.3),
+                              ),
+                            ),
+                            keyboardType: const TextInputType.numberWithOptions(
+                                decimal: true),
+                            inputFormatters: [
+                              FilteringTextInputFormatter.allow(
+                                  RegExp(r'^\d+\.?\d{0,2}')),
+                            ],
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return l10n.pleaseEnterAmount;
+                              }
+                              if (double.tryParse(value) == null) {
+                                return l10n.pleaseEnterValidAmount;
+                              }
+                              if (double.parse(value) <= 0) {
+                                return l10n.amountGreaterThanZero;
+                              }
+                              return null;
+                            },
+                          ),
                         ],
                       ),
                     ),
-                  ),
 
-                  const SizedBox(height: 16),
+                    const SizedBox(height: 20),
 
-                  // Description
-                  TextFormField(
-                    controller: _descriptionController,
-                    textCapitalization: TextCapitalization.sentences,
-                    maxLines: 2,
-                    decoration: InputDecoration(
-                      labelText: l10n.descriptionOptional,
-                      prefixIcon: const Icon(Icons.notes_outlined),
-                      filled: isLight,
-                      fillColor: isLight ? Colors.white : null,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(
-                          color: isLight ? softBorder : theme.dividerColor,
+                    // From account (exclude To account from list)
+                    AccountPickerField(
+                      selectedAccount: _fromAccount,
+                      label: l10n.fromAccount,
+                      excludeAccountUuid: _toAccount?.uuid,
+                      surfaceColor: tileFill,
+                      onChanged: (acc) => setState(() => _fromAccount = acc),
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    // Transfer direction indicator
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                          shape: BoxShape.circle,
                         ),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(
-                          color: isLight ? softBorder : theme.dividerColor,
-                        ),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(
+                        child: Icon(
+                          Icons.arrow_downward_rounded,
                           color: theme.colorScheme.primary,
-                          width: 1.5,
+                          size: 20,
                         ),
                       ),
                     ),
-                  ),
 
-                  const SizedBox(height: 24),
+                    const SizedBox(height: 12),
 
-                  SizedBox(
-                    width: double.infinity,
-                    child: GradientButton(
-                      label: l10n.recordTransfer,
-                      gradient: AppColors.getPrimaryGradient(
-                        theme.colorScheme.primary,
-                      ),
-                      icon: Symbols.swap_horiz,
-                      isLoading: _isLoading,
-                      onPressed: _save,
-                      width: double.infinity,
+                    // To account (exclude From account from list)
+                    AccountPickerField(
+                      selectedAccount: _toAccount,
+                      label: l10n.toAccount,
+                      excludeAccountUuid: _fromAccount?.uuid,
+                      surfaceColor: tileFill,
+                      onChanged: (acc) => setState(() => _toAccount = acc),
                     ),
-                  ),
-                ],
+
+                    const SizedBox(height: 16),
+
+                    // Date selector
+                    InkWell(
+                      onTap: _selectDate,
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: tileFill ?? theme.colorScheme.surface,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: isLight ? softBorder : theme.dividerColor,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.calendar_today_outlined,
+                                color: theme.colorScheme.onSurfaceVariant,
+                                size: 20),
+                            const SizedBox(width: 16),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  l10n.date,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color:
+                                        theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  AppDateFormatter.formatDate(
+                                    _selectedDate,
+                                    pattern: dateFormat,
+                                  ),
+                                  style:
+                                      theme.textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const Spacer(),
+                            const Icon(Icons.arrow_forward_ios, size: 16),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Description
+                    TextFormField(
+                      controller: _descriptionController,
+                      textCapitalization: TextCapitalization.sentences,
+                      maxLines: 2,
+                      decoration: InputDecoration(
+                        labelText: l10n.descriptionOptional,
+                        prefixIcon: const Icon(Icons.notes_outlined),
+                        filled: isLight,
+                        fillColor: isLight ? Colors.white : null,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(
+                            color: isLight ? softBorder : theme.dividerColor,
+                          ),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(
+                            color: isLight ? softBorder : theme.dividerColor,
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(
+                            color: theme.colorScheme.primary,
+                            width: 1.5,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    SizedBox(
+                      width: double.infinity,
+                      child: GradientButton(
+                        label: l10n.recordTransfer,
+                        gradient: AppColors.getPrimaryGradient(
+                          theme.colorScheme.primary,
+                        ),
+                        icon: Symbols.swap_horiz,
+                        isLoading: _isLoading,
+                        onPressed: _save,
+                        width: double.infinity,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
