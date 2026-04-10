@@ -21,18 +21,33 @@ class TransactionAccountIconBadge extends StatelessWidget {
     final accent = TransferAccountBox.accentColorFor(account, theme);
 
     return Positioned(
-      bottom: 8,
-      right: isRtl ? 8 : null,
-      left: isRtl ? null : 8,
+      bottom: -4,
+      right: isRtl ? -4 : null,
+      left: isRtl ? null : -4,
       child: Opacity(
-        opacity: isInactive ? 0.25 : 0.55,
+        opacity: isInactive ? 0.6 : 1.0,
         child: Tooltip(
           message: account.name,
-          child: Padding(
-            padding: const EdgeInsets.all(2),
+          child: Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: theme.cardColor,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.15),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+              border: Border.all(
+                color: accent.withValues(alpha: 0.2),
+                width: 1,
+              ),
+            ),
             child: Icon(
               TransferAccountBox.iconForAccount(account),
-              size: 18,
+              size: 14,
               color: accent,
             ),
           ),

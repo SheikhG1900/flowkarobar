@@ -2911,25 +2911,39 @@ class TxMoreOptionsSection extends StatelessWidget {
                   ),
                 ),
                 if (paidRelationship != null)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: (isExpense ? AppColors.expenseColor : AppColors.incomeColor)
-                          .withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      _relationshipLabel(
-                        paidRelationship!,
-                        l10n,
-                        isExpense,
+                  Builder(builder: (context) {
+                    final isReceivable = paidRelationship == 'PAID_FOR' ||
+                        paidRelationship == 'WILL_RECEIVE';
+                    final isPayable = paidRelationship == 'PAID_BY' ||
+                        paidRelationship == 'RECEIVED_FROM';
+                    final badgeColor = isReceivable
+                        ? AppColors.receivableColor
+                        : isPayable
+                            ? AppColors.payableColor
+                            : (isExpense
+                                ? AppColors.expenseColor
+                                : AppColors.incomeColor);
+
+                    return Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: badgeColor.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(8),
                       ),
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: isExpense ? AppColors.expenseColor : AppColors.incomeColor,
-                        fontWeight: FontWeight.w600,
+                      child: Text(
+                        _relationshipLabel(
+                          paidRelationship!,
+                          l10n,
+                          isExpense,
+                        ),
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: badgeColor,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                    ),
-                  ),
+                    );
+                  }),
                 const SizedBox(width: 8),
                 AnimatedRotation(
                   duration: const Duration(milliseconds: 200),

@@ -180,38 +180,6 @@ class VoiceAiParser extends BaseTransactionAiParser {
       type = "EXPENSE";
     }
 
-    // Contact extraction.
-    final subjectContactRegex = RegExp(
-      r'^([A-Z][a-z]+)\s+(?:has|ne|ko|took|borrowed|gave|is|was|purchased|paid|spent)\b',
-      caseSensitive: false,
-    );
-    final subjectMatch = subjectContactRegex.firstMatch(originalText);
-    if (subjectMatch != null) {
-      contact = subjectMatch.group(1);
-    }
-
-    if (contact == null) {
-      final objectContactRegex = RegExp(
-        r'\b(?:to|from|by|with|ko|se|ne|gave|given)\s+([A-Z][a-z]+)\b',
-        caseSensitive: false,
-      );
-      final objectMatch = objectContactRegex.firstMatch(originalText);
-      if (objectMatch != null) {
-        contact = objectMatch.group(1);
-      }
-    }
-
-    if (contact == null) {
-      final trailingContactRegex = RegExp(
-        r'([A-Z][a-z]+)\s+(?:ko|ne|se|ke|ki taraf)\b',
-        caseSensitive: false,
-      );
-      final trailingMatch = trailingContactRegex.firstMatch(originalText);
-      if (trailingMatch != null) {
-        contact = trailingMatch.group(1);
-      }
-    }
-
     final stopWords = [
       "I",
       "The",
@@ -242,6 +210,50 @@ class VoiceAiParser extends BaseTransactionAiParser {
       "Kiya",
       "Purchased"
     ];
+
+    // Contact extraction.
+    final subjectContactRegex = RegExp(
+      r'^([A-Z][a-z]+)\s+(?:has|ne|ko|took|borrowed|gave|is|was|purchased|paid|spent)\b',
+      caseSensitive: false,
+    );
+    final subjectMatch = subjectContactRegex.firstMatch(originalText);
+    if (subjectMatch != null) {
+      contact = subjectMatch.group(1);
+    }
+
+    if (contact == null || stopWords.contains(contact)) {
+      final objectContactRegex = RegExp(
+        r'\b(?:to|from|by|with|ko|se|ne|gave|given)\s+([A-Z][a-z]+)\b',
+        caseSensitive: false,
+      );
+      final objectMatch = objectContactRegex.firstMatch(originalText);
+      if (objectMatch != null) {
+        contact = objectMatch.group(1);
+      }
+    }
+
+    if (contact == null || stopWords.contains(contact)) {
+      final trailingContactRegex = RegExp(
+        r'([A-Z][a-z]+)\s+(?:ko|ne|se|ki taraf)\b',
+        caseSensitive: false,
+      );
+      final trailingMatch = trailingContactRegex.firstMatch(originalText);
+      if (trailingMatch != null) {
+        contact = trailingMatch.group(1);
+      }
+    }
+
+    if (contact == null || stopWords.contains(contact)) {
+      final trailingContactRegex = RegExp(
+        r'([A-Z][a-z]+)\s+(?:|ke|kay|ka|ki)\b',
+        caseSensitive: false,
+      );
+      final trailingMatch = trailingContactRegex.firstMatch(originalText);
+      if (trailingMatch != null) {
+        contact = trailingMatch.group(1);
+      }
+    }
+
     if (contact != null && stopWords.contains(contact)) {
       contact = null;
     }

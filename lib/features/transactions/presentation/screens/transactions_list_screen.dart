@@ -376,28 +376,36 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                 ),
             ],
           ),
-          body: hasSchedules
-              ? TabBarView(
-                  controller: _tabController,
-                  children: [
-                    _buildBody(paginatedState, theme),
-                    _buildSchedulesTab(schedulesAsync.value ?? []),
-                  ],
-                )
-              : _buildBody(paginatedState, theme),
-          floatingActionButton: AppFloatingActionButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const AddTransactionScreen(),
+          body: Stack(
+            children: [
+              hasSchedules
+                  ? TabBarView(
+                      controller: _tabController,
+                      children: [
+                        _buildBody(paginatedState, theme),
+                        _buildSchedulesTab(schedulesAsync.value ?? []),
+                      ],
+                    )
+                  : _buildBody(paginatedState, theme),
+              Positioned(
+                bottom: 16 + MediaQuery.of(context).padding.bottom,
+                right: 16,
+                child: AppFloatingActionButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const AddTransactionScreen(),
+                      ),
+                    );
+                  },
+                  backgroundColor: AppColors.transactionsSectionColor,
+                  foregroundColor: Colors.white,
+                  child: Icon(
+                      _tabController.index == 1 ? Icons.more_time : Icons.add),
                 ),
-              );
-            },
-            backgroundColor: AppColors.transactionsSectionColor,
-            foregroundColor: Colors.white,
-            child:
-                Icon(_tabController.index == 1 ? Icons.more_time : Icons.add),
+              ),
+            ],
           ),
         );
   }
