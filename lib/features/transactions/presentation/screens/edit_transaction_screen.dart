@@ -202,7 +202,7 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
         categoryUuid: _selectedCategory?.uuid,
         contactUuid: _selectedContactUuid,
         accountUuid: _selectedAccount?.uuid,
-        paidRelationship: _paidRelationship ?? 'PROCESSED',
+        paidRelationship: _paidRelationship,
         dueDate: _dueDate,
         scheduleType: result.scheduleType,
         selectedDaysOfWeek: result.selectedDaysOfWeek,
@@ -225,7 +225,8 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
     } catch (e) {
       if (mounted) {
         final l10n = AppLocalizations.of(context)!;
-        ToastUtils.showErrorToast(context, ref, l10n.errorOccurred(e.toString()));
+        ToastUtils.showErrorToast(
+            context, ref, l10n.errorOccurred(e.toString()));
       }
     } finally {
       if (mounted) {
@@ -297,7 +298,8 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
       }
 
       if (mounted) {
-        final capturedTemplateService = ref.read(messageTemplateServiceProvider);
+        final capturedTemplateService =
+            ref.read(messageTemplateServiceProvider);
         final capturedLanguage = getCurrentLanguageCode(ref);
         final capturedContainer = ProviderScope.containerOf(context);
         final capturedCurrency = ref.read(currentCurrencyProvider).value!;
@@ -307,10 +309,11 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
         final capturedActiveColor = ref.read(activeCashbookProvider).color;
 
         Navigator.pop(context, true); // Return true to indicate success
-        
+
         // Fetch updated transaction details for the toast action
         final repository = ref.read(transactionsRepositoryProvider);
-        final transactionWithDetails = await repository.getTransactionWithDetailsByUuid(widget.transaction.uuid);
+        final transactionWithDetails = await repository
+            .getTransactionWithDetailsByUuid(widget.transaction.uuid);
 
         if (transactionWithDetails != null) {
           ToastUtils.showSuccessToast(
@@ -344,7 +347,8 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ToastUtils.showErrorToast(context, ref, l10n.errorOccurred(e.toString()));
+        ToastUtils.showErrorToast(
+            context, ref, l10n.errorOccurred(e.toString()));
       }
     } finally {
       if (mounted) {
@@ -377,8 +381,8 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
     // Calculate relative days if _dueDate is set
     String? relativeText;
     if (_dueDate != null) {
-      final txDate = DateTime(
-          _selectedDate.year, _selectedDate.month, _selectedDate.day);
+      final txDate =
+          DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day);
       final dDate = DateTime(_dueDate!.year, _dueDate!.month, _dueDate!.day);
       final diff = dDate.difference(txDate).inDays;
 
@@ -625,7 +629,8 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                                 size: 24,
                               ),
                             ),
-                            title: Text(CategoryHelper.getCategoryName(category, l10n)),
+                            title: Text(
+                                CategoryHelper.getCategoryName(category, l10n)),
                             trailing: _selectedCategory?.uuid == category.uuid
                                 ? Icon(Icons.check_circle, color: color)
                                 : null,
@@ -641,7 +646,8 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                     },
                     loading: () =>
                         const Center(child: CircularProgressIndicator()),
-                    error: (e, s) => Center(child: Text(l10n.errorOccurred(e.toString()))),
+                    error: (e, s) =>
+                        Center(child: Text(l10n.errorOccurred(e.toString()))),
                   ),
                 ),
               ],
@@ -764,7 +770,8 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                     },
                     loading: () =>
                         const Center(child: CircularProgressIndicator()),
-                    error: (e, s) => Center(child: Text(l10n.errorOccurred(e.toString()))),
+                    error: (e, s) =>
+                        Center(child: Text(l10n.errorOccurred(e.toString()))),
                   ),
                 ),
               ],
@@ -959,7 +966,8 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                               if (contacts == null || contacts.isEmpty) return;
                               setModalState(() {
                                 for (final contact in contacts) {
-                                  _groupShares.add(SplitShare(contact: contact));
+                                  _groupShares
+                                      .add(SplitShare(contact: contact));
                                 }
                                 recalculateShares(_groupShares.length - 1);
                               });
@@ -1119,7 +1127,8 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                                           onChanged: (val) {
                                             setDialogState(() {
                                               share.percentage = val;
-                                              share.amount = (val / 100) * totalAmount;
+                                              share.amount =
+                                                  (val / 100) * totalAmount;
                                             });
                                             setModalState(() {
                                               recalculateOthers(index);
@@ -1375,12 +1384,20 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                                 : AppColors.incomeColor,
                           ),
                           decoration: InputDecoration(
-                            prefixText: Directionality.of(context) == TextDirection.rtl ? null : '$currencySymbol ',
-                            suffixText: Directionality.of(context) == TextDirection.rtl ? ' $currencySymbol' : null,
-                            prefixStyle: theme.textTheme.displayMedium?.copyWith(
+                            prefixText:
+                                Directionality.of(context) == TextDirection.rtl
+                                    ? null
+                                    : '$currencySymbol ',
+                            suffixText:
+                                Directionality.of(context) == TextDirection.rtl
+                                    ? ' $currencySymbol'
+                                    : null,
+                            prefixStyle:
+                                theme.textTheme.displayMedium?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant,
                             ),
-                            suffixStyle: theme.textTheme.displayMedium?.copyWith(
+                            suffixStyle:
+                                theme.textTheme.displayMedium?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant,
                             ),
                             border: InputBorder.none,
@@ -1389,8 +1406,8 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                               color: Colors.grey.withValues(alpha: 0.3),
                             ),
                           ),
-                          keyboardType:
-                              const TextInputType.numberWithOptions(decimal: true),
+                          keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true),
                           inputFormatters: [
                             FilteringTextInputFormatter.allow(
                                 RegExp(r'^\d+\.?\d{0,2}')),
@@ -1416,8 +1433,8 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                         right: 0,
                         child: IconButton(
                           padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(
-                              minWidth: 28, minHeight: 28),
+                          constraints:
+                              const BoxConstraints(minWidth: 28, minHeight: 28),
                           onPressed: () async {
                             final amount =
                                 double.tryParse(_amountController.text) ?? 0.0;
@@ -1456,14 +1473,16 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                       icon: Icons.arrow_upward_rounded,
                       isSelected: isExpense,
                       gradient: AppColors.expenseGradient,
-                      onTap: isSplitted ? () {} : () {
-                        setState(() {
-                          _selectedType = 'EXPENSE';
-                          // Reset relationship when type changes
-                          _paidRelationship = 'PROCESSED';
-                          _dueDate = null;
-                        });
-                      },
+                      onTap: isSplitted
+                          ? () {}
+                          : () {
+                              setState(() {
+                                _selectedType = 'EXPENSE';
+                                // Reset relationship when type changes
+                                _paidRelationship = 'PROCESSED';
+                                _dueDate = null;
+                              });
+                            },
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -1473,14 +1492,16 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                       icon: Icons.arrow_downward_rounded,
                       isSelected: !isExpense,
                       gradient: AppColors.incomeGradient,
-                      onTap: isSplitted ? () {} : () {
-                        setState(() {
-                          _selectedType = 'INCOME';
-                          // Reset relationship when type changes
-                          _paidRelationship = 'PROCESSED';
-                          _dueDate = null;
-                        });
-                      },
+                      onTap: isSplitted
+                          ? () {}
+                          : () {
+                              setState(() {
+                                _selectedType = 'INCOME';
+                                // Reset relationship when type changes
+                                _paidRelationship = 'PROCESSED';
+                                _dueDate = null;
+                              });
+                            },
                     ),
                   ),
                 ],
@@ -1533,7 +1554,8 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                             alignment: Alignment.center,
                             child: Icon(
                               _selectedCategory?.icon != null
-                                  ? IconHelper.getIconData(_selectedCategory!.icon)
+                                  ? IconHelper.getIconData(
+                                      _selectedCategory!.icon)
                                   : Symbols.category,
                               color: _selectedCategory?.color != null
                                   ? Color(int.parse(_selectedCategory!.color!
@@ -1608,7 +1630,8 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                               if (snap == null || !snap.hasBudget) {
                                 return const SizedBox.shrink();
                               }
-                              final isPremium = ref.watch(premiumProvider).isPremium;
+                              final isPremium =
+                                  ref.watch(premiumProvider).isPremium;
                               final isBudgetLocked = !isPremium &&
                                   (_selectedCategory?.budgetSeq ?? 0) >
                                       PremiumGate.categoryBudgetTotalLimit;
@@ -1641,28 +1664,30 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                               return Padding(
                                 padding: const EdgeInsets.only(top: 12),
                                 child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
                                   children: [
-                                  DualAmountProgressBar(
-                                    leftLabel: isExpense
-                                        ? l10n.budgetBarUsed
-                                        : l10n.budgetBarProgress,
-                                    leftAmount:
-                                        snap.netAmount > 0 ? snap.netAmount : 0.0,
-                                    rightLabel: l10n.remaining,
-                                    rightAmount: snap.remainingOrGap > 0
-                                        ? snap.remainingOrGap
-                                        : 0.0,
-                                    symbol: sym,
-                                    decimals: dec,
-                                    filledColor: snap.progressRatio > 1
-                                        ? AppColors.expenseColor
-                                        : catColor,
-                                    compact: true,
-                                  ),
-                                ],
-                              ),
-                            );
+                                    DualAmountProgressBar(
+                                      leftLabel: isExpense
+                                          ? l10n.budgetBarUsed
+                                          : l10n.budgetBarProgress,
+                                      leftAmount: snap.netAmount > 0
+                                          ? snap.netAmount
+                                          : 0.0,
+                                      rightLabel: l10n.remaining,
+                                      rightAmount: snap.remainingOrGap > 0
+                                          ? snap.remainingOrGap
+                                          : 0.0,
+                                      symbol: sym,
+                                      decimals: dec,
+                                      filledColor: snap.progressRatio > 1
+                                          ? AppColors.expenseColor
+                                          : catColor,
+                                      compact: true,
+                                    ),
+                                  ],
+                                ),
+                              );
                             },
                             loading: () => const SizedBox.shrink(),
                             error: (_, __) => const SizedBox.shrink(),
@@ -1847,9 +1872,8 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                     () => _isMoreOptionsExpanded = !_isMoreOptionsExpanded),
                 selectedType: _selectedType,
                 paidRelationship: _paidRelationship,
-                onRelationshipChange: isSplitted
-                    ? (_) async {}
-                    : _handleRelationshipChange,
+                onRelationshipChange:
+                    isSplitted ? (_) async {} : _handleRelationshipChange,
                 dueDate: _dueDate,
                 selectedDate: _selectedDate,
                 onDueDateTap: _selectDueDate,
@@ -1942,7 +1966,6 @@ class _TypeButton extends StatelessWidget {
     );
   }
 }
-
 
 class _SplitShareCard extends StatefulWidget {
   final SplitShare share;

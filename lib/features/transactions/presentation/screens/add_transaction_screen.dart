@@ -98,6 +98,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
 
   // Linked transaction fields
   String? _selectedContactUuid;
+
   /// UI: `'PROCESSED'` = Processed selected; `null` = none (pending / no processedDate);
   /// otherwise `'PAID_FOR'|'PAID_BY'|'RECEIVED_FROM'|'WILL_RECEIVE'`.
   String? _paidRelationship = 'PROCESSED';
@@ -363,7 +364,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
         categoryUuid: _selectedCategory?.uuid ?? _selectedCategoryUuid,
         contactUuid: _selectedContact?.uuid ?? _selectedContactUuid,
         accountUuid: _selectedAccount?.uuid,
-        paidRelationship: _paidRelationship ?? 'PROCESSED',
+        paidRelationship: _paidRelationship,
         dueDate: _dueDate,
         dueDateOffset: dueDateOffset,
         scheduleType: result.scheduleType,
@@ -429,11 +430,13 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     }
 
     // Show negative balance warning for CASH accounts (non-blocking)
-    if (_selectedAccount != null && _selectedType == 'EXPENSE' && !_saveIsPending) {
+    if (_selectedAccount != null &&
+        _selectedType == 'EXPENSE' &&
+        !_saveIsPending) {
       final accountsRepo = ref.read(accountsRepositoryProvider);
       final amount = double.tryParse(_amountController.text) ?? 0.0;
-      final wouldBeNegative =
-          await accountsRepo.wouldCauseNegativeBalance(_selectedAccount!, amount);
+      final wouldBeNegative = await accountsRepo.wouldCauseNegativeBalance(
+          _selectedAccount!, amount);
       if (wouldBeNegative && mounted) {
         ToastUtils.showWarningToast(context, ref, l10n.negativeBalanceWarning);
       }
@@ -820,7 +823,8 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                           final category = item.category;
                           final usage = item.usageCount;
 
-                          final isPremium = ref.watch(premiumProvider).isPremium;
+                          final isPremium =
+                              ref.watch(premiumProvider).isPremium;
                           final isLocked = !isPremium &&
                               !category.isDefault &&
                               (category.addSeq ?? 0) >
@@ -938,7 +942,8 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     );
   }
 
-  Future<Contact?> _showContactPicker({Set<String>? excludeContactUuids}) async {
+  Future<Contact?> _showContactPicker(
+      {Set<String>? excludeContactUuids}) async {
     return await showModalBottomSheet<Contact>(
       context: context,
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -995,8 +1000,8 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                     data: (contactsWithUsage) {
                       final filtered = excludeContactUuids != null
                           ? contactsWithUsage
-                              .where((item) =>
-                                  !excludeContactUuids.contains(item.contact.uuid))
+                              .where((item) => !excludeContactUuids
+                                  .contains(item.contact.uuid))
                               .toList()
                           : contactsWithUsage;
                       if (filtered.isEmpty) {
@@ -1013,7 +1018,8 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                           final contact = item.contact;
                           final usage = item.usageCount;
 
-                          final isPremium = ref.watch(premiumProvider).isPremium;
+                          final isPremium =
+                              ref.watch(premiumProvider).isPremium;
                           final isLocked = !isPremium &&
                               (contact.addSeq ?? 0) >
                                   PremiumGate.contactTotalLimit;
@@ -1027,8 +1033,8 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                                     width: 40,
                                     height: 40,
                                     decoration: BoxDecoration(
-                                      gradient:
-                                          AppColors.getContactGradient(contact.name),
+                                      gradient: AppColors.getContactGradient(
+                                          contact.name),
                                       shape: BoxShape.circle,
                                     ),
                                     alignment: Alignment.center,
@@ -1350,7 +1356,8 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                               if (contacts != null && contacts.isNotEmpty) {
                                 setModalState(() {
                                   for (final contact in contacts) {
-                                    _groupShares.add(SplitShare(contact: contact));
+                                    _groupShares
+                                        .add(SplitShare(contact: contact));
                                   }
                                   recalculateShares(_groupShares.length - 1);
                                 });
@@ -1685,432 +1692,418 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.addTransaction),
-            leading: IconButton(
-              icon: const Icon(Icons.close),
-              onPressed: () => Navigator.pop(context),
-            ),
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.help_outline),
-                tooltip: l10n.scenarioHelpTitle,
-                onPressed: () {
-                  showTransactionScenarioPicker(context,
-                      onScenarioSelected: (type, relationship) {
-                    setState(() {
-                      _selectedType = type;
-                      _paidRelationship = relationship;
-                      _createLinkedEntry = relationship != null;
-                    });
-                  });
-                },
+        leading: IconButton(
+          icon: const Icon(Icons.close),
+          onPressed: () => Navigator.pop(context),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.help_outline),
+            tooltip: l10n.scenarioHelpTitle,
+            onPressed: () {
+              showTransactionScenarioPicker(context,
+                  onScenarioSelected: (type, relationship) {
+                setState(() {
+                  _selectedType = type;
+                  _paidRelationship = relationship;
+                  _createLinkedEntry = relationship != null;
+                });
+              });
+            },
+          ),
+        ],
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 8),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            // Schedule button — icon only
+            if (!_isGroupSplit) ...[
+              FloatingActionButton.small(
+                heroTag: 'schedule_fab',
+                tooltip: l10n.schedule,
+                backgroundColor:
+                    isExpense ? AppColors.expenseColor : AppColors.incomeColor,
+                foregroundColor: Colors.white,
+                onPressed: _isLoading
+                    ? null
+                    : (scheduleLimitsAsync.asData?.value != null &&
+                            !scheduleLimitsAsync.asData!.value.canAdd)
+                        ? () => PremiumGate.showPremiumDialog(context)
+                        : _scheduleTransaction,
+                child: const Icon(Icons.schedule),
               ),
+              const SizedBox(height: 8),
             ],
-          ),
-          floatingActionButtonLocation:
-              FloatingActionButtonLocation.endFloat,
-          floatingActionButton: Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                // Schedule button — icon only
-                if (!_isGroupSplit) ...[
-                  FloatingActionButton.small(
-                    heroTag: 'schedule_fab',
-                    tooltip: l10n.schedule,
-                    backgroundColor:
-                        isExpense ? AppColors.expenseColor : AppColors.incomeColor,
-                    foregroundColor: Colors.white,
-                    onPressed: _isLoading
-                        ? null
-                        : (scheduleLimitsAsync.asData?.value != null &&
-                                !scheduleLimitsAsync.asData!.value.canAdd)
-                            ? () => PremiumGate.showPremiumDialog(context)
-                            : _scheduleTransaction,
-                    child: const Icon(Icons.schedule),
-                  ),
-                  const SizedBox(height: 8),
-                ],
-                // Save chip
-                _FabChip(
-                  label: _isLoading ? l10n.saving : l10n.save,
-                  icon: _isLoading
-                      ? null
-                      : (_isDuplicate ||
-                              (limitsAsync.asData?.value != null &&
-                                  !limitsAsync.asData!.value.canAdd))
-                          ? Icons.lock
-                          : Icons.check,
-                  isLoading: _isLoading,
-                  color: isExpense ? AppColors.expenseColor : AppColors.incomeColor,
-                  onPressed: (_isLoading || _isDuplicate) ? null : _saveTransaction,
-                ),
-              ],
+            // Save chip
+            _FabChip(
+              label: _isLoading ? l10n.saving : l10n.save,
+              icon: _isLoading
+                  ? null
+                  : (_isDuplicate ||
+                          (limitsAsync.asData?.value != null &&
+                              !limitsAsync.asData!.value.canAdd))
+                      ? Icons.lock
+                      : Icons.check,
+              isLoading: _isLoading,
+              color: isExpense ? AppColors.expenseColor : AppColors.incomeColor,
+              onPressed: (_isLoading || _isDuplicate) ? null : _saveTransaction,
             ),
+          ],
+        ),
+      ),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: isExpense
+                ? [
+                    AppColors.expenseColor.withValues(alpha: 0.05),
+                    Colors.transparent
+                  ]
+                : [
+                    AppColors.incomeColor.withValues(alpha: 0.05),
+                    Colors.transparent
+                  ],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
           ),
-          body: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: isExpense
-                    ? [
-                        AppColors.expenseColor.withValues(alpha: 0.05),
-                        Colors.transparent
-                      ]
-                    : [
-                        AppColors.incomeColor.withValues(alpha: 0.05),
-                        Colors.transparent
-                      ],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              ),
+        ),
+        child: Form(
+          key: _formKey,
+          child: ListView(
+            key: const Key('add_transaction_list_view'),
+            padding: EdgeInsets.only(
+              left: 16,
+              right: 16,
+              top: 16,
+              bottom: MediaQuery.of(context).padding.bottom + 16,
             ),
-            child: Form(
-              key: _formKey,
-              child: ListView(
-                key: const Key('add_transaction_list_view'),
-                padding: EdgeInsets.only(
-                  left: 16,
-                  right: 16,
-                  top: 16,
-                  bottom: MediaQuery.of(context).padding.bottom + 16,
+            children: [
+              // Amount Input (Large & Prominent)
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: theme.cardColor,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: (isExpense
+                              ? AppColors.expenseColor
+                              : AppColors.incomeColor)
+                          .withValues(alpha: 0.1),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
                 ),
-                children: [
-                  // Amount Input (Large & Prominent)
-                  Container(
-                      padding: const EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                        color: theme.cardColor,
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                            color: (isExpense
-                                    ? AppColors.expenseColor
-                                    : AppColors.incomeColor)
-                                .withValues(alpha: 0.1),
-                            blurRadius: 20,
-                            offset: const Offset(0, 10),
+                child: Stack(
+                  children: [
+                    // Amount field + label
+                    Column(
+                      children: [
+                        Text(
+                          l10n.howMuch,
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
                           ),
-                        ],
-                      ),
-                      child: Stack(
-                        children: [
-                          // Amount field + label
-                          Column(
-                            children: [
-                              Text(
-                                l10n.howMuch,
-                                textAlign: TextAlign.center,
-                                style: theme.textTheme.titleMedium?.copyWith(
-                                  color: theme.colorScheme.onSurfaceVariant,
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              TextFormField(
-                                controller: _amountController,
-                                focusNode: _amountFocusNode,
-                                autofocus: false,
-                                textAlign: TextAlign.center,
-                                style: theme.textTheme.displayLarge?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: isExpense
-                                      ? AppColors.expenseColor
-                                      : AppColors.incomeColor,
-                                ),
-                                decoration: InputDecoration(
-                                  prefixText: isRtl ? null : '$currencySymbol ',
-                                  suffixText: isRtl ? ' $currencySymbol' : null,
-                                  prefixStyle:
-                                      theme.textTheme.displayMedium?.copyWith(
-                                    color: theme.colorScheme.onSurfaceVariant,
-                                  ),
-                                  suffixStyle:
-                                      theme.textTheme.displayMedium?.copyWith(
-                                    color: theme.colorScheme.onSurfaceVariant,
-                                  ),
-                                  border: InputBorder.none,
-                                  hintText: l10n.amountHint,
-                                  hintStyle: theme.textTheme.displayLarge?.copyWith(
-                                    color: Colors.grey.withValues(alpha: 0.3),
-                                  ),
-                                ),
-                                keyboardType: const TextInputType.numberWithOptions(
-                                    decimal: true),
-                                inputFormatters: [
-                                  FilteringTextInputFormatter.allow(
-                                      RegExp(r'^\d+\.?\d{0,2}')),
-                                ],
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return l10n.pleaseEnterAmount;
-                                  }
-                                  if (double.tryParse(value) == null) {
-                                    return l10n.pleaseEnterValidNumber;
-                                  }
-                                  if (double.parse(value) <= 0) {
-                                    return l10n.amountGreaterThanZero;
-                                  }
-                                  return null;
-                                },
-                              ),
-                            ],
+                        ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: _amountController,
+                          focusNode: _amountFocusNode,
+                          autofocus: false,
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.displayLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: isExpense
+                                ? AppColors.expenseColor
+                                : AppColors.incomeColor,
                           ),
-                          // Calculator icon stacked at top-right corner
-                          if ((double.tryParse(_amountController.text) ?? 0) > 0)
-                            Positioned(
-                              top: -8,
-                              right: 0,
-                              child: IconButton(
-                                padding: EdgeInsets.zero,
-                                constraints: const BoxConstraints(
-                                    minWidth: 28, minHeight: 28),
-                                onPressed: () async {
-                                  final amount = double.tryParse(
-                                          _amountController.text) ??
-                                      0.0;
-                                  await AmountCalculatorSheet.show(
-                                    context,
-                                    initialAmount: amount,
-                                    currencySymbol: currencySymbol,
-                                    decimalPlaces: decimalPlaces,
-                                    onDone: (result) {
-                                      setState(() {
-                                        _amountController.text =
-                                            result.toStringAsFixed(
-                                                decimalPlaces);
-                                      });
-                                    },
-                                  );
-                                },
-                                icon: Icon(
-                                  Symbols.calculate,
-                                  size: 20,
-                                  color: theme.colorScheme.onSurfaceVariant,
-                                ),
-                                tooltip: l10n.amountCalculatorButtonTooltip,
-                              ),
+                          decoration: InputDecoration(
+                            prefixText: isRtl ? null : '$currencySymbol ',
+                            suffixText: isRtl ? ' $currencySymbol' : null,
+                            prefixStyle:
+                                theme.textTheme.displayMedium?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
                             ),
-                        ],
+                            suffixStyle:
+                                theme.textTheme.displayMedium?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                            border: InputBorder.none,
+                            hintText: l10n.amountHint,
+                            hintStyle: theme.textTheme.displayLarge?.copyWith(
+                              color: Colors.grey.withValues(alpha: 0.3),
+                            ),
+                          ),
+                          keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true),
+                          inputFormatters: [
+                            FilteringTextInputFormatter.allow(
+                                RegExp(r'^\d+\.?\d{0,2}')),
+                          ],
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return l10n.pleaseEnterAmount;
+                            }
+                            if (double.tryParse(value) == null) {
+                              return l10n.pleaseEnterValidNumber;
+                            }
+                            if (double.parse(value) <= 0) {
+                              return l10n.amountGreaterThanZero;
+                            }
+                            return null;
+                          },
+                        ),
+                      ],
+                    ),
+                    // Calculator icon stacked at top-right corner
+                    if ((double.tryParse(_amountController.text) ?? 0) > 0)
+                      Positioned(
+                        top: -8,
+                        right: 0,
+                        child: IconButton(
+                          padding: EdgeInsets.zero,
+                          constraints:
+                              const BoxConstraints(minWidth: 28, minHeight: 28),
+                          onPressed: () async {
+                            final amount =
+                                double.tryParse(_amountController.text) ?? 0.0;
+                            await AmountCalculatorSheet.show(
+                              context,
+                              initialAmount: amount,
+                              currencySymbol: currencySymbol,
+                              decimalPlaces: decimalPlaces,
+                              onDone: (result) {
+                                setState(() {
+                                  _amountController.text =
+                                      result.toStringAsFixed(decimalPlaces);
+                                });
+                              },
+                            );
+                          },
+                          icon: Icon(
+                            Symbols.calculate,
+                            size: 20,
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                          tooltip: l10n.amountCalculatorButtonTooltip,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Type Selection (Gradient Buttons)
+              Row(
+                children: [
+                  Expanded(
+                    child: _TypeButton(
+                      label: l10n.expense,
+                      icon: Icons.arrow_upward_rounded,
+                      isSelected: isExpense,
+                      gradient: AppColors.expenseGradient,
+                      onTap: () {
+                        setState(() {
+                          _selectedType = 'EXPENSE';
+                          _paidRelationship = 'PROCESSED';
+                          _createLinkedEntry = false;
+                          _dueDate = null;
+                        });
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _TypeButton(
+                      label: l10n.income,
+                      icon: Icons.arrow_downward_rounded,
+                      isSelected: !isExpense,
+                      gradient: AppColors.incomeGradient,
+                      onTap: () {
+                        setState(() {
+                          _selectedType = 'INCOME';
+                          _paidRelationship = 'PROCESSED';
+                          _createLinkedEntry = false;
+                          _dueDate = null;
+                        });
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+
+              // Category Selector
+              Consumer(
+                builder: (context, ref, _) {
+                  final hintAsync = ref.watch(
+                    categoryMonthlyBudgetHintProvider(
+                      CategoryMonthlyHintKey(
+                        _selectedCategory?.uuid,
+                        _selectedDate,
                       ),
                     ),
-                  const SizedBox(height: 24),
-
-                  // Type Selection (Gradient Buttons)
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _TypeButton(
-                          label: l10n.expense,
-                          icon: Icons.arrow_upward_rounded,
-                          isSelected: isExpense,
-                          gradient: AppColors.expenseGradient,
-                          onTap: () {
-                            setState(() {
-                              _selectedType = 'EXPENSE';
-                              _paidRelationship = 'PROCESSED';
-                              _createLinkedEntry = false;
-                              _dueDate = null;
-                            });
-                          },
+                  );
+                  final sym = ref.watch(currencySymbolProvider);
+                  final dec = ref.watch(currencyDecimalPlacesProvider);
+                  return InkWell(
+                    onTap: _showCategoryPicker,
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surface,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: _selectedCategory != null
+                              ? (_selectedType == 'EXPENSE'
+                                  ? AppColors.expenseColor
+                                  : AppColors.incomeColor)
+                              : theme.dividerColor,
+                          width: _selectedCategory != null ? 1.5 : 1,
                         ),
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _TypeButton(
-                          label: l10n.income,
-                          icon: Icons.arrow_downward_rounded,
-                          isSelected: !isExpense,
-                          gradient: AppColors.incomeGradient,
-                          onTap: () {
-                            setState(() {
-                              _selectedType = 'INCOME';
-                              _paidRelationship = 'PROCESSED';
-                              _createLinkedEntry = false;
-                              _dueDate = null;
-                            });
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Category Selector
-                  Consumer(
-                      builder: (context, ref, _) {
-                        final hintAsync = ref.watch(
-                          categoryMonthlyBudgetHintProvider(
-                            CategoryMonthlyHintKey(
-                              _selectedCategory?.uuid,
-                              _selectedDate,
-                            ),
-                          ),
-                        );
-                        final sym = ref.watch(currencySymbolProvider);
-                        final dec = ref.watch(currencyDecimalPlacesProvider);
-                        return InkWell(
-                          onTap: _showCategoryPicker,
-                          borderRadius: BorderRadius.circular(12),
-                          child: Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: theme.colorScheme.surface,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: _selectedCategory != null
-                                    ? (_selectedType == 'EXPENSE'
-                                        ? AppColors.expenseColor
-                                        : AppColors.incomeColor)
-                                    : theme.dividerColor,
-                                width: _selectedCategory != null ? 1.5 : 1,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  color: _selectedCategory?.color != null
+                                      ? Color(int.parse(_selectedCategory!
+                                              .color!
+                                              .replaceAll('#', '0xFF')))
+                                          .withValues(alpha: 0.1)
+                                      : theme
+                                          .colorScheme.surfaceContainerHighest,
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: _selectedCategory?.color != null
+                                      ? Border.all(
+                                          color: Color(int.parse(
+                                                  _selectedCategory!.color!
+                                                      .replaceAll('#', '0xFF')))
+                                              .withValues(alpha: 0.3),
+                                        )
+                                      : null,
+                                ),
+                                alignment: Alignment.center,
+                                child: Icon(
+                                  IconHelper.getIconData(
+                                          _selectedCategory?.icon) ??
+                                      Symbols.category,
+                                  color: _selectedCategory?.color != null
+                                      ? Color(int.parse(_selectedCategory!
+                                          .color!
+                                          .replaceAll('#', '0xFF')))
+                                      : Theme.of(context)
+                                          .colorScheme
+                                          .onSurfaceVariant,
+                                  size: 24,
+                                ),
                               ),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Row(
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Container(
-                                      width: 40,
-                                      height: 40,
-                                      decoration: BoxDecoration(
-                                        color: _selectedCategory?.color != null
-                                            ? Color(int.parse(_selectedCategory!
-                                                    .color!
-                                                    .replaceAll('#', '0xFF')))
-                                                .withValues(alpha: 0.1)
-                                            : theme.colorScheme
-                                                .surfaceContainerHighest,
-                                        borderRadius: BorderRadius.circular(10),
-                                        border: _selectedCategory?.color != null
-                                            ? Border.all(
-                                                color: Color(int.parse(
-                                                        _selectedCategory!
-                                                            .color!
-                                                            .replaceAll(
-                                                                '#', '0xFF')))
-                                                    .withValues(alpha: 0.3),
-                                              )
-                                            : null,
-                                      ),
-                                      alignment: Alignment.center,
-                                      child: Icon(
-                                        IconHelper.getIconData(
-                                                _selectedCategory?.icon) ??
-                                            Symbols.category,
-                                        color: _selectedCategory?.color != null
-                                            ? Color(int.parse(_selectedCategory!
-                                                .color!
-                                                .replaceAll('#', '0xFF')))
-                                            : Theme.of(context)
-                                                .colorScheme
-                                                .onSurfaceVariant,
-                                        size: 24,
+                                    Text(
+                                      l10n.category,
+                                      style:
+                                          theme.textTheme.bodySmall?.copyWith(
+                                        color:
+                                            theme.colorScheme.onSurfaceVariant,
                                       ),
                                     ),
-                                    const SizedBox(width: 16),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            l10n.category,
-                                            style: theme.textTheme.bodySmall
-                                                ?.copyWith(
-                                              color: theme.colorScheme
-                                                  .onSurfaceVariant,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 4),
-                                          Text(
-                                            _selectedCategory != null
-                                                ? CategoryHelper.getCategoryName(
-                                                    _selectedCategory!, l10n)
-                                                : l10n.selectCategory,
-                                            style: theme.textTheme.titleMedium
-                                                ?.copyWith(
-                                              fontWeight:
-                                                  _selectedCategory != null
-                                                      ? FontWeight.bold
-                                                      : FontWeight.normal,
-                                              color: _selectedCategory != null
-                                                  ? theme.colorScheme.onSurface
-                                                  : theme.colorScheme
-                                                      .onSurfaceVariant,
-                                            ),
-                                          ),
-                                        ],
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      _selectedCategory != null
+                                          ? CategoryHelper.getCategoryName(
+                                              _selectedCategory!, l10n)
+                                          : l10n.selectCategory,
+                                      style:
+                                          theme.textTheme.titleMedium?.copyWith(
+                                        fontWeight: _selectedCategory != null
+                                            ? FontWeight.bold
+                                            : FontWeight.normal,
+                                        color: _selectedCategory != null
+                                            ? theme.colorScheme.onSurface
+                                            : theme
+                                                .colorScheme.onSurfaceVariant,
                                       ),
                                     ),
-                                    if (_selectedCategory != null)
-                                      IconButton(
-                                        icon: Icon(Icons.close,
-                                            size: 20,
-                                            color: _selectedCategory?.color !=
-                                                    null
-                                                ? Color(int.parse(
-                                                    _selectedCategory!.color!
-                                                        .replaceAll(
-                                                            '#', '0xFF')))
-                                                : theme.colorScheme.primary),
-                                        onPressed: () {
-                                          setState(() {
-                                            _selectedCategory = null;
-                                          });
-                                        },
-                                      )
-                                    else
-                                      const Icon(Icons.arrow_forward_ios,
-                                          size: 16),
                                   ],
                                 ),
-                                hintAsync.when(
-                                  data: (snap) {
-                                    if (snap == null || !snap.hasBudget) {
-                                      return const SizedBox.shrink();
-                                    }
-                                    final isPremium = ref.watch(premiumProvider).isPremium;
-                                    final isBudgetLocked = !isPremium &&
-                                        (_selectedCategory?.budgetSeq ?? 0) >
-                                            PremiumGate.categoryBudgetTotalLimit;
+                              ),
+                              if (_selectedCategory != null)
+                                IconButton(
+                                  icon: Icon(Icons.close,
+                                      size: 20,
+                                      color: _selectedCategory?.color != null
+                                          ? Color(int.parse(_selectedCategory!
+                                              .color!
+                                              .replaceAll('#', '0xFF')))
+                                          : theme.colorScheme.primary),
+                                  onPressed: () {
+                                    setState(() {
+                                      _selectedCategory = null;
+                                    });
+                                  },
+                                )
+                              else
+                                const Icon(Icons.arrow_forward_ios, size: 16),
+                            ],
+                          ),
+                          hintAsync.when(
+                            data: (snap) {
+                              if (snap == null || !snap.hasBudget) {
+                                return const SizedBox.shrink();
+                              }
+                              final isPremium =
+                                  ref.watch(premiumProvider).isPremium;
+                              final isBudgetLocked = !isPremium &&
+                                  (_selectedCategory?.budgetSeq ?? 0) >
+                                      PremiumGate.categoryBudgetTotalLimit;
 
-                                    if (isBudgetLocked) {
-                                      return const SizedBox.shrink();
-                                    }
+                              if (isBudgetLocked) {
+                                return const SizedBox.shrink();
+                              }
 
-                                    final catColor = _selectedCategory
-                                                ?.color !=
-                                            null
-                                        ? Color(int.parse(_selectedCategory!
-                                            .color!
-                                            .replaceAll('#', '0xFF')))
-                                        : (_selectedType == 'EXPENSE'
-                                            ? AppColors.expenseColor
-                                            : AppColors.incomeColor);
-                                    final rem = snap.remainingOrGap;
-                                    final remStr =
-                                        AmountFormatter.formatWithCurrency(
-                                      rem.abs(),
-                                      sym,
-                                      dec,
-                                    );
-                                    final budStr =
-                                        AmountFormatter.formatWithCurrency(
-                                      snap.budgetAmount!,
-                                      sym,
-                                      dec,
-                                    );
-                                    final sub = rem >= 0
-                                        ? l10n.budgetRemainingOf(remStr, budStr)
-                                        : l10n.budgetOverBy(remStr);
-                                    return Padding(
-                                      padding: const EdgeInsets.only(top: 10),
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.stretch,
-                                        children: [
+                              final catColor = _selectedCategory?.color != null
+                                  ? Color(int.parse(_selectedCategory!.color!
+                                      .replaceAll('#', '0xFF')))
+                                  : (_selectedType == 'EXPENSE'
+                                      ? AppColors.expenseColor
+                                      : AppColors.incomeColor);
+                              final rem = snap.remainingOrGap;
+                              final remStr = AmountFormatter.formatWithCurrency(
+                                rem.abs(),
+                                sym,
+                                dec,
+                              );
+                              final budStr = AmountFormatter.formatWithCurrency(
+                                snap.budgetAmount!,
+                                sym,
+                                dec,
+                              );
+                              final sub = rem >= 0
+                                  ? l10n.budgetRemainingOf(remStr, budStr)
+                                  : l10n.budgetOverBy(remStr);
+                              return Padding(
+                                padding: const EdgeInsets.only(top: 10),
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                  children: [
                                     DualAmountProgressBar(
                                       leftLabel: _selectedType == 'EXPENSE'
                                           ? l10n.budgetBarUsed
@@ -2132,339 +2125,336 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                                   ],
                                 ),
                               );
-                                  },
-                                  loading: () => const SizedBox.shrink(),
-                                  error: (_, __) => const SizedBox.shrink(),
-                                ),
-                              ],
-                            ),
+                            },
+                            loading: () => const SizedBox.shrink(),
+                            error: (_, __) => const SizedBox.shrink(),
                           ),
-                        );
-                      },
-                    ),
-                  if (widget.initialCategoryName != null &&
-                      _selectedCategory == null)
-                    Padding(
-                      padding: const EdgeInsets.only(left: 16, top: 4),
-                      child: Text(
-                        l10n.suggestedLabel(LocalizationHelper.localizeCategory(
-                            context, widget.initialCategoryName!)),
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.primary,
-                          fontStyle: FontStyle.italic,
-                        ),
+                        ],
                       ),
                     ),
-                  const SizedBox(height: 16),
-
-                  // Contact Selector (Optional)
-                  InkWell(
-                      onTap: () async {
-                        final contact = await _showContactPicker();
-                        if (contact != null) {
-                          setState(() {
-                            _selectedContact = contact;
-                            _selectedContactUuid = contact.uuid;
-                          });
-                        }
-                      },
-                      borderRadius: BorderRadius.circular(12),
-                      child: Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.surface,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: _selectedContact != null
-                                ? theme.colorScheme.primary
-                                : theme.dividerColor,
-                            width: _selectedContact != null ? 1.5 : 1,
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 40,
-                              height: 40,
-                              decoration: BoxDecoration(
-                                gradient: _selectedContact != null
-                                    ? AppColors.getContactGradient(
-                                        _selectedContact!.name)
-                                    : null,
-                                color: _selectedContact == null
-                                    ? theme.colorScheme.surfaceContainerHighest
-                                    : null,
-                                shape: BoxShape.circle,
-                              ),
-                              alignment: Alignment.center,
-                              child: _selectedContact != null
-                                  ? Text(
-                                      _selectedContact!.name[0].toUpperCase(),
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    )
-                                  : Icon(
-                                      Icons.person_outline,
-                                      color: theme.colorScheme.onSurfaceVariant,
-                                    ),
-                            ),
-                            const SizedBox(width: 16),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  l10n.contactOptional,
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: theme.colorScheme.onSurfaceVariant,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  _selectedContact?.name ?? l10n.selectContact,
-                                  style: theme.textTheme.titleMedium?.copyWith(
-                                    fontWeight: _selectedContact != null
-                                        ? FontWeight.bold
-                                        : FontWeight.normal,
-                                    color: _selectedContact != null
-                                        ? theme.colorScheme.onSurface
-                                        : theme.colorScheme.onSurfaceVariant,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            if (_selectedContact != null) ...[
-                              const Spacer(),
-                              IconButton(
-                                icon: const Icon(Icons.close, size: 20),
-                                onPressed: () {
-                                  setState(() {
-                                    _selectedContact = null;
-                                    _selectedContactUuid = null;
-                                    _paidRelationship = 'PROCESSED';
-                                    _createLinkedEntry = false;
-                                    _dueDate = null;
-                                  });
-                                },
-                              ),
-                            ] else if (widget.initialContactName != null) ...[
-                              const Spacer(),
-                              const Icon(Icons.arrow_forward_ios, size: 16),
-                            ] else ...[
-                              const Spacer(),
-                              const Icon(Icons.arrow_forward_ios, size: 16),
-                            ],
-                          ],
-                        ),
-                      ),
+                  );
+                },
+              ),
+              if (widget.initialCategoryName != null &&
+                  _selectedCategory == null)
+                Padding(
+                  padding: const EdgeInsets.only(left: 16, top: 4),
+                  child: Text(
+                    l10n.suggestedLabel(LocalizationHelper.localizeCategory(
+                        context, widget.initialCategoryName!)),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.primary,
+                      fontStyle: FontStyle.italic,
+                    ),
                   ),
-                  if (widget.initialContactName != null &&
-                      _selectedContact == null)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8),
-                      child: SizedBox(
-                        width: double.infinity,
-                        child: OutlinedButton.icon(
-                          onPressed: () async {
-                            final contactsRepo =
-                                ref.read(contactsRepositoryProvider);
-                            final String uuid =
-                                await contactsRepo.createContact(
-                              ContactsCompanion(
-                                name: drift.Value(widget.initialContactName!),
-                                phone: drift.Value(widget.initialContactPhone),
-                                createdAt: drift.Value(DateTime.now()),
-                                updatedAt: drift.Value(DateTime.now()),
+                ),
+              const SizedBox(height: 16),
+
+              // Contact Selector (Optional)
+              InkWell(
+                onTap: () async {
+                  final contact = await _showContactPicker();
+                  if (contact != null) {
+                    setState(() {
+                      _selectedContact = contact;
+                      _selectedContactUuid = contact.uuid;
+                    });
+                  }
+                },
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surface,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: _selectedContact != null
+                          ? theme.colorScheme.primary
+                          : theme.dividerColor,
+                      width: _selectedContact != null ? 1.5 : 1,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          gradient: _selectedContact != null
+                              ? AppColors.getContactGradient(
+                                  _selectedContact!.name)
+                              : null,
+                          color: _selectedContact == null
+                              ? theme.colorScheme.surfaceContainerHighest
+                              : null,
+                          shape: BoxShape.circle,
+                        ),
+                        alignment: Alignment.center,
+                        child: _selectedContact != null
+                            ? Text(
+                                _selectedContact!.name[0].toUpperCase(),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              )
+                            : Icon(
+                                Icons.person_outline,
+                                color: theme.colorScheme.onSurfaceVariant,
                               ),
-                            );
-                            final newContact =
-                                (await contactsRepo.watchAllContacts().first)
-                                    .firstWhere((c) => c.uuid == uuid);
+                      ),
+                      const SizedBox(width: 16),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            l10n.contactOptional,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            _selectedContact?.name ?? l10n.selectContact,
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: _selectedContact != null
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                              color: _selectedContact != null
+                                  ? theme.colorScheme.onSurface
+                                  : theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (_selectedContact != null) ...[
+                        const Spacer(),
+                        IconButton(
+                          icon: const Icon(Icons.close, size: 20),
+                          onPressed: () {
                             setState(() {
-                              _selectedContact = newContact;
-                              _selectedContactUuid = uuid;
+                              _selectedContact = null;
+                              _selectedContactUuid = null;
+                              _paidRelationship = 'PROCESSED';
+                              _createLinkedEntry = false;
+                              _dueDate = null;
                             });
                           },
-                          icon: const Icon(Icons.add, size: 18),
-                          label: Text(
-                            l10n.addContactWithName(widget.initialContactName!),
-                            textAlign: TextAlign.center,
-                          ),
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
                         ),
-                      ),
-                    ),
-                  const SizedBox(height: 16),
-
-                  // Account picker (create account from sheet when none exist)
-                  AccountPickerField(
-                    selectedAccount: _selectedAccount,
-                    excludeCreditCard: _selectedType == 'INCOME' &&
-                        _selectedCategory?.uuid != 'default_cat_refund',
-                    onChanged: (acc) => setState(() => _selectedAccount = acc),
+                      ] else if (widget.initialContactName != null) ...[
+                        const Spacer(),
+                        const Icon(Icons.arrow_forward_ios, size: 16),
+                      ] else ...[
+                        const Spacer(),
+                        const Icon(Icons.arrow_forward_ios, size: 16),
+                      ],
+                    ],
                   ),
-                  const SizedBox(height: 16),
-
-                  // Description
-                  TextFormField(
-                    controller: _descriptionController,
-                    decoration: InputDecoration(
-                      labelText: l10n.description,
-                      hintText: l10n.descriptionHint,
-                      prefixIcon: const Icon(Icons.notes_outlined),
-                    ),
-                    maxLines: 2,
-                    textCapitalization: TextCapitalization.sentences,
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Date Selector
-                  InkWell(
-                      onTap: _selectDate,
-                      borderRadius: BorderRadius.circular(12),
-                      child: Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.surface,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: theme.dividerColor),
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(10),
-                              decoration: BoxDecoration(
-                                gradient: AppColors.getSecondaryGradient(
-                                    theme.colorScheme.primary),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: const Icon(
-                                Icons.calendar_today,
-                                color: Colors.white,
-                                size: 20,
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  l10n.date,
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: theme.colorScheme.onSurfaceVariant,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
-                                  style: theme.textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const Spacer(),
-                            const Icon(Icons.arrow_forward_ios, size: 16),
-                          ],
-                        ),
-                      ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // More Options (collapsible — relationship cards, due date, split)
-                  TxMoreOptionsSection(
-                    isExpanded: _isMoreOptionsExpanded,
-                    onToggle: () => setState(
-                        () => _isMoreOptionsExpanded = !_isMoreOptionsExpanded),
-                    selectedType: _selectedType,
-                    paidRelationship: _paidRelationship,
-                    onRelationshipChange: _handleRelationshipChange,
-                    dueDate: _dueDate,
-                    selectedDate: _selectedDate,
-                    onDueDateTap: () async {
-                      await showModalBottomSheet(
-                        context: context,
-                        builder: (context) => SafeArea(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              ListTile(
-                                leading: const Icon(Icons.calendar_today),
-                                title: Text(l10n.pickActualDate),
-                                onTap: () {
-                                  Navigator.pop(context);
-                                  _selectDueDate();
-                                },
-                              ),
-                              ListTile(
-                                leading: const Icon(Icons.timer),
-                                title: Text(l10n.relativeDateAfterXDays("X")),
-                                onTap: () {
-                                  Navigator.pop(context);
-                                  _showRelativeDateDialog();
-                                },
-                              ),
-                              if (_dueDate != null)
-                                ListTile(
-                                  leading: const Icon(Icons.clear,
-                                      color: Colors.red),
-                                  title: Text(l10n.clearData,
-                                      style: const TextStyle(
-                                          color: Colors.red)),
-                                  onTap: () {
-                                    setState(() => _dueDate = null);
-                                    Navigator.pop(context);
-                                  },
-                                ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                    onClearDueDate: () => setState(() => _dueDate = null),
-                    isGroupSplit: _isGroupSplit,
-                    groupSharesCount: _groupShares.length,
-                    myShareAmount: _myShareAmount,
-                    isSplitMode: _isSplitMode,
-                    onSplitTap: _showGroupSplitDialog,
-                    onClearSplit: () => setState(() {
-                      _isGroupSplit = false;
-                      _groupShares = [];
-                    }),
-                    showSplitButton: widget.initialExternalLinkId == null,
-                  ),
-
-                  // Countdown badge
-                  if (limitsAsync.asData?.value != null &&
-                      !limitsAsync.asData!.value.isUnlimited &&
-                      limitsAsync.asData!.value.canAdd)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8),
-                      child: Center(
-                        child: LimitCountdownBadge(
-                          dailyUsed: limitsAsync.asData!.value.dailyTotal -
-                              limitsAsync.asData!.value.dailyRemaining,
-                          dailyTotal: limitsAsync.asData!.value.dailyTotal,
-                          monthlyUsed: limitsAsync.asData!.value.monthlyTotal -
-                              limitsAsync.asData!.value.monthlyRemaining,
-                          monthlyTotal: limitsAsync.asData!.value.monthlyTotal,
-                        ),
-                      ),
-                    ),
-
-                  // Bottom padding for FABs
-                  const SizedBox(height: 100),
-                ],
+                ),
               ),
-            ),
+              if (widget.initialContactName != null && _selectedContact == null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () async {
+                        final contactsRepo =
+                            ref.read(contactsRepositoryProvider);
+                        final String uuid = await contactsRepo.createContact(
+                          ContactsCompanion(
+                            name: drift.Value(widget.initialContactName!),
+                            phone: drift.Value(widget.initialContactPhone),
+                            createdAt: drift.Value(DateTime.now()),
+                            updatedAt: drift.Value(DateTime.now()),
+                          ),
+                        );
+                        final newContact =
+                            (await contactsRepo.watchAllContacts().first)
+                                .firstWhere((c) => c.uuid == uuid);
+                        setState(() {
+                          _selectedContact = newContact;
+                          _selectedContactUuid = uuid;
+                        });
+                      },
+                      icon: const Icon(Icons.add, size: 18),
+                      label: Text(
+                        l10n.addContactWithName(widget.initialContactName!),
+                        textAlign: TextAlign.center,
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              const SizedBox(height: 16),
+
+              // Account picker (create account from sheet when none exist)
+              AccountPickerField(
+                selectedAccount: _selectedAccount,
+                excludeCreditCard: _selectedType == 'INCOME' &&
+                    _selectedCategory?.uuid != 'default_cat_refund',
+                onChanged: (acc) => setState(() => _selectedAccount = acc),
+              ),
+              const SizedBox(height: 16),
+
+              // Description
+              TextFormField(
+                controller: _descriptionController,
+                decoration: InputDecoration(
+                  labelText: l10n.description,
+                  hintText: l10n.descriptionHint,
+                  prefixIcon: const Icon(Icons.notes_outlined),
+                ),
+                maxLines: 2,
+                textCapitalization: TextCapitalization.sentences,
+              ),
+              const SizedBox(height: 16),
+
+              // Date Selector
+              InkWell(
+                onTap: _selectDate,
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surface,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: theme.dividerColor),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          gradient: AppColors.getSecondaryGradient(
+                              theme.colorScheme.primary),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(
+                          Icons.calendar_today,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            l10n.date,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const Spacer(),
+                      const Icon(Icons.arrow_forward_ios, size: 16),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // More Options (collapsible — relationship cards, due date, split)
+              TxMoreOptionsSection(
+                isExpanded: _isMoreOptionsExpanded,
+                onToggle: () => setState(
+                    () => _isMoreOptionsExpanded = !_isMoreOptionsExpanded),
+                selectedType: _selectedType,
+                paidRelationship: _paidRelationship,
+                onRelationshipChange: _handleRelationshipChange,
+                dueDate: _dueDate,
+                selectedDate: _selectedDate,
+                onDueDateTap: () async {
+                  await showModalBottomSheet(
+                    context: context,
+                    builder: (context) => SafeArea(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          ListTile(
+                            leading: const Icon(Icons.calendar_today),
+                            title: Text(l10n.pickActualDate),
+                            onTap: () {
+                              Navigator.pop(context);
+                              _selectDueDate();
+                            },
+                          ),
+                          ListTile(
+                            leading: const Icon(Icons.timer),
+                            title: Text(l10n.relativeDateAfterXDays("X")),
+                            onTap: () {
+                              Navigator.pop(context);
+                              _showRelativeDateDialog();
+                            },
+                          ),
+                          if (_dueDate != null)
+                            ListTile(
+                              leading:
+                                  const Icon(Icons.clear, color: Colors.red),
+                              title: Text(l10n.clearData,
+                                  style: const TextStyle(color: Colors.red)),
+                              onTap: () {
+                                setState(() => _dueDate = null);
+                                Navigator.pop(context);
+                              },
+                            ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+                onClearDueDate: () => setState(() => _dueDate = null),
+                isGroupSplit: _isGroupSplit,
+                groupSharesCount: _groupShares.length,
+                myShareAmount: _myShareAmount,
+                isSplitMode: _isSplitMode,
+                onSplitTap: _showGroupSplitDialog,
+                onClearSplit: () => setState(() {
+                  _isGroupSplit = false;
+                  _groupShares = [];
+                }),
+                showSplitButton: widget.initialExternalLinkId == null,
+              ),
+
+              // Countdown badge
+              if (limitsAsync.asData?.value != null &&
+                  !limitsAsync.asData!.value.isUnlimited &&
+                  limitsAsync.asData!.value.canAdd)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Center(
+                    child: LimitCountdownBadge(
+                      dailyUsed: limitsAsync.asData!.value.dailyTotal -
+                          limitsAsync.asData!.value.dailyRemaining,
+                      dailyTotal: limitsAsync.asData!.value.dailyTotal,
+                      monthlyUsed: limitsAsync.asData!.value.monthlyTotal -
+                          limitsAsync.asData!.value.monthlyRemaining,
+                      monthlyTotal: limitsAsync.asData!.value.monthlyTotal,
+                    ),
+                  ),
+                ),
+
+              // Bottom padding for FABs
+              const SizedBox(height: 100),
+            ],
           ),
-        );
+        ),
+      ),
+    );
   }
 }
 
@@ -2884,7 +2874,9 @@ class TxMoreOptionsSection extends StatelessWidget {
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
                 color: isExpanded
-                    ? (isExpense ? AppColors.expenseColor : AppColors.incomeColor)
+                    ? (isExpense
+                            ? AppColors.expenseColor
+                            : AppColors.incomeColor)
                         .withValues(alpha: 0.4)
                     : theme.dividerColor,
               ),
@@ -2895,7 +2887,9 @@ class TxMoreOptionsSection extends StatelessWidget {
                   Icons.tune,
                   size: 20,
                   color: isExpanded
-                      ? (isExpense ? AppColors.expenseColor : AppColors.incomeColor)
+                      ? (isExpense
+                          ? AppColors.expenseColor
+                          : AppColors.incomeColor)
                       : theme.colorScheme.onSurfaceVariant,
                 ),
                 const SizedBox(width: 12),
@@ -2905,7 +2899,9 @@ class TxMoreOptionsSection extends StatelessWidget {
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w600,
                       color: isExpanded
-                          ? (isExpense ? AppColors.expenseColor : AppColors.incomeColor)
+                          ? (isExpense
+                              ? AppColors.expenseColor
+                              : AppColors.incomeColor)
                           : theme.colorScheme.onSurface,
                     ),
                   ),
@@ -3109,7 +3105,8 @@ class TxMoreOptionsSection extends StatelessWidget {
                           if (isGroupSplit)
                             GestureDetector(
                               onTap: onClearSplit,
-                              child: Icon(Icons.close, color: theme.hintColor, size: 20),
+                              child: Icon(Icons.close,
+                                  color: theme.hintColor, size: 20),
                             )
                           else
                             Icon(Icons.chevron_right, color: theme.hintColor),
