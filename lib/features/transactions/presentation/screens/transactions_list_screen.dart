@@ -38,6 +38,9 @@ import 'package:flowpaisa/shared/widgets/app_loading_indicator.dart';
 import 'package:flowpaisa/shared/widgets/collapsible_list_summary.dart';
 import 'package:flowpaisa/features/analytics/presentation/providers/analytics_provider.dart';
 import 'package:flowpaisa/shared/widgets/app_floating_action_button.dart';
+import 'package:flowpaisa/features/transactions/presentation/widgets/transaction_speed_dial.dart';
+import 'package:flowpaisa/features/receipt_scan/presentation/screens/scan_receipt_screen.dart';
+import 'package:flowpaisa/features/voice_command/presentation/screens/voice_add_screen.dart';
 
 import 'package:flowpaisa/features/transactions/presentation/widgets/schedule_details_dialog.dart';
 
@@ -332,11 +335,6 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                   });
                 },
               ),
-              if (!_isSearching)
-                IconButton(
-                  icon: const Icon(Icons.backup_table),
-                  onPressed: () => _showImportOptions(context),
-                ),
               if (!_isSearching && kDebugMode)
                 PopupMenuButton<String>(
                   icon: const Icon(Icons.more_vert),
@@ -387,11 +385,10 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                       ],
                     )
                   : _buildBody(paginatedState, theme),
-              Positioned(
-                bottom: 16 + MediaQuery.of(context).padding.bottom,
-                right: 16,
-                child: AppFloatingActionButton(
-                  onPressed: () {
+              Positioned.fill(
+                child: TransactionSpeedDial(
+                  activeColor: AppColors.transactionsSectionColor,
+                  onAddTransaction: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -399,10 +396,23 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                       ),
                     );
                   },
-                  backgroundColor: AppColors.transactionsSectionColor,
-                  foregroundColor: Colors.white,
-                  child: Icon(
-                      _tabController.index == 1 ? Icons.more_time : Icons.add),
+                  onVoiceAdd: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const VoiceAddScreen(),
+                      ),
+                    );
+                  },
+                  onScanReceipt: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ScanReceiptScreen(),
+                      ),
+                    );
+                  },
+                  onBulkImport: () => _showImportOptions(context),
                 ),
               ),
             ],
