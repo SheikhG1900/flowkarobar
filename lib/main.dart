@@ -1027,8 +1027,8 @@ class _DashboardTab extends ConsumerWidget {
                                 ReorderableDragStartListener(
                                   index: i,
                                   child: Padding(
-                                    padding: const EdgeInsets.only(
-                                        right: 8, top: 16),
+                                    padding: const EdgeInsetsDirectional.only(
+                                        end: 8, top: 16),
                                     child: Container(
                                       width: 36,
                                       height: 36,
