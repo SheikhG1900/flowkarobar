@@ -1157,8 +1157,8 @@ class _DashboardTab extends ConsumerWidget {
                         tooltip: l10n.reorderWidgetsOff,
                         onPressed: () {
                           ref
-                              .read(dashboardReorderModeProvider.notifier)
-                              .set(false);
+                              .read(dashboardVisibilityProvider.notifier)
+                              .setVisibility(DashboardVisibility.visible);
                         },
                       ),
                       IconButton(
@@ -1390,30 +1390,28 @@ class _DashboardTab extends ConsumerWidget {
                             e.$3,
                             size: 16,
                             color: checked
-                                ? theme.colorScheme.onPrimaryContainer
+                                ? theme.colorScheme.primary
                                 : theme.colorScheme.onSurfaceVariant,
                           ),
                           selected: checked,
+                          showCheckmark: false,
                           labelStyle: TextStyle(
                             color: checked
-                                ? theme.colorScheme.onPrimaryContainer
+                                ? theme.colorScheme.primary
                                 : theme.colorScheme.onSurface,
                             fontWeight:
                                 checked ? FontWeight.bold : FontWeight.normal,
                           ),
-                          selectedColor: theme.colorScheme.primaryContainer,
-                          checkmarkColor: theme.colorScheme.onPrimaryContainer,
+                          selectedColor: theme.colorScheme.primary.withValues(alpha: 0.15),
+                          side: BorderSide(
+                            color: checked
+                                ? theme.colorScheme.primary
+                                : theme.dividerColor,
+                            width: checked ? 2 : 1,
+                          ),
                           onSelected: busy
                               ? null
                               : (v) async {
-                                  if (e.$1 ==
-                                          DashboardWidgetKind.quickActions &&
-                                      v) {
-                                    await HomeScreen
-                                        .showQuickActionSelectionSheetForBottomBar(
-                                            context, ref, theme, l10n);
-                                    return;
-                                  }
                                   await ref
                                       .read(dashboardWidgetLayoutProvider
                                           .notifier)
@@ -2713,55 +2711,72 @@ class _DashboardHeader extends ConsumerWidget {
         ),
         Consumer(
           builder: (context, ref, child) {
-            final showWidgetArea = ref.watch(showDashboardWidgetAreaProvider);
+            final visibility = ref.watch(dashboardVisibilityProvider);
             final hasSeenCustomization =
                 ref.watch(dashboardCustomizationSeenProvider);
+
+            IconData icon;
+            Color color;
+            bool showBadge = false;
+
+            switch (visibility) {
+              case DashboardVisibility.visible:
+                icon = Icons.dashboard_customize;
+                color = theme.colorScheme.primary;
+                break;
+              case DashboardVisibility.edit:
+                icon = Icons.dashboard_customize;
+                color = theme.colorScheme.primary;
+                showBadge = true;
+                break;
+              case DashboardVisibility.hidden:
+                icon = Icons.dashboard_customize_outlined;
+                color = theme.colorScheme.onSurface;
+                break;
+            }
+
             return Stack(
               alignment: Alignment.topRight,
               children: [
                 IconButton(
-                  icon: Icon(
-                    showWidgetArea
-                        ? Icons.dashboard_customize
-                        : Icons.dashboard_customize_outlined,
-                    color: showWidgetArea
-                        ? theme.colorScheme.primary
-                        : theme.colorScheme.onSurface,
-                  ),
+                  icon: Icon(icon, color: color),
                   onPressed: () {
-                    final next = !showWidgetArea;
-                    ref
-                        .read(showDashboardWidgetAreaProvider.notifier)
-                        .setVisibility(next);
-                    if (next) {
-                      ref.read(dashboardReorderModeProvider.notifier).set(true);
-                      // Mark as seen when opened
+                    ref.read(dashboardVisibilityProvider.notifier).next();
+                    if (ref.read(dashboardVisibilityProvider) !=
+                        DashboardVisibility.hidden) {
                       ref
                           .read(dashboardCustomizationSeenProvider.notifier)
                           .setSeen();
-                    } else {
-                      ref
-                          .read(dashboardReorderModeProvider.notifier)
-                          .set(false);
                     }
                   },
                   tooltip: l10n.addToDashboard,
                 ),
-                if (!hasSeenCustomization)
+                if (!hasSeenCustomization || showBadge)
                   Positioned(
-                    top: 10,
-                    right: 10,
+                    top: 6,
+                    right: 6,
                     child: Container(
-                      width: 8,
-                      height: 8,
+                      width: 14,
+                      height: 14,
                       decoration: BoxDecoration(
-                        color: theme.colorScheme.error,
+                        color: showBadge
+                            ? Colors.orange
+                            : theme.colorScheme.error,
                         shape: BoxShape.circle,
                         border: Border.all(
                           color: theme.colorScheme.surface,
                           width: 1.5,
                         ),
                       ),
+                      child: showBadge
+                          ? const Center(
+                              child: Icon(
+                                Icons.edit,
+                                size: 8,
+                                color: Colors.white,
+                              ),
+                            )
+                          : null,
                     ),
                   ),
               ],

@@ -21,6 +21,9 @@ List<DashboardWidgetConfig> get defaultDashboardWidgetLayout => [
 
 class DashboardWidgetLayoutNotifier
     extends AsyncNotifier<List<DashboardWidgetConfig>> {
+  // Keep track of last known configs for each kind to restore them when toggled back on
+  static final Map<DashboardWidgetKind, DashboardWidgetConfig> _lastKnownConfigs = {};
+
   @override
   Future<List<DashboardWidgetConfig>> build() async {
     // Depend on active cashbook so layout is reloaded when switching cashbooks.
@@ -31,12 +34,28 @@ class DashboardWidgetLayoutNotifier
     final repo = ref.read(userPreferencesRepositoryProvider);
     final json = await repo.getDashboardWidgetLayout();
     final list = DashboardWidgetConfig.listFromJson(json);
+
+    // Populate last known configs from the loaded list
+    for (final config in list) {
+      if (!config.kind.isEntity) {
+        _lastKnownConfigs[config.kind] = config;
+      }
+    }
+
     if (list.isEmpty) return defaultDashboardWidgetLayout;
     return list;
   }
 
   Future<void> setLayout(List<DashboardWidgetConfig> configs) async {
     state = AsyncData(configs);
+
+    // Update last known configs
+    for (final config in configs) {
+      if (!config.kind.isEntity) {
+        _lastKnownConfigs[config.kind] = config;
+      }
+    }
+
     await AsyncValue.guard(() async {
       final repo = ref.read(userPreferencesRepositoryProvider);
       await repo.setDashboardWidgetLayout(
@@ -82,7 +101,24 @@ class DashboardWidgetLayoutNotifier
     final current = state.value ?? defaultDashboardWidgetLayout;
     if (on) {
       if (current.any((c) => c.kind == kind)) return;
-      await setLayout([...current, DashboardWidgetConfig(kind: kind)]);
+
+      // Restore previous config if it exists in the "last known" history
+      // or use a default one.
+      DashboardWidgetConfig newConfig =
+          _lastKnownConfigs[kind] ?? DashboardWidgetConfig(kind: kind);
+
+      // If it's quickActions and we don't have a last known, default to some actions
+      if (kind == DashboardWidgetKind.quickActions &&
+          newConfig.quickActionCodes == null) {
+        newConfig = newConfig.copyWith(quickActionCodes: [
+          'voice_add',
+          'add_transaction',
+          'scan_receipt',
+          'accounts'
+        ]);
+      }
+
+      await setLayout([...current, newConfig]);
     } else {
       final next = current.where((c) => c.kind != kind).toList();
       if (next.length == current.length) return;
@@ -98,6 +134,14 @@ class DashboardWidgetLayoutNotifier
     final next = List<DashboardWidgetConfig>.from(current);
     final item = next.removeAt(from);
     next.insert(to, item);
+    await setLayout(next);
+  }
+
+  Future<void> setQuickActionsOnDashboard(int index, List<String> codes) async {
+    final current = state.value ?? defaultDashboardWidgetLayout;
+    if (index < 0 || index >= current.length) return;
+    final next = List<DashboardWidgetConfig>.from(current);
+    next[index] = next[index].copyWith(quickActionCodes: codes);
     await setLayout(next);
   }
 
@@ -129,6 +173,64 @@ class DashboardReorderModeNotifier extends Notifier<bool> {
 final dashboardReorderModeProvider =
     NotifierProvider<DashboardReorderModeNotifier, bool>(
         DashboardReorderModeNotifier.new);
+
+/// Dashboard visibility states: visible, edit, hidden.
+enum DashboardVisibility { visible, edit, hidden }
+
+class DashboardVisibilityNotifier extends Notifier<DashboardVisibility> {
+  @override
+  DashboardVisibility build() {
+    // Initialize from existing providers to maintain backward compatibility
+    final showWidgetArea = ref.read(showDashboardWidgetAreaProvider);
+    final reorderMode = ref.read(dashboardReorderModeProvider);
+
+    if (!showWidgetArea) return DashboardVisibility.hidden;
+    if (reorderMode) return DashboardVisibility.edit;
+    return DashboardVisibility.visible;
+  }
+
+  void next() {
+    switch (state) {
+      case DashboardVisibility.visible:
+        state = DashboardVisibility.edit;
+        ref.read(dashboardReorderModeProvider.notifier).set(true);
+        ref.read(showDashboardWidgetAreaProvider.notifier).setVisibility(true);
+        break;
+      case DashboardVisibility.edit:
+        state = DashboardVisibility.hidden;
+        ref.read(dashboardReorderModeProvider.notifier).set(false);
+        ref.read(showDashboardWidgetAreaProvider.notifier).setVisibility(false);
+        break;
+      case DashboardVisibility.hidden:
+        state = DashboardVisibility.visible;
+        ref.read(dashboardReorderModeProvider.notifier).set(false);
+        ref.read(showDashboardWidgetAreaProvider.notifier).setVisibility(true);
+        break;
+    }
+  }
+
+  void setVisibility(DashboardVisibility visibility) {
+    state = visibility;
+    switch (visibility) {
+      case DashboardVisibility.visible:
+        ref.read(dashboardReorderModeProvider.notifier).set(false);
+        ref.read(showDashboardWidgetAreaProvider.notifier).setVisibility(true);
+        break;
+      case DashboardVisibility.edit:
+        ref.read(dashboardReorderModeProvider.notifier).set(true);
+        ref.read(showDashboardWidgetAreaProvider.notifier).setVisibility(true);
+        break;
+      case DashboardVisibility.hidden:
+        ref.read(dashboardReorderModeProvider.notifier).set(false);
+        ref.read(showDashboardWidgetAreaProvider.notifier).setVisibility(false);
+        break;
+    }
+  }
+}
+
+final dashboardVisibilityProvider =
+    NotifierProvider<DashboardVisibilityNotifier, DashboardVisibility>(
+        DashboardVisibilityNotifier.new);
 
 /// Effective layout: same as saved but with entity widgets whose entity is deleted
 /// removed. Automatically persists the cleaned list when stale configs are found.

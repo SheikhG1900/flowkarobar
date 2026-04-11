@@ -1666,8 +1666,119 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
       ThemeData theme,
       DashboardWidgetConfig config,
       int layoutIndex) async {
-    await HomeScreen.showQuickActionSelectionSheetForBottomBar(
-        context, ref, theme, l10n);
+    final actions = [
+      ('voice_add', l10n.voiceAdd, Icons.mic_none_rounded),
+      ('add_transaction', l10n.add, Icons.add),
+      ('scan_receipt', l10n.scan, Icons.document_scanner_outlined),
+      ('accounts', l10n.accounts, Symbols.account_balance),
+      ('contacts', l10n.contacts, Icons.people_outline_rounded),
+      ('receivables', l10n.receivableTag, Symbols.account_balance_wallet),
+      ('payables', l10n.payables, Icons.payment_outlined),
+      ('categories', l10n.categories, Icons.category_outlined),
+      ('analytics', l10n.analytics, Icons.bar_chart_rounded),
+      ('user_guide', l10n.userGuide, Icons.help_outline_rounded),
+      ('app_tour', l10n.appTour, Icons.tour_outlined),
+    ];
+
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) => Consumer(
+        builder: (context, ref, _) {
+          // Re-watch the layout to get live updates if needed, 
+          // but we can also just use the local state for the modal.
+          final currentLayout = ref.watch(dashboardWidgetLayoutProvider).value;
+          if (currentLayout == null || layoutIndex >= currentLayout.length) {
+            return const SizedBox.shrink();
+          }
+          final currentConfig = currentLayout[layoutIndex];
+          final selectedCodes = currentConfig.quickActionCodes ?? [];
+
+          return SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SizedBox(height: 16),
+                  Text(
+                    l10n.quickActions,
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Flexible(
+                    child: SingleChildScrollView(
+                      child: Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: actions.map((e) {
+                          final isSelected = selectedCodes.contains(e.$1);
+                          return FilterChip(
+                            avatar: Icon(
+                              e.$3,
+                              size: 18,
+                              color: isSelected
+                                  ? theme.colorScheme.primary
+                                  : theme.colorScheme.onSurfaceVariant,
+                            ),
+                            label: Text(e.$2),
+                            selected: isSelected,
+                            showCheckmark: false,
+                            onSelected: (selected) {
+                              final newList = List<String>.from(selectedCodes);
+                              if (selected) {
+                                if (!newList.contains(e.$1)) {
+                                  newList.add(e.$1);
+                                }
+                              } else {
+                                newList.remove(e.$1);
+                              }
+
+                              ref
+                                  .read(dashboardWidgetLayoutProvider.notifier)
+                                  .setQuickActionsOnDashboard(
+                                      layoutIndex, newList);
+                            },
+                            selectedColor:
+                                theme.colorScheme.primary.withValues(alpha: 0.15),
+                            labelStyle: TextStyle(
+                              color: isSelected
+                                  ? theme.colorScheme.primary
+                                  : theme.colorScheme.onSurface,
+                              fontWeight: isSelected
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                            ),
+                            side: BorderSide(
+                              color: isSelected
+                                  ? theme.colorScheme.primary
+                                  : theme.dividerColor,
+                              width: isSelected ? 2 : 1,
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      child: Text(l10n.done),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(height: MediaQuery.paddingOf(context).bottom),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
   }
 
   void _openTransactionsFiltered(
