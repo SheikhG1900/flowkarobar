@@ -168,6 +168,9 @@ class AppTheme {
         centerTitle: false,
         backgroundColor: Colors.transparent,
         systemOverlayStyle: const SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          systemNavigationBarColor: Colors.transparent,
+          systemNavigationBarDividerColor: Colors.transparent,
           statusBarIconBrightness: Brightness.dark, // For Android (dark icons)
           statusBarBrightness: Brightness.light, // For iOS (dark icons)
           systemNavigationBarIconBrightness: Brightness.dark,
@@ -361,6 +364,9 @@ class AppTheme {
         centerTitle: false,
         backgroundColor: Colors.transparent,
         systemOverlayStyle: const SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          systemNavigationBarColor: Colors.transparent,
+          systemNavigationBarDividerColor: Colors.transparent,
           statusBarIconBrightness: Brightness.light, // For Android (light icons)
           statusBarBrightness: Brightness.dark, // For iOS (light icons)
           systemNavigationBarIconBrightness: Brightness.light,

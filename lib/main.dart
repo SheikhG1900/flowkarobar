@@ -90,6 +90,7 @@ void main() async {
       statusBarIconBrightness: Brightness.dark, // Default for light mode
       statusBarBrightness: Brightness.light, // Default for iOS light mode
       systemNavigationBarColor: Colors.transparent,
+      systemNavigationBarDividerColor: Colors.transparent,
       systemNavigationBarIconBrightness: Brightness.dark,
     ),
   );
