@@ -141,7 +141,9 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
             icon: Icons.call_made,
             color: AppColors.payableColor,
             builder: (stats) => AmountFormatter.formatWithCurrency(
-                stats.payable(filter), currency!.symbol, currency.decimalPlaces),
+                stats.payable(filter),
+                currency!.symbol,
+                currency.decimalPlaces),
             onTap: () => _openPayables(ref, context, filter),
             onRemove: () => _removeAt(ref, layoutIndex),
           ),
@@ -615,8 +617,8 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
               }
             }
 
-            final totalNet =
-                categorizedNet + (includeUncategorized ? uncategorizedAmt : 0.0);
+            final totalNet = categorizedNet +
+                (includeUncategorized ? uncategorizedAmt : 0.0);
 
             final hasBudget = totalBudgetCap > 0;
             final pr = hasBudget ? totalNet / totalBudgetCap : 0.0;
@@ -920,8 +922,10 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
 
     return accountsAsync.when(
       data: (accounts) {
-        final totalAssets = accounts.where((a) => !a.type.balanceIsLiability).fold<double>(
-            0, (sum, a) => sum + a.balance.clamp(0, double.infinity));
+        final totalAssets = accounts
+            .where((a) => !a.type.balanceIsLiability)
+            .fold<double>(
+                0, (sum, a) => sum + a.balance.clamp(0, double.infinity));
         final totalLiabilities = accounts
             .where((a) => a.type.balanceIsLiability)
             .fold<double>(0, (sum, a) => sum + a.balance.abs());
@@ -964,7 +968,8 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 10),
                         decoration: BoxDecoration(
-                          color: AppColors.receivableColor.withValues(alpha: 0.08),
+                          color:
+                              AppColors.receivableColor.withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
                               color: AppColors.receivableColor
@@ -1240,8 +1245,9 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
         final isIncomeHigher = netCash >= 0;
         final amount = netCash.abs();
         final label = isIncomeHigher ? l10n.netIncome : l10n.netExpenses;
-        final gradient =
-            isIncomeHigher ? AppColors.incomeGradient : AppColors.expenseGradient;
+        final gradient = isIncomeHigher
+            ? AppColors.incomeGradient
+            : AppColors.expenseGradient;
 
         final transparentGradient = LinearGradient(
           colors: gradient.colors.map((c) => c.withValues(alpha: .85)).toList(),
@@ -1540,8 +1546,9 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
 
   Widget _wrapCard(
       {Key? reorderKey, required Widget child, VoidCallback? onRemove}) {
-    final widget =
-        reorderKey != null ? KeyedSubtree(key: reorderKey, child: child) : child;
+    final widget = reorderKey != null
+        ? KeyedSubtree(key: reorderKey, child: child)
+        : child;
     if (onRemove == null) return widget;
 
     return Stack(
@@ -1784,10 +1791,8 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
       WidgetRef ref, BuildContext context, DashboardFilter filter) {
     final isMonthly = filter == DashboardFilter.monthly;
     final now = DateTime.now();
-    final startDate =
-        isMonthly ? DateTime(now.year, now.month, 1) : null;
-    final endDate =
-        isMonthly ? DateTime(now.year, now.month + 1, 0) : null;
+    final startDate = isMonthly ? DateTime(now.year, now.month, 1) : null;
+    final endDate = isMonthly ? DateTime(now.year, now.month + 1, 0) : null;
     ref.read(transactionsPaginatedProvider.notifier).applyFilters(
           TransactionFilters(
             startDate: startDate,
@@ -1804,13 +1809,10 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
       WidgetRef ref, BuildContext context, DashboardFilter filter) {
     final isMonthly = filter == DashboardFilter.monthly;
     final now = DateTime.now();
-    final startDate =
-        isMonthly ? DateTime(now.year, now.month, 1) : null;
-    final endDate =
-        isMonthly ? DateTime(now.year, now.month + 1, 0) : null;
-    ref
-        .read(receivablesPaginatedProvider('PENDING').notifier)
-        .applyFilters(ReceivableFilters(startDate: startDate, endDate: endDate));
+    final startDate = isMonthly ? DateTime(now.year, now.month, 1) : null;
+    final endDate = isMonthly ? DateTime(now.year, now.month + 1, 0) : null;
+    ref.read(receivablesPaginatedProvider('PENDING').notifier).applyFilters(
+        ReceivableFilters(startDate: startDate, endDate: endDate));
     Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => const ReceivablesListScreen()),
@@ -1821,10 +1823,8 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
       WidgetRef ref, BuildContext context, DashboardFilter filter) {
     final isMonthly = filter == DashboardFilter.monthly;
     final now = DateTime.now();
-    final startDate =
-        isMonthly ? DateTime(now.year, now.month, 1) : null;
-    final endDate =
-        isMonthly ? DateTime(now.year, now.month + 1, 0) : null;
+    final startDate = isMonthly ? DateTime(now.year, now.month, 1) : null;
+    final endDate = isMonthly ? DateTime(now.year, now.month + 1, 0) : null;
     ref
         .read(payablesPaginatedProvider('PENDING').notifier)
         .applyFilters(PayableFilters(startDate: startDate, endDate: endDate));
@@ -1865,274 +1865,307 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 0),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          if (reorderMode)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    l10n.quickActions,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
+          Container(
+            decoration: reorderMode
+                ? BoxDecoration(
+                    border: Border.all(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                      width: 1.5,
+                    ),
+                    borderRadius: BorderRadius.circular(24),
+                    color: theme.colorScheme.primary.withValues(alpha: 0.05),
+                  )
+                : null,
+            padding:
+                reorderMode ? const EdgeInsets.symmetric(vertical: 16) : null,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (reorderMode)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          l10n.quickActions,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.add_circle_outline, size: 20),
-                    onPressed: () => _showQuickActionSelectionSheetForWidget(
-                      context,
-                      ref,
-                      l10n,
-                      theme,
-                      config,
-                      layoutIndex,
+                        IconButton(
+                          icon: const Icon(Icons.add_circle_outline, size: 20),
+                          onPressed: () =>
+                              _showQuickActionSelectionSheetForWidget(
+                            context,
+                            ref,
+                            l10n,
+                            theme,
+                            config,
+                            layoutIndex,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ],
-              ),
-            ),
-          if (reorderMode) const SizedBox(height: 12),
-          // Grid layout for quick actions (responsive)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                // Calculate optimal item width based on available space
-                const double minItemWidth = 100; // Minimum width per item
-                final double availableWidth = constraints.maxWidth;
+                if (reorderMode) const SizedBox(height: 12),
+                // Grid layout for quick actions (responsive)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      // Calculate optimal item width based on available space
+                      const double minItemWidth = 100; // Minimum width per item
+                      final double availableWidth = constraints.maxWidth;
 
-                // Calculate how many items can fit
-                int crossAxisCount = (availableWidth / minItemWidth).floor();
-                crossAxisCount =
-                    crossAxisCount.clamp(2, 6); // Min 2, Max 6 columns
+                      // Calculate how many items can fit
+                      int crossAxisCount =
+                          (availableWidth / minItemWidth).floor();
+                      crossAxisCount =
+                          crossAxisCount.clamp(2, 6); // Min 2, Max 6 columns
 
-                // Calculate actual item width
-                final double itemWidth = availableWidth / crossAxisCount;
-                final double childAspectRatio =
-                    itemWidth / 110; // Height is fixed at ~110px
+                      // Calculate actual item width
+                      final double itemWidth = availableWidth / crossAxisCount;
+                      final double childAspectRatio =
+                          itemWidth / 110; // Height is fixed at ~110px
 
-                return GridView.count(
-                  shrinkWrap: true,
-                  padding: EdgeInsets.zero,
-                  physics: const NeverScrollableScrollPhysics(),
-                  crossAxisCount: crossAxisCount,
-                  mainAxisSpacing: 10,
-                  crossAxisSpacing: 10,
-                  childAspectRatio: childAspectRatio,
-                  children: [
-                    if (config.quickActionCodes == null ||
-                        config.quickActionCodes!.contains('voice_add'))
-                      _QuickActionButton(
-                        icon: Icons.mic_none_rounded,
-                        label: l10n.voiceAdd,
-                        gradient: AppColors.transactionsSectionGradient,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => VoiceAddScreen(),
+                      return GridView.count(
+                        shrinkWrap: true,
+                        padding: EdgeInsets.zero,
+                        physics: const NeverScrollableScrollPhysics(),
+                        crossAxisCount: crossAxisCount,
+                        mainAxisSpacing: 10,
+                        crossAxisSpacing: 10,
+                        childAspectRatio: childAspectRatio,
+                        children: [
+                          if (config.quickActionCodes == null ||
+                              config.quickActionCodes!.contains('voice_add'))
+                            _QuickActionButton(
+                              icon: Icons.mic_none_rounded,
+                              label: l10n.voiceAdd,
+                              gradient: AppColors.transactionsSectionGradient,
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => VoiceAddScreen(),
+                                  ),
+                                );
+                              },
                             ),
-                          );
-                        },
-                      ),
-                    if (config.quickActionCodes == null ||
-                        config.quickActionCodes!.contains('add_transaction'))
-                      _QuickActionButton(
-                        icon: Icons.add,
-                        label: l10n.add,
-                        gradient: AppColors.transactionsSectionGradient,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  const AddTransactionScreen(),
+                          if (config.quickActionCodes == null ||
+                              config.quickActionCodes!
+                                  .contains('add_transaction'))
+                            _QuickActionButton(
+                              icon: Icons.add,
+                              label: l10n.add,
+                              gradient: AppColors.transactionsSectionGradient,
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        const AddTransactionScreen(),
+                                  ),
+                                );
+                              },
                             ),
-                          );
-                        },
-                      ),
-                    if (config.quickActionCodes == null ||
-                        config.quickActionCodes!.contains('scan_receipt'))
-                      _QuickActionButton(
-                        icon: Icons.document_scanner_outlined,
-                        label: l10n.scan,
-                        gradient: AppColors.transactionsSectionGradient,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => ScanReceiptScreen(),
+                          if (config.quickActionCodes == null ||
+                              config.quickActionCodes!.contains('scan_receipt'))
+                            _QuickActionButton(
+                              icon: Icons.document_scanner_outlined,
+                              label: l10n.scan,
+                              gradient: AppColors.transactionsSectionGradient,
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => ScanReceiptScreen(),
+                                  ),
+                                );
+                              },
                             ),
-                          );
-                        },
-                      ),
-                    if (config.quickActionCodes == null ||
-                        config.quickActionCodes!.contains('accounts'))
-                      _QuickActionButton(
-                        icon: Symbols.account_balance,
-                        label: l10n.accounts,
-                        gradient: AppColors.dashboardSectionGradient,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const AccountsScreen(),
+                          if (config.quickActionCodes == null ||
+                              config.quickActionCodes!.contains('accounts'))
+                            _QuickActionButton(
+                              icon: Symbols.account_balance,
+                              label: l10n.accounts,
+                              gradient: AppColors.dashboardSectionGradient,
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        const AccountsScreen(),
+                                  ),
+                                );
+                              },
                             ),
-                          );
-                        },
-                      ),
-                    if (config.quickActionCodes == null ||
-                        config.quickActionCodes!.contains('contacts'))
-                      _QuickActionButton(
-                        icon: Icons.people_outline_rounded,
-                        label: l10n.contacts,
-                        gradient: AppColors.getPrimaryGradient(
-                            theme.colorScheme.primary),
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const ContactsListScreen(),
+                          if (config.quickActionCodes == null ||
+                              config.quickActionCodes!.contains('contacts'))
+                            _QuickActionButton(
+                              icon: Icons.people_outline_rounded,
+                              label: l10n.contacts,
+                              gradient: AppColors.getPrimaryGradient(
+                                  theme.colorScheme.primary),
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        const ContactsListScreen(),
+                                  ),
+                                );
+                              },
                             ),
-                          );
-                        },
-                      ),
-                    if (config.quickActionCodes == null ||
-                        config.quickActionCodes!.contains('receivables'))
-                      _QuickActionButton(
-                        icon: Symbols.account_balance_wallet,
-                        label: l10n.receivableTag,
-                        gradient: AppColors.receivablesSectionGradient,
-                        onTap: () {
-                          // Clear filters and search before navigating
-                          final pendingNotifier = ref.read(
-                              receivablesPaginatedProvider('PENDING')
-                                  .notifier);
-                          pendingNotifier.updateSearchQuery('');
-                          pendingNotifier.applyFilters(ReceivableFilters());
+                          if (config.quickActionCodes == null ||
+                              config.quickActionCodes!.contains('receivables'))
+                            _QuickActionButton(
+                              icon: Symbols.account_balance_wallet,
+                              label: l10n.receivableTag,
+                              gradient: AppColors.receivablesSectionGradient,
+                              onTap: () {
+                                // Clear filters and search before navigating
+                                final pendingNotifier = ref.read(
+                                    receivablesPaginatedProvider('PENDING')
+                                        .notifier);
+                                pendingNotifier.updateSearchQuery('');
+                                pendingNotifier
+                                    .applyFilters(ReceivableFilters());
 
-                          final overdueNotifier = ref.read(
-                              receivablesPaginatedProvider('OVERDUE')
-                                  .notifier);
-                          overdueNotifier.updateSearchQuery('');
-                          overdueNotifier.applyFilters(ReceivableFilters());
+                                final overdueNotifier = ref.read(
+                                    receivablesPaginatedProvider('OVERDUE')
+                                        .notifier);
+                                overdueNotifier.updateSearchQuery('');
+                                overdueNotifier
+                                    .applyFilters(ReceivableFilters());
 
-                          final receivedNotifier = ref.read(
-                              receivablesPaginatedProvider('RECEIVED')
-                                  .notifier);
-                          receivedNotifier.updateSearchQuery('');
-                          receivedNotifier.applyFilters(ReceivableFilters());
+                                final receivedNotifier = ref.read(
+                                    receivablesPaginatedProvider('RECEIVED')
+                                        .notifier);
+                                receivedNotifier.updateSearchQuery('');
+                                receivedNotifier
+                                    .applyFilters(ReceivableFilters());
 
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  const ReceivablesListScreen(),
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        const ReceivablesListScreen(),
+                                  ),
+                                );
+                              },
                             ),
-                          );
-                        },
-                      ),
-                    if (config.quickActionCodes == null ||
-                        config.quickActionCodes!.contains('payables'))
-                      _QuickActionButton(
-                        icon: Icons.payment_outlined,
-                        label: l10n.payables,
-                        gradient: AppColors.payablesSectionGradient,
-                        onTap: () {
-                          // Clear filters and search before navigating
-                          final pendingNotifier = ref.read(
-                              payablesPaginatedProvider('PENDING').notifier);
-                          pendingNotifier.updateSearchQuery('');
-                          pendingNotifier.applyFilters(PayableFilters());
+                          if (config.quickActionCodes == null ||
+                              config.quickActionCodes!.contains('payables'))
+                            _QuickActionButton(
+                              icon: Icons.payment_outlined,
+                              label: l10n.payables,
+                              gradient: AppColors.payablesSectionGradient,
+                              onTap: () {
+                                // Clear filters and search before navigating
+                                final pendingNotifier = ref.read(
+                                    payablesPaginatedProvider('PENDING')
+                                        .notifier);
+                                pendingNotifier.updateSearchQuery('');
+                                pendingNotifier.applyFilters(PayableFilters());
 
-                          final overdueNotifier = ref.read(
-                              payablesPaginatedProvider('OVERDUE').notifier);
-                          overdueNotifier.updateSearchQuery('');
-                          overdueNotifier.applyFilters(PayableFilters());
+                                final overdueNotifier = ref.read(
+                                    payablesPaginatedProvider('OVERDUE')
+                                        .notifier);
+                                overdueNotifier.updateSearchQuery('');
+                                overdueNotifier.applyFilters(PayableFilters());
 
-                          final paidNotifier = ref.read(
-                              payablesPaginatedProvider('PAID').notifier);
-                          paidNotifier.updateSearchQuery('');
-                          paidNotifier.applyFilters(PayableFilters());
+                                final paidNotifier = ref.read(
+                                    payablesPaginatedProvider('PAID').notifier);
+                                paidNotifier.updateSearchQuery('');
+                                paidNotifier.applyFilters(PayableFilters());
 
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const PayablesListScreen(),
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        const PayablesListScreen(),
+                                  ),
+                                );
+                              },
                             ),
-                          );
-                        },
-                      ),
-                    if (config.quickActionCodes == null ||
-                        config.quickActionCodes!.contains('categories'))
-                      _QuickActionButton(
-                        icon: Icons.category_outlined,
-                        label: l10n.categories,
-                        gradient: AppColors.getSecondaryGradient(
-                            theme.colorScheme.primary),
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  const CategoriesListScreen(),
+                          if (config.quickActionCodes == null ||
+                              config.quickActionCodes!.contains('categories'))
+                            _QuickActionButton(
+                              icon: Icons.category_outlined,
+                              label: l10n.categories,
+                              gradient: AppColors.getSecondaryGradient(
+                                  theme.colorScheme.primary),
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        const CategoriesListScreen(),
+                                  ),
+                                );
+                              },
                             ),
-                          );
-                        },
-                      ),
-                    if (config.quickActionCodes == null ||
-                        config.quickActionCodes!.contains('analytics'))
-                      _QuickActionButton(
-                        icon: Icons.bar_chart_rounded,
-                        label: l10n.analytics,
-                        gradient: AppColors.analyticsSectionGradient,
-                        showLock: !isPremium,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const AnalyticsScreen(),
+                          if (config.quickActionCodes == null ||
+                              config.quickActionCodes!.contains('analytics'))
+                            _QuickActionButton(
+                              icon: Icons.bar_chart_rounded,
+                              label: l10n.analytics,
+                              gradient: AppColors.analyticsSectionGradient,
+                              showLock: !isPremium,
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        const AnalyticsScreen(),
+                                  ),
+                                );
+                              },
                             ),
-                          );
-                        },
-                      ),
-                    if (config.quickActionCodes == null ||
-                        config.quickActionCodes!.contains('user_guide'))
-                      _QuickActionButton(
-                        icon: Icons.help_outline_rounded,
-                        label: l10n.userGuide,
-                        gradient: AppColors.getSecondaryGradient(
-                            theme.colorScheme.secondary),
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const UserGuideScreen(),
+                          if (config.quickActionCodes == null ||
+                              config.quickActionCodes!.contains('user_guide'))
+                            _QuickActionButton(
+                              icon: Icons.help_outline_rounded,
+                              label: l10n.userGuide,
+                              gradient: AppColors.getSecondaryGradient(
+                                  theme.colorScheme.secondary),
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        const UserGuideScreen(),
+                                  ),
+                                );
+                              },
                             ),
-                          );
-                        },
-                      ),
-                    if (config.quickActionCodes == null ||
-                        config.quickActionCodes!.contains('app_tour'))
-                      _QuickActionButton(
-                        icon: Icons.tour_outlined,
-                        label: l10n.appTour,
-                        gradient: AppColors.getPrimaryGradient(activeColor),
-                        onTap: () {
-                          // Start the onboarding screen again
-                          ref
-                              .read(onboardingCompletedProvider.notifier)
-                              .setCompleted(false);
-                        },
-                      ),
-                  ],
-                );
-              },
+                          if (config.quickActionCodes == null ||
+                              config.quickActionCodes!.contains('app_tour'))
+                            _QuickActionButton(
+                              icon: Icons.tour_outlined,
+                              label: l10n.appTour,
+                              gradient:
+                                  AppColors.getPrimaryGradient(activeColor),
+                              onTap: () {
+                                // Start the onboarding screen again
+                                ref
+                                    .read(onboardingCompletedProvider.notifier)
+                                    .setCompleted(false);
+                              },
+                            ),
+                        ],
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 12),
         ],
       ),
     );
