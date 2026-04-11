@@ -1,3 +1,4 @@
+import 'package:flowpaisa/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -1658,133 +1659,15 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
     await ref.read(dashboardWidgetLayoutProvider.notifier).removeAt(index);
   }
 
-  Future<void> _showQuickActionSelectionSheetForWidget(
+  static Future<void> _showQuickActionSelectionSheetForWidget(
       BuildContext context,
       WidgetRef ref,
       AppLocalizations l10n,
       ThemeData theme,
       DashboardWidgetConfig config,
       int layoutIndex) async {
-    final actions = [
-      ('voice_add', l10n.voiceAdd, Icons.mic_none_rounded),
-      ('add_transaction', l10n.add, Icons.add),
-      ('scan_receipt', l10n.scan, Icons.document_scanner_outlined),
-      ('accounts', l10n.accounts, Symbols.account_balance),
-      ('contacts', l10n.contacts, Icons.people_outline_rounded),
-      ('receivables', l10n.receivableTag, Symbols.account_balance_wallet),
-      ('payables', l10n.payables, Icons.payment_outlined),
-      ('categories', l10n.categories, Icons.category_outlined),
-      ('analytics', l10n.analytics, Icons.bar_chart_rounded),
-      ('user_guide', l10n.userGuide, Icons.help_outline_rounded),
-      ('app_tour', l10n.appTour, Icons.tour_outlined),
-    ];
-
-    final layoutAsync = ref.read(dashboardWidgetLayoutProvider);
-    final allConfigs = layoutAsync.value ?? [];
-
-    // Summary widgets that are already on dashboard (excluding THIS widget)
-    final existingSummaryKinds = allConfigs
-        .where((c) => !c.kind.isEntity && c != config)
-        .map((c) => c.kind)
-        .toSet();
-
-    final actionToKind = {
-      'accounts': DashboardWidgetKind.netWorth,
-      'contacts': DashboardWidgetKind.contactsSummary,
-      'receivables': DashboardWidgetKind.receivablesSummary,
-      'payables': DashboardWidgetKind.payablesSummary,
-      'categories': DashboardWidgetKind.categoriesSummary,
-    };
-
-    // Filter out actions that are already used as individual summary widgets elsewhere
-    final availableActions = actions.where((a) {
-      final kind = actionToKind[a.$1];
-      if (kind != null && existingSummaryKinds.contains(kind)) return false;
-      return true;
-    }).toList();
-
-    final currentActions = config.quickActionCodes?.toSet() ??
-        actions.map((e) => e.$1).toSet(); // Default to all if null
-
-    await showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      builder: (ctx) => StatefulBuilder(
-        builder: (context, setState) => SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(0, 20, 0, 16),
-                  child: Text(
-                    l10n.quickActions,
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: availableActions.map((e) {
-                    final isSelected = currentActions.contains(e.$1);
-                    return FilterChip(
-                      label: Text(e.$2),
-                      avatar: Icon(
-                        e.$3,
-                        size: 16,
-                        color: isSelected
-                            ? theme.colorScheme.onPrimaryContainer
-                            : theme.colorScheme.onSurfaceVariant,
-                      ),
-                      selected: isSelected,
-                      labelStyle: TextStyle(
-                        color: isSelected
-                            ? theme.colorScheme.onPrimaryContainer
-                            : theme.colorScheme.onSurface,
-                        fontWeight:
-                            isSelected ? FontWeight.bold : FontWeight.normal,
-                      ),
-                      selectedColor: theme.colorScheme.primaryContainer,
-                      checkmarkColor: theme.colorScheme.onPrimaryContainer,
-                      onSelected: (v) {
-                        setState(() {
-                          if (v) {
-                            currentActions.add(e.$1);
-                          } else {
-                            currentActions.remove(e.$1);
-                          }
-                        });
-                      },
-                    );
-                  }).toList(),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 24),
-                  child: FilledButton(
-                    onPressed: () async {
-                      await ref
-                          .read(dashboardWidgetLayoutProvider.notifier)
-                          .updateWidget(
-                            layoutIndex,
-                            config.copyWith(
-                                quickActionCodes: currentActions.toList()),
-                          );
-                      if (context.mounted) Navigator.pop(ctx);
-                    },
-                    child: Text(l10n.save),
-                  ),
-                ),
-                SizedBox(height: MediaQuery.paddingOf(context).bottom),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
+    await HomeScreen.showQuickActionSelectionSheetForBottomBar(
+        context, ref, theme, l10n);
   }
 
   void _openTransactionsFiltered(
@@ -1895,17 +1778,23 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        IconButton(
-                          icon: const Icon(Icons.add_circle_outline, size: 20),
-                          onPressed: () =>
-                              _showQuickActionSelectionSheetForWidget(
-                            context,
-                            ref,
-                            l10n,
-                            theme,
-                            config,
-                            layoutIndex,
-                          ),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon:
+                                  const Icon(Icons.grid_view_rounded, size: 20),
+                              onPressed: () =>
+                                  _showQuickActionSelectionSheetForWidget(
+                                context,
+                                ref,
+                                l10n,
+                                theme,
+                                config,
+                                layoutIndex,
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),

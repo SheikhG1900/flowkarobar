@@ -253,6 +253,69 @@ class _FlowpaisaAppState extends ConsumerState<FlowpaisaApp>
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
+  static Future<void> showQuickActionSelectionSheetForBottomBar(
+      BuildContext context,
+      WidgetRef ref,
+      ThemeData theme,
+      AppLocalizations l10n) async {
+    final actions = [
+      ('voice_add', l10n.voiceAdd, Icons.mic_none_rounded),
+      ('add_transaction', l10n.add, Icons.add),
+      ('scan_receipt', l10n.scan, Icons.document_scanner_outlined),
+      ('accounts', l10n.accounts, Symbols.account_balance),
+      ('contacts', l10n.contacts, Icons.people_outline_rounded),
+      ('receivables', l10n.receivableTag, Symbols.account_balance_wallet),
+      ('payables', l10n.payables, Icons.payment_outlined),
+      ('categories', l10n.categories, Icons.category_outlined),
+      ('analytics', l10n.analytics, Icons.bar_chart_rounded),
+      ('user_guide', l10n.userGuide, Icons.help_outline_rounded),
+      ('app_tour', l10n.appTour, Icons.tour_outlined),
+    ];
+
+    final currentCode = ref.read(bottomBarQuickActionProvider);
+
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(
+                l10n.quickActions,
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            Flexible(
+              child: ListView(
+                shrinkWrap: true,
+                children: actions.map((e) {
+                  return ListTile(
+                    leading: Icon(e.$3),
+                    title: Text(e.$2),
+                    trailing:
+                        currentCode == e.$1 ? const Icon(Icons.check) : null,
+                    onTap: () {
+                      ref
+                          .read(bottomBarQuickActionProvider.notifier)
+                          .setAction(e.$1);
+                      Navigator.pop(ctx);
+                    },
+                  );
+                }).toList(),
+              ),
+            ),
+            SizedBox(height: MediaQuery.paddingOf(context).bottom),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
@@ -603,8 +666,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 final activeColor = activeCashbook.color;
                 final quickActionCode = ref.watch(bottomBarQuickActionProvider);
                 final isPremium = PremiumGate.isPremium(ref);
+                final reorderMode = ref.watch(dashboardReorderModeProvider);
+                final theme = Theme.of(context);
 
-                return _buildCenterQuickButton(
+                final button = _buildCenterQuickButton(
                   context,
                   ref,
                   quickActionCode,
@@ -612,6 +677,77 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   l10n,
                   activeColor,
                 );
+
+                if (reorderMode) {
+                  return Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      button,
+                      PositionedDirectional(
+                        top: -8,
+                        start: -8,
+                        child:                             GestureDetector(
+                              onTap: () => _DashboardTab
+                                  .showQuickActionSelectionSheetForBottomBar(
+                                      context, ref, Theme.of(context), l10n),
+                              child: Container(
+                            width: 24,
+                            height: 24,
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.primary,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Colors.white, width: 2),
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: Colors.black26,
+                                  blurRadius: 4,
+                                  offset: Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: const Icon(
+                              Icons.grid_view_rounded,
+                              color: Colors.white,
+                              size: 14,
+                            ),
+                          ),
+                        ),
+                      ),
+                      PositionedDirectional(
+                        top: -8,
+                        end: -8,
+                        child: GestureDetector(
+                          onTap: () => ref
+                              .read(showBottomBarQuickButtonProvider.notifier)
+                              .setVisibility(false),
+                          child: Container(
+                            width: 24,
+                            height: 24,
+                            decoration: BoxDecoration(
+                              color: Colors.red,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Colors.white, width: 2),
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: Colors.black26,
+                                  blurRadius: 4,
+                                  offset: Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: const Icon(
+                              Icons.delete,
+                              color: Colors.white,
+                              size: 14,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                }
+
+                return button;
               },
             )
           : null,
@@ -692,8 +828,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
 
     return GestureDetector(
-      onLongPress: () =>
-          _showQuickActionSelectionSheetForBottomBar(context, ref, theme, l10n),
+      onLongPress: () => HomeScreen.showQuickActionSelectionSheetForBottomBar(
+          context, ref, theme, l10n),
       child: FloatingActionButton(
         onPressed: onTap,
         backgroundColor: activeColor,
@@ -704,60 +840,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Future<void> _showQuickActionSelectionSheetForBottomBar(BuildContext context,
-      WidgetRef ref, ThemeData theme, AppLocalizations l10n) async {
-    final actions = [
-      ('voice_add', l10n.voiceAdd, Icons.mic_none_rounded),
-      ('add_transaction', l10n.add, Icons.add),
-      ('scan_receipt', l10n.scan, Icons.document_scanner_outlined),
-      ('accounts', l10n.accounts, Symbols.account_balance),
-      ('contacts', l10n.contacts, Icons.people_outline_rounded),
-      ('receivables', l10n.receivableTag, Symbols.account_balance_wallet),
-      ('payables', l10n.payables, Icons.payment_outlined),
-      ('categories', l10n.categories, Icons.category_outlined),
-      ('analytics', l10n.analytics, Icons.bar_chart_rounded),
-    ];
-
-    final currentCode = ref.read(bottomBarQuickActionProvider);
-
-    await showModalBottomSheet(
-      context: context,
-      builder: (ctx) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Text(
-                l10n.quickActions,
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            Flexible(
-              child: ListView(
-                shrinkWrap: true,
-                children: actions.map((e) {
-                  return ListTile(
-                    leading: Icon(e.$3),
-                    title: Text(e.$2),
-                    trailing:
-                        currentCode == e.$1 ? const Icon(Icons.check) : null,
-                    onTap: () {
-                      ref
-                          .read(bottomBarQuickActionProvider.notifier)
-                          .setAction(e.$1);
-                      Navigator.pop(ctx);
-                    },
-                  );
-                }).toList(),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+  static Future<void> showQuickActionSelectionSheetForBottomBar(
+      BuildContext context,
+      WidgetRef ref,
+      ThemeData theme,
+      AppLocalizations l10n) async {
+    await _DashboardTab.showQuickActionSelectionSheetForBottomBar(
+        context, ref, theme, l10n);
   }
 }
 
@@ -840,7 +929,15 @@ class _DashboardBodyScrollState extends ConsumerState<_DashboardBodyScroll> {
                           const SyncStatusSection(),
                           if (showPrivacyHighlight) ...[
                             const SizedBox(height: 12),
-                            const _DashboardPrivacyHighlight(),
+                            ref.watch(dashboardReorderModeProvider)
+                                ? _DashboardTab.wrapCard(
+                                    child: const _DashboardPrivacyHighlight(),
+                                    onRemove: () => ref
+                                        .read(showDashboardPrivacyHighlightProvider
+                                            .notifier)
+                                        .setVisibility(false),
+                                  )
+                                : const _DashboardPrivacyHighlight(),
                             const SizedBox(height: 12),
                           ],
                         ],
@@ -924,6 +1021,108 @@ class _DashboardTab extends ConsumerWidget {
     );
   }
 
+  static Future<void> showQuickActionSelectionSheetForBottomBar(
+      BuildContext context,
+      WidgetRef ref,
+      ThemeData theme,
+      AppLocalizations l10n) async {
+    final actions = [
+      ('voice_add', l10n.voiceAdd, Icons.mic_none_rounded),
+      ('add_transaction', l10n.add, Icons.add),
+      ('scan_receipt', l10n.scan, Icons.document_scanner_outlined),
+      ('accounts', l10n.accounts, Symbols.account_balance),
+      ('contacts', l10n.contacts, Icons.people_outline_rounded),
+      ('receivables', l10n.receivableTag, Symbols.account_balance_wallet),
+      ('payables', l10n.payables, Icons.payment_outlined),
+      ('categories', l10n.categories, Icons.category_outlined),
+      ('analytics', l10n.analytics, Icons.bar_chart_rounded),
+      ('user_guide', l10n.userGuide, Icons.help_outline_rounded),
+      ('app_tour', l10n.appTour, Icons.tour_outlined),
+    ];
+
+    final currentCode = ref.read(bottomBarQuickActionProvider);
+
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(
+                l10n.quickActions,
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            Flexible(
+              child: ListView(
+                shrinkWrap: true,
+                children: actions.map((e) {
+                  return ListTile(
+                    leading: Icon(e.$3),
+                    title: Text(e.$2),
+                    trailing:
+                        currentCode == e.$1 ? const Icon(Icons.check) : null,
+                    onTap: () {
+                      ref
+                          .read(bottomBarQuickActionProvider.notifier)
+                          .setAction(e.$1);
+                      Navigator.pop(ctx);
+                    },
+                  );
+                }).toList(),
+              ),
+            ),
+            SizedBox(height: MediaQuery.paddingOf(context).bottom),
+          ],
+        ),
+      ),
+    );
+  }
+
+  static Widget wrapCard({required Widget child, VoidCallback? onRemove}) {
+    if (onRemove == null) return child;
+
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        child,
+        PositionedDirectional(
+          top: -10,
+          end: -10,
+          child: GestureDetector(
+            onTap: onRemove,
+            child: Container(
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
+                color: Colors.red,
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 2),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Colors.black26,
+                    blurRadius: 4,
+                    offset: Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: const Icon(
+                Icons.delete,
+                color: Colors.white,
+                size: 16,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   static Widget _buildDashboardWidgetsSection(
     BuildContext context,
     WidgetRef ref,
@@ -932,6 +1131,7 @@ class _DashboardTab extends ConsumerWidget {
     List<DashboardWidgetConfig> configs,
     bool reorderMode,
   ) {
+
     return RepaintBoundary(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
@@ -1209,19 +1409,9 @@ class _DashboardTab extends ConsumerWidget {
                                   if (e.$1 ==
                                           DashboardWidgetKind.quickActions &&
                                       v) {
-                                    final selected =
-                                        await _showQuickActionSelectionSheet(
-                                            context, theme, l10n);
-                                    if (selected != null) {
-                                      await ref
-                                          .read(dashboardWidgetLayoutProvider
-                                              .notifier)
-                                          .addWidget(DashboardWidgetConfig(
-                                            kind: DashboardWidgetKind
-                                                .quickActions,
-                                            quickActionCodes: selected,
-                                          ));
-                                    }
+                                    await HomeScreen
+                                        .showQuickActionSelectionSheetForBottomBar(
+                                            context, ref, theme, l10n);
                                     return;
                                   }
                                   await ref
@@ -1328,96 +1518,6 @@ class _DashboardTab extends ConsumerWidget {
     );
   }
 
-  static Future<List<String>?> _showQuickActionSelectionSheet(
-      BuildContext context, ThemeData theme, AppLocalizations l10n) async {
-    final actions = [
-      ('voice_add', l10n.voiceAdd, Icons.mic_none_rounded),
-      ('add_transaction', l10n.add, Icons.add),
-      ('scan_receipt', l10n.scan, Icons.document_scanner_outlined),
-      ('accounts', l10n.accounts, Symbols.account_balance),
-      ('contacts', l10n.contacts, Icons.people_outline_rounded),
-      ('receivables', l10n.receivableTag, Symbols.account_balance_wallet),
-      ('payables', l10n.payables, Icons.payment_outlined),
-      ('categories', l10n.categories, Icons.category_outlined),
-      ('analytics', l10n.analytics, Icons.bar_chart_rounded),
-      ('user_guide', l10n.userGuide, Icons.help_outline_rounded),
-      ('app_tour', l10n.appTour, Icons.tour_outlined),
-    ];
-
-    final selected = actions.map((e) => e.$1).toSet();
-    return showModalBottomSheet<List<String>>(
-      context: context,
-      isScrollControlled: true,
-      builder: (ctx) => StatefulBuilder(
-        builder: (context, setState) => SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(0, 20, 0, 16),
-                  child: Text(
-                    l10n.quickActions,
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: actions.map((e) {
-                    final isSelected = selected.contains(e.$1);
-                    return FilterChip(
-                      label: Text(e.$2),
-                      avatar: Icon(
-                        e.$3,
-                        size: 16,
-                        color: isSelected
-                            ? theme.colorScheme.onPrimaryContainer
-                            : theme.colorScheme.onSurfaceVariant,
-                      ),
-                      selected: isSelected,
-                      labelStyle: TextStyle(
-                        color: isSelected
-                            ? theme.colorScheme.onPrimaryContainer
-                            : theme.colorScheme.onSurface,
-                        fontWeight:
-                            isSelected ? FontWeight.bold : FontWeight.normal,
-                      ),
-                      selectedColor: theme.colorScheme.primaryContainer,
-                      checkmarkColor: theme.colorScheme.onPrimaryContainer,
-                      onSelected: (v) {
-                        setState(() {
-                          if (v) {
-                            selected.add(e.$1);
-                          } else {
-                            selected.remove(e.$1);
-                          }
-                        });
-                      },
-                    );
-                  }).toList(),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 24),
-                  child: FilledButton(
-                    onPressed: selected.isEmpty
-                        ? null
-                        : () => Navigator.pop(ctx, selected.toList()),
-                    child: Text(l10n.add),
-                  ),
-                ),
-                SizedBox(height: MediaQuery.paddingOf(context).bottom),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 
   static Widget _buildFilterChip(BuildContext context, WidgetRef ref,
       DashboardFilter currentFilter, bool isDark) {
@@ -1934,8 +2034,8 @@ class _DashboardTab extends ConsumerWidget {
     }
 
     return GestureDetector(
-      onLongPress: () =>
-          _showQuickActionSelectionSheetForBottomBar(context, ref, theme, l10n),
+      onLongPress: () => HomeScreen.showQuickActionSelectionSheetForBottomBar(
+          context, ref, theme, l10n),
       child: FloatingActionButton(
         onPressed: onTap,
         backgroundColor: activeColor,
@@ -1948,58 +2048,8 @@ class _DashboardTab extends ConsumerWidget {
 
   Future<void> _showQuickActionSelectionSheetForBottomBar(BuildContext context,
       WidgetRef ref, ThemeData theme, AppLocalizations l10n) async {
-    final actions = [
-      ('voice_add', l10n.voiceAdd, Icons.mic_none_rounded),
-      ('add_transaction', l10n.add, Icons.add),
-      ('scan_receipt', l10n.scan, Icons.document_scanner_outlined),
-      ('accounts', l10n.accounts, Symbols.account_balance),
-      ('contacts', l10n.contacts, Icons.people_outline_rounded),
-      ('receivables', l10n.receivableTag, Symbols.account_balance_wallet),
-      ('payables', l10n.payables, Icons.payment_outlined),
-      ('categories', l10n.categories, Icons.category_outlined),
-      ('analytics', l10n.analytics, Icons.bar_chart_rounded),
-    ];
-
-    final currentCode = ref.read(bottomBarQuickActionProvider);
-
-    await showModalBottomSheet(
-      context: context,
-      builder: (ctx) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Text(
-                l10n.quickActions,
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            Flexible(
-              child: ListView(
-                shrinkWrap: true,
-                children: actions.map((e) {
-                  return ListTile(
-                    leading: Icon(e.$3),
-                    title: Text(e.$2),
-                    trailing:
-                        currentCode == e.$1 ? const Icon(Icons.check) : null,
-                    onTap: () {
-                      ref
-                          .read(bottomBarQuickActionProvider.notifier)
-                          .setAction(e.$1);
-                      Navigator.pop(ctx);
-                    },
-                  );
-                }).toList(),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+    await HomeScreen.showQuickActionSelectionSheetForBottomBar(
+        context, ref, theme, l10n);
   }
 }
 
