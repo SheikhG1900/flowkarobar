@@ -926,9 +926,18 @@ class _DashboardBodyScrollState extends ConsumerState<_DashboardBodyScroll> {
                       padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
                       child: Column(
                         children: [
-                          const SyncStatusSection(),
+                          const SizedBox(height: 12),
+                          Consumer(
+                            builder: (context, ref, child) {
+                              final showSync =
+                                  ref.watch(showDashboardSyncStatusProvider);
+                              if (!showSync) {
+                                return const SizedBox.shrink();
+                              }
+                              return const SyncStatusSection();
+                            },
+                          ),
                           if (showPrivacyHighlight) ...[
-                            const SizedBox(height: 12),
                             ref.watch(dashboardReorderModeProvider)
                                 ? _DashboardTab.wrapCard(
                                     child: const _DashboardPrivacyHighlight(),
@@ -2706,6 +2715,61 @@ class _DashboardHeader extends ConsumerWidget {
                     ),
                   ),
               ],
+            );
+          },
+        ),
+        Consumer(
+          builder: (context, ref, child) {
+            final showSync = ref.watch(showDashboardSyncStatusProvider);
+            final backupState = ref.watch(backupProvider);
+
+            final bool isSyncing = backupState.syncStatus == 'Syncing...' ||
+                backupState.syncStatus == 'Processing...' ||
+                backupState.syncStatus == 'Pulling...' ||
+                backupState.syncStatus == 'Pushing...';
+            final bool hasUnsynced = backupState.unsyncedCount > 0;
+            final int updatesCount =
+                backupState.cloudVersion - backupState.localVersion;
+            final bool hasCloudUpdates = updatesCount > 0;
+            final bool isSyncAlreadyInProgress =
+                backupState.syncStatus == 'Sync already in progress';
+            final bool isLockError =
+                backupState.syncStatus.contains('Error') &&
+                    (backupState.syncStatus.contains('database is locked') ||
+                        backupState.syncStatus.contains('1555') ||
+                        backupState.syncStatus.contains('code 5') ||
+                        backupState.syncStatus.contains('SQLITE_BUSY'));
+
+            // Hide the cloud icon if everything is idle and the section is hidden
+            if (!showSync &&
+                !isSyncing &&
+                !hasUnsynced &&
+                !hasCloudUpdates &&
+                !isSyncAlreadyInProgress &&
+                !isLockError &&
+                backupState.syncStatus != 'Success') {
+              return const SizedBox.shrink();
+            }
+
+            Color iconColor = theme.colorScheme.primary;
+            if (isSyncAlreadyInProgress || isLockError || hasUnsynced) {
+              iconColor = Colors.orange;
+            } else if (isSyncing) {
+              iconColor = theme.colorScheme.primary;
+            } else if (hasCloudUpdates) {
+              iconColor = Colors.lightBlue;
+            } else if (backupState.syncStatus == 'Success') {
+              iconColor = Colors.green;
+            }
+
+            return IconButton(
+              icon: Icon(
+                showSync ? Icons.cloud : Icons.cloud_outlined,
+                color: iconColor,
+              ),
+              onPressed: () =>
+                  ref.read(showDashboardSyncStatusProvider.notifier).toggle(),
+              tooltip: l10n.syncStatusTitle,
             );
           },
         ),

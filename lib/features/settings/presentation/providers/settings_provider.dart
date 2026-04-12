@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/shared/providers/database_provider.dart';
 import 'package:flowpaisa/features/settings/data/user_preferences_repository.dart';
 
+import 'package:flowpaisa/shared/providers/shared_preferences_provider.dart';
+
 // User Preferences Repository Provider
 final userPreferencesRepositoryProvider =
     Provider<UserPreferencesRepository>((ref) {
@@ -367,6 +369,32 @@ class ShowDashboardFinancialSummaryNotifier extends Notifier<bool> {
 final showDashboardFinancialSummaryProvider =
     NotifierProvider<ShowDashboardFinancialSummaryNotifier, bool>(() {
   return ShowDashboardFinancialSummaryNotifier();
+});
+
+// Show Dashboard Sync Status State Provider
+class ShowDashboardSyncStatusNotifier extends Notifier<bool> {
+  static const String _key = 'show_dashboard_sync_status';
+
+  @override
+  bool build() {
+    final prefs = ref.watch(sharedPreferencesProvider);
+    return prefs.getBool(_key) ?? false; // Default to false (hidden)
+  }
+
+  Future<void> setVisibility(bool show) async {
+    final prefs = ref.read(sharedPreferencesProvider);
+    await prefs.setBool(_key, show);
+    state = show;
+  }
+
+  void toggle() {
+    setVisibility(!state);
+  }
+}
+
+final showDashboardSyncStatusProvider =
+    NotifierProvider<ShowDashboardSyncStatusNotifier, bool>(() {
+  return ShowDashboardSyncStatusNotifier();
 });
 
 // Helper provider to get the font for the CURRENT language

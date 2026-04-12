@@ -181,146 +181,141 @@ class _SyncStatusSectionState extends ConsumerState<SyncStatusSection>
       statusColor = Colors.green;
     }
 
-    return Column(
-      children: [
-        const SizedBox(height: 12),
-        ScaleTransition(
-          scale: _scaleAnimation,
-          child: FadeTransition(
-            opacity: _fadeAnimation,
-            child: Container(
-              margin: const EdgeInsets.symmetric(vertical: 12),
-              padding: const EdgeInsets.all(18),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    statusColor.withValues(alpha: isDark ? 0.3 : 0.1),
-                    statusColor.withValues(alpha: isDark ? 0.4 : 0.2),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: statusColor.withValues(alpha: 0.6),
-                  width: 1,
-                ),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          statusColor.withValues(alpha: 0.3),
-                          statusColor.withValues(alpha: 0.2),
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: statusColor.withValues(alpha: 0.3),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: isSyncing
-                        ? const SizedBox(
-                            width: 28,
-                            height: 28,
-                            child: AppLoadingIndicator(size: 24),
-                          )
-                        : Icon(
-                            statusIcon,
-                            color: statusColor,
-                            size: 28,
-                          ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          l10n.syncStatusTitle,
-                          style: theme.textTheme.titleSmall?.copyWith(
-                            color: statusColor,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          statusText,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            color: theme.colorScheme.onSurface,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  if ((hasUnsynced || hasCloudUpdates) && !isSyncing)
-                    Container(
-                      decoration: BoxDecoration(
-                        color: statusColor.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: IconButton(
-                        onPressed: () async {
-                          if (isPremium) {
-                            if (isSignedIn) {
-                              ref
-                                  .read(backupProvider.notifier)
-                                  .triggerSync(l10n);
-                            } else {
-                              final success = await ref
-                                  .read(backupProvider.notifier)
-                                  .signInIfNeeded();
-                              if (success) {
-                                ref
-                                    .read(backupProvider.notifier)
-                                    .triggerSync(l10n);
-                              }
-                            }
-                          } else {
-                            PremiumGate.showPremiumDialog(context);
-                          }
-                        },
-                        icon: Icon(
-                          Symbols.sync,
-                          color: statusColor,
-                          size: 24,
-                        ),
-                        tooltip: l10n.syncNow,
-                        padding: const EdgeInsets.all(12),
-                      ),
-                    ),
-                  if (isSuccess && !hasUnsynced && !hasCloudUpdates)
-                    Icon(
-                      Symbols.check_circle,
-                      color: statusColor.withValues(alpha: 0.7),
-                      size: 28,
-                    ),
-                  if (isSyncing)
-                    Icon(
-                      Symbols.clock_loader_20_rounded,
-                      color: statusColor.withValues(alpha: 0.7),
-                      size: 28,
-                    ),
-                ],
-              ),
+    return ScaleTransition(
+      scale: _scaleAnimation,
+      child: FadeTransition(
+        opacity: _fadeAnimation,
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                statusColor.withValues(alpha: isDark ? 0.3 : 0.1),
+                statusColor.withValues(alpha: isDark ? 0.4 : 0.2),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: statusColor.withValues(alpha: 0.6),
+              width: 1,
             ),
           ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      statusColor.withValues(alpha: 0.3),
+                      statusColor.withValues(alpha: 0.2),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: statusColor.withValues(alpha: 0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: isSyncing
+                    ? const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: AppLoadingIndicator(size: 20),
+                      )
+                    : Icon(
+                        statusIcon,
+                        color: statusColor,
+                        size: 24,
+                      ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      l10n.syncStatusTitle,
+                      style: theme.textTheme.labelMedium?.copyWith(
+                        color: statusColor.withValues(alpha: 0.8),
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      statusText,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: theme.colorScheme.onSurface,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              if ((hasUnsynced || hasCloudUpdates) && !isSyncing)
+                Container(
+                  decoration: BoxDecoration(
+                    color: statusColor.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: IconButton(
+                    onPressed: () async {
+                      if (isPremium) {
+                        if (isSignedIn) {
+                          ref
+                              .read(backupProvider.notifier)
+                              .triggerSync(l10n);
+                        } else {
+                          final success = await ref
+                              .read(backupProvider.notifier)
+                              .signInIfNeeded();
+                          if (success) {
+                            ref
+                                .read(backupProvider.notifier)
+                                .triggerSync(l10n);
+                          }
+                        }
+                      } else {
+                        PremiumGate.showPremiumDialog(context);
+                      }
+                    },
+                    icon: Icon(
+                      Symbols.sync,
+                      color: statusColor,
+                      size: 24,
+                    ),
+                    tooltip: l10n.syncNow,
+                    padding: const EdgeInsets.all(12),
+                  ),
+                ),
+              if (isSuccess && !hasUnsynced && !hasCloudUpdates)
+                Icon(
+                  Symbols.check_circle,
+                  color: statusColor.withValues(alpha: 0.7),
+                  size: 28,
+                ),
+              if (isSyncing)
+                Icon(
+                  Symbols.clock_loader_20_rounded,
+                  color: statusColor.withValues(alpha: 0.7),
+                  size: 28,
+                ),
+            ],
+          ),
         ),
-      ],
+      ),
     );
   }
 }
