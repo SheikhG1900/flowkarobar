@@ -196,70 +196,17 @@ class AccountsRepository {
 
   /// Returns balance as a reactive stream (re-emits on any transaction/transfer change).
   Stream<double> watchAccountBalance(Account account) {
-    final incomeStream = (_db.selectOnly(_db.transactions)
-          ..addColumns([_db.transactions.amount.sum()])
-          ..where(
-            _db.transactions.accountUuid.equals(account.uuid) &
-                _db.transactions.type.equals('INCOME') &
-                _db.transactions.isDeleted.equals(false) &
-                _db.transactions.processedDate.isNotNull() &
-                _db.transactions.processedDate
-                    .isBiggerOrEqualValue(account.openingDate),
-          ))
-        .watchSingle()
-        .map((r) => r.read(_db.transactions.amount.sum()) ?? 0.0);
-
-    final expenseStream = (_db.selectOnly(_db.transactions)
-          ..addColumns([_db.transactions.amount.sum()])
-          ..where(
-            _db.transactions.accountUuid.equals(account.uuid) &
-                _db.transactions.type.equals('EXPENSE') &
-                _db.transactions.isDeleted.equals(false) &
-                _db.transactions.processedDate.isNotNull() &
-                _db.transactions.processedDate
-                    .isBiggerOrEqualValue(account.openingDate),
-          ))
-        .watchSingle()
-        .map((r) => r.read(_db.transactions.amount.sum()) ?? 0.0);
-
-    final transfersInStream = (_db.selectOnly(_db.accountTransfers)
-          ..addColumns([_db.accountTransfers.amount.sum()])
-          ..where(
-            _db.accountTransfers.toAccountUuid.equals(account.uuid) &
-                _db.accountTransfers.isDeleted.equals(false) &
-                _db.accountTransfers.date
-                    .isBiggerOrEqualValue(account.openingDate),
-          ))
-        .watchSingle()
-        .map((r) => r.read(_db.accountTransfers.amount.sum()) ?? 0.0);
-
-    final transfersOutStream = (_db.selectOnly(_db.accountTransfers)
-          ..addColumns([_db.accountTransfers.amount.sum()])
-          ..where(
-            _db.accountTransfers.fromAccountUuid.equals(account.uuid) &
-                _db.accountTransfers.isDeleted.equals(false) &
-                _db.accountTransfers.date
-                    .isBiggerOrEqualValue(account.openingDate),
-          ))
-        .watchSingle()
-        .map((r) => r.read(_db.accountTransfers.amount.sum()) ?? 0.0);
-
-    final type = AccountType.fromValue(account.type);
-
-    return incomeStream
-        .asyncMap((income) async {
-          final expense = await expenseStream.first;
-          final transfersIn = await transfersInStream.first;
-          final transfersOut = await transfersOutStream.first;
-          if (type.isCreditCard) {
-            // Expenses & cash advances (transfersOut) increase liability.
-            // Payments (transfersIn) reduce liability.
-            return account.openingBalance - expense + transfersIn - transfersOut;
-          } else {
-            return account.openingBalance + income - expense + transfersIn -
-                transfersOut;
-          }
-        });
+    // Recompute when this account, its transactions, or ANY transfer change.
+    return Rx.combineLatest3<Account?, List<AccountTransfer>, List<Transaction>,
+        Account?>(
+      _db.select(_db.accounts).watchSingleOrNull(),
+      _db.select(_db.accountTransfers).watch(),
+      _db.select(_db.transactions).watch(),
+      (acc, _, __) => acc,
+    ).asyncMap((acc) async {
+      if (acc == null) return 0.0;
+      return getAccountBalance(acc);
+    });
   }
 
   /// Calculates the credit card due amount:

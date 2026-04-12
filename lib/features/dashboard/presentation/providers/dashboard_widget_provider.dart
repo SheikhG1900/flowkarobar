@@ -194,7 +194,6 @@ class DashboardVisibilityNotifier extends Notifier<DashboardVisibility> {
       case DashboardVisibility.visible:
         state = DashboardVisibility.edit;
         ref.read(dashboardReorderModeProvider.notifier).set(true);
-        ref.read(showDashboardWidgetAreaProvider.notifier).setVisibility(true);
         break;
       case DashboardVisibility.edit:
         state = DashboardVisibility.hidden;
@@ -210,15 +209,25 @@ class DashboardVisibilityNotifier extends Notifier<DashboardVisibility> {
   }
 
   void setVisibility(DashboardVisibility visibility) {
+    if (state == visibility) return;
+    
+    final oldState = state;
     state = visibility;
+    
     switch (visibility) {
       case DashboardVisibility.visible:
         ref.read(dashboardReorderModeProvider.notifier).set(false);
-        ref.read(showDashboardWidgetAreaProvider.notifier).setVisibility(true);
+        // Only update persistent storage if we are coming from hidden
+        if (oldState == DashboardVisibility.hidden) {
+          ref.read(showDashboardWidgetAreaProvider.notifier).setVisibility(true);
+        }
         break;
       case DashboardVisibility.edit:
         ref.read(dashboardReorderModeProvider.notifier).set(true);
-        ref.read(showDashboardWidgetAreaProvider.notifier).setVisibility(true);
+        // Only update persistent storage if we are coming from hidden
+        if (oldState == DashboardVisibility.hidden) {
+          ref.read(showDashboardWidgetAreaProvider.notifier).setVisibility(true);
+        }
         break;
       case DashboardVisibility.hidden:
         ref.read(dashboardReorderModeProvider.notifier).set(false);

@@ -2720,6 +2720,9 @@ class _DashboardHeader extends ConsumerWidget {
         ),
         Consumer(
           builder: (context, ref, child) {
+            // Keep sync status polling active globally (reactive approach).
+            ref.watch(syncStatusPollingProvider);
+            
             final showSync = ref.watch(showDashboardSyncStatusProvider);
             final backupState = ref.watch(backupProvider);
 
@@ -2751,20 +2754,35 @@ class _DashboardHeader extends ConsumerWidget {
               return const SizedBox.shrink();
             }
 
+            IconData statusIcon;
             Color iconColor = theme.colorScheme.primary;
+            
             if (isSyncAlreadyInProgress || isLockError || hasUnsynced) {
               iconColor = Colors.orange;
+              statusIcon = showSync
+                  ? (hasUnsynced ? Icons.cloud_upload : Icons.cloud)
+                  : (hasUnsynced
+                      ? Icons.cloud_upload_outlined
+                      : Icons.cloud_outlined);
             } else if (isSyncing) {
               iconColor = theme.colorScheme.primary;
+              statusIcon = showSync ? Icons.cloud_sync : Icons.cloud_sync_outlined;
             } else if (hasCloudUpdates) {
               iconColor = Colors.lightBlue;
+              statusIcon = showSync ? Icons.cloud_download : Icons.cloud_download_outlined;
             } else if (backupState.syncStatus == 'Success') {
               iconColor = Colors.green;
+              statusIcon = showSync ? Icons.cloud_done : Icons.cloud_done_outlined;
+            } else if (backupState.syncStatus.contains('Error')) {
+              iconColor = theme.colorScheme.error;
+              statusIcon = showSync ? Icons.cloud_off : Icons.cloud_off_outlined;
+            } else {
+              statusIcon = showSync ? Icons.cloud : Icons.cloud_outlined;
             }
 
             return IconButton(
               icon: Icon(
-                showSync ? Icons.cloud : Icons.cloud_outlined,
+                statusIcon,
                 color: iconColor,
               ),
               onPressed: () =>

@@ -81,6 +81,7 @@ final dashboardStatsProvider = StreamProvider<DashboardStats>((ref) {
   ref.watch(allTransactionsProvider);
   ref.watch(allReceivablesProvider);
   ref.watch(allPayablesProvider);
+  ref.watch(syncStatusPollingProvider); // Keep polling active for dashboard stats
 
   final txStatsStream = txRepo.watchTransactionStats();
   final recentTxStream = txRepo.watchRecentTransactions(limit: 5);
