@@ -1345,6 +1345,11 @@ class _DashboardTab extends ConsumerWidget {
         l10n.quickActions,
         Icons.grid_view_rounded
       ),
+      (
+        DashboardWidgetKind.accountsSlider,
+        l10n.accounts,
+        Symbols.account_balance
+      ),
     ];
     showModalBottomSheet<void>(
       context: context,

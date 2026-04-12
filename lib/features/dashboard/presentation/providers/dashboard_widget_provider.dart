@@ -46,6 +46,8 @@ class DashboardWidgetLayoutNotifier
     return list;
   }
 
+  static Map<DashboardWidgetKind, DashboardWidgetConfig> get lastKnownConfigs => _lastKnownConfigs;
+
   Future<void> setLayout(List<DashboardWidgetConfig> configs) async {
     state = AsyncData(configs);
 
@@ -93,7 +95,6 @@ class DashboardWidgetLayoutNotifier
     await setLayout(next);
   }
 
-  /// Show or hide a summary widget kind. At most one slot when adding; removing
   /// clears all duplicate entries of that kind. Entity pins are unchanged.
   Future<void> setSummaryKindOnDashboard(
       DashboardWidgetKind kind, bool on) async {
@@ -117,6 +118,9 @@ class DashboardWidgetLayoutNotifier
           'accounts'
         ]);
       }
+
+      // If it's accountsSlider and we don't have a last known, we can just use the default
+      // (which is already newConfig)
 
       await setLayout([...current, newConfig]);
     } else {

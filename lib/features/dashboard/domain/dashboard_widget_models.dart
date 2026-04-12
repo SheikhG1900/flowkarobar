@@ -17,6 +17,7 @@ enum DashboardWidgetKind {
   incomeSummary,
   expenseSummary,
   financialSummary,
+  accountsSlider,
   // Entity widgets
   transaction,
   category,
