@@ -1568,6 +1568,12 @@ class AppLocalizationsHi extends AppLocalizations {
   String get add => 'जोड़ें';
 
   @override
+  String get scanReceipt => 'रसीद स्कैन करें';
+
+  @override
+  String get voiceAdd => 'आवाज से जोड़ें';
+
+  @override
   String get scan => 'स्कैन';
 
   @override
@@ -2326,12 +2332,6 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get copyDeepLinkSubtitle => 'डीप लिंक क्लिपबोर्ड पर कॉपी करें';
-
-  @override
-  String get scanReceipt => 'रसीद स्कैन करें';
-
-  @override
-  String get voiceAdd => 'आवाज से जोड़ें';
 
   @override
   String get tapToSpeak => 'बोलने के लिए टैप करें';

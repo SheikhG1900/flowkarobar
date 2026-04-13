@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
 
+import 'package:flowpaisa/l10n/app_localizations.dart';
+
 class TransactionSpeedDial extends ConsumerStatefulWidget {
   final VoidCallback onAddTransaction;
   final VoidCallback onVoiceAdd;
@@ -61,9 +63,11 @@ class _TransactionSpeedDialState extends ConsumerState<TransactionSpeedDial>
     final isDark = theme.brightness == Brightness.dark;
     final activeCashbook = ref.watch(activeCashbookProvider);
     final activeColor = activeCashbook.color;
+    final l10n = AppLocalizations.of(context)!;
+    final isRtl = Directionality.of(context) == TextDirection.rtl;
 
     return Stack(
-      alignment: Alignment.bottomRight,
+      alignment: isRtl ? Alignment.bottomLeft : Alignment.bottomRight,
       children: [
         if (_isExpanded)
           GestureDetector(
@@ -77,16 +81,19 @@ class _TransactionSpeedDialState extends ConsumerState<TransactionSpeedDial>
         Padding(
           padding: EdgeInsets.only(
             bottom: 16 + MediaQuery.of(context).padding.bottom,
-            right: 16,
+            left: isRtl ? 16 : 0,
+            right: isRtl ? 0 : 16,
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.end,
+            crossAxisAlignment:
+                isRtl ? CrossAxisAlignment.start : CrossAxisAlignment.end,
             children: [
               _buildStep(
                 index: 2,
-                label: 'Bulk Import',
+                label: l10n.bulkImport,
                 icon: Icons.backup_table,
+                isRtl: isRtl,
                 color: isDark
                     ? theme.colorScheme.secondaryContainer
                     : theme.colorScheme.primary.withValues(alpha: 0.1),
@@ -102,8 +109,9 @@ class _TransactionSpeedDialState extends ConsumerState<TransactionSpeedDial>
               const SizedBox(height: 16),
               _buildStep(
                 index: 1,
-                label: 'Scan Receipt',
+                label: l10n.scanReceipt,
                 icon: Icons.document_scanner_outlined,
+                isRtl: isRtl,
                 color: isDark
                     ? theme.colorScheme.primaryContainer
                     : theme.colorScheme.primary.withValues(alpha: 0.1),
@@ -119,8 +127,9 @@ class _TransactionSpeedDialState extends ConsumerState<TransactionSpeedDial>
               const SizedBox(height: 16),
               _buildStep(
                 index: 0,
-                label: 'Voice Add',
+                label: l10n.voiceAdd,
                 icon: Icons.mic_none_rounded,
+                isRtl: isRtl,
                 color: widget.activeColor,
                 iconColor: Colors.white,
                 size: 56,
@@ -131,71 +140,34 @@ class _TransactionSpeedDialState extends ConsumerState<TransactionSpeedDial>
               ),
               const SizedBox(height: 16),
               // Split Main Button
-              Material(
-                elevation: 4,
-                borderRadius: BorderRadius.circular(32),
-                color: widget.activeColor,
-                shadowColor: widget.activeColor.withValues(alpha: 0.4),
-                child: IntrinsicHeight(
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Primary Action: Add Transaction
-                      InkWell(
-                        onTap: widget.onAddTransaction,
-                        borderRadius: const BorderRadius.horizontal(
-                            left: Radius.circular(32)),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 20, vertical: 14),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(Icons.add,
-                                  color: Colors.white, size: 24),
-                              const SizedBox(width: 8),
-                              const Text(
-                                'Add',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      // Vertical Divider
-                      Container(
-                        width: 1,
-                        color: Colors.white.withValues(alpha: 0.2),
-                        margin: const EdgeInsets.symmetric(vertical: 12),
-                      ),
-                      // Toggle Expansion Arrow
-                      InkWell(
-                        onTap: _toggle,
-                        borderRadius: const BorderRadius.horizontal(
-                            right: Radius.circular(32)),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 14),
-                          child: AnimatedBuilder(
-                            animation: _controller,
-                            builder: (context, child) {
-                              return Transform.rotate(
-                                angle: _controller.value * math.pi, // 180 degrees
-                                child: const Icon(
-                                  Icons.keyboard_arrow_up,
-                                  color: Colors.white,
-                                  size: 24,
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                      ),
-                    ],
+              Align(
+                alignment: isRtl ? Alignment.centerLeft : Alignment.centerRight,
+                child: Material(
+                  elevation: 4,
+                  borderRadius: BorderRadius.circular(32),
+                  color: widget.activeColor,
+                  shadowColor: widget.activeColor.withValues(alpha: 0.4),
+                  child: IntrinsicHeight(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (isRtl) ...[
+                          // Toggle Expansion Arrow (RTL)
+                          _buildToggleArrow(isRtl: true),
+                          // Vertical Divider
+                          _buildDivider(),
+                          // Primary Action: Add Transaction (RTL)
+                          _buildAddAction(l10n, isRtl: true),
+                        ] else ...[
+                          // Primary Action: Add Transaction (LTR)
+                          _buildAddAction(l10n, isRtl: false),
+                          // Vertical Divider
+                          _buildDivider(),
+                          // Toggle Expansion Arrow (LTR)
+                          _buildToggleArrow(isRtl: false),
+                        ],
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -203,6 +175,68 @@ class _TransactionSpeedDialState extends ConsumerState<TransactionSpeedDial>
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildDivider() {
+    return Container(
+      width: 1,
+      color: Colors.white.withValues(alpha: 0.2),
+      margin: const EdgeInsets.symmetric(vertical: 12),
+    );
+  }
+
+  Widget _buildAddAction(AppLocalizations l10n, {required bool isRtl}) {
+    return InkWell(
+      onTap: widget.onAddTransaction,
+      borderRadius: BorderRadius.horizontal(
+        left: Radius.circular(isRtl ? 0 : 32),
+        right: Radius.circular(isRtl ? 32 : 0),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.add, color: Colors.white, size: 24),
+            const SizedBox(width: 8),
+            Text(
+              l10n.add,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildToggleArrow({required bool isRtl}) {
+    return InkWell(
+      onTap: _toggle,
+      borderRadius: BorderRadius.horizontal(
+        left: Radius.circular(isRtl ? 32 : 0),
+        right: Radius.circular(isRtl ? 0 : 32),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+        child: AnimatedBuilder(
+          animation: _controller,
+          builder: (context, child) {
+            return Transform.rotate(
+              angle: _controller.value * math.pi, // 180 degrees
+              child: const Icon(
+                Icons.keyboard_arrow_up,
+                color: Colors.white,
+                size: 24,
+              ),
+            );
+          },
+        ),
+      ),
     );
   }
 
@@ -214,6 +248,7 @@ class _TransactionSpeedDialState extends ConsumerState<TransactionSpeedDial>
     required Color iconColor,
     required double size,
     required VoidCallback onTap,
+    required bool isRtl,
   }) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
@@ -244,75 +279,87 @@ class _TransactionSpeedDialState extends ConsumerState<TransactionSpeedDial>
             offset: Offset(0, (1 - value) * 20),
             child: Transform.scale(
               scale: value,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: labelBgColor,
-                      borderRadius: BorderRadius.circular(8),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.1),
-                          blurRadius: 4,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Text(
-                      label,
-                      style: TextStyle(
-                        color: labelTextColor,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  SizedBox(
-                    width: size,
-                    height: size,
-                    child: FloatingActionButton(
-                      heroTag: 'speed_dial_$index',
-                      onPressed: onTap,
-                      backgroundColor: isDark ? color : theme.cardColor,
-                      elevation: 3,
-                      highlightElevation: 4,
-                      disabledElevation: 0,
-                      focusElevation: 4,
-                      hoverElevation: 4,
-                      splashColor: iconColor.withValues(alpha: 0.1),
-                      shape: CircleBorder(
-                        side: isDark
-                            ? BorderSide.none
-                            : BorderSide(
-                                color: iconColor.withValues(alpha: 0.15),
-                                width: 1,
-                              ),
-                      ),
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          if (!isDark)
-                            Container(
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: color,
-                              ),
-                            ),
-                          Icon(icon, color: iconColor, size: size * 0.45),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
+              child: Align(
+                alignment: isRtl ? Alignment.centerLeft : Alignment.centerRight,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildStepLabel(labelBgColor, label, labelTextColor),
+                    const SizedBox(width: 12),
+                    _buildStepFab(index, onTap, isDark, color, theme, iconColor,
+                        size, icon),
+                  ],
+                ),
               ),
             ),
           ),
         );
       },
+    );
+  }
+
+  Widget _buildStepLabel(Color labelBgColor, String label, Color labelTextColor) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: labelBgColor,
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: labelTextColor,
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStepFab(int index, VoidCallback onTap, bool isDark, Color color,
+      ThemeData theme, Color iconColor, double size, IconData icon) {
+    return SizedBox(
+      width: size,
+      height: size,
+      child: FloatingActionButton(
+        heroTag: 'speed_dial_$index',
+        onPressed: onTap,
+        backgroundColor: isDark ? color : theme.cardColor,
+        elevation: 3,
+        highlightElevation: 4,
+        disabledElevation: 0,
+        focusElevation: 4,
+        hoverElevation: 4,
+        splashColor: iconColor.withValues(alpha: 0.1),
+        shape: CircleBorder(
+          side: isDark
+              ? BorderSide.none
+              : BorderSide(
+                  color: iconColor.withValues(alpha: 0.15),
+                  width: 1,
+                ),
+        ),
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            if (!isDark)
+              Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: color,
+                ),
+              ),
+            Icon(icon, color: iconColor, size: size * 0.45),
+          ],
+        ),
+      ),
     );
   }
 }

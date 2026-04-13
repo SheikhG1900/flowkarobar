@@ -1561,6 +1561,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get add => 'Add';
 
   @override
+  String get scanReceipt => 'Scan Receipt';
+
+  @override
+  String get voiceAdd => 'Voice Add';
+
+  @override
   String get scan => 'Scan';
 
   @override
@@ -2317,12 +2323,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get copyDeepLinkSubtitle => 'Copy deep link to clipboard';
-
-  @override
-  String get scanReceipt => 'Scan Receipt';
-
-  @override
-  String get voiceAdd => 'Voice Add';
 
   @override
   String get tapToSpeak => 'Tap to speak';

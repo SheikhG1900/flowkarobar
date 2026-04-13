@@ -1571,6 +1571,12 @@ class AppLocalizationsUr extends AppLocalizations {
   String get add => 'شامل کریں';
 
   @override
+  String get scanReceipt => 'رسید اسکین کریں';
+
+  @override
+  String get voiceAdd => 'آواز سے شامل کریں';
+
+  @override
   String get scan => 'اسکین';
 
   @override
@@ -2331,12 +2337,6 @@ class AppLocalizationsUr extends AppLocalizations {
 
   @override
   String get copyDeepLinkSubtitle => 'ڈیپ لنک کلپ بورڈ پر کاپی کریں';
-
-  @override
-  String get scanReceipt => 'رسید اسکین کریں';
-
-  @override
-  String get voiceAdd => 'آواز سے شامل کریں';
 
   @override
   String get tapToSpeak => 'بولنے کے لیے ٹیپ کریں';

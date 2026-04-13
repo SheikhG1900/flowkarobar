@@ -2926,6 +2926,18 @@ abstract class AppLocalizations {
   /// **'Add'**
   String get add;
 
+  /// No description provided for @scanReceipt.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan Receipt'**
+  String get scanReceipt;
+
+  /// No description provided for @voiceAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice Add'**
+  String get voiceAdd;
+
   /// No description provided for @scan.
   ///
   /// In en, this message translates to:
@@ -4257,18 +4269,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Copy deep link to clipboard'**
   String get copyDeepLinkSubtitle;
-
-  /// No description provided for @scanReceipt.
-  ///
-  /// In en, this message translates to:
-  /// **'Scan Receipt'**
-  String get scanReceipt;
-
-  /// No description provided for @voiceAdd.
-  ///
-  /// In en, this message translates to:
-  /// **'Voice Add'**
-  String get voiceAdd;
 
   /// No description provided for @tapToSpeak.
   ///
