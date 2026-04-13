@@ -2338,6 +2338,8 @@ class _DashboardRecentTransactionTile extends StatelessWidget {
           title: Text(
             transaction.description ?? (isExpense ? l10n.expense : l10n.income),
             style: const TextStyle(fontWeight: FontWeight.w600),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
           subtitle: Text(AppDateFormatter.formatDate(transaction.date,
               pattern: dateFormat)),

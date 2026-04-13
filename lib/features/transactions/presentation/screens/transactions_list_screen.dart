@@ -771,6 +771,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                     color: theme.colorScheme.onSurfaceVariant
                         .withValues(alpha: isInactive ? 0.5 : 1.0),
                   ),
+                  maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
                 // Contact tag - styled like payable/receivable tags
