@@ -876,6 +876,7 @@ class _DashboardBodyScrollState extends ConsumerState<_DashboardBodyScroll> {
   static const double _kLogoRevealThreshold = 20.0;
 
   double _logoRevealPull = 0.0;
+  final ValueNotifier<double> _logoRevealNotifier = ValueNotifier<double>(0.0);
 
   bool _onScrollNotification(ScrollNotification n) {
     if (n.metrics.axis != Axis.vertical) return false;
@@ -888,10 +889,16 @@ class _DashboardBodyScrollState extends ConsumerState<_DashboardBodyScroll> {
         ? (overscroll - _kLogoRevealThreshold).clamp(0.0, _kLogoRevealMax)
         : 0.0;
 
-    if (next != _logoRevealPull) {
-      setState(() => _logoRevealPull = next);
+    if (next != _logoRevealNotifier.value) {
+      _logoRevealNotifier.value = next;
     }
     return false;
+  }
+
+  @override
+  void dispose() {
+    _logoRevealNotifier.dispose();
+    super.dispose();
   }
 
   @override
@@ -912,7 +919,12 @@ class _DashboardBodyScrollState extends ConsumerState<_DashboardBodyScroll> {
             parent: BouncingScrollPhysics(),
           ),
           slivers: [
-            _DashboardHeader(logoRevealPull: _logoRevealPull),
+            ValueListenableBuilder<double>(
+              valueListenable: _logoRevealNotifier,
+              builder: (context, value, child) {
+                return _DashboardHeader(logoRevealPull: value);
+              },
+            ),
             SliverToBoxAdapter(
               child: Consumer(
                 builder: (context, ref, child) {

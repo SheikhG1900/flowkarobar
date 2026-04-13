@@ -351,114 +351,116 @@ class DashboardEntityWidgetCard extends ConsumerWidget {
   }) {
     final effectiveAmountColor = amountColor ??
         (isExpense ? AppColors.expenseColor : AppColors.incomeColor);
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: Material(
-        color: theme.cardColor,
-        borderRadius: BorderRadius.circular(16),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: isLocked
-              ? () => PremiumGate.showPremiumDialog(context)
-              : onTap,
-          onLongPress: () => _showEntityActionsSheet(
-                context, ref, onRemove, l10n, kind, entityUuid),
-          child: Stack(
-            children: [
-              Opacity(
-                opacity: isLocked ? 0.5 : 1.0,
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                        color: color.withValues(alpha: 0.4), width: 1),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Row(
-                        children: [
-                          leadingChild ??
-                              Container(
-                                width: 44,
-                                height: 44,
-                                decoration: BoxDecoration(
-                                  color: color.withValues(alpha: 0.15),
-                                  shape: BoxShape.circle,
-                                ),
-                                alignment: Alignment.center,
-                                child: Icon(
-                                  _iconForKind(kind),
-                                  color: color,
-                                  size: 22,
-                                ),
-                              ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  title,
-                                  style: theme.textTheme.titleSmall?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  subtitle,
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: theme.colorScheme.onSurfaceVariant,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ],
-                            ),
-                          ),
-                          if (currency != null)
-                            Directionality(
-                              textDirection: TextDirection.ltr,
-                              child: Text(
-                                '${isExpense ? '\u200E−' : '\u200E+'} ${AmountFormatter.formatWithCurrency(amount, currency.symbol, currency.decimalPlaces)}',
-                                style: theme.textTheme.titleSmall?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: effectiveAmountColor,
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                      if (titleColumnExtra != null) ...[
-                        titleColumnExtra!,
-                      ],
-                    ],
-                  ),
-                ),
-              ),
-              if (isLocked)
-                Positioned(
-                  top: 8,
-                  right: 8,
+    return RepaintBoundary(
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 10),
+        child: Material(
+          color: theme.cardColor,
+          borderRadius: BorderRadius.circular(16),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: isLocked
+                ? () => PremiumGate.showPremiumDialog(context)
+                : onTap,
+            onLongPress: () => _showEntityActionsSheet(
+                  context, ref, onRemove, l10n, kind, entityUuid),
+            child: Stack(
+              children: [
+                Opacity(
+                  opacity: isLocked ? 0.5 : 1.0,
                   child: Container(
-                    padding: const EdgeInsets.all(4),
+                    padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.surfaceContainerHighest
-                          .withValues(alpha: 0.95),
-                      shape: BoxShape.circle,
+                      border: Border.all(
+                          color: color.withValues(alpha: 0.4), width: 1),
+                      borderRadius: BorderRadius.circular(16),
                     ),
-                    child: Icon(
-                      Icons.lock,
-                      size: 16,
-                      color: theme.colorScheme.onSurfaceVariant,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Row(
+                          children: [
+                            leadingChild ??
+                                Container(
+                                  width: 44,
+                                  height: 44,
+                                  decoration: BoxDecoration(
+                                    color: color.withValues(alpha: 0.15),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  alignment: Alignment.center,
+                                  child: Icon(
+                                    _iconForKind(kind),
+                                    color: color,
+                                    size: 22,
+                                  ),
+                                ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    title,
+                                    style: theme.textTheme.titleSmall?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    subtitle,
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            if (currency != null)
+                              Directionality(
+                                textDirection: TextDirection.ltr,
+                                child: Text(
+                                  '${isExpense ? '\u200E−' : '\u200E+'} ${AmountFormatter.formatWithCurrency(amount, currency.symbol, currency.decimalPlaces)}',
+                                  style: theme.textTheme.titleSmall?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: effectiveAmountColor,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                        if (titleColumnExtra != null) ...[
+                          titleColumnExtra!,
+                        ],
+                      ],
                     ),
                   ),
                 ),
-            ],
+                if (isLocked)
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surfaceContainerHighest
+                            .withValues(alpha: 0.95),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.lock,
+                        size: 16,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
           ),
         ),
       ),

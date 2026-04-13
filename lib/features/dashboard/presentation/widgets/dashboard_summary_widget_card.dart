@@ -513,83 +513,85 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
     final transactions = transactionsAsync.items.take(5).toList();
     if (transactions.isEmpty) return const SizedBox.shrink();
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: Material(
-        color: theme.cardColor,
-        borderRadius: BorderRadius.circular(16),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: () {
-            Navigator.push(
+    return RepaintBoundary(
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 10),
+        child: Material(
+          color: theme.cardColor,
+          borderRadius: BorderRadius.circular(16),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const TransactionsListScreen()),
+              );
+            },
+            onLongPress: () => _showSummaryActionsSheet(
               context,
-              MaterialPageRoute(builder: (_) => const TransactionsListScreen()),
-            );
-          },
-          onLongPress: () => _showSummaryActionsSheet(
-            context,
-            ref,
-            onRemove,
-            l10n,
-          ),
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              border: Border.all(
-                  color: theme.dividerColor.withValues(alpha: 0.1), width: 1),
-              borderRadius: BorderRadius.circular(16),
+              ref,
+              onRemove,
+              l10n,
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Row(
-                  children: [
-                    Icon(Icons.history,
-                        color: theme.colorScheme.primary, size: 20),
-                    const SizedBox(width: 8),
-                    Text(
-                      l10n.recentTransactions,
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                border: Border.all(
+                    color: theme.dividerColor.withValues(alpha: 0.1), width: 1),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.history,
+                          color: theme.colorScheme.primary, size: 20),
+                      const SizedBox(width: 8),
+                      Text(
+                        l10n.recentTransactions,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
-                    const Spacer(),
-                    Icon(Icons.arrow_forward_ios,
-                        size: 12, color: theme.hintColor),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                ...transactions.map((tx) {
-                  final isIncome = tx.transaction.type == 'INCOME';
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            tx.transaction.description ??
-                                tx.category?.name ??
-                                l10n.uncategorized,
-                            style: theme.textTheme.bodySmall,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                      const Spacer(),
+                      Icon(Icons.arrow_forward_ios,
+                          size: 12, color: theme.hintColor),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  ...transactions.map((tx) {
+                    final isIncome = tx.transaction.type == 'INCOME';
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              tx.transaction.description ??
+                                  tx.category?.name ??
+                                  l10n.uncategorized,
+                              style: theme.textTheme.bodySmall,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
-                        ),
-                        Text(
-                          AmountFormatter.formatWithCurrency(
-                              tx.transaction.amount, symbol, decimals),
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: isIncome
-                                ? AppColors.incomeColor
-                                : AppColors.expenseColor,
-                            fontWeight: FontWeight.bold,
+                          Text(
+                            AmountFormatter.formatWithCurrency(
+                                tx.transaction.amount, symbol, decimals),
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: isIncome
+                                  ? AppColors.incomeColor
+                                  : AppColors.expenseColor,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                  );
-                }),
-              ],
+                        ],
+                      ),
+                    );
+                  }),
+                ],
+              ),
             ),
           ),
         ),
@@ -1426,77 +1428,79 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
     String? copyOpenLinkEntityType,
     String? copyOpenLinkUuid,
   }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: Material(
-        color: theme.cardColor,
-        borderRadius: BorderRadius.circular(16),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: onTap,
-          onLongPress: () => _showSummaryActionsSheet(
-            context,
-            ref,
-            onRemove,
-            l10n,
-            copyOpenLinkEntityType: copyOpenLinkEntityType,
-            copyOpenLinkUuid: copyOpenLinkUuid,
-          ),
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              border: Border.all(color: color.withValues(alpha: 0.4), width: 1),
-              borderRadius: BorderRadius.circular(16),
+    return RepaintBoundary(
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 10),
+        child: Material(
+          color: theme.cardColor,
+          borderRadius: BorderRadius.circular(16),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: onTap,
+            onLongPress: () => _showSummaryActionsSheet(
+              context,
+              ref,
+              onRemove,
+              l10n,
+              copyOpenLinkEntityType: copyOpenLinkEntityType,
+              copyOpenLinkUuid: copyOpenLinkUuid,
             ),
-            child: Row(
-              children: [
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.15),
-                    shape: BoxShape.circle,
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                border: Border.all(color: color.withValues(alpha: 0.4), width: 1),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.15),
+                      shape: BoxShape.circle,
+                    ),
+                    alignment: Alignment.center,
+                    child: Icon(icon, color: color, size: 22),
                   ),
-                  alignment: Alignment.center,
-                  child: Icon(icon, color: color, size: 22),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      if (subtitle != null) ...[
-                        const SizedBox(height: 2),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
                         Text(
-                          subtitle,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
+                          title,
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w600,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
+                        if (subtitle != null) ...[
+                          const SizedBox(height: 2),
+                          Text(
+                            subtitle,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
                       ],
-                    ],
+                    ),
                   ),
-                ),
-                Text(
-                  amountLabel,
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: color,
+                  Text(
+                    amountLabel,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: color,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
