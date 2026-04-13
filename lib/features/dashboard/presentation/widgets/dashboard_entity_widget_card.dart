@@ -25,6 +25,8 @@ import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/accounts/domain/models/account_models.dart';
 import 'package:flowpaisa/features/accounts/presentation/providers/accounts_provider.dart';
 import 'package:flowpaisa/features/accounts/presentation/screens/account_detail_screen.dart';
+import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
+import 'package:flowpaisa/features/premium/domain/premium_provider.dart';
 import 'package:flowpaisa/features/whatsapp/domain/deep_link_service.dart';
 import 'package:flowpaisa/features/categories/presentation/providers/categories_provider.dart';
 import 'package:flowpaisa/shared/widgets/dual_amount_progress_bar.dart';
@@ -106,6 +108,7 @@ class DashboardEntityWidgetCard extends ConsumerWidget {
           error: (_, __) => const SizedBox.shrink(),
         );
       case DashboardWidgetKind.category:
+        final isPremium = ref.watch(premiumProvider).isPremium;
         final async = ref.watch(categoryStatisticsProvider(uuid));
         final budgetAsync = ref.watch(categoryDetailBudgetProvider(uuid));
         final symbol = ref.watch(currencySymbolProvider);
@@ -114,6 +117,9 @@ class DashboardEntityWidgetCard extends ConsumerWidget {
         return async.when(
           data: (stats) {
             final cat = stats.category;
+            final isCategoryLocked = !isPremium &&
+                !cat.isDefault &&
+                (cat.addSeq ?? 0) > PremiumGate.categoryTotalLimit;
             final isExpense = cat.type == 'EXPENSE';
             final color = cat.color != null
                 ? Color(int.parse(cat.color!.replaceAll('#', '0xFF')))
@@ -170,6 +176,7 @@ class DashboardEntityWidgetCard extends ConsumerWidget {
               onTap: () => _openCategory(context, uuid),
               onRemove: () => _removeAt(ref, layoutIndex),
               titleColumnExtra: progressChild,
+              isLocked: isCategoryLocked,
             );
           },
           loading: () => _buildCardPlaceholder(theme),
@@ -340,6 +347,7 @@ class DashboardEntityWidgetCard extends ConsumerWidget {
     required VoidCallback onTap,
     required VoidCallback onRemove,
     Widget? titleColumnExtra,
+    bool isLocked = false,
   }) {
     final effectiveAmountColor = amountColor ??
         (isExpense ? AppColors.expenseColor : AppColors.incomeColor);
@@ -350,80 +358,107 @@ class DashboardEntityWidgetCard extends ConsumerWidget {
         borderRadius: BorderRadius.circular(16),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
-          onTap: onTap,
+          onTap: isLocked
+              ? () => PremiumGate.showPremiumDialog(context)
+              : onTap,
           onLongPress: () => _showEntityActionsSheet(
                 context, ref, onRemove, l10n, kind, entityUuid),
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              border: Border.all(
-                  color: color.withValues(alpha: 0.4), width: 1),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Row(
-                  children: [
-                    leadingChild ??
-                        Container(
-                          width: 44,
-                          height: 44,
-                          decoration: BoxDecoration(
-                            color: color.withValues(alpha: 0.15),
-                            shape: BoxShape.circle,
-                          ),
-                          alignment: Alignment.center,
-                          child: Icon(
-                            _iconForKind(kind),
-                            color: color,
-                            size: 22,
-                          ),
-                        ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+          child: Stack(
+            children: [
+              Opacity(
+                opacity: isLocked ? 0.5 : 1.0,
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                        color: color.withValues(alpha: 0.4), width: 1),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Row(
                         children: [
-                          Text(
-                            title,
-                            style: theme.textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.w600,
+                          leadingChild ??
+                              Container(
+                                width: 44,
+                                height: 44,
+                                decoration: BoxDecoration(
+                                  color: color.withValues(alpha: 0.15),
+                                  shape: BoxShape.circle,
+                                ),
+                                alignment: Alignment.center,
+                                child: Icon(
+                                  _iconForKind(kind),
+                                  color: color,
+                                  size: 22,
+                                ),
+                              ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  title,
+                                  style: theme.textTheme.titleSmall?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  subtitle,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
                           ),
-                          const SizedBox(height: 2),
-                          Text(
-                            subtitle,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
+                          if (currency != null)
+                            Directionality(
+                              textDirection: TextDirection.ltr,
+                              child: Text(
+                                '${isExpense ? '\u200E−' : '\u200E+'} ${AmountFormatter.formatWithCurrency(amount, currency.symbol, currency.decimalPlaces)}',
+                                style: theme.textTheme.titleSmall?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: effectiveAmountColor,
+                                ),
+                              ),
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
                         ],
                       ),
-                    ),
-                    if (currency != null)
-                      Directionality(
-                        textDirection: TextDirection.ltr,
-                        child: Text(
-                          '${isExpense ? '\u200E−' : '\u200E+'} ${AmountFormatter.formatWithCurrency(amount, currency.symbol, currency.decimalPlaces)}',
-                          style: theme.textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: effectiveAmountColor,
-                          ),
-                        ),
-                      ),
-                  ],
+                      if (titleColumnExtra != null) ...[
+                        titleColumnExtra!,
+                      ],
+                    ],
+                  ),
                 ),
-                if (titleColumnExtra != null) ...[
-                  titleColumnExtra!,
-                ],
-              ],
-            ),
+              ),
+              if (isLocked)
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surfaceContainerHighest
+                          .withValues(alpha: 0.95),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.lock,
+                      size: 16,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+            ],
           ),
         ),
       ),
@@ -599,6 +634,9 @@ class DashboardEntityWidgetCard extends ConsumerWidget {
   ) {
     final acc = awb.account;
     final type = awb.type;
+    final isPremium = ref.watch(premiumProvider).isPremium;
+    final isAccountLocked = !isPremium &&
+        (acc.addSeq ?? 0) > PremiumGate.accountTotalLimit;
     final accountColor = acc.color != null
         ? Color(int.parse(acc.color!.replaceAll('#', '0xFF')))
         : theme.colorScheme.primary;
@@ -675,6 +713,7 @@ class DashboardEntityWidgetCard extends ConsumerWidget {
       onRemove: () => _removeAt(ref, layoutIndex),
       titleColumnExtra: progressChild ??
           _accountDashboardTitleExtra(theme, l10n, currency, awb),
+      isLocked: isAccountLocked,
     );
   }
 

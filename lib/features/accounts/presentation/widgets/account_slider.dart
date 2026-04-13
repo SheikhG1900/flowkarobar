@@ -5,13 +5,14 @@ import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/core/utils/icon_helper.dart';
 import 'package:flowpaisa/features/accounts/domain/models/account_models.dart';
 import 'package:flowpaisa/features/accounts/presentation/providers/accounts_provider.dart';
-import 'package:flowpaisa/features/accounts/presentation/screens/accounts_screen.dart';
+import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
+import 'package:flowpaisa/features/premium/domain/premium_provider.dart';
 import 'package:flowpaisa/features/accounts/presentation/screens/account_detail_screen.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
-/// A reusable horizontal slider for accounts, matching the design in AccountsScreen.
+/// A reusable horizontal slider for accounts, matching the accounts screen layout and premium locks.
 class AccountSlider extends ConsumerWidget {
   final bool showHeader;
   const AccountSlider({super.key, this.showHeader = false});
@@ -19,8 +20,7 @@ class AccountSlider extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final accountsAsync = ref.watch(accountsWithBalanceProvider);
-    final theme = Theme.of(context);
-    final l10n = AppLocalizations.of(context)!;
+    final isPremium = ref.watch(premiumProvider).isPremium;
 
     return accountsAsync.when(
       data: (accounts) {
@@ -39,17 +39,23 @@ class AccountSlider extends ConsumerWidget {
                 itemCount: accounts.length,
                 itemBuilder: (context, index) {
                   final awb = accounts[index];
+                  final isLocked = !isPremium &&
+                      (awb.account.addSeq ?? 0) >
+                          PremiumGate.accountTotalLimit;
                   return _AccountCard(
                     awb: awb,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              AccountDetailScreen(accountUuid: awb.account.uuid),
-                        ),
-                      );
-                    },
+                    isLocked: isLocked,
+                    onTap: isLocked
+                        ? () => PremiumGate.showPremiumDialog(context)
+                        : () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => AccountDetailScreen(
+                                    accountUuid: awb.account.uuid),
+                              ),
+                            );
+                          },
                   );
                 },
               ),
