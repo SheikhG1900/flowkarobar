@@ -10,30 +10,37 @@ class AnalyticsRepository {
   Future<List<CategoryExpense>> getExpensesByCategory(
       DateTime start, DateTime end) async {
     final startDate = DateTime(start.year, start.month, start.day, 0, 0, 0);
-    final endDate =
-        DateTime(end.year, end.month, end.day, 23, 59, 59);
+    final endDate = DateTime(end.year, end.month, end.day, 23, 59, 59);
+
+    final netAmount = _database.transactions.type.caseMatch(
+      when: {
+        const Constant('INCOME'): _database.transactions.amount,
+      },
+      orElse: _database.transactions.amount * const Constant(-1.0),
+    ).sum();
+
     final query = _database.selectOnly(_database.transactions)
-      ..addColumns([
-        _database.transactions.categoryUuid,
-        _database.transactions.amount.sum()
-      ])
+      ..addColumns([_database.transactions.categoryUuid, netAmount])
       ..where(_database.transactions.date.isBetweenValues(startDate, endDate))
-      ..where(_database.transactions.type.equals('EXPENSE'))
       ..where(_database.transactions.isDeleted.equals(false))
       ..where(_database.transactions.processedDate.isNotNull())
       ..groupBy([_database.transactions.categoryUuid]);
+
     final results = await query.get();
     final List<CategoryExpense> categoryExpenses = [];
     for (final row in results) {
       final categoryUuid = row.read(_database.transactions.categoryUuid);
-      final totalAmount = row.read(_database.transactions.amount.sum()) ?? 0.0;
-      if (categoryUuid != null && totalAmount > 0) {
+      final net = row.read(netAmount) ?? 0.0;
+
+      // If net is negative, it means expenses > income for this category.
+      // We show it in the Expense chart as a positive absolute value.
+      if (categoryUuid != null && net < 0) {
         final category = await (_database.select(_database.categories)
               ..where((c) => c.uuid.equals(categoryUuid)))
             .getSingleOrNull();
         if (category != null) {
-          categoryExpenses.add(
-              CategoryExpense(category: category, totalAmount: totalAmount));
+          categoryExpenses.add(CategoryExpense(
+              category: category, totalAmount: net.abs()));
         }
       }
     }
@@ -792,28 +799,37 @@ class AnalyticsRepository {
 
   Future<List<CategoryIncome>> getIncomeByCategory(
       DateTime start, DateTime end) async {
+    final startDate = DateTime(start.year, start.month, start.day, 0, 0, 0);
+    final endDate = DateTime(end.year, end.month, end.day, 23, 59, 59);
+
+    final netAmount = _database.transactions.type.caseMatch(
+      when: {
+        const Constant('INCOME'): _database.transactions.amount,
+      },
+      orElse: _database.transactions.amount * const Constant(-1.0),
+    ).sum();
+
     final query = _database.selectOnly(_database.transactions)
-      ..addColumns([
-        _database.transactions.categoryUuid,
-        _database.transactions.amount.sum()
-      ])
-      ..where(_database.transactions.date.isBetweenValues(start, end))
-      ..where(_database.transactions.type.equals('INCOME'))
+      ..addColumns([_database.transactions.categoryUuid, netAmount])
+      ..where(_database.transactions.date.isBetweenValues(startDate, endDate))
       ..where(_database.transactions.isDeleted.equals(false))
       ..where(_database.transactions.processedDate.isNotNull())
       ..groupBy([_database.transactions.categoryUuid]);
+
     final results = await query.get();
     final List<CategoryIncome> categoryIncomes = [];
     for (final row in results) {
       final categoryUuid = row.read(_database.transactions.categoryUuid);
-      final totalAmount = row.read(_database.transactions.amount.sum()) ?? 0.0;
-      if (categoryUuid != null && totalAmount > 0) {
+      final net = row.read(netAmount) ?? 0.0;
+
+      // If net is positive, it means income > expenses for this category.
+      if (categoryUuid != null && net > 0) {
         final category = await (_database.select(_database.categories)
               ..where((c) => c.uuid.equals(categoryUuid)))
             .getSingleOrNull();
         if (category != null) {
           categoryIncomes.add(
-              CategoryIncome(category: category, totalAmount: totalAmount));
+              CategoryIncome(category: category, totalAmount: net));
         }
       }
     }

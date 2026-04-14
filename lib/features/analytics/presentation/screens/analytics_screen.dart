@@ -1998,109 +1998,160 @@ class _PayableReceivableTrendsChart extends ConsumerWidget {
         final selectedData =
             selectedIndex != null ? trends[selectedIndex] : null;
 
+        // Calculate combined totals for all months if nothing is selected
+        final combinedTotalP = trends.fold(0.0, (sum, t) => sum + (t.totalPayable ?? 0));
+        final combinedPaidP = trends.fold(0.0, (sum, t) => sum + (t.paidPayable ?? 0));
+        final combinedPendingP = trends.fold(0.0, (sum, t) => sum + (t.pendingPayable ?? 0));
+        
+        final combinedTotalR = trends.fold(0.0, (sum, t) => sum + (t.totalReceivable ?? 0));
+        final combinedReceivedR = trends.fold(0.0, (sum, t) => sum + (t.receivedReceivable ?? 0));
+        final combinedPendingR = trends.fold(0.0, (sum, t) => sum + (t.pendingReceivable ?? 0));
+
+        final displayTotalP = selectedData?.totalPayable ?? combinedTotalP;
+        final displayPaidP = selectedData?.paidPayable ?? combinedPaidP;
+        final displayPendingP = selectedData?.pendingPayable ?? combinedPendingP;
+
+        final displayTotalR = selectedData?.totalReceivable ?? combinedTotalR;
+        final displayReceivedR = selectedData?.receivedReceivable ?? combinedReceivedR;
+        final displayPendingR = selectedData?.pendingReceivable ?? combinedPendingR;
+
         return Column(
           children: [
-            if (selectedData != null)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 16, left: 8, right: 8),
-                child: Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.surfaceContainerHighest
-                        .withValues(alpha: 0.5),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: theme.colorScheme.outlineVariant),
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Container(
-                                  width: 12,
-                                  height: 12,
-                                  decoration: BoxDecoration(
-                                    color: AppColors.payableColor,
-                                    borderRadius: BorderRadius.circular(2),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 16, left: 8, right: 8),
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceContainerHighest
+                      .withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: theme.colorScheme.outlineVariant),
+                ),
+                child: Column(
+                  children: [
+                    if (selectedData == null)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Text(
+                          l10n.all,
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: theme.colorScheme.primary,
+                          ),
+                        ),
+                      ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Container(
+                                    width: 12,
+                                    height: 12,
+                                    decoration: BoxDecoration(
+                                      color: AppColors.payableColor,
+                                      borderRadius: BorderRadius.circular(2),
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(width: 8),
-                                Text(l10n.payableTag,
-                                    style: theme.textTheme.labelSmall),
-                              ],
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              AmountFormatter.formatWithCurrency(
-                                  selectedData.totalPayable, currencySymbol, 0),
-                              style: theme.textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.payableColor,
+                                  const SizedBox(width: 8),
+                                  Text(l10n.payableTag,
+                                      style: theme.textTheme.labelSmall),
+                                ],
                               ),
-                            ),
-                            if ((selectedData.pendingPayable ?? 0) > 0)
+                              const SizedBox(height: 4),
                               Text(
-                                '${l10n.pending}: ${AmountFormatter.formatWithCurrency(selectedData.pendingPayable!, currencySymbol, 0)}',
+                                AmountFormatter.formatWithCurrency(
+                                    displayTotalP, currencySymbol, 0),
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.payableColor,
+                                ),
+                              ),
+                              Text(
+                                '${l10n.paid}: ${AmountFormatter.formatWithCurrency(displayPaidP, currencySymbol, 0)}',
                                 style: theme.textTheme.labelSmall?.copyWith(
                                   color: theme.colorScheme.onSurfaceVariant,
                                 ),
                               ),
-                          ],
-                        ),
-                      ),
-                      Container(
-                        width: 1,
-                        height: 40,
-                        color: theme.colorScheme.outlineVariant,
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Container(
-                                  width: 12,
-                                  height: 12,
-                                  decoration: BoxDecoration(
-                                    color: AppColors.receivableColor,
-                                    borderRadius: BorderRadius.circular(2),
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Text(l10n.receivableTag,
-                                    style: theme.textTheme.labelSmall),
-                              ],
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              AmountFormatter.formatWithCurrency(
-                                  selectedData.totalReceivable,
-                                  currencySymbol,
-                                  0),
-                              style: theme.textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.receivableColor,
-                              ),
-                            ),
-                            if ((selectedData.pendingReceivable ?? 0) > 0)
                               Text(
-                                '${l10n.pending}: ${AmountFormatter.formatWithCurrency(selectedData.pendingReceivable!, currencySymbol, 0)}',
+                                '${l10n.pending}: ${AmountFormatter.formatWithCurrency(displayPendingP, currencySymbol, 0)}',
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  color: displayPendingP > 0
+                                      ? AppColors.payableColor
+                                      : theme.colorScheme.onSurfaceVariant,
+                                  fontWeight: displayPendingP > 0
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          width: 1,
+                          height: 40,
+                          color: theme.colorScheme.outlineVariant,
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Container(
+                                    width: 12,
+                                    height: 12,
+                                    decoration: BoxDecoration(
+                                      color: AppColors.receivableColor,
+                                      borderRadius: BorderRadius.circular(2),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(l10n.receivableTag,
+                                      style: theme.textTheme.labelSmall),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                AmountFormatter.formatWithCurrency(
+                                    displayTotalR,
+                                    currencySymbol,
+                                    0),
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.receivableColor,
+                                ),
+                              ),
+                              Text(
+                                '${l10n.receivedLabel}: ${AmountFormatter.formatWithCurrency(displayReceivedR, currencySymbol, 0)}',
                                 style: theme.textTheme.labelSmall?.copyWith(
                                   color: theme.colorScheme.onSurfaceVariant,
                                 ),
                               ),
-                          ],
+                              Text(
+                                '${l10n.pending}: ${AmountFormatter.formatWithCurrency(displayPendingR, currencySymbol, 0)}',
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  color: displayPendingR > 0
+                                      ? AppColors.receivableColor
+                                      : theme.colorScheme.onSurfaceVariant,
+                                  fontWeight: displayPendingR > 0
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
+            ),
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: SizedBox(
@@ -2292,11 +2343,59 @@ class _PayableReceivableTrendsChart extends ConsumerWidget {
                 ),
               ),
             ),
+            const SizedBox(height: 16),
+            // Chart Legend
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Wrap(
+                spacing: 16,
+                runSpacing: 8,
+                alignment: WrapAlignment.center,
+                children: [
+                  _LegendItem(label: l10n.paid, color: AppColors.payableColor),
+                  _LegendItem(
+                      label: l10n.receivedLabel,
+                      color: AppColors.receivableColor),
+                  _LegendItem(label: l10n.pending, color: Colors.grey.shade400),
+                ],
+              ),
+            ),
           ],
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, s) => Center(child: Text('Error: `$e')),
+    );
+  }
+}
+
+class _LegendItem extends StatelessWidget {
+  final String label;
+  final Color color;
+
+  const _LegendItem({required this.label, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 10,
+          height: 10,
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+          ),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          label,
+          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+        ),
+      ],
     );
   }
 }
