@@ -1695,6 +1695,7 @@
   "manifestContentLocked": "Manifest Content (Locked)",
   "deltaContent": "Delta Content",
   "refreshStatus": "Refresh Status",
+  "refreshStatus": "Refresh Status",
   "refreshBackups": "Refresh Backups",
   "locked": "Locked",
   "lockedWithTime": "Locked ({minutes}m)",

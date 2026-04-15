@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -322,6 +324,13 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   int _selectedIndex = 0;
+  bool _isSwitchingCashbook = false;
+  Timer? _cashbookSwitchRevealTimer;
+
+  /// Hold dimmed UI while the new cashbook DB and dashboard providers repopulate.
+  static const Duration _cashbookSwitchHold = Duration(milliseconds: 1200);
+  /// Fade between full brightness and the dimmed “switching” state.
+  static const Duration _cashbookSwitchFade = Duration(milliseconds: 700);
 
   @override
   void initState() {
@@ -336,6 +345,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         _checkCreditCardNotifications();
       }
     });
+  }
+
+  @override
+  void dispose() {
+    _cashbookSwitchRevealTimer?.cancel();
+    super.dispose();
   }
 
   Future<void> _checkCreditCardNotifications() async {
@@ -399,6 +414,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
+    // Listen to active cashbook changes: dull UI briefly, then reveal
+    ref.listen(activeCashbookIdProvider, (_, __) {
+      if (!mounted) return;
+      _cashbookSwitchRevealTimer?.cancel();
+      setState(() {
+        _isSwitchingCashbook = true;
+      });
+      _cashbookSwitchRevealTimer = Timer(_cashbookSwitchHold, () {
+        if (!mounted) return;
+        // One frame after hold: let the new cashbook tree paint with fresh data, then fade in.
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          setState(() {
+            _isSwitchingCashbook = false;
+          });
+        });
+      });
+    });
+
     ref.listen<BackupState>(backupProvider, (previous, next) {
       if (next.premiumExpiredLogout &&
           !(previous?.premiumExpiredLogout ?? false)) {
@@ -450,27 +484,43 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       body: LayoutBuilder(
         builder: (context, constraints) {
           if (constraints.maxWidth < 600) {
-            // Mobile Layout
-            return AnimatedSwitcher(
-              duration: const Duration(milliseconds: 400),
-              switchInCurve: Curves.easeOutCubic,
-              switchOutCurve: Curves.easeInCubic,
-              transitionBuilder: (Widget child, Animation<double> animation) {
-                return FadeTransition(
-                  opacity: animation,
-                  child: SlideTransition(
-                    position: Tween<Offset>(
-                      begin: const Offset(0.01, 0),
-                      end: Offset.zero,
-                    ).animate(animation),
-                    child: child,
+            // Mobile Layout — dull + loading overlay while switching cashbooks
+            return Stack(
+              children: [
+                AnimatedOpacity(
+                  duration: _cashbookSwitchFade,
+                  opacity: _isSwitchingCashbook ? 0.3 : 1.0,
+                  child: IgnorePointer(
+                    ignoring: _isSwitchingCashbook,
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 400),
+                      switchInCurve: Curves.easeOutCubic,
+                      switchOutCurve: Curves.easeInCubic,
+                      transitionBuilder:
+                          (Widget child, Animation<double> animation) {
+                        return FadeTransition(
+                          opacity: animation,
+                          child: SlideTransition(
+                            position: Tween<Offset>(
+                              begin: const Offset(0.01, 0),
+                              end: Offset.zero,
+                            ).animate(animation),
+                            child: child,
+                          ),
+                        );
+                      },
+                      child: KeyedSubtree(
+                        key: ValueKey<int>(_selectedIndex),
+                        child: screens[_selectedIndex],
+                      ),
+                    ),
                   ),
-                );
-              },
-              child: KeyedSubtree(
-                key: ValueKey<int>(_selectedIndex),
-                child: screens[_selectedIndex],
-              ),
+                ),
+                if (_isSwitchingCashbook)
+                  const Center(
+                    child: AppLoadingIndicator(size: 60),
+                  ),
+              ],
             );
           } else {
             // Tablet/Desktop Layout
@@ -539,16 +589,31 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
                 const VerticalDivider(thickness: 1, width: 1),
                 Expanded(
-                  child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 400),
-                    transitionBuilder:
-                        (Widget child, Animation<double> animation) {
-                      return FadeTransition(opacity: animation, child: child);
-                    },
-                    child: KeyedSubtree(
-                      key: ValueKey<int>(_selectedIndex),
-                      child: screens[_selectedIndex],
-                    ),
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      AnimatedOpacity(
+                        duration: _cashbookSwitchFade,
+                        opacity: _isSwitchingCashbook ? 0.3 : 1.0,
+                        child: IgnorePointer(
+                          ignoring: _isSwitchingCashbook,
+                          child: AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 400),
+                            transitionBuilder: (Widget child,
+                                Animation<double> animation) {
+                              return FadeTransition(
+                                  opacity: animation, child: child);
+                            },
+                            child: KeyedSubtree(
+                              key: ValueKey<int>(_selectedIndex),
+                              child: screens[_selectedIndex],
+                            ),
+                          ),
+                        ),
+                      ),
+                      if (_isSwitchingCashbook)
+                        const AppLoadingIndicator(size: 60),
+                    ],
                   ),
                 ),
               ],
@@ -950,15 +1015,19 @@ class _DashboardBodyScrollState extends ConsumerState<_DashboardBodyScroll> {
                             },
                           ),
                           if (showPrivacyHighlight) ...[
-                            ref.watch(dashboardReorderModeProvider)
-                                ? _DashboardTab.wrapCard(
-                                    child: const _DashboardPrivacyHighlight(),
-                                    onRemove: () => ref
-                                        .read(showDashboardPrivacyHighlightProvider
-                                            .notifier)
-                                        .setVisibility(false),
-                                  )
-                                : const _DashboardPrivacyHighlight(),
+                            AnimatedSize(
+                              duration: const Duration(milliseconds: 300),
+                              curve: Curves.easeInOut,
+                              child: ref.watch(dashboardReorderModeProvider)
+                                  ? _DashboardTab.wrapCard(
+                                      child: const _DashboardPrivacyHighlight(),
+                                      onRemove: () => ref
+                                          .read(showDashboardPrivacyHighlightProvider
+                                              .notifier)
+                                          .setVisibility(false),
+                                    )
+                                  : const _DashboardPrivacyHighlight(),
+                            ),
                             const SizedBox(height: 12),
                           ],
                         ],
@@ -1361,6 +1430,11 @@ class _DashboardTab extends ConsumerWidget {
         DashboardWidgetKind.accountsSlider,
         l10n.accounts,
         Symbols.account_balance
+      ),
+      (
+        DashboardWidgetKind.cashbooksSlider,
+        l10n.cashbooks,
+        Symbols.book
       ),
     ];
     showModalBottomSheet<void>(

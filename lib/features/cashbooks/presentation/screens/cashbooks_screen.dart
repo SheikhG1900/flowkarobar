@@ -1,4 +1,7 @@
 import 'package:flowpaisa/core/utils/icon_helper.dart';
+import 'package:flowpaisa/shared/providers/database_provider.dart';
+import 'package:flowpaisa/shared/providers/shared_preferences_provider.dart';
+import 'package:flowpaisa/features/cashbooks/domain/models/cashbook_summary.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
@@ -431,8 +434,29 @@ class CashbooksScreen extends ConsumerWidget {
     );
   }
 
-  void _switchCashbook(BuildContext context, WidgetRef ref, Cashbook cashbook) {
+  void _switchCashbook(BuildContext context, WidgetRef ref, Cashbook cashbook) async {
     final l10n = AppLocalizations.of(context)!;
+    
+    // 1. Calculate summary for CURRENT cashbook before switching
+    try {
+      final currentDb = ref.read(databaseProvider);
+      final currentCashbook = ref.read(activeCashbookProvider);
+      final prefs = ref.read(sharedPreferencesProvider);
+      
+      if (kDebugMode) {
+        print('CashbooksScreen: Updating summary for ${currentCashbook.name} before switch');
+      }
+      
+      // We must ensure the database is fully initialized before calculating
+      // On some platforms, LazyDatabase might not have opened the underlying connection yet.
+      await currentDb.customSelect('SELECT 1').getSingle();
+      
+      await CashbookSummaryService.calculateAndUpdate(prefs, currentDb, currentCashbook);
+    } catch (e) {
+      if (kDebugMode) print('Error updating summary before switch: $e');
+    }
+
+    // 2. Perform the switch
     ref.read(activeCashbookIdProvider.notifier).setActive(cashbook.id);
     ToastUtils.showSuccessToast(
         context, ref, l10n.switchedToCashbook(cashbook.name));

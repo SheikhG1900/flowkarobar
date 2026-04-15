@@ -39,6 +39,7 @@ import 'package:flowpaisa/core/utils/category_budget_utils.dart';
 import 'package:flowpaisa/shared/widgets/dual_amount_progress_bar.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flowpaisa/features/accounts/presentation/widgets/account_slider.dart';
+import 'package:flowpaisa/features/cashbooks/presentation/widgets/cashbook_slider.dart';
 import 'package:flowpaisa/features/whatsapp/domain/deep_link_service.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
@@ -273,6 +274,17 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
           ),
           () => _removeAt(ref, layoutIndex),
         );
+      case DashboardWidgetKind.cashbooksSlider:
+        return wrapRemove(
+          _buildCashbooksSlider(
+            context,
+            ref,
+            theme,
+            l10n,
+            onRemove: () => _removeAt(ref, layoutIndex),
+          ),
+          () => _removeAt(ref, layoutIndex),
+        );
       default:
         return const SizedBox.shrink();
     }
@@ -286,9 +298,25 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
     required VoidCallback onRemove,
   }) {
     return const Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         AccountSlider(showHeader: true),
+        SizedBox(height: 12),
+      ],
+    );
+  }
+
+  Widget _buildCashbooksSlider(
+    BuildContext context,
+    WidgetRef ref,
+    ThemeData theme,
+    AppLocalizations l10n, {
+    required VoidCallback onRemove,
+  }) {
+    return const Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        CashbookSlider(),
         SizedBox(height: 12),
       ],
     );

@@ -28,48 +28,24 @@ class _AddCashbookSheetState extends ConsumerState<AddCashbookSheet> {
   bool _isLoading = false;
 
   final List<List<String>> _colorVariants = [
-    ['#E3F2FD', '#90CAF9', '#2196F3', '#1976D2', '#0D47A1'], // Blue variants
-    ['#E0F7FA', '#80DEEA', '#00BCD4', '#0097A7', '#006064'], // Cyan variants
-    ['#E0F2F1', '#80CBC4', '#009688', '#00796B', '#004D40'], // Teal variants
-    ['#E8F5E9', '#A5D6A7', '#4CAF50', '#388E3C', '#1B5E20'], // Green variants
-    [
-      '#F1F8E9',
-      '#C5E1A5',
-      '#8BC34A',
-      '#689F38',
-      '#33691E'
-    ], // Light Green variants
-    ['#F9FBE7', '#E6EE9C', '#CDDC39', '#AFB42B', '#827717'], // Lime variants
-    ['#FFFDE7', '#FFF59D', '#FFEB3B', '#FBC02D', '#F57F17'], // Yellow variants
-    ['#FFF8E1', '#FFE082', '#FFC107', '#FFA000', '#FF6F00'], // Amber variants
-    ['#FFF3E0', '#FFCC80', '#FF9800', '#F57C00', '#E65100'], // Orange variants
-    [
-      '#FBE9E7',
-      '#FFAB91',
-      '#FF5722',
-      '#E64A19',
-      '#BF360C'
-    ], // Deep Orange variants
-    ['#FFEBEE', '#EF9A9A', '#F44336', '#D32F2F', '#B71C1C'], // Red variants
-    ['#FCE4EC', '#F48FB1', '#E91E63', '#C2185B', '#880E4F'], // Pink variants
-    ['#F3E5F5', '#CE93D8', '#9C27B0', '#7B1FA2', '#4A148C'], // Purple variants
-    [
-      '#EDE7F6',
-      '#B39DDB',
-      '#673AB7',
-      '#512DA8',
-      '#311B92'
-    ], // Deep Purple variants
-    ['#E8EAF6', '#9FA8DA', '#3F51B5', '#303F9F', '#1A237E'], // Indigo variants
-    ['#EFEBE9', '#BCAAA4', '#795548', '#5D4037', '#3E2723'], // Brown variants
-    [
-      '#ECEFF1',
-      '#B0BEC5',
-      '#607D8B',
-      '#455A64',
-      '#263238'
-    ], // Blue Grey variants
-    ['#FAFAFA', '#EEEEEE', '#9E9E9E', '#616161', '#212121'], // Grey variants
+    ['#90CAF9', '#2196F3', '#1976D2', '#0D47A1'], // Blue variants
+    ['#80DEEA', '#00BCD4', '#0097A7', '#006064'], // Cyan variants
+    ['#80CBC4', '#009688', '#00796B', '#004D40'], // Teal variants
+    ['#A5D6A7', '#4CAF50', '#388E3C', '#1B5E20'], // Green variants
+    ['#C5E1A5', '#8BC34A', '#689F38', '#33691E'], // Light Green variants
+    ['#E6EE9C', '#CDDC39', '#AFB42B', '#827717'], // Lime variants
+    ['#FFF59D', '#FFEB3B', '#FBC02D', '#F57F17'], // Yellow variants
+    ['#FFE082', '#FFC107', '#FFA000', '#FF6F00'], // Amber variants
+    ['#FFCC80', '#FF9800', '#F57C00', '#E65100'], // Orange variants
+    ['#FFAB91', '#FF5722', '#E64A19', '#BF360C'], // Deep Orange variants
+    ['#EF9A9A', '#F44336', '#D32F2F', '#B71C1C'], // Red variants
+    ['#F48FB1', '#E91E63', '#C2185B', '#880E4F'], // Pink variants
+    ['#CE93D8', '#9C27B0', '#7B1FA2', '#4A148C'], // Purple variants
+    ['#B39DDB', '#673AB7', '#512DA8', '#311B92'], // Deep Purple variants
+    ['#9FA8DA', '#3F51B5', '#303F9F', '#1A237E'], // Indigo variants
+    ['#BCAAA4', '#795548', '#5D4037', '#3E2723'], // Brown variants
+    ['#B0BEC5', '#607D8B', '#455A64', '#263238'], // Blue Grey variants
+    ['#EEEEEE', '#9E9E9E', '#616161', '#212121'], // Grey variants
   ];
 
   final List<IconData> _cashbookIcons = [
@@ -258,7 +234,7 @@ class _AddCashbookSheetState extends ConsumerState<AddCashbookSheet> {
               Text(l10n.selectColor, style: theme.textTheme.titleMedium),
               const SizedBox(height: 12),
               SizedBox(
-                height: 260,
+                height: 210,
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
                   itemCount: _colorVariants.length,

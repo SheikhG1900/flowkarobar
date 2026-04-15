@@ -8,6 +8,7 @@ import 'package:flowpaisa/features/accounts/presentation/providers/accounts_prov
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/features/premium/domain/premium_provider.dart';
 import 'package:flowpaisa/features/accounts/presentation/screens/account_detail_screen.dart';
+import 'package:flowpaisa/features/accounts/presentation/widgets/account_card_background_patterns.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
 import 'package:material_symbols_icons/symbols.dart';
@@ -22,54 +23,96 @@ class AccountSlider extends ConsumerWidget {
     final accountsAsync = ref.watch(accountsWithBalanceProvider);
     final isPremium = ref.watch(premiumProvider).isPremium;
 
-    return accountsAsync.when(
-      data: (accounts) {
-        if (accounts.isEmpty) return const SizedBox.shrink();
+    return SizedBox(
+      width: double.infinity,
+      child: accountsAsync.when(
+        data: (accounts) {
+          if (accounts.isEmpty) return const SizedBox.shrink();
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SizedBox(
-              height: 230,
-              child: RepaintBoundary(
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 15),
-                  itemCount: accounts.length,
-                  itemBuilder: (context, index) {
-                    final awb = accounts[index];
-                    final isLocked = !isPremium &&
-                        (awb.account.addSeq ?? 0) >
-                            PremiumGate.accountTotalLimit;
-                    return _AccountCard(
-                      awb: awb,
-                      isLocked: isLocked,
-                      onTap: isLocked
-                          ? () => PremiumGate.showPremiumDialog(context)
-                          : () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => AccountDetailScreen(
-                                      accountUuid: awb.account.uuid),
-                                ),
-                              );
-                            },
-                    );
-                  },
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                height: 230,
+                width: double.infinity,
+                child: RepaintBoundary(
+                  child: accounts.length == 1
+                      ? Padding(
+                          padding: const EdgeInsets.only(
+                              left: 12, right: 12, top: 0, bottom: 15),
+                          child: _buildSingleAccountCard(
+                            context,
+                            accounts.single,
+                            isPremium,
+                          ),
+                        )
+                      : ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          padding: const EdgeInsets.only(
+                              left: 12, right: 12, top: 10, bottom: 15),
+                          itemCount: accounts.length,
+                          itemBuilder: (context, index) {
+                            final awb = accounts[index];
+                            final isLocked = !isPremium &&
+                                (awb.account.addSeq ?? 0) >
+                                    PremiumGate.accountTotalLimit;
+                            return _AccountCard(
+                              awb: awb,
+                              isLocked: isLocked,
+                              onTap: isLocked
+                                  ? () => PremiumGate.showPremiumDialog(context)
+                                  : () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              AccountDetailScreen(
+                                                  accountUuid:
+                                                      awb.account.uuid),
+                                        ),
+                                      );
+                                    },
+                            );
+                          },
+                        ),
                 ),
               ),
-            ),
-          ],
-        );
-      },
-      loading: () => const SizedBox(
-        height: 230,
-        child: Center(child: CircularProgressIndicator()),
+            ],
+          );
+        },
+        loading: () => const SizedBox(
+          height: 230,
+          child: Center(child: CircularProgressIndicator()),
+        ),
+        error: (_, __) => const SizedBox.shrink(),
       ),
-      error: (_, __) => const SizedBox.shrink(),
+    );
+  }
+
+  static Widget _buildSingleAccountCard(
+    BuildContext context,
+    AccountWithBalance awb,
+    bool isPremium,
+  ) {
+    final isLocked =
+        !isPremium && (awb.account.addSeq ?? 0) > PremiumGate.accountTotalLimit;
+    return _AccountCard(
+      expandHorizontally: true,
+      awb: awb,
+      isLocked: isLocked,
+      onTap: isLocked
+          ? () => PremiumGate.showPremiumDialog(context)
+          : () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => AccountDetailScreen(
+                    accountUuid: awb.account.uuid,
+                  ),
+                ),
+              );
+            },
     );
   }
 }
@@ -79,10 +122,14 @@ class _AccountCard extends ConsumerWidget {
   final VoidCallback onTap;
   final bool isLocked;
 
+  /// Single card in slider: grow to full row width (parent must be width-bounded).
+  final bool expandHorizontally;
+
   const _AccountCard({
     required this.awb,
     required this.onTap,
     this.isLocked = false,
+    this.expandHorizontally = false,
   });
 
   @override
@@ -109,9 +156,9 @@ class _AccountCard extends ConsumerWidget {
 
     return RepaintBoundary(
       child: Container(
-        width: 280,
+        width: expandHorizontally ? double.infinity : 280,
         height: 185,
-        margin: const EdgeInsets.symmetric(horizontal: 4),
+        margin: EdgeInsets.symmetric(horizontal: expandHorizontally ? 0 : 4),
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(24),
@@ -125,7 +172,8 @@ class _AccountCard extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(24),
                     boxShadow: [
                       BoxShadow(
-                        color: accountColor.withValues(alpha: isDark ? 0.5 : 0.7),
+                        color:
+                            accountColor.withValues(alpha: isDark ? 0.5 : 0.7),
                         blurRadius: 8,
                         spreadRadius: 2,
                         offset: const Offset(0, 4),
@@ -134,17 +182,15 @@ class _AccountCard extends ConsumerWidget {
                   ),
                   child: Stack(
                     children: [
-                      if (type.isCreditCard)
-                        Positioned.fill(
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(24),
-                            child: CustomPaint(
-                              painter: _CardPatternPainter(
-                                color: Colors.white.withValues(alpha: 0.05),
-                              ),
-                            ),
+                      Positioned.fill(
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(24),
+                          child: CustomPaint(
+                            painter: accountCardBackgroundPainter(type),
                           ),
                         ),
+                      ),
+                      accountCardDecorativeBackgroundIcon(iconData),
                       Padding(
                         padding: const EdgeInsets.all(20),
                         child: Column(
@@ -166,13 +212,14 @@ class _AccountCard extends ConsumerWidget {
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       Text(
                                         acc.name,
-                                        style:
-                                            theme.textTheme.titleMedium?.copyWith(
+                                        style: theme.textTheme.titleMedium
+                                            ?.copyWith(
                                           fontWeight: FontWeight.bold,
                                           color: Colors.white,
                                         ),
@@ -183,8 +230,8 @@ class _AccountCard extends ConsumerWidget {
                                         _typeLabel(l10n, type),
                                         style:
                                             theme.textTheme.bodySmall?.copyWith(
-                                          color:
-                                              Colors.white.withValues(alpha: 0.8),
+                                          color: Colors.white
+                                              .withValues(alpha: 0.8),
                                         ),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
@@ -207,8 +254,8 @@ class _AccountCard extends ConsumerWidget {
                                       borderRadius: BorderRadius.circular(4),
                                       boxShadow: [
                                         BoxShadow(
-                                          color:
-                                              Colors.black.withValues(alpha: 0.2),
+                                          color: Colors.black
+                                              .withValues(alpha: 0.2),
                                           blurRadius: 2,
                                         ),
                                       ],
@@ -330,30 +377,6 @@ class _AccountCard extends ConsumerWidget {
         return l10n.creditCard;
     }
   }
-}
-
-class _CardPatternPainter extends CustomPainter {
-  final Color color;
-  _CardPatternPainter({required this.color});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..strokeWidth = 1.5
-      ..style = PaintingStyle.stroke;
-
-    for (var i = -size.height; i < size.width; i += 15) {
-      canvas.drawLine(
-        Offset(i, 0),
-        Offset(i + size.height, size.height),
-        paint,
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(CustomPainter oldDelegate) => false;
 }
 
 class _DueBadge extends StatelessWidget {

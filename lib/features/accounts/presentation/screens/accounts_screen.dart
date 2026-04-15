@@ -17,6 +17,7 @@ import 'package:flowpaisa/features/premium/presentation/screens/premium_screen.d
 import 'package:flowpaisa/features/accounts/domain/models/account_models.dart';
 import 'package:flowpaisa/features/accounts/presentation/providers/accounts_provider.dart';
 import 'package:flowpaisa/features/accounts/presentation/screens/account_detail_screen.dart';
+import 'package:flowpaisa/features/accounts/presentation/widgets/account_card_background_patterns.dart';
 import 'package:flowpaisa/features/accounts/presentation/screens/add_edit_account_screen.dart';
 import 'package:flowpaisa/features/accounts/presentation/widgets/account_transfer_sheet.dart';
 import 'package:flowpaisa/features/accounts/presentation/widgets/transfer_account_box.dart';
@@ -129,25 +130,48 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
                 const SizedBox(height: 12),
                 SizedBox(
                   height: 230,
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.only(
-                        left: 12, right: 12, top: 10, bottom: 30),
-                    itemCount: accounts.length,
-                    itemBuilder: (context, index) {
-                      final awb = accounts[index];
-                      final isLocked = !isPremium &&
-                          (awb.account.addSeq ?? 0) >
-                              PremiumGate.accountTotalLimit;
-                      return _AccountCard(
-                        awb: awb,
-                        isLocked: isLocked,
-                        onTap: isLocked
-                            ? () => PremiumGate.showPremiumDialog(context)
-                            : () => _goToDetail(context, awb.account),
-                      );
-                    },
-                  ),
+                  width: double.infinity,
+                  child: accounts.length == 1
+                      ? Padding(
+                          padding: const EdgeInsets.only(
+                              left: 12, right: 12, top: 10, bottom: 30),
+                          child: Builder(
+                            builder: (context) {
+                              final awb = accounts.single;
+                              final isLocked = !isPremium &&
+                                  (awb.account.addSeq ?? 0) >
+                                      PremiumGate.accountTotalLimit;
+                              return _AccountCard(
+                                expandHorizontally: true,
+                                awb: awb,
+                                isLocked: isLocked,
+                                onTap: isLocked
+                                    ? () =>
+                                        PremiumGate.showPremiumDialog(context)
+                                    : () => _goToDetail(context, awb.account),
+                              );
+                            },
+                          ),
+                        )
+                      : ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          padding: const EdgeInsets.only(
+                              left: 12, right: 12, top: 10, bottom: 30),
+                          itemCount: accounts.length,
+                          itemBuilder: (context, index) {
+                            final awb = accounts[index];
+                            final isLocked = !isPremium &&
+                                (awb.account.addSeq ?? 0) >
+                                    PremiumGate.accountTotalLimit;
+                            return _AccountCard(
+                              awb: awb,
+                              isLocked: isLocked,
+                              onTap: isLocked
+                                  ? () => PremiumGate.showPremiumDialog(context)
+                                  : () => _goToDetail(context, awb.account),
+                            );
+                          },
+                        ),
                 ),
               ],
               const SizedBox(height: 24),
@@ -463,10 +487,14 @@ class _AccountCard extends ConsumerWidget {
   final VoidCallback onTap;
   final bool isLocked;
 
+  /// Single card in row: grow to full width (parent must be width-bounded).
+  final bool expandHorizontally;
+
   const _AccountCard({
     required this.awb,
     required this.onTap,
     this.isLocked = false,
+    this.expandHorizontally = false,
   });
 
   @override
@@ -495,9 +523,9 @@ class _AccountCard extends ConsumerWidget {
         : AmountFormatter.formatWithCurrency(awb.balance, symbol, decimals);
 
     return Container(
-      width: 280,
+      width: expandHorizontally ? double.infinity : 280,
       height: 185, // Increased height to prevent vertical overflow
-      margin: const EdgeInsets.symmetric(horizontal: 4),
+      margin: EdgeInsets.symmetric(horizontal: expandHorizontally ? 0 : 4),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(24),
@@ -525,18 +553,15 @@ class _AccountCard extends ConsumerWidget {
                 ),
                 child: Stack(
                   children: [
-                    // Background Pattern for Credit Cards
-                    if (type.isCreditCard)
-                      Positioned.fill(
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(24),
-                          child: CustomPaint(
-                            painter: _CardPatternPainter(
-                              color: Colors.white.withValues(alpha: 0.05),
-                            ),
-                          ),
+                    Positioned.fill(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(24),
+                        child: CustomPaint(
+                          painter: accountCardBackgroundPainter(type),
                         ),
                       ),
+                    ),
+                    accountCardDecorativeBackgroundIcon(iconData),
 
                     Padding(
                       padding: const EdgeInsets.all(20),
@@ -722,30 +747,6 @@ class _AccountCard extends ConsumerWidget {
         return l10n.creditCard;
     }
   }
-}
-
-class _CardPatternPainter extends CustomPainter {
-  final Color color;
-  _CardPatternPainter({required this.color});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..strokeWidth = 1.5
-      ..style = PaintingStyle.stroke;
-
-    for (var i = -size.height; i < size.width; i += 15) {
-      canvas.drawLine(
-        Offset(i, 0),
-        Offset(i + size.height, size.height),
-        paint,
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(CustomPainter oldDelegate) => false;
 }
 
 class _DueBadge extends StatelessWidget {

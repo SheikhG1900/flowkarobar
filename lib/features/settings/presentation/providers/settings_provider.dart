@@ -301,11 +301,16 @@ class ShowDashboardWidgetAreaNotifier extends Notifier<bool> {
   bool build() {
     _repository = ref.watch(userPreferencesRepositoryProvider);
     _loadVisibility();
-    return true; // Default initial state
+    return false; // Default to hidden while loading
   }
 
   Future<void> _loadVisibility() async {
-    state = await _repository.getShowDashboardWidgetArea();
+    final value = await _repository.getPreference(UserPreferencesRepository.keyShowDashboardWidgetArea);
+    if (value != null) {
+      state = value != 'false';
+    } else {
+      state = true; // Default to true if no preference is set
+    }
   }
 
   Future<void> setVisibility(bool show) async {
@@ -327,11 +332,16 @@ class ShowDashboardPrivacyHighlightNotifier extends Notifier<bool> {
   bool build() {
     _repository = ref.watch(userPreferencesRepositoryProvider);
     _loadVisibility();
-    return true; // Default initial state
+    return false; // Default to hidden while loading
   }
 
   Future<void> _loadVisibility() async {
-    state = await _repository.getShowDashboardPrivacyHighlight();
+    final value = await _repository.getPreference(UserPreferencesRepository.keyShowDashboardPrivacyHighlight);
+    if (value != null) {
+      state = value != 'false';
+    } else {
+      state = true; // Default to true if no preference is set
+    }
   }
 
   Future<void> setVisibility(bool show) async {
@@ -353,11 +363,16 @@ class ShowDashboardFinancialSummaryNotifier extends Notifier<bool> {
   bool build() {
     _repository = ref.watch(userPreferencesRepositoryProvider);
     _loadVisibility();
-    return true; // Default initial state
+    return false; // Default to hidden while loading
   }
 
   Future<void> _loadVisibility() async {
-    state = await _repository.getShowDashboardFinancialSummary();
+    final value = await _repository.getPreference(UserPreferencesRepository.keyShowDashboardFinancialSummary);
+    if (value != null) {
+      state = value != 'false';
+    } else {
+      state = true; // Default to true if no preference is set
+    }
   }
 
   Future<void> setVisibility(bool show) async {

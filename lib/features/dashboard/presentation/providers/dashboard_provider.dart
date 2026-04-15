@@ -44,6 +44,17 @@ double dashboardNetWorthFromAccounts(List<AccountWithBalance> accounts) {
   return totalAssets - totalLiabilities;
 }
 
+/// Same logic as hero balance: sum of non-liability account balances.
+double dashboardAvailableCashFromAccounts(List<AccountWithBalance> accounts) {
+  double availableCash = 0;
+  for (final awb in accounts) {
+    if (!awb.type.isCreditCard) {
+      availableCash += awb.balance;
+    }
+  }
+  return availableCash;
+}
+
 class DashboardFilterNotifier extends Notifier<DashboardFilter> {
   @override
   DashboardFilter build() => DashboardFilter.monthly;

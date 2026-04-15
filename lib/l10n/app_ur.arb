@@ -1170,6 +1170,7 @@
   "manifestContentLocked": "مینی فیسٹ مواد (مقفل)",
   "deltaContent": "ڈیلٹا مواد",
   "refreshStatus": "اسٹیٹس ری فریش کریں",
+  "refreshStatus": "اسٹیٹس ری فریش کریں",
   "refreshBackups": "بیک اپ ری فریش کریں",
   "locked": "مقفل",
   "lockedWithTime": "مقفل ({minutes} منٹ)",

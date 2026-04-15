@@ -1170,6 +1170,7 @@
   "manifestContentLocked": "मेनिफेस्ट सामग्री (लॉक)",
   "deltaContent": "डेल्टा सामग्री",
   "refreshStatus": "स्थिति रिफ्रेश करें",
+  "refreshStatus": "स्थिति रिफ्रेश करें",
   "refreshBackups": "बैकअप रिफ्रेश करें",
   "locked": "लॉक",
   "lockedWithTime": "लॉक ({minutes} मिनट)",
