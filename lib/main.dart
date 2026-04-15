@@ -63,6 +63,8 @@ import 'package:flowpaisa/features/dashboard/domain/dashboard_widget_models.dart
 import 'package:flowpaisa/features/dashboard/presentation/providers/dashboard_widget_provider.dart';
 import 'package:flowpaisa/features/dashboard/presentation/widgets/dashboard_entity_widget_card.dart';
 import 'package:flowpaisa/features/dashboard/presentation/widgets/dashboard_summary_widget_card.dart';
+import 'package:flowpaisa/features/dashboard/presentation/providers/dashboard_hero_combine_provider.dart';
+import 'package:flowpaisa/features/dashboard/presentation/widgets/dashboard_hero_combine_sheet.dart';
 import 'package:flowpaisa/shared/providers/shared_preferences_provider.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
@@ -2264,7 +2266,7 @@ class _DashboardRecentTransactionsHeader extends StatelessWidget {
 }
 
 /// Isolated from the rest of the dashboard so transaction stream updates do not
-/// rebuild hero, stats, or header providers.
+/// rebuild dashboard header, stats, or related providers.
 class _DashboardRecentTransactionsBody extends ConsumerWidget {
   const _DashboardRecentTransactionsBody({super.key});
 
@@ -3003,6 +3005,9 @@ class _DashboardHeroContent extends ConsumerWidget {
     final accountsWithBalanceAsync = ref.watch(accountsWithBalanceProvider);
     final showNetWorthOnHero =
         hasAccounts && mainBalanceView == DashboardMainBalanceView.netWorth;
+    final heroCombineAddends = ref.watch(dashboardHeroCombinedAddendsProvider);
+    final heroCombineChips = ref.watch(dashboardHeroCombinedCashbooksForChipsProvider);
+    final cashbookCount = ref.watch(cashbooksProvider).length;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -3022,19 +3027,64 @@ class _DashboardHeroContent extends ConsumerWidget {
                 Row(
                   children: [
                     Expanded(
-                      child: Text(
-                        showNetWorthOnHero ? l10n.netWorth : l10n.availableCash,
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          color: isDark
-                              ? Colors.white.withValues(alpha: 0.9)
-                              : AppColors.lightTextSecondary,
-                          fontWeight: FontWeight.w600,
-                          shadows: isDark
-                              ? AppTheme.textShadow(blurMultiplier: 1.0)
-                              : null,
-                        ),
+                      child: Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              showNetWorthOnHero
+                                  ? l10n.netWorth
+                                  : l10n.availableCash,
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                color: isDark
+                                    ? Colors.white.withValues(alpha: 0.9)
+                                    : AppColors.lightTextSecondary,
+                                fontWeight: FontWeight.w600,
+                                shadows: isDark
+                                    ? AppTheme.textShadow(blurMultiplier: 1.0)
+                                    : null,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          if (heroCombineChips.isNotEmpty) ...[
+                            const SizedBox(width: 8),
+                            ...heroCombineChips.map(
+                              (c) => Padding(
+                                padding: const EdgeInsets.only(left: 4),
+                                child: CircleAvatar(
+                                  radius: 11,
+                                  backgroundColor: c.color
+                                      .withValues(alpha: isDark ? 0.35 : 0.25),
+                                  child: Icon(
+                                    c.icon,
+                                    size: 13,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
                     ),
+                    if (hasAccounts && cashbookCount > 1)
+                      IconButton(
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(
+                          minWidth: 36,
+                          minHeight: 36,
+                        ),
+                        tooltip: l10n.dashboardHeroCombineTitle,
+                        onPressed: () =>
+                            showDashboardHeroCombineSheet(context, ref),
+                        icon: Icon(
+                          Icons.layers_outlined,
+                          size: 20,
+                          color: isDark
+                              ? Colors.white.withValues(alpha: 0.55)
+                              : AppColors.lightTextSecondary,
+                        ),
+                      ),
                     if (hasAccounts)
                       Icon(
                         Icons.swap_horiz_rounded,
@@ -3051,8 +3101,9 @@ class _DashboardHeroContent extends ConsumerWidget {
                     showNetWorthOnHero
                         ? accountsWithBalanceAsync.when(
                             data: (accounts) {
-                              final nw =
-                                  dashboardNetWorthFromAccounts(accounts);
+                              final nw = dashboardNetWorthFromAccounts(
+                                      accounts) +
+                                  heroCombineAddends.netWorth;
                               return RollingAmount(
                                 amount: nw,
                                 currencySymbol: currency.symbol,
@@ -3083,17 +3134,20 @@ class _DashboardHeroContent extends ConsumerWidget {
                             ),
                           )
                         : dashboardStatsAsync.when(
-                            data: (stats) => RollingAmount(
-                              amount: stats.totalBalance,
-                              currencySymbol: currency.symbol,
-                              decimalPlaces: currency.decimalPlaces,
-                              style: theme.textTheme.displaySmall?.copyWith(
+                            data: (stats) {
+                              final combinedCash = stats.totalBalance +
+                                  heroCombineAddends.availableCash;
+                              return RollingAmount(
+                                amount: combinedCash,
+                                currencySymbol: currency.symbol,
+                                decimalPlaces: currency.decimalPlaces,
+                                style: theme.textTheme.displaySmall?.copyWith(
                                 color:
                                     isDark ? Colors.white : AppColors.lightText,
                                 fontWeight: FontWeight.bold,
                                 height: 1.1,
                                 fontSize: AmountFormatter.getFontSize(
-                                  stats.totalBalance,
+                                  combinedCash,
                                   baseSize: 28,
                                   decimalPlaces: currency.decimalPlaces,
                                 ),
@@ -3101,10 +3155,12 @@ class _DashboardHeroContent extends ConsumerWidget {
                                     ? AppTheme.textShadow(blurMultiplier: 4.0)
                                     : null,
                               ),
-                            ),
+                            );
+                            },
                             loading: () => lastStats != null
                                 ? RollingAmount(
-                                    amount: lastStats.totalBalance,
+                                    amount: lastStats.totalBalance +
+                                        heroCombineAddends.availableCash,
                                     currencySymbol: currency.symbol,
                                     decimalPlaces: currency.decimalPlaces,
                                     style:
@@ -3115,7 +3171,8 @@ class _DashboardHeroContent extends ConsumerWidget {
                                       fontWeight: FontWeight.bold,
                                       height: 1.1,
                                       fontSize: AmountFormatter.getFontSize(
-                                        lastStats.totalBalance,
+                                        lastStats.totalBalance +
+                                            heroCombineAddends.availableCash,
                                         baseSize: 28,
                                         decimalPlaces: currency.decimalPlaces,
                                       ),

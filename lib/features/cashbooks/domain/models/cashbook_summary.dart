@@ -65,10 +65,10 @@ class CashbookSummaryService {
       // Since we are in a Future context, we take the first value from the stream
       final txStats = await txRepo.watchTransactionStats().first;
       
-      // 1. Available Cash (Same as Hero: cashIncome - cashExpense)
+      // 1. Available Cash (same as dashboard header: cashIncome - cashExpense)
       final availableCash = txStats.cashIncome - txStats.cashExpense;
 
-      // 2. Net Worth (Same as Hero: Assets - Liabilities from accounts)
+      // 2. Net Worth (same as dashboard header: assets − liabilities from accounts)
       final netWorth = dashboardNetWorthFromAccounts(accounts);
 
       final summary = CashbookSummary(
@@ -99,14 +99,16 @@ class CashbookSummaryService {
       ..sort((a, b) => b.lastUpdated.compareTo(a.lastUpdated));
   }
 
-  static Future<Map<String, CashbookSummary>> _loadAll(SharedPreferences prefs) async {
+  /// Sync read for dashboard combine totals (same JSON as [_loadAll]).
+  static Map<String, CashbookSummary> readAllSummariesSync(
+      SharedPreferences prefs) {
     final jsonString = prefs.getString(_kStorageKey);
     if (jsonString == null) return {};
 
     try {
       final List<dynamic> list = json.decode(jsonString);
       final Map<String, CashbookSummary> map = {};
-      for (var item in list) {
+      for (final item in list) {
         final summary = CashbookSummary.fromMap(item as Map<String, dynamic>);
         map[summary.uuid] = summary;
       }
@@ -114,6 +116,11 @@ class CashbookSummaryService {
     } catch (e) {
       return {};
     }
+  }
+
+  static Future<Map<String, CashbookSummary>> _loadAll(
+      SharedPreferences prefs) async {
+    return readAllSummariesSync(prefs);
   }
 
   static Future<void> _saveAll(SharedPreferences prefs, Map<String, CashbookSummary> summaries) async {

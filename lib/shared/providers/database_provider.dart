@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
+import 'package:drift/drift.dart';
 
 // Database instance cache to prevent multiple instances during Phoenix restart
 AppDatabase? _cachedDatabase;
@@ -22,7 +23,11 @@ final databaseProvider = Provider<AppDatabase>((ref) {
     return _cachedDatabase!;
   }
 
-  _cachedDatabase = AppDatabase(fileName: '${activeCashbook.dbPath}.db');
+  // We set dontWarnAboutMultipleDatabases to true because we often open 
+  // temporary connections for summary calculations during switches/syncs.
+  driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
+  
+  _cachedDatabase = AppDatabase(fileName: activeCashbook.dbPath);
   _cachedDbPath = activeCashbook.dbPath;
 
   // Dispose when provider is destroyed or active cashbook changes

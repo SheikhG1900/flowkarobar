@@ -4200,4 +4200,19 @@ class AppLocalizationsUr extends AppLocalizations {
 
   @override
   String get updateTransfer => 'ٹرانسفر اپ ڈیٹ کریں';
+
+  @override
+  String get dashboardHeroCombineTitle => 'ڈیش بورڈ کل میں شامل کریں';
+
+  @override
+  String get dashboardHeroCombineSubtitle =>
+      'ہر منتخب کیش بُک کا آخری محفوظ دستیاب کیش اور خالص مالیت یہاں دکھائی گئی رقم میں شامل کرتا ہے (یہ کیش بُک زندہ رہتی ہے؛ باقی محفوظ کل استعمال ہوتے ہیں)۔';
+
+  @override
+  String get dashboardHeroCombineNoSummary =>
+      'کل محفوظ کرنے کے لیے اس کیش بُک کو ایک بار کھولیں۔';
+
+  @override
+  String get dashboardHeroCombineNoOthers =>
+      'شامل کرنے کے لیے کوئی دوسری کیش بُک نہیں۔';
 }

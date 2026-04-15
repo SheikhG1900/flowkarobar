@@ -8,7 +8,7 @@ import 'package:flowpaisa/features/backup/presentation/providers/backup_provider
 import 'package:flowpaisa/features/accounts/domain/models/account_models.dart';
 import 'package:rxdart/rxdart.dart';
 
-/// Main dashboard hero amount: cash from transactions vs net worth from accounts.
+/// Main dashboard header balance view: cash from transactions vs net worth from accounts.
 enum DashboardMainBalanceView { availableCash, netWorth }
 
 class DashboardMainBalanceViewNotifier extends Notifier<DashboardMainBalanceView> {
@@ -44,7 +44,7 @@ double dashboardNetWorthFromAccounts(List<AccountWithBalance> accounts) {
   return totalAssets - totalLiabilities;
 }
 
-/// Same logic as hero balance: sum of non-liability account balances.
+/// Same logic as dashboard header available cash: sum of non–credit-card account balances.
 double dashboardAvailableCashFromAccounts(List<AccountWithBalance> accounts) {
   double availableCash = 0;
   for (final awb in accounts) {

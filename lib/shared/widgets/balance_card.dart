@@ -6,7 +6,7 @@ import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
 
 /// Balance Card with Gradient Background
-/// Hero card displaying total balance with income/expense breakdown
+/// Prominent balance card displaying total balance with income/expense breakdown
 class BalanceCard extends ConsumerWidget {
   final double balance;
   final double income;

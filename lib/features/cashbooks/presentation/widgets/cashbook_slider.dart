@@ -194,14 +194,14 @@ class _CashbookSummaryCard extends ConsumerWidget {
               ),
               child: Stack(
                 children: [
-                  // Decorative background icon
-                  Positioned(
-                    right: -20,
+                  // Decorative background icon (end = trailing side; mirrors in RTL)
+                  PositionedDirectional(
+                    end: -20,
                     bottom: -20,
                     child: Icon(
                       iconData,
                       size: 130,
-                      color: Colors.white.withValues(alpha: 0.25),
+                      color: Colors.white.withValues(alpha: 0.13),
                     ),
                   ),
                   Padding(

@@ -1602,5 +1602,9 @@
   "transferDeleted": "ट्रांसफर सफलतापूर्वक हटा दिया गया",
   "transferUpdated": "ट्रांसफर सफलतापूर्वक अपडेट किया गया",
   "editTransfer": "ट्रांसफर संपादित करें",
-  "updateTransfer": "ट्रांसफर अपडेट करें"
+  "updateTransfer": "ट्रांसफर अपडेट करें",
+  "dashboardHeroCombineTitle": "डैशबोर्ड कुल में शामिल करें",
+  "dashboardHeroCombineSubtitle": "प्रत्येक चुने हुए कैशबुक का अंतिम सहेजा उपलब्ध कैश और कुल संपत्ति यहाँ दिखाई राशियों में जोड़ता है (यह कैशबुक लाइव रहता है; अन्य सहेजे गए कुल का उपयोग करते हैं)।",
+  "dashboardHeroCombineNoSummary": "कुल सहेजने के लिए उस कैशबुक को एक बार खोलें।",
+  "dashboardHeroCombineNoOthers": "शामिल करने के लिए कोई अन्य कैशबुक नहीं है।"
 }

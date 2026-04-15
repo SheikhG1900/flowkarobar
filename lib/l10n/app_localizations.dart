@@ -7654,6 +7654,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Update Transfer'**
   String get updateTransfer;
+
+  /// No description provided for @dashboardHeroCombineTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Include in dashboard totals'**
+  String get dashboardHeroCombineTitle;
+
+  /// No description provided for @dashboardHeroCombineSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Adds each selected cashbook\'s last saved available cash and net worth to the amounts shown here (this cashbook stays live; others use saved totals).'**
+  String get dashboardHeroCombineSubtitle;
+
+  /// No description provided for @dashboardHeroCombineNoSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Open that cashbook once to save its totals.'**
+  String get dashboardHeroCombineNoSummary;
+
+  /// No description provided for @dashboardHeroCombineNoOthers.
+  ///
+  /// In en, this message translates to:
+  /// **'There are no other cashbooks to include.'**
+  String get dashboardHeroCombineNoOthers;
 }
 
 class _AppLocalizationsDelegate

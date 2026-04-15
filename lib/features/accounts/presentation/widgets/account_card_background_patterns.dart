@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flowpaisa/features/accounts/domain/models/account_models.dart';
 
 /// Large corner watermark — same layout and alpha as cashbook slider cards.
-Positioned accountCardDecorativeBackgroundIcon(IconData iconData) {
-  return Positioned(
-    right: -20,
+/// Uses [end] so in RTL the icon mirrors to the opposite corner.
+PositionedDirectional accountCardDecorativeBackgroundIcon(IconData iconData) {
+  return PositionedDirectional(
+    end: -20,
     bottom: -20,
     child: Icon(
       iconData,
