@@ -3070,16 +3070,19 @@ class _DashboardHeroContent extends ConsumerWidget {
                         ],
                       ),
                     ),
-                    if (hasAccounts && cashbookCount > 1)
+                    // Combine other cashbooks into hero totals — only needs 2+ cashbooks, not accounts loaded.
+                    if (cashbookCount > 1) ...[
                       IconButton(
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(
-                          minWidth: 36,
-                          minHeight: 36,
-                        ),
                         tooltip: l10n.dashboardHeroCombineTitle,
                         onPressed: () =>
                             showDashboardHeroCombineSheet(context, ref),
+                        // Avoid default 48dp / explicit 36×36 min — that stretched the hero label row.
+                        style: IconButton.styleFrom(
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          visualDensity: VisualDensity.compact,
+                          minimumSize: Size.zero,
+                          padding: const EdgeInsets.all(2),
+                        ),
                         icon: Icon(
                           Icons.layers_outlined,
                           size: 20,
@@ -3088,6 +3091,8 @@ class _DashboardHeroContent extends ConsumerWidget {
                               : AppColors.lightTextSecondary,
                         ),
                       ),
+                      if (hasAccounts) const SizedBox(width: 10),
+                    ],
                     if (hasAccounts)
                       Icon(
                         Icons.swap_horiz_rounded,
