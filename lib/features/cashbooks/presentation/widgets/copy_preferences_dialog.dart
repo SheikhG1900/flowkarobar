@@ -6,6 +6,7 @@ import 'package:flowpaisa/features/cashbooks/domain/models/cashbook.dart';
 import 'package:flowpaisa/features/cashbooks/domain/preferences_copy_service.dart';
 import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
 import 'package:flowpaisa/features/currencies/presentation/providers/currencies_provider.dart';
+import 'package:flowpaisa/features/dashboard/presentation/providers/dashboard_widget_provider.dart';
 import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
 
@@ -32,6 +33,7 @@ class _CopyPreferencesSheetState extends ConsumerState<CopyPreferencesSheet> {
   bool _copyTemplates = true;
   bool _copyContacts = false;
   bool _copyCategories = false;
+  bool _copyDashboardWidgets = true;
   bool _isLoading = false;
 
   @override
@@ -244,6 +246,17 @@ class _CopyPreferencesSheetState extends ConsumerState<CopyPreferencesSheet> {
                         ),
                         const Divider(height: 1),
                         CheckboxListTile(
+                          title: Text(l10n.copyDashboardWidgets),
+                          subtitle: Text(l10n.copyDashboardWidgetsDescription),
+                          value: _copyDashboardWidgets,
+                          onChanged: (value) {
+                            setState(() {
+                              _copyDashboardWidgets = value ?? false;
+                            });
+                          },
+                        ),
+                        const Divider(height: 1),
+                        CheckboxListTile(
                           title: Text(l10n.copyDateFormatAndFonts),
                           subtitle: Text(l10n.copyDateFormatAndFontsSubtitle),
                           value: _copyDateAndFonts,
@@ -348,7 +361,8 @@ class _CopyPreferencesSheetState extends ConsumerState<CopyPreferencesSheet> {
         !_copyCurrencies &&
         !_copyTemplates &&
         !_copyContacts &&
-        !_copyCategories) {
+        !_copyCategories &&
+        !_copyDashboardWidgets) {
       ToastUtils.showErrorToast(context, ref, l10n.pleaseSelectAtLeastOne);
       return;
     }
@@ -364,6 +378,7 @@ class _CopyPreferencesSheetState extends ConsumerState<CopyPreferencesSheet> {
           _copyDateAndFonts &&
           _copyCurrencies &&
           _copyTemplates &&
+          _copyDashboardWidgets &&
           !_copyContacts &&
           !_copyCategories) {
         await PreferencesCopyService.copyPreferences(
@@ -420,6 +435,13 @@ class _CopyPreferencesSheetState extends ConsumerState<CopyPreferencesSheet> {
             cashbooks,
           );
         }
+        if (_copyDashboardWidgets) {
+          await PreferencesCopyService.copyDashboardWidgetsOnly(
+            _selectedSourceCashbookId!,
+            widget.targetCashbookId,
+            cashbooks,
+          );
+        }
       }
 
       if (mounted) {
@@ -449,12 +471,22 @@ class _CopyPreferencesSheetState extends ConsumerState<CopyPreferencesSheet> {
       ref.invalidate(userProfileProvider);
     }
     if (copiedDateFonts) {
+      ref.invalidate(languageProvider);
       ref.invalidate(fontProvider);
       ref.invalidate(selectedCurrencyIdProvider);
       ref.invalidate(currentCurrencyProvider);
     }
     if (copiedCurrencies) {
       ref.invalidate(currenciesListProvider);
+    }
+    if (_copyDashboardWidgets) {
+      ref.invalidate(dashboardWidgetLayoutProvider);
+      ref.invalidate(showDashboardWidgetAreaProvider);
+      ref.invalidate(showDashboardPrivacyHighlightProvider);
+      ref.invalidate(showDashboardFinancialSummaryProvider);
+      ref.invalidate(bottomBarQuickActionProvider);
+      ref.invalidate(showBottomBarQuickButtonProvider);
+      ref.invalidate(dashboardVisibilityProvider);
     }
   }
 }

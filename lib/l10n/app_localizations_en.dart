@@ -2834,7 +2834,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get copyDateFormatAndFontsSubtitle =>
-      'Fonts per language, date format, and selected currency for amounts';
+      'App language, fonts per language, date format, and selected currency for amounts';
 
   @override
   String get copyCurrenciesOption => 'Currencies';
@@ -2859,6 +2859,13 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get copyCategoriesDescription =>
       'Expense and income categories with icons and colors';
+
+  @override
+  String get copyDashboardWidgets => 'Dashboard widgets';
+
+  @override
+  String get copyDashboardWidgetsDescription =>
+      'Widget layout, privacy and financial summary toggles, bottom quick action, and dashboard visibility';
 
   @override
   String get copy => 'Copy';

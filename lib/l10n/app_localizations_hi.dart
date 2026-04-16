@@ -2843,7 +2843,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get copyDateFormatAndFontsSubtitle =>
-      'प्रति भाषा फ़ॉन्ट, तारीख प्रारूप और राशियों के लिए चयनित मुद्रा';
+      'ऐप भाषा, प्रति भाषा फ़ॉन्ट, तारीख प्रारूप और राशियों के लिए चयनित मुद्रा';
 
   @override
   String get copyCurrenciesOption => 'मुद्राएँ';
@@ -2867,6 +2867,13 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get copyCategoriesDescription =>
       'आय और व्यय श्रेणियाँ आइकन और रंगों के साथ';
+
+  @override
+  String get copyDashboardWidgets => 'डैशबोर्ड विजेट';
+
+  @override
+  String get copyDashboardWidgetsDescription =>
+      'विजेट लेआउट, गोपनीयता और वित्तीय सारांश टॉगल, नीचे त्वरित क्रिया और डैशबोर्ड दृश्यता';
 
   @override
   String get copy => 'कॉपी करें';

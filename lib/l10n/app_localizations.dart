@@ -5239,7 +5239,7 @@ abstract class AppLocalizations {
   /// No description provided for @copyDateFormatAndFontsSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Fonts per language, date format, and selected currency for amounts'**
+  /// **'App language, fonts per language, date format, and selected currency for amounts'**
   String get copyDateFormatAndFontsSubtitle;
 
   /// No description provided for @copyCurrenciesOption.
@@ -5283,6 +5283,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Expense and income categories with icons and colors'**
   String get copyCategoriesDescription;
+
+  /// No description provided for @copyDashboardWidgets.
+  ///
+  /// In en, this message translates to:
+  /// **'Dashboard widgets'**
+  String get copyDashboardWidgets;
+
+  /// No description provided for @copyDashboardWidgetsDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Widget layout, privacy and financial summary toggles, bottom quick action, and dashboard visibility'**
+  String get copyDashboardWidgetsDescription;
 
   /// No description provided for @copy.
   ///

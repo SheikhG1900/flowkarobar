@@ -2851,7 +2851,7 @@ class AppLocalizationsUr extends AppLocalizations {
 
   @override
   String get copyDateFormatAndFontsSubtitle =>
-      'ہر زبان کے فونٹ، تاریخ کا فارمیٹ اور رقوم کے لیے منتخب کرنسی';
+      'ایپ کی زبان، ہر زبان کے فونٹ، تاریخ کا فارمیٹ اور رقوم کے لیے منتخب کرنسی';
 
   @override
   String get copyCurrenciesOption => 'کرنسیاں';
@@ -2875,6 +2875,13 @@ class AppLocalizationsUr extends AppLocalizations {
   @override
   String get copyCategoriesDescription =>
       'آمدنی اور اخراجات کے زمرے آئیکن اور رنگوں کے ساتھ';
+
+  @override
+  String get copyDashboardWidgets => 'ڈیش بورڈ ویجٹس';
+
+  @override
+  String get copyDashboardWidgetsDescription =>
+      'ویجٹ لے آؤٹ، پرائیویسی اور مالی خلاصہ ٹوگلز، نیچے فوری ایکشن اور ڈیش بورڈ کی نمائش';
 
   @override
   String get copy => 'کاپی کریں';

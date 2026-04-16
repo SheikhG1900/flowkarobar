@@ -13,7 +13,7 @@ const _kLegacyGlobalCombineUuids = 'dashboard_hero_combine_uuids_v1';
 /// Local SharedPreferences only — **not** synced via [UserPreferencesRepository].
 /// Each active cashbook has its own list of *other* cashbook UUIDs to fold into dashboard header totals.
 String _storageKeyForActiveCashbook(String activeCashbookId) =>
-    'dashboard_combine_includes_v2_$activeCashbookId';
+    'dashboard_combine_includes_v1_$activeCashbookId';
 
 /// Cashbooks (other than active) whose **saved** summary amounts are added to dashboard header totals.
 /// Selection is stored **per active cashbook** on this device only.

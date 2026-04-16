@@ -1,12 +1,13 @@
 import 'package:drift/drift.dart';
 import 'package:flowpaisa/core/database/database.dart';
-import 'package:flowpaisa/features/settings/data/user_preferences_repository.dart';
 import 'package:flowpaisa/features/cashbooks/domain/models/cashbook.dart';
+import 'package:flowpaisa/features/settings/data/user_preferences_repository.dart';
 
 /// Service for copying preferences between cashbooks
 class PreferencesCopyService {
   /// Copy all preferences from source cashbook to target cashbook
-  /// This includes: user profile, date format, currency, and all message templates
+  /// This includes: user profile, dashboard widget prefs, language, date format,
+  /// fonts, currency catalog, selected currency, and message templates
   static Future<void> copyPreferences(
     String sourceCashbookId,
     String targetCashbookId,
@@ -32,6 +33,82 @@ class PreferencesCopyService {
 
       // Copy message templates
       await copyMessageTemplates(sourceDb, targetDb);
+
+      await _copyDashboardWidgetPreferences(sourceRepo, targetRepo);
+    } finally {
+      await sourceDb.close();
+      await targetDb.close();
+    }
+  }
+
+  /// Dashboard layout, visibility toggles, bottom-bar quick action, and related keys.
+  static Future<void> _copyDashboardWidgetPreferences(
+    UserPreferencesRepository sourceRepo,
+    UserPreferencesRepository targetRepo,
+  ) async {
+    final layout = await sourceRepo
+        .getPreference(UserPreferencesRepository.keyDashboardWidgetLayout);
+    if (layout != null && layout.isNotEmpty) {
+      await targetRepo.setPreference(
+        UserPreferencesRepository.keyDashboardWidgetLayout,
+        layout,
+      );
+    }
+    await _copyPreferenceKeyIfPresent(
+      sourceRepo,
+      targetRepo,
+      UserPreferencesRepository.keyShowDashboardWidgetArea,
+    );
+    await _copyPreferenceKeyIfPresent(
+      sourceRepo,
+      targetRepo,
+      UserPreferencesRepository.keyShowDashboardPrivacyHighlight,
+    );
+    await _copyPreferenceKeyIfPresent(
+      sourceRepo,
+      targetRepo,
+      UserPreferencesRepository.keyShowDashboardFinancialSummary,
+    );
+    await _copyPreferenceKeyIfPresent(
+      sourceRepo,
+      targetRepo,
+      UserPreferencesRepository.keyBottomBarQuickAction,
+    );
+    await _copyPreferenceKeyIfPresent(
+      sourceRepo,
+      targetRepo,
+      UserPreferencesRepository.keyShowBottomBarQuickButton,
+    );
+  }
+
+  static Future<void> _copyPreferenceKeyIfPresent(
+    UserPreferencesRepository sourceRepo,
+    UserPreferencesRepository targetRepo,
+    String key,
+  ) async {
+    final value = await sourceRepo.getPreference(key);
+    if (value != null) {
+      await targetRepo.setPreference(key, value);
+    }
+  }
+
+  /// Copy dashboard-related preferences from Drift per-cashbook DB only (layout, toggles, quick action).
+  /// Does not copy SharedPreferences hero-combine selection.
+  static Future<void> copyDashboardWidgetsOnly(
+    String sourceCashbookId,
+    String targetCashbookId,
+    List<Cashbook> cashbooks,
+  ) async {
+    final sourceCashbook = cashbooks.firstWhere((c) => c.id == sourceCashbookId);
+    final targetCashbook = cashbooks.firstWhere((c) => c.id == targetCashbookId);
+
+    final sourceDb = AppDatabase(fileName: '${sourceCashbook.dbPath}.db');
+    final targetDb = AppDatabase(fileName: '${targetCashbook.dbPath}.db');
+
+    try {
+      final sourceRepo = UserPreferencesRepository(sourceDb);
+      final targetRepo = UserPreferencesRepository(targetDb);
+      await _copyDashboardWidgetPreferences(sourceRepo, targetRepo);
     } finally {
       await sourceDb.close();
       await targetDb.close();
@@ -54,16 +131,18 @@ class PreferencesCopyService {
     if (address != null) await targetRepo.setUserAddress(address);
   }
 
-  /// Date format and per-language fonts only.
+  /// Date format, app language, and per-language fonts.
   static Future<void> _copyDateAndFontsData(
     UserPreferencesRepository sourceRepo,
     UserPreferencesRepository targetRepo,
   ) async {
+    final language = await sourceRepo.getLanguage();
     final dateFormat = await sourceRepo.getDateFormat();
     final fontEn = await sourceRepo.getFontForLanguage('en');
     final fontHi = await sourceRepo.getFontForLanguage('hi');
     final fontUr = await sourceRepo.getFontForLanguage('ur');
 
+    await targetRepo.setLanguage(language);
     await targetRepo.setDateFormat(dateFormat);
     await targetRepo.setFontForLanguage('en', fontEn);
     await targetRepo.setFontForLanguage('hi', fontHi);
