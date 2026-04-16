@@ -1603,8 +1603,8 @@
   "transferUpdated": "ٹرانسفر کامیابی سے اپ ڈیٹ کر دیا گیا",
   "editTransfer": "ٹرانسفر میں ترمیم کریں",
   "updateTransfer": "ٹرانسفر اپ ڈیٹ کریں",
-  "dashboardHeroCombineTitle": "ڈیش بورڈ کل میں شامل کریں",
-  "dashboardHeroCombineSubtitle": "ہر منتخب کیش بُک کا آخری محفوظ دستیاب کیش اور خالص مالیت یہاں دکھائی گئی رقم میں شامل کرتا ہے (یہ کیش بُک زندہ رہتی ہے؛ باقی محفوظ کل استعمال ہوتے ہیں)۔",
-  "dashboardHeroCombineNoSummary": "کل محفوظ کرنے کے لیے اس کیش بُک کو ایک بار کھولیں۔",
+  "dashboardHeroCombineTitle": "مجموعی بیلنس دیکھیں",
+  "dashboardHeroCombineSubtitle": "اس کیش بُک کے لیے ڈیش بورڈ کل میں کون سی دوسری کیش بُکیں شامل کرنی ہیں، منتخب کریں۔",
+  "dashboardHeroCombineNoSummary": "رقم لوڈ کرنے کے لیے ایک بار کھولیں۔",
   "dashboardHeroCombineNoOthers": "شامل کرنے کے لیے کوئی دوسری کیش بُک نہیں۔"
 }

@@ -4197,15 +4197,15 @@ class AppLocalizationsHi extends AppLocalizations {
   String get updateTransfer => 'ट्रांसफर अपडेट करें';
 
   @override
-  String get dashboardHeroCombineTitle => 'डैशबोर्ड कुल में शामिल करें';
+  String get dashboardHeroCombineTitle => 'संयुक्त शेष देखें';
 
   @override
   String get dashboardHeroCombineSubtitle =>
-      'प्रत्येक चुने हुए कैशबुक का अंतिम सहेजा उपलब्ध कैश और कुल संपत्ति यहाँ दिखाई राशियों में जोड़ता है (यह कैशबुक लाइव रहता है; अन्य सहेजे गए कुल का उपयोग करते हैं)।';
+      'इस कैशबुक के लिए डैशबोर्ड कुल में कौन से अन्य कैशबुक जोड़ने हैं, चुनें।';
 
   @override
   String get dashboardHeroCombineNoSummary =>
-      'कुल सहेजने के लिए उस कैशबुक को एक बार खोलें।';
+      'राशि लोड करने के लिए एक बार खोलें।';
 
   @override
   String get dashboardHeroCombineNoOthers =>

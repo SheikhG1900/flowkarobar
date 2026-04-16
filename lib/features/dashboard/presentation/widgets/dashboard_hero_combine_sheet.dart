@@ -1,26 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/features/cashbooks/domain/models/cashbook_summary.dart';
 import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
 import 'package:flowpaisa/features/dashboard/presentation/providers/dashboard_hero_combine_provider.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
+import 'package:flowpaisa/shared/providers/currency_provider.dart';
 import 'package:flowpaisa/shared/providers/shared_preferences_provider.dart';
 
 Future<void> showDashboardHeroCombineSheet(
     BuildContext context, WidgetRef ref) async {
-  final l10n = AppLocalizations.of(context)!;
   await showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
     builder: (ctx) {
       return Consumer(
         builder: (context, ref, _) {
+          final l10n = AppLocalizations.of(context)!;
+          final theme = Theme.of(ctx);
           final activeId = ref.watch(activeCashbookIdProvider);
           final cashbooks = ref.watch(cashbooksProvider);
           final selected =
               ref.watch(dashboardHeroCombinedCashbookIdsProvider);
           final prefs = ref.watch(sharedPreferencesProvider);
           final summaries = CashbookSummaryService.readAllSummariesSync(prefs);
+          final symbol = ref.watch(currencySymbolProvider);
+          final decimals = ref.watch(currencyDecimalPlacesProvider);
 
           final others =
               cashbooks.where((c) => c.id != activeId).toList()
@@ -46,9 +51,7 @@ Future<void> showDashboardHeroCombineSheet(
                       height: 4,
                       margin: const EdgeInsets.only(bottom: 12),
                       decoration: BoxDecoration(
-                        color: Theme.of(ctx)
-                            .colorScheme
-                            .onSurfaceVariant
+                        color: theme.colorScheme.onSurfaceVariant
                             .withValues(alpha: 0.4),
                         borderRadius: BorderRadius.circular(2),
                       ),
@@ -56,16 +59,16 @@ Future<void> showDashboardHeroCombineSheet(
                   ),
                   Text(
                     l10n.dashboardHeroCombineTitle,
-                    style: Theme.of(ctx).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     l10n.dashboardHeroCombineSubtitle,
-                    style: Theme.of(ctx).textTheme.bodyMedium?.copyWith(
-                          color: Theme.of(ctx).colorScheme.onSurfaceVariant,
-                        ),
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   if (others.isEmpty)
@@ -79,46 +82,146 @@ Future<void> showDashboardHeroCombineSheet(
                   else
                     ConstrainedBox(
                       constraints: BoxConstraints(
-                        maxHeight: MediaQuery.sizeOf(ctx).height * 0.45,
+                        maxHeight: MediaQuery.sizeOf(ctx).height * 0.5,
                       ),
                       child: ListView.separated(
                         shrinkWrap: true,
                         itemCount: others.length,
-                        separatorBuilder: (_, __) => const Divider(height: 1),
+                        separatorBuilder: (_, __) => const SizedBox(height: 10),
                         itemBuilder: (context, index) {
                           final c = others[index];
                           final on = selected.contains(c.id);
-                          final hasSummary = summaries[c.id] != null;
-                          return SwitchListTile(
-                            value: on,
-                            onChanged: (v) {
-                              ref
-                                  .read(
-                                    dashboardHeroCombinedCashbookIdsProvider
-                                        .notifier,
-                                  )
-                                  .toggle(c.id, v);
-                            },
-                            secondary: Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: c.color.withValues(alpha: 0.2),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Icon(c.icon, color: c.color, size: 22),
-                            ),
-                            title: Text(c.name),
-                            subtitle: !hasSummary && on
-                                ? Text(
-                                    l10n.dashboardHeroCombineNoSummary,
-                                    style: TextStyle(
-                                      color: Theme.of(ctx)
-                                          .colorScheme
-                                          .tertiary,
-                                      fontSize: 12,
+                          final summary = summaries[c.id];
+
+                          return Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              onTap: () {
+                                ref
+                                    .read(
+                                      dashboardHeroCombinedCashbookIdsProvider
+                                          .notifier,
+                                    )
+                                    .toggle(c.id, !on);
+                              },
+                              borderRadius: BorderRadius.circular(14),
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 200),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 12,
+                                ),
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                    width: on ? 2 : 1,
+                                    color: on
+                                        ? theme.colorScheme.primary
+                                        : theme.colorScheme.outlineVariant,
+                                  ),
+                                  borderRadius: BorderRadius.circular(14),
+                                  color: on
+                                      ? theme.colorScheme.primary
+                                          .withValues(alpha: 0.08)
+                                      : theme.colorScheme.surfaceContainerHighest
+                                          .withValues(alpha: 0.35),
+                                ),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(10),
+                                      decoration: BoxDecoration(
+                                        color: c.color
+                                            .withValues(alpha: 0.2),
+                                        borderRadius:
+                                            BorderRadius.circular(12),
+                                      ),
+                                      child: Icon(
+                                        c.icon,
+                                        color: c.color,
+                                        size: 24,
+                                      ),
                                     ),
-                                  )
-                                : null,
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            c.name,
+                                            style: theme.textTheme.titleSmall
+                                                ?.copyWith(
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Row(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Expanded(
+                                                child: _BalanceMetricColumn(
+                                                  label: l10n.availableCash,
+                                                  value: summary != null
+                                                      ? AmountFormatter
+                                                          .formatWithCurrency(
+                                                          summary
+                                                              .availableCash,
+                                                          symbol,
+                                                          decimals,
+                                                        )
+                                                      : '—',
+                                                  theme: theme,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 12),
+                                              Expanded(
+                                                child: _BalanceMetricColumn(
+                                                  label: l10n.netWorth,
+                                                  value: summary != null
+                                                      ? AmountFormatter
+                                                          .formatWithCurrency(
+                                                          summary.netWorth,
+                                                          symbol,
+                                                          decimals,
+                                                        )
+                                                      : '—',
+                                                  theme: theme,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          if (summary == null) ...[
+                                            const SizedBox(height: 6),
+                                            Text(
+                                              l10n.dashboardHeroCombineNoSummary,
+                                              style: theme.textTheme.labelSmall
+                                                  ?.copyWith(
+                                                color: theme
+                                                    .colorScheme.tertiary,
+                                              ),
+                                            ),
+                                          ],
+                                        ],
+                                      ),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.only(left: 4),
+                                      child: Icon(
+                                        on
+                                            ? Icons.check_circle
+                                            : Icons.circle_outlined,
+                                        color: on
+                                            ? theme.colorScheme.primary
+                                            : theme.colorScheme.outline,
+                                        size: 22,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
                           );
                         },
                       ),
@@ -133,3 +236,41 @@ Future<void> showDashboardHeroCombineSheet(
   );
 }
 
+class _BalanceMetricColumn extends StatelessWidget {
+  const _BalanceMetricColumn({
+    required this.label,
+    required this.value,
+    required this.theme,
+  });
+
+  final String label;
+  final String value;
+  final ThemeData theme;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: theme.textTheme.labelSmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+            fontSize: 10,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          value,
+          style: theme.textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+          maxLines: 1,
+          softWrap: false,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ],
+    );
+  }
+}

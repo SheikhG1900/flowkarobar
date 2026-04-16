@@ -7658,19 +7658,19 @@ abstract class AppLocalizations {
   /// No description provided for @dashboardHeroCombineTitle.
   ///
   /// In en, this message translates to:
-  /// **'Include in dashboard totals'**
+  /// **'View combined balance'**
   String get dashboardHeroCombineTitle;
 
   /// No description provided for @dashboardHeroCombineSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Adds each selected cashbook\'s last saved available cash and net worth to the amounts shown here (this cashbook stays live; others use saved totals).'**
+  /// **'Choose which other cashbooks to add to the dashboard totals for this cashbook.'**
   String get dashboardHeroCombineSubtitle;
 
   /// No description provided for @dashboardHeroCombineNoSummary.
   ///
   /// In en, this message translates to:
-  /// **'Open that cashbook once to save its totals.'**
+  /// **'Open once to load amounts.'**
   String get dashboardHeroCombineNoSummary;
 
   /// No description provided for @dashboardHeroCombineNoOthers.

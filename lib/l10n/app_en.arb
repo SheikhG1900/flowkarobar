@@ -2154,8 +2154,8 @@
   "transferUpdated": "Transfer updated successfully",
   "editTransfer": "Edit Transfer",
   "updateTransfer": "Update Transfer",
-  "dashboardHeroCombineTitle": "Include in dashboard totals",
-  "dashboardHeroCombineSubtitle": "Adds each selected cashbook's last saved available cash and net worth to the amounts shown here (this cashbook stays live; others use saved totals).",
-  "dashboardHeroCombineNoSummary": "Open that cashbook once to save its totals.",
+  "dashboardHeroCombineTitle": "View combined balance",
+  "dashboardHeroCombineSubtitle": "Choose which other cashbooks to add to the dashboard totals for this cashbook.",
+  "dashboardHeroCombineNoSummary": "Open once to load amounts.",
   "dashboardHeroCombineNoOthers": "There are no other cashbooks to include."
 }

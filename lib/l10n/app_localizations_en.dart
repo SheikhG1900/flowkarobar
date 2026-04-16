@@ -4186,15 +4186,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get updateTransfer => 'Update Transfer';
 
   @override
-  String get dashboardHeroCombineTitle => 'Include in dashboard totals';
+  String get dashboardHeroCombineTitle => 'View combined balance';
 
   @override
   String get dashboardHeroCombineSubtitle =>
-      'Adds each selected cashbook\'s last saved available cash and net worth to the amounts shown here (this cashbook stays live; others use saved totals).';
+      'Choose which other cashbooks to add to the dashboard totals for this cashbook.';
 
   @override
-  String get dashboardHeroCombineNoSummary =>
-      'Open that cashbook once to save its totals.';
+  String get dashboardHeroCombineNoSummary => 'Open once to load amounts.';
 
   @override
   String get dashboardHeroCombineNoOthers =>
