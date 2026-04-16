@@ -6,7 +6,9 @@ import 'package:flowpaisa/features/accounts/data/accounts_repository.dart';
 import 'package:flowpaisa/features/accounts/domain/models/account_models.dart';
 import 'package:flowpaisa/features/transactions/data/transactions_repository.dart';
 import 'package:flowpaisa/features/cashbooks/domain/models/cashbook.dart';
+import 'package:flowpaisa/features/currencies/data/currencies_repository.dart';
 import 'package:flowpaisa/features/dashboard/presentation/providers/dashboard_provider.dart';
+import 'package:flowpaisa/features/settings/data/user_preferences_repository.dart';
 import 'package:drift/drift.dart';
 
 class CashbookSummary {
@@ -15,11 +17,15 @@ class CashbookSummary {
   final double netWorth;
   final DateTime lastUpdated;
 
+  /// [AppCurrency.uuid] for this cashbook when the summary was saved (per-cashbook DB).
+  final String? currencyUuid;
+
   CashbookSummary({
     required this.uuid,
     required this.availableCash,
     required this.netWorth,
     required this.lastUpdated,
+    this.currencyUuid,
   });
 
   Map<String, dynamic> toMap() {
@@ -28,6 +34,7 @@ class CashbookSummary {
       'availableCash': availableCash,
       'netWorth': netWorth,
       'lastUpdated': lastUpdated.toIso8601String(),
+      if (currencyUuid != null) 'currencyUuid': currencyUuid,
     };
   }
 
@@ -37,6 +44,7 @@ class CashbookSummary {
       availableCash: (map['availableCash'] as num?)?.toDouble() ?? 0.0,
       netWorth: (map['netWorth'] as num?)?.toDouble() ?? 0.0,
       lastUpdated: DateTime.parse(map['lastUpdated'] as String),
+      currencyUuid: map['currencyUuid'] as String?,
     );
   }
 
@@ -71,11 +79,22 @@ class CashbookSummaryService {
       // 2. Net Worth (same as dashboard header: assets − liabilities from accounts)
       final netWorth = dashboardNetWorthFromAccounts(accounts);
 
+      final userPrefsRepo = UserPreferencesRepository(db);
+      String? currencyUuid =
+          await userPrefsRepo.getPreference(UserPreferencesRepository.keySelectedCurrencyId);
+      if (currencyUuid == null || currencyUuid.isEmpty) {
+        final code = await userPrefsRepo.getCurrency();
+        final currenciesRepo = CurrenciesRepository(db);
+        final c = await currenciesRepo.getCurrencyByCode(code);
+        currencyUuid = c?.uuid;
+      }
+
       final summary = CashbookSummary(
         uuid: cashbook.id,
         availableCash: availableCash,
         netWorth: netWorth,
         lastUpdated: DateTime.now(),
+        currencyUuid: currencyUuid,
       );
 
       await updateSummary(prefs, summary);

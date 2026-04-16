@@ -11,6 +11,8 @@ class UserPreferencesRepository {
   static const String keyLanguage = 'language';
   static const String keyThemeMode = 'theme_mode';
   static const String keyCurrency = 'currency';
+  /// UUID of selected row in [AppCurrencies] (same key as [currency_provider]).
+  static const String keySelectedCurrencyId = 'selected_currency_id';
   static const String keyDateFormat = 'date_format';
   static const String keyUserName = 'user_name';
   static const String keyUserEmail = 'user_email';

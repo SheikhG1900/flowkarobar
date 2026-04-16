@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/features/cashbooks/domain/models/cashbook_summary.dart';
 import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
@@ -24,8 +25,6 @@ Future<void> showDashboardHeroCombineSheet(
               ref.watch(dashboardHeroCombinedCashbookIdsProvider);
           final prefs = ref.watch(sharedPreferencesProvider);
           final summaries = CashbookSummaryService.readAllSummariesSync(prefs);
-          final symbol = ref.watch(currencySymbolProvider);
-          final decimals = ref.watch(currencyDecimalPlacesProvider);
 
           final others =
               cashbooks.where((c) => c.id != activeId).toList()
@@ -156,41 +155,10 @@ Future<void> showDashboardHeroCombineSheet(
                                             ),
                                           ),
                                           const SizedBox(height: 8),
-                                          Row(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Expanded(
-                                                child: _BalanceMetricColumn(
-                                                  label: l10n.availableCash,
-                                                  value: summary != null
-                                                      ? AmountFormatter
-                                                          .formatWithCurrency(
-                                                          summary
-                                                              .availableCash,
-                                                          symbol,
-                                                          decimals,
-                                                        )
-                                                      : '—',
-                                                  theme: theme,
-                                                ),
-                                              ),
-                                              const SizedBox(width: 12),
-                                              Expanded(
-                                                child: _BalanceMetricColumn(
-                                                  label: l10n.netWorth,
-                                                  value: summary != null
-                                                      ? AmountFormatter
-                                                          .formatWithCurrency(
-                                                          summary.netWorth,
-                                                          symbol,
-                                                          decimals,
-                                                        )
-                                                      : '—',
-                                                  theme: theme,
-                                                ),
-                                              ),
-                                            ],
+                                          _CombineCashbookBalances(
+                                            summary: summary,
+                                            l10n: l10n,
+                                            theme: theme,
                                           ),
                                           if (summary == null) ...[
                                             const SizedBox(height: 6),
@@ -234,6 +202,91 @@ Future<void> showDashboardHeroCombineSheet(
       );
     },
   );
+}
+
+class _CombineCashbookBalances extends ConsumerWidget {
+  const _CombineCashbookBalances({
+    required this.summary,
+    required this.l10n,
+    required this.theme,
+  });
+
+  final CashbookSummary? summary;
+  final AppLocalizations l10n;
+  final ThemeData theme;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final sm = summary;
+    if (sm == null) {
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: _BalanceMetricColumn(
+              label: l10n.availableCash,
+              value: '—',
+              theme: theme,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: _BalanceMetricColumn(
+              label: l10n.netWorth,
+              value: '—',
+              theme: theme,
+            ),
+          ),
+        ],
+      );
+    }
+
+    final asyncCurrency =
+        ref.watch(cashbookSummaryCurrencyProvider(sm.currencyUuid));
+    final fallbackSym = ref.watch(currencySymbolProvider);
+    final fallbackDec = ref.watch(currencyDecimalPlacesProvider);
+
+    return asyncCurrency.when(
+      data: (AppCurrency currency) => _metricsRow(
+        sm,
+        currency.symbol,
+        currency.decimalPlaces,
+      ),
+      loading: () => _metricsRow(sm, fallbackSym, fallbackDec),
+      error: (_, __) => _metricsRow(sm, fallbackSym, fallbackDec),
+    );
+  }
+
+  Widget _metricsRow(CashbookSummary s, String symbol, int decimals) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: _BalanceMetricColumn(
+            label: l10n.availableCash,
+            value: AmountFormatter.formatWithCurrency(
+              s.availableCash,
+              symbol,
+              decimals,
+            ),
+            theme: theme,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _BalanceMetricColumn(
+            label: l10n.netWorth,
+            value: AmountFormatter.formatWithCurrency(
+              s.netWorth,
+              symbol,
+              decimals,
+            ),
+            theme: theme,
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 class _BalanceMetricColumn extends StatelessWidget {

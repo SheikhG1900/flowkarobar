@@ -2839,6 +2839,20 @@ class AppLocalizationsHi extends AppLocalizations {
   String get preferencesDescription => 'मुद्रा और तारीख प्रारूप सेटिंग्स';
 
   @override
+  String get copyDateFormatAndFonts => 'तारीख प्रारूप और फ़ॉन्ट';
+
+  @override
+  String get copyDateFormatAndFontsSubtitle =>
+      'प्रति भाषा फ़ॉन्ट, तारीख प्रारूप और राशियों के लिए चयनित मुद्रा';
+
+  @override
+  String get copyCurrenciesOption => 'मुद्राएँ';
+
+  @override
+  String get copyCurrenciesOptionSubtitle =>
+      'स्रोत कैशबुक की मुद्रा परिभाषाएँ (नाम, प्रतीक, कोड)';
+
+  @override
   String get messageTemplatesDescription => 'व्हाट्सएप संदेश टेम्पलेट्स';
 
   @override

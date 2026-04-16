@@ -5230,6 +5230,30 @@ abstract class AppLocalizations {
   /// **'Currency and Date Format settings'**
   String get preferencesDescription;
 
+  /// No description provided for @copyDateFormatAndFonts.
+  ///
+  /// In en, this message translates to:
+  /// **'Date format & fonts'**
+  String get copyDateFormatAndFonts;
+
+  /// No description provided for @copyDateFormatAndFontsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Fonts per language, date format, and selected currency for amounts'**
+  String get copyDateFormatAndFontsSubtitle;
+
+  /// No description provided for @copyCurrenciesOption.
+  ///
+  /// In en, this message translates to:
+  /// **'Currencies'**
+  String get copyCurrenciesOption;
+
+  /// No description provided for @copyCurrenciesOptionSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Currency definitions from the source cashbook (names, symbols, codes)'**
+  String get copyCurrenciesOptionSubtitle;
+
   /// No description provided for @messageTemplatesDescription.
   ///
   /// In en, this message translates to:

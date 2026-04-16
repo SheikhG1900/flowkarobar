@@ -10,6 +10,7 @@ import 'package:flowpaisa/shared/providers/shared_preferences_provider.dart';
 import 'package:flowpaisa/shared/providers/database_provider.dart';
 import 'package:flowpaisa/features/premium/domain/premium_provider.dart';
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
+import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:material_symbols_icons/symbols.dart';
@@ -124,8 +125,17 @@ class _CashbookSummaryCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
-    final symbol = ref.watch(currencySymbolProvider);
-    final decimals = ref.watch(currencyDecimalPlacesProvider);
+    final summaryCurrencyAsync =
+        ref.watch(cashbookSummaryCurrencyProvider(summary.currencyUuid));
+    final fallbackSym = ref.watch(currencySymbolProvider);
+    final fallbackDec = ref.watch(currencyDecimalPlacesProvider);
+    final rowCurrency = summaryCurrencyAsync.when<AppCurrency?>(
+      data: (c) => c,
+      loading: () => null,
+      error: (_, __) => null,
+    );
+    final symbol = rowCurrency?.symbol ?? fallbackSym;
+    final decimals = rowCurrency?.decimalPlaces ?? fallbackDec;
     final cashbooks = ref.watch(cashbooksProvider);
 
     final cashbook = cashbooks.firstWhereOrNull((c) => c.id == summary.uuid);

@@ -2830,6 +2830,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get preferencesDescription => 'Currency and Date Format settings';
 
   @override
+  String get copyDateFormatAndFonts => 'Date format & fonts';
+
+  @override
+  String get copyDateFormatAndFontsSubtitle =>
+      'Fonts per language, date format, and selected currency for amounts';
+
+  @override
+  String get copyCurrenciesOption => 'Currencies';
+
+  @override
+  String get copyCurrenciesOptionSubtitle =>
+      'Currency definitions from the source cashbook (names, symbols, codes)';
+
+  @override
   String get messageTemplatesDescription => 'WhatsApp message templates';
 
   @override

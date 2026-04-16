@@ -1,10 +1,13 @@
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
-import 'package:flowpaisa/core/database/database.dart';
-import 'package:flowpaisa/features/settings/data/user_preferences_repository.dart';
+import 'package:flowpaisa/features/cashbooks/domain/models/cashbook.dart';
 import 'package:flowpaisa/features/cashbooks/domain/preferences_copy_service.dart';
 import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
+import 'package:flowpaisa/features/currencies/presentation/providers/currencies_provider.dart';
+import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
+import 'package:flowpaisa/shared/providers/currency_provider.dart';
 
 import 'package:flowpaisa/l10n/app_localizations.dart';
 
@@ -24,7 +27,8 @@ class CopyPreferencesSheet extends ConsumerStatefulWidget {
 class _CopyPreferencesSheetState extends ConsumerState<CopyPreferencesSheet> {
   String? _selectedSourceCashbookId;
   bool _copyProfile = true;
-  bool _copyPreferences = true;
+  bool _copyDateAndFonts = true;
+  bool _copyCurrencies = false;
   bool _copyTemplates = true;
   bool _copyContacts = false;
   bool _copyCategories = false;
@@ -51,6 +55,8 @@ class _CopyPreferencesSheetState extends ConsumerState<CopyPreferencesSheet> {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
     final cashbooks = ref.watch(cashbooksProvider);
+    final targetCashbook = cashbooks
+        .firstWhereOrNull((c) => c.id == widget.targetCashbookId);
     final availableSources =
         cashbooks.where((c) => c.id != widget.targetCashbookId).toList();
 
@@ -84,6 +90,14 @@ class _CopyPreferencesSheetState extends ConsumerState<CopyPreferencesSheet> {
                 ),
               ],
             ),
+            if (targetCashbook != null) ...[
+              const SizedBox(height: 12),
+              _CopyPreferencesTargetRow(
+                cashbook: targetCashbook,
+                l10n: l10n,
+                theme: theme,
+              ),
+            ],
             const SizedBox(height: 24),
             Text(l10n.noOtherCashbooks),
             const SizedBox(height: 24),
@@ -130,6 +144,14 @@ class _CopyPreferencesSheetState extends ConsumerState<CopyPreferencesSheet> {
               ),
             ],
           ),
+          if (targetCashbook != null) ...[
+            const SizedBox(height: 12),
+            _CopyPreferencesTargetRow(
+              cashbook: targetCashbook,
+              l10n: l10n,
+              theme: theme,
+            ),
+          ],
           const SizedBox(height: 20),
           Flexible(
             child: SingleChildScrollView(
@@ -222,13 +244,12 @@ class _CopyPreferencesSheetState extends ConsumerState<CopyPreferencesSheet> {
                         ),
                         const Divider(height: 1),
                         CheckboxListTile(
-                          title: Text(l10n.preferencesDescription),
-                          subtitle: Text(
-                              '${l10n.preferencesDescription} (Currency, Date, Fonts)'),
-                          value: _copyPreferences,
+                          title: Text(l10n.copyDateFormatAndFonts),
+                          subtitle: Text(l10n.copyDateFormatAndFontsSubtitle),
+                          value: _copyDateAndFonts,
                           onChanged: (value) {
                             setState(() {
-                              _copyPreferences = value ?? false;
+                              _copyDateAndFonts = value ?? false;
                             });
                           },
                         ),
@@ -262,6 +283,17 @@ class _CopyPreferencesSheetState extends ConsumerState<CopyPreferencesSheet> {
                           onChanged: (value) {
                             setState(() {
                               _copyCategories = value ?? false;
+                            });
+                          },
+                        ),
+                        const Divider(height: 1),
+                        CheckboxListTile(
+                          title: Text(l10n.copyCurrenciesOption),
+                          subtitle: Text(l10n.copyCurrenciesOptionSubtitle),
+                          value: _copyCurrencies,
+                          onChanged: (value) {
+                            setState(() {
+                              _copyCurrencies = value ?? false;
                             });
                           },
                         ),
@@ -312,7 +344,8 @@ class _CopyPreferencesSheetState extends ConsumerState<CopyPreferencesSheet> {
     }
 
     if (!_copyProfile &&
-        !_copyPreferences &&
+        !_copyDateAndFonts &&
+        !_copyCurrencies &&
         !_copyTemplates &&
         !_copyContacts &&
         !_copyCategories) {
@@ -328,11 +361,11 @@ class _CopyPreferencesSheetState extends ConsumerState<CopyPreferencesSheet> {
       final cashbooks = ref.read(cashbooksProvider);
 
       if (_copyProfile &&
-          _copyPreferences &&
+          _copyDateAndFonts &&
+          _copyCurrencies &&
           _copyTemplates &&
           !_copyContacts &&
           !_copyCategories) {
-        // Copy all preferences (profile, prefs, templates only)
         await PreferencesCopyService.copyPreferences(
           _selectedSourceCashbookId!,
           widget.targetCashbookId,
@@ -347,33 +380,24 @@ class _CopyPreferencesSheetState extends ConsumerState<CopyPreferencesSheet> {
             cashbooks,
           );
         }
-        if (_copyPreferences) {
-          final sourceCashbook =
-              cashbooks.firstWhere((c) => c.id == _selectedSourceCashbookId);
-          final targetCashbook =
-              cashbooks.firstWhere((c) => c.id == widget.targetCashbookId);
-          final sourceDb =
-              AppDatabase(fileName: '${sourceCashbook.dbPath}.db');
-          final targetDb =
-              AppDatabase(fileName: '${targetCashbook.dbPath}.db');
-          try {
-            final sourceRepo = UserPreferencesRepository(sourceDb);
-            final targetRepo = UserPreferencesRepository(targetDb);
-            final dateFormat = await sourceRepo.getDateFormat();
-            final currency = await sourceRepo.getCurrency();
-            final fontEn = await sourceRepo.getFontForLanguage('en');
-            final fontHi = await sourceRepo.getFontForLanguage('hi');
-            final fontUr = await sourceRepo.getFontForLanguage('ur');
-
-            await targetRepo.setDateFormat(dateFormat);
-            await targetRepo.setCurrency(currency);
-            await targetRepo.setFontForLanguage('en', fontEn);
-            await targetRepo.setFontForLanguage('hi', fontHi);
-            await targetRepo.setFontForLanguage('ur', fontUr);
-          } finally {
-            await sourceDb.close();
-            await targetDb.close();
-          }
+        if (_copyCurrencies) {
+          await PreferencesCopyService.copyAllCurrenciesOnly(
+            _selectedSourceCashbookId!,
+            widget.targetCashbookId,
+            cashbooks,
+          );
+        }
+        if (_copyDateAndFonts) {
+          await PreferencesCopyService.copyDateAndFontsOnly(
+            _selectedSourceCashbookId!,
+            widget.targetCashbookId,
+            cashbooks,
+          );
+          await PreferencesCopyService.copySelectedCurrencyOnly(
+            _selectedSourceCashbookId!,
+            widget.targetCashbookId,
+            cashbooks,
+          );
         }
         if (_copyTemplates) {
           await PreferencesCopyService.copyMessageTemplatesOnly(
@@ -399,6 +423,7 @@ class _CopyPreferencesSheetState extends ConsumerState<CopyPreferencesSheet> {
       }
 
       if (mounted) {
+        _invalidateCopiedPreferenceProviders(ref);
         Navigator.pop(context);
         ToastUtils.showSuccessToast(context, ref, l10n.preferencesCopied);
       }
@@ -411,5 +436,56 @@ class _CopyPreferencesSheetState extends ConsumerState<CopyPreferencesSheet> {
             context, ref, l10n.errorOccurred(e.toString()));
       }
     }
+  }
+
+  /// Preferences are written directly to the target DB file; in-memory notifiers
+  /// must be invalidated or the UI keeps stale profile, fonts, and currency state.
+  void _invalidateCopiedPreferenceProviders(WidgetRef ref) {
+    final copiedProfile = _copyProfile;
+    final copiedDateFonts = _copyDateAndFonts;
+    final copiedCurrencies = _copyCurrencies;
+
+    if (copiedProfile || copiedDateFonts) {
+      ref.invalidate(userProfileProvider);
+    }
+    if (copiedDateFonts) {
+      ref.invalidate(fontProvider);
+      ref.invalidate(selectedCurrencyIdProvider);
+      ref.invalidate(currentCurrencyProvider);
+    }
+    if (copiedCurrencies) {
+      ref.invalidate(currenciesListProvider);
+    }
+  }
+}
+
+class _CopyPreferencesTargetRow extends StatelessWidget {
+  const _CopyPreferencesTargetRow({
+    required this.cashbook,
+    required this.l10n,
+    required this.theme,
+  });
+
+  final Cashbook cashbook;
+  final AppLocalizations l10n;
+  final ThemeData theme;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(cashbook.icon, color: cashbook.color, size: 22),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            l10n.toTarget(cashbook.name),
+            style: theme.textTheme.titleSmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ],
+    );
   }
 }

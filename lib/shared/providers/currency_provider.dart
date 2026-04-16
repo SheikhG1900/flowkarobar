@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/features/currencies/presentation/providers/currencies_provider.dart';
+import 'package:flowpaisa/features/settings/data/user_preferences_repository.dart';
 import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 import 'package:flowpaisa/core/utils/currency_detector.dart';
 
@@ -28,7 +29,7 @@ final currencyInitializerProvider = FutureProvider<void>((ref) async {
       print(
           '💵 Currency Initializer: Found currency: ${currency.name} (${currency.symbol})');
       await prefsRepository.setPreference(
-          'selected_currency_id', currency.uuid,
+          UserPreferencesRepository.keySelectedCurrencyId, currency.uuid,
           markUnsynced: false);
     } else {
       print(
@@ -38,7 +39,7 @@ final currencyInitializerProvider = FutureProvider<void>((ref) async {
       print(
           '💵 Currency Initializer: Using default: ${defaultCurrency.name} (${defaultCurrency.symbol})');
       await prefsRepository.setPreference(
-          'selected_currency_id', defaultCurrency.uuid,
+          UserPreferencesRepository.keySelectedCurrencyId, defaultCurrency.uuid,
           markUnsynced: false);
     }
     await prefsRepository.setPreference('currency_initialized', 'true',
@@ -55,7 +56,8 @@ final selectedCurrencyIdProvider = FutureProvider<String?>((ref) async {
   await ref.watch(currencyInitializerProvider.future);
 
   final prefsRepository = ref.watch(userPreferencesRepositoryProvider);
-  final idString = await prefsRepository.getPreference('selected_currency_id');
+  final idString =
+      await prefsRepository.getPreference(UserPreferencesRepository.keySelectedCurrencyId);
 
   return idString;
 });
@@ -75,6 +77,22 @@ final currentCurrencyProvider = FutureProvider<AppCurrency>((ref) async {
   // Fallback to default currency
   final repository = ref.read(currenciesRepositoryProvider);
   return repository.getDefaultCurrency();
+});
+
+/// Resolves [AppCurrency] for a saved cashbook summary: stored UUID first, then
+/// active cashbook currency, then default catalog currency.
+final cashbookSummaryCurrencyProvider =
+    FutureProvider.family<AppCurrency, String?>((ref, currencyUuid) async {
+  final repo = ref.read(currenciesRepositoryProvider);
+  if (currencyUuid != null && currencyUuid.isNotEmpty) {
+    final c = await repo.getCurrencyByUuid(currencyUuid);
+    if (c != null) return c;
+  }
+  try {
+    return await ref.read(currentCurrencyProvider.future);
+  } catch (_) {
+    return repo.getDefaultCurrency();
+  }
 });
 
 /// Provider for the current currency symbol (most commonly used)
@@ -105,7 +123,7 @@ class CurrencyNotifier extends Notifier<void> {
   Future<void> setSelectedCurrency(String currencyUuid) async {
     final prefsRepository = ref.read(userPreferencesRepositoryProvider);
     await prefsRepository.setPreference(
-        'selected_currency_id', currencyUuid);
+        UserPreferencesRepository.keySelectedCurrencyId, currencyUuid);
 
     // Invalidate providers to refresh the UI
     ref.invalidate(selectedCurrencyIdProvider);

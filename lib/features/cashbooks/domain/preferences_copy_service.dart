@@ -2,7 +2,6 @@ import 'package:drift/drift.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/features/settings/data/user_preferences_repository.dart';
 import 'package:flowpaisa/features/cashbooks/domain/models/cashbook.dart';
-import 'package:uuid/uuid.dart';
 
 /// Service for copying preferences between cashbooks
 class PreferencesCopyService {
@@ -27,8 +26,9 @@ class PreferencesCopyService {
       // Copy user profile
       await copyUserProfile(sourceRepo, targetRepo);
 
-      // Copy preferences (date format, currency, fonts)
-      await _copyPreferencesData(sourceRepo, targetRepo);
+      await _copyDateAndFontsData(sourceRepo, targetRepo);
+      await _copyAllAppCurrencyRows(sourceDb, targetDb);
+      await _copySelectedCurrencyPrefs(sourceRepo, targetRepo);
 
       // Copy message templates
       await copyMessageTemplates(sourceDb, targetDb);
@@ -54,22 +54,116 @@ class PreferencesCopyService {
     if (address != null) await targetRepo.setUserAddress(address);
   }
 
-  /// Copy preferences (date format, currency, fonts)
-  static Future<void> _copyPreferencesData(
+  /// Date format and per-language fonts only.
+  static Future<void> _copyDateAndFontsData(
     UserPreferencesRepository sourceRepo,
     UserPreferencesRepository targetRepo,
   ) async {
     final dateFormat = await sourceRepo.getDateFormat();
-    final currency = await sourceRepo.getCurrency();
     final fontEn = await sourceRepo.getFontForLanguage('en');
     final fontHi = await sourceRepo.getFontForLanguage('hi');
     final fontUr = await sourceRepo.getFontForLanguage('ur');
 
     await targetRepo.setDateFormat(dateFormat);
-    await targetRepo.setCurrency(currency);
     await targetRepo.setFontForLanguage('en', fontEn);
     await targetRepo.setFontForLanguage('hi', fontHi);
     await targetRepo.setFontForLanguage('ur', fontUr);
+  }
+
+  /// Replaces all rows in [targetDb] `app_currencies` with those from [sourceDb]
+  /// (same UUIDs; insert or replace).
+  static Future<void> _copyAllAppCurrencyRows(
+    AppDatabase sourceDb,
+    AppDatabase targetDb,
+  ) async {
+    final rows = await sourceDb.select(sourceDb.appCurrencies).get();
+    for (final row in rows) {
+      await targetDb.into(targetDb.appCurrencies).insert(
+            row,
+            mode: InsertMode.insertOrReplace,
+          );
+    }
+  }
+
+  /// Selected currency UUID (for summaries / formatting) and legacy code string.
+  static Future<void> _copySelectedCurrencyPrefs(
+    UserPreferencesRepository sourceRepo,
+    UserPreferencesRepository targetRepo,
+  ) async {
+    final uuid =
+        await sourceRepo.getPreference(UserPreferencesRepository.keySelectedCurrencyId);
+    if (uuid != null && uuid.isNotEmpty) {
+      await targetRepo.setPreference(
+        UserPreferencesRepository.keySelectedCurrencyId,
+        uuid,
+      );
+    }
+    final currency = await sourceRepo.getCurrency();
+    await targetRepo.setCurrency(currency);
+  }
+
+  /// Copy date format and fonts from source cashbook to target (no currency).
+  static Future<void> copyDateAndFontsOnly(
+    String sourceCashbookId,
+    String targetCashbookId,
+    List<Cashbook> cashbooks,
+  ) async {
+    final sourceCashbook = cashbooks.firstWhere((c) => c.id == sourceCashbookId);
+    final targetCashbook = cashbooks.firstWhere((c) => c.id == targetCashbookId);
+
+    final sourceDb = AppDatabase(fileName: '${sourceCashbook.dbPath}.db');
+    final targetDb = AppDatabase(fileName: '${targetCashbook.dbPath}.db');
+
+    try {
+      final sourceRepo = UserPreferencesRepository(sourceDb);
+      final targetRepo = UserPreferencesRepository(targetDb);
+      await _copyDateAndFontsData(sourceRepo, targetRepo);
+    } finally {
+      await sourceDb.close();
+      await targetDb.close();
+    }
+  }
+
+  /// Copy every [AppCurrency] row from source DB to target (catalog).
+  static Future<void> copyAllCurrenciesOnly(
+    String sourceCashbookId,
+    String targetCashbookId,
+    List<Cashbook> cashbooks,
+  ) async {
+    final sourceCashbook = cashbooks.firstWhere((c) => c.id == sourceCashbookId);
+    final targetCashbook = cashbooks.firstWhere((c) => c.id == targetCashbookId);
+
+    final sourceDb = AppDatabase(fileName: '${sourceCashbook.dbPath}.db');
+    final targetDb = AppDatabase(fileName: '${targetCashbook.dbPath}.db');
+
+    try {
+      await _copyAllAppCurrencyRows(sourceDb, targetDb);
+    } finally {
+      await sourceDb.close();
+      await targetDb.close();
+    }
+  }
+
+  /// Copy which currency is selected (UUID + legacy code) from source to target.
+  static Future<void> copySelectedCurrencyOnly(
+    String sourceCashbookId,
+    String targetCashbookId,
+    List<Cashbook> cashbooks,
+  ) async {
+    final sourceCashbook = cashbooks.firstWhere((c) => c.id == sourceCashbookId);
+    final targetCashbook = cashbooks.firstWhere((c) => c.id == targetCashbookId);
+
+    final sourceDb = AppDatabase(fileName: '${sourceCashbook.dbPath}.db');
+    final targetDb = AppDatabase(fileName: '${targetCashbook.dbPath}.db');
+
+    try {
+      final sourceRepo = UserPreferencesRepository(sourceDb);
+      final targetRepo = UserPreferencesRepository(targetDb);
+      await _copySelectedCurrencyPrefs(sourceRepo, targetRepo);
+    } finally {
+      await sourceDb.close();
+      await targetDb.close();
+    }
   }
 
   /// Copy all message templates
@@ -136,7 +230,8 @@ class PreferencesCopyService {
     }
   }
 
-  /// Copy all non-deleted contacts from source to target (with new UUIDs).
+  /// Copy all non-deleted contacts from source to target.
+  /// Upserts by [Contact.uuid]; preserves [Contact.addSeq] and other fields.
   static Future<void> copyContacts(
     AppDatabase sourceDb,
     AppDatabase targetDb,
@@ -147,24 +242,14 @@ class PreferencesCopyService {
 
     for (final c in sourceContacts) {
       await targetDb.into(targetDb.contacts).insert(
-            ContactsCompanion.insert(
-              uuid: const Uuid().v4(),
-              name: c.name,
-              phone: Value(c.phone),
-              email: Value(c.email),
-              notes: Value(c.notes),
-              createdAt: Value(c.createdAt),
-              updatedAt: Value(c.updatedAt),
-              isDeleted: const Value(false),
-              isNotSynced: const Value(true),
-            ),
+            c.copyWith(isDeleted: false, isNotSynced: true),
+            mode: InsertMode.insertOrReplace,
           );
     }
   }
 
   /// Copy all non-deleted categories from source to target.
-  /// Default categories keep the same UUID and use insertOrIgnore to avoid duplicates.
-  /// Non-default categories get new UUIDs.
+  /// Upserts by [Category.uuid]; preserves budgets and [addSeq] / [budgetSeq].
   static Future<void> copyCategories(
     AppDatabase sourceDb,
     AppDatabase targetDb,
@@ -174,22 +259,9 @@ class PreferencesCopyService {
         .get();
 
     for (final c in sourceCategories) {
-      final useSameUuid = c.isDefault;
-      final uuid = useSameUuid ? c.uuid : const Uuid().v4();
       await targetDb.into(targetDb.categories).insert(
-            CategoriesCompanion.insert(
-              uuid: uuid,
-              name: c.name,
-              icon: Value(c.icon),
-              color: Value(c.color),
-              type: c.type,
-              isDefault: Value(c.isDefault),
-              isDeleted: const Value(false),
-              createdAt: Value(c.createdAt),
-              updatedAt: Value(c.updatedAt),
-              isNotSynced: const Value(true),
-            ),
-          mode: useSameUuid ? InsertMode.insertOrIgnore : InsertMode.insert,
+            c.copyWith(isDeleted: false, isNotSynced: true),
+            mode: InsertMode.insertOrReplace,
           );
     }
   }

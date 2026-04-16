@@ -2847,6 +2847,20 @@ class AppLocalizationsUr extends AppLocalizations {
   String get preferencesDescription => 'کرنسی اور تاریخ کے فارمیٹ کی ترتیبات';
 
   @override
+  String get copyDateFormatAndFonts => 'تاریخ کا فارمیٹ اور فونٹس';
+
+  @override
+  String get copyDateFormatAndFontsSubtitle =>
+      'ہر زبان کے فونٹ، تاریخ کا فارمیٹ اور رقوم کے لیے منتخب کرنسی';
+
+  @override
+  String get copyCurrenciesOption => 'کرنسیاں';
+
+  @override
+  String get copyCurrenciesOptionSubtitle =>
+      'ماخذ کیش بُک کی کرنسی کی تعریفیں (نام، علامت، کوڈ)';
+
+  @override
   String get messageTemplatesDescription => 'واٹس ایپ میسج ٹیمپلیٹس';
 
   @override
