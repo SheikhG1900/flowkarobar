@@ -134,7 +134,7 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
                   child: accounts.length == 1
                       ? Padding(
                           padding: const EdgeInsets.only(
-                              left: 12, right: 12, top: 10, bottom: 30),
+                              left: 12, right: 12, top: 0, bottom: 10),
                           child: Builder(
                             builder: (context) {
                               final awb = accounts.single;
@@ -156,7 +156,7 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
                       : ListView.builder(
                           scrollDirection: Axis.horizontal,
                           padding: const EdgeInsets.only(
-                              left: 12, right: 12, top: 10, bottom: 30),
+                              left: 12, right: 12, top: 0, bottom: 10),
                           itemCount: accounts.length,
                           itemBuilder: (context, index) {
                             final awb = accounts[index];
@@ -562,154 +562,157 @@ class _AccountCard extends ConsumerWidget {
                       child: Stack(
                         clipBehavior: Clip.none,
                         children: [
-                    Positioned.fill(
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(24),
-                        child: CustomPaint(
-                          painter: accountCardBackgroundPainter(type),
-                        ),
-                      ),
-                    ),
-                    accountCardDecorativeBackgroundIcon(iconData),
-
-                    Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Container(
-                                width: 44,
-                                height: 44,
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.2),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                alignment: Alignment.center,
-                                child: Icon(iconData,
-                                    color: Colors.white, size: 24),
+                          Positioned.fill(
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(24),
+                              child: CustomPaint(
+                                painter: accountCardBackgroundPainter(type),
                               ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  mainAxisSize: MainAxisSize.min,
+                            ),
+                          ),
+                          accountCardDecorativeBackgroundIcon(iconData),
+                          Padding(
+                            padding: const EdgeInsets.all(20),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
                                   children: [
-                                    Text(
-                                      acc.name,
-                                      style:
-                                          theme.textTheme.titleMedium?.copyWith(
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    Text(
-                                      _typeLabel(l10n, type),
-                                      style:
-                                          theme.textTheme.bodySmall?.copyWith(
+                                    Container(
+                                      width: 44,
+                                      height: 44,
+                                      decoration: BoxDecoration(
                                         color:
-                                            Colors.white.withValues(alpha: 0.8),
+                                            Colors.white.withValues(alpha: 0.2),
+                                        borderRadius: BorderRadius.circular(12),
                                       ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
+                                      alignment: Alignment.center,
+                                      child: Icon(iconData,
+                                          color: Colors.white, size: 24),
                                     ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            acc.name,
+                                            style: theme.textTheme.titleMedium
+                                                ?.copyWith(
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.white,
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                          Text(
+                                            _typeLabel(l10n, type),
+                                            style: theme.textTheme.bodySmall
+                                                ?.copyWith(
+                                              color: Colors.white
+                                                  .withValues(alpha: 0.8),
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    if (type.isCreditCard)
+                                      Container(
+                                        width: 35,
+                                        height: 25,
+                                        decoration: BoxDecoration(
+                                          gradient: LinearGradient(
+                                            colors: [
+                                              Colors.yellow.shade700,
+                                              Colors.yellow.shade200,
+                                              Colors.yellow.shade700,
+                                            ],
+                                          ),
+                                          borderRadius:
+                                              BorderRadius.circular(4),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.black
+                                                  .withValues(alpha: 0.2),
+                                              blurRadius: 2,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
                                   ],
                                 ),
-                              ),
-                              if (type.isCreditCard)
-                                Container(
-                                  width: 35,
-                                  height: 25,
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      colors: [
-                                        Colors.yellow.shade700,
-                                        Colors.yellow.shade200,
-                                        Colors.yellow.shade700,
-                                      ],
+                                const Spacer(),
+                                Text(
+                                  type.isCreditCard
+                                      ? (awb.creditBalance > 0
+                                          ? l10n.creditBalance
+                                          : l10n.outstandingBalance)
+                                      : l10n.currentBalance,
+                                  style: theme.textTheme.labelSmall?.copyWith(
+                                    color: Colors.white.withValues(alpha: 0.7),
+                                    letterSpacing: 0.5,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 4),
+                                FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  alignment: Alignment.centerLeft,
+                                  child: Text(
+                                    balanceText,
+                                    style:
+                                        theme.textTheme.headlineSmall?.copyWith(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
                                     ),
-                                    borderRadius: BorderRadius.circular(4),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color:
-                                            Colors.black.withValues(alpha: 0.2),
-                                        blurRadius: 2,
-                                      ),
-                                    ],
                                   ),
                                 ),
-                            ],
-                          ),
-                          const Spacer(),
-                          Text(
-                            type.isCreditCard
-                                ? (awb.creditBalance > 0
-                                    ? l10n.creditBalance
-                                    : l10n.outstandingBalance)
-                                : l10n.currentBalance,
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: Colors.white.withValues(alpha: 0.7),
-                              letterSpacing: 0.5,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 4),
-                          FittedBox(
-                            fit: BoxFit.scaleDown,
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                              balanceText,
-                              style: theme.textTheme.headlineSmall?.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                              ),
+                                if (type.isCreditCard &&
+                                    (awb.dueAmount ?? 0.0) > 0) ...[
+                                  const SizedBox(height: 8),
+                                  _DueBadge(
+                                    dueAmount: awb.dueAmount ?? 0.0,
+                                    symbol: symbol,
+                                    decimals: decimals,
+                                    isDark: true,
+                                  ),
+                                ],
+                              ],
                             ),
                           ),
-                          if (type.isCreditCard &&
-                              (awb.dueAmount ?? 0.0) > 0) ...[
-                            const SizedBox(height: 8),
-                            _DueBadge(
-                              dueAmount: awb.dueAmount ?? 0.0,
-                              symbol: symbol,
-                              decimals: decimals,
-                              isDark: true,
-                            ),
-                          ],
                         ],
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                  if (isLocked)
+                    Positioned(
+                      top: 12,
+                      right: 12,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: const BoxDecoration(
+                          color: Colors.white24,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.lock,
+                          size: 16,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ),
-            if (isLocked)
-              Positioned(
-                top: 12,
-                right: 12,
-                child: Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: const BoxDecoration(
-                    color: Colors.white24,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.lock,
-                    size: 16,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-          ],
+          ),
         ),
       ),
-    ),
-  ),
-),
-);
+    );
   }
 
   LinearGradient _accountCardGradient(Color accountColor, ThemeData theme) {

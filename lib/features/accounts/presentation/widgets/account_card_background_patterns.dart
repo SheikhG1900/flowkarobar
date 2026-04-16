@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flowpaisa/features/accounts/domain/models/account_models.dart';
 
-/// Large corner watermark — same layout and alpha as cashbook slider cards.
-/// Uses [end] so in RTL the icon mirrors to the opposite corner.
+/// Large corner watermark at the top trailing side (mirrors in RTL via [end]).
+/// Alpha matches cashbook slider cards.
 PositionedDirectional accountCardDecorativeBackgroundIcon(IconData iconData) {
   return PositionedDirectional(
     end: -20,
-    bottom: -20,
+    top: -20,
     child: Icon(
       iconData,
-      size: 130,
-      color: Colors.white.withValues(alpha: 0.25),
+      size: 180,
+      color: Colors.white.withValues(alpha: 0.08),
     ),
   );
 }
@@ -22,21 +22,21 @@ CustomPainter accountCardBackgroundPainter(AccountType type) {
   switch (type) {
     case AccountType.creditCard:
       return CreditCardDiagonalPatternPainter(
-        color: Colors.white.withValues(alpha: 0.12),
+        color: Colors.white.withValues(alpha: 0.05),
       );
     case AccountType.bank:
       return HorizontalPinstripePatternPainter(
-        color: Colors.white.withValues(alpha: 0.075),
+        color: Colors.white.withValues(alpha: 0.05),
         lineSpacing: 14,
       );
     case AccountType.savings:
       return HorizontalPinstripePatternPainter(
-        color: Colors.white.withValues(alpha: 0.075),
+        color: Colors.white.withValues(alpha: 0.05),
         lineSpacing: 17,
       );
     case AccountType.cash:
       return DotGridPatternPainter(
-        color: Colors.white.withValues(alpha: 0.13),
+        color: Colors.white.withValues(alpha: 0.055),
         cellSize: 18,
         dotRadius: 2.0,
       );
