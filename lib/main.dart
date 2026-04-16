@@ -982,6 +982,9 @@ class _DashboardBodyScrollState extends ConsumerState<_DashboardBodyScroll> {
           await Future.delayed(const Duration(milliseconds: 500));
         },
         child: CustomScrollView(
+          // Allow dashboard cards (e.g. account/cashbook sliders) to paint shadows
+          // past sliver bounds without viewport clipping.
+          clipBehavior: Clip.none,
           physics: const AlwaysScrollableScrollPhysics(
             parent: BouncingScrollPhysics(),
           ),

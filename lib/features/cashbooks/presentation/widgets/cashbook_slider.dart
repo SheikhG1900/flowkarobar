@@ -77,13 +77,18 @@ class _CashbookSliderState extends ConsumerState<CashbookSlider> {
             mainAxisSize: MainAxisSize.min,
             children: [
               SizedBox(
-                height: 180,
+                height: 196,
                 width: double.infinity,
                 child: RepaintBoundary(
                   child: expandSingle
                       ? Padding(
+                          // Match accounts_screen / account_slider single-card insets.
                           padding: const EdgeInsets.only(
-                              left: 12, right: 12, top: 0, bottom: 15),
+                            left: 0,
+                            right: 0,
+                            top: 0,
+                            bottom: 0,
+                          ),
                           child: _CashbookSummaryCard(
                             summary: summaries.single,
                             expandHorizontally: true,
@@ -91,8 +96,9 @@ class _CashbookSliderState extends ConsumerState<CashbookSlider> {
                         )
                       : ListView.builder(
                           scrollDirection: Axis.horizontal,
+                          clipBehavior: Clip.none,
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 15),
+                              horizontal: 0, vertical: 0),
                           itemCount: summaries.length,
                           itemBuilder: (context, index) {
                             return _CashbookSummaryCard(
@@ -150,177 +156,197 @@ class _CashbookSummaryCard extends ConsumerWidget {
         (cashbook.addSeq ?? 0) >= PremiumGate.cashbookTotalLimit;
 
     return Container(
-      width: expandHorizontally ? double.infinity : 280,
-      margin: EdgeInsets.symmetric(horizontal: expandHorizontally ? 0 : 6),
-      child: Material(
+      margin: EdgeInsets.symmetric(
+        horizontal: expandHorizontally ? 0 : 6,
+        vertical: 6,
+      ),
+      decoration: BoxDecoration(
         color: Colors.transparent,
-        child: InkWell(
-          onTap: isLocked
-              ? () => PremiumGate.showPremiumDialog(context)
-              : () async {
-                  // 1. Calculate summary for CURRENT cashbook before switching
-                  try {
-                    final currentDb = ref.read(databaseProvider);
-                    final currentCashbook = ref.read(activeCashbookProvider);
-                    final prefs = ref.read(sharedPreferencesProvider);
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: cashbookColor.withValues(alpha: isDark ? 0.3 : 0.4),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: SizedBox(
+          width: expandHorizontally ? double.infinity : 280,
+          height: double.infinity,
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: isLocked
+                  ? () => PremiumGate.showPremiumDialog(context)
+                  : () async {
+                      // 1. Calculate summary for CURRENT cashbook before switching
+                      try {
+                        final currentDb = ref.read(databaseProvider);
+                        final currentCashbook =
+                            ref.read(activeCashbookProvider);
+                        final prefs = ref.read(sharedPreferencesProvider);
 
-                    // Ensure database is initialized
-                    await currentDb.customSelect('SELECT 1').getSingle();
+                        // Ensure database is initialized
+                        await currentDb.customSelect('SELECT 1').getSingle();
 
-                    await CashbookSummaryService.calculateAndUpdate(
-                        prefs, currentDb, currentCashbook);
-                  } catch (e) {
-                    if (kDebugMode) {
-                      print('Error updating summary before switch: $e');
-                    }
-                  }
+                        await CashbookSummaryService.calculateAndUpdate(
+                            prefs, currentDb, currentCashbook);
+                      } catch (e) {
+                        if (kDebugMode) {
+                          print('Error updating summary before switch: $e');
+                        }
+                      }
 
-                  // 2. Perform the switch
-                  ref
-                      .read(activeCashbookIdProvider.notifier)
-                      .setActive(summary.uuid);
-                },
-          borderRadius: BorderRadius.circular(20),
-          child: Opacity(
-            opacity: isLocked ? 0.6 : 1.0,
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    cashbookColor.withValues(alpha: 0.8),
-                    cashbookColor,
-                  ],
-                ),
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: cashbookColor.withValues(alpha: isDark ? 0.3 : 0.4),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Stack(
-                children: [
-                  // Decorative background icon (end = trailing side; mirrors in RTL)
-                  PositionedDirectional(
-                    end: -20,
-                    bottom: -20,
-                    child: Icon(
-                      iconData,
-                      size: 130,
-                      color: Colors.white.withValues(alpha: 0.13),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.2),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Icon(
-                                isLocked ? Icons.lock : iconData,
-                                color: Colors.white,
-                                size: 20,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                cashbook.name,
-                                style: theme.textTheme.titleMedium?.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const Spacer(),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    l10n.availableCash,
-                                    style: theme.textTheme.labelSmall?.copyWith(
-                                      color:
-                                          Colors.white.withValues(alpha: 0.7),
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 2),
-                                  FittedBox(
-                                    fit: BoxFit.scaleDown,
-                                    child: Text(
-                                      AmountFormatter.formatWithCurrency(
-                                        summary.availableCash,
-                                        symbol,
-                                        decimals,
-                                      ),
-                                      style:
-                                          theme.textTheme.titleSmall?.copyWith(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    l10n.netWorth,
-                                    style: theme.textTheme.labelSmall?.copyWith(
-                                      color:
-                                          Colors.white.withValues(alpha: 0.7),
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 2),
-                                  FittedBox(
-                                    fit: BoxFit.scaleDown,
-                                    child: Text(
-                                      AmountFormatter.formatWithCurrency(
-                                        summary.netWorth,
-                                        symbol,
-                                        decimals,
-                                      ),
-                                      style:
-                                          theme.textTheme.titleSmall?.copyWith(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
+                      // 2. Perform the switch
+                      ref
+                          .read(activeCashbookIdProvider.notifier)
+                          .setActive(summary.uuid);
+                    },
+              borderRadius: BorderRadius.circular(20),
+              child: Opacity(
+                opacity: isLocked ? 0.6 : 1.0,
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        cashbookColor.withValues(alpha: 0.8),
+                        cashbookColor,
                       ],
                     ),
+                    borderRadius: BorderRadius.circular(20),
                   ),
-                ],
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      // Decorative background icon (end = trailing side; mirrors in RTL)
+                      PositionedDirectional(
+                        end: -20,
+                        bottom: -20,
+                        child: Icon(
+                          iconData,
+                          size: 130,
+                          color: Colors.white.withValues(alpha: 0.13),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withValues(alpha: 0.2),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Icon(
+                                    isLocked ? Icons.lock : iconData,
+                                    color: Colors.white,
+                                    size: 20,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    cashbook.name,
+                                    style:
+                                        theme.textTheme.titleMedium?.copyWith(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const Spacer(),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        l10n.availableCash,
+                                        style: theme.textTheme.labelSmall
+                                            ?.copyWith(
+                                          color: Colors.white
+                                              .withValues(alpha: 0.7),
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      FittedBox(
+                                        fit: BoxFit.scaleDown,
+                                        child: Text(
+                                          AmountFormatter.formatWithCurrency(
+                                            summary.availableCash,
+                                            symbol,
+                                            decimals,
+                                          ),
+                                          style: theme.textTheme.titleSmall
+                                              ?.copyWith(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        l10n.netWorth,
+                                        style: theme.textTheme.labelSmall
+                                            ?.copyWith(
+                                          color: Colors.white
+                                              .withValues(alpha: 0.7),
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      FittedBox(
+                                        fit: BoxFit.scaleDown,
+                                        child: Text(
+                                          AmountFormatter.formatWithCurrency(
+                                            summary.netWorth,
+                                            symbol,
+                                            decimals,
+                                          ),
+                                          style: theme.textTheme.titleSmall
+                                              ?.copyWith(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
           ),

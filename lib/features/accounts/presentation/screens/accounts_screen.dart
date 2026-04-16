@@ -523,36 +523,45 @@ class _AccountCard extends ConsumerWidget {
         : AmountFormatter.formatWithCurrency(awb.balance, symbol, decimals);
 
     return Container(
-      width: expandHorizontally ? double.infinity : 280,
-      height: 185, // Increased height to prevent vertical overflow
-      margin: EdgeInsets.symmetric(horizontal: expandHorizontally ? 0 : 4),
-      child: InkWell(
-        onTap: onTap,
+      margin: EdgeInsets.symmetric(
+        horizontal: expandHorizontally ? 0 : 4,
+        vertical: 6,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.transparent,
         borderRadius: BorderRadius.circular(24),
-        child: Stack(
-          children: [
-            Opacity(
-              opacity: isLocked ? 0.5 : 1.0,
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: _accountCardGradient(accountColor, theme),
-                  borderRadius: BorderRadius.circular(24),
-                  boxShadow: [
-                    BoxShadow(
-                      color: accountColor.withValues(alpha: isDark ? 0.5 : 0.7),
-                      blurRadius: 8,
-                      spreadRadius: 2,
-                      offset: const Offset(0, 4),
-                    ),
-                    // BoxShadow(
-                    //   color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.1),
-                    //   blurRadius: 6,
-                    //   offset: const Offset(0, 2),
-                    // ),
-                  ],
-                ),
-                child: Stack(
-                  children: [
+        boxShadow: [
+          BoxShadow(
+            color: accountColor.withValues(alpha: isDark ? 0.5 : 0.7),
+            blurRadius: 8,
+            spreadRadius: 2,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: SizedBox(
+          width: expandHorizontally ? double.infinity : 280,
+          height: 185,
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: onTap,
+              borderRadius: BorderRadius.circular(24),
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Opacity(
+                    opacity: isLocked ? 0.5 : 1.0,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: _accountCardGradient(accountColor, theme),
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                      child: Stack(
+                        clipBehavior: Clip.none,
+                        children: [
                     Positioned.fill(
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(24),
@@ -697,7 +706,10 @@ class _AccountCard extends ConsumerWidget {
           ],
         ),
       ),
-    );
+    ),
+  ),
+),
+);
   }
 
   LinearGradient _accountCardGradient(Color accountColor, ThemeData theme) {
