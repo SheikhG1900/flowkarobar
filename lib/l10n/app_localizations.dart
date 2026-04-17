@@ -2926,6 +2926,24 @@ abstract class AppLocalizations {
   /// **'Add'**
   String get add;
 
+  /// No description provided for @bulkImportLoadingContent.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading data…'**
+  String get bulkImportLoadingContent;
+
+  /// No description provided for @bulkImportProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}% ({current} / {total})'**
+  String bulkImportProgress(int percent, int current, int total);
+
+  /// No description provided for @bulkImportPreviewLimited.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview shows first {shown} of {total} rows'**
+  String bulkImportPreviewLimited(int shown, int total);
+
   /// No description provided for @scanReceipt.
   ///
   /// In en, this message translates to:

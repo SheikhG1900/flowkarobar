@@ -548,6 +548,22 @@
   "quickActions": "त्वरित कार्य",
   "add": "जोड़ें",
   "bulkImport": "बल्क इंपोर्ट",
+  "bulkImportLoadingContent": "डेटा लोड हो रहा है…",
+  "bulkImportProgress": "{percent}% ({current} / {total})",
+  "@bulkImportProgress": {
+    "placeholders": {
+      "percent": { "type": "int" },
+      "current": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "bulkImportPreviewLimited": "पूर्वावलोकन में पहली {shown} पंक्तियाँ, कुल {total}",
+  "@bulkImportPreviewLimited": {
+    "placeholders": {
+      "shown": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
   "scanReceipt": "रसीद स्कैन करें",
   "voiceAdd": "आवाज से जोड़ें",
   "scan": "स्कैन",

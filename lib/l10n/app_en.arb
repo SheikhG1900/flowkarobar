@@ -854,6 +854,22 @@
   "quickActions": "Quick Actions",
   "add": "Add",
   "bulkImport": "Bulk Import",
+  "bulkImportLoadingContent": "Loading data…",
+  "bulkImportProgress": "{percent}% ({current} / {total})",
+  "@bulkImportProgress": {
+    "placeholders": {
+      "percent": { "type": "int" },
+      "current": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "bulkImportPreviewLimited": "Preview shows first {shown} of {total} rows",
+  "@bulkImportPreviewLimited": {
+    "placeholders": {
+      "shown": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
   "scanReceipt": "Scan Receipt",
   "voiceAdd": "Voice Add",
   "scan": "Scan",

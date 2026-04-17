@@ -1,20 +1,28 @@
+import 'dart:math' show min;
+
 import 'package:drift/drift.dart' hide Column;
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/category_helper.dart';
 import 'package:flowpaisa/core/utils/date_formatter.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
+import 'package:flowpaisa/features/accounts/presentation/providers/accounts_provider.dart';
 import 'package:flowpaisa/features/categories/presentation/providers/categories_provider.dart';
 import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
+import 'package:flowpaisa/shared/widgets/app_loading_indicator.dart';
 import 'package:flowpaisa/features/premium/domain/premium_provider.dart';
 import 'package:flowpaisa/features/premium/presentation/screens/premium_screen.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transaction_service_provider.dart';
+import 'package:flowpaisa/features/transactions/presentation/screens/bulk_import_parse.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
+import 'package:flutter/foundation.dart' show compute;
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:uuid/uuid.dart';
 
 class BulkImportScreen extends ConsumerStatefulWidget {
   final String? initialContent;
@@ -25,6 +33,19 @@ class BulkImportScreen extends ConsumerStatefulWidget {
 }
 
 class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
+  /// Avoid building a huge [DataTable] (layout cost grows with row count).
+  static const int _kMaxPreviewRows = 200;
+
+  static const List<String> _kMappingFields = [
+    'Date',
+    'Amount',
+    'Description',
+    'Category',
+    'Type',
+    'Contact',
+    'Account',
+  ];
+
   // Parsing state
   List<List<String>> _rawRows = [];
   List<String> _headers = [];
@@ -41,24 +62,113 @@ class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
     'Category': null,
     'Type': null,
     'Contact': null,
+    'Account': null,
   };
 
   // Default values
   String _defaultType = 'EXPENSE';
   Category? _defaultCategory;
   Contact? _defaultContact;
+  Account? _defaultAccount;
   DateTime _defaultDate = DateTime.now();
 
   // Selection state
   Set<int> _selectedRowIndices = {};
   bool _isImporting = false;
+  bool _isParsingContent = false;
+  int _importCurrent = 0;
+  int _importTotal = 0;
 
   @override
   void initState() {
     super.initState();
     if (widget.initialContent != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _processRawData(widget.initialContent!);
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        // Let the push transition (and any sheet above) finish before parsing.
+        await Future<void>.delayed(const Duration(milliseconds: 120));
+        if (!mounted) {
+          return;
+        }
+        await _loadRawData(widget.initialContent!);
+      });
+    }
+  }
+
+  String _mappingFieldLabel(AppLocalizations l10n, String field) {
+    switch (field) {
+      case 'Date':
+        return l10n.date;
+      case 'Amount':
+        return l10n.amount;
+      case 'Description':
+        return l10n.description;
+      case 'Category':
+        return l10n.category;
+      case 'Type':
+        return l10n.type;
+      case 'Contact':
+        return l10n.contact;
+      case 'Account':
+        return l10n.account;
+      default:
+        return field;
+    }
+  }
+
+  Future<void> _loadRawData(String content) async {
+    if (content.isEmpty) {
+      return;
+    }
+    setState(() => _isParsingContent = true);
+    // Let the loading overlay paint before heavy work starts.
+    await SchedulerBinding.instance.endOfFrame;
+    if (!mounted) {
+      return;
+    }
+    try {
+      final request = BulkImportParseRequest(
+        content: content,
+        separator: _separator,
+        hasHeader: _hasHeader,
+      );
+      // Parse on a background isolate (VM/desktop/mobile) so the UI thread
+      // does not block on split/map for large pastes.
+      final result = await compute(parseBulkImportData, request);
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _lastRawContent = content;
+        _rawRows = result.rawRows;
+        _headers = result.headers;
+        _selectedRowIndices = result.selectedRowIndices.toSet();
+        _columnMapping = result.columnMapping;
+        _dateFormat = result.dateFormat;
+      });
+    } catch (e) {
+      if (mounted) {
+        ToastUtils.showErrorToast(
+            context, ref, 'Error parsing data with selected separator');
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isParsingContent = false);
+      }
+    }
+  }
+
+  void _reportImportProgress(int current, int total) {
+    if (!mounted || total <= 0) {
+      return;
+    }
+    final step = (total ~/ 80).clamp(1, 50);
+    if (current == 1 ||
+        current == total ||
+        current % step == 0 ||
+        total <= 30) {
+      setState(() {
+        _importCurrent = current;
+        _importTotal = total;
       });
     }
   }
@@ -78,37 +188,94 @@ class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
       appBar: AppBar(
         title: Text(l10n.bulkImport),
       ),
-      body: Column(
+      body: Stack(
         children: [
-          if (_rawRows.isEmpty)
-            Expanded(
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.upload_file,
-                        size: 64, color: Theme.of(context).disabledColor),
-                    const SizedBox(height: 16),
-                    Text(l10n.noTransactions), // Use "No transactions found"
-                  ],
+          Column(
+            children: [
+              if (_rawRows.isEmpty)
+                Expanded(
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.upload_file,
+                            size: 64,
+                            color: Theme.of(context).disabledColor),
+                        const SizedBox(height: 16),
+                        Text(l10n.noTransactions),
+                      ],
+                    ),
+                  ),
+                )
+              else ...[
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        _buildConfigurationSection(context, isTablet),
+                        _buildMappingSection(context, isTablet),
+                        _buildDefaultValuesSection(context, isTablet),
+                        _buildPreviewSection(context),
+                      ],
+                    ),
+                  ),
                 ),
-              ),
-            )
-          else ...[
-            Expanded(
-              child: SingleChildScrollView(
-                child: Column(
-                  children: [
-                    _buildConfigurationSection(context, isTablet),
-                    _buildMappingSection(context, isTablet),
-                    _buildDefaultValuesSection(context, isTablet),
-                    _buildPreviewSection(context),
-                  ],
+                _buildImportAction(context),
+              ],
+            ],
+          ),
+          if (_isParsingContent)
+            Positioned.fill(
+              child: AbsorbPointer(
+                child: SizedBox.expand(
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Material(
+                        elevation: 6,
+                        shadowColor: Theme.of(context)
+                            .colorScheme
+                            .shadow
+                            .withValues(alpha: 0.18),
+                        surfaceTintColor:
+                            Theme.of(context).colorScheme.surfaceTint,
+                        borderRadius: BorderRadius.circular(20),
+                        color:
+                            Theme.of(context).colorScheme.surfaceContainerHigh,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 28,
+                            vertical: 24,
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              AppLoadingIndicator(
+                                size: 48,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                l10n.bulkImportLoadingContent,
+                                textAlign: TextAlign.center,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium
+                                    ?.copyWith(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurfaceVariant,
+                                    ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),
-            _buildImportAction(context),
-          ],
         ],
       ),
     );
@@ -138,7 +305,7 @@ class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
                   onPressed: () async {
                     final data = await Clipboard.getData(Clipboard.kTextPlain);
                     if (data?.text != null) {
-                      _processRawData(data!.text!);
+                      await _loadRawData(data!.text!);
                     } else {
                       if (mounted) {
                         ToastUtils.showInfoToast(
@@ -173,8 +340,8 @@ class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
               onChanged: (value) {
                 setState(() {
                   _hasHeader = value;
-                  _processRawData(_lastRawContent ?? '');
                 });
+                _loadRawData(_lastRawContent ?? '');
               },
             ),
           ],
@@ -200,8 +367,8 @@ class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
         if (value != null) {
           setState(() {
             _separator = value;
-            _processRawData(_lastRawContent ?? '');
           });
+          _loadRawData(_lastRawContent ?? '');
         }
       },
     );
@@ -235,16 +402,6 @@ class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
   Widget _buildMappingSection(BuildContext context, bool isTablet) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-
-    // For now we show all: Date, Amount, Description, Category, Type, Contact
-    const mappingFields = [
-      'Date',
-      'Amount',
-      'Description',
-      'Category',
-      'Type',
-      'Contact'
-    ];
 
     // If no data is loaded yet, we should still show the mapping fields but with no options
     final maxColumns = _rawRows.isNotEmpty ? _rawRows.first.length : 0;
@@ -304,25 +461,10 @@ class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
                     items: [
                       DropdownMenuItem<String>(
                           value: null, child: Text(l10n.cancel)),
-                      ...mappingFields.map((field) {
-                        String localizedLabel = field;
-                        if (field == 'Date') {
-                          localizedLabel = l10n.date;
-                        } else if (field == 'Amount') {
-                          localizedLabel = l10n.amount;
-                        } else if (field == 'Description') {
-                          localizedLabel = l10n.description;
-                        } else if (field == 'Category') {
-                          localizedLabel = l10n.category;
-                        } else if (field == 'Type') {
-                          localizedLabel = l10n.type;
-                        } else if (field == 'Contact') {
-                          localizedLabel = l10n.contact;
-                        }
-
+                      ..._kMappingFields.map((field) {
                         return DropdownMenuItem<String>(
                           value: field,
-                          child: Text(localizedLabel),
+                          child: Text(_mappingFieldLabel(l10n, field)),
                         );
                       }),
                     ],
@@ -355,6 +497,7 @@ class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
     final theme = Theme.of(context);
     final categoriesAsync = ref.watch(categoriesByTypeProvider(_defaultType));
     final contactsAsync = ref.watch(contactsListProvider);
+    final accountsAsync = ref.watch(accountsStreamProvider);
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -404,6 +547,8 @@ class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
                   const SizedBox(height: 16),
                   _buildDefaultContactDropdown(l10n, contactsAsync),
                 ],
+                const SizedBox(height: 16),
+                _buildDefaultAccountDropdown(l10n, accountsAsync),
               ],
             ),
           ),
@@ -551,12 +696,39 @@ class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
     );
   }
 
+  Widget _buildDefaultAccountDropdown(
+      AppLocalizations l10n, AsyncValue<List<Account>> accountsAsync) {
+    return DropdownButtonFormField<Account?>(
+      value: _defaultAccount,
+      isExpanded: true,
+      decoration: InputDecoration(
+        labelText: l10n.account,
+        border: const OutlineInputBorder(),
+      ),
+      items: [
+        DropdownMenuItem(value: null, child: Text(l10n.cancel)),
+        ...(accountsAsync.value ?? []).map((a) {
+          return DropdownMenuItem(
+            value: a,
+            child: Text(
+              a.name,
+              overflow: TextOverflow.ellipsis,
+            ),
+          );
+        }),
+      ],
+      onChanged: (value) => setState(() => _defaultAccount = value),
+    );
+  }
+
   Widget _buildPreviewSection(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
 
     final startIndex = _hasHeader ? 1 : 0;
     final rowsToPreview = _rawRows.skip(startIndex).toList();
+    final totalDataRows = rowsToPreview.length;
+    final previewRowCount = min(_kMaxPreviewRows, totalDataRows);
 
     return Card(
       margin: const EdgeInsets.all(16),
@@ -575,12 +747,22 @@ class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
                       ?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 Text(
-                  '${_selectedRowIndices.length} / ${rowsToPreview.length} ${l10n.selected}',
+                  '${_selectedRowIndices.length} / $totalDataRows ${l10n.selected}',
                   style: theme.textTheme.bodySmall,
                 ),
               ],
             ),
           ),
+          if (totalDataRows > _kMaxPreviewRows)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+              child: Text(
+                l10n.bulkImportPreviewLimited(_kMaxPreviewRows, totalDataRows),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                ),
+              ),
+            ),
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: DataTable(
@@ -604,32 +786,12 @@ class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
                     },
                   ),
                 ),
-                ...[
-                  'Date',
-                  'Amount',
-                  'Description',
-                  'Category',
-                  'Type',
-                  'Contact'
-                ].map((field) {
-                  String localizedLabel = field;
-                  if (field == 'Date') {
-                    localizedLabel = l10n.date;
-                  } else if (field == 'Amount') {
-                    localizedLabel = l10n.amount;
-                  } else if (field == 'Description') {
-                    localizedLabel = l10n.description;
-                  } else if (field == 'Category') {
-                    localizedLabel = l10n.category;
-                  } else if (field == 'Type') {
-                    localizedLabel = l10n.type;
-                  } else if (field == 'Contact') {
-                    localizedLabel = l10n.contact;
-                  }
-                  return DataColumn(label: Text(localizedLabel));
+                ..._kMappingFields.map((field) {
+                  return DataColumn(
+                      label: Text(_mappingFieldLabel(l10n, field)));
                 }),
               ],
-              rows: List.generate(rowsToPreview.length, (index) {
+              rows: List.generate(previewRowCount, (index) {
                 final rowIndex = index + startIndex;
                 final row = _rawRows[rowIndex];
                 final isSelected = _selectedRowIndices.contains(rowIndex);
@@ -660,14 +822,7 @@ class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
                         },
                       ),
                     ),
-                    ...[
-                      'Date',
-                      'Amount',
-                      'Description',
-                      'Category',
-                      'Type',
-                      'Contact'
-                    ].map((field) {
+                    ..._kMappingFields.map((field) {
                       final colIndex = _columnMapping[field];
                       String value = '';
                       bool isDefault = false;
@@ -688,6 +843,8 @@ class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
                           value = _defaultType;
                         } else if (field == 'Contact') {
                           value = _defaultContact?.name ?? '-';
+                        } else if (field == 'Account') {
+                          value = _defaultAccount?.name ?? '-';
                         }
                       }
 
@@ -728,7 +885,9 @@ class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
         ],
       ),
       child: ElevatedButton(
-        onPressed: _isImporting || _selectedRowIndices.isEmpty
+        onPressed: _isImporting ||
+                _isParsingContent ||
+                _selectedRowIndices.isEmpty
             ? null
             : _importTransactions,
         style: ElevatedButton.styleFrom(
@@ -739,7 +898,40 @@ class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
         child: _isImporting
-            ? const CircularProgressIndicator(color: Colors.white)
+            ? Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (_importTotal > 0) ...[
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: LinearProgressIndicator(
+                        value: _importCurrent / _importTotal,
+                        minHeight: 6,
+                        backgroundColor: Colors.white24,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      l10n.bulkImportProgress(
+                        _importTotal == 0
+                            ? 0
+                            : ((_importCurrent * 100) / _importTotal)
+                                .round()
+                                .clamp(0, 100),
+                        _importCurrent,
+                        _importTotal,
+                      ),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ] else
+                    const CircularProgressIndicator(color: Colors.white),
+                ],
+              )
             : Text(
                 '${l10n.import} ${_selectedRowIndices.length} ${l10n.transactions}'),
       ),
@@ -748,119 +940,33 @@ class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
 
   // --- Logic Methods ---
 
-  void _processRawData(String content) {
-    if (content.isEmpty) return;
-    _lastRawContent = content;
-
-    try {
-      final lines = content
-          .split(RegExp(r'\r?\n'))
-          .where((l) => l.trim().isNotEmpty)
-          .toList();
-      if (lines.isEmpty) return;
-
-      setState(() {
-        _rawRows = lines.map((l) => l.split(_separator)).toList();
-        _selectedRowIndices = Iterable<int>.generate(_rawRows.length).toSet();
-
-        if (_hasHeader && _rawRows.isNotEmpty) {
-          _headers = _rawRows.first.map((h) => h.trim()).toList();
-          _selectedRowIndices.remove(0);
-        } else {
-          _headers = [];
-        }
-        _autoDetectColumns();
-      });
-    } catch (e) {
-      if (mounted) {
-        ToastUtils.showErrorToast(
-            context, ref, 'Error parsing data with selected separator');
-      }
-    }
-  }
-
-  void _autoDetectColumns() {
-    if (_headers.isEmpty) return;
-
-    // Reset current mapping to avoid confusion from previous data
-    final Map<String, int?> mapping = {
-      'Date': null,
-      'Amount': null,
-      'Description': null,
-      'Category': null,
-      'Type': null,
-      'Contact': null,
-    };
-
-    for (int i = 0; i < _headers.length; i++) {
-      final header = _headers[i].toLowerCase();
-
-      if (header.contains('date')) {
-        mapping['Date'] = i;
-      } else if (header.contains('amount') ||
-          header.contains('price') ||
-          header.contains('value')) {
-        mapping['Amount'] = i;
-      } else if (header.contains('desc')) {
-        mapping['Description'] = i;
-      } else if (header.contains('cat')) {
-        mapping['Category'] = i;
-      } else if (header.contains('type')) {
-        mapping['Type'] = i;
-      } else if (header.contains('contact') ||
-          header.contains('name') ||
-          header.contains('person')) {
-        mapping['Contact'] = i;
-      }
-    }
-
-    if (mapping['Date'] != null && _rawRows.length > (_hasHeader ? 1 : 0)) {
-      final sampleDate = _rawRows[_hasHeader ? 1 : 0][mapping['Date']!];
-      _suggestDateFormat(sampleDate);
-    }
-
-    setState(() {
-      _columnMapping = Map<String, int?>.from(mapping);
-    });
-  }
-
-  void _suggestDateFormat(String sample) {
-    if (sample.isEmpty) return;
-
-    if (sample.contains('-')) {
-      if (sample.indexOf('-') == 4) {
-        _dateFormat = 'yyyy-MM-dd';
-      } else {
-        _dateFormat = 'dd-MM-yyyy';
-      }
-    } else if (sample.contains('/')) {
-      final parts = sample.split('/');
-      if (parts.isNotEmpty) {
-        final first = int.tryParse(parts[0]);
-        if (first != null && first > 12) {
-          _dateFormat = 'dd/MM/yyyy';
-        } else {
-          _dateFormat = 'MM/dd/yyyy';
-        }
-      }
-    } else if (RegExp(r'[a-zA-Z]').hasMatch(sample)) {
-      _dateFormat = 'MMM dd, yyyy';
-    }
-  }
-
   Future<void> _importTransactions() async {
     final l10n = AppLocalizations.of(context)!;
     final service = ref.read(transactionServiceProvider);
     final categoriesRepo = ref.read(categoriesRepositoryProvider);
     final contactsRepo = ref.read(contactsRepositoryProvider);
+    final accountsRepo = ref.read(accountsRepositoryProvider);
 
-    setState(() => _isImporting = true);
+    final sortedRows = _selectedRowIndices.toList()..sort();
+    final totalRows = sortedRows.length;
+
+    setState(() {
+      _isImporting = true;
+      _importCurrent = 0;
+      _importTotal = totalRows;
+    });
 
     int successCount = 0;
     int errorCount = 0;
 
     try {
-      for (final rowIndex in _selectedRowIndices) {
+      final accountsList =
+          List<Account>.from(await accountsRepo.getAllAccounts());
+      var processed = 0;
+      for (final rowIndex in sortedRows) {
+        processed++;
+        _reportImportProgress(processed, totalRows);
+
         final row = _rawRows[rowIndex];
 
         final dateStr = _columnMapping['Date'] != null &&
@@ -886,6 +992,10 @@ class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
         final contactName = _columnMapping['Contact'] != null &&
                 _columnMapping['Contact']! < row.length
             ? row[_columnMapping['Contact']!]
+            : '';
+        final accountName = _columnMapping['Account'] != null &&
+                _columnMapping['Account']! < row.length
+            ? row[_columnMapping['Account']!]
             : '';
 
         DateTime date = _defaultDate;
@@ -967,6 +1077,43 @@ class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
           }
         }
 
+        String? accountUuid = _defaultAccount?.uuid;
+        if (accountName.trim().isNotEmpty) {
+          final key = accountName.trim().toLowerCase();
+          Account? match;
+          for (final a in accountsList) {
+            if (a.name.toLowerCase() == key) {
+              match = a;
+              break;
+            }
+          }
+          if (match != null) {
+            accountUuid = match.uuid;
+          } else {
+            final trimmedName = accountName.trim();
+            final newUuid = const Uuid().v4();
+            final now = DateTime.now();
+            await accountsRepo.createAccount(
+              AccountsCompanion.insert(
+                uuid: newUuid,
+                name: trimmedName,
+                type: 'CASH',
+                openingBalance: const Value(0.0),
+                openingDate: Value(date),
+                createdAt: Value(now),
+                updatedAt: Value(now),
+              ),
+            );
+            // Avoid duplicate creates for the same name in this import batch.
+            final created = await accountsRepo.getAccountByUuid(newUuid);
+            if (created != null) {
+              accountsList.add(created);
+            }
+            accountUuid = newUuid;
+            ref.invalidate(accountsStreamProvider);
+          }
+        }
+
         try {
           await service.createTransaction(
             amount: amount,
@@ -975,6 +1122,8 @@ class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
             description: description.isNotEmpty ? description : null,
             categoryUuid: categoryUuid,
             contactUuid: contactUuid,
+            accountUuid: accountUuid,
+            isImport: true,
           );
           successCount++;
         } catch (e) {
@@ -995,7 +1144,13 @@ class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
     } catch (e) {
       if (mounted) ToastUtils.showErrorToast(context, ref, e.toString());
     } finally {
-      if (mounted) setState(() => _isImporting = false);
+      if (mounted) {
+        setState(() {
+          _isImporting = false;
+          _importCurrent = 0;
+          _importTotal = 0;
+        });
+      }
     }
   }
 }

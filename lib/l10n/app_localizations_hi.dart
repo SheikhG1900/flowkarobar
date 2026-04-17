@@ -1568,6 +1568,19 @@ class AppLocalizationsHi extends AppLocalizations {
   String get add => 'जोड़ें';
 
   @override
+  String get bulkImportLoadingContent => 'डेटा लोड हो रहा है…';
+
+  @override
+  String bulkImportProgress(int percent, int current, int total) {
+    return '$percent% ($current / $total)';
+  }
+
+  @override
+  String bulkImportPreviewLimited(int shown, int total) {
+    return 'पूर्वावलोकन में पहली $shown पंक्तियाँ, कुल $total';
+  }
+
+  @override
   String get scanReceipt => 'रसीद स्कैन करें';
 
   @override

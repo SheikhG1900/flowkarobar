@@ -61,6 +61,10 @@ class TransactionsListScreen extends ConsumerStatefulWidget {
 
 class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
     with SingleTickerProviderStateMixin {
+  /// Lets the bottom sheet (and loading dialog) finish closing before the next step.
+  static const Duration _bulkImportSheetCloseDelay =
+      Duration(milliseconds: 320);
+
   late ScrollController _scrollController;
   late TabController _tabController;
   late TextEditingController _searchController;
@@ -158,16 +162,20 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
     );
   }
 
-  void _showImportOptions(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+  void _showImportOptions(BuildContext parentContext) {
+    final l10n = AppLocalizations.of(parentContext)!;
     final isPremium = ref.read(premiumProvider).isPremium;
+    final theme = Theme.of(parentContext);
+    final loadingBarrierColor = theme.brightness == Brightness.dark
+        ? Colors.black.withValues(alpha: 0.26)
+        : Colors.black.withValues(alpha: 0.06);
 
     showModalBottomSheet(
-      context: context,
+      context: parentContext,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) => SafeArea(
+      builder: (sheetContext) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -177,7 +185,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                 children: [
                   Text(
                     l10n.bulkImport,
-                    style: Theme.of(context)
+                    style: Theme.of(sheetContext)
                         .textTheme
                         .titleLarge
                         ?.copyWith(fontWeight: FontWeight.bold),
@@ -194,25 +202,52 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
               leading: const Icon(Icons.content_paste),
               title: Text(l10n.pasteFromClipboard),
               onTap: () async {
-                Navigator.pop(context);
+                Navigator.pop(sheetContext);
+                await Future<void>.delayed(_bulkImportSheetCloseDelay);
+                if (!parentContext.mounted) {
+                  return;
+                }
                 if (!isPremium) {
                   Navigator.push(
-                      context,
+                      parentContext,
                       MaterialPageRoute(
                           builder: (context) => const PremiumScreen()));
                   return;
                 }
                 final data = await Clipboard.getData(Clipboard.kTextPlain);
                 if (data?.text != null) {
+                  final text = data!.text!;
+                  if (text.length > 4000 && parentContext.mounted) {
+                    showDialog<void>(
+                      context: parentContext,
+                      barrierDismissible: false,
+                      barrierColor: loadingBarrierColor,
+                      builder: (dialogContext) =>
+                          const _BulkImportLoadingDialog(),
+                    );
+                    await Future<void>.delayed(Duration.zero);
+                    if (!parentContext.mounted) {
+                      return;
+                    }
+                    Navigator.of(parentContext).pop();
+                    await Future<void>.delayed(_bulkImportSheetCloseDelay);
+                    if (!parentContext.mounted) {
+                      return;
+                    }
+                  }
+                  if (!parentContext.mounted) {
+                    return;
+                  }
                   Navigator.push(
-                    context,
+                    parentContext,
                     MaterialPageRoute(
                       builder: (context) =>
-                          BulkImportScreen(initialContent: data!.text),
+                          BulkImportScreen(initialContent: text),
                     ),
                   );
                 } else {
-                  ToastUtils.showInfoToast(context, ref, 'Clipboard is empty');
+                  ToastUtils.showInfoToast(
+                      parentContext, ref, 'Clipboard is empty');
                 }
               },
             ),
@@ -220,10 +255,14 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
               leading: const Icon(Icons.file_open),
               title: Text(l10n.pickCsvFile),
               onTap: () async {
-                Navigator.pop(context);
+                Navigator.pop(sheetContext);
+                await Future<void>.delayed(_bulkImportSheetCloseDelay);
+                if (!parentContext.mounted) {
+                  return;
+                }
                 if (!isPremium) {
                   Navigator.push(
-                      context,
+                      parentContext,
                       MaterialPageRoute(
                           builder: (context) => const PremiumScreen()));
                   return;
@@ -234,15 +273,41 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                 );
 
                 if (result != null && result.files.single.path != null) {
-                  final file = File(result.files.single.path!);
-                  final content = await file.readAsString();
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) =>
-                          BulkImportScreen(initialContent: content),
-                    ),
+                  if (!parentContext.mounted) {
+                    return;
+                  }
+                  showDialog<void>(
+                    context: parentContext,
+                    barrierDismissible: false,
+                    barrierColor: loadingBarrierColor,
+                    builder: (dialogContext) =>
+                        const _BulkImportLoadingDialog(),
                   );
+                  try {
+                    final file = File(result.files.single.path!);
+                    final content = await file.readAsString();
+                    if (!parentContext.mounted) {
+                      return;
+                    }
+                    Navigator.of(parentContext).pop();
+                    await Future<void>.delayed(_bulkImportSheetCloseDelay);
+                    if (!parentContext.mounted) {
+                      return;
+                    }
+                    Navigator.push(
+                      parentContext,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            BulkImportScreen(initialContent: content),
+                      ),
+                    );
+                  } catch (e) {
+                    if (parentContext.mounted) {
+                      Navigator.of(parentContext).pop();
+                      ToastUtils.showErrorToast(
+                          parentContext, ref, e.toString());
+                    }
+                  }
                 }
               },
             ),
@@ -1230,6 +1295,49 @@ class _TransactionListSummaryContent extends ConsumerWidget {
         child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
       ),
       error: (_, __) => const SizedBox.shrink(),
+    );
+  }
+}
+
+/// Lightweight dim + floating panel (avoids default dark [Colors.black54] dialog barrier).
+class _BulkImportLoadingDialog extends StatelessWidget {
+  const _BulkImportLoadingDialog();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        child: Material(
+          elevation: 6,
+          shadowColor: theme.colorScheme.shadow.withValues(alpha: 0.18),
+          surfaceTintColor: theme.colorScheme.surfaceTint,
+          borderRadius: BorderRadius.circular(20),
+          color: theme.colorScheme.surfaceContainerHigh,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AppLoadingIndicator(
+                  size: 48,
+                  color: theme.colorScheme.primary,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  l10n.bulkImportLoadingContent,
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

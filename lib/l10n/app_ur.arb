@@ -548,6 +548,22 @@
   "quickActions": "فوری کارروائیاں",
   "add": "شامل کریں",
   "bulkImport": "بلک امپورٹ",
+  "bulkImportLoadingContent": "ڈیٹا لوڈ ہو رہا ہے…",
+  "bulkImportProgress": "{percent}% ({current} / {total})",
+  "@bulkImportProgress": {
+    "placeholders": {
+      "percent": { "type": "int" },
+      "current": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "bulkImportPreviewLimited": "پیش نظارہ میں پہلی {shown} قطاریں، کل {total}",
+  "@bulkImportPreviewLimited": {
+    "placeholders": {
+      "shown": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
   "scanReceipt": "رسید اسکین کریں",
   "voiceAdd": "آواز سے شامل کریں",
   "scan": "اسکین",

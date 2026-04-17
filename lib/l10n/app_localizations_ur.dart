@@ -1571,6 +1571,19 @@ class AppLocalizationsUr extends AppLocalizations {
   String get add => 'شامل کریں';
 
   @override
+  String get bulkImportLoadingContent => 'ڈیٹا لوڈ ہو رہا ہے…';
+
+  @override
+  String bulkImportProgress(int percent, int current, int total) {
+    return '$percent% ($current / $total)';
+  }
+
+  @override
+  String bulkImportPreviewLimited(int shown, int total) {
+    return 'پیش نظارہ میں پہلی $shown قطاریں، کل $total';
+  }
+
+  @override
   String get scanReceipt => 'رسید اسکین کریں';
 
   @override

@@ -1561,6 +1561,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get add => 'Add';
 
   @override
+  String get bulkImportLoadingContent => 'Loading data…';
+
+  @override
+  String bulkImportProgress(int percent, int current, int total) {
+    return '$percent% ($current / $total)';
+  }
+
+  @override
+  String bulkImportPreviewLimited(int shown, int total) {
+    return 'Preview shows first $shown of $total rows';
+  }
+
+  @override
   String get scanReceipt => 'Scan Receipt';
 
   @override
