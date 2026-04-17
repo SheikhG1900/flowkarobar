@@ -2944,6 +2944,48 @@ abstract class AppLocalizations {
   /// **'Preview shows first {shown} of {total} rows'**
   String bulkImportPreviewLimited(int shown, int total);
 
+  /// No description provided for @bulkImportPreviewShowingFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Previewing first {shown} of {total} rows'**
+  String bulkImportPreviewShowingFirst(int shown, int total);
+
+  /// No description provided for @bulkImportPreviewShowAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Show all'**
+  String get bulkImportPreviewShowAll;
+
+  /// No description provided for @bulkImportPreviewShowLess.
+  ///
+  /// In en, this message translates to:
+  /// **'Show less'**
+  String get bulkImportPreviewShowLess;
+
+  /// No description provided for @bulkImportPreviewShowingAllRows.
+  ///
+  /// In en, this message translates to:
+  /// **'Showing all {total} rows'**
+  String bulkImportPreviewShowingAllRows(int total);
+
+  /// No description provided for @bulkImportLinkColumn.
+  ///
+  /// In en, this message translates to:
+  /// **'Receivable / Payable'**
+  String get bulkImportLinkColumn;
+
+  /// No description provided for @bulkImportDefaultLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Default receivable / payable'**
+  String get bulkImportDefaultLink;
+
+  /// No description provided for @bulkImportUpdatingPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Updating preview…'**
+  String get bulkImportUpdatingPreview;
+
   /// No description provided for @scanReceipt.
   ///
   /// In en, this message translates to:

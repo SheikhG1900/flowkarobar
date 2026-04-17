@@ -151,21 +151,9 @@ class _TransactionSpeedDialState extends ConsumerState<TransactionSpeedDial>
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        if (isRtl) ...[
-                          // Toggle Expansion Arrow (RTL)
-                          _buildToggleArrow(isRtl: true),
-                          // Vertical Divider
-                          _buildDivider(),
-                          // Primary Action: Add Transaction (RTL)
-                          _buildAddAction(l10n, isRtl: true),
-                        ] else ...[
-                          // Primary Action: Add Transaction (LTR)
-                          _buildAddAction(l10n, isRtl: false),
-                          // Vertical Divider
-                          _buildDivider(),
-                          // Toggle Expansion Arrow (LTR)
-                          _buildToggleArrow(isRtl: false),
-                        ],
+                        _buildAddAction(context, l10n),
+                        _buildDivider(),
+                        _buildToggleArrow(context),
                       ],
                     ),
                   ),
@@ -186,13 +174,13 @@ class _TransactionSpeedDialState extends ConsumerState<TransactionSpeedDial>
     );
   }
 
-  Widget _buildAddAction(AppLocalizations l10n, {required bool isRtl}) {
+  Widget _buildAddAction(BuildContext context, AppLocalizations l10n) {
     return InkWell(
       onTap: widget.onAddTransaction,
-      borderRadius: BorderRadius.horizontal(
-        left: Radius.circular(isRtl ? 0 : 32),
-        right: Radius.circular(isRtl ? 32 : 0),
-      ),
+      borderRadius: BorderRadiusDirectional.horizontal(
+        start: const Radius.circular(32),
+        end: Radius.zero,
+      ).resolve(Directionality.of(context)),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
         child: Row(
@@ -214,13 +202,13 @@ class _TransactionSpeedDialState extends ConsumerState<TransactionSpeedDial>
     );
   }
 
-  Widget _buildToggleArrow({required bool isRtl}) {
+  Widget _buildToggleArrow(BuildContext context) {
     return InkWell(
       onTap: _toggle,
-      borderRadius: BorderRadius.horizontal(
-        left: Radius.circular(isRtl ? 32 : 0),
-        right: Radius.circular(isRtl ? 0 : 32),
-      ),
+      borderRadius: BorderRadiusDirectional.horizontal(
+        start: Radius.zero,
+        end: const Radius.circular(32),
+      ).resolve(Directionality.of(context)),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
         child: AnimatedBuilder(

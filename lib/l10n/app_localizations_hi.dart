@@ -1581,6 +1581,31 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
+  String bulkImportPreviewShowingFirst(int shown, int total) {
+    return 'कुल $total में से पहली $shown पंक्तियों का पूर्वावलोकन';
+  }
+
+  @override
+  String get bulkImportPreviewShowAll => 'सभी दिखाएँ';
+
+  @override
+  String get bulkImportPreviewShowLess => 'कम दिखाएँ';
+
+  @override
+  String bulkImportPreviewShowingAllRows(int total) {
+    return 'सभी $total पंक्तियाँ दिख रही हैं';
+  }
+
+  @override
+  String get bulkImportLinkColumn => 'प्राप्य / देय';
+
+  @override
+  String get bulkImportDefaultLink => 'डिफ़ॉल्ट प्राप्य / देय';
+
+  @override
+  String get bulkImportUpdatingPreview => 'पूर्वावलोकन अपडेट हो रहा है…';
+
+  @override
   String get scanReceipt => 'रसीद स्कैन करें';
 
   @override

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' show min;
 
 import 'package:drift/drift.dart' hide Column;
@@ -24,6 +25,100 @@ import 'package:intl/intl.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:uuid/uuid.dart';
 
+/// Holds default-value fields for bulk import; updated via [ValueNotifier] so
+/// changing mapping does not rebuild defaults (and vice versa).
+class BulkImportDefaultsData {
+  const BulkImportDefaultsData({
+    required this.defaultType,
+    this.defaultCategory,
+    this.defaultContact,
+    this.defaultAccount,
+    this.defaultLinkIntent,
+    required this.defaultDate,
+  });
+
+  final String defaultType;
+  final Category? defaultCategory;
+  final Contact? defaultContact;
+  final Account? defaultAccount;
+  final String? defaultLinkIntent;
+  final DateTime defaultDate;
+}
+
+/// Defers building the heavy preview [DataTable] until [delay] after data changes.
+class _BulkImportPreviewDeferred extends StatefulWidget {
+  const _BulkImportPreviewDeferred({
+    required this.listenable,
+    required this.delay,
+    required this.rawRowsVersion,
+    required this.placeholderBuilder,
+    required this.tableBuilder,
+  });
+
+  final Listenable listenable;
+  final Duration delay;
+  final int rawRowsVersion;
+  final WidgetBuilder placeholderBuilder;
+  final WidgetBuilder tableBuilder;
+
+  @override
+  State<_BulkImportPreviewDeferred> createState() =>
+      _BulkImportPreviewDeferredState();
+}
+
+class _BulkImportPreviewDeferredState extends State<_BulkImportPreviewDeferred> {
+  Timer? _timer;
+  bool _showTable = false;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.listenable.addListener(_onDataChanged);
+    _schedule();
+  }
+
+  @override
+  void didUpdateWidget(covariant _BulkImportPreviewDeferred oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.listenable != widget.listenable) {
+      oldWidget.listenable.removeListener(_onDataChanged);
+      widget.listenable.addListener(_onDataChanged);
+    }
+    if (oldWidget.rawRowsVersion != widget.rawRowsVersion) {
+      _schedule();
+    }
+  }
+
+  void _onDataChanged() {
+    _schedule();
+  }
+
+  void _schedule() {
+    _timer?.cancel();
+    setState(() => _showTable = false);
+    _timer = Timer(widget.delay, () {
+      if (mounted) {
+        setState(() => _showTable = true);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    widget.listenable.removeListener(_onDataChanged);
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_showTable) {
+      return widget.placeholderBuilder(context);
+    }
+    return widget.tableBuilder(context);
+  }
+}
+
 class BulkImportScreen extends ConsumerStatefulWidget {
   final String? initialContent;
   const BulkImportScreen({super.key, this.initialContent});
@@ -33,8 +128,8 @@ class BulkImportScreen extends ConsumerStatefulWidget {
 }
 
 class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
-  /// Avoid building a huge [DataTable] (layout cost grows with row count).
-  static const int _kMaxPreviewRows = 200;
+  /// Default preview row count before the user taps "Show all".
+  static const int _kPreviewRowsInitial = 20;
 
   static const List<String> _kMappingFields = [
     'Date',
@@ -43,8 +138,15 @@ class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
     'Category',
     'Type',
     'Contact',
+    'Link',
     'Account',
   ];
+
+  /// Rows above this: show a short busy overlay when mapping/defaults change.
+  static const int _kPreviewBusyRowThreshold = 80;
+
+  /// Defer building the preview [DataTable] so mapping/defaults stay responsive.
+  static const Duration _kPreviewTableRevealDelay = Duration(milliseconds: 350);
 
   // Parsing state
   List<List<String>> _rawRows = [];
@@ -54,28 +156,53 @@ class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
   String _dateFormat = 'dd/MM/yyyy';
   String? _lastRawContent;
 
-  // Mapping state
-  Map<String, int?> _columnMapping = {
+  final ValueNotifier<Map<String, int?>> _columnMappingNotifier =
+      ValueNotifier<Map<String, int?>>({
     'Date': null,
     'Amount': null,
     'Description': null,
     'Category': null,
     'Type': null,
     'Contact': null,
+    'Link': null,
     'Account': null,
-  };
+  });
 
-  // Default values
-  String _defaultType = 'EXPENSE';
-  Category? _defaultCategory;
-  Contact? _defaultContact;
-  Account? _defaultAccount;
-  DateTime _defaultDate = DateTime.now();
+  final ValueNotifier<BulkImportDefaultsData> _defaultsNotifier =
+      ValueNotifier<BulkImportDefaultsData>(
+    BulkImportDefaultsData(
+      defaultType: 'EXPENSE',
+      defaultDate: DateTime.now(),
+    ),
+  );
 
-  // Selection state
-  Set<int> _selectedRowIndices = {};
+  final ValueNotifier<Set<int>> _selectedRowIndicesNotifier =
+      ValueNotifier<Set<int>>({});
+
+  /// Keeps scroll offset when the subtree rebuilds (mapping/defaults/preview).
+  final ScrollController _bulkImportScrollController = ScrollController();
+
+  /// One notifier per spreadsheet column index — only that dropdown rebuilds.
+  List<ValueNotifier<String?>>? _mappingFieldPerColumn;
+
+  Listenable? _previewDataListenableCache;
+
+  /// Mapping + defaults only. Selection is *not* included so toggling checkboxes
+  /// does not rebuild the whole [DataTable].
+  Listenable get _previewDataListenable {
+    return _previewDataListenableCache ??= Listenable.merge([
+      _columnMappingNotifier,
+      _defaultsNotifier,
+    ]);
+  }
+
+  Map<String, int?> get _columnMapping => _columnMappingNotifier.value;
+
   bool _isImporting = false;
   bool _isParsingContent = false;
+  bool _isUiBusy = false;
+  /// When false, preview shows only [_kPreviewRowsInitial] rows.
+  bool _previewTableExpanded = false;
   int _importCurrent = 0;
   int _importTotal = 0;
 
@@ -94,6 +221,78 @@ class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
     }
   }
 
+  @override
+  void dispose() {
+    _disposeMappingFieldNotifiers();
+    _bulkImportScrollController.dispose();
+    _columnMappingNotifier.dispose();
+    _defaultsNotifier.dispose();
+    _selectedRowIndicesNotifier.dispose();
+    super.dispose();
+  }
+
+  void _disposeMappingFieldNotifiers() {
+    if (_mappingFieldPerColumn == null) {
+      return;
+    }
+    for (final n in _mappingFieldPerColumn!) {
+      n.dispose();
+    }
+    _mappingFieldPerColumn = null;
+  }
+
+  void _ensureMappingFieldNotifiers(int maxColumns) {
+    if (_mappingFieldPerColumn != null &&
+        _mappingFieldPerColumn!.length == maxColumns) {
+      return;
+    }
+    _disposeMappingFieldNotifiers();
+    if (maxColumns == 0) {
+      return;
+    }
+    _mappingFieldPerColumn = List.generate(
+      maxColumns,
+      (_) => ValueNotifier<String?>(null),
+    );
+  }
+
+  void _syncMappingFieldNotifiersFromMasterMap(int maxColumns) {
+    _ensureMappingFieldNotifiers(maxColumns);
+    if (maxColumns == 0 || _mappingFieldPerColumn == null) {
+      return;
+    }
+    final map = _columnMappingNotifier.value;
+    for (var i = 0; i < maxColumns; i++) {
+      String? fieldForCol;
+      for (final f in _kMappingFields) {
+        if (map[f] == i) {
+          fieldForCol = f;
+          break;
+        }
+      }
+      if (_mappingFieldPerColumn![i].value != fieldForCol) {
+        _mappingFieldPerColumn![i].value = fieldForCol;
+      }
+    }
+  }
+
+  void _rebuildColumnMappingFromFieldNotifiers() {
+    final list = _mappingFieldPerColumn;
+    if (list == null) {
+      return;
+    }
+    final m = <String, int?>{
+      for (final f in _kMappingFields) f: null,
+    };
+    for (var i = 0; i < list.length; i++) {
+      final field = list[i].value;
+      if (field != null) {
+        m[field] = i;
+      }
+    }
+    _columnMappingNotifier.value = m;
+  }
+
   String _mappingFieldLabel(AppLocalizations l10n, String field) {
     switch (field) {
       case 'Date':
@@ -110,21 +309,134 @@ class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
         return l10n.contact;
       case 'Account':
         return l10n.account;
+      case 'Link':
+        return l10n.bulkImportLinkColumn;
       default:
         return field;
     }
   }
 
-  Future<void> _loadRawData(String content) async {
-    if (content.isEmpty) {
+  /// Parses AR/AP column text. Returns `RECEIVABLE`, `PAYABLE`, or null.
+  static String? _parseLinkCell(String raw) {
+    final s = raw.trim().toUpperCase();
+    if (s.isEmpty) {
+      return null;
+    }
+    if (s.contains('RECEIV') || s == 'AR') {
+      return 'RECEIVABLE';
+    }
+    if (s.contains('PAYABLE') || s == 'AP') {
+      return 'PAYABLE';
+    }
+    return null;
+  }
+
+  /// Row cell when non-empty; otherwise default from import settings.
+  String? _effectiveRowLinkIntent(String rowCell) {
+    if (rowCell.trim().isNotEmpty) {
+      return _parseLinkCell(rowCell);
+    }
+    return _defaultsNotifier.value.defaultLinkIntent;
+  }
+
+  /// Maps expense/income + receivable/payable to [paidRelationship].
+  static String? _paidRelationshipForTypeAndLink(
+      String type, String? linkIntent) {
+    if (linkIntent == null) {
+      return null;
+    }
+    if (type == 'EXPENSE' && linkIntent == 'RECEIVABLE') {
+      return 'PAID_FOR';
+    }
+    if (type == 'EXPENSE' && linkIntent == 'PAYABLE') {
+      return 'PAID_BY';
+    }
+    if (type == 'INCOME' && linkIntent == 'RECEIVABLE') {
+      return 'WILL_RECEIVE';
+    }
+    if (type == 'INCOME' && linkIntent == 'PAYABLE') {
+      return 'RECEIVED_FROM';
+    }
+    return null;
+  }
+
+  /// After [setState] shows a busy overlay, waits until that overlay has been
+  /// laid out and painted before starting heavy work (compute, large rebuilds).
+  Future<void> _waitForBusyOverlayPaint() async {
+    await Future<void>.delayed(Duration.zero);
+    if (!mounted) {
       return;
     }
-    setState(() => _isParsingContent = true);
-    // Let the loading overlay paint before heavy work starts.
     await SchedulerBinding.instance.endOfFrame;
     if (!mounted) {
       return;
     }
+    await SchedulerBinding.instance.endOfFrame;
+  }
+
+  Future<void> _runWithPreviewBusy(VoidCallback fn) async {
+    final heavy = _rawRows.length > _kPreviewBusyRowThreshold;
+    if (heavy && mounted) {
+      setState(() => _isUiBusy = true);
+      await _waitForBusyOverlayPaint();
+    }
+    try {
+      if (!mounted) {
+        return;
+      }
+      fn();
+      if (heavy && mounted) {
+        await SchedulerBinding.instance.endOfFrame;
+      }
+    } finally {
+      if (heavy && mounted) {
+        setState(() => _isUiBusy = false);
+      }
+    }
+  }
+
+  Future<void> _runPreviewExpandToggle() async {
+    if (!mounted || _isUiBusy) {
+      return;
+    }
+    setState(() => _isUiBusy = true);
+    await _waitForBusyOverlayPaint();
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _previewTableExpanded = !_previewTableExpanded;
+    });
+    await SchedulerBinding.instance.endOfFrame;
+    if (!mounted) {
+      return;
+    }
+    setState(() => _isUiBusy = false);
+  }
+
+  /// Updates header/separator in one [setState] with [_isParsingContent] so the
+  /// next build skips the heavy mapping/preview subtree; then parses after the
+  /// overlay can paint.
+  void _applyParseOptionChangeAndReload(void Function() applyOption) {
+    final content = _lastRawContent ?? '';
+    if (content.isEmpty) {
+      setState(applyOption);
+      return;
+    }
+    setState(() {
+      applyOption();
+      _isParsingContent = true;
+    });
+    Future<void>(() async {
+      await _waitForBusyOverlayPaint();
+      if (!mounted) {
+        return;
+      }
+      await _parseAndApplyContent(content);
+    });
+  }
+
+  Future<void> _parseAndApplyContent(String content) async {
     try {
       final request = BulkImportParseRequest(
         content: content,
@@ -141,10 +453,15 @@ class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
         _lastRawContent = content;
         _rawRows = result.rawRows;
         _headers = result.headers;
-        _selectedRowIndices = result.selectedRowIndices.toSet();
-        _columnMapping = result.columnMapping;
         _dateFormat = result.dateFormat;
+        _previewTableExpanded = false;
       });
+      _columnMappingNotifier.value =
+          Map<String, int?>.from(result.columnMapping);
+      _syncMappingFieldNotifiersFromMasterMap(
+        result.rawRows.isNotEmpty ? result.rawRows.first.length : 0,
+      );
+      _selectedRowIndicesNotifier.value = result.selectedRowIndices.toSet();
     } catch (e) {
       if (mounted) {
         ToastUtils.showErrorToast(
@@ -155,6 +472,18 @@ class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
         setState(() => _isParsingContent = false);
       }
     }
+  }
+
+  Future<void> _loadRawData(String content) async {
+    if (content.isEmpty) {
+      return;
+    }
+    setState(() => _isParsingContent = true);
+    await _waitForBusyOverlayPaint();
+    if (!mounted) {
+      return;
+    }
+    await _parseAndApplyContent(content);
   }
 
   void _reportImportProgress(int current, int total) {
@@ -188,11 +517,13 @@ class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
       appBar: AppBar(
         title: Text(l10n.bulkImport),
       ),
-      body: Stack(
+      body: SafeArea(
+        top: false,
+        child: Stack(
         children: [
           Column(
             children: [
-              if (_rawRows.isEmpty)
+              if (_rawRows.isEmpty && !_isParsingContent)
                 Expanded(
                   child: Center(
                     child: Column(
@@ -210,12 +541,21 @@ class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
               else ...[
                 Expanded(
                   child: SingleChildScrollView(
+                    key: const PageStorageKey<String>(
+                        'bulk_import_main_scroll'),
+                    controller: _bulkImportScrollController,
                     child: Column(
                       children: [
                         _buildConfigurationSection(context, isTablet),
-                        _buildMappingSection(context, isTablet),
-                        _buildDefaultValuesSection(context, isTablet),
-                        _buildPreviewSection(context),
+                        // Only shrink while raw data is re-parsed; keep full height
+                        // during [_isUiBusy] so scroll offset is not destroyed.
+                        if (_isParsingContent)
+                          const SizedBox(height: 120)
+                        else ...[
+                          _buildMappingSection(context, isTablet),
+                          _buildDefaultValuesSection(context, isTablet),
+                          _buildPreviewSection(context),
+                        ],
                       ],
                     ),
                   ),
@@ -224,7 +564,7 @@ class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
               ],
             ],
           ),
-          if (_isParsingContent)
+          if (_isParsingContent || _isUiBusy)
             Positioned.fill(
               child: AbsorbPointer(
                 child: SizedBox.expand(
@@ -256,7 +596,9 @@ class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
                               ),
                               const SizedBox(height: 16),
                               Text(
-                                l10n.bulkImportLoadingContent,
+                                _isParsingContent
+                                    ? l10n.bulkImportLoadingContent
+                                    : l10n.bulkImportUpdatingPreview,
                                 textAlign: TextAlign.center,
                                 style: Theme.of(context)
                                     .textTheme
@@ -277,6 +619,7 @@ class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
               ),
             ),
         ],
+        ),
       ),
     );
   }
@@ -338,10 +681,9 @@ class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
               title: Text(l10n.hasHeader),
               value: _hasHeader,
               onChanged: (value) {
-                setState(() {
+                _applyParseOptionChangeAndReload(() {
                   _hasHeader = value;
                 });
-                _loadRawData(_lastRawContent ?? '');
               },
             ),
           ],
@@ -365,10 +707,9 @@ class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
       ],
       onChanged: (value) {
         if (value != null) {
-          setState(() {
+          _applyParseOptionChangeAndReload(() {
             _separator = value;
           });
-          _loadRawData(_lastRawContent ?? '');
         }
       },
     );
@@ -389,10 +730,12 @@ class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
         'dd-MM-yyyy',
         'MMM dd, yyyy',
       ].map((f) => DropdownMenuItem(value: f, child: Text(f))).toList(),
-      onChanged: (value) {
+      onChanged: (value) async {
         if (value != null) {
-          setState(() {
-            _dateFormat = value;
+          await _runWithPreviewBusy(() {
+            setState(() {
+              _dateFormat = value;
+            });
           });
         }
       },
@@ -417,6 +760,12 @@ class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
       }
     }
 
+    if (maxColumns > 0 &&
+        (_mappingFieldPerColumn == null ||
+            _mappingFieldPerColumn!.length != maxColumns)) {
+      _syncMappingFieldNotifiersFromMasterMap(maxColumns);
+    }
+
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -437,50 +786,55 @@ class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
               children: columnDisplayNames.asMap().entries.map((entry) {
                 final colIndex = entry.key;
                 final colName = entry.value;
+                if (_mappingFieldPerColumn == null ||
+                    colIndex >= _mappingFieldPerColumn!.length) {
+                  return const SizedBox.shrink();
+                }
+                final fieldNotifier = _mappingFieldPerColumn![colIndex];
 
                 return SizedBox(
                   width: isTablet
                       ? (MediaQuery.of(context).size.width - 100) / 3
                       : (MediaQuery.of(context).size.width - 64),
-                  child: DropdownButtonFormField<String>(
-                    key: ValueKey('mapping_col_${colIndex}_${maxColumns}'),
-                    value: _columnMapping.entries
-                            .firstWhere((e) => e.value == colIndex,
-                                orElse: () => const MapEntry('', null))
-                            .key
-                            .isEmpty
-                        ? null
-                        : _columnMapping.entries
-                            .firstWhere((e) => e.value == colIndex)
-                            .key,
-                    isExpanded: true,
-                    decoration: InputDecoration(
-                      labelText: colName,
-                      border: const OutlineInputBorder(),
-                    ),
-                    items: [
-                      DropdownMenuItem<String>(
-                          value: null, child: Text(l10n.cancel)),
-                      ..._kMappingFields.map((field) {
-                        return DropdownMenuItem<String>(
-                          value: field,
-                          child: Text(_mappingFieldLabel(l10n, field)),
-                        );
-                      }),
-                    ],
-                    onChanged: (field) {
-                      setState(() {
-                        // Clear previous mapping for this field if any
-                        if (field != null) {
-                          _columnMapping.updateAll(
-                              (key, value) => value == colIndex ? null : value);
-                          _columnMapping[field] = colIndex;
-                        } else {
-                          // If cancelled, find which field was mapped to this column and clear it
-                          _columnMapping.updateAll(
-                              (key, value) => value == colIndex ? null : value);
-                        }
-                      });
+                  child: ValueListenableBuilder<String?>(
+                    valueListenable: fieldNotifier,
+                    builder: (context, selectedField, _) {
+                      return DropdownButtonFormField<String>(
+                        key: ValueKey('mapping_col_${colIndex}_${maxColumns}'),
+                        value: selectedField,
+                        isExpanded: true,
+                        decoration: InputDecoration(
+                          labelText: colName,
+                          border: const OutlineInputBorder(),
+                        ),
+                        items: [
+                          DropdownMenuItem<String>(
+                              value: null, child: Text(l10n.cancel)),
+                          ..._kMappingFields.map((field) {
+                            return DropdownMenuItem<String>(
+                              value: field,
+                              child: Text(_mappingFieldLabel(l10n, field)),
+                            );
+                          }),
+                        ],
+                        onChanged: (field) async {
+                          await _runWithPreviewBusy(() {
+                            if (field != null) {
+                              for (var j = 0;
+                                  j < _mappingFieldPerColumn!.length;
+                                  j++) {
+                                if (j != colIndex &&
+                                    _mappingFieldPerColumn![j].value ==
+                                        field) {
+                                  _mappingFieldPerColumn![j].value = null;
+                                }
+                              }
+                            }
+                            fieldNotifier.value = field;
+                            _rebuildColumnMappingFromFieldNotifiers();
+                          });
+                        },
+                      );
                     },
                   ),
                 );
@@ -495,71 +849,84 @@ class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
   Widget _buildDefaultValuesSection(BuildContext context, bool isTablet) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final categoriesAsync = ref.watch(categoriesByTypeProvider(_defaultType));
     final contactsAsync = ref.watch(contactsListProvider);
     final accountsAsync = ref.watch(accountsStreamProvider);
 
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: ExpansionTile(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        collapsedShape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        title: Text(
-          l10n.defaultValues,
-          style: theme.textTheme.titleMedium
-              ?.copyWith(fontWeight: FontWeight.bold),
-        ),
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              children: [
-                if (isTablet)
-                  Row(
-                    children: [
-                      Expanded(child: _buildDefaultTypeDropdown(l10n)),
-                      const SizedBox(width: 16),
-                      Expanded(child: _buildDefaultDatePicker(context, l10n)),
-                    ],
-                  )
-                else ...[
-                  _buildDefaultTypeDropdown(l10n),
-                  const SizedBox(height: 16),
-                  _buildDefaultDatePicker(context, l10n),
-                ],
-                const SizedBox(height: 16),
-                if (isTablet)
-                  Row(
-                    children: [
-                      Expanded(
-                          child: _buildDefaultCategoryDropdown(
-                              l10n, categoriesAsync)),
-                      const SizedBox(width: 16),
-                      Expanded(
-                          child: _buildDefaultContactDropdown(
-                              l10n, contactsAsync)),
-                    ],
-                  )
-                else ...[
-                  _buildDefaultCategoryDropdown(l10n, categoriesAsync),
-                  const SizedBox(height: 16),
-                  _buildDefaultContactDropdown(l10n, contactsAsync),
-                ],
-                const SizedBox(height: 16),
-                _buildDefaultAccountDropdown(l10n, accountsAsync),
-              ],
+    return ValueListenableBuilder<BulkImportDefaultsData>(
+      valueListenable: _defaultsNotifier,
+      builder: (context, d, _) {
+        final categoriesAsync =
+            ref.watch(categoriesByTypeProvider(d.defaultType));
+        return Card(
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          child: ExpansionTile(
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            collapsedShape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            title: Text(
+              l10n.defaultValues,
+              style: theme.textTheme.titleMedium
+                  ?.copyWith(fontWeight: FontWeight.bold),
             ),
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  children: [
+                    if (isTablet)
+                      Row(
+                        children: [
+                          Expanded(child: _buildDefaultTypeDropdown(l10n, d)),
+                          const SizedBox(width: 16),
+                          Expanded(
+                              child: _buildDefaultDatePicker(context, l10n, d)),
+                        ],
+                      )
+                    else ...[
+                      _buildDefaultTypeDropdown(l10n, d),
+                      const SizedBox(height: 16),
+                      _buildDefaultDatePicker(context, l10n, d),
+                    ],
+                    const SizedBox(height: 16),
+                    if (isTablet)
+                      Row(
+                        children: [
+                          Expanded(
+                              child: _buildDefaultCategoryDropdown(
+                                  l10n, categoriesAsync, d)),
+                          const SizedBox(width: 16),
+                          Expanded(
+                              child: _buildDefaultContactDropdown(
+                                  l10n, contactsAsync, d)),
+                        ],
+                      )
+                    else ...[
+                      _buildDefaultCategoryDropdown(
+                          l10n, categoriesAsync, d),
+                      const SizedBox(height: 16),
+                      _buildDefaultContactDropdown(l10n, contactsAsync, d),
+                    ],
+                    const SizedBox(height: 16),
+                    _buildDefaultLinkDropdown(l10n, d),
+                    const SizedBox(height: 16),
+                    _buildDefaultAccountDropdown(l10n, accountsAsync, d),
+                  ],
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
-  Widget _buildDefaultTypeDropdown(AppLocalizations l10n) {
+  Widget _buildDefaultTypeDropdown(
+      AppLocalizations l10n, BulkImportDefaultsData d) {
     return DropdownButtonFormField<String>(
-      value: _defaultType,
+      value: d.defaultType,
       decoration: InputDecoration(
         labelText: l10n.type,
         border: const OutlineInputBorder(),
@@ -568,28 +935,77 @@ class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
         DropdownMenuItem(value: 'EXPENSE', child: Text(l10n.expense)),
         DropdownMenuItem(value: 'INCOME', child: Text(l10n.income)),
       ],
-      onChanged: (value) {
+      onChanged: (value) async {
         if (value != null) {
-          setState(() {
-            _defaultType = value;
-            _defaultCategory = null;
+          await _runWithPreviewBusy(() {
+            final v = _defaultsNotifier.value;
+            _defaultsNotifier.value = BulkImportDefaultsData(
+              defaultType: value,
+              defaultCategory: null,
+              defaultContact: v.defaultContact,
+              defaultAccount: v.defaultAccount,
+              defaultLinkIntent: v.defaultLinkIntent,
+              defaultDate: v.defaultDate,
+            );
           });
         }
       },
     );
   }
 
-  Widget _buildDefaultDatePicker(BuildContext context, AppLocalizations l10n) {
+  Widget _buildDefaultLinkDropdown(
+      AppLocalizations l10n, BulkImportDefaultsData d) {
+    return DropdownButtonFormField<String?>(
+      value: d.defaultLinkIntent,
+      isExpanded: true,
+      decoration: InputDecoration(
+        labelText: l10n.bulkImportDefaultLink,
+        border: const OutlineInputBorder(),
+      ),
+      items: [
+        DropdownMenuItem(value: null, child: Text(l10n.none)),
+        DropdownMenuItem(
+            value: 'RECEIVABLE', child: Text(l10n.receivable)),
+        DropdownMenuItem(value: 'PAYABLE', child: Text(l10n.payable)),
+      ],
+      onChanged: (value) async {
+        await _runWithPreviewBusy(() {
+          final v = _defaultsNotifier.value;
+          _defaultsNotifier.value = BulkImportDefaultsData(
+            defaultType: v.defaultType,
+            defaultCategory: v.defaultCategory,
+            defaultContact: v.defaultContact,
+            defaultAccount: v.defaultAccount,
+            defaultLinkIntent: value,
+            defaultDate: v.defaultDate,
+          );
+        });
+      },
+    );
+  }
+
+  Widget _buildDefaultDatePicker(
+      BuildContext context, AppLocalizations l10n, BulkImportDefaultsData d) {
     return InkWell(
       onTap: () async {
         final date = await showDatePicker(
           context: context,
-          initialDate: _defaultDate,
+          initialDate: d.defaultDate,
           firstDate: DateTime(2000),
           lastDate: DateTime(2100),
         );
         if (date != null) {
-          setState(() => _defaultDate = date);
+          await _runWithPreviewBusy(() {
+            final v = _defaultsNotifier.value;
+            _defaultsNotifier.value = BulkImportDefaultsData(
+              defaultType: v.defaultType,
+              defaultCategory: v.defaultCategory,
+              defaultContact: v.defaultContact,
+              defaultAccount: v.defaultAccount,
+              defaultLinkIntent: v.defaultLinkIntent,
+              defaultDate: date,
+            );
+          });
         }
       },
       child: InputDecorator(
@@ -597,15 +1013,17 @@ class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
           labelText: l10n.date,
           border: const OutlineInputBorder(),
         ),
-        child: Text(AppDateFormatter.formatDate(_defaultDate)),
+        child: Text(AppDateFormatter.formatDate(d.defaultDate)),
       ),
     );
   }
 
   Widget _buildDefaultCategoryDropdown(
-      AppLocalizations l10n, AsyncValue<List<Category>> categoriesAsync) {
+      AppLocalizations l10n,
+      AsyncValue<List<Category>> categoriesAsync,
+      BulkImportDefaultsData d) {
     return DropdownButtonFormField<Category?>(
-      value: _defaultCategory,
+      value: d.defaultCategory,
       isExpanded: true,
       decoration: InputDecoration(
         labelText: l10n.category,
@@ -646,14 +1064,28 @@ class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
           );
         }),
       ],
-      onChanged: (value) => setState(() => _defaultCategory = value),
+      onChanged: (value) async {
+        await _runWithPreviewBusy(() {
+          final v = _defaultsNotifier.value;
+          _defaultsNotifier.value = BulkImportDefaultsData(
+            defaultType: v.defaultType,
+            defaultCategory: value,
+            defaultContact: v.defaultContact,
+            defaultAccount: v.defaultAccount,
+            defaultLinkIntent: v.defaultLinkIntent,
+            defaultDate: v.defaultDate,
+          );
+        });
+      },
     );
   }
 
   Widget _buildDefaultContactDropdown(
-      AppLocalizations l10n, AsyncValue<List<Contact>> contactsAsync) {
+      AppLocalizations l10n,
+      AsyncValue<List<Contact>> contactsAsync,
+      BulkImportDefaultsData d) {
     return DropdownButtonFormField<Contact?>(
-      value: _defaultContact,
+      value: d.defaultContact,
       isExpanded: true,
       decoration: InputDecoration(
         labelText: l10n.contact,
@@ -692,14 +1124,28 @@ class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
           );
         }),
       ],
-      onChanged: (value) => setState(() => _defaultContact = value),
+      onChanged: (value) async {
+        await _runWithPreviewBusy(() {
+          final v = _defaultsNotifier.value;
+          _defaultsNotifier.value = BulkImportDefaultsData(
+            defaultType: v.defaultType,
+            defaultCategory: v.defaultCategory,
+            defaultContact: value,
+            defaultAccount: v.defaultAccount,
+            defaultLinkIntent: v.defaultLinkIntent,
+            defaultDate: v.defaultDate,
+          );
+        });
+      },
     );
   }
 
   Widget _buildDefaultAccountDropdown(
-      AppLocalizations l10n, AsyncValue<List<Account>> accountsAsync) {
+      AppLocalizations l10n,
+      AsyncValue<List<Account>> accountsAsync,
+      BulkImportDefaultsData d) {
     return DropdownButtonFormField<Account?>(
-      value: _defaultAccount,
+      value: d.defaultAccount,
       isExpanded: true,
       decoration: InputDecoration(
         labelText: l10n.account,
@@ -717,18 +1163,78 @@ class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
           );
         }),
       ],
-      onChanged: (value) => setState(() => _defaultAccount = value),
+      onChanged: (value) async {
+        await _runWithPreviewBusy(() {
+          final v = _defaultsNotifier.value;
+          _defaultsNotifier.value = BulkImportDefaultsData(
+            defaultType: v.defaultType,
+            defaultCategory: v.defaultCategory,
+            defaultContact: v.defaultContact,
+            defaultAccount: value,
+            defaultLinkIntent: v.defaultLinkIntent,
+            defaultDate: v.defaultDate,
+          );
+        });
+      },
+    );
+  }
+
+  Widget _buildPreviewPlaceholder(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    return Card(
+      margin: const EdgeInsets.all(16),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+        child: Row(
+          children: [
+            AppLoadingIndicator(
+              size: 32,
+              color: theme.colorScheme.primary,
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                l10n.bulkImportUpdatingPreview,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
   Widget _buildPreviewSection(BuildContext context) {
+    return _BulkImportPreviewDeferred(
+      listenable: _previewDataListenable,
+      delay: _kPreviewTableRevealDelay,
+      rawRowsVersion: _rawRows.length,
+      placeholderBuilder: _buildPreviewPlaceholder,
+      tableBuilder: (ctx) => ListenableBuilder(
+        listenable: _previewDataListenable,
+        builder: (context, _) {
+          return _buildPreviewTableCard(context);
+        },
+      ),
+    );
+  }
+
+  Widget _buildPreviewTableCard(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
+    final columnMapping = _columnMappingNotifier.value;
+    final def = _defaultsNotifier.value;
 
     final startIndex = _hasHeader ? 1 : 0;
     final rowsToPreview = _rawRows.skip(startIndex).toList();
     final totalDataRows = rowsToPreview.length;
-    final previewRowCount = min(_kMaxPreviewRows, totalDataRows);
+    final previewRowCount = _previewTableExpanded
+        ? totalDataRows
+        : min(_kPreviewRowsInitial, totalDataRows);
 
     return Card(
       margin: const EdgeInsets.all(16),
@@ -746,20 +1252,53 @@ class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
                   style: theme.textTheme.titleMedium
                       ?.copyWith(fontWeight: FontWeight.bold),
                 ),
-                Text(
-                  '${_selectedRowIndices.length} / $totalDataRows ${l10n.selected}',
-                  style: theme.textTheme.bodySmall,
+                ValueListenableBuilder<Set<int>>(
+                  valueListenable: _selectedRowIndicesNotifier,
+                  builder: (context, selected, _) {
+                    return Text(
+                      '${selected.length} / $totalDataRows ${l10n.selected}',
+                      style: theme.textTheme.bodySmall,
+                    );
+                  },
                 ),
               ],
             ),
           ),
-          if (totalDataRows > _kMaxPreviewRows)
+          if (!_previewTableExpanded && totalDataRows > _kPreviewRowsInitial)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
               child: Text(
-                l10n.bulkImportPreviewLimited(_kMaxPreviewRows, totalDataRows),
+                l10n.bulkImportPreviewShowingFirst(
+                  min(_kPreviewRowsInitial, totalDataRows),
+                  totalDataRows,
+                ),
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                ),
+              ),
+            ),
+          if (_previewTableExpanded && totalDataRows > _kPreviewRowsInitial)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+              child: Text(
+                l10n.bulkImportPreviewShowingAllRows(totalDataRows),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                ),
+              ),
+            ),
+          if (totalDataRows > _kPreviewRowsInitial)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: _isUiBusy ? null : () => _runPreviewExpandToggle(),
+                  child: Text(
+                    _previewTableExpanded
+                        ? l10n.bulkImportPreviewShowLess
+                        : l10n.bulkImportPreviewShowAll,
+                  ),
                 ),
               ),
             ),
@@ -767,23 +1306,15 @@ class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
             scrollDirection: Axis.horizontal,
             child: DataTable(
               columnSpacing: 24,
-              showCheckboxColumn: false, // Hide the default checkbox column
+              showCheckboxColumn: false,
               columns: [
                 DataColumn(
-                  label: Checkbox(
-                    value: rowsToPreview.isNotEmpty &&
-                        _selectedRowIndices.length == rowsToPreview.length,
-                    onChanged: (value) {
-                      setState(() {
-                        if (value == true) {
-                          _selectedRowIndices =
-                              Iterable<int>.generate(_rawRows.length).toSet();
-                          if (_hasHeader) _selectedRowIndices.remove(0);
-                        } else {
-                          _selectedRowIndices.clear();
-                        }
-                      });
-                    },
+                  label: _BulkImportSelectAllCheckbox(
+                    selectionListenable: _selectedRowIndicesNotifier,
+                    startIndex: startIndex,
+                    totalDataRows: totalDataRows,
+                    totalRawRowCount: _rawRows.length,
+                    hasHeader: _hasHeader,
                   ),
                 ),
                 ..._kMappingFields.map((field) {
@@ -794,64 +1325,83 @@ class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
               rows: List.generate(previewRowCount, (index) {
                 final rowIndex = index + startIndex;
                 final row = _rawRows[rowIndex];
-                final isSelected = _selectedRowIndices.contains(rowIndex);
 
                 return DataRow(
-                  selected: isSelected,
                   onSelectChanged: (value) {
-                    setState(() {
-                      if (value == true) {
-                        _selectedRowIndices.add(rowIndex);
-                      } else {
-                        _selectedRowIndices.remove(rowIndex);
-                      }
-                    });
+                    final s =
+                        Set<int>.from(_selectedRowIndicesNotifier.value);
+                    if (value == true) {
+                      s.add(rowIndex);
+                    } else {
+                      s.remove(rowIndex);
+                    }
+                    _selectedRowIndicesNotifier.value = s;
                   },
                   cells: [
                     DataCell(
-                      Checkbox(
-                        value: isSelected,
+                      _BulkImportRowCheckbox(
+                        rowIndex: rowIndex,
+                        selectionListenable: _selectedRowIndicesNotifier,
                         onChanged: (value) {
-                          setState(() {
-                            if (value == true) {
-                              _selectedRowIndices.add(rowIndex);
-                            } else {
-                              _selectedRowIndices.remove(rowIndex);
-                            }
-                          });
+                          final s = Set<int>.from(
+                              _selectedRowIndicesNotifier.value);
+                          if (value == true) {
+                            s.add(rowIndex);
+                          } else {
+                            s.remove(rowIndex);
+                          }
+                          _selectedRowIndicesNotifier.value = s;
                         },
                       ),
                     ),
                     ..._kMappingFields.map((field) {
-                      final colIndex = _columnMapping[field];
-                      String value = '';
-                      bool isDefault = false;
+                      final colIndex = columnMapping[field];
+                      String cellValue = '';
+                      bool isDefaultCell = false;
 
                       if (colIndex != null && colIndex < row.length) {
-                        value = row[colIndex].trim();
+                        cellValue = row[colIndex].trim();
                       }
 
-                      if (value.isEmpty) {
-                        isDefault = true;
+                      if (field == 'Link' && cellValue.isNotEmpty) {
+                        final p = _parseLinkCell(cellValue);
+                        if (p == 'RECEIVABLE') {
+                          cellValue = l10n.receivable;
+                        } else if (p == 'PAYABLE') {
+                          cellValue = l10n.payable;
+                        }
+                      }
+
+                      if (cellValue.isEmpty) {
+                        isDefaultCell = true;
                         if (field == 'Date') {
-                          value = AppDateFormatter.formatDate(_defaultDate);
+                          cellValue =
+                              AppDateFormatter.formatDate(def.defaultDate);
                         } else if (field == 'Amount') {
-                          value = '0.00';
+                          cellValue = '0.00';
                         } else if (field == 'Category') {
-                          value = _defaultCategory?.name ?? '-';
+                          cellValue = def.defaultCategory?.name ?? '-';
                         } else if (field == 'Type') {
-                          value = _defaultType;
+                          cellValue = def.defaultType;
                         } else if (field == 'Contact') {
-                          value = _defaultContact?.name ?? '-';
+                          cellValue = def.defaultContact?.name ?? '-';
                         } else if (field == 'Account') {
-                          value = _defaultAccount?.name ?? '-';
+                          cellValue = def.defaultAccount?.name ?? '-';
+                        } else if (field == 'Link') {
+                          if (def.defaultLinkIntent == null) {
+                            cellValue = l10n.none;
+                          } else {
+                            cellValue = def.defaultLinkIntent == 'RECEIVABLE'
+                                ? l10n.receivable
+                                : l10n.payable;
+                          }
                         }
                       }
 
                       return DataCell(
                         Text(
-                          value,
-                          style: isDefault
+                          cellValue,
+                          style: isDefaultCell
                               ? const TextStyle(
                                   fontStyle: FontStyle.italic,
                                   color: Colors.grey)
@@ -872,69 +1422,75 @@ class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
 
   Widget _buildImportAction(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, -5),
+    return ListenableBuilder(
+      listenable: _selectedRowIndicesNotifier,
+      builder: (context, _) {
+        final count = _selectedRowIndicesNotifier.value.length;
+        return Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 10,
+                offset: const Offset(0, -5),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: ElevatedButton(
-        onPressed: _isImporting ||
-                _isParsingContent ||
-                _selectedRowIndices.isEmpty
-            ? null
-            : _importTransactions,
-        style: ElevatedButton.styleFrom(
-          minimumSize: const Size.fromHeight(50),
-          backgroundColor: AppColors.transactionsSectionColor,
-          foregroundColor: Colors.white,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-        child: _isImporting
-            ? Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (_importTotal > 0) ...[
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(4),
-                      child: LinearProgressIndicator(
-                        value: _importCurrent / _importTotal,
-                        minHeight: 6,
-                        backgroundColor: Colors.white24,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      l10n.bulkImportProgress(
-                        _importTotal == 0
-                            ? 0
-                            : ((_importCurrent * 100) / _importTotal)
-                                .round()
-                                .clamp(0, 100),
-                        _importCurrent,
-                        _importTotal,
-                      ),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ] else
-                    const CircularProgressIndicator(color: Colors.white),
-                ],
-              )
-            : Text(
-                '${l10n.import} ${_selectedRowIndices.length} ${l10n.transactions}'),
-      ),
+          child: ElevatedButton(
+            onPressed: _isImporting ||
+                    _isParsingContent ||
+                    _isUiBusy ||
+                    count == 0
+                ? null
+                : _importTransactions,
+            style: ElevatedButton.styleFrom(
+              minimumSize: const Size.fromHeight(50),
+              backgroundColor: AppColors.transactionsSectionColor,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
+            ),
+            child: _isImporting
+                ? Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (_importTotal > 0) ...[
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(4),
+                          child: LinearProgressIndicator(
+                            value: _importCurrent / _importTotal,
+                            minHeight: 6,
+                            backgroundColor: Colors.white24,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          l10n.bulkImportProgress(
+                            _importTotal == 0
+                                ? 0
+                                : ((_importCurrent * 100) / _importTotal)
+                                    .round()
+                                    .clamp(0, 100),
+                            _importCurrent,
+                            _importTotal,
+                          ),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ] else
+                        const CircularProgressIndicator(color: Colors.white),
+                    ],
+                  )
+                : Text('${l10n.import} $count ${l10n.transactions}'),
+          ),
+        );
+      },
     );
   }
 
@@ -947,7 +1503,7 @@ class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
     final contactsRepo = ref.read(contactsRepositoryProvider);
     final accountsRepo = ref.read(accountsRepositoryProvider);
 
-    final sortedRows = _selectedRowIndices.toList()..sort();
+    final sortedRows = _selectedRowIndicesNotifier.value.toList()..sort();
     final totalRows = sortedRows.length;
 
     setState(() {
@@ -969,36 +1525,38 @@ class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
 
         final row = _rawRows[rowIndex];
 
-        final dateStr = _columnMapping['Date'] != null &&
-                _columnMapping['Date']! < row.length
-            ? row[_columnMapping['Date']!]
+        final map = _columnMappingNotifier.value;
+        final dateStr = map['Date'] != null && map['Date']! < row.length
+            ? row[map['Date']!]
             : '';
-        final amountStr = _columnMapping['Amount'] != null &&
-                _columnMapping['Amount']! < row.length
-            ? row[_columnMapping['Amount']!]
+        final amountStr = map['Amount'] != null && map['Amount']! < row.length
+            ? row[map['Amount']!]
             : '';
-        final description = _columnMapping['Description'] != null &&
-                _columnMapping['Description']! < row.length
-            ? row[_columnMapping['Description']!]
+        final description =
+            map['Description'] != null && map['Description']! < row.length
+                ? row[map['Description']!]
+                : '';
+        final categoryName =
+            map['Category'] != null && map['Category']! < row.length
+                ? row[map['Category']!]
+                : '';
+        final typeStr = map['Type'] != null && map['Type']! < row.length
+            ? row[map['Type']!]
             : '';
-        final categoryName = _columnMapping['Category'] != null &&
-                _columnMapping['Category']! < row.length
-            ? row[_columnMapping['Category']!]
-            : '';
-        final typeStr = _columnMapping['Type'] != null &&
-                _columnMapping['Type']! < row.length
-            ? row[_columnMapping['Type']!]
-            : '';
-        final contactName = _columnMapping['Contact'] != null &&
-                _columnMapping['Contact']! < row.length
-            ? row[_columnMapping['Contact']!]
-            : '';
-        final accountName = _columnMapping['Account'] != null &&
-                _columnMapping['Account']! < row.length
-            ? row[_columnMapping['Account']!]
+        final contactName =
+            map['Contact'] != null && map['Contact']! < row.length
+                ? row[map['Contact']!]
+                : '';
+        final accountName =
+            map['Account'] != null && map['Account']! < row.length
+                ? row[map['Account']!]
+                : '';
+        final linkCell = map['Link'] != null && map['Link']! < row.length
+            ? row[map['Link']!]
             : '';
 
-        DateTime date = _defaultDate;
+        final defaults = _defaultsNotifier.value;
+        DateTime date = defaults.defaultDate;
         if (dateStr.isNotEmpty) {
           try {
             date = DateFormat(_dateFormat).parse(dateStr);
@@ -1012,7 +1570,7 @@ class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
                   0.0;
         }
 
-        String type = _defaultType;
+        String type = defaults.defaultType;
         if (typeStr.isNotEmpty) {
           final t = typeStr.toUpperCase();
           if (t.contains('INC')) {
@@ -1022,7 +1580,7 @@ class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
           }
         }
 
-        String? categoryUuid = _defaultCategory?.uuid;
+        String? categoryUuid = defaults.defaultCategory?.uuid;
         if (categoryName.isNotEmpty) {
           final categories =
               await categoriesRepo.watchCategoriesByType(type).first;
@@ -1057,7 +1615,7 @@ class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
           }
         }
 
-        String? contactUuid = _defaultContact?.uuid;
+        String? contactUuid = defaults.defaultContact?.uuid;
         if (contactName.isNotEmpty) {
           final contacts = await contactsRepo.watchAllContacts().first;
           final match = contacts
@@ -1077,7 +1635,7 @@ class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
           }
         }
 
-        String? accountUuid = _defaultAccount?.uuid;
+        String? accountUuid = defaults.defaultAccount?.uuid;
         if (accountName.trim().isNotEmpty) {
           final key = accountName.trim().toLowerCase();
           Account? match;
@@ -1114,6 +1672,12 @@ class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
           }
         }
 
+        var paidRelationship =
+            _paidRelationshipForTypeAndLink(type, _effectiveRowLinkIntent(linkCell));
+        if (paidRelationship != null && contactUuid == null) {
+          paidRelationship = null;
+        }
+
         try {
           await service.createTransaction(
             amount: amount,
@@ -1123,6 +1687,7 @@ class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
             categoryUuid: categoryUuid,
             contactUuid: contactUuid,
             accountUuid: accountUuid,
+            paidRelationship: paidRelationship,
             isImport: true,
           );
           successCount++;
@@ -1152,5 +1717,163 @@ class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
         });
       }
     }
+  }
+}
+
+/// Checkbox for one preview row; listens to [selectionListenable] so the parent
+/// [DataTable] does not rebuild when only selection changes.
+class _BulkImportRowCheckbox extends StatefulWidget {
+  const _BulkImportRowCheckbox({
+    required this.rowIndex,
+    required this.selectionListenable,
+    required this.onChanged,
+  });
+
+  final int rowIndex;
+  final ValueNotifier<Set<int>> selectionListenable;
+  final ValueChanged<bool?> onChanged;
+
+  @override
+  State<_BulkImportRowCheckbox> createState() => _BulkImportRowCheckboxState();
+}
+
+class _BulkImportRowCheckboxState extends State<_BulkImportRowCheckbox> {
+  late bool _selected;
+
+  @override
+  void initState() {
+    super.initState();
+    _selected = widget.selectionListenable.value.contains(widget.rowIndex);
+    widget.selectionListenable.addListener(_onSelectionChanged);
+  }
+
+  @override
+  void didUpdateWidget(covariant _BulkImportRowCheckbox oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.selectionListenable != widget.selectionListenable) {
+      oldWidget.selectionListenable.removeListener(_onSelectionChanged);
+      widget.selectionListenable.addListener(_onSelectionChanged);
+    }
+    _syncFromNotifier();
+  }
+
+  void _onSelectionChanged() {
+    final now = widget.selectionListenable.value.contains(widget.rowIndex);
+    if (now != _selected) {
+      setState(() => _selected = now);
+    }
+  }
+
+  void _syncFromNotifier() {
+    final now = widget.selectionListenable.value.contains(widget.rowIndex);
+    if (now != _selected) {
+      setState(() => _selected = now);
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.selectionListenable.removeListener(_onSelectionChanged);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Checkbox(
+      value: _selected,
+      onChanged: widget.onChanged,
+    );
+  }
+}
+
+/// Header checkbox for select-all; only this widget rebuilds on selection churn.
+class _BulkImportSelectAllCheckbox extends StatefulWidget {
+  const _BulkImportSelectAllCheckbox({
+    required this.selectionListenable,
+    required this.startIndex,
+    required this.totalDataRows,
+    required this.totalRawRowCount,
+    required this.hasHeader,
+  });
+
+  final ValueNotifier<Set<int>> selectionListenable;
+  final int startIndex;
+  final int totalDataRows;
+  final int totalRawRowCount;
+  final bool hasHeader;
+
+  @override
+  State<_BulkImportSelectAllCheckbox> createState() =>
+      _BulkImportSelectAllCheckboxState();
+}
+
+class _BulkImportSelectAllCheckboxState extends State<_BulkImportSelectAllCheckbox> {
+  late bool _allSelected;
+
+  bool _computeAllSelected(Set<int> s) {
+    if (widget.totalDataRows == 0) {
+      return false;
+    }
+    for (var i = 0; i < widget.totalDataRows; i++) {
+      if (!s.contains(widget.startIndex + i)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _allSelected = _computeAllSelected(widget.selectionListenable.value);
+    widget.selectionListenable.addListener(_onSelectionChanged);
+  }
+
+  @override
+  void didUpdateWidget(covariant _BulkImportSelectAllCheckbox oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.selectionListenable != widget.selectionListenable) {
+      oldWidget.selectionListenable.removeListener(_onSelectionChanged);
+      widget.selectionListenable.addListener(_onSelectionChanged);
+    }
+    _syncFromNotifier();
+  }
+
+  void _onSelectionChanged() {
+    final now = _computeAllSelected(widget.selectionListenable.value);
+    if (now != _allSelected) {
+      setState(() => _allSelected = now);
+    }
+  }
+
+  void _syncFromNotifier() {
+    final now = _computeAllSelected(widget.selectionListenable.value);
+    if (now != _allSelected) {
+      setState(() => _allSelected = now);
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.selectionListenable.removeListener(_onSelectionChanged);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Checkbox(
+      value: widget.totalDataRows > 0 && _allSelected,
+      onChanged: (value) {
+        if (value == true) {
+          final s = Iterable<int>.generate(widget.totalRawRowCount).toSet();
+          if (widget.hasHeader) {
+            s.remove(0);
+          }
+          widget.selectionListenable.value = s;
+        } else {
+          widget.selectionListenable.value = {};
+        }
+      },
+    );
   }
 }

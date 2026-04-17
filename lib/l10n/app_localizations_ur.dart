@@ -1584,6 +1584,31 @@ class AppLocalizationsUr extends AppLocalizations {
   }
 
   @override
+  String bulkImportPreviewShowingFirst(int shown, int total) {
+    return 'کل $total میں سے پہلی $shown قطاروں کا پیش نظارہ';
+  }
+
+  @override
+  String get bulkImportPreviewShowAll => 'سب دکھائیں';
+
+  @override
+  String get bulkImportPreviewShowLess => 'کم دکھائیں';
+
+  @override
+  String bulkImportPreviewShowingAllRows(int total) {
+    return 'تمام $total قطاریں دکھائی جا رہی ہیں';
+  }
+
+  @override
+  String get bulkImportLinkColumn => 'قابل وصول / قابل ادائیگی';
+
+  @override
+  String get bulkImportDefaultLink => 'طے شدہ قابل وصول / قابل ادائیگی';
+
+  @override
+  String get bulkImportUpdatingPreview => 'پیش نظارہ اپ ڈیٹ ہو رہا ہے…';
+
+  @override
   String get scanReceipt => 'رسید اسکین کریں';
 
   @override

@@ -36,6 +36,7 @@ Map<String, int?> _emptyMapping() => {
       'Type': null,
       'Contact': null,
       'Account': null,
+      'Link': null,
     };
 
 Map<String, int?> _detectColumnMapping(List<String> headers) {
@@ -61,6 +62,13 @@ Map<String, int?> _detectColumnMapping(List<String> headers) {
       mapping['Type'] = i;
     } else if (header.contains('account')) {
       mapping['Account'] = i;
+    } else if (header == 'ar' ||
+        header == 'ap' ||
+        header.contains('receivable') ||
+        header.contains('payable') ||
+        header.contains(' ar/') ||
+        header.contains('ar /')) {
+      mapping['Link'] = i;
     } else if (header.contains('contact') ||
         header.contains('name') ||
         header.contains('person')) {

@@ -564,6 +564,24 @@
       "total": { "type": "int" }
     }
   },
+  "bulkImportPreviewShowingFirst": "کل {total} میں سے پہلی {shown} قطاروں کا پیش نظارہ",
+  "@bulkImportPreviewShowingFirst": {
+    "placeholders": {
+      "shown": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "bulkImportPreviewShowAll": "سب دکھائیں",
+  "bulkImportPreviewShowLess": "کم دکھائیں",
+  "bulkImportPreviewShowingAllRows": "تمام {total} قطاریں دکھائی جا رہی ہیں",
+  "@bulkImportPreviewShowingAllRows": {
+    "placeholders": {
+      "total": { "type": "int" }
+    }
+  },
+  "bulkImportLinkColumn": "قابل وصول / قابل ادائیگی",
+  "bulkImportDefaultLink": "طے شدہ قابل وصول / قابل ادائیگی",
+  "bulkImportUpdatingPreview": "پیش نظارہ اپ ڈیٹ ہو رہا ہے…",
   "scanReceipt": "رسید اسکین کریں",
   "voiceAdd": "آواز سے شامل کریں",
   "scan": "اسکین",

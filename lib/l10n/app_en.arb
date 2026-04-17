@@ -870,6 +870,24 @@
       "total": { "type": "int" }
     }
   },
+  "bulkImportPreviewShowingFirst": "Previewing first {shown} of {total} rows",
+  "@bulkImportPreviewShowingFirst": {
+    "placeholders": {
+      "shown": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "bulkImportPreviewShowAll": "Show all",
+  "bulkImportPreviewShowLess": "Show less",
+  "bulkImportPreviewShowingAllRows": "Showing all {total} rows",
+  "@bulkImportPreviewShowingAllRows": {
+    "placeholders": {
+      "total": { "type": "int" }
+    }
+  },
+  "bulkImportLinkColumn": "Receivable / Payable",
+  "bulkImportDefaultLink": "Default receivable / payable",
+  "bulkImportUpdatingPreview": "Updating preview…",
   "scanReceipt": "Scan Receipt",
   "voiceAdd": "Voice Add",
   "scan": "Scan",

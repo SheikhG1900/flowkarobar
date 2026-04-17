@@ -1574,6 +1574,31 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String bulkImportPreviewShowingFirst(int shown, int total) {
+    return 'Previewing first $shown of $total rows';
+  }
+
+  @override
+  String get bulkImportPreviewShowAll => 'Show all';
+
+  @override
+  String get bulkImportPreviewShowLess => 'Show less';
+
+  @override
+  String bulkImportPreviewShowingAllRows(int total) {
+    return 'Showing all $total rows';
+  }
+
+  @override
+  String get bulkImportLinkColumn => 'Receivable / Payable';
+
+  @override
+  String get bulkImportDefaultLink => 'Default receivable / payable';
+
+  @override
+  String get bulkImportUpdatingPreview => 'Updating preview…';
+
+  @override
   String get scanReceipt => 'Scan Receipt';
 
   @override

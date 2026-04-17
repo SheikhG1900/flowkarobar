@@ -564,6 +564,24 @@
       "total": { "type": "int" }
     }
   },
+  "bulkImportPreviewShowingFirst": "कुल {total} में से पहली {shown} पंक्तियों का पूर्वावलोकन",
+  "@bulkImportPreviewShowingFirst": {
+    "placeholders": {
+      "shown": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "bulkImportPreviewShowAll": "सभी दिखाएँ",
+  "bulkImportPreviewShowLess": "कम दिखाएँ",
+  "bulkImportPreviewShowingAllRows": "सभी {total} पंक्तियाँ दिख रही हैं",
+  "@bulkImportPreviewShowingAllRows": {
+    "placeholders": {
+      "total": { "type": "int" }
+    }
+  },
+  "bulkImportLinkColumn": "प्राप्य / देय",
+  "bulkImportDefaultLink": "डिफ़ॉल्ट प्राप्य / देय",
+  "bulkImportUpdatingPreview": "पूर्वावलोकन अपडेट हो रहा है…",
   "scanReceipt": "रसीद स्कैन करें",
   "voiceAdd": "आवाज से जोड़ें",
   "scan": "स्कैन",
