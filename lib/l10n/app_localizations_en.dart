@@ -21,6 +21,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get backgroundCloudClearStarted => 'Cloud clear started in background';
 
   @override
+  String get sourceLabel => 'Source';
+
+  @override
   String get targetLabel => 'Target';
 
   @override
@@ -2565,6 +2568,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bulkProcessInBulk => 'Process in bulk';
+
+  @override
+  String get cannotRestoreActiveCashbook =>
+      'You cannot restore data into the active cashbook. Please switch to another cashbook first to release the file lock.';
 
   @override
   String get uncategorized => 'Uncategorized';

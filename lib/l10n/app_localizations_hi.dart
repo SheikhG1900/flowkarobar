@@ -22,6 +22,9 @@ class AppLocalizationsHi extends AppLocalizations {
       'क्लाउड डेटा हटाना बैकग्राउंड में शुरू हुआ';
 
   @override
+  String get sourceLabel => 'स्रोत';
+
+  @override
   String get targetLabel => 'लक्ष्य';
 
   @override
@@ -2574,6 +2577,10 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get bulkProcessInBulk => 'बल्क में प्रोसेस करें';
+
+  @override
+  String get cannotRestoreActiveCashbook =>
+      'आप सक्रिय कैशबुक में डेटा बहाल नहीं कर सकते। फ़ाइल लॉक हटाने के लिए कृपया पहले दूसरी कैशबुक पर स्विच करें।';
 
   @override
   String get uncategorized => 'बिना श्रेणी';

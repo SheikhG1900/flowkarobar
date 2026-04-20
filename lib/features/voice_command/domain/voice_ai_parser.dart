@@ -181,34 +181,48 @@ class VoiceAiParser extends BaseTransactionAiParser {
     }
 
     final stopWords = [
-      "I",
-      "The",
-      "A",
-      "An",
-      "Maine",
-      "Ko",
-      "Ne",
-      "Se",
-      "Diye",
-      "Liye",
-      "Per",
-      "Par",
-      "Ka",
-      "Ki",
-      "Ke",
-      "Mila",
-      "Diya",
-      "Kharch",
-      "Spent",
-      "Gave",
-      "Received",
-      "Kiye",
-      "Hua",
-      "Kharcha",
-      "Pada",
-      "Ada",
-      "Kiya",
-      "Purchased"
+      "i",
+      "the",
+      "a",
+      "an",
+      "maine",
+      "mujhe",
+      "ko",
+      "by",
+      "ne",
+      "se",
+      "diye",
+      "liye",
+      "per",
+      "par",
+      "ka",
+      "ki",
+      "ke",
+      "mila",
+      "milay",
+      "diya",
+      "kharch",
+      "spent",
+      "spend",
+      "bought",
+      "buying",
+      "buy",
+      "got",
+      "get",
+      "gave",
+      "received",
+      "receive",
+      "receiving",
+      "kiye",
+      "hua",
+      "kharcha",
+      "pada",
+      "ada",
+      "kiya",
+      "purchased",
+      "pay",
+      "paid",
+      "paying",
     ];
 
     // Contact extraction.
@@ -221,7 +235,7 @@ class VoiceAiParser extends BaseTransactionAiParser {
       contact = subjectMatch.group(1);
     }
 
-    if (contact == null || stopWords.contains(contact)) {
+    if (contact == null || stopWords.contains(contact.toLowerCase())) {
       final objectContactRegex = RegExp(
         r'\b(?:to|from|by|with|ko|se|ne|gave|given)\s+([A-Z][a-z]+)\b',
         caseSensitive: false,
@@ -243,7 +257,7 @@ class VoiceAiParser extends BaseTransactionAiParser {
       }
     }
 
-    if (contact == null || stopWords.contains(contact)) {
+    if (contact == null || stopWords.contains(contact.toLowerCase())) {
       final trailingContactRegex = RegExp(
         r'([A-Z][a-z]+)\s+(?:|ke|kay|ka|ki)\b',
         caseSensitive: false,
@@ -294,8 +308,17 @@ class VoiceAiParser extends BaseTransactionAiParser {
     } else if ((tokens.contains('ko') &&
             tokens.containsAny(['diye', 'diya'])) ||
         (tokens.contains('ne') && tokens.containsAny(['liye', 'liya'])) ||
-        lowerText.startsWithAny(
-            ['give', 'gave', 'i give', 'i gave', 'i paid', 'i pay'])) {
+        lowerText.startsWithAny([
+          'give',
+          'gave',
+          'i give',
+          'i gave',
+          'i paid',
+          'i pay',
+          'paid',
+          'pay',
+          'paying'
+        ])) {
       relationship = 'PAID_FOR';
     } else if (lowerText
             .containsAny(['paid by', 'someone paid', 'for me', 'mere liye']) ||

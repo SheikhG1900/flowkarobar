@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'package:flowpaisa/features/backup/data/google_drive_service.dart';
 import 'package:flowpaisa/features/backup/domain/models/sync_manifest.dart';
+import 'package:flowpaisa/core/database/connection/native.dart' as native;
+import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -17,6 +19,12 @@ class BackupRepository {
     // `rawName` may contain an extension; Drift stores as '<name>.sqlite'.
     final logicalName =
         rawName.replaceAll(RegExp(r'\.(db|sqlite)$'), '');
+    
+    // Ensure data is flushed to the main file
+    if (!kIsWeb) {
+      await native.checkpointDatabase(logicalName);
+    }
+
     final file = File(p.join(dbFolder.path, '$logicalName.sqlite'));
     // ignore: avoid_print
     print(

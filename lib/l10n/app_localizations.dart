@@ -124,6 +124,12 @@ abstract class AppLocalizations {
   /// **'Cloud clear started in background'**
   String get backgroundCloudClearStarted;
 
+  /// No description provided for @sourceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Source'**
+  String get sourceLabel;
+
   /// No description provided for @targetLabel.
   ///
   /// In en, this message translates to:
@@ -4707,6 +4713,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Process in bulk'**
   String get bulkProcessInBulk;
+
+  /// No description provided for @cannotRestoreActiveCashbook.
+  ///
+  /// In en, this message translates to:
+  /// **'You cannot restore data into the active cashbook. Please switch to another cashbook first to release the file lock.'**
+  String get cannotRestoreActiveCashbook;
 
   /// No description provided for @uncategorized.
   ///

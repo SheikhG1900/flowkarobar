@@ -4,6 +4,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flowpaisa/features/cashbooks/domain/models/cashbook.dart';
 import 'package:flowpaisa/core/utils/native_share.dart';
 import 'package:flowpaisa/core/utils/date_formatter.dart';
+import 'package:flowpaisa/core/database/connection/native.dart' as native;
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import 'package:share_plus/share_plus.dart';
@@ -15,6 +16,12 @@ class LocalBackupService {
     final dbFolder = await getApplicationDocumentsDirectory();
     final logicalName =
         cashbook.dbPath.replaceAll(RegExp(r'\.(db|sqlite)$'), '');
+    
+    // Ensure all data is flushed to the main file before copying
+    if (!kIsWeb) {
+      await native.checkpointDatabase(logicalName);
+    }
+
     final dbFile = File(p.join(dbFolder.path, '$logicalName.sqlite'));
 
     // Debug logging to help diagnose path issues

@@ -4,6 +4,7 @@
   "backgroundActivityStarted": "سرگرمی پس منظر میں شروع ہوگئی",
   "backgroundBackupStarted": "بیک اپ پس منظر میں شروع ہو گیا",
   "backgroundCloudClearStarted": "کلاؤڈ ڈیٹا کی صفائی پس منظر میں شروع ہوگئی",
+  "sourceLabel": "ماخذ",
   "targetLabel": "ہدف",
   "cloudBackupsFor": "{name} کے لیے کلاؤڈ بیک اپ",
   "@cloudBackupsFor": {
@@ -893,6 +894,7 @@
   "bulkReceiveInBulk": "بلک میں وصول کریں",
   "bulkPayInBulk": "بلک میں ادائیگی کریں",
   "bulkProcessInBulk": "بلک میں پروسیس کریں",
+  "cannotRestoreActiveCashbook": "آپ فعال کیش بک میں ڈیٹا بحال نہیں کر سکتے۔ فائل لاک ختم کرنے کے لیے براہ کرم پہلے کسی دوسری کیش بک پر سوئچ کریں۔",
   "uncategorized": "بغیر زمرہ",
   "categoriesSummaryIncludeInTotal": "کل میں شامل کریں",
   "editSchedule": "شیڈول میں ترمیم کریں",

@@ -22,6 +22,9 @@ class AppLocalizationsUr extends AppLocalizations {
       'کلاؤڈ ڈیٹا کی صفائی پس منظر میں شروع ہوگئی';
 
   @override
+  String get sourceLabel => 'ماخذ';
+
+  @override
   String get targetLabel => 'ہدف';
 
   @override
@@ -2578,6 +2581,10 @@ class AppLocalizationsUr extends AppLocalizations {
 
   @override
   String get bulkProcessInBulk => 'بلک میں پروسیس کریں';
+
+  @override
+  String get cannotRestoreActiveCashbook =>
+      'آپ فعال کیش بک میں ڈیٹا بحال نہیں کر سکتے۔ فائل لاک ختم کرنے کے لیے براہ کرم پہلے کسی دوسری کیش بک پر سوئچ کریں۔';
 
   @override
   String get uncategorized => 'بغیر زمرہ';

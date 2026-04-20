@@ -4,6 +4,7 @@
   "backgroundActivityStarted": "Activity started in background",
   "backgroundBackupStarted": "Backup started in background",
   "backgroundCloudClearStarted": "Cloud clear started in background",
+  "sourceLabel": "Source",
   "targetLabel": "Target",
   "cloudBackupsFor": "Cloud Backups for {name}",
   "@cloudBackupsFor": {
@@ -1373,6 +1374,7 @@
   "bulkReceiveInBulk": "Receive in bulk",
   "bulkPayInBulk": "Pay in bulk",
   "bulkProcessInBulk": "Process in bulk",
+  "cannotRestoreActiveCashbook": "You cannot restore data into the active cashbook. Please switch to another cashbook first to release the file lock.",
   "uncategorized": "Uncategorized",
   "categoriesSummaryIncludeInTotal": "Include in total",
   "editSchedule": "Edit Schedule",

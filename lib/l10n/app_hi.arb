@@ -4,6 +4,7 @@
   "backgroundActivityStarted": "गतिविधि बैकग्राउंड में शुरू हुई",
   "backgroundBackupStarted": "बैकअप बैकग्राउंड में शुरू हुआ",
   "backgroundCloudClearStarted": "क्लाउड डेटा हटाना बैकग्राउंड में शुरू हुआ",
+  "sourceLabel": "स्रोत",
   "targetLabel": "लक्ष्य",
   "cloudBackupsFor": "{name} के लिए क्लाउड बैकअप",
   "@cloudBackupsFor": {
@@ -893,6 +894,7 @@
   "bulkReceiveInBulk": "बल्क में प्राप्त करें",
   "bulkPayInBulk": "बल्क में भुगतान करें",
   "bulkProcessInBulk": "बल्क में प्रोसेस करें",
+  "cannotRestoreActiveCashbook": "आप सक्रिय कैशबुक में डेटा बहाल नहीं कर सकते। फ़ाइल लॉक हटाने के लिए कृपया पहले दूसरी कैशबुक पर स्विच करें।",
   "uncategorized": "बिना श्रेणी",
   "categoriesSummaryIncludeInTotal": "कुल में शामिल करें",
   "editSchedule": "शेड्यूल संपादित करें",

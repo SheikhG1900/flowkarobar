@@ -357,7 +357,12 @@ class CashbooksScreen extends ConsumerWidget {
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
-        padding: const EdgeInsets.all(24),
+        padding: EdgeInsets.fromLTRB(
+          24,
+          24,
+          24,
+          MediaQuery.of(context).padding.bottom + 24,
+        ),
         decoration: BoxDecoration(
           color: theme.scaffoldBackgroundColor,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
@@ -499,19 +504,43 @@ class CashbooksScreen extends ConsumerWidget {
 
   void _showRestoreOptions(
       BuildContext context, WidgetRef ref, Cashbook cashbook) {
+    final activeId = ref.read(activeCashbookIdProvider);
+    final l10n = AppLocalizations.of(context)!;
+
+    if (cashbook.id == activeId) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text(l10n.information),
+          content: Text(l10n.cannotRestoreActiveCashbook),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(l10n.ok),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
     if (!PremiumGate.isPremium(ref)) {
       PremiumGate.showPremiumDialog(context);
       return;
     }
 
-    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
 
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
-        padding: const EdgeInsets.all(24),
+        padding: EdgeInsets.fromLTRB(
+          24,
+          24,
+          24,
+          MediaQuery.of(context).padding.bottom + 24,
+        ),
         decoration: BoxDecoration(
           color: theme.scaffoldBackgroundColor,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
@@ -523,6 +552,15 @@ class CashbooksScreen extends ConsumerWidget {
             Text(
               l10n.restoreOptionsTitle,
               style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '${l10n.targetLabel}: ${cashbook.name}',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.primary,
                 fontWeight: FontWeight.bold,
               ),
               textAlign: TextAlign.center,
@@ -634,7 +672,12 @@ class CashbooksScreen extends ConsumerWidget {
                         return ListView.builder(
                           controller: scrollController,
                           itemCount: state.availableCashbookIds.length,
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          padding: EdgeInsets.fromLTRB(
+                            16,
+                            0,
+                            16,
+                            MediaQuery.of(context).padding.bottom + 16,
+                          ),
                           itemBuilder: (context, index) {
                             final cloudId = state.availableCashbookIds[index];
                             final metadata = state.cashbookMetadata[cloudId];
@@ -776,7 +819,21 @@ class CashbooksScreen extends ConsumerWidget {
                   context: context,
                   builder: (dialogContext) => AlertDialog(
                     title: Text(l10n.restore),
-                    content: Text(l10n.restoreBackupMessage),
+                    content: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(l10n.restoreBackupMessage),
+                        const SizedBox(height: 12),
+                        Text(
+                          '${l10n.targetLabel}: ${targetCashbook.name}',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.primary,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.pop(dialogContext, false),
@@ -846,7 +903,12 @@ class CashbooksScreen extends ConsumerWidget {
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
-        padding: const EdgeInsets.all(24),
+        padding: EdgeInsets.fromLTRB(
+          24,
+          24,
+          24,
+          MediaQuery.of(context).padding.bottom + 24,
+        ),
         decoration: BoxDecoration(
           color: theme.scaffoldBackgroundColor,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
@@ -858,6 +920,15 @@ class CashbooksScreen extends ConsumerWidget {
             Text(
               l10n.backupOptionsTitle,
               style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '${l10n.sourceLabel}: ${cashbook.name}',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.primary,
                 fontWeight: FontWeight.bold,
               ),
               textAlign: TextAlign.center,
