@@ -518,6 +518,8 @@ class TransactionDetailsDialog extends ConsumerWidget {
                     ref,
                     linkedPayable,
                     item,
+                    transaction,
+                    currency,
                     contact: contact as Contact?,
                   ),
                 ),
@@ -542,6 +544,8 @@ class TransactionDetailsDialog extends ConsumerWidget {
                     ref,
                     linkedReceivable,
                     item,
+                    transaction,
+                    currency,
                     contact: contact as Contact?,
                   ),
                 ),
@@ -559,6 +563,10 @@ class TransactionDetailsDialog extends ConsumerWidget {
                 context,
                 theme,
                 l10n,
+                ref,
+                transaction,
+                currency,
+                item,
                 isReceivable: pr == 'PAID_FOR' || pr == 'WILL_RECEIVE',
                 contact: contact as Contact?,
               ),
@@ -572,6 +580,10 @@ class TransactionDetailsDialog extends ConsumerWidget {
                     context,
                     theme,
                     l10n,
+                    ref,
+                    transaction,
+                    currency,
+                    item,
                     isExpense: isExpense,
                     contact: contact as Contact?,
                   ),
@@ -602,20 +614,6 @@ class TransactionDetailsDialog extends ConsumerWidget {
               ),
               const SizedBox(height: 16),
             ],
-            if (contact != null && pr == null) ...[
-              _buildTxContactCard(
-                context,
-                theme,
-                l10n,
-                ref,
-                contact as Contact,
-                transaction,
-                category,
-                item,
-                currency,
-              ),
-              const SizedBox(height: 16),
-            ],
             if (category != null) ...[
               _buildTxCategoryCard(
                 context,
@@ -643,6 +641,33 @@ class TransactionDetailsDialog extends ConsumerWidget {
               body: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  if (contact != null) ...[
+                    _buildDetailRow(
+                      context,
+                      icon: Icons.person_outline,
+                      label: l10n.contact,
+                      value: contact.name,
+                      trailing: IconButton(
+                        icon: Icon(
+                          Icons.chevron_right,
+                          size: 20,
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ContactDetailsScreen(
+                                contactUuid: contact.uuid,
+                              ),
+                            ),
+                          );
+                        },
+                        constraints: const BoxConstraints(),
+                        padding: EdgeInsets.zero,
+                      ),
+                    ),
+                  ],
                   _buildDetailRow(
                     context,
                     icon: Icons.calendar_today_outlined,
@@ -854,10 +879,15 @@ class TransactionDetailsDialog extends ConsumerWidget {
   static Widget _buildTxRelationshipCard(
     BuildContext context,
     ThemeData theme,
-    AppLocalizations l10n, {
+    AppLocalizations l10n,
+    WidgetRef ref,
+    dynamic transaction,
+    dynamic currency,
+    TransactionWithDetails item, {
     required bool isReceivable,
     Contact? contact,
   }) {
+    final isDarkMode = theme.brightness == Brightness.dark;
     final color = isReceivable
         ? AppColors.receivableColor
         : AppColors.payableColor;
@@ -869,8 +899,8 @@ class TransactionDetailsDialog extends ConsumerWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            color.withValues(alpha: 0.15),
-            color.withValues(alpha: 0.06),
+            color.withValues(alpha: isDarkMode ? 0.15 : 0.08),
+            color.withValues(alpha: isDarkMode ? 0.06 : 0.03),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -879,7 +909,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
         border: Border.all(color: color.withValues(alpha: 0.4), width: 1),
         boxShadow: [
           BoxShadow(
-            color: color.withValues(alpha: 0.12),
+            color: color.withValues(alpha: isDarkMode ? 0.12 : 0.05),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -1001,6 +1031,43 @@ class TransactionDetailsDialog extends ConsumerWidget {
                 ),
               ),
             ),
+            if (contact.phone != null && transaction.isAutoGenerated != true) ...[
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    ShareHelper.shareTransaction(
+                      context,
+                      ref,
+                      transaction,
+                      contact,
+                      item.category,
+                      item.isLinkedEntryMarked,
+                      currencyOverride: currency,
+                      userProfileOverride: ref.read(userProfileProvider),
+                      transactionServiceOverride:
+                          ref.read(transactionServiceProvider),
+                      whatsAppServiceOverride:
+                          ref.read(whatsAppServiceProvider),
+                      templateServiceOverride:
+                          ref.read(messageTemplateServiceProvider),
+                      languageOverride: getCurrentLanguageCode(ref),
+                    );
+                  },
+                  icon: const Icon(Icons.chat, color: Color(0xFF25D366)),
+                  label: Text(l10n.sendMessage),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: const Color(0xFF25D366),
+                    side: const BorderSide(color: Color(0xFF25D366)),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ],
         ],
       ),
@@ -1010,10 +1077,15 @@ class TransactionDetailsDialog extends ConsumerWidget {
   static Widget _buildTxProcessedCard(
     BuildContext context,
     ThemeData theme,
-    AppLocalizations l10n, {
+    AppLocalizations l10n,
+    WidgetRef ref,
+    dynamic transaction,
+    dynamic currency,
+    TransactionWithDetails item, {
     required bool isExpense,
     Contact? contact,
   }) {
+    final isDarkMode = theme.brightness == Brightness.dark;
     final color = theme.colorScheme.primary;
     return Container(
       width: double.infinity,
@@ -1021,8 +1093,8 @@ class TransactionDetailsDialog extends ConsumerWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            color.withValues(alpha: 0.15),
-            color.withValues(alpha: 0.06),
+            color.withValues(alpha: isDarkMode ? 0.15 : 0.08),
+            color.withValues(alpha: isDarkMode ? 0.06 : 0.03),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -1031,7 +1103,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
         border: Border.all(color: color.withValues(alpha: 0.4), width: 1),
         boxShadow: [
           BoxShadow(
-            color: color.withValues(alpha: 0.12),
+            color: color.withValues(alpha: isDarkMode ? 0.12 : 0.05),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -1170,6 +1242,43 @@ class TransactionDetailsDialog extends ConsumerWidget {
                 ),
               ),
             ),
+            if (contact.phone != null && transaction.isAutoGenerated != true) ...[
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    ShareHelper.shareTransaction(
+                      context,
+                      ref,
+                      transaction,
+                      contact,
+                      item.category,
+                      item.isLinkedEntryMarked,
+                      currencyOverride: currency,
+                      userProfileOverride: ref.read(userProfileProvider),
+                      transactionServiceOverride:
+                          ref.read(transactionServiceProvider),
+                      whatsAppServiceOverride:
+                          ref.read(whatsAppServiceProvider),
+                      templateServiceOverride:
+                          ref.read(messageTemplateServiceProvider),
+                      languageOverride: getCurrentLanguageCode(ref),
+                    );
+                  },
+                  icon: const Icon(Icons.chat, color: Color(0xFF25D366)),
+                  label: Text(l10n.sendMessage),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: const Color(0xFF25D366),
+                    side: const BorderSide(color: Color(0xFF25D366)),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ],
         ],
       ),
@@ -1187,168 +1296,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
     TransactionWithDetails item,
     dynamic currency,
   ) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: theme.colorScheme.shadow.withValues(alpha: 0.06),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  Icons.person,
-                  size: 24,
-                  color: theme.colorScheme.onPrimaryContainer,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Text(
-                l10n.contact,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: theme.colorScheme.onSurface,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ContactDetailsScreen(
-                      contactUuid: contact.uuid,
-                    ),
-                  ),
-                );
-              },
-              borderRadius: BorderRadius.circular(12),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        gradient: AppColors.getContactGradient(contact.name),
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.getContactColor(contact.name)
-                                .withValues(alpha: 0.3),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        contact.name.isNotEmpty
-                            ? contact.name[0].toUpperCase()
-                            : '?',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            contact.name,
-                            style: theme.textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          if (contact.phone != null) ...[
-                            const SizedBox(height: 2),
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.phone,
-                                  size: 14,
-                                  color: theme.colorScheme.onSurfaceVariant,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  contact.phone!,
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: theme.colorScheme.onSurfaceVariant,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                    if (contact.phone != null &&
-                        transaction.isAutoGenerated != true)
-                      IconButton(
-                        icon:
-                            const Icon(Icons.chat, color: Color(0xFF25D366)),
-                        onPressed: () {
-                          ShareHelper.shareTransaction(
-                            context,
-                            ref,
-                            transaction,
-                            contact,
-                            category,
-                            item.isLinkedEntryMarked,
-                            currencyOverride: currency,
-                            userProfileOverride: ref.read(userProfileProvider),
-                            transactionServiceOverride:
-                                ref.read(transactionServiceProvider),
-                            whatsAppServiceOverride:
-                                ref.read(whatsAppServiceProvider),
-                            templateServiceOverride:
-                                ref.read(messageTemplateServiceProvider),
-                            languageOverride: getCurrentLanguageCode(ref),
-                          );
-                        },
-                        tooltip: l10n.sendMessage,
-                      ),
-                    Icon(
-                      Icons.chevron_right,
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
+    return const SizedBox.shrink();
   }
 
   static Widget _buildTxCategoryCard(
@@ -1739,11 +1687,14 @@ class TransactionDetailsDialog extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
     dynamic payable,
-    TransactionWithDetails item, {
+    TransactionWithDetails item,
+    dynamic transaction,
+    dynamic currency, {
     Contact? contact,
   }) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
     final isPending = payable.status == 'PENDING';
     const color = AppColors.payableColor;
 
@@ -1753,8 +1704,8 @@ class TransactionDetailsDialog extends ConsumerWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            color.withValues(alpha: 0.15),
-            color.withValues(alpha: 0.06),
+            color.withValues(alpha: isDarkMode ? 0.15 : 0.08),
+            color.withValues(alpha: isDarkMode ? 0.06 : 0.03),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -1763,7 +1714,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
         border: Border.all(color: color.withValues(alpha: 0.4), width: 1),
         boxShadow: [
           BoxShadow(
-            color: color.withValues(alpha: 0.12),
+            color: color.withValues(alpha: isDarkMode ? 0.12 : 0.05),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -1876,6 +1827,43 @@ class TransactionDetailsDialog extends ConsumerWidget {
                 ),
               ),
             ),
+            if (contact.phone != null && transaction.isAutoGenerated != true) ...[
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    ShareHelper.shareTransaction(
+                      context,
+                      ref,
+                      transaction,
+                      contact,
+                      item.category,
+                      item.isLinkedEntryMarked,
+                      currencyOverride: currency,
+                      userProfileOverride: ref.read(userProfileProvider),
+                      transactionServiceOverride:
+                          ref.read(transactionServiceProvider),
+                      whatsAppServiceOverride:
+                          ref.read(whatsAppServiceProvider),
+                      templateServiceOverride:
+                          ref.read(messageTemplateServiceProvider),
+                      languageOverride: getCurrentLanguageCode(ref),
+                    );
+                  },
+                  icon: const Icon(Icons.chat, color: Color(0xFF25D366)),
+                  label: Text(l10n.sendMessage),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: const Color(0xFF25D366),
+                    side: const BorderSide(color: Color(0xFF25D366)),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ],
           if (payable.dueDate != null) ...[
             const SizedBox(height: 8),
@@ -1934,11 +1922,14 @@ class TransactionDetailsDialog extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
     dynamic receivable,
-    TransactionWithDetails item, {
+    TransactionWithDetails item,
+    dynamic transaction,
+    dynamic currency, {
     Contact? contact,
   }) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
     final isPending = receivable.status == 'PENDING';
     const color = AppColors.receivableColor;
 
@@ -1948,8 +1939,8 @@ class TransactionDetailsDialog extends ConsumerWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            color.withValues(alpha: 0.15),
-            color.withValues(alpha: 0.06),
+            color.withValues(alpha: isDarkMode ? 0.15 : 0.08),
+            color.withValues(alpha: isDarkMode ? 0.06 : 0.03),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -1958,7 +1949,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
         border: Border.all(color: color.withValues(alpha: 0.4), width: 1),
         boxShadow: [
           BoxShadow(
-            color: color.withValues(alpha: 0.12),
+            color: color.withValues(alpha: isDarkMode ? 0.12 : 0.05),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -2071,6 +2062,43 @@ class TransactionDetailsDialog extends ConsumerWidget {
                 ),
               ),
             ),
+            if (contact.phone != null && transaction.isAutoGenerated != true) ...[
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    ShareHelper.shareTransaction(
+                      context,
+                      ref,
+                      transaction,
+                      contact,
+                      item.category,
+                      item.isLinkedEntryMarked,
+                      currencyOverride: currency,
+                      userProfileOverride: ref.read(userProfileProvider),
+                      transactionServiceOverride:
+                          ref.read(transactionServiceProvider),
+                      whatsAppServiceOverride:
+                          ref.read(whatsAppServiceProvider),
+                      templateServiceOverride:
+                          ref.read(messageTemplateServiceProvider),
+                      languageOverride: getCurrentLanguageCode(ref),
+                    );
+                  },
+                  icon: const Icon(Icons.chat, color: Color(0xFF25D366)),
+                  label: Text(l10n.sendMessage),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: const Color(0xFF25D366),
+                    side: const BorderSide(color: Color(0xFF25D366)),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ],
           if (receivable.dueDate != null) ...[
             const SizedBox(height: 8),
