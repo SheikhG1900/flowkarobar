@@ -1661,6 +1661,10 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                                   ? l10n.budgetRemainingOf(remStr, budStr)
                                   : l10n.budgetOverBy(remStr);
 
+                              final monthStr = AppDateFormatter.formatMonth(
+                                  snap.period.startDate,
+                                  context: context);
+
                               return Padding(
                                 padding: const EdgeInsets.only(top: 12),
                                 child: Column(
@@ -1669,12 +1673,12 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                                   children: [
                                     DualAmountProgressBar(
                                       leftLabel: isExpense
-                                          ? l10n.budgetBarUsed
-                                          : l10n.budgetBarProgress,
+                                          ? '${l10n.budgetBarUsed} ($monthStr)'
+                                          : '${l10n.budgetBarProgress} ($monthStr)',
                                       leftAmount: snap.netAmount > 0
                                           ? snap.netAmount
                                           : 0.0,
-                                      rightLabel: l10n.remaining,
+                                      rightLabel: '${l10n.remaining} ($monthStr)',
                                       rightAmount: snap.remainingOrGap > 0
                                           ? snap.remainingOrGap
                                           : 0.0,

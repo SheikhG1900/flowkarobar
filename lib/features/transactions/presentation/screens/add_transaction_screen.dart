@@ -14,6 +14,7 @@ import 'package:flowpaisa/features/whatsapp/presentation/providers/whatsapp_prov
 import 'package:flowpaisa/core/utils/share_helper.dart';
 import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
+import 'package:flowpaisa/core/utils/date_formatter.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transaction_service_provider.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
 // import 'package:flowpaisa/features/transactions/presentation/widgets/transaction_details_dialog.dart';
@@ -2098,6 +2099,9 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                               final sub = rem >= 0
                                   ? l10n.budgetRemainingOf(remStr, budStr)
                                   : l10n.budgetOverBy(remStr);
+                              final monthStr = AppDateFormatter.formatMonth(
+                                  snap.period.startDate,
+                                  context: context);
                               return Padding(
                                 padding: const EdgeInsets.only(top: 10),
                                 child: Column(
@@ -2106,12 +2110,12 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                                   children: [
                                     DualAmountProgressBar(
                                       leftLabel: _selectedType == 'EXPENSE'
-                                          ? l10n.budgetBarUsed
-                                          : l10n.budgetBarProgress,
+                                          ? '${l10n.budgetBarUsed} ($monthStr)'
+                                          : '${l10n.budgetBarProgress} ($monthStr)',
                                       leftAmount: snap.netAmount > 0
                                           ? snap.netAmount
                                           : 0.0,
-                                      rightLabel: l10n.remaining,
+                                      rightLabel: '${l10n.remaining} ($monthStr)',
                                       rightAmount: snap.remainingOrGap > 0
                                           ? snap.remainingOrGap
                                           : 0.0,

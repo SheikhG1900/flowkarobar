@@ -382,6 +382,11 @@ class _EditSplitTransactionScreenState
                                     final sub = rem >= 0
                                         ? l10n.budgetRemainingOf(remStr, budStr)
                                         : l10n.budgetOverBy(remStr);
+
+                                    final monthStr = AppDateFormatter.formatMonth(
+                                        snap.period.startDate,
+                                        context: context);
+
                                     return Padding(
                                       padding: const EdgeInsets.only(bottom: 8),
                                       child: Column(
@@ -389,11 +394,13 @@ class _EditSplitTransactionScreenState
                                             CrossAxisAlignment.stretch,
                                         children: [
                                           DualAmountProgressBar(
-                                            leftLabel: l10n.budgetBarUsed,
+                                            leftLabel:
+                                                '${l10n.budgetBarUsed} ($monthStr)',
                                             leftAmount: snap.netAmount > 0
                                                 ? snap.netAmount
                                                 : 0.0,
-                                            rightLabel: l10n.remaining,
+                                            rightLabel:
+                                                '${l10n.remaining} ($monthStr)',
                                             rightAmount: snap.remainingOrGap > 0
                                                 ? snap.remainingOrGap
                                                 : 0.0,
