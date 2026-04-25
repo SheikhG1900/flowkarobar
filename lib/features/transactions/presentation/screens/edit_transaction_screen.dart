@@ -1627,9 +1627,10 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
 
                           return hintAsync.when(
                             data: (snap) {
-                              if (snap == null || !snap.hasBudget) {
+                              if (snap == null) {
                                 return const SizedBox.shrink();
                               }
+
                               final isPremium =
                                   ref.watch(premiumProvider).isPremium;
                               final isBudgetLocked = !isPremium &&
@@ -1640,12 +1641,71 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                                 return const SizedBox.shrink();
                               }
 
+                              // If no budget is set, only show for premium users
+                              if (!snap.hasBudget && !isPremium) {
+                                return const SizedBox.shrink();
+                              }
+
+                              // If no budget and no consumption, hide even for premium
+                              if (!snap.hasBudget && snap.netAmount <= 0) {
+                                return const SizedBox.shrink();
+                              }
+
                               final catColor = _selectedCategory?.color != null
                                   ? Color(int.parse(_selectedCategory!.color!
                                       .replaceAll('#', '0xFF')))
                                   : (isExpense
                                       ? AppColors.expenseColor
                                       : AppColors.incomeColor);
+
+                              final monthStr = AppDateFormatter.formatMonth(
+                                  snap.period.startDate,
+                                  context: context);
+
+                              if (!snap.hasBudget) {
+                                // Premium feature: show consumption even without budget
+                                final consumedStr =
+                                    AmountFormatter.formatWithCurrency(
+                                  snap.netAmount,
+                                  sym,
+                                  dec,
+                                );
+                                return Padding(
+                                  padding: const EdgeInsets.only(top: 12),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Icon(
+                                            isExpense
+                                                ? Icons.shopping_cart_outlined
+                                                : Icons.account_balance_wallet_outlined,
+                                            size: 14,
+                                            color: catColor,
+                                          ),
+                                          const SizedBox(width: 6),
+                                          Expanded(
+                                            child: Text(
+                                              isExpense
+                                                  ? '$consumedStr ${l10n.budgetBarUsed.toLowerCase()} ($monthStr)'
+                                                  : '$consumedStr ${l10n.budgetBarProgress.toLowerCase()} ($monthStr)',
+                                              style: theme.textTheme.bodySmall
+                                                  ?.copyWith(
+                                                color: theme.colorScheme
+                                                    .onSurfaceVariant,
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }
+
                               final rem = snap.remainingOrGap;
                               final remStr = AmountFormatter.formatWithCurrency(
                                 rem.abs(),
@@ -1660,10 +1720,6 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                               final sub = rem >= 0
                                   ? l10n.budgetRemainingOf(remStr, budStr)
                                   : l10n.budgetOverBy(remStr);
-
-                              final monthStr = AppDateFormatter.formatMonth(
-                                  snap.period.startDate,
-                                  context: context);
 
                               return Padding(
                                 padding: const EdgeInsets.only(top: 12),
@@ -1771,6 +1827,56 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                                   : theme.colorScheme.onSurfaceVariant,
                             ),
                           ),
+                          if (_selectedContact != null &&
+                              ref.watch(premiumProvider).isPremium)
+                            Consumer(
+                              builder: (context, ref, _) {
+                                final statsAsync = ref.watch(
+                                    contactStatisticsProvider(
+                                        _selectedContact!.uuid));
+                                return statsAsync.when(
+                                  data: (stats) {
+                                    final balance = stats.netBalance;
+                                    if (balance == 0)
+                                      return const SizedBox.shrink();
+                                    final isReceivable = balance > 0;
+                                    final color = isReceivable
+                                        ? AppColors.receivableColor
+                                        : AppColors.payableColor;
+                                    final sym =
+                                        ref.watch(currencySymbolProvider);
+                                    final dec = ref.watch(
+                                        currencyDecimalPlacesProvider);
+                                    return Padding(
+                                      padding: const EdgeInsets.only(top: 4),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            isReceivable
+                                                ? Icons.call_received
+                                                : Icons.call_made,
+                                            size: 12,
+                                            color: color,
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            '${isReceivable ? l10n.receivable : l10n.payable}: ${AmountFormatter.formatWithCurrency(balance.abs(), sym, dec, isRtl: Directionality.of(context) == TextDirection.rtl)}',
+                                            style: theme.textTheme.bodySmall
+                                                ?.copyWith(
+                                              color: color,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  },
+                                  loading: () => const SizedBox.shrink(),
+                                  error: (_, __) => const SizedBox.shrink(),
+                                );
+                              },
+                            ),
                         ],
                       ),
                       if (_selectedContact != null) ...[

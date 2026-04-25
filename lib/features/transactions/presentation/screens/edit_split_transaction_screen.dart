@@ -351,10 +351,12 @@ class _EditSplitTransactionScreenState
                                 ),
                                 hintAsync.when(
                                   data: (snap) {
-                                    if (snap == null || !snap.hasBudget) {
+                                    if (snap == null) {
                                       return const SizedBox.shrink();
                                     }
-                                    final isPremium = ref.watch(premiumProvider).isPremium;
+
+                                    final isPremium =
+                                        ref.watch(premiumProvider).isPremium;
                                     final isBudgetLocked = !isPremium &&
                                         (_selectedCategory!.budgetSeq ?? 0) >
                                             PremiumGate.categoryBudgetTotalLimit;
@@ -363,9 +365,73 @@ class _EditSplitTransactionScreenState
                                       return const SizedBox.shrink();
                                     }
 
+                                    // If no budget is set, only show for premium users
+                                    if (!snap.hasBudget && !isPremium) {
+                                      return const SizedBox.shrink();
+                                    }
+
+                                    // If no budget and no consumption, hide even for premium
+                                    if (!snap.hasBudget && snap.netAmount <= 0) {
+                                      return const SizedBox.shrink();
+                                    }
+
                                     final catColor = Color(int.parse(
                                         _selectedCategory!.color!
                                             .replaceAll('#', '0xFF')));
+
+                                    final monthStr = AppDateFormatter.formatMonth(
+                                        snap.period.startDate,
+                                        context: context);
+
+                                    if (!snap.hasBudget) {
+                                      // Premium feature: show consumption even without budget
+                                      final consumedStr =
+                                          AmountFormatter.formatWithCurrency(
+                                        snap.netAmount,
+                                        sym,
+                                        dec,
+                                      );
+                                      return Padding(
+                                        padding:
+                                            const EdgeInsets.only(bottom: 8),
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Row(
+                                              children: [
+                                                Icon(
+                                                  isExpense
+                                                      ? Icons
+                                                          .shopping_cart_outlined
+                                                      : Icons
+                                                          .account_balance_wallet_outlined,
+                                                  size: 14,
+                                                  color: catColor,
+                                                ),
+                                                const SizedBox(width: 6),
+                                                Expanded(
+                                                  child: Text(
+                                                    isExpense
+                                                        ? '$consumedStr ${l10n.budgetBarUsed.toLowerCase()} ($monthStr)'
+                                                        : '$consumedStr ${l10n.budgetBarProgress.toLowerCase()} ($monthStr)',
+                                                    style: theme
+                                                        .textTheme.bodySmall
+                                                        ?.copyWith(
+                                                      color: theme.colorScheme
+                                                          .onSurfaceVariant,
+                                                      fontWeight:
+                                                          FontWeight.w500,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    }
+
                                     final rem = snap.remainingOrGap;
                                     final remStr =
                                         AmountFormatter.formatWithCurrency(
@@ -382,11 +448,6 @@ class _EditSplitTransactionScreenState
                                     final sub = rem >= 0
                                         ? l10n.budgetRemainingOf(remStr, budStr)
                                         : l10n.budgetOverBy(remStr);
-
-                                    final monthStr = AppDateFormatter.formatMonth(
-                                        snap.period.startDate,
-                                        context: context);
-
                                     return Padding(
                                       padding: const EdgeInsets.only(bottom: 8),
                                       child: Column(
@@ -760,6 +821,58 @@ class _EditSplitTransactionScreenState
                               ],
                             ],
                           ),
+                          if (!row.isUser &&
+                              row.contact != null &&
+                              ref.watch(premiumProvider).isPremium)
+                            Consumer(
+                              builder: (context, ref, _) {
+                                final statsAsync = ref.watch(
+                                    contactStatisticsProvider(
+                                        row.contact!.uuid));
+                                return statsAsync.when(
+                                  data: (stats) {
+                                    final balance = stats.netBalance;
+                                    if (balance == 0)
+                                      return const SizedBox.shrink();
+                                    final isReceivable = balance > 0;
+                                    final color = isReceivable
+                                        ? AppColors.receivableColor
+                                        : AppColors.payableColor;
+                                    final sym =
+                                        ref.watch(currencySymbolProvider);
+                                    final dec = ref.watch(
+                                        currencyDecimalPlacesProvider);
+                                    return Padding(
+                                      padding: const EdgeInsets.only(top: 2),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            isReceivable
+                                                ? Icons.call_received
+                                                : Icons.call_made,
+                                            size: 10,
+                                            color: color,
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            '${isReceivable ? l10n.receivable : l10n.payable}: ${AmountFormatter.formatWithCurrency(balance.abs(), sym, dec, isRtl: Directionality.of(context) == TextDirection.rtl)}',
+                                            style: theme.textTheme.labelSmall
+                                                ?.copyWith(
+                                              color: color,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 10,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  },
+                                  loading: () => const SizedBox.shrink(),
+                                  error: (_, __) => const SizedBox.shrink(),
+                                );
+                              },
+                            ),
                         ],
                       ),
                     ),

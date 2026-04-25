@@ -44,9 +44,15 @@ class AmountFormatter {
 
   /// Get formatted text with currency symbol
   static String formatWithCurrency(
-      double amount, String currency, int decimalPlaces) {
+      double amount, String currency, int decimalPlaces,
+      {bool isRtl = false}) {
     final isNegative = amount < 0;
     final formattedAmount = formatAmount(amount.abs(), decimalPlaces);
+    if (isRtl) {
+      return isNegative
+          ? '($formattedAmount $currency)'
+          : '$formattedAmount $currency';
+    }
     return isNegative
         ? '($currency$formattedAmount)'
         : '$currency$formattedAmount';
