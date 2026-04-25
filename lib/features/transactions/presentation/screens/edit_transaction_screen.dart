@@ -31,7 +31,6 @@ import 'package:flowpaisa/shared/widgets/dual_amount_progress_bar.dart';
 import 'package:flowpaisa/features/transactions/presentation/widgets/schedule_selection_drawer.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/schedule_service_provider.dart';
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
-import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/features/premium/domain/premium_provider.dart';
 import 'package:flowpaisa/features/transactions/presentation/screens/edit_split_transaction_screen.dart';
 import 'package:flowpaisa/features/transactions/presentation/widgets/transaction_scenario_picker.dart';
@@ -2192,17 +2191,76 @@ class _SplitShareCardState extends State<_SplitShareCard> {
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: Text(
-                  widget.share.isUser
-                      ? widget.l10n.me
-                      : (widget.share.contact?.name ?? ''),
-                  style: TextStyle(
-                    fontWeight: widget.share.isUser
-                        ? FontWeight.bold
-                        : FontWeight.normal,
-                    color:
-                        widget.share.isUser ? theme.colorScheme.primary : null,
-                  ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      widget.share.isUser
+                          ? widget.l10n.me
+                          : (widget.share.contact?.name ?? ''),
+                      style: TextStyle(
+                        fontWeight: widget.share.isUser
+                            ? FontWeight.bold
+                            : FontWeight.normal,
+                        color: widget.share.isUser
+                            ? theme.colorScheme.primary
+                            : null,
+                      ),
+                    ),
+                    if (!widget.share.isUser &&
+                        widget.share.contact != null)
+                      Consumer(
+                        builder: (context, ref, _) {
+                          final isPremium = ref.watch(premiumProvider).isPremium;
+                          if (!isPremium) return const SizedBox.shrink();
+
+                          final statsAsync = ref.watch(
+                              contactStatisticsProvider(
+                                  widget.share.contact!.uuid));
+                          return statsAsync.when(
+                            data: (stats) {
+                              final balance = stats.netBalance;
+                              if (balance == 0) return const SizedBox.shrink();
+                              final isReceivable = balance > 0;
+                              final color = isReceivable
+                                  ? AppColors.receivableColor
+                                  : AppColors.payableColor;
+                              final sym = ref.watch(currencySymbolProvider);
+                              final dec =
+                                  ref.watch(currencyDecimalPlacesProvider);
+                              return Padding(
+                                padding: const EdgeInsets.only(top: 2),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      isReceivable
+                                          ? Icons.call_received
+                                          : Icons.call_made,
+                                      size: 10,
+                                      color: color,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      '${isReceivable ? widget.l10n.receivable : widget.l10n.payable}: ${AmountFormatter.formatWithCurrency(balance.abs(), sym, dec, isRtl: Directionality.of(context) == TextDirection.rtl)}',
+                                      style:
+                                          theme.textTheme.labelSmall?.copyWith(
+                                        color: color,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 10,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                            loading: () => const SizedBox.shrink(),
+                            error: (_, __) => const SizedBox.shrink(),
+                          );
+                        },
+                      ),
+                  ],
                 ),
               ),
               IconButton(
@@ -2225,7 +2283,7 @@ class _SplitShareCardState extends State<_SplitShareCard> {
           Row(
             children: [
               SizedBox(
-                width: 80,
+                width: 100,
                 child: TextFormField(
                   controller: _pctController,
                   focusNode: _pctFocus,

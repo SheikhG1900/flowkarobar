@@ -632,7 +632,12 @@ class _EditSplitTransactionScreenState
                 ),
                 // Bottom Summary & Action
                 Container(
-                  padding: const EdgeInsets.all(24),
+                  padding: EdgeInsets.only(
+                    left: 24,
+                    right: 24,
+                    top: 24,
+                    bottom: 24 + MediaQuery.of(context).padding.bottom,
+                  ),
                   decoration: BoxDecoration(
                     color: theme.cardColor,
                     boxShadow: [
