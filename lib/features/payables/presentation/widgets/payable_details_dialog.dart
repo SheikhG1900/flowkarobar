@@ -1,3 +1,4 @@
+import 'package:flowpaisa/core/utils/tabular_parser.dart';
 import 'package:flowpaisa/features/transactions/presentation/widgets/linked_settlement_account_sheet.dart';
 import 'package:flowpaisa/features/transactions/presentation/widgets/transaction_details_dialog.dart';
 import 'package:flowpaisa/features/contacts/presentation/screens/contact_details_screen.dart';
@@ -361,7 +362,7 @@ class PayableDetailsDialog extends ConsumerWidget {
                     context,
                     title: l10n.linkedTransaction,
                     titleIcon: Icons.receipt_long_outlined,
-                    useScheduleDateRangeStyle: true,
+                    useScheduleDateRangeStyle: false,
                     body: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
@@ -437,11 +438,25 @@ class PayableDetailsDialog extends ConsumerWidget {
                           context,
                           icon: Icons.notes_outlined,
                           label: l10n.description,
-                          value: payable.description!,
+                          value: TabularParser.isTabular(payable.description)
+                              ? TabularParser.parse(payable.description).$1
+                              : payable.description!,
                         ),
                     ],
                   ),
                 ),
+
+                if (payable.description != null &&
+                    TabularParser.isTabular(payable.description)) ...[
+                  const SizedBox(height: 16),
+                  TransactionDetailsDialog.buildTabularDataSection(
+                    context,
+                    theme,
+                    l10n,
+                    payable.description!,
+                    currency,
+                  ),
+                ],
 
                 if (isPending) ...[
                   const SizedBox(height: 16),
@@ -1002,7 +1017,9 @@ class PayableDetailsDialog extends ConsumerWidget {
               transaction.description.isNotEmpty) ...[
             const SizedBox(height: 8),
             Text(
-              transaction.description,
+              TabularParser.isTabular(transaction.description)
+                  ? TabularParser.parse(transaction.description).$1
+                  : transaction.description,
               style: theme.textTheme.bodySmall,
             ),
           ],

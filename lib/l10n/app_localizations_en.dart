@@ -4264,4 +4264,19 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get dashboardHeroCombineNoOthers =>
       'There are no other cashbooks to include.';
+
+  @override
+  String get itemizedDetails => 'Itemized Details';
+
+  @override
+  String get unitPrice => 'Unit Price';
+
+  @override
+  String get unitsQuantity => 'Units/Qty';
+
+  @override
+  String get price => 'Price';
+
+  @override
+  String get itemized => 'Itemized';
 }

@@ -2199,5 +2199,10 @@
   "dashboardHeroCombineTitle": "View combined balance",
   "dashboardHeroCombineSubtitle": "Choose which other cashbooks to add to the dashboard totals for this cashbook.",
   "dashboardHeroCombineNoSummary": "Open once to load amounts.",
-  "dashboardHeroCombineNoOthers": "There are no other cashbooks to include."
+  "dashboardHeroCombineNoOthers": "There are no other cashbooks to include.",
+  "itemizedDetails": "Itemized Details",
+  "unitPrice": "Unit Price",
+  "unitsQuantity": "Units/Qty",
+  "price": "Price",
+  "itemized": "Itemized"
 }

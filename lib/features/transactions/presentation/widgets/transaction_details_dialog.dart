@@ -14,6 +14,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/core/utils/date_formatter.dart';
+import 'package:flowpaisa/core/utils/tabular_parser.dart';
 import 'package:flowpaisa/core/database/database.dart' show Account, Category, Contact;
 import 'package:flowpaisa/features/transactions/domain/models.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transaction_service_provider.dart';
@@ -35,6 +36,7 @@ import 'package:flutter/services.dart';
 import 'package:flowpaisa/features/whatsapp/domain/deep_link_service.dart';
 import 'package:flowpaisa/features/dashboard/domain/dashboard_widget_models.dart';
 import 'package:flowpaisa/features/dashboard/presentation/providers/dashboard_widget_provider.dart';
+import 'package:flowpaisa/features/premium/domain/premium_provider.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 class TransactionDetailsDialog extends ConsumerWidget {
@@ -676,13 +678,16 @@ class TransactionDetailsDialog extends ConsumerWidget {
                         pattern: ref.watch(userProfileProvider).dateFormat),
                   ),
                   if (transaction.description != null &&
-                      transaction.description!.isNotEmpty)
+                      transaction.description!.isNotEmpty) ...[
                     _buildDetailRow(
                       context,
                       icon: Icons.notes_outlined,
                       label: l10n.description,
-                      value: transaction.description!,
+                      value: TabularParser.isTabular(transaction.description)
+                          ? TabularParser.parse(transaction.description).$1
+                          : transaction.description!,
                     ),
+                  ],
                   if (transaction.processedDate != null)
                     _buildDetailRow(
                       context,
@@ -726,6 +731,19 @@ class TransactionDetailsDialog extends ConsumerWidget {
                 ],
               ),
             ),
+
+            if (transaction.description != null &&
+                TabularParser.isTabular(transaction.description) &&
+                ref.watch(premiumProvider).isPremium) ...[
+              const SizedBox(height: 16),
+              buildTabularDataSection(
+                context,
+                theme,
+                l10n,
+                transaction.description!,
+                currency,
+              ),
+            ],
 
             if (kDebugMode) ...[
               const SizedBox(height: 16),
@@ -785,6 +803,138 @@ class TransactionDetailsDialog extends ConsumerWidget {
                 ),
               ),
             ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  static Widget buildTabularDataSection(
+    BuildContext context,
+    ThemeData theme,
+    AppLocalizations l10n,
+    String description,
+    dynamic currency,
+  ) {
+    final (_, rows) = TabularParser.parse(description);
+    if (rows.isEmpty) return const SizedBox.shrink();
+
+    final total = rows.fold(0.0, (sum, row) => sum + row.totalAmount);
+    final isRtl = Directionality.of(context) == TextDirection.rtl;
+
+    final isDarkMode = theme.brightness == Brightness.dark;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: isDarkMode
+            ? theme.colorScheme.surfaceContainerLow
+            : theme.colorScheme.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.5)),
+      ),
+      child: Theme(
+        data: theme.copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          initiallyExpanded: true,
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(16)),
+          ),
+          collapsedShape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(16)),
+          ),
+          title: Row(
+            children: [
+              Icon(Icons.table_chart_outlined,
+                  size: 18, color: theme.colorScheme.primary),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  l10n.itemizedDetails,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
+              ),
+              Text(
+                AmountFormatter.formatWithCurrency(
+                  total,
+                  currency.symbol,
+                  currency.decimalPlaces,
+                ),
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: theme.colorScheme.primary,
+                ),
+              ),
+            ],
+          ),
+          children: [
+            const Divider(height: 1),
+            ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: rows.length,
+              separatorBuilder: (context, index) => const Divider(height: 1),
+              itemBuilder: (context, index) {
+                final row = rows[index];
+                final unitPriceStr = AmountFormatter.formatWithCurrency(
+                  row.unitAmount,
+                  currency.symbol,
+                  currency.decimalPlaces,
+                );
+
+                return Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            AppDateFormatter.formatDate(row.date,
+                                pattern: 'dd MMM, yyyy'),
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                          Text(
+                            AmountFormatter.formatWithCurrency(
+                              row.totalAmount,
+                              currency.symbol,
+                              currency.decimalPlaces,
+                            ),
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: theme.colorScheme.primary,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        row.description,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        isRtl
+                            ? '$unitPriceStr x ${row.quantity}'
+                            : '${row.quantity} x $unitPriceStr',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                        textDirection: TextDirection.ltr,
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
           ],
         ),
       ),

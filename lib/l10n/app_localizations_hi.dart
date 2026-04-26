@@ -4276,4 +4276,19 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get dashboardHeroCombineNoOthers =>
       'शामिल करने के लिए कोई अन्य कैशबुक नहीं है।';
+
+  @override
+  String get itemizedDetails => 'मदवार विवरण';
+
+  @override
+  String get unitPrice => 'इकाई मूल्य';
+
+  @override
+  String get unitsQuantity => 'इकाई/मात्रा';
+
+  @override
+  String get price => 'मूल्य';
+
+  @override
+  String get itemized => 'मदवार';
 }

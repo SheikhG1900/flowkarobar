@@ -4281,4 +4281,19 @@ class AppLocalizationsUr extends AppLocalizations {
   @override
   String get dashboardHeroCombineNoOthers =>
       'شامل کرنے کے لیے کوئی دوسری کیش بُک نہیں۔';
+
+  @override
+  String get itemizedDetails => 'آئٹم وار تفصیلات';
+
+  @override
+  String get unitPrice => 'یونٹ کی قیمت';
+
+  @override
+  String get unitsQuantity => 'یونٹ/مقدار';
+
+  @override
+  String get price => 'قیمت';
+
+  @override
+  String get itemized => 'آئٹم وار';
 }

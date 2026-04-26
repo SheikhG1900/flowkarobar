@@ -16,6 +16,8 @@ import 'package:flowpaisa/features/categories/presentation/providers/categories_
 import 'package:flowpaisa/features/categories/domain/category_monthly_hint_key.dart';
 import 'package:flowpaisa/features/categories/presentation/widgets/category_budget_progress_bar.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
+import 'package:flowpaisa/core/utils/tabular_parser.dart';
+import 'package:flowpaisa/features/transactions/presentation/widgets/tabular_editor_sheet.dart';
 import 'package:flowpaisa/features/categories/presentation/screens/add_category_screen.dart';
 import 'package:flowpaisa/features/contacts/presentation/screens/add_contact_screen.dart';
 import 'package:flowpaisa/shared/widgets/dual_amount_progress_bar.dart';
@@ -100,6 +102,11 @@ class _EditSplitTransactionScreenState
   String? _paidRelationship;
   String? _selectedType;
 
+  // Tabular Description fields
+  bool _isTabularMode = false;
+  List<TabularRow> _tabularRows = [];
+  String _tabularSummary = '';
+
   List<_ShareRow> _rows = [];
   String? _linkedGroupId;
 
@@ -120,9 +127,16 @@ class _EditSplitTransactionScreenState
     _linkedGroupId ??= t.linkedGroupId;
     _selectedType ??= t.type;
     _selectedDate = t.date;
-    _descriptionController.text = t.description ?? '';
+    if (TabularParser.isTabular(t.description)) {
+      final (summary, rows) = TabularParser.parse(t.description);
+      _isTabularMode = true;
+      _tabularSummary = summary;
+      _tabularRows = rows;
+      _descriptionController.text = summary;
+    } else {
+      _descriptionController.text = t.description ?? '';
+    }
     _paidRelationship = t.paidRelationship;
-    _selectedCategory = first.category;
     if (t.linkedPayableUuid != null || t.linkedReceivableUuid != null) {
       if (first.linkedPayable != null && first.linkedPayable!.dueDate != null) {
         _dueDate = first.linkedPayable!.dueDate;
@@ -302,9 +316,70 @@ class _EditSplitTransactionScreenState
                         decoration: InputDecoration(
                           labelText: l10n.description,
                           border: const OutlineInputBorder(),
+                          suffixIcon: ref.watch(premiumProvider).isPremium
+                              ? IconButton(
+                                  icon: Icon(
+                                    _isTabularMode
+                                        ? Icons.table_chart
+                                        : Icons.table_chart_outlined,
+                                    color: _isTabularMode
+                                        ? theme.colorScheme.primary
+                                        : null,
+                                  ),
+                                  onPressed: () {
+                                    TabularEditorSheet.show(
+                                      context,
+                                      initialRows: _tabularRows,
+                                      currencySymbol: currency.symbol,
+                                      decimalPlaces: currency.decimalPlaces,
+                                      currentTransactionAmount: double.tryParse(
+                                              _totalAmountController.text) ??
+                                          0.0,
+                                      onSave: (rows, updateAmount) {
+                                        setState(() {
+                                          _tabularRows = rows;
+                                          _isTabularMode = rows.isNotEmpty;
+                                          if (updateAmount) {
+                                            final total = rows.fold(
+                                                0.0,
+                                                (sum, row) =>
+                                                    sum + row.totalAmount);
+                                            _totalAmountController.text =
+                                                total.toStringAsFixed(
+                                                    currency.decimalPlaces);
+                                            _onTotalAmountChanged(
+                                                _totalAmountController.text);
+                                          }
+                                        });
+                                      },
+                                    );
+                                  },
+                                  tooltip: _isTabularMode
+                                      ? 'Edit Itemized Details'
+                                      : 'Add Itemized Details',
+                                )
+                              : null,
                         ),
                         maxLines: 2,
                       ),
+                      if (_isTabularMode)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8, left: 4),
+                          child: Row(
+                            children: [
+                              Icon(Icons.check_circle,
+                                  size: 14, color: theme.colorScheme.primary),
+                              const SizedBox(width: 6),
+                              Text(
+                                '${_tabularRows.length} item(s) added',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.primary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       const SizedBox(height: 16),
                       // Category
                       if (_selectedCategory != null)
@@ -1581,13 +1656,20 @@ class _EditSplitTransactionScreenState
       final isPending = _paidRelationship == 'PAID_BY' ||
           _paidRelationship == 'WILL_RECEIVE';
 
+      String? finalDescription = _descriptionController.text.isEmpty
+          ? null
+          : _descriptionController.text;
+
+      if (_isTabularMode && _tabularRows.isNotEmpty) {
+        finalDescription = TabularParser.serialize(
+            _descriptionController.text, _tabularRows);
+      }
+
       await ref.read(transactionServiceProvider).updateGroupSplit(
             linkedGroupId: _linkedGroupId!,
             type: _selectedType!,
             date: _selectedDate,
-            description: _descriptionController.text.isEmpty
-                ? null
-                : _descriptionController.text,
+            description: finalDescription,
             categoryUuid: _selectedCategory?.uuid,
             paidRelationship: _paidRelationship,
             dueDate: _dueDate,

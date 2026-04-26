@@ -15,6 +15,8 @@ import 'package:flowpaisa/core/utils/share_helper.dart';
 import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/core/utils/date_formatter.dart';
+import 'package:flowpaisa/core/utils/tabular_parser.dart';
+import 'package:flowpaisa/features/transactions/presentation/widgets/tabular_editor_sheet.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transaction_service_provider.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
 // import 'package:flowpaisa/features/transactions/presentation/widgets/transaction_details_dialog.dart';
@@ -131,6 +133,11 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
   List<SplitShare> _groupShares = [];
   bool _isGroupSplit = false;
 
+  // Tabular Description fields
+  bool _isTabularMode = false;
+  List<TabularRow> _tabularRows = [];
+  String _tabularSummary = '';
+
   void _onAmountChanged() => setState(() {});
 
   /// True when user opened Add Transaction without any initial data (no import, voice, receipt, etc.).
@@ -160,7 +167,15 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
       _selectedDate = widget.initialDate!;
     }
     if (widget.initialDescription != null) {
-      _descriptionController.text = widget.initialDescription!;
+      if (TabularParser.isTabular(widget.initialDescription)) {
+        final (summary, rows) = TabularParser.parse(widget.initialDescription);
+        _isTabularMode = true;
+        _tabularSummary = summary;
+        _tabularRows = rows;
+        _descriptionController.text = summary;
+      } else {
+        _descriptionController.text = widget.initialDescription!;
+      }
     }
     if (widget.initialType != null) {
       _selectedType = widget.initialType!;
@@ -451,9 +466,14 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
       final transactionService = ref.read(transactionServiceProvider);
 
       final amount = double.parse(_amountController.text);
-      final description = _descriptionController.text.isEmpty
+      String? description = _descriptionController.text.isEmpty
           ? null
           : _descriptionController.text;
+
+      if (_isTabularMode && _tabularRows.isNotEmpty) {
+        description = TabularParser.serialize(
+            _descriptionController.text, _tabularRows);
+      }
 
       if (_isGroupSplit) {
         await transactionService.createGroupSplit(
@@ -2420,10 +2440,66 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                   labelText: l10n.description,
                   hintText: l10n.descriptionHint,
                   prefixIcon: const Icon(Icons.notes_outlined),
+                  suffixIcon: ref.watch(premiumProvider).isPremium
+                      ? IconButton(
+                          icon: Icon(
+                            _isTabularMode
+                                ? Icons.table_chart
+                                : Icons.table_chart_outlined,
+                            color: _isTabularMode
+                                ? theme.colorScheme.primary
+                                : null,
+                          ),
+                          onPressed: () {
+                            TabularEditorSheet.show(
+                              context,
+                              initialRows: _tabularRows,
+                              currencySymbol: currencySymbol,
+                              decimalPlaces: decimalPlaces,
+                              currentTransactionAmount:
+                                  double.tryParse(_amountController.text) ??
+                                      0.0,
+                              onSave: (rows, updateAmount) {
+                                setState(() {
+                                  _tabularRows = rows;
+                                  _isTabularMode = rows.isNotEmpty;
+                                  if (updateAmount) {
+                                    final total = rows.fold(0.0,
+                                        (sum, row) => sum + row.totalAmount);
+                                    _amountController.text =
+                                        total.toStringAsFixed(decimalPlaces);
+                                  }
+                                });
+                              },
+                            );
+                          },
+                          tooltip: _isTabularMode
+                              ? 'Edit Itemized Details'
+                              : 'Add Itemized Details',
+                        )
+                      : null,
                 ),
                 maxLines: 2,
                 textCapitalization: TextCapitalization.sentences,
               ),
+              if (_isTabularMode)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8, left: 12),
+                  child: Row(
+                    children: [
+                      Icon(Icons.check_circle,
+                          size: 14, color: theme.colorScheme.primary),
+                      const SizedBox(width: 6),
+                      Text(
+                        '${_tabularRows.length} item(s) added',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               const SizedBox(height: 16),
 
               // Date Selector

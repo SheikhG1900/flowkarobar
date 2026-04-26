@@ -1648,5 +1648,10 @@
   "dashboardHeroCombineTitle": "مجموعی بیلنس دیکھیں",
   "dashboardHeroCombineSubtitle": "اس کیش بُک کے لیے ڈیش بورڈ کل میں کون سی دوسری کیش بُکیں شامل کرنی ہیں، منتخب کریں۔",
   "dashboardHeroCombineNoSummary": "رقم لوڈ کرنے کے لیے ایک بار کھولیں۔",
-  "dashboardHeroCombineNoOthers": "شامل کرنے کے لیے کوئی دوسری کیش بُک نہیں۔"
+  "dashboardHeroCombineNoOthers": "شامل کرنے کے لیے کوئی دوسری کیش بُک نہیں۔",
+  "itemizedDetails": "آئٹم وار تفصیلات",
+  "unitPrice": "یونٹ کی قیمت",
+  "unitsQuantity": "یونٹ/مقدار",
+  "price": "قیمت",
+  "itemized": "آئٹم وار"
 }

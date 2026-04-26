@@ -7786,6 +7786,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'There are no other cashbooks to include.'**
   String get dashboardHeroCombineNoOthers;
+
+  /// No description provided for @itemizedDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Itemized Details'**
+  String get itemizedDetails;
+
+  /// No description provided for @unitPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Unit Price'**
+  String get unitPrice;
+
+  /// No description provided for @unitsQuantity.
+  ///
+  /// In en, this message translates to:
+  /// **'Units/Qty'**
+  String get unitsQuantity;
+
+  /// No description provided for @price.
+  ///
+  /// In en, this message translates to:
+  /// **'Price'**
+  String get price;
+
+  /// No description provided for @itemized.
+  ///
+  /// In en, this message translates to:
+  /// **'Itemized'**
+  String get itemized;
 }
 
 class _AppLocalizationsDelegate

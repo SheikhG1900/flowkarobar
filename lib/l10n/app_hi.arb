@@ -1648,5 +1648,10 @@
   "dashboardHeroCombineTitle": "संयुक्त शेष देखें",
   "dashboardHeroCombineSubtitle": "इस कैशबुक के लिए डैशबोर्ड कुल में कौन से अन्य कैशबुक जोड़ने हैं, चुनें।",
   "dashboardHeroCombineNoSummary": "राशि लोड करने के लिए एक बार खोलें।",
-  "dashboardHeroCombineNoOthers": "शामिल करने के लिए कोई अन्य कैशबुक नहीं है।"
+  "dashboardHeroCombineNoOthers": "शामिल करने के लिए कोई अन्य कैशबुक नहीं है।",
+  "itemizedDetails": "मदवार विवरण",
+  "unitPrice": "इकाई मूल्य",
+  "unitsQuantity": "इकाई/मात्रा",
+  "price": "मूल्य",
+  "itemized": "मदवार"
 }
