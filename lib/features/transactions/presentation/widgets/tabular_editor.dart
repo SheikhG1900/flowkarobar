@@ -44,6 +44,17 @@ class _TabularEditorState extends State<TabularEditor> {
     });
   }
 
+  void _copyRow(int index) {
+    setState(() {
+      final original = widget.rows[index];
+      widget.rows.insert(
+        index + 1,
+        original.copyWith(date: DateTime.now()),
+      );
+      widget.onChanged(widget.rows);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -66,6 +77,7 @@ class _TabularEditorState extends State<TabularEditor> {
               widget.onChanged(widget.rows);
             },
             onDelete: () => _removeRow(index),
+            onCopy: () => _copyRow(index),
           );
         }),
         const SizedBox(height: 12),
@@ -89,6 +101,7 @@ class _TabularRowInput extends StatefulWidget {
   final int decimalPlaces;
   final VoidCallback onChanged;
   final VoidCallback onDelete;
+  final VoidCallback onCopy;
 
   const _TabularRowInput({
     super.key,
@@ -97,6 +110,7 @@ class _TabularRowInput extends StatefulWidget {
     required this.decimalPlaces,
     required this.onChanged,
     required this.onDelete,
+    required this.onCopy,
   });
 
   @override
@@ -190,6 +204,15 @@ class _TabularRowInputState extends State<_TabularRowInput> {
                   fontWeight: FontWeight.bold,
                   color: theme.colorScheme.primary,
                 ),
+              ),
+              const SizedBox(width: 8),
+              IconButton(
+                icon: Icon(Icons.copy_outlined,
+                    color: theme.colorScheme.primary, size: 20),
+                onPressed: widget.onCopy,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                tooltip: l10n.copy,
               ),
               const SizedBox(width: 8),
               IconButton(

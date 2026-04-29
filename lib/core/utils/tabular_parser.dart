@@ -16,6 +16,20 @@ class TabularRow {
 
   double get totalAmount => quantity * unitAmount;
 
+  TabularRow copyWith({
+    DateTime? date,
+    double? quantity,
+    double? unitAmount,
+    String? description,
+  }) {
+    return TabularRow(
+      date: date ?? this.date,
+      quantity: quantity ?? this.quantity,
+      unitAmount: unitAmount ?? this.unitAmount,
+      description: description ?? this.description,
+    );
+  }
+
   List<dynamic> toArray() {
     return [
       AppDateFormatter.formatDate(date, pattern: 'yyyy-MM-dd'),
