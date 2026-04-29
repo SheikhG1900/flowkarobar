@@ -1870,6 +1870,12 @@ abstract class AppLocalizations {
   /// **'Clear All'**
   String get clearAll;
 
+  /// No description provided for @clearAllItemsConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to clear all items?'**
+  String get clearAllItemsConfirmation;
+
   /// No description provided for @clearAllNotifications.
   ///
   /// In en, this message translates to:

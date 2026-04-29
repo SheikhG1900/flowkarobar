@@ -78,58 +78,6 @@ class _TabularEditorState extends State<TabularEditor> {
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
         ),
-        const SizedBox(height: 16),
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: isDiff 
-                ? theme.colorScheme.errorContainer.withValues(alpha: 0.3)
-                : theme.colorScheme.primaryContainer.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: isDiff ? theme.colorScheme.error : theme.colorScheme.primary.withValues(alpha: 0.3),
-            ),
-          ),
-          child: Column(
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    '${l10n.itemized} ${l10n.price}:',
-                    style: theme.textTheme.bodyMedium
-                        ?.copyWith(fontWeight: FontWeight.bold),
-                  ),
-                  Text(
-                    AmountFormatter.formatWithCurrency(tabularTotal,
-                        widget.currencySymbol, widget.decimalPlaces),
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: isDiff
-                          ? theme.colorScheme.error
-                          : theme.colorScheme.primary,
-                    ),
-                  ),
-                ],
-              ),
-              if (isDiff) ...[
-                const SizedBox(height: 12),
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton.icon(
-                    onPressed: widget.onSyncTotal,
-                    icon: const Icon(Icons.sync, size: 18),
-                    label: Text(l10n.updateTransaction),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: theme.colorScheme.error,
-                      foregroundColor: theme.colorScheme.onError,
-                    ),
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
       ],
     );
   }

@@ -982,6 +982,10 @@ class AppLocalizationsUr extends AppLocalizations {
   String get clearAll => 'تمام صاف کریں';
 
   @override
+  String get clearAllItemsConfirmation =>
+      'کیا آپ واقعی تمام اشیاء کو صاف کرنا چاہتے ہیں؟';
+
+  @override
   String get clearAllNotifications => 'تمام اطلاعات صاف کریں؟';
 
   @override

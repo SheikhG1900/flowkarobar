@@ -350,6 +350,7 @@
   "allNotificationsMarkedRead": "सभी सूचनाओं को पढ़ा गया चिह्नित किया गया",
   "markAllRead": "सब पढ़ा",
   "clearAll": "सभी साफ़ करें",
+  "clearAllItemsConfirmation": "क्या आप वाकई सभी आइटम साफ़ करना चाहते हैं?",
   "clearAllNotifications": "सभी सूचनाएं साफ़ करें?",
   "clearAllNotificationsMessage": "क्या आप वाकई सभी सूचनाएं हटाना चाहते हैं? यह क्रिया पूर्ववत नहीं की जा सकती।",
   "notificationsCleared": "सभी सूचनाएं साफ़ कर दी गईं",

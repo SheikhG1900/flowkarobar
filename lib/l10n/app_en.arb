@@ -590,6 +590,7 @@
   "allNotificationsMarkedRead": "All notifications marked as read",
   "markAllRead": "All Read",
   "clearAll": "Clear All",
+  "clearAllItemsConfirmation": "Are you sure you want to clear all items?",
   "clearAllNotifications": "Clear all notifications?",
   "clearAllNotificationsMessage": "Are you sure you want to delete all notifications? This action cannot be undone.",
   "notificationsCleared": "All notifications cleared",

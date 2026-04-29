@@ -976,6 +976,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get clearAll => 'Clear All';
 
   @override
+  String get clearAllItemsConfirmation =>
+      'Are you sure you want to clear all items?';
+
+  @override
   String get clearAllNotifications => 'Clear all notifications?';
 
   @override

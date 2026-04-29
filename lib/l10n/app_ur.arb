@@ -350,6 +350,7 @@
   "allNotificationsMarkedRead": "تمام اطلاعات کو پڑھا ہوا نشان زد کر دیا گیا",
   "markAllRead": "سب پڑھا",
   "clearAll": "تمام صاف کریں",
+  "clearAllItemsConfirmation": "کیا آپ واقعی تمام اشیاء کو صاف کرنا چاہتے ہیں؟",
   "clearAllNotifications": "تمام اطلاعات صاف کریں؟",
   "clearAllNotificationsMessage": "کیا آپ واقعی تمام اطلاعات کو حذف کرنا چاہتے ہیں؟ یہ عمل واپس نہیں کیا جا سکتا۔",
   "notificationsCleared": "تمام اطلاعات صاف کر دی گئیں",

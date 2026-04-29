@@ -981,6 +981,10 @@ class AppLocalizationsHi extends AppLocalizations {
   String get clearAll => 'सभी साफ़ करें';
 
   @override
+  String get clearAllItemsConfirmation =>
+      'क्या आप वाकई सभी आइटम साफ़ करना चाहते हैं?';
+
+  @override
   String get clearAllNotifications => 'सभी सूचनाएं साफ़ करें?';
 
   @override
