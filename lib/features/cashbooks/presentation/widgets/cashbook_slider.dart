@@ -79,34 +79,32 @@ class _CashbookSliderState extends ConsumerState<CashbookSlider> {
               SizedBox(
                 height: 196,
                 width: double.infinity,
-                child: RepaintBoundary(
-                  child: expandSingle
-                      ? Padding(
-                          // Match accounts_screen / account_slider single-card insets.
-                          padding: const EdgeInsets.only(
-                            left: 0,
-                            right: 0,
-                            top: 0,
-                            bottom: 0,
-                          ),
-                          child: _CashbookSummaryCard(
-                            summary: summaries.single,
-                            expandHorizontally: true,
-                          ),
-                        )
-                      : ListView.builder(
-                          scrollDirection: Axis.horizontal,
-                          clipBehavior: Clip.none,
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 0, vertical: 0),
-                          itemCount: summaries.length,
-                          itemBuilder: (context, index) {
-                            return _CashbookSummaryCard(
-                              summary: summaries[index],
-                            );
-                          },
+                child: expandSingle
+                    ? Padding(
+                        // Match accounts_screen / account_slider single-card insets.
+                        padding: const EdgeInsets.only(
+                          left: 0,
+                          right: 0,
+                          top: 0,
+                          bottom: 0,
                         ),
-                ),
+                        child: _CashbookSummaryCard(
+                          summary: summaries.single,
+                          expandHorizontally: true,
+                        ),
+                      )
+                    : ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        clipBehavior: Clip.none,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 0, vertical: 0),
+                        itemCount: summaries.length,
+                        itemBuilder: (context, index) {
+                          return _CashbookSummaryCard(
+                            summary: summaries[index],
+                          );
+                        },
+                      ),
               ),
             ],
           );

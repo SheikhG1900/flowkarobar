@@ -1312,9 +1312,8 @@ class _DashboardTab extends ConsumerWidget {
                         for (var i = 0; i < configs.length; i++)
                           KeyedSubtree(
                             key: configs[i].kind.isEntity
-                                ? ValueKey('entity-$i-${configs[i].entityUuid}')
-                                : ValueKey(
-                                    'summary-$i-${configs[i].kind.name}'),
+                                ? ValueKey('entity-${configs[i].entityUuid}')
+                                : ValueKey('summary-${configs[i].kind.name}'),
                             child: Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -1357,7 +1356,7 @@ class _DashboardTab extends ConsumerWidget {
                                           config: configs[i],
                                           layoutIndex: i,
                                           reorderKey: ValueKey(
-                                              'summary-$i-${configs[i].kind.name}'),
+                                              'summary-${configs[i].kind.name}'),
                                         ),
                                 ),
                               ],
@@ -1377,7 +1376,7 @@ class _DashboardTab extends ConsumerWidget {
                                   config: configs[i],
                                   layoutIndex: i,
                                   reorderKey: ValueKey(
-                                      'summary-$i-${configs[i].kind.name}'),
+                                      'summary-${configs[i].kind.name}'),
                                 ),
                       ],
                     ),
