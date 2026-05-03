@@ -1654,5 +1654,7 @@
   "unitPrice": "इकाई मूल्य",
   "unitsQuantity": "इकाई/मात्रा",
   "price": "मूल्य",
-  "itemized": "मदवार"
+  "itemized": "मदवार",
+  "nextGenerated": "अगली बार उत्पन्न होगा",
+  "never": "कभी नहीं"
 }

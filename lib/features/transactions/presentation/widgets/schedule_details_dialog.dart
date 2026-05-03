@@ -395,10 +395,10 @@ class ScheduleDetailsDialog extends ConsumerWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.primaryContainer.withValues(alpha: 0.8),
+                  color: theme.colorScheme.primaryContainer.withValues(alpha: theme.brightness == Brightness.light ? 0.4 : 0.8),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: theme.colorScheme.primary.withValues(alpha: 0.5),
+                    color: theme.colorScheme.primary.withValues(alpha: theme.brightness == Brightness.light ? 0.2 : 0.5),
                     width: 1,
                   ),
                 ),
@@ -514,6 +514,15 @@ class ScheduleDetailsDialog extends ConsumerWidget {
               value: AppDateFormatter.formatDate(schedule.lastGeneratedDate!,
                   pattern: dateFormat),
             ),
+          _buildDetailRow(
+            context,
+            icon: Icons.event_repeat,
+            label: l10n.nextGenerated,
+            value: _calculateNextGeneratedDate(schedule) != null
+                ? AppDateFormatter.formatDate(_calculateNextGeneratedDate(schedule)!,
+                    pattern: dateFormat)
+                : l10n.never,
+          ),
           if (account != null)
             _buildDetailRow(
               context,
@@ -1255,6 +1264,145 @@ class ScheduleDetailsDialog extends ConsumerWidget {
     } catch (_) {
       return '';
     }
+  }
+
+  static DateTime? _calculateNextGeneratedDate(TransactionSchedule schedule) {
+    // 1. Determine the base start search date
+    // Priority: lastGeneratedDate + 1 day > createdAt > today (fallback)
+    DateTime baseStart;
+    if (schedule.lastGeneratedDate != null) {
+      baseStart = DateTime(
+        schedule.lastGeneratedDate!.year,
+        schedule.lastGeneratedDate!.month,
+        schedule.lastGeneratedDate!.day,
+      ).add(const Duration(days: 1));
+    } else {
+      // Use createdAt if available, otherwise fallback to today
+      final created = schedule.createdAt;
+      baseStart = DateTime(created.year, created.month, created.day);
+    }
+
+    // 2. Adjust with startDate if it exists and is after our baseStart
+    DateTime startSearch = baseStart;
+    if (schedule.startDate != null) {
+      final sDate = DateTime(
+        schedule.startDate!.year,
+        schedule.startDate!.month,
+        schedule.startDate!.day,
+      );
+      if (sDate.isAfter(startSearch)) {
+        startSearch = sDate;
+      }
+    }
+
+    DateTime? nextDate;
+
+    // 3. Calculate based on schedule type
+    switch (schedule.scheduleType) {
+      case 'DAILY':
+        nextDate = startSearch;
+        break;
+
+      case 'WEEKLY':
+        if (schedule.selectedDaysOfWeek != null) {
+          final List<int> days = List<int>.from(jsonDecode(schedule.selectedDaysOfWeek!))..sort();
+          if (days.isNotEmpty) {
+            final currentWeekday = startSearch.weekday % 7; // 0=Sunday, 6=Saturday
+            
+            // Find first scheduled day >= current weekday
+            int? targetDay;
+            for (final d in days) {
+              if (d >= currentWeekday) {
+                targetDay = d;
+                break;
+              }
+            }
+
+            if (targetDay != null) {
+              // Same week
+              nextDate = startSearch.add(Duration(days: targetDay - currentWeekday));
+            } else {
+              // Next week, first scheduled day
+              nextDate = startSearch.add(Duration(days: (7 - currentWeekday) + days.first));
+            }
+          }
+        }
+        break;
+
+      case 'MONTHLY':
+        if (schedule.selectedDaysOfMonth != null) {
+          final List<int> days = List<int>.from(jsonDecode(schedule.selectedDaysOfMonth!))..sort();
+          if (days.isNotEmpty) {
+            final currentDay = startSearch.day;
+            
+            int? targetDay;
+            for (final d in days) {
+              if (d >= currentDay) {
+                // Check if this day actually exists in the current month
+                // We'll verify existence below and move to next month if needed
+                targetDay = d;
+                break;
+              }
+            }
+
+            if (targetDay != null) {
+              // Try current month
+              final candidate = DateTime(startSearch.year, startSearch.month, targetDay);
+              // If candidate is before startSearch (can happen if targetDay is same but time was stripped)
+              // or if the month rolled over (e.g. Feb 30 -> March 2)
+              if (candidate.isBefore(startSearch) || candidate.month != startSearch.month) {
+                // Move to next month's first scheduled day
+                nextDate = _getFirstValidDayInNextMonth(startSearch.year, startSearch.month, days.first);
+              } else {
+                nextDate = candidate;
+              }
+            } else {
+              // Next month, first scheduled day
+              nextDate = _getFirstValidDayInNextMonth(startSearch.year, startSearch.month, days.first);
+            }
+          }
+        }
+        break;
+    }
+
+    // 4. Final validation against endDate
+    if (nextDate != null && schedule.endDate != null) {
+      final eDate = DateTime(
+        schedule.endDate!.year,
+        schedule.endDate!.month,
+        schedule.endDate!.day,
+      );
+      if (nextDate.isAfter(eDate)) {
+        return null;
+      }
+    }
+
+    return nextDate;
+  }
+
+  /// Helper to find the first valid day in the next month
+  static DateTime _getFirstValidDayInNextMonth(int year, int month, int targetDay) {
+    var nextMonth = month + 1;
+    var nextYear = year;
+    if (nextMonth > 12) {
+      nextMonth = 1;
+      nextYear++;
+    }
+    
+    // Handle months with fewer days (e.g. Feb 30)
+    // If targetDay is 31 but next month only has 30, we move to the next month again?
+    // Actually, for simplicity and matching how most schedulers work, 
+    // we'll find the first month where targetDay is valid.
+    var candidate = DateTime(nextYear, nextMonth, targetDay);
+    while (candidate.month != nextMonth) {
+      nextMonth++;
+      if (nextMonth > 12) {
+        nextMonth = 1;
+        nextYear++;
+      }
+      candidate = DateTime(nextYear, nextMonth, targetDay);
+    }
+    return candidate;
   }
 
   static void _toggleSchedule(

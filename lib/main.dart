@@ -75,6 +75,7 @@ import 'package:flowpaisa/shared/widgets/app_loading_indicator.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workmanager/workmanager.dart';
+import 'package:flowpaisa/core/background/background_dispatcher.dart';
 import 'package:flowpaisa/features/transactions/data/schedule_scheduler.dart';
 import 'package:flowpaisa/features/backup/data/sync/sync_scheduler.dart';
 
@@ -121,7 +122,7 @@ void main() async {
   // Initialize workmanager for background tasks
   if (!kIsWeb) {
     await Workmanager().initialize(
-      callbackDispatcher,
+      universalCallbackDispatcher,
       isInDebugMode: false,
     );
 
@@ -140,25 +141,6 @@ void main() async {
       ),
     ),
   );
-}
-
-/// Background task callback for workmanager
-@pragma('vm:entry-point')
-void callbackDispatcher() {
-  Workmanager().executeTask((task, inputData) async {
-    // 1. Handle Sync Tasks
-    if (task == syncTaskName || task.startsWith('on-demand-sync-')) {
-      return await handleSyncTask(task, inputData);
-    }
-
-    // 2. Handle Schedule Tasks
-    if (task == 'schedule-transactions') {
-      await processSchedules();
-      return Future.value(true);
-    }
-
-    return Future.value(false);
-  });
 }
 
 Future<void> _initializeFonts() async {
@@ -344,6 +326,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
         // Check credit card payment due dates
         _checkCreditCardNotifications();
+
+        // Process scheduled transactions (catch-up)
+        processSchedulesFromContext(ref);
       }
     });
   }

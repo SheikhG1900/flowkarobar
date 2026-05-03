@@ -1,4 +1,5 @@
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
+import 'package:flowpaisa/core/background/background_dispatcher.dart';
 import 'package:workmanager/workmanager.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flowpaisa/core/database/database.dart';
@@ -362,16 +363,6 @@ Future<void> _updateSyncStatus(AppDatabase db, String deviceId, String status,
   }
 }
 
-@pragma('vm:entry-point')
-void callbackDispatcher() {
-  Workmanager().executeTask((task, inputData) async {
-    if (task == syncTaskName || task.startsWith('on-demand-sync-')) {
-      return await handleSyncTask(task, inputData);
-    }
-    return true;
-  });
-}
-
 class SyncScheduler {
   /// Returns true if a sync task is currently considered in progress (flag set and not timed out).
   static Future<bool> isSyncInProgress() async {
@@ -389,7 +380,7 @@ class SyncScheduler {
 
   static Future<void> init() async {
     await Workmanager().initialize(
-      callbackDispatcher,
+      universalCallbackDispatcher,
       isInDebugMode: false,
     );
 

@@ -138,20 +138,29 @@ class ScheduleService {
     }
 
     // Determine start date for generation
+    // Priority: lastGeneratedDate + 1 day > createdAt > today (fallback)
     DateTime startDate;
     if (schedule.lastGeneratedDate != null) {
-      // Start from day after last generated date
-      final lastDate = schedule.lastGeneratedDate!;
-      startDate = DateTime(lastDate.year, lastDate.month, lastDate.day)
-          .add(const Duration(days: 1));
-    } else if (schedule.startDate != null) {
       startDate = DateTime(
+        schedule.lastGeneratedDate!.year,
+        schedule.lastGeneratedDate!.month,
+        schedule.lastGeneratedDate!.day,
+      ).add(const Duration(days: 1));
+    } else {
+      final created = schedule.createdAt;
+      startDate = DateTime(created.year, created.month, created.day);
+    }
+
+    // Adjust with startDate if it exists and is after our base start
+    if (schedule.startDate != null) {
+      final sDate = DateTime(
         schedule.startDate!.year,
         schedule.startDate!.month,
         schedule.startDate!.day,
       );
-    } else {
-      startDate = today; // Start from today if no start date
+      if (sDate.isAfter(startDate)) {
+        startDate = sDate;
+      }
     }
 
     // Generate list of dates to create transactions for
@@ -267,41 +276,84 @@ class ScheduleService {
     var current = DateTime(startDate.year, startDate.month, startDate.day);
     final end = DateTime(endDate.year, endDate.month, endDate.day);
 
+    // Optimized calculation to avoid large while loops
     while (current.isBefore(end) || current.isAtSameMomentAs(end)) {
-      bool shouldGenerate = false;
+      DateTime? nextDate;
 
       switch (schedule.scheduleType) {
         case 'DAILY':
-          shouldGenerate = true;
+          nextDate = current;
           break;
 
         case 'WEEKLY':
           if (schedule.selectedDaysOfWeek != null) {
-            final daysOfWeek = _parseDaysOfWeek(schedule.selectedDaysOfWeek!);
-            final weekday =
-                current.weekday % 7; // Convert to 0=Sunday, 6=Saturday
-            shouldGenerate = daysOfWeek.contains(weekday);
+            final List<int> days = List<int>.from(jsonDecode(schedule.selectedDaysOfWeek!))..sort();
+            if (days.isNotEmpty) {
+              final currentWeekday = current.weekday % 7; // 0=Sunday
+              int? targetDay = days.firstWhere((d) => d >= currentWeekday, orElse: () => -1);
+
+              if (targetDay != -1) {
+                nextDate = current.add(Duration(days: targetDay - currentWeekday));
+              } else {
+                nextDate = current.add(Duration(days: (7 - currentWeekday) + days.first));
+              }
+            }
           }
           break;
 
         case 'MONTHLY':
           if (schedule.selectedDaysOfMonth != null) {
-            final daysOfMonth =
-                _parseDaysOfMonth(schedule.selectedDaysOfMonth!);
-            final dayOfMonth = current.day;
-            shouldGenerate = daysOfMonth.contains(dayOfMonth);
+            final List<int> days = List<int>.from(jsonDecode(schedule.selectedDaysOfMonth!))..sort();
+            if (days.isNotEmpty) {
+              final currentDay = current.day;
+              int? targetDay = days.firstWhere((d) => d >= currentDay, orElse: () => -1);
+
+              if (targetDay != -1) {
+                final candidate = DateTime(current.year, current.month, targetDay);
+                if (candidate.isBefore(current) || candidate.month != current.month) {
+                  nextDate = _getFirstValidDayInNextMonth(current.year, current.month, days.first);
+                } else {
+                  nextDate = candidate;
+                }
+              } else {
+                nextDate = _getFirstValidDayInNextMonth(current.year, current.month, days.first);
+              }
+            }
           }
           break;
       }
 
-      if (shouldGenerate) {
-        dates.add(DateTime(current.year, current.month, current.day));
+      if (nextDate != null && (nextDate.isBefore(end) || nextDate.isAtSameMomentAs(end))) {
+        dates.add(nextDate);
+        // Move current to day after nextDate to find subsequent occurrences
+        current = nextDate.add(const Duration(days: 1));
+      } else {
+        break; // No more occurrences within range
       }
-
-      current = current.add(const Duration(days: 1));
     }
 
     return dates;
+  }
+
+  /// Helper to find the first valid day in the next month
+  static DateTime _getFirstValidDayInNextMonth(int year, int month, int targetDay) {
+    var nextMonth = month + 1;
+    var nextYear = year;
+    if (nextMonth > 12) {
+      nextMonth = 1;
+      nextYear++;
+    }
+    
+    var candidate = DateTime(nextYear, nextMonth, targetDay);
+    while (candidate.month != nextMonth) {
+      nextMonth++;
+      if (nextMonth > 12) {
+        nextMonth = 1;
+        nextYear++;
+      }
+      candidate = DateTime(nextYear, nextMonth, targetDay);
+    }
+    return candidate;
   }
 
   /// Parse days of week from JSON string

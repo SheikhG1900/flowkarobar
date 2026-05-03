@@ -4295,4 +4295,10 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get itemized => 'मदवार';
+
+  @override
+  String get nextGenerated => 'अगली बार उत्पन्न होगा';
+
+  @override
+  String get never => 'कभी नहीं';
 }

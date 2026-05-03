@@ -1654,5 +1654,7 @@
   "unitPrice": "یونٹ کی قیمت",
   "unitsQuantity": "یونٹ/مقدار",
   "price": "قیمت",
-  "itemized": "آئٹم وار"
+  "itemized": "آئٹم وار",
+  "nextGenerated": "اگلی بار تیار کیا جائے گا",
+  "never": "کبھی نہیں"
 }

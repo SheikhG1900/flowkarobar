@@ -4300,4 +4300,10 @@ class AppLocalizationsUr extends AppLocalizations {
 
   @override
   String get itemized => 'آئٹم وار';
+
+  @override
+  String get nextGenerated => 'اگلی بار تیار کیا جائے گا';
+
+  @override
+  String get never => 'کبھی نہیں';
 }

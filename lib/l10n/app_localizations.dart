@@ -7822,6 +7822,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Itemized'**
   String get itemized;
+
+  /// No description provided for @nextGenerated.
+  ///
+  /// In en, this message translates to:
+  /// **'Next Generated'**
+  String get nextGenerated;
+
+  /// No description provided for @never.
+  ///
+  /// In en, this message translates to:
+  /// **'Never'**
+  String get never;
 }
 
 class _AppLocalizationsDelegate

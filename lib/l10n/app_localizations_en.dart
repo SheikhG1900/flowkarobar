@@ -4283,4 +4283,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get itemized => 'Itemized';
+
+  @override
+  String get nextGenerated => 'Next Generated';
+
+  @override
+  String get never => 'Never';
 }
