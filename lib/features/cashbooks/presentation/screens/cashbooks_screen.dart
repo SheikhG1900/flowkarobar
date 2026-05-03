@@ -17,7 +17,6 @@ import 'package:flowpaisa/features/backup/data/local_backup_service.dart';
 import 'package:flowpaisa/features/backup/presentation/providers/backup_provider.dart';
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/features/premium/domain/premium_provider.dart';
-import 'package:flowpaisa/features/premium/presentation/screens/premium_screen.dart';
 import 'package:flowpaisa/shared/widgets/premium_badge.dart';
 import 'package:flowpaisa/shared/widgets/app_loading_indicator.dart';
 import 'package:file_selector/file_selector.dart' as selector;
@@ -51,45 +50,7 @@ class CashbooksScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Row(
-          children: [
-            Text(l10n.myCashbooks),
-            if (ref.watch(backupProvider).syncInterval != 'manual') ...[
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color:
-                      theme.colorScheme.primaryContainer.withValues(alpha: 0.5),
-                  borderRadius: BorderRadius.circular(4),
-                  border: Border.all(
-                    color: theme.colorScheme.primary.withValues(alpha: 0.3),
-                  ),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.sync,
-                      size: 10,
-                      color: theme.colorScheme.primary,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      l10n.autoSyncBadge(
-                          ref.watch(backupProvider).syncInterval),
-                      style: TextStyle(
-                        color: theme.colorScheme.primary,
-                        fontSize: 10,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ],
-        ),
+        title: Text(l10n.myCashbooks),
       ),
       body: cashbooks.isEmpty
           ? const Center(child: CircularProgressIndicator())
@@ -299,21 +260,6 @@ class CashbooksScreen extends ConsumerWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           AppFloatingActionButton(
-            heroTag: 'set_sync_schedule',
-            backgroundColor: theme.colorScheme.tertiaryContainer,
-            onPressed: () {
-              if (!PremiumGate.isPremium(ref)) {
-                PremiumGate.showPremiumDialog(context);
-                return;
-              }
-              _showSyncScheduleDialog(context, ref);
-            },
-            tooltip: l10n.syncSchedule,
-            child: Icon(Icons.schedule,
-                color: theme.colorScheme.onTertiaryContainer),
-          ),
-          const SizedBox(width: 16),
-          AppFloatingActionButton(
             heroTag: 'add_cloud_cashbook',
             backgroundColor: theme.colorScheme.secondaryContainer,
             onPressed: () async {
@@ -343,78 +289,6 @@ class CashbooksScreen extends ConsumerWidget {
             child: Icon(Icons.add, color: theme.colorScheme.onPrimary),
           ),
         ],
-      ),
-    );
-  }
-
-  void _showSyncScheduleDialog(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context)!;
-    final theme = Theme.of(context);
-    final notifier = ref.read(backupProvider.notifier);
-    final currentState = ref.read(backupProvider).syncInterval;
-
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        padding: EdgeInsets.fromLTRB(
-          24,
-          24,
-          24,
-          MediaQuery.of(context).padding.bottom + 24,
-        ),
-        decoration: BoxDecoration(
-          color: theme.scaffoldBackgroundColor,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.schedule, color: theme.colorScheme.primary),
-                const SizedBox(width: 12),
-                Text(
-                  l10n.syncSchedule,
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: theme.dividerColor),
-              ),
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton<String>(
-                  isExpanded: true,
-                  value: currentState,
-                  items: [
-                    DropdownMenuItem(
-                        value: 'manual', child: Text(l10n.noIdleSync)),
-                    ...['12', '24', '36', '48', '60', '72', '84', '96']
-                        .map((h) => DropdownMenuItem(
-                              value: h,
-                              child: Text('$h ${l10n.hours}'),
-                            )),
-                  ],
-                  onChanged: (v) {
-                    if (v != null) {
-                      notifier.setSyncInterval(v);
-                      Navigator.pop(context);
-                    }
-                  },
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
-          ],
-        ),
       ),
     );
   }

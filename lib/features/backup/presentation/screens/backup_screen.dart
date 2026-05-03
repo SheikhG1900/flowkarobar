@@ -763,32 +763,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-              // Expanded Dropdown
-              Container(
-                height: 56,
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: theme.dividerColor),
-                ),
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton<String>(
-                    isExpanded: true,
-                    value: state.syncInterval,
-                    items: [
-                      DropdownMenuItem(
-                          value: 'manual', child: Text(l10n.noIdleSync)),
-                      ...['12', '24', '36', '48', '60', '72', '84', '96']
-                          .map((h) => DropdownMenuItem(
-                                value: h,
-                                child: Text('$h ${l10n.hours}'),
-                              )),
-                    ],
-                    onChanged: (v) =>
-                        v != null ? notifier.setSyncInterval(v) : null,
-                  ),
-                ),
-              ),
+              // Sync Interval removed (Background tasks disabled)
             ],
         ),
       ),
