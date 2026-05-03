@@ -74,8 +74,6 @@ import 'package:flowpaisa/shared/widgets/rolling_amount.dart';
 import 'package:flowpaisa/shared/widgets/app_loading_indicator.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:workmanager/workmanager.dart';
-import 'package:flowpaisa/core/background/background_dispatcher.dart';
 import 'package:flowpaisa/features/transactions/data/schedule_scheduler.dart';
 import 'package:flowpaisa/features/backup/data/sync/sync_scheduler.dart';
 
@@ -118,18 +116,6 @@ void main() async {
   // Force tree shaking for Material Symbols icons
   // This ensures only used icons are included in the build
   Symbols.forceCompileTimeTreeShaking();
-
-  // Initialize workmanager for background tasks
-  if (!kIsWeb) {
-    await Workmanager().initialize(
-      universalCallbackDispatcher,
-      isInDebugMode: false,
-    );
-
-    // Initialize Sync Scheduler
-    await SyncScheduler.init();
-    await SyncScheduler.scheduleDailySync();
-  }
 
   runApp(
     Phoenix(
@@ -328,7 +314,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         _checkCreditCardNotifications();
 
         // Process scheduled transactions (catch-up)
-        processSchedulesFromContext(ref);
+        // Add a delay to ensure the app is fully interactive before heavy processing
+        Future.delayed(const Duration(seconds: 3), () {
+          processSchedulesFromContext(ref);
+        });
       }
     });
   }

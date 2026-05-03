@@ -16,40 +16,30 @@ import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/features/cashbooks/domain/models/cashbook.dart';
 import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
 
+import 'package:flowpaisa/features/notifications/presentation/providers/notification_provider.dart';
+import 'package:flowpaisa/l10n/app_localizations.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
+
 /// Background task callback for workmanager
 /// This function will be called by workmanager to generate transactions from schedules
 @pragma('vm:entry-point')
 void scheduleTransactionTask() {
-  // This will be called from the background isolate
-  // We need to initialize the database and services here
-  // Note: This is a simplified version - in production, you'd need to handle
-  // the isolate context properly
+  // Background tasks removed
 }
 
-/// Main function to process all active schedules and generate transactions
-/// This should be called from the background task
-Future<void> processSchedules() async {
+/// Helper function to process schedules and check for overdue items from a Riverpod context
+/// This is used when the app is in foreground
+Future<void> processSchedulesFromContext(WidgetRef ref) async {
   try {
+    final cashbooks = ref.read(cashbooksProvider);
+    final isPremium = PremiumGate.isPremium(ref);
+    
+    // Load localizations for notifications
     final prefs = await SharedPreferences.getInstance();
-    final jsonList = prefs.getStringList('cashbooks_list');
-
-    List<Cashbook> cashbooks = [];
-    if (jsonList == null || jsonList.isEmpty) {
-      cashbooks = [
-        Cashbook(
-          id: 'default',
-          name: 'Main Cashbook',
-          colorCode: '#2196F3',
-          iconCodePoint: Symbols.water_drop.codePoint.toString(),
-          dbPath: 'flowpaisa',
-          createdAt: DateTime.now(),
-        )
-      ];
-    } else {
-      cashbooks = jsonList.map((json) => Cashbook.fromJson(json)).toList();
-    }
-
-    final isPremium = prefs.getBool('is_premium_user') ?? false;
+    final localeCode = prefs.getString('language_code') ?? 'en';
+    final l10n = await AppLocalizations.delegate.load(Locale(localeCode));
 
     for (final cashbook in cashbooks) {
       // Skip locked cashbooks for free users
@@ -59,8 +49,14 @@ Future<void> processSchedules() async {
         continue;
       }
 
+      // For each cashbook, we need a separate database instance and services
+      final isActive = cashbook.id == ref.read(activeCashbookIdProvider);
+
+      final database = isActive
+          ? ref.read(databaseProvider)
+          : AppDatabase(fileName: '${cashbook.dbPath}.db');
+      
       try {
-        final database = AppDatabase(fileName: '${cashbook.dbPath}.db');
         final schedulesRepository = SchedulesRepository(database);
         final scheduleService = ScheduleService(
           database: database,
@@ -76,84 +72,106 @@ Future<void> processSchedules() async {
           ),
         );
 
-        // Get all active schedules
+        // 1. Process active schedules
         final activeSchedules = await schedulesRepository.getActiveSchedules();
-
-        // Process each schedule
         for (final schedule in activeSchedules) {
           try {
             await scheduleService.generateTransactionsFromSchedule(schedule.uuid,
                 isPremium: isPremium);
           } catch (e) {
-            print(
-                'Error processing schedule ${schedule.uuid} in ${cashbook.name}: $e');
+            debugPrint('Error processing schedule ${schedule.uuid} in ${cashbook.name}: $e');
           }
         }
 
-        await database.close();
-      } catch (e) {
-        print('Error processing cashbook ${cashbook.name}: $e');
-      }
-    }
-  } catch (e) {
-    print('Error in processSchedules: $e');
-  }
-}
+        // 2. Check for overdue payables and receivables
+        final payablesRepo = PayablesRepository(database);
+        final receivablesRepo = ReceivablesRepository(database);
 
-/// Helper function to process schedules from a Riverpod context
-/// This is used when the app is in foreground
-Future<void> processSchedulesFromContext(WidgetRef ref) async {
-  try {
-    final cashbooks = ref.read(cashbooksProvider);
+        final overduePayables = await payablesRepo.getOverduePayables();
+        for (final p in overduePayables) {
+          await NotificationNotifier.addNotificationStatic(
+            title: l10n.payableOverdue,
+            message: l10n.payableOverdueMessage(
+                p.description ?? (l10n.payable), p.dueDate?.toString() ?? ''),
+            type: NotificationType.payable,
+            isUrgent: true,
+            cashbookUuid: cashbook.id,
+            entityId: p.uuid,
+            titleKey: 'payableOverdue',
+            messageKey: 'payableOverdueMessage',
+            parameters: {
+              'description': p.description ?? l10n.payable,
+              'date': p.dueDate?.toString() ?? '',
+            },
+          );
+        }
 
-    final isPremium = PremiumGate.isPremium(ref);
-    for (final cashbook in cashbooks) {
-      // Skip locked cashbooks for free users
-      if (!isPremium &&
-          cashbook.id != 'default' &&
-          (cashbook.addSeq ?? 0) >= PremiumGate.cashbookTotalLimit) {
-        continue;
-      }
+        final overdueReceivables = await receivablesRepo.getOverdueReceivables();
+        for (final r in overdueReceivables) {
+          await NotificationNotifier.addNotificationStatic(
+            title: l10n.receivableOverdue,
+            message: l10n.receivableOverdueMessage(
+                r.description ?? (l10n.receivable), r.dueDate?.toString() ?? ''),
+            type: NotificationType.receivable,
+            isUrgent: true,
+            cashbookUuid: cashbook.id,
+            entityId: r.uuid,
+            titleKey: 'receivableOverdue',
+            messageKey: 'receivableOverdueMessage',
+            parameters: {
+              'description': r.description ?? l10n.receivable,
+              'date': r.dueDate?.toString() ?? '',
+            },
+          );
+        }
 
-      // For each cashbook, we need a separate database instance and services
-      // except if it's the active one, we might want to use the providers
-      final isActive = cashbook.id == ref.read(activeCashbookIdProvider);
+        // 3. Check for upcoming items (due within 24 hours)
+        final upcomingPayables = await payablesRepo.getUpcomingPayables(days: 1);
+        for (final p in upcomingPayables) {
+          await NotificationNotifier.addNotificationStatic(
+            title: l10n.upcomingPayable,
+            message: l10n.upcomingPayableMessage(
+                p.description ?? (l10n.payable), p.dueDate?.toString() ?? ''),
+            type: NotificationType.payable,
+            cashbookUuid: cashbook.id,
+            entityId: p.uuid,
+            titleKey: 'upcomingPayable',
+            messageKey: 'upcomingPayableMessage',
+            parameters: {
+              'description': p.description ?? l10n.payable,
+              'date': p.dueDate?.toString() ?? '',
+            },
+          );
+        }
 
-      final database = isActive
-          ? ref.read(databaseProvider)
-          : AppDatabase(fileName: '${cashbook.dbPath}.db');
-      final schedulesRepository = SchedulesRepository(database);
-      final scheduleService = ScheduleService(
-        database: database,
-        schedulesRepository: schedulesRepository,
-        transactionsRepository: TransactionsRepository(database),
-        transactionService: TransactionService(
-          database: database,
-          transactionsRepository: TransactionsRepository(database),
-          receivablesRepository: ReceivablesRepository(database),
-          payablesRepository: PayablesRepository(database),
-          categoriesRepository: CategoriesRepository(database),
-          contactsRepository: ContactsRepository(database),
-        ),
-      );
-
-      final activeSchedules = await schedulesRepository.getActiveSchedules();
-
-      for (final schedule in activeSchedules) {
-        try {
-          await scheduleService.generateTransactionsFromSchedule(schedule.uuid,
-              isPremium: isPremium);
-        } catch (e) {
-          print(
-              'Error processing schedule ${schedule.uuid} in ${cashbook.name}: $e');
+        final upcomingReceivables = await receivablesRepo.getUpcomingReceivables(days: 1);
+        for (final r in upcomingReceivables) {
+          await NotificationNotifier.addNotificationStatic(
+            title: l10n.upcomingReceivable,
+            message: l10n.upcomingReceivableMessage(
+                r.description ?? (l10n.receivable), r.dueDate?.toString() ?? ''),
+            type: NotificationType.receivable,
+            cashbookUuid: cashbook.id,
+            entityId: r.uuid,
+            titleKey: 'upcomingReceivable',
+            messageKey: 'upcomingReceivableMessage',
+            parameters: {
+              'description': r.description ?? l10n.receivable,
+              'date': r.dueDate?.toString() ?? '',
+            },
+          );
+        }
+      } finally {
+        if (!isActive) {
+          await database.close();
         }
       }
-
-      if (!isActive) {
-        await database.close();
-      }
     }
+    
+    // Refresh the notification provider to show new items in UI
+    ref.read(notificationProvider.notifier).refresh();
+    
   } catch (e) {
-    print('Error in processSchedulesFromContext: $e');
+    debugPrint('Error in processSchedulesFromContext: $e');
   }
 }

@@ -1,3 +1,5 @@
+import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
+import 'package:flowpaisa/features/backup/data/sync/sync_engine.dart';
 import 'package:flowpaisa/features/premium/domain/premium_provider.dart';
 import 'package:flowpaisa/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:flowpaisa/core/database/database.dart';
@@ -265,11 +267,67 @@ class BackupNotifier extends Notifier<BackupState> {
       if (kDebugMode) {
         print('BackupNotifier: Sync on startup triggered');
       }
-      final cashbooksJson = prefs.getStringList('cashbooks_list');
-      if (cashbooksJson != null && cashbooksJson.isNotEmpty) {
-        await SyncScheduler.triggerOnDemandSync();
-      } else {
+      
+      // 1. Sync the active cashbook in the foreground (with UI updates)
+      // Add a small delay to let the UI finish rendering first
+      Future.delayed(const Duration(milliseconds: 500), () {
         triggerSync(null);
+      });
+
+      // 2. Sync all other unlocked cashbooks in the foreground (silent)
+      // Run this with a larger delay and in a separate microtask to prevent UI jank
+      Future.delayed(const Duration(seconds: 2), () {
+        _syncOtherCashbooksSilently();
+      });
+    }
+  }
+
+  Future<void> _syncOtherCashbooksSilently() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final cashbooksJson = prefs.getStringList('cashbooks_list');
+      if (cashbooksJson == null || cashbooksJson.isEmpty) return;
+
+      final activeCashbook = ref.read(activeCashbookProvider);
+      final isPremium = ref.read(premiumProvider).isPremium;
+      
+      final cashbooks = cashbooksJson.map((j) => Cashbook.fromJson(j)).toList();
+      
+      for (final cashbook in cashbooks) {
+        // Skip the active cashbook (already handled by triggerSync)
+        if (cashbook.id == activeCashbook.id) continue;
+
+        // Skip locked cashbooks for free users
+        if (!isPremium &&
+            cashbook.id != 'default' &&
+            (cashbook.addSeq ?? 0) >= PremiumGate.cashbookTotalLimit) {
+          continue;
+        }
+
+        if (kDebugMode) {
+          print('BackupNotifier: Silent foreground sync for: ${cashbook.name}');
+        }
+
+        final db = AppDatabase(fileName: '${cashbook.dbPath}.db');
+        final syncEngine = SyncEngine(
+          db: db,
+          driveService: _driveService,
+          cashbook: cashbook,
+        );
+
+        try {
+          await syncEngine.sync();
+        } catch (e) {
+          if (kDebugMode) {
+            print('BackupNotifier: Silent sync failed for ${cashbook.name}: $e');
+          }
+        } finally {
+          await db.close();
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('BackupNotifier: Error in _syncOtherCashbooksSilently: $e');
       }
     }
   }
@@ -342,41 +400,34 @@ class BackupNotifier extends Notifier<BackupState> {
 
   Future<void> triggerSync(AppLocalizations? l10n) async {
     try {
-      // Avoid starting a second sync if one is already in progress (or recently started).
-      if (await SyncScheduler.isSyncInProgress()) {
-        state = state.copyWith(
-            isLoading: false,
-            error: null,
-            syncStatus: 'Sync already in progress');
-        Future.delayed(const Duration(seconds: 3), () {
-          if (ref.mounted) _checkFinalStatus();
-        });
+      // Avoid starting a second sync if one is already in progress
+      if (state.syncStatus == 'Syncing...' || state.syncStatus == 'Pulling...' || state.syncStatus == 'Pushing...') {
         return;
       }
 
-      // Set isLoading to true ONLY if we are not already syncing
-      if (state.syncStatus != 'Syncing...') {
-        state = state.copyWith(
-            isLoading: true, error: null, syncStatus: 'Syncing...');
-      }
+      state = state.copyWith(isLoading: true, error: null, syncStatus: 'Syncing...');
 
-      // 1. Trigger the background task
-      await SyncScheduler.triggerOnDemandSync();
+      final activeCashbook = ref.read(activeCashbookProvider);
+      final db = ref.read(databaseProvider);
+      
+      final syncEngine = SyncEngine(
+        db: db,
+        driveService: _driveService,
+        cashbook: activeCashbook,
+      );
 
-      // 2. Start a periodic refresh timer to catch updates from the background isolate.
-      // This is necessary because Drift streams don't automatically propagate
-      // across isolates without a shared connection.
-      _startSyncProgressTimer();
-
-      // 3. Safety timeout: If background task doesn't report back, clear loading state
-      Future.delayed(const Duration(seconds: 30), () {
-        if (state.isLoading) {
-          _checkFinalStatus();
+      try {
+        await syncEngine.sync();
+        state = state.copyWith(isLoading: false, syncStatus: 'Success');
+        _handleSyncSuccess();
+      } catch (e) {
+        state = state.copyWith(isLoading: false, error: e.toString(), syncStatus: 'Error');
+        if (kDebugMode) {
+          print('BackupNotifier: Foreground sync failed: $e');
         }
-      });
+      }
     } catch (e) {
-      state = state.copyWith(
-          isLoading: false, error: e.toString(), syncStatus: 'Idle');
+      state = state.copyWith(isLoading: false, error: e.toString(), syncStatus: 'Idle');
     }
   }
 
@@ -951,7 +1002,6 @@ class BackupNotifier extends Notifier<BackupState> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('sync_interval', interval);
     state = state.copyWith(syncInterval: interval);
-    await SyncScheduler.scheduleDailySync();
   }
 
   Future<String> getDeltaFileContent(String fileId) async {
@@ -1131,7 +1181,6 @@ class BackupNotifier extends Notifier<BackupState> {
     await prefs.remove('sync_account_email');
 
     await prefs.setString('sync_interval', 'manual');
-    await SyncScheduler.cancelAllSyncTasks();
 
     state = BackupState.initial(); // Reset
   }
