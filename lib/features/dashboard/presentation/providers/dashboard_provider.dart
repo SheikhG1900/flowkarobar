@@ -7,6 +7,7 @@ import 'package:flowpaisa/features/dashboard/domain/models.dart';
 import 'package:flowpaisa/features/backup/presentation/providers/backup_provider.dart';
 import 'package:flowpaisa/features/accounts/domain/models/account_models.dart';
 import 'package:rxdart/rxdart.dart';
+import 'package:collection/collection.dart';
 
 /// Main dashboard header balance view: cash from transactions vs net worth from accounts.
 enum DashboardMainBalanceView { availableCash, netWorth }
@@ -90,7 +91,7 @@ final dashboardStatsProvider = StreamProvider<DashboardStats>((ref) {
   ref.watch(syncStatusPollingProvider);
 
   final txStatsStream = txRepo.watchTransactionStats();
-  final recentTxStream = txRepo.watchRecentTransactions(limit: 5);
+  final recentTxStream = txRepo.watchRecentTransactions(limit: 5).distinct((prev, next) => const ListEquality().equals(prev, next));
   final receivableStatsStream = receivableRepo.watchReceivableStats();
   final payableStatsStream = payableRepo.watchPayableStats();
 
@@ -115,7 +116,7 @@ final dashboardStatsProvider = StreamProvider<DashboardStats>((ref) {
         recentTransactions: recentTx,
       );
     },
-  );
+  ).debounceTime(const Duration(milliseconds: 100)).distinct((prev, next) => prev == next);
 });
 
 /// Provider for recent transactions (last 10)
@@ -128,7 +129,7 @@ final recentTransactionsProvider = StreamProvider<List<Transaction>>((ref) {
     // This ensures we re-fetch after sync completes
   }
 
-  return txRepo.watchRecentTransactions(limit: 10);
+  return txRepo.watchRecentTransactions(limit: 10).distinct((prev, next) => const ListEquality().equals(prev, next)).debounceTime(const Duration(milliseconds: 100));
 });
 
 /// Provider for total balance

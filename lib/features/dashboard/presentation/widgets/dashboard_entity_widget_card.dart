@@ -60,6 +60,7 @@ class DashboardEntityWidgetCard extends ConsumerWidget {
       case DashboardWidgetKind.transaction:
         final async = ref.watch(transactionWithDetailsProvider(uuid));
         return async.when(
+          skipLoadingOnRefresh: true,
           data: (item) {
             if (item == null) return const SizedBox.shrink();
             final isExpense = item.transaction.type == 'EXPENSE';
@@ -73,6 +74,7 @@ class DashboardEntityWidgetCard extends ConsumerWidget {
             Widget? leadingChild;
             if (cat != null) {
               leadingChild = Container(
+                key: ValueKey('entity-tx-icon-$uuid'),
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
@@ -92,6 +94,7 @@ class DashboardEntityWidgetCard extends ConsumerWidget {
               currency,
               kind: config.kind,
               entityUuid: uuid,
+              key: ValueKey('entity-tx-$uuid'),
               leadingChild: leadingChild,
               title: item.transaction.description?.isNotEmpty == true
                   ? item.transaction.description!
@@ -102,9 +105,10 @@ class DashboardEntityWidgetCard extends ConsumerWidget {
               color: AppColors.transactionsSectionColor,
               onTap: () => _openTransaction(context, uuid),
               onRemove: () => _removeAt(ref, layoutIndex),
+              contentKey: ValueKey('entity-tx-content-col-$uuid'),
             );
           },
-          loading: () => _buildCardPlaceholder(theme),
+          loading: () => _buildCardPlaceholder(theme, key: ValueKey('entity-tx-loading-$uuid')),
           error: (_, __) => const SizedBox.shrink(),
         );
       case DashboardWidgetKind.category:
@@ -115,6 +119,7 @@ class DashboardEntityWidgetCard extends ConsumerWidget {
         final decimals = ref.watch(currencyDecimalPlacesProvider);
 
         return async.when(
+          skipLoadingOnRefresh: true,
           data: (stats) {
             final cat = stats.category;
             final isCategoryLocked = !isPremium &&
@@ -131,6 +136,7 @@ class DashboardEntityWidgetCard extends ConsumerWidget {
                 progressChild = Padding(
                   padding: const EdgeInsets.only(top: 8),
                   child: DualAmountProgressBar(
+                    key: ValueKey('entity-cat-budget-$uuid'),
                     leftLabel: isExpense
                         ? l10n.budgetBarUsed
                         : l10n.budgetBarProgress,
@@ -156,7 +162,9 @@ class DashboardEntityWidgetCard extends ConsumerWidget {
               currency,
               kind: config.kind,
               entityUuid: uuid,
+              key: ValueKey('entity-cat-$uuid'),
               leadingChild: Container(
+                key: ValueKey('entity-cat-icon-$uuid'),
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
@@ -177,14 +185,16 @@ class DashboardEntityWidgetCard extends ConsumerWidget {
               onRemove: () => _removeAt(ref, layoutIndex),
               titleColumnExtra: progressChild,
               isLocked: isCategoryLocked,
+              contentKey: ValueKey('entity-cat-content-col-$uuid'),
             );
           },
-          loading: () => _buildCardPlaceholder(theme),
+          loading: () => _buildCardPlaceholder(theme, key: ValueKey('entity-cat-loading-$uuid')),
           error: (_, __) => const SizedBox.shrink(),
         );
       case DashboardWidgetKind.contact:
         final async = ref.watch(contactStatisticsProvider(uuid));
         return async.when(
+          skipLoadingOnRefresh: true,
           data: (stats) {
             final net = stats.netBalance;
             return _buildCard(
@@ -195,7 +205,8 @@ class DashboardEntityWidgetCard extends ConsumerWidget {
               currency,
               kind: config.kind,
               entityUuid: uuid,
-              leadingChild: _buildContactAvatar(stats.contact.name),
+              key: ValueKey('entity-contact-$uuid'),
+              leadingChild: _buildContactAvatar(stats.contact.name, key: ValueKey('entity-contact-icon-$uuid')),
               title: stats.contact.name,
               subtitle: net >= 0 ? l10n.receivableTag : l10n.payableTag,
               amount: net.abs(),
@@ -208,14 +219,16 @@ class DashboardEntityWidgetCard extends ConsumerWidget {
                   : AppColors.payableColor,
               onTap: () => _openContact(context, uuid),
               onRemove: () => _removeAt(ref, layoutIndex),
+              contentKey: ValueKey('entity-contact-content-col-$uuid'),
             );
           },
-          loading: () => _buildCardPlaceholder(theme),
+          loading: () => _buildCardPlaceholder(theme, key: ValueKey('entity-contact-loading-$uuid')),
           error: (_, __) => const SizedBox.shrink(),
         );
       case DashboardWidgetKind.payable:
         final async = ref.watch(payableWithLinkedDataProvider(uuid));
         return async.when(
+          skipLoadingOnRefresh: true,
           data: (item) {
             if (item == null) return const SizedBox.shrink();
             final contactName = item.contact?.name ?? '';
@@ -227,8 +240,9 @@ class DashboardEntityWidgetCard extends ConsumerWidget {
               currency,
               kind: config.kind,
               entityUuid: uuid,
+              key: ValueKey('entity-payable-$uuid'),
               leadingChild: contactName.isNotEmpty
-                  ? _buildContactAvatar(contactName)
+                  ? _buildContactAvatar(contactName, key: ValueKey('entity-payable-icon-$uuid'))
                   : null,
               title: item.contact?.name ?? l10n.payable,
               subtitle: item.payable.dueDate != null
@@ -241,14 +255,16 @@ class DashboardEntityWidgetCard extends ConsumerWidget {
               amountColor: AppColors.payableColor,
               onTap: () => _openPayable(context, uuid),
               onRemove: () => _removeAt(ref, layoutIndex),
+              contentKey: ValueKey('entity-payable-content-col-$uuid'),
             );
           },
-          loading: () => _buildCardPlaceholder(theme),
+          loading: () => _buildCardPlaceholder(theme, key: ValueKey('entity-payable-loading-$uuid')),
           error: (_, __) => const SizedBox.shrink(),
         );
       case DashboardWidgetKind.receivable:
         final async = ref.watch(receivableWithLinkedDataProvider(uuid));
         return async.when(
+          skipLoadingOnRefresh: true,
           data: (item) {
             if (item == null) return const SizedBox.shrink();
             final contactName = item.contact?.name ?? '';
@@ -260,8 +276,9 @@ class DashboardEntityWidgetCard extends ConsumerWidget {
               currency,
               kind: config.kind,
               entityUuid: uuid,
+              key: ValueKey('entity-receivable-$uuid'),
               leadingChild: contactName.isNotEmpty
-                  ? _buildContactAvatar(contactName)
+                  ? _buildContactAvatar(contactName, key: ValueKey('entity-receivable-icon-$uuid'))
                   : null,
               title: item.contact?.name ?? l10n.receivableTag,
               subtitle: item.receivable.dueDate != null
@@ -274,9 +291,10 @@ class DashboardEntityWidgetCard extends ConsumerWidget {
               amountColor: AppColors.receivableColor,
               onTap: () => _openReceivable(context, uuid),
               onRemove: () => _removeAt(ref, layoutIndex),
+              contentKey: ValueKey('entity-receivable-content-col-$uuid'),
             );
           },
-          loading: () => _buildCardPlaceholder(theme),
+          loading: () => _buildCardPlaceholder(theme, key: ValueKey('entity-receivable-loading-$uuid')),
           error: (_, __) => const SizedBox.shrink(),
         );
       case DashboardWidgetKind.account:
@@ -300,7 +318,7 @@ class DashboardEntityWidgetCard extends ConsumerWidget {
           );
         }
         if (listAsync.isLoading || detailAsync.isLoading) {
-          return _buildCardPlaceholder(theme);
+          return _buildCardPlaceholder(theme, key: ValueKey('entity-account-loading-$uuid'));
         }
         return const SizedBox.shrink();
       default:
@@ -308,8 +326,9 @@ class DashboardEntityWidgetCard extends ConsumerWidget {
     }
   }
 
-  static Widget _buildContactAvatar(String name) {
+  static Widget _buildContactAvatar(String name, {Key? key}) {
     return Container(
+      key: key,
       width: 44,
       height: 44,
       decoration: BoxDecoration(
@@ -348,10 +367,13 @@ class DashboardEntityWidgetCard extends ConsumerWidget {
     required VoidCallback onRemove,
     Widget? titleColumnExtra,
     bool isLocked = false,
+    Key? key,
+    Key? contentKey,
   }) {
     final effectiveAmountColor = amountColor ??
         (isExpense ? AppColors.expenseColor : AppColors.incomeColor);
     return RepaintBoundary(
+      key: key,
       child: Padding(
         padding: const EdgeInsets.only(bottom: 10),
         child: Material(
@@ -398,9 +420,10 @@ class DashboardEntityWidgetCard extends ConsumerWidget {
                                 ),
                             const SizedBox(width: 12),
                             Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
+                                child: Column(
+                                  key: contentKey,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
                                   Text(
                                     title,
                                     style: theme.textTheme.titleSmall?.copyWith(
@@ -486,8 +509,9 @@ class DashboardEntityWidgetCard extends ConsumerWidget {
     }
   }
 
-  Widget _buildCardPlaceholder(ThemeData theme) {
+  Widget _buildCardPlaceholder(ThemeData theme, {Key? key}) {
     return Padding(
+      key: key,
       padding: const EdgeInsets.only(bottom: 10),
       child: Container(
         height: 76,
@@ -689,7 +713,9 @@ class DashboardEntityWidgetCard extends ConsumerWidget {
       currency,
       kind: kind,
       entityUuid: uuid,
+      key: ValueKey('entity-account-$uuid'),
       leadingChild: Container(
+        key: ValueKey('entity-account-icon-$uuid'),
         width: 44,
         height: 44,
         decoration: BoxDecoration(
@@ -714,8 +740,9 @@ class DashboardEntityWidgetCard extends ConsumerWidget {
       onTap: () => _openAccount(context, uuid),
       onRemove: () => _removeAt(ref, layoutIndex),
       titleColumnExtra: progressChild ??
-          _accountDashboardTitleExtra(theme, l10n, currency, awb),
+          _accountDashboardTitleExtra(theme, l10n, currency, awb, key: ValueKey('entity-account-extra-$uuid')),
       isLocked: isAccountLocked,
+      contentKey: ValueKey('entity-account-content-col-$uuid'),
     );
   }
 
@@ -725,8 +752,9 @@ class DashboardEntityWidgetCard extends ConsumerWidget {
     ThemeData theme,
     AppLocalizations l10n,
     dynamic currency,
-    AccountWithBalance awb,
-  ) {
+    AccountWithBalance awb, {
+    Key? key,
+  }) {
     if (currency == null || !awb.type.isCreditCard) return null;
 
     final acc = awb.account;
@@ -738,6 +766,7 @@ class DashboardEntityWidgetCard extends ConsumerWidget {
     final available = awb.availableCredit ?? 0;
 
     return Text(
+      key: key,
       '${l10n.available}: ${AmountFormatter.formatWithCurrency(available, symbol, decimals)}',
       style: theme.textTheme.labelSmall?.copyWith(
         color: AppColors.incomeColor,

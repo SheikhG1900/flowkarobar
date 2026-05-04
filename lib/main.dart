@@ -1659,6 +1659,7 @@ class _DashboardTab extends ConsumerWidget {
     required dynamic currency,
     required bool isDark,
     double? overdue,
+    required String label,
   }) {
     final style = TextStyle(
       color: isDark ? Colors.white : AppColors.lightText,
@@ -1666,13 +1667,16 @@ class _DashboardTab extends ConsumerWidget {
       fontWeight: FontWeight.bold,
     );
     return Column(
+      key: ValueKey('summary-amount-col-$label'),
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         FittedBox(
+          key: ValueKey('summary-amount-fitted-$label'),
           fit: BoxFit.scaleDown,
           alignment: Alignment.centerLeft,
           child: RollingAmount(
+            key: ValueKey('summary-amount-rolling-$label'),
             amount: amount,
             currencySymbol: currency.symbol,
             decimalPlaces: currency.decimalPlaces,
@@ -1682,6 +1686,7 @@ class _DashboardTab extends ConsumerWidget {
         if (overdue != null && overdue > 0) ...[
           const SizedBox(height: 2),
           FittedBox(
+            key: ValueKey('summary-overdue-fitted-$label'),
             fit: BoxFit.scaleDown,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
@@ -1721,6 +1726,7 @@ class _DashboardTab extends ConsumerWidget {
   }) {
     final theme = Theme.of(context);
     return Column(
+      key: ValueKey('summary-row-$title'),
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
@@ -1743,6 +1749,7 @@ class _DashboardTab extends ConsumerWidget {
             final isLast = items.indexOf(item) == items.length - 1;
             return Expanded(
               child: InkWell(
+                key: ValueKey('summary-item-${item.label}'),
                 onTap: item.onTap,
                 borderRadius: BorderRadius.circular(12),
                 child: Container(
@@ -1767,6 +1774,7 @@ class _DashboardTab extends ConsumerWidget {
                     ],
                   ),
                   child: Column(
+                    key: ValueKey('summary-item-content-${item.label}'),
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
@@ -2866,6 +2874,8 @@ class _DashboardHeader extends ConsumerWidget {
             final visibility = ref.watch(dashboardVisibilityProvider);
             final hasSeenCustomization =
                 ref.watch(dashboardCustomizationSeenProvider);
+            final theme = Theme.of(context);
+            final l10n = AppLocalizations.of(context)!;
 
             IconData icon;
             Color color;
@@ -2983,6 +2993,15 @@ class _DashboardHeroContent extends ConsumerWidget {
     final heroCombineAddends = ref.watch(dashboardHeroCombinedAddendsProvider);
     final heroCombineChips = ref.watch(dashboardHeroCombinedCashbooksForChipsProvider);
     final cashbookCount = ref.watch(cashbooksProvider).length;
+
+    // Cache stats for loading state
+    dashboardStatsAsync.whenData((s) {
+      Future.microtask(() {
+        if (context.mounted) {
+          ref.read(lastDashboardStatsProvider.notifier).setLast(s);
+        }
+      });
+    });
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -3114,6 +3133,7 @@ class _DashboardHeroContent extends ConsumerWidget {
                             ),
                           )
                         : dashboardStatsAsync.when(
+                            skipLoadingOnRefresh: true,
                             data: (stats) {
                               final combinedCash = stats.totalBalance +
                                   heroCombineAddends.availableCash;
@@ -3200,24 +3220,27 @@ class _DashboardStatsGrid extends ConsumerWidget {
     final filter = ref.watch(dashboardFilterProvider);
     final lastStats = ref.watch(lastDashboardStatsProvider);
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _DashboardTab._buildSummaryRow(
-            context,
-            isDark: isDark,
-            title: l10n.cashFlow,
-            items: [
-              _SummaryItem(
-                label: l10n.income,
+    return RepaintBoundary(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _DashboardTab._buildSummaryRow(
+              context,
+              isDark: isDark,
+              title: l10n.cashFlow,
+              items: [
+                _SummaryItem(
+                  label: l10n.income,
                 amountContent: dashboardStatsAsync.when(
+                  skipLoadingOnRefresh: true,
                   data: (s) => _DashboardTab._buildSummaryAmountContent(
                     context,
                     amount: s.income(filter),
                     currency: currency,
                     isDark: isDark,
+                    label: l10n.income,
                   ),
                   loading: () => lastStats != null
                       ? _DashboardTab._buildSummaryAmountContent(
@@ -3225,44 +3248,47 @@ class _DashboardStatsGrid extends ConsumerWidget {
                           amount: lastStats.income(filter),
                           currency: currency,
                           isDark: isDark,
+                          label: l10n.income,
                         )
                       : _DashboardTab._buildAmountPlaceholder(
                           context, currency, isDark),
                   error: (_, __) => _DashboardTab._buildAmountPlaceholder(
                       context, currency, isDark),
                 ),
-                color: AppColors.incomeColor,
-                icon: Icons.south_west,
-                onTap: () {
-                  final isMonthly = filter == DashboardFilter.monthly;
-                  final now = DateTime.now();
-                  final startDate =
-                      isMonthly ? DateTime(now.year, now.month, 1) : null;
-                  final endDate =
-                      isMonthly ? DateTime(now.year, now.month + 1, 0) : null;
-                  ref.read(transactionsPaginatedProvider.notifier).applyFilters(
-                        TransactionFilters(
-                          type: 'INCOME',
-                          startDate: startDate,
-                          endDate: endDate,
-                        ),
-                      );
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const TransactionsListScreen(),
-                    ),
-                  );
-                },
-              ),
+                  color: AppColors.incomeColor,
+                  icon: Icons.south_west,
+                  onTap: () {
+                    final isMonthly = filter == DashboardFilter.monthly;
+                    final now = DateTime.now();
+                    final startDate =
+                        isMonthly ? DateTime(now.year, now.month, 1) : null;
+                    final endDate =
+                        isMonthly ? DateTime(now.year, now.month + 1, 0) : null;
+                    ref.read(transactionsPaginatedProvider.notifier).applyFilters(
+                          TransactionFilters(
+                            type: 'INCOME',
+                            startDate: startDate,
+                            endDate: endDate,
+                          ),
+                        );
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const TransactionsListScreen(),
+                      ),
+                    );
+                  },
+                ),
               _SummaryItem(
                 label: l10n.expense,
                 amountContent: dashboardStatsAsync.when(
+                  skipLoadingOnRefresh: true,
                   data: (s) => _DashboardTab._buildSummaryAmountContent(
                     context,
                     amount: s.expense(filter),
                     currency: currency,
                     isDark: isDark,
+                    label: l10n.expense,
                   ),
                   loading: () => lastStats != null
                       ? _DashboardTab._buildSummaryAmountContent(
@@ -3270,44 +3296,47 @@ class _DashboardStatsGrid extends ConsumerWidget {
                           amount: lastStats.expense(filter),
                           currency: currency,
                           isDark: isDark,
+                          label: l10n.expense,
                         )
                       : _DashboardTab._buildAmountPlaceholder(
                           context, currency, isDark),
                   error: (_, __) => _DashboardTab._buildAmountPlaceholder(
                       context, currency, isDark),
                 ),
-                color: AppColors.expenseColor,
-                icon: Icons.north_east,
-                onTap: () {
-                  final isMonthly = filter == DashboardFilter.monthly;
-                  final now = DateTime.now();
-                  final startDate =
-                      isMonthly ? DateTime(now.year, now.month, 1) : null;
-                  final endDate =
-                      isMonthly ? DateTime(now.year, now.month + 1, 0) : null;
-                  ref.read(transactionsPaginatedProvider.notifier).applyFilters(
-                        TransactionFilters(
-                          type: 'EXPENSE',
-                          startDate: startDate,
-                          endDate: endDate,
-                        ),
-                      );
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const TransactionsListScreen(),
-                    ),
-                  );
-                },
-              ),
+                  color: AppColors.expenseColor,
+                  icon: Icons.north_east,
+                  onTap: () {
+                    final isMonthly = filter == DashboardFilter.monthly;
+                    final now = DateTime.now();
+                    final startDate =
+                        isMonthly ? DateTime(now.year, now.month, 1) : null;
+                    final endDate =
+                        isMonthly ? DateTime(now.year, now.month + 1, 0) : null;
+                    ref.read(transactionsPaginatedProvider.notifier).applyFilters(
+                          TransactionFilters(
+                            type: 'EXPENSE',
+                            startDate: startDate,
+                            endDate: endDate,
+                          ),
+                        );
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const TransactionsListScreen(),
+                      ),
+                    );
+                  },
+                ),
               _SummaryItem(
                 label: l10n.netCash,
                 amountContent: dashboardStatsAsync.when(
+                  skipLoadingOnRefresh: true,
                   data: (s) => _DashboardTab._buildSummaryAmountContent(
                     context,
                     amount: s.netCash(filter),
                     currency: currency,
                     isDark: isDark,
+                    label: l10n.netCash,
                   ),
                   loading: () => lastStats != null
                       ? _DashboardTab._buildSummaryAmountContent(
@@ -3315,53 +3344,56 @@ class _DashboardStatsGrid extends ConsumerWidget {
                           amount: lastStats.netCash(filter),
                           currency: currency,
                           isDark: isDark,
+                          label: l10n.netCash,
                         )
                       : _DashboardTab._buildAmountPlaceholder(
                           context, currency, isDark),
                   error: (_, __) => _DashboardTab._buildAmountPlaceholder(
                       context, currency, isDark),
                 ),
-                color: activeForeColor,
-                icon: Icons.account_balance_wallet,
-                onTap: () {
-                  final isMonthly = filter == DashboardFilter.monthly;
-                  final now = DateTime.now();
-                  final startDate =
-                      isMonthly ? DateTime(now.year, now.month, 1) : null;
-                  final endDate =
-                      isMonthly ? DateTime(now.year, now.month + 1, 0) : null;
-                  ref.read(transactionsPaginatedProvider.notifier).applyFilters(
-                        TransactionFilters(
-                          startDate: startDate,
-                          endDate: endDate,
-                        ),
-                      );
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const TransactionsListScreen(),
-                    ),
-                  );
-                },
-              ),
-            ],
-            currency: currency,
-          ),
-          const SizedBox(height: 8),
-          _DashboardTab._buildSummaryRow(
-            context,
-            isDark: isDark,
-            title: l10n.lendingCredit,
-            items: [
+                  color: activeForeColor,
+                  icon: Icons.account_balance_wallet,
+                  onTap: () {
+                    final isMonthly = filter == DashboardFilter.monthly;
+                    final now = DateTime.now();
+                    final startDate =
+                        isMonthly ? DateTime(now.year, now.month, 1) : null;
+                    final endDate =
+                        isMonthly ? DateTime(now.year, now.month + 1, 0) : null;
+                    ref.read(transactionsPaginatedProvider.notifier).applyFilters(
+                          TransactionFilters(
+                            startDate: startDate,
+                            endDate: endDate,
+                          ),
+                        );
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const TransactionsListScreen(),
+                      ),
+                    );
+                  },
+                ),
+              ],
+              currency: currency,
+            ),
+            const SizedBox(height: 8),
+            _DashboardTab._buildSummaryRow(
+              context,
+              isDark: isDark,
+              title: l10n.lendingCredit,
+              items: [
               _SummaryItem(
                 label: l10n.receivableTag,
                 amountContent: dashboardStatsAsync.when(
+                  skipLoadingOnRefresh: true,
                   data: (s) => _DashboardTab._buildSummaryAmountContent(
                     context,
                     amount: s.receivable(filter),
                     currency: currency,
                     isDark: isDark,
                     overdue: s.overdueReceivable,
+                    label: l10n.receivableTag,
                   ),
                   loading: () => lastStats != null
                       ? _DashboardTab._buildSummaryAmountContent(
@@ -3370,46 +3402,49 @@ class _DashboardStatsGrid extends ConsumerWidget {
                           currency: currency,
                           isDark: isDark,
                           overdue: lastStats.overdueReceivable,
+                          label: l10n.receivableTag,
                         )
                       : _DashboardTab._buildAmountPlaceholder(
                           context, currency, isDark),
                   error: (_, __) => _DashboardTab._buildAmountPlaceholder(
                       context, currency, isDark),
                 ),
-                color: AppColors.receivableColor,
-                icon: Icons.call_received,
-                onTap: () {
-                  final isMonthly = filter == DashboardFilter.monthly;
-                  final now = DateTime.now();
-                  final startDate =
-                      isMonthly ? DateTime(now.year, now.month, 1) : null;
-                  final endDate =
-                      isMonthly ? DateTime(now.year, now.month + 1, 0) : null;
-                  ref
-                      .read(receivablesPaginatedProvider('PENDING').notifier)
-                      .applyFilters(
-                        ReceivableFilters(
-                          startDate: startDate,
-                          endDate: endDate,
-                        ),
-                      );
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const ReceivablesListScreen(),
-                    ),
-                  );
-                },
-              ),
+                  color: AppColors.receivableColor,
+                  icon: Icons.call_received,
+                  onTap: () {
+                    final isMonthly = filter == DashboardFilter.monthly;
+                    final now = DateTime.now();
+                    final startDate =
+                        isMonthly ? DateTime(now.year, now.month, 1) : null;
+                    final endDate =
+                        isMonthly ? DateTime(now.year, now.month + 1, 0) : null;
+                    ref
+                        .read(receivablesPaginatedProvider('PENDING').notifier)
+                        .applyFilters(
+                          ReceivableFilters(
+                            startDate: startDate,
+                            endDate: endDate,
+                          ),
+                        );
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ReceivablesListScreen(),
+                      ),
+                    );
+                  },
+                ),
               _SummaryItem(
                 label: l10n.payableTag,
                 amountContent: dashboardStatsAsync.when(
+                  skipLoadingOnRefresh: true,
                   data: (s) => _DashboardTab._buildSummaryAmountContent(
                     context,
                     amount: s.payable(filter),
                     currency: currency,
                     isDark: isDark,
                     overdue: s.overduePayable,
+                    label: l10n.payableTag,
                   ),
                   loading: () => lastStats != null
                       ? _DashboardTab._buildSummaryAmountContent(
@@ -3418,45 +3453,48 @@ class _DashboardStatsGrid extends ConsumerWidget {
                           currency: currency,
                           isDark: isDark,
                           overdue: lastStats.overduePayable,
+                          label: l10n.payableTag,
                         )
                       : _DashboardTab._buildAmountPlaceholder(
                           context, currency, isDark),
                   error: (_, __) => _DashboardTab._buildAmountPlaceholder(
                       context, currency, isDark),
                 ),
-                color: AppColors.payableColor,
-                icon: Icons.call_made,
-                onTap: () {
-                  final isMonthly = filter == DashboardFilter.monthly;
-                  final now = DateTime.now();
-                  final startDate =
-                      isMonthly ? DateTime(now.year, now.month, 1) : null;
-                  final endDate =
-                      isMonthly ? DateTime(now.year, now.month + 1, 0) : null;
-                  ref
-                      .read(payablesPaginatedProvider('PENDING').notifier)
-                      .applyFilters(
-                        PayableFilters(
-                          startDate: startDate,
-                          endDate: endDate,
-                        ),
-                      );
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const PayablesListScreen(),
-                    ),
-                  );
-                },
-              ),
+                  color: AppColors.payableColor,
+                  icon: Icons.call_made,
+                  onTap: () {
+                    final isMonthly = filter == DashboardFilter.monthly;
+                    final now = DateTime.now();
+                    final startDate =
+                        isMonthly ? DateTime(now.year, now.month, 1) : null;
+                    final endDate =
+                        isMonthly ? DateTime(now.year, now.month + 1, 0) : null;
+                    ref
+                        .read(payablesPaginatedProvider('PENDING').notifier)
+                        .applyFilters(
+                          PayableFilters(
+                            startDate: startDate,
+                            endDate: endDate,
+                          ),
+                        );
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const PayablesListScreen(),
+                      ),
+                    );
+                  },
+                ),
               _SummaryItem(
                 label: l10n.netCredit,
                 amountContent: dashboardStatsAsync.when(
+                  skipLoadingOnRefresh: true,
                   data: (s) => _DashboardTab._buildSummaryAmountContent(
                     context,
                     amount: s.netCredit(filter),
                     currency: currency,
                     isDark: isDark,
+                    label: l10n.netCredit,
                   ),
                   loading: () => lastStats != null
                       ? _DashboardTab._buildSummaryAmountContent(
@@ -3464,19 +3502,21 @@ class _DashboardStatsGrid extends ConsumerWidget {
                           amount: lastStats.netCredit(filter),
                           currency: currency,
                           isDark: isDark,
+                          label: l10n.netCredit,
                         )
                       : _DashboardTab._buildAmountPlaceholder(
                           context, currency, isDark),
                   error: (_, __) => _DashboardTab._buildAmountPlaceholder(
                       context, currency, isDark),
                 ),
-                color: activeForeColor,
-                icon: Icons.swap_horiz,
-              ),
-            ],
-            currency: currency,
-          ),
-        ],
+                  color: activeForeColor,
+                  icon: Icons.swap_horiz,
+                ),
+              ],
+              currency: currency,
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -336,7 +336,17 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
     final symbol = currency?.symbol ?? '';
     final decimals = currency?.decimalPlaces ?? 2;
 
+    // Cache stats for loading state
+    async.whenData((s) {
+      Future.microtask(() {
+        if (context.mounted) {
+          ref.read(lastDashboardStatsProvider.notifier).setLast(s);
+        }
+      });
+    });
+
     return async.when(
+      skipLoadingOnRefresh: true,
       data: (s) {
         final income = s.income(filter);
         final expense = s.expense(filter);
@@ -348,6 +358,7 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
           child: Padding(
             padding: const EdgeInsets.only(bottom: 10),
             child: Material(
+              key: ValueKey('fin-summary-material-${filter.name}'),
               color: theme.cardColor,
               borderRadius: BorderRadius.circular(16),
               clipBehavior: Clip.antiAlias,
@@ -366,6 +377,7 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
                   l10n,
                 ),
                 child: Container(
+                  key: ValueKey('fin-summary-container-${filter.name}'),
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     border: Border.all(
@@ -374,12 +386,15 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Column(
+                    key: ValueKey('fin-summary-column-${filter.name}'),
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Row(
+                        key: ValueKey('fin-summary-row1-${filter.name}'),
                         children: [
                           Expanded(
                             child: _buildSmallStatItem(
+                              key: ValueKey('fin-summary-payable-${filter.name}'),
                               theme: theme,
                               color: AppColors.payableColor,
                               icon: Symbols.trending_down,
@@ -392,6 +407,7 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
                           const SizedBox(width: 8),
                           Expanded(
                             child: _buildSmallStatItem(
+                              key: ValueKey('fin-summary-receivable-${filter.name}'),
                               theme: theme,
                               color: AppColors.receivableColor,
                               icon: Symbols.trending_up,
@@ -405,9 +421,11 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
                       ),
                       const SizedBox(height: 8),
                       Row(
+                        key: ValueKey('fin-summary-row2-${filter.name}'),
                         children: [
                           Expanded(
                             child: _buildSmallStatItem(
+                              key: ValueKey('fin-summary-expense-${filter.name}'),
                               theme: theme,
                               color: AppColors.expenseColor,
                               icon: Symbols.trending_down,
@@ -420,6 +438,7 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
                           const SizedBox(width: 8),
                           Expanded(
                             child: _buildSmallStatItem(
+                              key: ValueKey('fin-summary-income-${filter.name}'),
                               theme: theme,
                               color: AppColors.incomeColor,
                               icon: Symbols.trending_up,
@@ -433,6 +452,7 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
                       ),
                       const SizedBox(height: 8),
                       _buildBalanceRow(
+                        key: ValueKey('fin-summary-bal1-${filter.name}'),
                         theme: theme,
                         currencySymbol: symbol,
                         decimalPlaces: decimals,
@@ -445,6 +465,7 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
                       ),
                       const SizedBox(height: 8),
                       _buildBalanceRow(
+                        key: ValueKey('fin-summary-bal2-${filter.name}'),
                         theme: theme,
                         currencySymbol: symbol,
                         decimalPlaces: decimals,
@@ -478,6 +499,7 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
     required String labelWhenLower,
     required LinearGradient gradientWhenHigher,
     required LinearGradient gradientWhenLower,
+    Key? key,
   }) {
     final isHigher = isReceivableHigher;
     final label = isHigher ? labelWhenHigher : labelWhenLower;
@@ -491,6 +513,7 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
     );
 
     return Container(
+      key: key,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         gradient: transparentGradient,
@@ -501,6 +524,7 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
         ),
       ),
       child: Row(
+        key: key != null ? ValueKey('bal-row-content-${key.toString()}') : null,
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
@@ -534,96 +558,107 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
     required VoidCallback onRemove,
     Key? reorderKey,
   }) {
-    final transactionsAsync = ref.watch(transactionsPaginatedProvider);
+    final transactionsAsync = ref.watch(recentTransactionsProvider);
     final symbol = currency?.symbol ?? '';
     final decimals = currency?.decimalPlaces ?? 2;
 
-    final transactions = transactionsAsync.items.take(5).toList();
-    if (transactions.isEmpty) return const SizedBox.shrink();
+    return transactionsAsync.when(
+      skipLoadingOnRefresh: true,
+      data: (transactions) {
+        if (transactions.isEmpty) return const SizedBox.shrink();
 
-    return RepaintBoundary(
-      child: Padding(
-        padding: const EdgeInsets.only(bottom: 10),
-        child: Material(
-          color: theme.cardColor,
-          borderRadius: BorderRadius.circular(16),
-          clipBehavior: Clip.antiAlias,
-          child: InkWell(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const TransactionsListScreen()),
-              );
-            },
-            onLongPress: () => _showSummaryActionsSheet(
-              context,
-              ref,
-              onRemove,
-              l10n,
-            ),
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                border: Border.all(
-                    color: theme.dividerColor.withValues(alpha: 0.1), width: 1),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Row(
-                    children: [
-                      Icon(Icons.history,
-                          color: theme.colorScheme.primary, size: 20),
-                      const SizedBox(width: 8),
-                      Text(
-                        l10n.recentTransactions,
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const Spacer(),
-                      Icon(Icons.arrow_forward_ios,
-                          size: 12, color: theme.hintColor),
-                    ],
+        return RepaintBoundary(
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Material(
+              key: const ValueKey('recent-tx-list'),
+              color: theme.cardColor,
+              borderRadius: BorderRadius.circular(16),
+              clipBehavior: Clip.antiAlias,
+              child: InkWell(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => const TransactionsListScreen()),
+                  );
+                },
+                onLongPress: () => _showSummaryActionsSheet(
+                  context,
+                  ref,
+                  onRemove,
+                  l10n,
+                ),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                        color: theme.dividerColor.withValues(alpha: 0.1),
+                        width: 1),
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                  const SizedBox(height: 12),
-                  ...transactions.map((tx) {
-                    final isIncome = tx.transaction.type == 'INCOME';
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: Row(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Row(
                         children: [
-                          Expanded(
-                            child: Text(
-                              tx.transaction.description ??
-                                  tx.category?.name ??
-                                  l10n.uncategorized,
-                              style: theme.textTheme.bodySmall,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
+                          Icon(Icons.history,
+                              color: theme.colorScheme.primary, size: 20),
+                          const SizedBox(width: 8),
                           Text(
-                            AmountFormatter.formatWithCurrency(
-                                tx.transaction.amount, symbol, decimals),
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: isIncome
-                                  ? AppColors.incomeColor
-                                  : AppColors.expenseColor,
+                            l10n.recentTransactions,
+                            style: theme.textTheme.titleSmall?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
                           ),
+                          const Spacer(),
+                          Icon(Icons.arrow_forward_ios,
+                              size: 12, color: theme.hintColor),
                         ],
                       ),
-                    );
-                  }),
-                ],
+                      const SizedBox(height: 12),
+                      ...transactions.take(5).map((tx) {
+                        final isIncome = tx.type == 'INCOME';
+                        return Padding(
+                          key: ValueKey('recent-tx-row-${tx.uuid}'),
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: Row(
+                            key: ValueKey('recent-tx-row-content-${tx.uuid}'),
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  key: ValueKey('recent-tx-desc-${tx.uuid}'),
+                                  tx.description ?? l10n.uncategorized,
+                                  style: theme.textTheme.bodySmall,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              Text(
+                                key: ValueKey('recent-tx-amount-${tx.uuid}'),
+                                AmountFormatter.formatWithCurrency(
+                                    tx.amount, symbol, decimals),
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: isIncome
+                                      ? AppColors.incomeColor
+                                      : AppColors.expenseColor,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }),
+                    ],
+                  ),
+                ),
               ),
             ),
           ),
-        ),
-      ),
+        );
+      },
+      loading: () => _buildCardPlaceholder(theme),
+      error: (_, __) => const SizedBox.shrink(),
     );
   }
 
@@ -652,309 +687,352 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
     final color = isIncome ? AppColors.incomeColor : AppColors.expenseColor;
 
     return categoriesAsync.when(
+      skipLoadingOnRefresh: true,
       data: (categories) {
         return netsAsync.when(
+          skipLoadingOnRefresh: true,
           data: (nets) {
-            final includeUncategorized = includeAsync.value ?? false;
-            final uncategorizedAmt = uncategorizedAsync.value ?? 0.0;
+            return includeAsync.when(
+              skipLoadingOnRefresh: true,
+              data: (includeUncategorized) {
+                return uncategorizedAsync.when(
+                  skipLoadingOnRefresh: true,
+                  data: (uncategorizedAmt) {
+                    double categorizedNet = 0;
+                    double totalBudgetCap = 0;
+                    for (final c in categories) {
+                      categorizedNet += nets[c.uuid] ?? 0;
+                      final isCatLocked = !PremiumGate.isPremium(ref) &&
+                          !c.isDefault &&
+                          (c.addSeq ?? 0) > PremiumGate.categoryTotalLimit;
+                      final isBudgetLocked = !PremiumGate.isPremium(ref) &&
+                          (c.budgetSeq ?? 0) >
+                              PremiumGate.categoryBudgetTotalLimit;
 
-            double categorizedNet = 0;
-            double totalBudgetCap = 0;
-            for (final c in categories) {
-              categorizedNet += nets[c.uuid] ?? 0;
-              final isCatLocked = !PremiumGate.isPremium(ref) &&
-                  !c.isDefault &&
-                  (c.addSeq ?? 0) > PremiumGate.categoryTotalLimit;
-              final isBudgetLocked = !PremiumGate.isPremium(ref) &&
-                  (c.budgetSeq ?? 0) > PremiumGate.categoryBudgetTotalLimit;
+                      if (!isCatLocked && !isBudgetLocked) {
+                        final b = budgetAmountForPeriod(c, range);
+                        if (b != null && b > 0) {
+                          totalBudgetCap += b;
+                        }
+                      }
+                    }
 
-              if (!isCatLocked && !isBudgetLocked) {
-                final b = budgetAmountForPeriod(c, range);
-                if (b != null && b > 0) {
-                  totalBudgetCap += b;
-                }
-              }
-            }
+                    final totalNet = categorizedNet +
+                        (includeUncategorized ? uncategorizedAmt : 0.0);
 
-            final totalNet = categorizedNet +
-                (includeUncategorized ? uncategorizedAmt : 0.0);
+                    final hasBudget = totalBudgetCap > 0;
+                    final pr = hasBudget ? totalNet / totalBudgetCap : 0.0;
+                    final over = hasBudget && pr > 1.0;
+                    final barFillColor = over ? AppColors.expenseColor : color;
 
-            final hasBudget = totalBudgetCap > 0;
-            final pr = hasBudget ? totalNet / totalBudgetCap : 0.0;
-            final over = hasBudget && pr > 1.0;
-            final barFillColor = over ? AppColors.expenseColor : color;
+                    final netStr = AmountFormatter.formatWithCurrency(
+                      totalNet,
+                      symbol,
+                      decimals,
+                    );
+                    final budgetStr = AmountFormatter.formatWithCurrency(
+                      totalBudgetCap,
+                      symbol,
+                      decimals,
+                    );
+                    final uncategorizedStr = AmountFormatter.formatWithCurrency(
+                      uncategorizedAmt,
+                      symbol,
+                      decimals,
+                    );
 
-            final netStr = AmountFormatter.formatWithCurrency(
-              totalNet,
-              symbol,
-              decimals,
-            );
-            final budgetStr = AmountFormatter.formatWithCurrency(
-              totalBudgetCap,
-              symbol,
-              decimals,
-            );
-            final uncategorizedStr = AmountFormatter.formatWithCurrency(
-              uncategorizedAmt,
-              symbol,
-              decimals,
-            );
+                    final gradientCardDecoration = BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [color, color.withValues(alpha: 0.82)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: color.withValues(alpha: 0.28),
+                          blurRadius: 8,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                    );
 
-            final gradientCardDecoration = BoxDecoration(
-              gradient: LinearGradient(
-                colors: [color, color.withValues(alpha: 0.82)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: color.withValues(alpha: 0.28),
-                  blurRadius: 8,
-                  offset: const Offset(0, 3),
-                ),
-              ],
-            );
+                    final isDarkForChip = theme.brightness == Brightness.dark;
+                    const chipLabelLight = Color(0xFF0F172A);
 
-            final isDarkForChip = theme.brightness == Brightness.dark;
-            const chipLabelLight = Color(0xFF0F172A);
-
-            return _wrapCard(
-              reorderKey: reorderKey,
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Container(
-                      clipBehavior: Clip.antiAlias,
-                      decoration: gradientCardDecoration,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Material(
-                            color: Colors.transparent,
-                            child: InkWell(
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => CategoriesListScreen(
-                                      initialIndex: isIncome ? 1 : 0,
+                    return _wrapCard(
+                      reorderKey: reorderKey,
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: Column(
+                          key: ValueKey('inc-exp-$type-${filter.name}'),
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Container(
+                              clipBehavior: Clip.antiAlias,
+                              decoration: gradientCardDecoration,
+                                        child: Column(
+                                          key: ValueKey('inc-exp-content-$type-${filter.name}'),
+                                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Material(
+                                              key: ValueKey('inc-exp-material-$type-${filter.name}'),
+                                              color: Colors.transparent,
+                                              child: InkWell(
+                                                onTap: () {
+                                                  Navigator.push(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                      builder: (_) =>
+                                                          CategoriesListScreen(
+                                                        initialIndex: isIncome ? 1 : 0,
+                                                      ),
+                                                    ),
+                                                  );
+                                                },
+                                                onLongPress: () =>
+                                                    _showSummaryActionsSheet(
+                                                  context,
+                                                  ref,
+                                                  onRemove,
+                                                  l10n,
+                                                ),
+                                                child: Padding(
+                                                  padding: const EdgeInsets.fromLTRB(
+                                                      12, 10, 12, 10),
+                                                  child: Stack(
+                                                    alignment: Alignment.center,
+                                                    children: [
+                                                      Column(
+                                                        key: ValueKey('inc-exp-stack-column-$type-${filter.name}'),
+                                                        mainAxisSize: MainAxisSize.min,
+                                                        children: [
+                                                Text(
+                                                  key: ValueKey('inc-exp-label-$type-${filter.name}'),
+                                                  isIncome
+                                                      ? l10n.totalIncome
+                                                      : l10n.totalExpenses,
+                                                  style: theme
+                                                      .textTheme.labelMedium
+                                                      ?.copyWith(
+                                                    color: Colors.white
+                                                        .withValues(alpha: 0.88),
+                                                    fontWeight: FontWeight.w500,
+                                                    fontSize: 11,
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 1),
+                                                Text(
+                                                  key: ValueKey('inc-exp-period-$type-${filter.name}'),
+                                                  _getPeriodLabel(
+                                                      context, range, l10n),
+                                                  style: theme
+                                                      .textTheme.labelSmall
+                                                      ?.copyWith(
+                                                    color: Colors.white
+                                                        .withValues(alpha: 0.65),
+                                                    fontWeight: FontWeight.w400,
+                                                    fontSize: 9,
+                                                    fontStyle: FontStyle.italic,
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 3),
+                                                Text(
+                                                  key: ValueKey('inc-exp-amount-$type-${filter.name}'),
+                                                  netStr,
+                                                  style: theme
+                                                      .textTheme.titleLarge
+                                                      ?.copyWith(
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 20,
+                                                    color: Colors.white,
+                                                  ),
+                                                ),
+                                                if (hasBudget) ...[
+                                                  const SizedBox(height: 6),
+                                                  Text(
+                                                    key: ValueKey('inc-exp-budget-$type-${filter.name}'),
+                                                    budgetStr,
+                                                    style: theme
+                                                        .textTheme.labelLarge
+                                                        ?.copyWith(
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                      fontSize: 12,
+                                                      color: Colors.white
+                                                          .withValues(
+                                                              alpha: 0.92),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ],
+                                            ),
+                                            PositionedDirectional(
+                                              end: 0,
+                                              child: Container(
+                                                padding:
+                                                    const EdgeInsets.all(7),
+                                                decoration: BoxDecoration(
+                                                  color: Colors.white
+                                                      .withValues(alpha: 0.2),
+                                                  shape: BoxShape.circle,
+                                                ),
+                                                child: const Icon(
+                                                  Icons.arrow_forward_ios,
+                                                  size: 14,
+                                                  color: Colors.white,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
                                     ),
                                   ),
-                                );
-                              },
-                              onLongPress: () => _showSummaryActionsSheet(
-                                context,
-                                ref,
-                                onRemove,
-                                l10n,
-                              ),
-                              child: Padding(
-                                padding:
-                                    const EdgeInsets.fromLTRB(12, 10, 12, 10),
-                                child: Stack(
-                                  alignment: Alignment.center,
-                                  children: [
-                                    Column(
-                                      mainAxisSize: MainAxisSize.min,
+                                  Divider(
+                                    height: 1,
+                                    thickness: 1,
+                                    color: Colors.white.withValues(alpha: 0.22),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.fromLTRB(
+                                        12, 8, 12, 10),
+                                    child: Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.center,
                                       children: [
-                                        Text(
-                                          isIncome
-                                              ? l10n.totalIncome
-                                              : l10n.totalExpenses,
-                                          style: theme.textTheme.labelMedium
-                                              ?.copyWith(
-                                            color: Colors.white
-                                                .withValues(alpha: 0.88),
-                                            fontWeight: FontWeight.w500,
-                                            fontSize: 11,
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                l10n.uncategorized,
+                                                style: theme
+                                                    .textTheme.labelSmall
+                                                    ?.copyWith(
+                                                  color: Colors.white
+                                                      .withValues(alpha: 0.78),
+                                                  fontWeight: FontWeight.w600,
+                                                  fontSize: 10,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 2),
+                                              Text(
+                                                uncategorizedStr,
+                                                style: theme
+                                                    .textTheme.titleSmall
+                                                    ?.copyWith(
+                                                  fontWeight: FontWeight.w700,
+                                                  color: Colors.white,
+                                                  fontSize: 14,
+                                                ),
+                                              ),
+                                            ],
                                           ),
                                         ),
-                                        const SizedBox(height: 1),
-                                        Text(
-                                          _getPeriodLabel(context, range, l10n),
-                                          style: theme.textTheme.labelSmall
-                                              ?.copyWith(
-                                            color: Colors.white
-                                                .withValues(alpha: 0.65),
-                                            fontWeight: FontWeight.w400,
-                                            fontSize: 9,
-                                            fontStyle: FontStyle.italic,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 3),
-                                        Text(
-                                          netStr,
-                                          style: theme.textTheme.titleLarge
-                                              ?.copyWith(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 20,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                        if (hasBudget) ...[
-                                          const SizedBox(height: 6),
-                                          Text(
-                                            budgetStr,
-                                            style: theme.textTheme.labelLarge
-                                                ?.copyWith(
+                                        const SizedBox(width: 8),
+                                        FilterChip(
+                                          showCheckmark: true,
+                                          selected: includeUncategorized,
+                                          label: Text(
+                                            l10n.categoriesSummaryIncludeInTotal,
+                                            style: TextStyle(
+                                              fontSize: 11,
                                               fontWeight: FontWeight.w600,
-                                              fontSize: 12,
-                                              color: Colors.white
-                                                  .withValues(alpha: 0.92),
+                                              color: isDarkForChip
+                                                  ? Colors.white.withValues(
+                                                      alpha: includeUncategorized
+                                                          ? 1.0
+                                                          : 0.92,
+                                                    )
+                                                  : (includeUncategorized
+                                                      ? color
+                                                      : chipLabelLight),
                                             ),
                                           ),
-                                        ],
+                                          selectedColor: isDarkForChip
+                                              ? Colors.white
+                                                  .withValues(alpha: 0.28)
+                                              : Colors.white
+                                                  .withValues(alpha: 0.92),
+                                          backgroundColor: isDarkForChip
+                                              ? Colors.white
+                                                  .withValues(alpha: 0.12)
+                                              : Colors.white
+                                                  .withValues(alpha: 0.55),
+                                          disabledColor: isDarkForChip
+                                              ? Colors.white
+                                                  .withValues(alpha: 0.08)
+                                              : Colors.white
+                                                  .withValues(alpha: 0.35),
+                                          checkmarkColor: isDarkForChip
+                                              ? Colors.white
+                                              : color,
+                                          side: BorderSide(
+                                            color: isDarkForChip
+                                                ? Colors.white.withValues(
+                                                    alpha: includeUncategorized
+                                                        ? 0.5
+                                                        : 0.32,
+                                                  )
+                                                : Colors.white.withValues(
+                                                    alpha: includeUncategorized
+                                                        ? 0.75
+                                                        : 0.5,
+                                                  ),
+                                          ),
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 8,
+                                            vertical: 0,
+                                          ),
+                                          materialTapTargetSize:
+                                              MaterialTapTargetSize.shrinkWrap,
+                                          visualDensity: VisualDensity.compact,
+                                          onSelected: (selected) {
+                                            ref
+                                                .read(
+                                                  includeUncategorizedInCategorySummaryProvider
+                                                      .notifier,
+                                                )
+                                                .setInclude(selected);
+                                          },
+                                        ),
                                       ],
                                     ),
-                                    PositionedDirectional(
-                                      end: 0,
-                                      child: Container(
-                                        padding: const EdgeInsets.all(7),
-                                        decoration: BoxDecoration(
-                                          color: Colors.white
-                                              .withValues(alpha: 0.2),
-                                          shape: BoxShape.circle,
-                                        ),
-                                        child: const Icon(
-                                          Icons.arrow_forward_ios,
-                                          size: 14,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                                  ),
+                                ],
                               ),
                             ),
-                          ),
-                          Divider(
-                            height: 1,
-                            thickness: 1,
-                            color: Colors.white.withValues(alpha: 0.22),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        l10n.uncategorized,
-                                        style: theme.textTheme.labelSmall
-                                            ?.copyWith(
-                                          color: Colors.white
-                                              .withValues(alpha: 0.78),
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 10,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 2),
-                                      Text(
-                                        uncategorizedStr,
-                                        style: theme.textTheme.titleSmall
-                                            ?.copyWith(
-                                          fontWeight: FontWeight.w700,
-                                          color: Colors.white,
-                                          fontSize: 14,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                FilterChip(
-                                  showCheckmark: true,
-                                  selected: includeUncategorized,
-                                  label: Text(
-                                    l10n.categoriesSummaryIncludeInTotal,
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w600,
-                                      color: isDarkForChip
-                                          ? Colors.white.withValues(
-                                              alpha: includeUncategorized
-                                                  ? 1.0
-                                                  : 0.92,
-                                            )
-                                          : (includeUncategorized
-                                              ? color
-                                              : chipLabelLight),
-                                    ),
-                                  ),
-                                  selectedColor: isDarkForChip
-                                      ? Colors.white.withValues(alpha: 0.28)
-                                      : Colors.white.withValues(alpha: 0.92),
-                                  backgroundColor: isDarkForChip
-                                      ? Colors.white.withValues(alpha: 0.12)
-                                      : Colors.white.withValues(alpha: 0.55),
-                                  disabledColor: isDarkForChip
-                                      ? Colors.white.withValues(alpha: 0.08)
-                                      : Colors.white.withValues(alpha: 0.35),
-                                  checkmarkColor:
-                                      isDarkForChip ? Colors.white : color,
-                                  side: BorderSide(
-                                    color: isDarkForChip
-                                        ? Colors.white.withValues(
-                                            alpha: includeUncategorized
-                                                ? 0.5
-                                                : 0.32,
-                                          )
-                                        : Colors.white.withValues(
-                                            alpha: includeUncategorized
-                                                ? 0.75
-                                                : 0.5,
-                                          ),
-                                  ),
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 0,
-                                  ),
-                                  materialTapTargetSize:
-                                      MaterialTapTargetSize.shrinkWrap,
-                                  visualDensity: VisualDensity.compact,
-                                  onSelected: (selected) {
-                                    ref
-                                        .read(
-                                          includeUncategorizedInCategorySummaryProvider
-                                              .notifier,
-                                        )
-                                        .setInclude(selected);
-                                  },
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
+                            if (hasBudget) ...[
+                              const SizedBox(height: 8),
+                              DualAmountProgressBar(
+                                leftLabel: isIncome
+                                    ? l10n.budgetBarProgress
+                                    : l10n.budgetBarUsed,
+                                leftAmount: totalNet > 0 ? totalNet : 0.0,
+                                rightLabel: l10n.remaining,
+                                rightAmount: (totalBudgetCap - totalNet) > 0
+                                    ? (totalBudgetCap - totalNet)
+                                    : 0.0,
+                                symbol: symbol,
+                                decimals: decimals,
+                                filledColor: barFillColor,
+                                compact: true,
+                              ),
+                            ],
+                          ],
+                        ),
                       ),
-                    ),
-                    if (hasBudget) ...[
-                      const SizedBox(height: 8),
-                      DualAmountProgressBar(
-                        leftLabel: isIncome
-                            ? l10n.budgetBarProgress
-                            : l10n.budgetBarUsed,
-                        leftAmount: totalNet > 0 ? totalNet : 0.0,
-                        rightLabel: l10n.remaining,
-                        rightAmount: (totalBudgetCap - totalNet) > 0
-                            ? (totalBudgetCap - totalNet)
-                            : 0.0,
-                        symbol: symbol,
-                        decimals: decimals,
-                        filledColor: barFillColor,
-                        compact: true,
-                      ),
-                    ],
-                  ],
-                ),
-              ),
+                    );
+                  },
+                  loading: () => _buildCardPlaceholder(theme),
+                  error: (_, __) => const SizedBox.shrink(),
+                );
+              },
+              loading: () => _buildCardPlaceholder(theme),
+              error: (_, __) => const SizedBox.shrink(),
             );
           },
           loading: () => _buildCardPlaceholder(theme),
@@ -980,6 +1058,7 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
     final decimals = currency?.decimalPlaces ?? 2;
 
     return accountsAsync.when(
+      skipLoadingOnRefresh: true,
       data: (accounts) {
         final totalAssets = accounts
             .where((a) => !a.type.balanceIsLiability)
@@ -995,6 +1074,7 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
           child: Padding(
             padding: const EdgeInsets.only(bottom: 10),
             child: Material(
+              key: const ValueKey('net-worth-summary-material'),
               color: theme.cardColor,
               borderRadius: BorderRadius.circular(16),
               clipBehavior: Clip.antiAlias,
@@ -1012,6 +1092,7 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
                   l10n,
                 ),
                 child: Container(
+                  key: const ValueKey('net-worth-summary-container'),
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     border: Border.all(
@@ -1020,10 +1101,12 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Column(
+                    key: const ValueKey('net-worth-summary-column'),
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       // Net Worth Item (Smaller version of _NetWorthItem)
                       Container(
+                        key: const ValueKey('net-worth-summary-header'),
                         padding: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 10),
                         decoration: BoxDecoration(
@@ -1035,9 +1118,11 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
                                   .withValues(alpha: 0.2)),
                         ),
                         child: Column(
+                          key: const ValueKey('net-worth-summary-header-col'),
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Row(
+                              key: const ValueKey('net-worth-summary-header-row'),
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Icon(
@@ -1058,6 +1143,7 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
                             ),
                             const SizedBox(height: 4),
                             Text(
+                              key: const ValueKey('net-worth-summary-amount'),
                               AmountFormatter.formatWithCurrency(
                                   netWorth, symbol, decimals),
                               style: theme.textTheme.titleMedium?.copyWith(
@@ -1073,9 +1159,11 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
                       const SizedBox(height: 8),
                       // Assets & Liabilities Row (Smaller version of _StatItem)
                       Row(
+                        key: const ValueKey('net-worth-summary-stats-row'),
                         children: [
                           Expanded(
                             child: _buildSmallStatItem(
+                              key: const ValueKey('net-worth-summary-assets'),
                               theme: theme,
                               color: AppColors.incomeColor,
                               icon: Symbols.trending_up,
@@ -1088,6 +1176,7 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
                           const SizedBox(width: 8),
                           Expanded(
                             child: _buildSmallStatItem(
+                              key: const ValueKey('net-worth-summary-liabilities'),
                               theme: theme,
                               color: AppColors.payableColor,
                               icon: Symbols.trending_down,
@@ -1120,8 +1209,10 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
     required double amount,
     required String symbol,
     required int decimals,
+    Key? key,
   }) {
     return Container(
+      key: key,
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.08),
@@ -1129,6 +1220,7 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
         border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Column(
+        key: key != null ? ValueKey('small-stat-col-${key.toString()}') : null,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
@@ -1180,6 +1272,7 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
     final decimals = currency?.decimalPlaces ?? 2;
 
     return async.when(
+      skipLoadingOnRefresh: true,
       data: (stats) {
         final netCredit = stats.netCredit(filter);
         final isReceivableHigher = netCredit >= 0;
@@ -1299,6 +1392,7 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
     final decimals = currency?.decimalPlaces ?? 2;
 
     return async.when(
+      skipLoadingOnRefresh: true,
       data: (stats) {
         final netCash = stats.netCash(filter);
         final isIncomeHigher = netCash >= 0;
@@ -1420,7 +1514,18 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
     Key? reorderKey,
   }) {
     final async = ref.watch(dashboardStatsProvider);
+
+    // Cache stats for loading state
+    async.whenData((s) {
+      Future.microtask(() {
+        if (context.mounted) {
+          ref.read(lastDashboardStatsProvider.notifier).setLast(s);
+        }
+      });
+    });
+
     return async.when(
+      skipLoadingOnRefresh: true,
       data: (stats) => _buildSummaryCard(
         context,
         ref,
@@ -1434,6 +1539,7 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
         onTap: onTap,
         onRemove: onRemove,
         reorderKey: reorderKey,
+        key: ValueKey('summary-card-$title-${filter.name}'),
       ),
       loading: () => _buildCardPlaceholder(theme),
       error: (_, __) => const SizedBox.shrink(),
@@ -1455,11 +1561,14 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
     Key? reorderKey,
     String? copyOpenLinkEntityType,
     String? copyOpenLinkUuid,
+    Key? key,
   }) {
     return RepaintBoundary(
+      key: key,
       child: Padding(
         padding: const EdgeInsets.only(bottom: 10),
         child: Material(
+          key: key != null ? ValueKey('summary-material-${key.toString()}') : null,
           color: theme.cardColor,
           borderRadius: BorderRadius.circular(16),
           clipBehavior: Clip.antiAlias,
@@ -1474,14 +1583,17 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
               copyOpenLinkUuid: copyOpenLinkUuid,
             ),
             child: Container(
+              key: key != null ? ValueKey('summary-container-${key.toString()}') : null,
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 border: Border.all(color: color.withValues(alpha: 0.4), width: 1),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Row(
+                key: key != null ? ValueKey('summary-row-${key.toString()}') : null,
                 children: [
                   Container(
+                    key: key != null ? ValueKey('summary-icon-container-${key.toString()}') : null,
                     width: 44,
                     height: 44,
                     decoration: BoxDecoration(
@@ -1494,9 +1606,11 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
+                      key: key != null ? ValueKey('summary-text-col-${key.toString()}') : null,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
+                          key: key != null ? ValueKey('summary-title-${key.toString()}') : null,
                           title,
                           style: theme.textTheme.titleSmall?.copyWith(
                             fontWeight: FontWeight.w600,
@@ -1507,6 +1621,7 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
                         if (subtitle != null) ...[
                           const SizedBox(height: 2),
                           Text(
+                            key: key != null ? ValueKey('summary-subtitle-${key.toString()}') : null,
                             subtitle,
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant,
@@ -1519,6 +1634,7 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
                     ),
                   ),
                   Text(
+                    key: key != null ? ValueKey('summary-amount-${key.toString()}') : null,
                     amountLabel,
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.bold,
@@ -1562,6 +1678,7 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
         onTap: onTap,
         onRemove: onRemove,
         reorderKey: reorderKey,
+        key: ValueKey('summary-count-$title'),
       ),
       loading: () => _buildCardPlaceholder(theme),
       error: (_, __) => const SizedBox.shrink(),
@@ -1599,6 +1716,7 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
         },
         onRemove: onRemove,
         reorderKey: reorderKey,
+        key: const ValueKey('summary-categories-count'),
       ),
       loading: () => _buildCardPlaceholder(theme),
       error: (_, __) => const SizedBox.shrink(),
@@ -1719,7 +1837,7 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
     await ref.read(dashboardWidgetLayoutProvider.notifier).removeAt(index);
   }
 
-  static Future<void> _showQuickActionSelectionSheetForWidget(
+  Future<void> _showQuickActionSelectionSheetForWidget(
       BuildContext context,
       WidgetRef ref,
       AppLocalizations l10n,

@@ -112,8 +112,13 @@ class _CategoryList extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
 
     return categoriesAsync.when(
+      skipLoadingOnRefresh: true,
       data: (categories) {
-        return _CategoryListBody(type: type, categories: categories);
+        return _CategoryListBody(
+          key: ValueKey('category-list-body-$type'),
+          type: type,
+          categories: categories,
+        );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (error, stack) =>
@@ -127,6 +132,7 @@ class _CategoryListBody extends ConsumerWidget {
   final List<Category> categories;
 
   const _CategoryListBody({
+    super.key,
     required this.type,
     required this.categories,
   });
@@ -155,6 +161,7 @@ class _CategoryListBody extends ConsumerWidget {
     );
 
     return netsAsync.when(
+      skipLoadingOnRefresh: true,
       data: (nets) {
         if (categories.isEmpty) {
           final typeLabel = type == 'EXPENSE' ? l10n.expense : l10n.income;
@@ -205,31 +212,32 @@ class _CategoryListBody extends ConsumerWidget {
             SliverPadding(
               padding: EdgeInsets.fromLTRB(
                   16, 0, 16, 80 + MediaQuery.of(context).padding.bottom),
-              sliver: SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                    final category = categories[index];
-                    final net = nets[category.uuid] ?? 0.0;
-                    final isPremium = ref.watch(premiumProvider).isPremium;
-                    final isLocked = !isPremium &&
-                        !category.isDefault &&
-                        (category.addSeq ?? 0) > PremiumGate.categoryTotalLimit;
-                    final isBudgetLocked = !isPremium &&
-                        (category.budgetSeq ?? 0) >
-                            PremiumGate.categoryBudgetTotalLimit;
+            sliver: SliverList(
+              key: ValueKey('category-list-$type'),
+              delegate: SliverChildBuilderDelegate(
+                (context, index) {
+                  final category = categories[index];
+                  final net = nets[category.uuid] ?? 0.0;
+                  final isPremium = ref.watch(premiumProvider).isPremium;
+                  final isLocked = !isPremium &&
+                      !category.isDefault &&
+                      (category.addSeq ?? 0) > PremiumGate.categoryTotalLimit;
+                  final isBudgetLocked = !isPremium &&
+                      (category.budgetSeq ?? 0) >
+                          PremiumGate.categoryBudgetTotalLimit;
 
-                    return _CategoryCard(
-                      key: ValueKey(category.uuid),
-                      category: category,
-                      netAmount: net,
-                      dateRange: range,
-                      isLocked: isLocked,
-                      isBudgetLocked: isBudgetLocked,
-                    );
-                  },
-                  childCount: categories.length,
-                ),
+                  return _CategoryCard(
+                    key: ValueKey('category-card-${category.uuid}'),
+                    category: category,
+                    netAmount: net,
+                    dateRange: range,
+                    isLocked: isLocked,
+                    isBudgetLocked: isBudgetLocked,
+                  );
+                },
+                childCount: categories.length,
               ),
+            ),
             ),
           ],
         );
@@ -373,16 +381,20 @@ class _CategoriesAggregateSummary extends ConsumerWidget {
     const chipLabelLight = Color(0xFF0F172A);
 
     return Column(
+      key: ValueKey('categories-aggregate-summary-$type'),
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Container(
+          key: ValueKey('categories-aggregate-container-$type'),
           clipBehavior: Clip.antiAlias,
           decoration: gradientCardDecoration,
           child: Column(
+            key: ValueKey('categories-aggregate-content-$type'),
             crossAxisAlignment: CrossAxisAlignment.stretch,
             mainAxisSize: MainAxisSize.min,
             children: [
               InkWell(
+                key: ValueKey('categories-aggregate-inkwell-$type'),
                 onTap: () async {
                   ref.read(transactionsPaginatedProvider.notifier).applyFilters(
                         TransactionFilters(
@@ -397,9 +409,6 @@ class _CategoriesAggregateSummary extends ConsumerWidget {
                       builder: (context) => const TransactionsListScreen(),
                     ),
                   );
-                  if (context.mounted) {
-                    invalidateCategoryPeriodNets(ref, type);
-                  }
                 },
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(12),
@@ -415,10 +424,12 @@ class _CategoriesAggregateSummary extends ConsumerWidget {
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 32),
                           child: Column(
+                            key: ValueKey('categories-aggregate-text-col-$type'),
                             mainAxisSize: MainAxisSize.min,
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               Text(
+                                key: ValueKey('categories-aggregate-label-$type'),
                                 isExpense ? l10n.totalExpenses : l10n.totalIncome,
                                 textAlign: TextAlign.center,
                                 style: theme.textTheme.labelMedium?.copyWith(
@@ -429,6 +440,7 @@ class _CategoriesAggregateSummary extends ConsumerWidget {
                               ),
                               const SizedBox(height: 4),
                               Text(
+                                key: ValueKey('categories-aggregate-amount-$type'),
                                 netStr,
                                 textAlign: TextAlign.center,
                                 style: theme.textTheme.titleLarge?.copyWith(
@@ -441,6 +453,7 @@ class _CategoriesAggregateSummary extends ConsumerWidget {
                               if (hasBudget) ...[
                                 const SizedBox(height: 6),
                                 Text(
+                                  key: ValueKey('categories-aggregate-budget-$type'),
                                   budgetStr,
                                   textAlign: TextAlign.center,
                                   style: theme.textTheme.labelLarge?.copyWith(
@@ -475,6 +488,7 @@ class _CategoriesAggregateSummary extends ConsumerWidget {
                 ),
               ),
               Divider(
+                key: ValueKey('categories-aggregate-divider-$type'),
                 height: 1,
                 thickness: 1,
                 color: Colors.white.withValues(alpha: 0.22),
@@ -482,13 +496,16 @@ class _CategoriesAggregateSummary extends ConsumerWidget {
               Padding(
                 padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
                 child: Row(
+                  key: ValueKey('categories-aggregate-uncategorized-row-$type'),
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Expanded(
                       child: Column(
+                        key: ValueKey('categories-aggregate-uncategorized-col-$type'),
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
+                            key: ValueKey('categories-aggregate-uncategorized-label-$type'),
                             l10n.uncategorized,
                             style: theme.textTheme.labelSmall?.copyWith(
                               color: Colors.white.withValues(alpha: 0.78),
@@ -498,6 +515,7 @@ class _CategoriesAggregateSummary extends ConsumerWidget {
                           ),
                           const SizedBox(height: 2),
                           Text(
+                            key: ValueKey('categories-aggregate-uncategorized-amount-$type'),
                             uncategorizedStr,
                             style: theme.textTheme.titleSmall?.copyWith(
                               fontWeight: FontWeight.w700,
@@ -510,6 +528,7 @@ class _CategoriesAggregateSummary extends ConsumerWidget {
                     ),
                     const SizedBox(width: 8),
                     FilterChip(
+                      key: ValueKey('categories-aggregate-uncategorized-chip-$type'),
                       showCheckmark: true,
                       selected: includeUncategorized,
                       label: Text(
@@ -571,6 +590,7 @@ class _CategoriesAggregateSummary extends ConsumerWidget {
         if (hasBudget) ...[
           const SizedBox(height: 8),
           DualAmountProgressBar(
+            key: ValueKey('categories-aggregate-budget-bar-$type'),
             leftLabel:
                 isExpense ? l10n.budgetBarUsed : l10n.budgetBarProgress,
             leftAmount: totalNet > 0 ? totalNet : 0.0,
@@ -649,9 +669,10 @@ class _CategoryCard extends ConsumerWidget {
         hasBudget && pr > 1.0 ? AppColors.expenseColor : color;
 
     return Padding(
+      key: ValueKey('category-card-padding-${category.uuid}'),
       padding: const EdgeInsets.only(bottom: 12),
       child: SwipeableListItem(
-        key: ValueKey(category.uuid),
+        key: ValueKey('category-swipeable-${category.uuid}'),
         enableEdit: true,
         enableDelete: !category.isDefault,
         editBackgroundColor: color,
@@ -667,7 +688,6 @@ class _CategoryCard extends ConsumerWidget {
           );
           if (updated == true) {
             ref.invalidate(categoriesByTypeProvider);
-            invalidateCategoryPeriodNets(ref, category.type);
           }
         },
         onDelete: category.isDefault || isLocked
@@ -676,6 +696,7 @@ class _CategoryCard extends ConsumerWidget {
                 await _deleteCategory(context, ref);
               },
         child: InkWell(
+          key: ValueKey('category-inkwell-${category.uuid}'),
           onTap: isLocked
               ? () => PremiumGate.showPremiumDialog(context)
               : () async {
@@ -686,15 +707,17 @@ class _CategoryCard extends ConsumerWidget {
                           CategoryDetailsScreen(categoryUuid: category.uuid),
                     ),
                   );
-                  invalidateCategoryPeriodNets(ref, category.type);
                 },
           borderRadius: BorderRadius.circular(16),
           child: Stack(
+            key: ValueKey('category-stack-${category.uuid}'),
             clipBehavior: Clip.none,
             children: [
               Opacity(
+                key: ValueKey('category-opacity-${category.uuid}'),
                 opacity: isLocked ? 0.5 : 1.0,
                 child: Container(
+                  key: ValueKey('category-container-${category.uuid}'),
                   clipBehavior: Clip.antiAlias,
                   decoration: BoxDecoration(
                     color: theme.cardColor,
@@ -705,16 +728,20 @@ class _CategoryCard extends ConsumerWidget {
                     ),
                   ),
                   child: Column(
+                    key: ValueKey('category-column-${category.uuid}'),
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Padding(
+                        key: ValueKey('category-inner-padding-${category.uuid}'),
                         padding: const EdgeInsets.all(16),
                         child: Row(
+                          key: ValueKey('category-row-${category.uuid}'),
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                             Hero(
                               tag: 'category_icon_${category.uuid}',
                               child: Container(
+                                key: ValueKey('category-icon-container-${category.uuid}'),
                                 width: 48,
                                 height: 48,
                                 decoration: BoxDecoration(
@@ -736,6 +763,7 @@ class _CategoryCard extends ConsumerWidget {
                             const SizedBox(width: 16),
                             Expanded(
                               child: Text(
+                                key: ValueKey('category-name-${category.uuid}'),
                                 LocalizationHelper.getLocalizedCategoryName(
                                     context, category.name),
                                 overflow: TextOverflow.ellipsis,
@@ -745,10 +773,12 @@ class _CategoryCard extends ConsumerWidget {
                               ),
                             ),
                             Column(
+                              key: ValueKey('category-amount-col-${category.uuid}'),
                               crossAxisAlignment: CrossAxisAlignment.end,
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Text(
+                                  key: ValueKey('category-amount-text-${category.uuid}'),
                                   AmountFormatter.formatWithCurrency(
                                     netAmount,
                                     symbol,
@@ -762,6 +792,7 @@ class _CategoryCard extends ConsumerWidget {
                                 if (hasBudget) ...[
                                   const SizedBox(height: 2),
                                   Text(
+                                    key: ValueKey('category-budget-text-${category.uuid}'),
                                     AmountFormatter.formatWithCurrency(
                                       budget!,
                                       symbol,
@@ -780,6 +811,7 @@ class _CategoryCard extends ConsumerWidget {
                             ),
                             const SizedBox(width: 8),
                             Icon(
+                              key: ValueKey('category-arrow-${category.uuid}'),
                               Icons.arrow_forward_ios,
                               size: 14,
                               color: theme.colorScheme.onSurfaceVariant
@@ -790,6 +822,7 @@ class _CategoryCard extends ConsumerWidget {
                       ),
                       if (hasBudget)
                         CategoryBudgetProgressBar(
+                          key: ValueKey('category-budget-bar-${category.uuid}'),
                           progress: pr,
                           fillColor: fillColor,
                         ),
@@ -797,30 +830,30 @@ class _CategoryCard extends ConsumerWidget {
                   ),
                 ),
               ),
-                  if (isLocked)
-                    Positioned(
-                      top: 6,
-                      right: 6,
-                      child: Container(
-                        padding: const EdgeInsets.all(2),
-                        decoration: BoxDecoration(
-                          color: theme.scaffoldBackgroundColor,
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.08),
-                              blurRadius: 2,
-                            ),
-                          ],
+              if (isLocked)
+                Positioned(
+                  top: 6,
+                  right: 6,
+                  child: Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: BoxDecoration(
+                      color: theme.scaffoldBackgroundColor,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.08),
+                          blurRadius: 2,
                         ),
+                      ],
+                    ),
                     child: Icon(
                       Icons.lock,
                       size: 14,
                       color: theme.colorScheme.primary,
                     ),
-                      ),
-                    ),
-                  if (!category.isDefault && !isLocked)
+                  ),
+                ),
+              if (!category.isDefault && !isLocked)
                 Positioned(
                   top: 6,
                   right: 6,

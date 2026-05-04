@@ -6,6 +6,8 @@ import 'package:flowpaisa/features/categories/domain/category_monthly_hint_key.d
 import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 import 'package:flowpaisa/shared/models/date_range_state.dart';
 import 'package:flowpaisa/shared/providers/database_provider.dart';
+import 'package:collection/collection.dart';
+import 'package:rxdart/rxdart.dart';
 
 // Repository provider
 final categoriesRepositoryProvider = Provider<CategoriesRepository>((ref) {
@@ -21,12 +23,12 @@ final categoriesListProvider = StreamProvider<List<Category>>((ref) {
 
 final categoriesByTypeProvider = StreamProvider.family<List<Category>, String>((ref, type) {
   final repository = ref.watch(categoriesRepositoryProvider);
-  return repository.watchCategoriesByType(type);
+  return repository.watchCategoriesByType(type).distinct((prev, next) => const ListEquality().equals(prev, next));
 });
 
 final categoriesWithUsageProvider = StreamProvider.family<List<CategoryWithUsage>, String>((ref, type) {
   final repository = ref.watch(categoriesRepositoryProvider);
-  return repository.watchCategoriesWithUsage(type);
+  return repository.watchCategoriesWithUsage(type).distinct((prev, next) => const ListEquality().equals(prev, next));
 });
 
 // Smart categories provider (alias for categoriesWithUsageProvider for clarity)
@@ -126,36 +128,37 @@ final categoryDetailBudgetProvider = FutureProvider.autoDispose
 
 /// Net amounts for all categories of [type] in the current category budget period.
 final categoryNetAmountsForListProvider =
-    FutureProvider.autoDispose.family<Map<String, double>, String>((ref, type) async {
+    StreamProvider.family<Map<String, double>, String>((ref, type) {
   final range = ref.watch(categoryBudgetDateRangeProvider);
   final repo = ref.watch(categoriesRepositoryProvider);
-  final categories = ref.watch(categoriesByTypeProvider(type)).when(
-        data: (c) => c,
-        loading: () => <Category>[],
-        error: (_, __) => <Category>[],
-      );
-  if (categories.isEmpty) return {};
-  return repo.getCategoryNetAmountsForCategories(
-    categories.map((c) => c.uuid).toList(),
-    range.startDate,
-    range.endDate,
-  );
-});
+  final categoriesAsync = ref.watch(categoriesByTypeProvider(type));
 
-/// Uncategorized net (sum EXPENSE − sum INCOME) for the current category budget period.
-final uncategorizedNetForCategoryPeriodProvider =
-    FutureProvider.autoDispose<double>((ref) async {
-  final range = ref.watch(categoryBudgetDateRangeProvider);
-  final repo = ref.watch(categoriesRepositoryProvider);
-  return repo.getUncategorizedNetAmount(range.startDate, range.endDate);
+  return categoriesAsync.when(
+    data: (categories) {
+      if (categories.isEmpty) return Stream.value(<String, double>{});
+      return repo
+          .watchCategoryNetAmountsForCategories(
+            categories.map((c) => c.uuid).toList(),
+            range.startDate,
+            range.endDate,
+          )
+          .distinct((prev, next) => const MapEquality().equals(prev, next))
+          .debounceTime(const Duration(milliseconds: 100));
+    },
+    loading: () => Stream.value(<String, double>{}),
+    error: (_, __) => Stream.value(<String, double>{}),
+  );
 });
 
 /// Uncategorized total for transactions of [type] for the current category budget period.
 final uncategorizedAmountByTypeProvider =
-    FutureProvider.autoDispose.family<double, String>((ref, type) async {
+    StreamProvider.family<double, String>((ref, type) {
   final range = ref.watch(categoryBudgetDateRangeProvider);
   final repo = ref.watch(categoriesRepositoryProvider);
-  return repo.getUncategorizedAmountByType(type, range.startDate, range.endDate);
+  return repo
+      .watchUncategorizedAmountByType(type, range.startDate, range.endDate)
+      .distinct()
+      .debounceTime(const Duration(milliseconds: 100));
 });
 
 class IncludeUncategorizedInCategorySummaryNotifier extends AsyncNotifier<bool> {
@@ -179,8 +182,7 @@ final includeUncategorizedInCategorySummaryProvider =
 
 /// Refresh category nets + uncategorized for the list after transactions/budget change.
 void invalidateCategoryPeriodNets(WidgetRef ref, String type) {
-  ref.invalidate(categoryNetAmountsForListProvider(type));
-  ref.invalidate(uncategorizedNetForCategoryPeriodProvider);
+  // No longer needed for StreamProviders as they react to DB changes
 }
 
 /// Monthly budget hint for add/edit transaction (lazy: category + reference date).

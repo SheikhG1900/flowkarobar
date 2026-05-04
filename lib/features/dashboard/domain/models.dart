@@ -1,4 +1,5 @@
 import 'package:flowpaisa/core/database/database.dart';
+import 'package:collection/collection.dart';
 
 /// Filter for dashboard statistics (Overall or Monthly)
 enum DashboardFilter { overall, monthly }
@@ -64,6 +65,39 @@ class DashboardStats {
       recentTransactions: [],
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is DashboardStats &&
+          runtimeType == other.runtimeType &&
+          totalBalance == other.totalBalance &&
+          incomeOverall == other.incomeOverall &&
+          incomeMonth == other.incomeMonth &&
+          expenseOverall == other.expenseOverall &&
+          expenseMonth == other.expenseMonth &&
+          payableOverall == other.payableOverall &&
+          payableMonth == other.payableMonth &&
+          receivableOverall == other.receivableOverall &&
+          receivableMonth == other.receivableMonth &&
+          overduePayable == other.overduePayable &&
+          overdueReceivable == other.overdueReceivable &&
+          const ListEquality().equals(recentTransactions, other.recentTransactions);
+
+  @override
+  int get hashCode =>
+      totalBalance.hashCode ^
+      incomeOverall.hashCode ^
+      incomeMonth.hashCode ^
+      expenseOverall.hashCode ^
+      expenseMonth.hashCode ^
+      payableOverall.hashCode ^
+      payableMonth.hashCode ^
+      receivableOverall.hashCode ^
+      receivableMonth.hashCode ^
+      overduePayable.hashCode ^
+      overdueReceivable.hashCode ^
+      const ListEquality().hash(recentTransactions);
 }
 
 class TransactionStats {

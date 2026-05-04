@@ -62,6 +62,71 @@ class CategoriesRepository {
         .watch();
   }
 
+  /// Watch net amounts for all categories of [type] in range [start] to [end].
+  Stream<Map<String, double>> watchCategoryNetAmountsForCategories(
+    List<String> categoryUuids,
+    DateTime start,
+    DateTime end,
+  ) {
+    if (categoryUuids.isEmpty) return Stream.value({});
+    final startDate = DateTime(start.year, start.month, start.day, 0, 0, 0);
+    final endDate = DateTime(end.year, end.month, end.day, 23, 59, 59);
+
+    final query = _database.selectOnly(_database.transactions)
+      ..addColumns([
+        _database.transactions.categoryUuid,
+        _database.transactions.type,
+        _database.transactions.amount.sum(),
+      ])
+      ..where(_database.transactions.categoryUuid.isIn(categoryUuids))
+      ..where(_database.transactions.date.isBetweenValues(startDate, endDate))
+      ..where(_database.transactions.isDeleted.equals(false))
+      ..where(_database.transactions.processedDate.isNotNull())
+      ..groupBy(
+          [_database.transactions.categoryUuid, _database.transactions.type]);
+
+    return query.watch().map((rows) {
+      final expenseBy = <String, double>{};
+      final incomeBy = <String, double>{};
+      for (final row in rows) {
+        final catUuid = row.read(_database.transactions.categoryUuid);
+        final type = row.read(_database.transactions.type);
+        final sum = row.read(_database.transactions.amount.sum()) ?? 0.0;
+        if (catUuid == null) continue;
+        if (type == 'EXPENSE') {
+          expenseBy[catUuid] = sum;
+        } else if (type == 'INCOME') {
+          incomeBy[catUuid] = sum;
+        }
+      }
+      final result = <String, double>{};
+      for (final id in categoryUuids) {
+        final e = expenseBy[id] ?? 0.0;
+        final i = incomeBy[id] ?? 0.0;
+        result[id] = e - i;
+      }
+      return result;
+    });
+  }
+
+  /// Watch uncategorized total for transactions of [type] in range [start] to [end].
+  Stream<double> watchUncategorizedAmountByType(
+      String type, DateTime start, DateTime end) {
+    final startDate = DateTime(start.year, start.month, start.day, 0, 0, 0);
+    final endDate = DateTime(end.year, end.month, end.day, 23, 59, 59);
+    final query = _database.selectOnly(_database.transactions)
+      ..addColumns([_database.transactions.amount.sum()])
+      ..where(_database.transactions.categoryUuid.isNull())
+      ..where(_database.transactions.type.equals(type))
+      ..where(_database.transactions.date.isBetweenValues(startDate, endDate))
+      ..where(_database.transactions.isDeleted.equals(false))
+      ..where(_database.transactions.processedDate.isNotNull());
+
+    return query
+        .watchSingle()
+        .map((r) => r.read(_database.transactions.amount.sum()) ?? 0.0);
+  }
+
   /// Watch categories with usage stats (most used first, excluding soft-deleted)
   Stream<List<CategoryWithUsage>> watchCategoriesWithUsage(String type) {
     final query = _database.select(_database.categories).join([
