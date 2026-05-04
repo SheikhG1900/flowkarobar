@@ -951,7 +951,6 @@ class BackupNotifier extends Notifier<BackupState> {
     ref.invalidate(accountsStreamProvider);
     ref.invalidate(allTransfersWithDetailsProvider);
     ref.invalidate(allTransactionsProvider);
-    ref.invalidate(dashboardStatsProvider);
     ref.invalidate(recentTransactionsProvider);
     ref.invalidate(transactionsWithDetailsProvider);
     ref.invalidate(transactionsPaginatedProvider);

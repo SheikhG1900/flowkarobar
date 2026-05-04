@@ -86,13 +86,8 @@ final dashboardStatsProvider = StreamProvider<DashboardStats>((ref) {
   final receivableRepo = ref.watch(receivablesRepositoryProvider);
   final payableRepo = ref.watch(payablesRepositoryProvider);
 
-  // We watch the underlying tables to ensure the dashboard refreshes
-  // whenever ANY transaction, receivable, or payable changes.
-  // This is a safety measure for cross-isolate sync updates.
-  ref.watch(allTransactionsProvider);
-  ref.watch(allReceivablesProvider);
-  ref.watch(allPayablesProvider);
-  ref.watch(syncStatusPollingProvider); // Keep polling active for dashboard stats
+  // We watch the sync status polling to ensure it stays active while the dashboard is visible.
+  ref.watch(syncStatusPollingProvider);
 
   final txStatsStream = txRepo.watchTransactionStats();
   final recentTxStream = txRepo.watchRecentTransactions(limit: 5);
@@ -126,9 +121,6 @@ final dashboardStatsProvider = StreamProvider<DashboardStats>((ref) {
 /// Provider for recent transactions (last 10)
 final recentTransactionsProvider = StreamProvider<List<Transaction>>((ref) {
   final txRepo = ref.watch(transactionsRepositoryProvider);
-
-  // Explicitly watch the underlying table to ensure refresh after sync
-  ref.watch(allTransactionsProvider);
 
   // Also watch the sync status - if it goes from 'Pulling' to 'Idle' or 'Success', refresh
   final syncStatus = ref.watch(backupProvider.select((s) => s.syncStatus));

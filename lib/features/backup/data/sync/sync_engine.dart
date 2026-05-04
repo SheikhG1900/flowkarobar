@@ -637,7 +637,9 @@ class SyncEngine {
         print(
             'SyncEngine: Applying changes from $fileName (Changes keys: ${versionFile.changes.keys.join(', ')})');
       }
-      await _applyChanges(versionFile.changes);
+      // We pass notify: false to avoid repeated UI refreshes during catch-up
+      // We will notify once at the end of the catch-up phase.
+      await _applyChanges(versionFile.changes, notify: false);
 
       // CRITICAL: Update local version number after EACH successful delta application
       // This ensures that if the process crashes at v8 (out of 10),
@@ -648,10 +650,25 @@ class SyncEngine {
       }
       await _saveProgress(deviceId, v);
     }
+
+    // Notify Drift once after ALL catch-up versions are applied
+    _db.markTablesUpdated({
+      _db.transactions,
+      _db.categories,
+      _db.contacts,
+      _db.accounts,
+      _db.accountTransfers,
+      _db.receivables,
+      _db.payables,
+      _db.reminders,
+      _db.appCurrencies,
+      _db.transactionSchedules,
+      _db.userPreferences,
+    });
   }
 
   Future<void> _applyChanges(
-      Map<String, List<Map<String, dynamic>>> changes) async {
+      Map<String, List<Map<String, dynamic>>> changes, {bool notify = true}) async {
     // Enable WAL mode for this connection if not already enabled
     try {
       await _db.customStatement('PRAGMA journal_mode=WAL;');
@@ -734,7 +751,7 @@ class SyncEngine {
     // This ensures that all Stream-based watchers (like Recent Transactions) refresh.
     final updatedTableNames =
         changes.keys.where((k) => !k.startsWith('_')).toSet();
-    if (updatedTableNames.isNotEmpty) {
+    if (notify && updatedTableNames.isNotEmpty) {
       if (kDebugMode) {
         print(
             'SyncEngine: Marking tables as updated: ${updatedTableNames.join(', ')}');
