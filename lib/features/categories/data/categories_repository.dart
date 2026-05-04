@@ -67,6 +67,7 @@ class CategoriesRepository {
     List<String> categoryUuids,
     DateTime start,
     DateTime end,
+    String type,
   ) {
     if (categoryUuids.isEmpty) return Stream.value({});
     final startDate = DateTime(start.year, start.month, start.day, 0, 0, 0);
@@ -90,12 +91,12 @@ class CategoriesRepository {
       final incomeBy = <String, double>{};
       for (final row in rows) {
         final catUuid = row.read(_database.transactions.categoryUuid);
-        final type = row.read(_database.transactions.type);
+        final t = row.read(_database.transactions.type);
         final sum = row.read(_database.transactions.amount.sum()) ?? 0.0;
         if (catUuid == null) continue;
-        if (type == 'EXPENSE') {
+        if (t == 'EXPENSE') {
           expenseBy[catUuid] = sum;
-        } else if (type == 'INCOME') {
+        } else if (t == 'INCOME') {
           incomeBy[catUuid] = sum;
         }
       }
@@ -103,7 +104,8 @@ class CategoriesRepository {
       for (final id in categoryUuids) {
         final e = expenseBy[id] ?? 0.0;
         final i = incomeBy[id] ?? 0.0;
-        result[id] = e - i;
+        // Return net relative to the requested type
+        result[id] = type == 'INCOME' ? i - e : e - i;
       }
       return result;
     });
@@ -346,7 +348,7 @@ class CategoriesRepository {
   // ── Category budgets & period net (active = not deleted + processed) ─────
 
   Future<double> getCategoryNetAmount(
-      String categoryUuid, DateTime start, DateTime end) async {
+      String categoryUuid, DateTime start, DateTime end, String type) async {
     final startDate = DateTime(start.year, start.month, start.day, 0, 0, 0);
     final endDate = DateTime(end.year, end.month, end.day, 23, 59, 59);
     final expenseSum = await (_database.selectOnly(_database.transactions)
@@ -367,13 +369,13 @@ class CategoriesRepository {
           ..where(_database.transactions.processedDate.isNotNull()))
         .getSingle()
         .then((r) => r.read(_database.transactions.amount.sum()) ?? 0.0);
-    return expenseSum - incomeSum;
+    return type == 'INCOME' ? incomeSum - expenseSum : expenseSum - incomeSum;
   }
 
   /// Net for transactions with no category: sum(EXPENSE) − sum(INCOME) in range.
   /// Same sign convention as [getCategoryNetAmount].
   Future<double> getUncategorizedNetAmount(
-      DateTime start, DateTime end) async {
+      DateTime start, DateTime end, String type) async {
     final startDate = DateTime(start.year, start.month, start.day, 0, 0, 0);
     final endDate = DateTime(end.year, end.month, end.day, 23, 59, 59);
     final expenseSum = await (_database.selectOnly(_database.transactions)
@@ -394,7 +396,7 @@ class CategoriesRepository {
           ..where(_database.transactions.processedDate.isNotNull()))
         .getSingle()
         .then((r) => r.read(_database.transactions.amount.sum()) ?? 0.0);
-    return expenseSum - incomeSum;
+    return type == 'INCOME' ? incomeSum - expenseSum : expenseSum - incomeSum;
   }
 
   /// Total for transactions with no category by type (EXPENSE or INCOME) in range.
@@ -430,8 +432,8 @@ class CategoriesRepository {
   }
 
   Future<CategoryPeriodStats> getCategoryPeriodStats(
-      String categoryUuid, DateTime start, DateTime end) async {
-    final net = await getCategoryNetAmount(categoryUuid, start, end);
+      String categoryUuid, DateTime start, DateTime end, String type) async {
+    final net = await getCategoryNetAmount(categoryUuid, start, end, type);
     final count = await getCategoryTransactionCount(categoryUuid, start, end);
     return CategoryPeriodStats(netAmount: net, transactionCount: count);
   }
@@ -443,7 +445,7 @@ class CategoriesRepository {
       throw Exception('Category not found');
     }
     final stats = await getCategoryPeriodStats(
-        categoryUuid, range.startDate, range.endDate);
+        categoryUuid, range.startDate, range.endDate, category.type);
     return CategoryBudgetSnapshot(
       category: category,
       period: range,
@@ -458,6 +460,7 @@ class CategoriesRepository {
     List<String> categoryUuids,
     DateTime start,
     DateTime end,
+    String type,
   ) async {
     if (categoryUuids.isEmpty) return {};
     final startDate = DateTime(start.year, start.month, start.day, 0, 0, 0);
@@ -480,12 +483,12 @@ class CategoriesRepository {
     final incomeBy = <String, double>{};
     for (final row in rows) {
       final catUuid = row.read(_database.transactions.categoryUuid);
-      final type = row.read(_database.transactions.type);
+      final t = row.read(_database.transactions.type);
       final sum = row.read(_database.transactions.amount.sum()) ?? 0.0;
       if (catUuid == null) continue;
-      if (type == 'EXPENSE') {
+      if (t == 'EXPENSE') {
         expenseBy[catUuid] = sum;
-      } else if (type == 'INCOME') {
+      } else if (t == 'INCOME') {
         incomeBy[catUuid] = sum;
       }
     }
@@ -493,7 +496,7 @@ class CategoriesRepository {
     for (final id in categoryUuids) {
       final e = expenseBy[id] ?? 0.0;
       final i = incomeBy[id] ?? 0.0;
-      result[id] = e - i;
+      result[id] = type == 'INCOME' ? i - e : e - i;
     }
     return result;
   }

@@ -141,6 +141,7 @@ final categoryNetAmountsForListProvider =
             categories.map((c) => c.uuid).toList(),
             range.startDate,
             range.endDate,
+            type,
           )
           .distinct((prev, next) => const MapEquality().equals(prev, next))
           .debounceTime(const Duration(milliseconds: 100));

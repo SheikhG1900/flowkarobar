@@ -664,9 +664,15 @@ class _CategoryCard extends ConsumerWidget {
     final decimals = ref.watch(currencyDecimalPlacesProvider);
     final budget = (isLocked || isBudgetLocked) ? null : budgetAmountForPeriod(category, dateRange);
     final hasBudget = budget != null && budget > 0;
+    
+    // For Income categories, progress is (Income - Expense) / Budget
+    // For Expense categories, progress is (Expense - Income) / Budget
+    // netAmount is already calculated relative to category type in repository
     final pr = hasBudget ? netAmount / budget : 0.0;
-    final fillColor =
-        hasBudget && pr > 1.0 ? AppColors.expenseColor : color;
+    
+    // For income, we don't usually show "over budget" in red unless it's an expense-like behavior.
+    // But keeping it consistent with the repository's netAmount logic.
+    final fillColor = hasBudget && isExpense && pr > 1.0 ? AppColors.expenseColor : color;
 
     return Padding(
       key: ValueKey('category-card-padding-${category.uuid}'),
