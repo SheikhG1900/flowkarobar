@@ -205,22 +205,42 @@ class _TabularRowInputState extends State<_TabularRowInput> {
                   color: theme.colorScheme.primary,
                 ),
               ),
-              const SizedBox(width: 8),
-              IconButton(
-                icon: Icon(Icons.copy_outlined,
-                    color: theme.colorScheme.primary, size: 20),
-                onPressed: widget.onCopy,
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-                tooltip: l10n.copy,
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: widget.onCopy,
+                  icon: const Icon(Icons.copy_outlined, size: 18),
+                  label: Text(l10n.copy),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: theme.colorScheme.primary,
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
               ),
-              const SizedBox(width: 8),
-              IconButton(
-                icon: const Icon(Icons.delete_outline,
-                    color: Colors.red, size: 20),
-                onPressed: widget.onDelete,
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
+              const SizedBox(width: 12),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: widget.onDelete,
+                  icon: const Icon(Icons.delete_outline, size: 18),
+                  label: Text(l10n.delete),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: theme.colorScheme.error,
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    side: BorderSide(
+                      color: theme.colorScheme.error.withValues(alpha: 0.45),
+                    ),
+                  ),
+                ),
               ),
             ],
           ),

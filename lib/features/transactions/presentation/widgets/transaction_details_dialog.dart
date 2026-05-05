@@ -983,17 +983,19 @@ class TransactionDetailsDialog extends ConsumerWidget {
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        key: ValueKey('tx-details-tabular-qty-$index'),
-                        isRtl
-                            ? '$unitPriceStr x ${row.quantity}'
-                            : '${row.quantity} x $unitPriceStr',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
+                      if ((row.quantity - 1.0).abs() > 1e-9) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          key: ValueKey('tx-details-tabular-qty-$index'),
+                          isRtl
+                              ? '$unitPriceStr x ${row.quantity}'
+                              : '${row.quantity} x $unitPriceStr',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                          textDirection: TextDirection.ltr,
                         ),
-                        textDirection: TextDirection.ltr,
-                      ),
+                      ],
                     ],
                   ),
                 );
