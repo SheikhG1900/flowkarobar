@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/features/transactions/domain/models.dart';
+import 'package:rxdart/rxdart.dart';
 
 class AnalyticsRepository {
   final AppDatabase _database;
@@ -208,18 +209,13 @@ class AnalyticsRepository {
   }
 
   /// Financial summary for the transaction list's current filters (date, type, category, contact, amount).
-  Future<FinancialSummary> getFinancialSummaryForTransactionFilters(
-      TransactionFilters filters) async {
-    final totalExpense = await _getTransactionSumByFilter(filters, 'EXPENSE');
-    final totalIncome = await _getTransactionSumByFilter(filters, 'INCOME');
+  Stream<FinancialSummary> watchFinancialSummaryForTransactionFilters(
+      TransactionFilters filters) {
+    final totalExpense = _watchTransactionSumByFilter(filters, 'EXPENSE');
+    final totalIncome = _watchTransactionSumByFilter(filters, 'INCOME');
 
     final bool hasDateFilter =
         filters.startDate != null || filters.endDate != null;
-    final bool hasCategoryFilter = filters.categoryUuids != null &&
-        filters.categoryUuids!.isNotEmpty;
-    final bool hasContactFilter = filters.contactUuids != null &&
-        filters.contactUuids!.isNotEmpty;
-
     final now = DateTime.now();
     final start = filters.startDate ?? DateTime(now.year, 1, 1);
     final end =
@@ -227,7 +223,7 @@ class AnalyticsRepository {
     final startDate = DateTime(start.year, start.month, start.day, 0, 0, 0);
     final endDate = DateTime(end.year, end.month, end.day, 23, 59, 59);
 
-    final totalPayable = await _getPayableTotalForFilters(
+    final totalPayable = _watchPayableTotalForFilters(
       hasDateFilter: hasDateFilter,
       startDate: startDate,
       endDate: endDate,
@@ -237,7 +233,7 @@ class AnalyticsRepository {
       maxAmount: filters.maxAmount,
       statusCodes: filters.statusCodes,
     );
-    final totalReceivable = await _getReceivableTotalForFilters(
+    final totalReceivable = _watchReceivableTotalForFilters(
       hasDateFilter: hasDateFilter,
       startDate: startDate,
       endDate: endDate,
@@ -248,14 +244,21 @@ class AnalyticsRepository {
       statusCodes: filters.statusCodes,
     );
 
-    return FinancialSummary(
-        totalPayable: totalPayable,
-        totalReceivable: totalReceivable,
-        totalExpense: totalExpense,
-        totalIncome: totalIncome);
+    return Rx.combineLatest4(
+      totalPayable,
+      totalReceivable,
+      totalExpense,
+      totalIncome,
+      (a, b, c, d) => FinancialSummary(
+        totalPayable: a,
+        totalReceivable: b,
+        totalExpense: c,
+        totalIncome: d,
+      ),
+    );
   }
 
-  Future<double> _getPayableTotalForFilters({
+  Stream<double> _watchPayableTotalForFilters({
     required bool hasDateFilter,
     required DateTime startDate,
     required DateTime endDate,
@@ -264,23 +267,21 @@ class AnalyticsRepository {
     double? minAmount,
     double? maxAmount,
     List<String>? statusCodes,
-  }) async {
+  }) {
     final hasCategoryFilter =
         categoryUuids != null && categoryUuids.isNotEmpty;
     final hasContactFilter =
         contactUuids != null && contactUuids.isNotEmpty;
 
-    // Payable summary = outstanding only (PENDING). Never include PAID.
     List<String> payableStatuses = [];
     final hasStatusFilter =
         statusCodes != null && statusCodes.isNotEmpty;
     if (hasStatusFilter) {
-      if (statusCodes!.contains('PAYABLE')) {
+      if (statusCodes.contains('PAYABLE')) {
         payableStatuses.add('PENDING');
       }
-      // If a status filter is active but PAYABLE not selected, summary is zero.
       if (payableStatuses.isEmpty) {
-        return 0.0;
+        return Stream.value(0.0);
       }
     } else {
       payableStatuses.add('PENDING');
@@ -322,8 +323,7 @@ class AnalyticsRepository {
           ),
         ])
         ..where(whereExpr);
-      final row = await query.getSingle();
-      return row.read(_database.payables.amount.sum()) ?? 0.0;
+      return query.watchSingle().map((row) => row.read(_database.payables.amount.sum()) ?? 0.0);
     }
 
     Expression<bool> whereExpr = _database.payables.isDeleted.equals(false);
@@ -350,11 +350,10 @@ class AnalyticsRepository {
     final query = _database.selectOnly(_database.payables)
       ..addColumns([_database.payables.amount.sum()])
       ..where(whereExpr);
-    final row = await query.getSingle();
-    return row.read(_database.payables.amount.sum()) ?? 0.0;
+    return query.watchSingle().map((row) => row.read(_database.payables.amount.sum()) ?? 0.0);
   }
 
-  Future<double> _getReceivableTotalForFilters({
+  Stream<double> _watchReceivableTotalForFilters({
     required bool hasDateFilter,
     required DateTime startDate,
     required DateTime endDate,
@@ -363,23 +362,21 @@ class AnalyticsRepository {
     double? minAmount,
     double? maxAmount,
     List<String>? statusCodes,
-  }) async {
+  }) {
     final hasCategoryFilter =
         categoryUuids != null && categoryUuids.isNotEmpty;
     final hasContactFilter =
         contactUuids != null && contactUuids.isNotEmpty;
 
-    // Receivable summary = outstanding only (PENDING). Never include RECEIVED.
     List<String> receivableStatuses = [];
     final hasStatusFilter =
         statusCodes != null && statusCodes.isNotEmpty;
     if (hasStatusFilter) {
-      if (statusCodes!.contains('RECEIVABLE')) {
+      if (statusCodes.contains('RECEIVABLE')) {
         receivableStatuses.add('PENDING');
       }
-      // If a status filter is active but RECEIVABLE not selected, summary is zero.
       if (receivableStatuses.isEmpty) {
-        return 0.0;
+        return Stream.value(0.0);
       }
     } else {
       receivableStatuses.add('PENDING');
@@ -421,8 +418,7 @@ class AnalyticsRepository {
           ),
         ])
         ..where(whereExpr);
-      final row = await query.getSingle();
-      return row.read(_database.receivables.amount.sum()) ?? 0.0;
+      return query.watchSingle().map((row) => row.read(_database.receivables.amount.sum()) ?? 0.0);
     }
 
     Expression<bool> whereExpr = _database.receivables.isDeleted.equals(false);
@@ -449,13 +445,12 @@ class AnalyticsRepository {
     final query = _database.selectOnly(_database.receivables)
       ..addColumns([_database.receivables.amount.sum()])
       ..where(whereExpr);
-    final row = await query.getSingle();
-    return row.read(_database.receivables.amount.sum()) ?? 0.0;
+    return query.watchSingle().map((row) => row.read(_database.receivables.amount.sum()) ?? 0.0);
   }
 
-  Future<double> _getTransactionSumByFilter(
-      TransactionFilters filters, String type) async {
-    if (filters.type != null && filters.type != type) return 0.0;
+  Stream<double> _watchTransactionSumByFilter(
+      TransactionFilters filters, String type) {
+    if (filters.type != null && filters.type != type) return Stream.value(0.0);
 
     final query = _database.selectOnly(_database.transactions);
     query.addColumns([_database.transactions.amount.sum()]);
@@ -497,43 +492,34 @@ class AnalyticsRepository {
               .isSmallerOrEqualValue(filters.maxAmount!);
     }
 
-    // Status-based filters: PAID / RECEIVED / PAYABLE / RECEIVABLE / AUTO / SCHEDULED / NOT_PROCESSED / PROCESSED
     bool hasNotProcessedFilter = false;
-    bool hasProcessedFilter = false;
     if (filters.statusCodes != null && filters.statusCodes!.isNotEmpty) {
       final statuses = filters.statusCodes!;
       Expression<bool>? statusExpr;
 
       bool has(String code) => statuses.contains(code);
       hasNotProcessedFilter = has('NOT_PROCESSED');
-      hasProcessedFilter = has('PROCESSED');
 
-      // Auto-generated transactions
       if (has('AUTO')) {
         final expr = _database.transactions.isAutoGenerated.equals(true);
         statusExpr = statusExpr == null ? expr : (statusExpr | expr);
       }
       
-      // Scheduled transactions
       if (has('SCHEDULED')) {
         final expr = _database.transactions.isScheduled.equals(true);
         statusExpr = statusExpr == null ? expr : (statusExpr | expr);
       }
 
-      // PROCESSED transactions
       if (has('PROCESSED')) {
         final expr = _database.transactions.processedDate.isNotNull();
         statusExpr = statusExpr == null ? expr : (statusExpr | expr);
       }
 
-      // NOT_PROCESSED transactions
       if (has('NOT_PROCESSED')) {
         final expr = _database.transactions.processedDate.isNull();
         statusExpr = statusExpr == null ? expr : (statusExpr | expr);
       }
 
-      // Join to payables/receivables to filter by their status
-      // PAID / PAYABLE relate to payables
       if (has('PAID') || has('PAYABLE')) {
         query.join([
           leftOuterJoin(
@@ -556,7 +542,6 @@ class AnalyticsRepository {
         statusExpr = statusExpr == null ? expr : (statusExpr | expr);
       }
 
-      // RECEIVED / RECEIVABLE relate to receivables
       if (has('RECEIVED') || has('RECEIVABLE')) {
         query.join([
           leftOuterJoin(
@@ -584,15 +569,12 @@ class AnalyticsRepository {
       }
     }
 
-    // Default: only include processed transactions, 
-    // UNLESS the user explicitly asked for NOT_PROCESSED transactions.
     if (!hasNotProcessedFilter) {
       whereExpr = whereExpr & _database.transactions.processedDate.isNotNull();
     }
 
     query.where(whereExpr);
-    final row = await query.getSingle();
-    return row.read(_database.transactions.amount.sum()) ?? 0.0;
+    return query.watchSingle().map((row) => row.read(_database.transactions.amount.sum()) ?? 0.0);
   }
 
   Future<FinancialSummary> getFinancialSummary(
@@ -908,6 +890,23 @@ class FinancialSummary {
       required this.totalExpense,
       required this.totalIncome})
       : netBalance = totalReceivable - totalPayable;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FinancialSummary &&
+          runtimeType == other.runtimeType &&
+          other.totalPayable == totalPayable &&
+          other.totalReceivable == totalReceivable &&
+          other.totalExpense == totalExpense &&
+          other.totalIncome == totalIncome;
+
+  @override
+  int get hashCode =>
+      totalPayable.hashCode ^
+      totalReceivable.hashCode ^
+      totalExpense.hashCode ^
+      totalIncome.hashCode;
 }
 
 class PayableReceivableTrend {

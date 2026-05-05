@@ -58,6 +58,7 @@ class _CollapsibleListSummaryState extends State<CollapsibleListSummary>
     final theme = Theme.of(context);
 
     return Container(
+      key: widget.key,
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),

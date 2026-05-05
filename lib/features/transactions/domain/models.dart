@@ -1,4 +1,5 @@
 import 'package:flowpaisa/core/database/database.dart';
+import 'package:collection/collection.dart';
 
 /// Enhanced transaction model with pre-fetched related data
 /// Used to avoid N+1 query problems when displaying transaction lists
@@ -18,6 +19,27 @@ class TransactionWithDetails {
     this.linkedPayable,
     this.linkedReceivable,
   });
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is TransactionWithDetails &&
+          runtimeType == other.runtimeType &&
+          transaction == other.transaction &&
+          category == other.category &&
+          contact == other.contact &&
+          account == other.account &&
+          linkedPayable == other.linkedPayable &&
+          linkedReceivable == other.linkedReceivable;
+
+  @override
+  int get hashCode =>
+      transaction.hashCode ^
+      category.hashCode ^
+      contact.hashCode ^
+      account.hashCode ^
+      linkedPayable.hashCode ^
+      linkedReceivable.hashCode;
 
   /// Returns true if the linked payable/receivable is marked/settled
   bool get isLinkedEntryMarked {
@@ -122,5 +144,38 @@ class TransactionFilters {
       maxAmount: clearMaxAmount ? null : (maxAmount ?? this.maxAmount),
       statusCodes: statusCodes ?? this.statusCodes,
     );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! TransactionFilters) return false;
+
+    final listEquals = const DeepCollectionEquality().equals;
+
+    return other.startDate == startDate &&
+        other.endDate == endDate &&
+        other.type == type &&
+        listEquals(other.categoryUuids, categoryUuids) &&
+        listEquals(other.contactUuids, contactUuids) &&
+        listEquals(other.accountUuids, accountUuids) &&
+        other.minAmount == minAmount &&
+        other.maxAmount == maxAmount &&
+        listEquals(other.statusCodes, statusCodes);
+  }
+
+  @override
+  int get hashCode {
+    final listHash = const DeepCollectionEquality().hash;
+
+    return startDate.hashCode ^
+        endDate.hashCode ^
+        type.hashCode ^
+        listHash(categoryUuids) ^
+        listHash(contactUuids) ^
+        listHash(accountUuids) ^
+        minAmount.hashCode ^
+        maxAmount.hashCode ^
+        listHash(statusCodes);
   }
 }

@@ -106,6 +106,7 @@ class DashboardEntityWidgetCard extends ConsumerWidget {
               onTap: () => _openTransaction(context, uuid),
               onRemove: () => _removeAt(ref, layoutIndex),
               contentKey: ValueKey('entity-tx-content-col-$uuid'),
+              amountKey: ValueKey('entity-tx-amount-$uuid'),
             );
           },
           loading: () => _buildCardPlaceholder(theme, key: ValueKey('entity-tx-loading-$uuid')),
@@ -220,6 +221,7 @@ class DashboardEntityWidgetCard extends ConsumerWidget {
               onTap: () => _openContact(context, uuid),
               onRemove: () => _removeAt(ref, layoutIndex),
               contentKey: ValueKey('entity-contact-content-col-$uuid'),
+              amountKey: ValueKey('entity-contact-amount-$uuid'),
             );
           },
           loading: () => _buildCardPlaceholder(theme, key: ValueKey('entity-contact-loading-$uuid')),
@@ -256,6 +258,7 @@ class DashboardEntityWidgetCard extends ConsumerWidget {
               onTap: () => _openPayable(context, uuid),
               onRemove: () => _removeAt(ref, layoutIndex),
               contentKey: ValueKey('entity-payable-content-col-$uuid'),
+              amountKey: ValueKey('entity-payable-amount-$uuid'),
             );
           },
           loading: () => _buildCardPlaceholder(theme, key: ValueKey('entity-payable-loading-$uuid')),
@@ -292,6 +295,7 @@ class DashboardEntityWidgetCard extends ConsumerWidget {
               onTap: () => _openReceivable(context, uuid),
               onRemove: () => _removeAt(ref, layoutIndex),
               contentKey: ValueKey('entity-receivable-content-col-$uuid'),
+              amountKey: ValueKey('entity-receivable-amount-$uuid'),
             );
           },
           loading: () => _buildCardPlaceholder(theme, key: ValueKey('entity-receivable-loading-$uuid')),
@@ -369,6 +373,7 @@ class DashboardEntityWidgetCard extends ConsumerWidget {
     bool isLocked = false,
     Key? key,
     Key? contentKey,
+    Key? amountKey,
   }) {
     final effectiveAmountColor = amountColor ??
         (isExpense ? AppColors.expenseColor : AppColors.incomeColor);
@@ -448,6 +453,7 @@ class DashboardEntityWidgetCard extends ConsumerWidget {
                               Directionality(
                                 textDirection: TextDirection.ltr,
                                 child: Text(
+                                  key: amountKey,
                                   '${isExpense ? '\u200E−' : '\u200E+'} ${AmountFormatter.formatWithCurrency(amount, currency.symbol, currency.decimalPlaces)}',
                                   style: theme.textTheme.titleSmall?.copyWith(
                                     fontWeight: FontWeight.bold,
@@ -743,6 +749,7 @@ class DashboardEntityWidgetCard extends ConsumerWidget {
           _accountDashboardTitleExtra(theme, l10n, currency, awb, key: ValueKey('entity-account-extra-$uuid')),
       isLocked: isAccountLocked,
       contentKey: ValueKey('entity-account-content-col-$uuid'),
+      amountKey: ValueKey('entity-account-amount-$uuid'),
     );
   }
 

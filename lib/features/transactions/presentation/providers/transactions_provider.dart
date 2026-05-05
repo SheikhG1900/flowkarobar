@@ -8,6 +8,7 @@ import 'package:flowpaisa/features/transactions/domain/models.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transaction_service_provider.dart';
 import 'package:flowpaisa/shared/providers/database_provider.dart';
 import 'package:flowpaisa/shared/models/paginated_state.dart';
+import 'package:collection/collection.dart';
 
 import 'package:flowpaisa/features/payables/presentation/providers/payables_provider.dart';
 import 'package:flowpaisa/features/receivables/presentation/providers/receivables_provider.dart';
@@ -63,10 +64,10 @@ final transactionsWithDetailsProvider =
     StreamProvider<List<TransactionWithDetails>>((ref) {
   final repository = ref.watch(transactionsRepositoryProvider);
 
-  // Explicitly watch the underlying table to ensure refresh after sync
-  ref.watch(allTransactionsProvider);
-
-  return repository.watchTransactionsWithDetails();
+  return repository
+      .watchTransactionsWithDetails()
+      .distinct((prev, next) => const ListEquality().equals(prev, next))
+      .debounceTime(const Duration(milliseconds: 100));
 });
 
 // Watch a single transaction with details by UUID
@@ -74,13 +75,10 @@ final transactionWithDetailsProvider =
     StreamProvider.family<TransactionWithDetails?, String>((ref, uuid) {
   final repository = ref.watch(transactionsRepositoryProvider);
 
-  // Also watch all transactions, payables, and receivables to ensure we refresh
-  // when any related data changes (e.g. when a linked entry is marked as paid)
-  ref.watch(allTransactionsProvider);
-  ref.watch(allPayablesProvider);
-  ref.watch(allReceivablesProvider);
-
-  return repository.watchTransactionWithDetailsByUuid(uuid);
+  return repository
+      .watchTransactionWithDetailsByUuid(uuid)
+      .distinct((prev, next) => prev == next)
+      .debounceTime(const Duration(milliseconds: 100));
 });
 
 /// All transactions in the same split group as the given transaction (for group edit / sibling list).
@@ -157,35 +155,45 @@ class TransactionsPaginatedNotifier
     extends Notifier<PaginatedState<TransactionWithDetails>> {
   StreamSubscription<List<TransactionWithDetails>>? _subscription;
   late TransactionsRepository _repository;
-  String _searchQuery = '';
-  TransactionFilters _filters = TransactionFilters();
 
   @override
   PaginatedState<TransactionWithDetails> build() {
-    _repository = ref.watch(transactionsRepositoryProvider);
-    // Load initial data asynchronously
-    Future.microtask(() => _loadInitial());
+    // Use [read], not [watch]: the repository provider creates a new instance on
+    // every re-run. Watching it would re-invoke [build], return a fresh empty
+    // [PaginatedState], and wipe the list (logo / loading flash) whenever the
+    // database or cashbook graph updates.
+    _repository = ref.read(transactionsRepositoryProvider);
 
     ref.onDispose(() {
       _subscription?.cancel();
     });
 
+    // Load initial data asynchronously
+    Future.microtask(() => _loadInitial());
+
     return PaginatedState<TransactionWithDetails>(
       items: [],
       isLoading: true,
+      filters: TransactionFilters(),
+      searchQuery: '',
     );
   }
 
   Future<void> _loadInitial() async {
-    state = state.copyWith(isLoading: true, error: null);
+    _repository = ref.read(transactionsRepositoryProvider);
+
+    // Do not set isLoading: true if we already have items to prevent flickering
+    if (state.items.isEmpty) {
+      state = state.copyWith(isLoading: true, error: null);
+    }
 
     try {
       // Load first page
       final List<TransactionWithDetails> initialItems;
       initialItems =
           await _repository.getTransactionsWithDetailsFilteredPaginated(
-        filters: _filters,
-        searchQuery: _searchQuery,
+        filters: state.filters ?? TransactionFilters(),
+        searchQuery: state.searchQuery ?? '',
         limit: state.pageSize,
         offset: 0,
       );
@@ -196,15 +204,18 @@ class TransactionsPaginatedNotifier
       // Watch for real-time updates to loaded items
       _subscription?.cancel();
       final stream = _repository.watchTransactionsWithDetailsFilteredPaginated(
-        filters: _filters,
-        searchQuery: _searchQuery,
-        limit: initialItems.length > state.pageSize
-            ? initialItems.length
+        filters: state.filters ?? TransactionFilters(),
+        searchQuery: state.searchQuery ?? '',
+        limit: state.items.length > state.pageSize
+            ? state.items.length
             : state.pageSize,
         offset: 0,
       );
 
-      _subscription = stream.listen((updatedItems) {
+      _subscription = stream
+          .distinct((prev, next) => const ListEquality().equals(prev, next))
+          .debounceTime(const Duration(milliseconds: 100))
+          .listen((updatedItems) {
         if (!state.isLoadingMore) {
           state = state.copyWith(items: updatedItems);
         }
@@ -225,8 +236,8 @@ class TransactionsPaginatedNotifier
     try {
       final List<TransactionWithDetails> newItems;
       newItems = await _repository.getTransactionsWithDetailsFilteredPaginated(
-        filters: _filters,
-        searchQuery: _searchQuery,
+        filters: state.filters ?? TransactionFilters(),
+        searchQuery: state.searchQuery ?? '',
         limit: state.pageSize,
         offset: state.currentOffset,
       );
@@ -246,15 +257,16 @@ class TransactionsPaginatedNotifier
         _subscription?.cancel();
         final stream =
             _repository.watchTransactionsWithDetailsFilteredPaginated(
-          filters: _filters,
-          searchQuery: _searchQuery,
-          limit: state.items.length > state.pageSize
-              ? state.items.length
-              : state.pageSize,
+          filters: state.filters ?? TransactionFilters(),
+          searchQuery: state.searchQuery ?? '',
+          limit: state.items.length,
           offset: 0,
         );
 
-        _subscription = stream.listen((updatedItems) {
+        _subscription = stream
+            .distinct((prev, next) => const ListEquality().equals(prev, next))
+            .debounceTime(const Duration(milliseconds: 100))
+            .listen((updatedItems) {
           if (!state.isLoadingMore) {
             state = state.copyWith(items: updatedItems);
           }
@@ -269,21 +281,24 @@ class TransactionsPaginatedNotifier
   }
 
   Future<void> search(String query) async {
-    if (_searchQuery == query) return;
-    _searchQuery = query;
+    if (state.searchQuery == query) return;
     _subscription?.cancel();
-    state = state.copyWith(items: [], isLoading: true, hasMore: true);
+    // Only show loading if we are starting a new search
+    state = state.copyWith(
+        items: [], isLoading: true, hasMore: true, searchQuery: query);
     await _loadInitial();
   }
 
   Future<void> applyFilters(TransactionFilters filters) async {
-    _filters = filters;
+    if (state.filters == filters) return;
     _subscription?.cancel();
-    state = state.copyWith(items: [], isLoading: true, hasMore: true);
+    // Only show loading if we are applying new filters
+    state = state.copyWith(
+        items: [], isLoading: true, hasMore: true, filters: filters);
     await _loadInitial();
   }
 
-  TransactionFilters get currentFilters => _filters;
+  TransactionFilters get currentFilters => state.filters ?? TransactionFilters();
 
   Future<void> refresh() async {
     _subscription?.cancel();

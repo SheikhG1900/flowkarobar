@@ -193,11 +193,18 @@ class BackupNotifier extends Notifier<BackupState> {
   late BackupRepository _repository;
   StreamSubscription<List<SyncMetadataData>>? _dbWatcherSubscription;
   final List<StreamSubscription> _unsyncedCountSubscriptions = [];
+  /// Coalesces rapid sync-success callbacks (multi-cashbook + periodic refresh)
+  /// so we do not invalidate stream-backed UI many times in a row.
+  Timer? _postSyncRefreshCoalesceTimer;
 
   @override
   BackupState build() {
     _driveService = ref.watch(googleDriveServiceProvider);
     _repository = ref.watch(backupRepositoryProvider);
+
+    ref.onDispose(() {
+      _postSyncRefreshCoalesceTimer?.cancel();
+    });
 
     // Watch for cashbook changes to refresh state
     ref.listen(activeCashbookProvider, (previous, next) {
@@ -419,7 +426,7 @@ class BackupNotifier extends Notifier<BackupState> {
       try {
         await syncEngine.sync();
         state = state.copyWith(isLoading: false, syncStatus: 'Success');
-        _handleSyncSuccess();
+        _schedulePostSyncRefresh();
       } catch (e) {
         state = state.copyWith(isLoading: false, error: e.toString(), syncStatus: 'Error');
         if (kDebugMode) {
@@ -491,7 +498,7 @@ class BackupNotifier extends Notifier<BackupState> {
         final bool timeChanged = state.lastSyncTime != metadata.lastSyncAt;
 
         // When already Success with same versions, ignore time wobble to avoid
-        // repeated state updates and _handleSyncSuccess every 2s (stops refresh flicker).
+        // repeated state updates and post-sync refresh every 2s (stops refresh flicker).
         final alreadySuccessSameVersions = state.syncStatus == 'Success' &&
             status == 'Success' &&
             state.localVersion == metadata.version &&
@@ -530,7 +537,7 @@ class BackupNotifier extends Notifier<BackupState> {
           if (status == 'Success') {
             _syncProgressTimer?.cancel();
             if (wasSyncing) {
-              _handleSyncSuccess();
+              _schedulePostSyncRefresh();
             }
           }
         }
@@ -870,9 +877,9 @@ class BackupNotifier extends Notifier<BackupState> {
       db.transactionSchedules,
     });
 
-          // If we just finished a sync (transitioned from syncing to success), trigger full refresh
+          // If we just finished a sync (transitioned from syncing to success), trigger refresh
           if (wasSyncing && isNowSuccess) {
-            _handleSyncSuccess();
+            _schedulePostSyncRefresh();
           } else if (isNowSuccess) {
             // Even if we weren't "syncing" (e.g. background sync finished),
             // if we are now in Success state, ensure we eventually go back to Idle
@@ -895,7 +902,19 @@ class BackupNotifier extends Notifier<BackupState> {
     });
   }
 
-  Future<void> _handleSyncSuccess() async {
+  /// Batches work when several cashbooks finish sync back-to-back (see logs:
+  /// "Notifying main isolate..." x3). Stream-based screens refresh via
+  /// [Query.markTablesUpdated] without needing [ref.invalidate].
+  void _schedulePostSyncRefresh() {
+    _postSyncRefreshCoalesceTimer?.cancel();
+    _postSyncRefreshCoalesceTimer =
+        Timer(const Duration(milliseconds: 750), () {
+      if (!ref.mounted) return;
+      _executePostSyncRefresh();
+    });
+  }
+
+  Future<void> _executePostSyncRefresh() async {
     // 1. Refresh local version and sync time from DB manually to ensure state is updated
     // even if the watcher hasn't fired yet
     final db = ref.read(databaseProvider);
@@ -945,25 +964,12 @@ class BackupNotifier extends Notifier<BackupState> {
       db.transactionSchedules,
     });
 
-    // FORCE REFRESH: Explicitly tell Riverpod to discard cached state
-    ref.invalidate(categoriesListProvider);
-    ref.invalidate(accountsWithBalanceProvider);
-    ref.invalidate(accountsStreamProvider);
-    ref.invalidate(allTransfersWithDetailsProvider);
-    ref.invalidate(allTransactionsProvider);
-    ref.invalidate(recentTransactionsProvider);
-    ref.invalidate(transactionsWithDetailsProvider);
-    ref.invalidate(transactionsPaginatedProvider);
-    ref.invalidate(payablesPaginatedProvider);
-    ref.invalidate(receivablesPaginatedProvider);
+    // Do NOT invalidate StreamProviders or paginated Notifiers here: Drift streams
+    // re-query after [markTablesUpdated], and invalidating (e.g.
+    // [transactionsPaginatedProvider]) wipes list state and causes repeated
+    // logo / reload flashes when multiple sync-success events fire in a row.
 
-    // Refresh summary providers
-    ref.invalidate(allPayablesProvider);
-    ref.invalidate(allReceivablesProvider);
-    ref.invalidate(pendingPayablesCountProvider);
-    ref.invalidate(pendingReceivablesCountProvider);
-    ref.invalidate(overduePayablesCountProvider);
-    ref.invalidate(overdueReceivablesCountProvider);
+    // FutureProviders that do not listen to table streams — must be refreshed.
     ref.invalidate(totalPendingPayablesProvider);
     ref.invalidate(totalPendingReceivablesProvider);
 

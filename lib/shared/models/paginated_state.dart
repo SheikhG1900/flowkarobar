@@ -1,3 +1,5 @@
+import 'package:flowpaisa/features/transactions/domain/models.dart';
+
 /// Generic pagination state model for managing paginated data
 class PaginatedState<T> {
   final List<T> items;
@@ -7,6 +9,8 @@ class PaginatedState<T> {
   final int currentOffset;
   final int pageSize;
   final String? error;
+  final TransactionFilters? filters;
+  final String? searchQuery;
 
   const PaginatedState({
     required this.items,
@@ -16,6 +20,8 @@ class PaginatedState<T> {
     this.currentOffset = 0,
     this.pageSize = 50,
     this.error,
+    this.filters,
+    this.searchQuery,
   });
 
   PaginatedState<T> copyWith({
@@ -26,6 +32,8 @@ class PaginatedState<T> {
     int? currentOffset,
     int? pageSize,
     String? error,
+    TransactionFilters? filters,
+    String? searchQuery,
   }) {
     return PaginatedState<T>(
       items: items ?? this.items,
@@ -35,6 +43,8 @@ class PaginatedState<T> {
       currentOffset: currentOffset ?? this.currentOffset,
       pageSize: pageSize ?? this.pageSize,
       error: error ?? this.error,
+      filters: filters ?? this.filters,
+      searchQuery: searchQuery ?? this.searchQuery,
     );
   }
 
@@ -47,6 +57,8 @@ class PaginatedState<T> {
       hasMore: true,
       currentOffset: 0,
       pageSize: pageSize,
+      filters: filters,
+      searchQuery: searchQuery,
     );
   }
 

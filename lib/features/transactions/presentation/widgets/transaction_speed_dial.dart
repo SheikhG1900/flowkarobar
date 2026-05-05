@@ -67,10 +67,12 @@ class _TransactionSpeedDialState extends ConsumerState<TransactionSpeedDial>
     final isRtl = Directionality.of(context) == TextDirection.rtl;
 
     return Stack(
+      key: const ValueKey('speed-dial-stack'),
       alignment: isRtl ? Alignment.bottomLeft : Alignment.bottomRight,
       children: [
         if (_isExpanded)
           GestureDetector(
+            key: const ValueKey('speed-dial-overlay'),
             onTap: _toggle,
             child: Container(
               color: Colors.black.withValues(alpha: 0.3),
@@ -79,17 +81,20 @@ class _TransactionSpeedDialState extends ConsumerState<TransactionSpeedDial>
             ),
           ),
         Padding(
+          key: const ValueKey('speed-dial-padding'),
           padding: EdgeInsets.only(
             bottom: 16 + MediaQuery.of(context).padding.bottom,
             left: isRtl ? 16 : 0,
             right: isRtl ? 0 : 16,
           ),
           child: Column(
+            key: const ValueKey('speed-dial-column'),
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment:
                 isRtl ? CrossAxisAlignment.start : CrossAxisAlignment.end,
             children: [
               _buildStep(
+                key: const ValueKey('speed-dial-step-bulk'),
                 index: 2,
                 label: l10n.bulkImport,
                 icon: Icons.backup_table,
@@ -108,6 +113,7 @@ class _TransactionSpeedDialState extends ConsumerState<TransactionSpeedDial>
               ),
               const SizedBox(height: 16),
               _buildStep(
+                key: const ValueKey('speed-dial-step-scan'),
                 index: 1,
                 label: l10n.scanReceipt,
                 icon: Icons.document_scanner_outlined,
@@ -124,8 +130,8 @@ class _TransactionSpeedDialState extends ConsumerState<TransactionSpeedDial>
                   widget.onScanReceipt();
                 },
               ),
-              const SizedBox(height: 16),
               _buildStep(
+                key: const ValueKey('speed-dial-step-voice'),
                 index: 0,
                 label: l10n.voiceAdd,
                 icon: Icons.mic_none_rounded,
@@ -141,14 +147,18 @@ class _TransactionSpeedDialState extends ConsumerState<TransactionSpeedDial>
               const SizedBox(height: 16),
               // Split Main Button
               Align(
+                key: const ValueKey('speed-dial-main-align'),
                 alignment: isRtl ? Alignment.centerLeft : Alignment.centerRight,
                 child: Material(
+                  key: const ValueKey('speed-dial-main-material'),
                   elevation: 4,
                   borderRadius: BorderRadius.circular(32),
                   color: widget.activeColor,
                   shadowColor: widget.activeColor.withValues(alpha: 0.4),
                   child: IntrinsicHeight(
+                    key: const ValueKey('speed-dial-main-height'),
                     child: Row(
+                      key: const ValueKey('speed-dial-main-row'),
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         _buildAddAction(context, l10n),
@@ -168,6 +178,7 @@ class _TransactionSpeedDialState extends ConsumerState<TransactionSpeedDial>
 
   Widget _buildDivider() {
     return Container(
+      key: const ValueKey('speed-dial-divider'),
       width: 1,
       color: Colors.white.withValues(alpha: 0.2),
       margin: const EdgeInsets.symmetric(vertical: 12),
@@ -176,6 +187,7 @@ class _TransactionSpeedDialState extends ConsumerState<TransactionSpeedDial>
 
   Widget _buildAddAction(BuildContext context, AppLocalizations l10n) {
     return InkWell(
+      key: const ValueKey('speed-dial-add-action'),
       onTap: widget.onAddTransaction,
       borderRadius: BorderRadiusDirectional.horizontal(
         start: const Radius.circular(32),
@@ -204,6 +216,7 @@ class _TransactionSpeedDialState extends ConsumerState<TransactionSpeedDial>
 
   Widget _buildToggleArrow(BuildContext context) {
     return InkWell(
+      key: const ValueKey('speed-dial-toggle-action'),
       onTap: _toggle,
       borderRadius: BorderRadiusDirectional.horizontal(
         start: Radius.zero,
@@ -229,6 +242,7 @@ class _TransactionSpeedDialState extends ConsumerState<TransactionSpeedDial>
   }
 
   Widget _buildStep({
+    Key? key,
     required int index,
     required String label,
     required IconData icon,
@@ -256,26 +270,32 @@ class _TransactionSpeedDialState extends ConsumerState<TransactionSpeedDial>
     );
 
     return AnimatedBuilder(
+      key: key,
       animation: animation,
       builder: (context, child) {
         final double value = animation.value;
         if (value == 0 && !_isExpanded) return const SizedBox.shrink();
 
         return Opacity(
+          key: key != null ? ValueKey('${(key as ValueKey).value}-opacity') : null,
           opacity: value.clamp(0.0, 1.0),
           child: Transform.translate(
+            key: key != null ? ValueKey('${(key as ValueKey).value}-translate') : null,
             offset: Offset(0, (1 - value) * 20),
             child: Transform.scale(
+              key: key != null ? ValueKey('${(key as ValueKey).value}-scale') : null,
               scale: value,
               child: Align(
+                key: key != null ? ValueKey('${(key as ValueKey).value}-align') : null,
                 alignment: isRtl ? Alignment.centerLeft : Alignment.centerRight,
                 child: Row(
+                  key: key != null ? ValueKey('${(key as ValueKey).value}-row') : null,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    _buildStepLabel(labelBgColor, label, labelTextColor),
+                    _buildStepLabel(labelBgColor, label, labelTextColor, key: key != null ? ValueKey('${(key as ValueKey).value}-label') : null),
                     const SizedBox(width: 12),
                     _buildStepFab(index, onTap, isDark, color, theme, iconColor,
-                        size, icon),
+                        size, icon, key: key != null ? ValueKey('${(key as ValueKey).value}-fab') : null),
                   ],
                 ),
               ),
@@ -286,8 +306,9 @@ class _TransactionSpeedDialState extends ConsumerState<TransactionSpeedDial>
     );
   }
 
-  Widget _buildStepLabel(Color labelBgColor, String label, Color labelTextColor) {
+  Widget _buildStepLabel(Color labelBgColor, String label, Color labelTextColor, {Key? key}) {
     return Container(
+      key: key,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
         color: labelBgColor,
@@ -312,8 +333,9 @@ class _TransactionSpeedDialState extends ConsumerState<TransactionSpeedDial>
   }
 
   Widget _buildStepFab(int index, VoidCallback onTap, bool isDark, Color color,
-      ThemeData theme, Color iconColor, double size, IconData icon) {
+      ThemeData theme, Color iconColor, double size, IconData icon, {Key? key}) {
     return SizedBox(
+      key: key,
       width: size,
       height: size,
       child: FloatingActionButton(

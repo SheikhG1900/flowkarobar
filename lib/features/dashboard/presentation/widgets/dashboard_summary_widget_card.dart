@@ -657,7 +657,7 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
           ),
         );
       },
-      loading: () => _buildCardPlaceholder(theme),
+      loading: () => _buildCardPlaceholder(theme, key: const ValueKey('recent-tx-loading')),
       error: (_, __) => const SizedBox.shrink(),
     );
   }
@@ -1766,8 +1766,9 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
     );
   }
 
-  Widget _buildCardPlaceholder(ThemeData theme) {
+  Widget _buildCardPlaceholder(ThemeData theme, {Key? key}) {
     return Padding(
+      key: key,
       padding: const EdgeInsets.only(bottom: 10),
       child: Container(
         height: 76,

@@ -61,6 +61,7 @@ class ScheduleListItem extends ConsumerWidget {
         : theme.colorScheme.onSurface;
 
     return Container(
+      key: key,
       decoration: BoxDecoration(
         color: theme.cardColor.withValues(alpha: isInactive ? 0.6 : 1.0),
         borderRadius: BorderRadius.circular(20),
@@ -77,8 +78,10 @@ class ScheduleListItem extends ConsumerWidget {
         ],
       ),
       child: Material(
+        key: key != null ? ValueKey('${(key as ValueKey).value}-material') : null,
         color: Colors.transparent,
         child: InkWell(
+          key: key != null ? ValueKey('${(key as ValueKey).value}-inkwell') : null,
           onTap: () {
             if (isLocked) {
               PremiumGate.showPremiumDialog(context);
@@ -95,11 +98,14 @@ class ScheduleListItem extends ConsumerWidget {
           },
           borderRadius: BorderRadius.circular(20),
           child: Padding(
+            key: key != null ? ValueKey('${(key as ValueKey).value}-padding') : null,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             child: Row(
+              key: key != null ? ValueKey('${(key as ValueKey).value}-row') : null,
               children: [
                 // Leading
                 Container(
+                  key: key != null ? ValueKey('${(key as ValueKey).value}-leading') : null,
                   width: 50,
                   height: 50,
                   decoration: BoxDecoration(
@@ -117,11 +123,14 @@ class ScheduleListItem extends ConsumerWidget {
                 const SizedBox(width: 16),
                 // Title & Subtitle
                 Expanded(
+                  key: key != null ? ValueKey('${(key as ValueKey).value}-content-expanded') : null,
                   child: Column(
+                    key: key != null ? ValueKey('${(key as ValueKey).value}-content-col') : null,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
+                        key: key != null ? ValueKey('${(key as ValueKey).value}-title') : null,
                         category != null
                             ? LocalizationHelper.getLocalizedCategoryName(
                                 context, category.name)
@@ -135,6 +144,7 @@ class ScheduleListItem extends ConsumerWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
+                        key: key != null ? ValueKey('${(key as ValueKey).value}-desc') : null,
                         schedule.description ??
                             (isExpense ? l10n.expense : l10n.income),
                         style: theme.textTheme.bodySmall?.copyWith(
@@ -147,6 +157,7 @@ class ScheduleListItem extends ConsumerWidget {
                         const SizedBox(height: 8),
                         // Contact tag
                         Container(
+                          key: key != null ? ValueKey('${(key as ValueKey).value}-contact-tag') : null,
                           padding: const EdgeInsets.symmetric(
                               horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
@@ -160,9 +171,11 @@ class ScheduleListItem extends ConsumerWidget {
                             ),
                           ),
                           child: Row(
+                            key: key != null ? ValueKey('${(key as ValueKey).value}-contact-row') : null,
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Container(
+                                key: key != null ? ValueKey('${(key as ValueKey).value}-contact-avatar') : null,
                                 width: 12,
                                 height: 12,
                                 decoration: BoxDecoration(
@@ -185,6 +198,7 @@ class ScheduleListItem extends ConsumerWidget {
                               const SizedBox(width: 4),
                               Flexible(
                                 child: Text(
+                                  key: key != null ? ValueKey('${(key as ValueKey).value}-contact-name') : null,
                                   contact.name,
                                   style: TextStyle(
                                     fontSize: 10,
@@ -204,12 +218,14 @@ class ScheduleListItem extends ConsumerWidget {
                 const SizedBox(width: 16),
                 // Trailing
                 Column(
+                  key: key != null ? ValueKey('${(key as ValueKey).value}-trailing-col') : null,
                   mainAxisSize: MainAxisSize.min,
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     // Frequency badge above amount
                     Container(
+                      key: key != null ? ValueKey('${(key as ValueKey).value}-freq-badge') : null,
                       padding: const EdgeInsets.symmetric(
                           horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
@@ -222,15 +238,18 @@ class ScheduleListItem extends ConsumerWidget {
                         ),
                       ),
                       child: Row(
+                        key: key != null ? ValueKey('${(key as ValueKey).value}-freq-row') : null,
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
+                            key: key != null ? ValueKey('${(key as ValueKey).value}-freq-icon') : null,
                             _getFrequencyIcon(schedule.scheduleType),
                             size: 10,
                             color: theme.colorScheme.primary,
                           ),
                           const SizedBox(width: 4),
                           Text(
+                            key: key != null ? ValueKey('${(key as ValueKey).value}-freq-label') : null,
                             _getFrequencyLabel(l10n, schedule.scheduleType),
                             style: TextStyle(
                               fontSize: 10,
@@ -243,8 +262,10 @@ class ScheduleListItem extends ConsumerWidget {
                     ),
                     const SizedBox(height: 4),
                     FittedBox(
+                      key: key != null ? ValueKey('${(key as ValueKey).value}-amount-fitted') : null,
                       fit: BoxFit.scaleDown,
                       child: Text(
+                        key: key != null ? ValueKey('${(key as ValueKey).value}-amount-text') : null,
                         '${isExpense ? '\u200E-' : '\u200E+'} ${AmountFormatter.formatWithCurrency(schedule.amount, currency.symbol, currency.decimalPlaces)}',
                         style: theme.textTheme.titleLarge?.copyWith(
                           color: isExpense
@@ -263,6 +284,7 @@ class ScheduleListItem extends ConsumerWidget {
                     if (schedule.paidRelationship != null) ...[
                       const SizedBox(height: 4),
                       Container(
+                        key: key != null ? ValueKey('${(key as ValueKey).value}-rel-badge') : null,
                         padding: const EdgeInsets.symmetric(
                             horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
@@ -278,6 +300,7 @@ class ScheduleListItem extends ConsumerWidget {
                           ),
                         ),
                         child: Text(
+                          key: key != null ? ValueKey('${(key as ValueKey).value}-rel-text') : null,
                           LocalizationHelper.localizeRelationshipShort(
                             l10n,
                             schedule.paidRelationship,
@@ -295,6 +318,7 @@ class ScheduleListItem extends ConsumerWidget {
                     if (isInactive) ...[
                       const SizedBox(height: 4),
                       Text(
+                        key: key != null ? ValueKey('${(key as ValueKey).value}-inactive-text') : null,
                         l10n.inactive,
                         style: theme.textTheme.labelSmall?.copyWith(
                           color: theme.colorScheme.error.withValues(alpha: 0.7),

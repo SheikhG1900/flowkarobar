@@ -2,10 +2,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/features/analytics/data/analytics_repository.dart';
 import 'package:flowpaisa/features/accounts/data/accounts_repository.dart';
 import 'package:flowpaisa/features/accounts/presentation/providers/accounts_provider.dart';
+import 'package:flowpaisa/features/transactions/domain/models.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
 import 'package:flowpaisa/shared/models/date_range_state.dart';
 import 'package:flowpaisa/shared/providers/database_provider.dart';
 import 'package:flowpaisa/shared/providers/shared_preferences_provider.dart';
+import 'package:rxdart/rxdart.dart';
 
 export 'package:flowpaisa/features/accounts/presentation/providers/accounts_provider.dart'
     show accountsWithBalanceProvider;
@@ -245,12 +247,15 @@ final categoryStatisticsProvider = FutureProvider.autoDispose
 
 /// Financial summary for the transaction list, respecting current filters.
 final transactionListSummaryProvider =
-    FutureProvider.autoDispose<FinancialSummary>((ref) async {
-  ref.watch(transactionsPaginatedProvider);
-  final filters =
-      ref.read(transactionsPaginatedProvider.notifier).currentFilters;
+    StreamProvider.autoDispose<FinancialSummary>((ref) {
+  final filters = ref.watch(transactionsPaginatedProvider
+      .select((s) => s.filters ?? TransactionFilters()));
   final repository = ref.watch(analyticsRepositoryProvider);
-  return repository.getFinancialSummaryForTransactionFilters(filters);
+
+  return repository
+      .watchFinancialSummaryForTransactionFilters(filters)
+      .distinct((a, b) => a == b)
+      .debounceTime(const Duration(milliseconds: 100));
 });
 
 // ── Account Analytics Providers ─────────────────────────────────────────────

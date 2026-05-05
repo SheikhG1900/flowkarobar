@@ -8,12 +8,15 @@ class ScheduleIconBadge extends StatelessWidget {
     final isRtl = Directionality.of(context) == TextDirection.rtl;
 
     return Positioned(
+      key: key,
       top: 8,
       left: isRtl ? 8 : null,
       right: isRtl ? null : 8,
       child: Opacity(
+        key: key != null ? ValueKey('${(key as ValueKey).value}-opacity') : null,
         opacity: 0.8,
         child: Container(
+          key: key != null ? ValueKey('${(key as ValueKey).value}-container') : null,
           padding: const EdgeInsets.all(0),
           decoration: BoxDecoration(
             color: Colors.blue.withValues(alpha: 0.55),
@@ -31,6 +34,7 @@ class ScheduleIconBadge extends StatelessWidget {
             ],
           ),
           child: Icon(
+            key: key != null ? ValueKey('${(key as ValueKey).value}-icon') : null,
             Icons.schedule_outlined,
             size: 28,
             color: Colors.white.withValues(alpha: 0.95),

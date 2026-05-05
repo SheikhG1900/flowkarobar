@@ -17,12 +17,15 @@ class SplitIconBadge extends StatelessWidget {
     final isRtl = Directionality.of(context) == TextDirection.rtl;
 
     return Positioned(
+      key: key,
       top: 8,
       right: isRtl ? 8 : null,
       left: isRtl ? null : 8,
       child: Opacity(
+        key: key != null ? ValueKey('${(key as ValueKey).value}-opacity') : null,
         opacity: 0.8,
         child: Container(
+          key: key != null ? ValueKey('${(key as ValueKey).value}-container') : null,
           padding: const EdgeInsets.all(3),
           decoration: BoxDecoration(
             color: color.withValues(alpha: 0.55),
@@ -40,6 +43,7 @@ class SplitIconBadge extends StatelessWidget {
             ],
           ),
           child: Icon(
+            key: key != null ? ValueKey('${(key as ValueKey).value}-icon') : null,
             icon,
             size: 0,
             color: Colors.white.withValues(alpha: 0.95),

@@ -66,9 +66,11 @@ class TransactionDetailsDialog extends ConsumerWidget {
     });
 
     return itemAsync.when(
+      skipLoadingOnRefresh: true,
       data: (item) {
         if (item == null) {
           return Scaffold(
+            key: const ValueKey('tx-details-not-found'),
             appBar: AppBar(title: Text(l10n.transactionDetails)),
             body: Center(
                 child: Text(l10n.errorOccurred('Transaction not found'))),
@@ -83,10 +85,11 @@ class TransactionDetailsDialog extends ConsumerWidget {
         final isExpense = transaction.type == 'EXPENSE';
 
         if (currency == null) {
-          return const Center(child: CircularProgressIndicator());
+          return const Center(key: ValueKey('tx-details-currency-loading'), child: CircularProgressIndicator());
         }
 
         return groupAsync.when(
+          skipLoadingOnRefresh: true,
           data: (group) {
             final isSplitGroup = group.length > 1;
             return _buildContent(
@@ -105,20 +108,24 @@ class TransactionDetailsDialog extends ConsumerWidget {
             );
           },
           loading: () => Scaffold(
+            key: const ValueKey('tx-details-group-loading'),
             appBar: AppBar(title: Text(l10n.transactionDetails)),
             body: const Center(child: CircularProgressIndicator()),
           ),
           error: (err, _) => Scaffold(
+            key: const ValueKey('tx-details-group-error'),
             appBar: AppBar(title: Text(l10n.transactionDetails)),
             body: Center(child: Text(l10n.errorOccurred(err.toString()))),
           ),
         );
       },
       loading: () => Scaffold(
+        key: const ValueKey('tx-details-item-loading'),
         appBar: AppBar(title: Text(l10n.transactionDetails)),
         body: const Center(child: CircularProgressIndicator()),
       ),
       error: (err, _) => Scaffold(
+        key: const ValueKey('tx-details-item-error'),
         appBar: AppBar(title: Text(l10n.transactionDetails)),
         body: Center(child: Text(l10n.errorOccurred(err.toString()))),
       ),
@@ -144,16 +151,20 @@ class TransactionDetailsDialog extends ConsumerWidget {
     final pr = transaction.paidRelationship as String?;
 
     return Scaffold(
+      key: const ValueKey('tx-details-scaffold'),
       appBar: AppBar(
+        key: const ValueKey('tx-details-appbar'),
         title: Text(l10n.transactionDetails),
         actions: [
           Builder(
+            key: const ValueKey('tx-details-pin-builder'),
             builder: (context) {
               ref.watch(dashboardWidgetLayoutProvider);
               final notifier = ref.read(dashboardWidgetLayoutProvider.notifier);
               final isPinned = notifier.isPinned(
                   DashboardWidgetKind.transaction, transaction.uuid);
               return IconButton(
+                key: const ValueKey('tx-details-pin-btn'),
                 icon: Icon(
                   isPinned ? Icons.push_pin : Icons.push_pin_outlined,
                   color: isPinned
@@ -195,12 +206,15 @@ class TransactionDetailsDialog extends ConsumerWidget {
         ],
       ),
       body: SingleChildScrollView(
+        key: const ValueKey('tx-details-scrollview'),
         padding: const EdgeInsets.all(20),
         child: Column(
+          key: const ValueKey('tx-details-column'),
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Amount Card
             Container(
+              key: const ValueKey('tx-details-amount-card'),
               width: double.infinity,
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
@@ -230,8 +244,10 @@ class TransactionDetailsDialog extends ConsumerWidget {
                 ],
               ),
               child: Column(
+                key: const ValueKey('tx-details-amount-column'),
                 children: [
                   Text(
+                    key: const ValueKey('tx-details-type-label'),
                     isExpense ? l10n.expense : l10n.income,
                     style: const TextStyle(
                       color: Colors.white70,
@@ -241,6 +257,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
+                    key: const ValueKey('tx-details-amount-text'),
                     '${isExpense ? '\u200E-' : '\u200E+'} ${AmountFormatter.formatWithCurrency(transaction.amount, currency.symbol, currency.decimalPlaces)}',
                     style: TextStyle(
                       color: Colors.white,
@@ -252,6 +269,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
                   if (transaction.paidRelationship != null) ...[
                     const SizedBox(height: 12),
                     Container(
+                      key: const ValueKey('tx-details-status-badge'),
                       padding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
@@ -259,10 +277,12 @@ class TransactionDetailsDialog extends ConsumerWidget {
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Row(
+                        key: const ValueKey('tx-details-status-row'),
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           if (item.isLinkedEntryMarked)
                             const Icon(
+                              key: ValueKey('tx-details-status-icon'),
                               Icons.check_circle,
                               size: 16,
                               color: Colors.white,
@@ -270,6 +290,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
                           if (item.isLinkedEntryMarked)
                             const SizedBox(width: 6),
                           Text(
+                            key: const ValueKey('tx-details-status-text'),
                             _getStatusLabel(
                                 context,
                                 transaction.paidRelationship!,
@@ -289,6 +310,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
                   if (transaction.isAutoGenerated) ...[
                     const SizedBox(height: 8),
                     Container(
+                      key: const ValueKey('tx-details-auto-badge'),
                       padding: const EdgeInsets.symmetric(
                           horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
@@ -296,15 +318,18 @@ class TransactionDetailsDialog extends ConsumerWidget {
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Row(
+                        key: const ValueKey('tx-details-auto-row'),
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           const Icon(
+                            key: ValueKey('tx-details-auto-icon'),
                             Icons.auto_awesome,
                             size: 14,
                             color: Colors.white,
                           ),
                           const SizedBox(width: 6),
                           Text(
+                            key: const ValueKey('tx-details-auto-text'),
                             l10n.autoGenerated,
                             style: const TextStyle(
                               color: Colors.white,
@@ -321,6 +346,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton.icon(
+                        key: const ValueKey('tx-details-reviewed-btn'),
                         onPressed: () =>
                             _markAsReviewed(context, ref, transaction.uuid),
                         icon: const Icon(Icons.check_circle_outline, size: 18),
@@ -341,9 +367,11 @@ class TransactionDetailsDialog extends ConsumerWidget {
                   ],
                   const SizedBox(height: 16),
                   Row(
+                    key: const ValueKey('tx-details-actions-row'),
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
                       IconButton(
+                        key: const ValueKey('tx-details-link-btn'),
                         icon: const Icon(Icons.link, color: Colors.white, size: 22),
                         tooltip: l10n.copyLink,
                         onPressed: () {
@@ -355,6 +383,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
                       ),
                       if (transaction.isAutoGenerated != true)
                         IconButton(
+                          key: const ValueKey('tx-details-share-btn'),
                           icon: const Icon(Icons.share, color: Colors.white, size: 22),
                           tooltip: l10n.share,
                           onPressed: () {
@@ -386,6 +415,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
                         ),
                       if (transaction.isAutoGenerated != true)
                         IconButton(
+                          key: const ValueKey('tx-details-duplicate-btn'),
                           icon: const Icon(Icons.copy, color: Colors.white, size: 22),
                           tooltip: l10n.duplicate,
                           onPressed: () {
@@ -425,6 +455,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
                         ),
                       if (!item.isLinkedEntryMarked && transaction.isAutoGenerated != true)
                         IconButton(
+                          key: const ValueKey('tx-details-edit-btn'),
                           icon: const Icon(Icons.edit, color: Colors.white, size: 22),
                           tooltip: l10n.editTransaction,
                           onPressed: () {
@@ -443,6 +474,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
                         ),
                       if (!item.isLinkedEntryMarked && transaction.isAutoGenerated != true)
                         IconButton(
+                          key: const ValueKey('tx-details-delete-btn'),
                           icon: const Icon(Icons.delete, color: Colors.white, size: 22),
                           tooltip: l10n.delete,
                           onPressed: () =>
@@ -458,8 +490,10 @@ class TransactionDetailsDialog extends ConsumerWidget {
 
             if (isSplitGroup) ...[
               Material(
+                key: const ValueKey('tx-details-split-material'),
                 color: Colors.transparent,
                 child: InkWell(
+                  key: const ValueKey('tx-details-split-inkwell'),
                   borderRadius: BorderRadius.circular(20),
                   onTap: () {
                     Navigator.push(
@@ -473,10 +507,12 @@ class TransactionDetailsDialog extends ConsumerWidget {
                   },
                   child: _buildSectionCard(
                     context,
+                    key: const ValueKey('tx-details-split-section'),
                     title: l10n.splittedBill,
                     titleIcon: Icons.people_outline,
                     useScheduleDateRangeStyle: true,
                     titleTrailing: IconButton(
+                      key: const ValueKey('tx-details-split-edit-btn'),
                       icon: const Icon(Icons.edit_outlined, size: 20),
                       onPressed: () {
                         Navigator.push(
@@ -504,8 +540,10 @@ class TransactionDetailsDialog extends ConsumerWidget {
 
             if (linkedPayable != null) ...[
               Material(
+                key: const ValueKey('tx-details-payable-material'),
                 color: Colors.transparent,
                 child: InkWell(
+                  key: const ValueKey('tx-details-payable-inkwell'),
                   borderRadius: BorderRadius.circular(20),
                   onTap: () {
                     showDialog(
@@ -530,8 +568,10 @@ class TransactionDetailsDialog extends ConsumerWidget {
             ],
             if (linkedReceivable != null) ...[
               Material(
+                key: const ValueKey('tx-details-receivable-material'),
                 color: Colors.transparent,
                 child: InkWell(
+                  key: const ValueKey('tx-details-receivable-inkwell'),
                   borderRadius: BorderRadius.circular(20),
                   onTap: () {
                     showDialog(
@@ -576,6 +616,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
             ],
             if (pr == 'PROCESSED') ...[
               Column(
+                key: const ValueKey('tx-details-processed-col'),
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   _buildTxProcessedCard(
@@ -596,6 +637,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
                     SizedBox(
                       width: double.infinity,
                       child: FilledButton.icon(
+                        key: const ValueKey('tx-details-mark-processed-btn'),
                         onPressed: () async {
                           await ref
                               .read(transactionServiceProvider)
@@ -638,18 +680,22 @@ class TransactionDetailsDialog extends ConsumerWidget {
 
             _buildSectionCard(
               context,
+              key: const ValueKey('tx-details-info-section'),
               title: l10n.information,
               titleIcon: Icons.info_outline,
               body: Column(
+                key: const ValueKey('tx-details-info-column'),
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   if (contact != null) ...[
                     _buildDetailRow(
                       context,
+                      key: const ValueKey('tx-details-contact-row'),
                       icon: Icons.person_outline,
                       label: l10n.contact,
                       value: contact.name,
                       trailing: IconButton(
+                        key: const ValueKey('tx-details-contact-btn'),
                         icon: Icon(
                           Icons.chevron_right,
                           size: 20,
@@ -672,6 +718,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
                   ],
                   _buildDetailRow(
                     context,
+                    key: const ValueKey('tx-details-date-row'),
                     icon: Icons.calendar_today_outlined,
                     label: l10n.date,
                     value: AppDateFormatter.formatDate(transaction.date,
@@ -681,6 +728,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
                       transaction.description!.isNotEmpty) ...[
                     _buildDetailRow(
                       context,
+                      key: const ValueKey('tx-details-desc-row'),
                       icon: Icons.notes_outlined,
                       label: l10n.description,
                       value: TabularParser.isTabular(transaction.description)
@@ -691,6 +739,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
                   if (transaction.processedDate != null)
                     _buildDetailRow(
                       context,
+                      key: const ValueKey('tx-details-processed-date-row'),
                       icon: Icons.check_circle_outline,
                       label: isExpense
                           ? l10n.paidOnRowLabel
@@ -705,6 +754,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
                       pr != 'PROCESSED') ...[
                     const SizedBox(height: 8),
                     OutlinedButton.icon(
+                      key: const ValueKey('tx-details-mark-processed-outlined-btn'),
                       onPressed: () async {
                         await ref
                             .read(transactionServiceProvider)
@@ -752,6 +802,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
               Theme(
                 data: theme.copyWith(dividerColor: Colors.transparent),
                 child: ExpansionTile(
+                  key: const ValueKey('tx-details-debug-tile'),
                   title: const Text(
                     "DEBUG INFO",
                     style: TextStyle(
@@ -825,6 +876,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
     final isDarkMode = theme.brightness == Brightness.dark;
 
     return Container(
+      key: const ValueKey('tx-details-tabular-section'),
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: isDarkMode
@@ -836,6 +888,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
       child: Theme(
         data: theme.copyWith(dividerColor: Colors.transparent),
         child: ExpansionTile(
+          key: const ValueKey('tx-details-tabular-tile'),
           initiallyExpanded: true,
           shape: const RoundedRectangleBorder(
             borderRadius: BorderRadius.all(Radius.circular(16)),
@@ -844,12 +897,14 @@ class TransactionDetailsDialog extends ConsumerWidget {
             borderRadius: BorderRadius.all(Radius.circular(16)),
           ),
           title: Row(
+            key: const ValueKey('tx-details-tabular-title-row'),
             children: [
               Icon(Icons.table_chart_outlined,
                   size: 18, color: theme.colorScheme.primary),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
+                  key: const ValueKey('tx-details-tabular-label'),
                   l10n.itemizedDetails,
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.bold,
@@ -858,6 +913,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
                 ),
               ),
               Text(
+                key: const ValueKey('tx-details-tabular-total'),
                 AmountFormatter.formatWithCurrency(
                   total,
                   currency.symbol,
@@ -873,6 +929,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
           children: [
             const Divider(height: 1),
             ListView.separated(
+              key: const ValueKey('tx-details-tabular-list'),
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: rows.length,
@@ -886,14 +943,18 @@ class TransactionDetailsDialog extends ConsumerWidget {
                 );
 
                 return Padding(
+                  key: ValueKey('tx-details-tabular-row-$index'),
                   padding: const EdgeInsets.all(16),
                   child: Column(
+                    key: ValueKey('tx-details-tabular-col-$index'),
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
+                        key: ValueKey('tx-details-tabular-header-$index'),
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
+                            key: ValueKey('tx-details-tabular-date-$index'),
                             AppDateFormatter.formatDate(row.date,
                                 pattern: 'dd MMM, yyyy'),
                             style: theme.textTheme.bodySmall?.copyWith(
@@ -901,6 +962,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
                             ),
                           ),
                           Text(
+                            key: ValueKey('tx-details-tabular-amount-$index'),
                             AmountFormatter.formatWithCurrency(
                               row.totalAmount,
                               currency.symbol,
@@ -915,6 +977,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
+                        key: ValueKey('tx-details-tabular-desc-$index'),
                         row.description,
                         style: theme.textTheme.bodyMedium?.copyWith(
                           fontWeight: FontWeight.w600,
@@ -922,6 +985,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
+                        key: ValueKey('tx-details-tabular-qty-$index'),
                         isRtl
                             ? '$unitPriceStr x ${row.quantity}'
                             : '${row.quantity} x $unitPriceStr',
@@ -944,6 +1008,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
   /// Section shell (schedule / account-detail style).
   static Widget _buildSectionCard(
     BuildContext context, {
+    Key? key,
     required String title,
     required IconData titleIcon,
     Color? accentColor,
@@ -954,6 +1019,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
     final theme = Theme.of(context);
     final accent = accentColor ?? theme.colorScheme.primary;
     return Container(
+      key: key,
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: useScheduleDateRangeStyle
@@ -984,12 +1050,15 @@ class TransactionDetailsDialog extends ConsumerWidget {
               ],
             ),
       child: Column(
+        key: key != null ? ValueKey('${(key as ValueKey).value}-column') : null,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            key: key != null ? ValueKey('${(key as ValueKey).value}-header') : null,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Container(
+                key: key != null ? ValueKey('${(key as ValueKey).value}-icon-container') : null,
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   color: useScheduleDateRangeStyle
@@ -1008,6 +1077,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
+                  key: key != null ? ValueKey('${(key as ValueKey).value}-title') : null,
                   title,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
@@ -1042,8 +1112,10 @@ class TransactionDetailsDialog extends ConsumerWidget {
         ? AppColors.receivableColor
         : AppColors.payableColor;
     final label = isReceivable ? l10n.receivable : l10n.payable;
+    final keyPrefix = isReceivable ? 'receivable' : 'payable';
 
     return Container(
+      key: ValueKey('tx-details-$keyPrefix-card'),
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -1066,11 +1138,14 @@ class TransactionDetailsDialog extends ConsumerWidget {
         ],
       ),
       child: Column(
+        key: ValueKey('tx-details-$keyPrefix-column'),
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            key: ValueKey('tx-details-$keyPrefix-header'),
             children: [
               Container(
+                key: ValueKey('tx-details-$keyPrefix-icon-container'),
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   color: color.withValues(alpha: 0.25),
@@ -1084,6 +1159,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
               ),
               const SizedBox(width: 12),
               Text(
+                key: ValueKey('tx-details-$keyPrefix-label'),
                 label,
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
@@ -1095,8 +1171,10 @@ class TransactionDetailsDialog extends ConsumerWidget {
           if (contact != null) ...[
             const SizedBox(height: 16),
             Material(
+              key: ValueKey('tx-details-$keyPrefix-contact-material'),
               color: Colors.transparent,
               child: InkWell(
+                key: ValueKey('tx-details-$keyPrefix-contact-inkwell'),
                 onTap: () {
                   Navigator.push(
                     context,
@@ -1109,10 +1187,13 @@ class TransactionDetailsDialog extends ConsumerWidget {
                 },
                 borderRadius: BorderRadius.circular(12),
                 child: Padding(
+                  key: ValueKey('tx-details-$keyPrefix-contact-padding'),
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   child: Row(
+                    key: ValueKey('tx-details-$keyPrefix-contact-row'),
                     children: [
                       Container(
+                        key: ValueKey('tx-details-$keyPrefix-contact-avatar'),
                         width: 48,
                         height: 48,
                         decoration: BoxDecoration(
@@ -1142,9 +1223,11 @@ class TransactionDetailsDialog extends ConsumerWidget {
                       const SizedBox(width: 14),
                       Expanded(
                         child: Column(
+                          key: ValueKey('tx-details-$keyPrefix-contact-info'),
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
+                              key: ValueKey('tx-details-$keyPrefix-contact-name'),
                               contact.name,
                               style: theme.textTheme.titleSmall?.copyWith(
                                 fontWeight: FontWeight.w600,
@@ -1153,6 +1236,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
                             if (contact.phone != null) ...[
                               const SizedBox(height: 2),
                               Row(
+                                key: ValueKey('tx-details-$keyPrefix-contact-phone-row'),
                                 children: [
                                   Icon(
                                     Icons.phone,
@@ -1161,6 +1245,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
                                   ),
                                   const SizedBox(width: 4),
                                   Text(
+                                    key: ValueKey('tx-details-$keyPrefix-contact-phone-text'),
                                     contact.phone!,
                                     style: theme.textTheme.bodySmall?.copyWith(
                                       color: theme.colorScheme.onSurfaceVariant,
@@ -1186,6 +1271,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
+                  key: ValueKey('tx-details-$keyPrefix-message-btn'),
                   onPressed: () {
                     ShareHelper.shareTransaction(
                       context,
@@ -1238,6 +1324,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
     final isDarkMode = theme.brightness == Brightness.dark;
     final color = theme.colorScheme.primary;
     return Container(
+      key: const ValueKey('tx-details-processed-card'),
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -1260,11 +1347,14 @@ class TransactionDetailsDialog extends ConsumerWidget {
         ],
       ),
       child: Column(
+        key: const ValueKey('tx-details-processed-column'),
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            key: const ValueKey('tx-details-processed-header'),
             children: [
               Container(
+                key: const ValueKey('tx-details-processed-icon-container'),
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   color: color.withValues(alpha: 0.25),
@@ -1279,10 +1369,12 @@ class TransactionDetailsDialog extends ConsumerWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
+                  key: const ValueKey('tx-details-processed-info'),
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
+                      key: const ValueKey('tx-details-processed-label'),
                       isExpense ? l10n.markAsPaid : l10n.markAsReceived,
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
@@ -1291,6 +1383,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
+                      key: const ValueKey('tx-details-processed-desc'),
                       isExpense
                           ? l10n.processedImmediately
                           : l10n.receivedImmediately,
@@ -1306,8 +1399,10 @@ class TransactionDetailsDialog extends ConsumerWidget {
           if (contact != null) ...[
             const SizedBox(height: 16),
             Material(
+              key: const ValueKey('tx-details-processed-contact-material'),
               color: Colors.transparent,
               child: InkWell(
+                key: const ValueKey('tx-details-processed-contact-inkwell'),
                 onTap: () {
                   Navigator.push(
                     context,
@@ -1320,10 +1415,13 @@ class TransactionDetailsDialog extends ConsumerWidget {
                 },
                 borderRadius: BorderRadius.circular(12),
                 child: Padding(
+                  key: const ValueKey('tx-details-processed-contact-padding'),
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   child: Row(
+                    key: const ValueKey('tx-details-processed-contact-row'),
                     children: [
                       Container(
+                        key: const ValueKey('tx-details-processed-contact-avatar'),
                         width: 48,
                         height: 48,
                         decoration: BoxDecoration(
@@ -1353,9 +1451,11 @@ class TransactionDetailsDialog extends ConsumerWidget {
                       const SizedBox(width: 14),
                       Expanded(
                         child: Column(
+                          key: const ValueKey('tx-details-processed-contact-info-col'),
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
+                              key: const ValueKey('tx-details-processed-contact-name'),
                               contact.name,
                               style: theme.textTheme.titleSmall?.copyWith(
                                 fontWeight: FontWeight.w600,
@@ -1364,6 +1464,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
                             if (contact.phone != null) ...[
                               const SizedBox(height: 2),
                               Row(
+                                key: const ValueKey('tx-details-processed-contact-phone-row'),
                                 children: [
                                   Icon(
                                     Icons.phone,
@@ -1372,6 +1473,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
                                   ),
                                   const SizedBox(width: 4),
                                   Text(
+                                    key: const ValueKey('tx-details-processed-contact-phone-text'),
                                     contact.phone!,
                                     style: theme.textTheme.bodySmall?.copyWith(
                                       color: theme.colorScheme.onSurfaceVariant,
@@ -1397,6 +1499,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
+                  key: const ValueKey('tx-details-processed-message-btn'),
                   onPressed: () {
                     ShareHelper.shareTransaction(
                       context,
@@ -1461,6 +1564,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
         : (isExpense ? AppColors.expenseColor : AppColors.incomeColor);
 
     return Container(
+      key: const ValueKey('tx-details-category-card'),
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -1476,8 +1580,10 @@ class TransactionDetailsDialog extends ConsumerWidget {
         ],
       ),
       child: Material(
+        key: const ValueKey('tx-details-category-material'),
         color: Colors.transparent,
         child: InkWell(
+          key: const ValueKey('tx-details-category-inkwell'),
           onTap: () {
             Navigator.push(
               context,
@@ -1490,10 +1596,13 @@ class TransactionDetailsDialog extends ConsumerWidget {
           },
           borderRadius: BorderRadius.circular(20),
           child: Padding(
+            key: const ValueKey('tx-details-category-padding'),
             padding: const EdgeInsets.symmetric(vertical: 4),
             child: Row(
+              key: const ValueKey('tx-details-category-row'),
               children: [
                 Container(
+                  key: const ValueKey('tx-details-category-icon-container'),
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
@@ -1513,9 +1622,11 @@ class TransactionDetailsDialog extends ConsumerWidget {
                 const SizedBox(width: 16),
                 Expanded(
                   child: Column(
+                    key: const ValueKey('tx-details-category-info'),
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
+                        key: const ValueKey('tx-details-category-label'),
                         l10n.category,
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
@@ -1523,6 +1634,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
+                        key: const ValueKey('tx-details-category-name'),
                         LocalizationHelper.getLocalizedCategoryName(
                             context, category.name),
                         style: theme.textTheme.titleMedium?.copyWith(
@@ -1572,6 +1684,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
     }
 
     return Container(
+      key: const ValueKey('tx-details-account-card'),
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -1587,8 +1700,10 @@ class TransactionDetailsDialog extends ConsumerWidget {
         ],
       ),
       child: Material(
+        key: const ValueKey('tx-details-account-material'),
         color: Colors.transparent,
         child: InkWell(
+          key: const ValueKey('tx-details-account-inkwell'),
           onTap: () {
             Navigator.push(
               context,
@@ -1601,10 +1716,13 @@ class TransactionDetailsDialog extends ConsumerWidget {
           },
           borderRadius: BorderRadius.circular(20),
           child: Padding(
+            key: const ValueKey('tx-details-account-padding'),
             padding: const EdgeInsets.symmetric(vertical: 4),
             child: Row(
+              key: const ValueKey('tx-details-account-row'),
               children: [
                 Container(
+                  key: const ValueKey('tx-details-account-icon-container'),
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
@@ -1620,9 +1738,11 @@ class TransactionDetailsDialog extends ConsumerWidget {
                 const SizedBox(width: 16),
                 Expanded(
                   child: Column(
+                    key: const ValueKey('tx-details-account-info'),
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
+                        key: const ValueKey('tx-details-account-label'),
                         l10n.account,
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
@@ -1630,6 +1750,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
+                        key: const ValueKey('tx-details-account-name'),
                         account.name,
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
@@ -1684,8 +1805,10 @@ class TransactionDetailsDialog extends ConsumerWidget {
     }
 
     final inner = Column(
+      key: const ValueKey('tx-details-split-summary-inner'),
       children: [
         Row(
+          key: const ValueKey('tx-details-split-summary-top-row'),
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             _buildSummaryMiniItem(context, l10n.totalAmount, totalAmount,
@@ -1699,10 +1822,12 @@ class TransactionDetailsDialog extends ConsumerWidget {
           ],
         ),
         Divider(
+          key: const ValueKey('tx-details-split-summary-divider'),
           height: embedded ? 22 : 24,
           color: theme.colorScheme.outlineVariant.withValues(alpha: 0.4),
         ),
         Row(
+          key: const ValueKey('tx-details-split-summary-bottom-row'),
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             if (hasPayables)
@@ -1723,6 +1848,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
     }
 
     return Container(
+      key: const ValueKey('tx-details-split-summary-container'),
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -1739,11 +1865,13 @@ class TransactionDetailsDialog extends ConsumerWidget {
       double amount, dynamic currency, Color color) {
     final theme = Theme.of(context);
     return Column(
+      key: ValueKey('mini-item-$label'),
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: theme.textTheme.labelSmall),
+        Text(key: ValueKey('mini-item-label-$label'), label, style: theme.textTheme.labelSmall),
         const SizedBox(height: 2),
         Text(
+          key: ValueKey('mini-item-amount-$label'),
           AmountFormatter.formatWithCurrency(
               amount, currency.symbol, currency.decimalPlaces),
           style: theme.textTheme.bodyMedium?.copyWith(
@@ -1759,15 +1887,18 @@ class TransactionDetailsDialog extends ConsumerWidget {
       BuildContext context, String label, String value) {
     final theme = Theme.of(context);
     return Padding(
+      key: ValueKey('debug-info-$label'),
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
+        key: ValueKey('debug-info-row-$label'),
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text("$label: ",
+          Text(key: ValueKey('debug-info-label-$label'), "$label: ",
               style: theme.textTheme.bodySmall
                   ?.copyWith(fontWeight: FontWeight.bold)),
           Expanded(
             child: Text(
+              key: ValueKey('debug-info-value-$label'),
               value,
               style:
                   theme.textTheme.bodySmall?.copyWith(fontFamily: 'monospace'),
@@ -1780,6 +1911,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
 
   static Widget _buildDetailRow(
     BuildContext context, {
+    Key? key,
     required IconData icon,
     required String label,
     required String value,
@@ -1789,11 +1921,14 @@ class TransactionDetailsDialog extends ConsumerWidget {
     final theme = Theme.of(context);
 
     return Padding(
+      key: key,
       padding: const EdgeInsets.only(bottom: 16),
       child: Row(
+        key: key != null ? ValueKey('${(key as ValueKey).value}-row') : null,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
+            key: key != null ? ValueKey('${(key as ValueKey).value}-icon-container') : null,
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
               color: theme.colorScheme.surfaceContainerHighest,
@@ -1808,9 +1943,11 @@ class TransactionDetailsDialog extends ConsumerWidget {
           const SizedBox(width: 16),
           Expanded(
             child: Column(
+              key: key != null ? ValueKey('${(key as ValueKey).value}-info-col') : null,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
+                  key: key != null ? ValueKey('${(key as ValueKey).value}-label') : null,
                   label,
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
@@ -1818,6 +1955,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
+                  key: key != null ? ValueKey('${(key as ValueKey).value}-value') : null,
                   value,
                   style: theme.textTheme.bodyLarge?.copyWith(
                     fontWeight: FontWeight.w600,
@@ -1849,6 +1987,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
     const color = AppColors.payableColor;
 
     return Container(
+      key: const ValueKey('tx-details-linked-payable-card'),
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -1871,11 +2010,14 @@ class TransactionDetailsDialog extends ConsumerWidget {
         ],
       ),
       child: Column(
+        key: const ValueKey('tx-details-linked-payable-column'),
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            key: const ValueKey('tx-details-linked-payable-header'),
             children: [
               Container(
+                key: const ValueKey('tx-details-linked-payable-icon-container'),
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   color: color.withValues(alpha: 0.25),
@@ -1885,6 +2027,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
               ),
               const SizedBox(width: 12),
               Text(
+                key: const ValueKey('tx-details-linked-payable-label'),
                 l10n.payable,
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
@@ -1895,6 +2038,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
           ),
           const SizedBox(height: 10),
           Row(
+            key: const ValueKey('tx-details-linked-payable-status-row'),
             children: [
               Icon(
                 isPending ? Icons.schedule : Icons.check_circle,
@@ -1903,6 +2047,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
               ),
               const SizedBox(width: 8),
               Text(
+                key: const ValueKey('tx-details-linked-payable-status-text'),
                 isPending ? l10n.payablePending : l10n.paidTag,
                 style: TextStyle(
                   color: color,
@@ -1915,8 +2060,10 @@ class TransactionDetailsDialog extends ConsumerWidget {
           if (contact != null) ...[
             const SizedBox(height: 14),
             Material(
+              key: const ValueKey('tx-details-linked-payable-contact-material'),
               color: Colors.transparent,
               child: InkWell(
+                key: const ValueKey('tx-details-linked-payable-contact-inkwell'),
                 onTap: () {
                   Navigator.push(
                     context,
@@ -1929,10 +2076,13 @@ class TransactionDetailsDialog extends ConsumerWidget {
                 },
                 borderRadius: BorderRadius.circular(12),
                 child: Padding(
+                  key: const ValueKey('tx-details-linked-payable-contact-padding'),
                   padding: const EdgeInsets.symmetric(vertical: 6),
                   child: Row(
+                    key: const ValueKey('tx-details-linked-payable-contact-row'),
                     children: [
                       Container(
+                        key: const ValueKey('tx-details-linked-payable-contact-avatar'),
                         width: 44,
                         height: 44,
                         decoration: BoxDecoration(
@@ -1962,6 +2112,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
+                          key: const ValueKey('tx-details-linked-payable-contact-name'),
                           contact.name,
                           style: theme.textTheme.titleSmall?.copyWith(
                             fontWeight: FontWeight.w600,
@@ -1982,6 +2133,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
+                  key: const ValueKey('tx-details-linked-payable-message-btn'),
                   onPressed: () {
                     ShareHelper.shareTransaction(
                       context,
@@ -2018,6 +2170,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
           if (payable.dueDate != null) ...[
             const SizedBox(height: 8),
             Text(
+              key: const ValueKey('tx-details-linked-payable-due-date'),
               l10n.dueAt(AppDateFormatter.formatDate(payable.dueDate,
                   pattern: ref.watch(userProfileProvider).dateFormat)),
               style: theme.textTheme.bodySmall?.copyWith(
@@ -2033,6 +2186,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
           if (payable.paidDate != null) ...[
             const SizedBox(height: 8),
             Row(
+              key: const ValueKey('tx-details-linked-payable-paid-row'),
               children: [
                 const Icon(
                   Icons.check_circle,
@@ -2041,6 +2195,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
                 ),
                 const SizedBox(width: 4),
                 Text(
+                  key: const ValueKey('tx-details-linked-payable-paid-text'),
                   l10n.paidOn(AppDateFormatter.formatDate(payable.paidDate!,
                       pattern: ref.watch(userProfileProvider).dateFormat)),
                   style: theme.textTheme.bodySmall?.copyWith(
@@ -2056,6 +2211,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
             SizedBox(
               width: double.infinity,
               child: FilledButton.icon(
+                key: const ValueKey('tx-details-linked-payable-mark-paid-btn'),
                 onPressed: () => _markAsPaid(context, ref, payable.uuid, item),
                 icon: const Icon(Icons.check_circle),
                 label: Text(l10n.markAsPaid),
@@ -2084,6 +2240,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
     const color = AppColors.receivableColor;
 
     return Container(
+      key: const ValueKey('tx-details-linked-receivable-card'),
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -2106,11 +2263,14 @@ class TransactionDetailsDialog extends ConsumerWidget {
         ],
       ),
       child: Column(
+        key: const ValueKey('tx-details-linked-receivable-column'),
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            key: const ValueKey('tx-details-linked-receivable-header'),
             children: [
               Container(
+                key: const ValueKey('tx-details-linked-receivable-icon-container'),
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   color: color.withValues(alpha: 0.25),
@@ -2120,6 +2280,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
               ),
               const SizedBox(width: 12),
               Text(
+                key: const ValueKey('tx-details-linked-receivable-label'),
                 l10n.receivable,
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
@@ -2130,6 +2291,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
           ),
           const SizedBox(height: 10),
           Row(
+            key: const ValueKey('tx-details-linked-receivable-status-row'),
             children: [
               Icon(
                 isPending ? Icons.schedule : Icons.check_circle,
@@ -2138,6 +2300,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
               ),
               const SizedBox(width: 8),
               Text(
+                key: const ValueKey('tx-details-linked-receivable-status-text'),
                 isPending ? l10n.receivablePending : l10n.receivedTag,
                 style: TextStyle(
                   color: color,
@@ -2150,8 +2313,10 @@ class TransactionDetailsDialog extends ConsumerWidget {
           if (contact != null) ...[
             const SizedBox(height: 14),
             Material(
+              key: const ValueKey('tx-details-linked-receivable-contact-material'),
               color: Colors.transparent,
               child: InkWell(
+                key: const ValueKey('tx-details-linked-receivable-contact-inkwell'),
                 onTap: () {
                   Navigator.push(
                     context,
@@ -2164,10 +2329,13 @@ class TransactionDetailsDialog extends ConsumerWidget {
                 },
                 borderRadius: BorderRadius.circular(12),
                 child: Padding(
+                  key: const ValueKey('tx-details-linked-receivable-contact-padding'),
                   padding: const EdgeInsets.symmetric(vertical: 6),
                   child: Row(
+                    key: const ValueKey('tx-details-linked-receivable-contact-row'),
                     children: [
                       Container(
+                        key: const ValueKey('tx-details-linked-receivable-contact-avatar'),
                         width: 44,
                         height: 44,
                         decoration: BoxDecoration(
@@ -2197,6 +2365,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
+                          key: const ValueKey('tx-details-linked-receivable-contact-name'),
                           contact.name,
                           style: theme.textTheme.titleSmall?.copyWith(
                             fontWeight: FontWeight.w600,
@@ -2217,6 +2386,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
+                  key: const ValueKey('tx-details-linked-receivable-message-btn'),
                   onPressed: () {
                     ShareHelper.shareTransaction(
                       context,
@@ -2253,6 +2423,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
           if (receivable.dueDate != null) ...[
             const SizedBox(height: 8),
             Text(
+              key: const ValueKey('tx-details-linked-receivable-due-date'),
               l10n.dueAt(AppDateFormatter.formatDate(receivable.dueDate,
                   pattern: ref.watch(userProfileProvider).dateFormat)),
               style: theme.textTheme.bodySmall?.copyWith(
@@ -2268,6 +2439,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
           if (receivable.receivedDate != null) ...[
             const SizedBox(height: 8),
             Row(
+              key: const ValueKey('tx-details-linked-receivable-received-row'),
               children: [
                 const Icon(
                   Icons.check_circle,
@@ -2276,6 +2448,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
                 ),
                 const SizedBox(width: 4),
                 Text(
+                  key: const ValueKey('tx-details-linked-receivable-received-text'),
                   l10n.receivedOn(AppDateFormatter.formatDate(
                       receivable.receivedDate!,
                       pattern: ref.watch(userProfileProvider).dateFormat)),
@@ -2292,6 +2465,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
             SizedBox(
               width: double.infinity,
               child: FilledButton.icon(
+                key: const ValueKey('tx-details-linked-receivable-mark-received-btn'),
                 onPressed: () =>
                     _markAsReceived(context, ref, receivable.uuid, item),
                 icon: const Icon(Icons.check_circle),

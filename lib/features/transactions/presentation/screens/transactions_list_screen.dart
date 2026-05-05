@@ -320,6 +320,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
 
   @override
   Widget build(BuildContext context) {
+    final ref = this.ref;
     final l10n = AppLocalizations.of(context)!;
     // Use the paginated provider
     final paginatedState = ref.watch(transactionsPaginatedProvider);
@@ -331,9 +332,12 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
     final hasActiveFilters = !currentFilters.isEmpty;
 
     return Scaffold(
+      key: const ValueKey('transactions-list-scaffold'),
       appBar: AppBar(
+            key: const ValueKey('transactions-list-appbar'),
             title: _isSearching
                 ? TextField(
+                    key: const ValueKey('tx-search-field'),
                     controller: _searchController,
                     autofocus: true,
                     decoration: InputDecoration(
@@ -351,18 +355,20 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                           .search(value);
                     },
                   )
-                : Text(l10n.transactions),
+                : Text(key: const ValueKey('tx-title'), l10n.transactions),
             bottom: hasSchedules && !_isSearching
                 ? TabBar(
+                    key: const ValueKey('tx-tab-bar'),
                     controller: _tabController,
                     tabs: [
-                      Tab(text: l10n.transactions),
-                      Tab(text: l10n.schedules),
+                      Tab(key: const ValueKey('tx-tab-tx'), text: l10n.transactions),
+                      Tab(key: const ValueKey('tx-tab-sched'), text: l10n.schedules),
                     ],
                   )
                 : null,
             actions: [
               IconButton(
+                key: const ValueKey('tx-filter-btn'),
                 icon: Stack(
                   children: [
                     const Icon(Icons.filter_list),
@@ -371,6 +377,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                         right: 0,
                         top: 0,
                         child: Container(
+                          key: const ValueKey('tx-filter-badge'),
                           padding: const EdgeInsets.all(2),
                           decoration: const BoxDecoration(
                             color: Colors.red,
@@ -387,6 +394,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                 onPressed: _showFilterBottomSheet,
               ),
               IconButton(
+                key: const ValueKey('tx-search-btn'),
                 icon: Icon(_isSearching ? Icons.close : Icons.search),
                 onPressed: () {
                   setState(() {
@@ -404,6 +412,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
               ),
               if (!_isSearching && kDebugMode)
                 PopupMenuButton<String>(
+                  key: const ValueKey('tx-more-btn'),
                   icon: const Icon(Icons.more_vert),
                   onSelected: (value) async {
                     if (value == 'generate_dummy') {
@@ -442,9 +451,11 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
             ],
           ),
           body: Stack(
+            key: const ValueKey('tx-body-stack'),
             children: [
               hasSchedules
                   ? TabBarView(
+                      key: const ValueKey('tx-tab-view'),
                       controller: _tabController,
                       children: [
                         _buildBody(paginatedState, theme),
@@ -454,6 +465,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                   : _buildBody(paginatedState, theme),
               Positioned.fill(
                 child: TransactionSpeedDial(
+                  key: const ValueKey('tx-speed-dial'),
                   activeColor: AppColors.transactionsSectionColor,
                   onAddTransaction: () {
                     Navigator.push(
@@ -491,11 +503,12 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
       PaginatedState<TransactionWithDetails> paginatedState, ThemeData theme) {
     final l10n = AppLocalizations.of(context)!;
     if (paginatedState.isLoading && paginatedState.items.isEmpty) {
-      return const AppLoadingIndicator(size: 60);
+      return const AppLoadingIndicator(key: ValueKey('tx-loading-indicator'), size: 60);
     }
 
     if (paginatedState.error != null && paginatedState.items.isEmpty) {
       return Center(
+        key: const ValueKey('tx-error-view'),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -525,6 +538,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
 
     if (paginatedState.items.isEmpty) {
       return Center(
+        key: const ValueKey('tx-empty-view'),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -579,22 +593,27 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
     final keys = groupedTransactions.keys.toList();
 
     return CustomScrollView(
+      key: const ValueKey('tx-list-scrollview'),
       controller: _scrollController,
       slivers: [
         SliverToBoxAdapter(
+          key: const ValueKey('tx-list-summary-adapter'),
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
             child: CollapsibleListSummary(
+              key: const ValueKey('tx-list-summary-collapsible'),
               title: l10n.financialSummary,
-              child: _TransactionListSummaryContent(),
+              child: _TransactionListSummaryContent(key: const ValueKey('tx-list-summary-content-inner')),
             ),
           ),
         ),
         // Date sections with sticky headers
         for (int i = 0; i < keys.length; i++)
           SliverStickyHeader(
+            key: ValueKey('tx-sticky-header-${keys[i]}'),
             header: _buildDateHeader(theme, keys[i]),
             sliver: SliverList(
+              key: ValueKey('tx-sliver-list-${keys[i]}'),
               delegate: SliverChildBuilderDelegate(
                 (context, itemIndex) {
                   final dateKey = keys[i];
@@ -610,9 +629,11 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                           item.isLinkedEntryMarked;
 
                   return Padding(
+                    key: ValueKey('tx-row-${item.transaction.uuid}'),
                     padding:
                         const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                     child: SwipeableListItem(
+                      key: ValueKey('tx-swipe-${item.transaction.uuid}'),
                       enableEdit: !isRestricted,
                       enableDelete: !isRestricted,
                       borderRadius: 20,
@@ -667,14 +688,22 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
           ),
         // Loading indicator or "No more items"
         if (paginatedState.isLoadingMore)
-          const SliverToBoxAdapter(
+          SliverToBoxAdapter(
+            key: const ValueKey('tx-loading-more-adapter'),
             child: Padding(
-              padding: EdgeInsets.all(16.0),
-              child: AppLoadingIndicator(size: 30),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              child: SizedBox(
+                height: 3,
+                child: LinearProgressIndicator(
+                  minHeight: 3,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
             ),
           )
         else if (!paginatedState.hasMore && paginatedState.items.isNotEmpty)
           SliverToBoxAdapter(
+            key: const ValueKey('tx-no-more-adapter'),
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: Center(
@@ -688,7 +717,9 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
             ),
           ),
         SliverToBoxAdapter(
+          key: const ValueKey('tx-bottom-logo-adapter'),
           child: FadedBottomLogo(
+            key: const ValueKey('tx-bottom-logo'),
             bottomPadding: 100 + MediaQuery.of(context).padding.bottom,
           ),
         ),
@@ -698,11 +729,13 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
 
   Widget _buildDateHeader(ThemeData theme, String dateKey) {
     return Container(
+      key: ValueKey('tx-date-header-$dateKey'),
       height: 50,
       color: Colors.transparent,
       padding: const EdgeInsets.symmetric(vertical: 8),
       alignment: Alignment.center,
       child: Container(
+        key: ValueKey('tx-date-header-inner-$dateKey'),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         decoration: BoxDecoration(
           color: AppColors.transactionsSectionColor.withValues(alpha: 0.7),
@@ -716,6 +749,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
           ],
         ),
         child: Text(
+          key: ValueKey('tx-date-header-text-$dateKey'),
           dateKey,
           style: theme.textTheme.titleSmall?.copyWith(
             color: Colors.white,
@@ -779,9 +813,11 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
     final account = item.account;
 
     return Stack(
+      key: ValueKey('tx-card-stack-${transaction.uuid}'),
       clipBehavior: Clip.none,
       children: [
         Container(
+          key: ValueKey('tx-card-container-${transaction.uuid}'),
           decoration: BoxDecoration(
             color: theme.cardColor.withValues(alpha: isInactive ? 0.6 : 1.0),
             borderRadius: BorderRadius.circular(20),
@@ -798,8 +834,10 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
             ],
           ),
           child: ListTile(
+            key: ValueKey('tx-card-listtile-${transaction.uuid}'),
             contentPadding: const EdgeInsets.all(16),
             leading: Container(
+              key: ValueKey('tx-card-icon-${transaction.uuid}'),
               width: 50,
               height: 50,
               decoration: BoxDecoration(
@@ -815,6 +853,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                   category?.icon, displayColor, isExpense),
             ),
             title: Text(
+              key: ValueKey('tx-card-title-${transaction.uuid}'),
               category != null
                   ? LocalizationHelper.getLocalizedCategoryName(
                       context, category.name)
@@ -827,9 +866,11 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
               overflow: TextOverflow.ellipsis,
             ),
             subtitle: Column(
+              key: ValueKey('tx-card-subtitle-col-${transaction.uuid}'),
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
+                  key: ValueKey('tx-card-desc-${transaction.uuid}'),
                   transaction.description ??
                       (isExpense ? l10n.expense : l10n.income),
                   style: theme.textTheme.bodySmall?.copyWith(
@@ -843,6 +884,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                 if (contact != null) ...[
                   const SizedBox(height: 6),
                   Container(
+                    key: ValueKey('tx-card-contact-${transaction.uuid}'),
                     padding:
                         const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                     decoration: BoxDecoration(
@@ -856,9 +898,11 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                       ),
                     ),
                     child: Row(
+                      key: ValueKey('tx-card-contact-row-${transaction.uuid}'),
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Container(
+                          key: ValueKey('tx-card-contact-avatar-${transaction.uuid}'),
                           width: 14,
                           height: 14,
                           decoration: BoxDecoration(
@@ -868,6 +912,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                           ),
                           alignment: Alignment.center,
                           child: Text(
+                            key: ValueKey('tx-card-contact-initial-${transaction.uuid}'),
                             contact.name.isNotEmpty
                                 ? contact.name[0].toUpperCase()
                                 : '?',
@@ -881,6 +926,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                         const SizedBox(width: 4),
                         Flexible(
                           child: Text(
+                            key: ValueKey('tx-card-contact-name-${transaction.uuid}'),
                             contact.name,
                             style: TextStyle(
                               fontSize: 10,
@@ -897,10 +943,12 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
               ],
             ),
             trailing: Column(
+              key: ValueKey('tx-card-trailing-${transaction.uuid}'),
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
+                  key: ValueKey('tx-card-amount-${transaction.uuid}'),
                   '${isExpense ? '\u200E-' : '\u200E+'} ${AmountFormatter.formatWithCurrency(transaction.amount, currency.symbol, currency.decimalPlaces)}',
                   style: theme.textTheme.titleLarge?.copyWith(
                     color: isExpense
@@ -918,6 +966,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                 if (transaction.paidRelationship != null) ...[
                   const SizedBox(height: 4),
                   Container(
+                    key: ValueKey('tx-card-status-${transaction.uuid}'),
                     padding:
                         const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
@@ -931,10 +980,12 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                       ),
                     ),
                     child: Row(
+                      key: ValueKey('tx-card-status-row-${transaction.uuid}'),
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         if (item.isLinkedEntryMarked) ...[
                           Icon(
+                            key: ValueKey('tx-card-status-icon-${transaction.uuid}'),
                             Icons.check_circle,
                             size: 10,
                             color:
@@ -943,6 +994,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                           const SizedBox(width: 3),
                         ],
                         Text(
+                          key: ValueKey('tx-card-status-text-${transaction.uuid}'),
                           _getStatusLabel(
                             l10n,
                             transaction.paidRelationship!,
@@ -964,6 +1016,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                 if (transaction.isAutoGenerated == true) ...[
                   const SizedBox(height: 4),
                   Container(
+                    key: ValueKey('tx-card-auto-${transaction.uuid}'),
                     padding:
                         const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
@@ -975,9 +1028,11 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                       ),
                     ),
                     child: Row(
+                      key: ValueKey('tx-card-auto-row-${transaction.uuid}'),
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(
+                          key: ValueKey('tx-card-auto-icon-${transaction.uuid}'),
                           Icons.auto_awesome,
                           size: 10,
                           color: Colors.grey[600],
@@ -985,6 +1040,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                         const SizedBox(width: 3),
                         Flexible(
                           child: Text(
+                            key: ValueKey('tx-card-auto-text-${transaction.uuid}'),
                             l10n.autoBadge,
                             style: TextStyle(
                               fontSize: 10,
@@ -1012,12 +1068,13 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
           ),
         ),
         // Schedule icon badge (top-right corner)
-        if (transaction.isScheduled == true) const ScheduleIconBadge(),
+        if (transaction.isScheduled == true) ScheduleIconBadge(key: ValueKey('tx-card-sched-badge-${transaction.uuid}')),
         // Split icon badge (top-left in LTR); same transaction has linkedGroupId from DB
-        if (showSplitBadge) SplitIconBadge(groupId: linkedGroupId!),
+        if (showSplitBadge) SplitIconBadge(key: ValueKey('tx-card-split-badge-${transaction.uuid}'), groupId: linkedGroupId!),
         // Account icon (bottom-left in LTR), same horizontal side as split badge
         if (account != null)
           TransactionAccountIconBadge(
+            key: ValueKey('tx-card-acc-badge-${transaction.uuid}'),
             account: account,
             theme: theme,
             isInactive: isInactive,
@@ -1030,16 +1087,18 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
     final l10n = AppLocalizations.of(context)!;
     if (schedules.isEmpty) {
       return Center(
+        key: const ValueKey('tx-schedules-empty'),
         child: Text(l10n.noSchedulesFound),
       );
     }
 
     return ListView.builder(
+      key: const ValueKey('tx-schedules-list'),
       padding: const EdgeInsets.only(top: 8, bottom: 100),
       itemCount: schedules.length + 1,
       itemBuilder: (context, index) {
         if (index == schedules.length) {
-          return const FadedBottomLogo(bottomPadding: 40);
+          return const FadedBottomLogo(key: ValueKey('tx-schedules-bottom-logo'), bottomPadding: 40);
         }
         final item = schedules[index];
         final schedule = item.schedule;
@@ -1048,8 +1107,10 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
             (schedule.addSeq ?? 0) > PremiumGate.scheduleTotalLimit;
 
         return Padding(
+          key: ValueKey('tx-schedule-row-${schedule.uuid}'),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
           child: SwipeableListItem(
+            key: ValueKey('tx-schedule-swipe-${schedule.uuid}'),
             enableEdit: !isLocked,
             enableDelete: !isLocked,
             borderRadius: 20,
@@ -1063,11 +1124,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                           schedule: schedule,
                         ),
                       ),
-                    ).then((updated) {
-                      if (updated == true) {
-                        ref.invalidate(allSchedulesWithDetailsProvider);
-                      }
-                    });
+                    );
                   },
             onDelete: isLocked
                 ? null
@@ -1078,21 +1135,25 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                       ToastUtils.showSuccessToast(
                           context, ref, l10n.scheduleDeleted);
                     }
-                    ref.invalidate(allSchedulesWithDetailsProvider);
                   },
             child: Stack(
+              key: ValueKey('tx-schedule-stack-${schedule.uuid}'),
               children: [
                 Opacity(
+                  key: ValueKey('tx-schedule-opacity-${schedule.uuid}'),
                   opacity: isLocked ? 0.5 : 1.0,
                   child: ScheduleListItem(
+                    key: ValueKey('tx-schedule-item-${schedule.uuid}'),
                     item: item,
                   ),
                 ),
                 if (isLocked)
                   Positioned(
+                    key: ValueKey('tx-schedule-lock-pos-${schedule.uuid}'),
                     top: 12,
                     right: 12,
                     child: Container(
+                      key: ValueKey('tx-schedule-lock-container-${schedule.uuid}'),
                       padding: const EdgeInsets.all(4),
                       decoration: const BoxDecoration(
                         color: Colors.white,
@@ -1105,6 +1166,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                         ],
                       ),
                       child: const Icon(
+                        key: ValueKey('tx-schedule-lock-icon'),
                         Icons.lock,
                         size: 16,
                         color: Colors.orange,
@@ -1148,9 +1210,10 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
 }
 
 class _TransactionListSummaryContent extends ConsumerWidget {
-  const _TransactionListSummaryContent();
+  const _TransactionListSummaryContent({super.key});
 
   static Widget _buildBalanceRow({
+    Key? key,
     required ThemeData theme,
     required String currencySymbol,
     required int decimalPlaces,
@@ -1173,6 +1236,7 @@ class _TransactionListSummaryContent extends ConsumerWidget {
     );
 
     return Container(
+      key: key,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         gradient: transparentGradient,
@@ -1183,9 +1247,11 @@ class _TransactionListSummaryContent extends ConsumerWidget {
         ),
       ),
       child: Row(
+        key: key != null ? ValueKey('${(key as ValueKey).value}-row') : null,
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
+            key: key != null ? ValueKey('${(key as ValueKey).value}-label') : null,
             label,
             style: theme.textTheme.labelMedium?.copyWith(
               color: Colors.white,
@@ -1193,6 +1259,7 @@ class _TransactionListSummaryContent extends ConsumerWidget {
             ),
           ),
           Text(
+            key: key != null ? ValueKey('${(key as ValueKey).value}-amount') : null,
             AmountFormatter.formatWithCurrency(
                 amount, currencySymbol, decimalPlaces),
             style: theme.textTheme.titleSmall?.copyWith(
@@ -1214,13 +1281,17 @@ class _TransactionListSummaryContent extends ConsumerWidget {
     final decimalPlaces = ref.watch(currencyDecimalPlacesProvider);
 
     return summaryAsync.when(
+      skipLoadingOnRefresh: true,
       data: (s) => Column(
+        key: const ValueKey('tx-list-summary-content-column'),
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            key: const ValueKey('tx-list-summary-row-1'),
             children: [
               Expanded(
                 child: _SummaryTile(
+                  key: const ValueKey('tx-summary-payable'),
                   label: l10n.payableTag,
                   amount: s.totalPayable,
                   color: AppColors.payableColor,
@@ -1231,6 +1302,7 @@ class _TransactionListSummaryContent extends ConsumerWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: _SummaryTile(
+                  key: const ValueKey('tx-summary-receivable'),
                   label: l10n.receivableTag,
                   amount: s.totalReceivable,
                   color: AppColors.receivableColor,
@@ -1242,9 +1314,11 @@ class _TransactionListSummaryContent extends ConsumerWidget {
           ),
           const SizedBox(height: 8),
           Row(
+            key: const ValueKey('tx-list-summary-row-2'),
             children: [
               Expanded(
                 child: _SummaryTile(
+                  key: const ValueKey('tx-summary-expense'),
                   label: l10n.expenses,
                   amount: s.totalExpense,
                   color: AppColors.expenseColor,
@@ -1255,6 +1329,7 @@ class _TransactionListSummaryContent extends ConsumerWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: _SummaryTile(
+                  key: const ValueKey('tx-summary-income'),
                   label: l10n.income,
                   amount: s.totalIncome,
                   color: AppColors.incomeColor,
@@ -1266,6 +1341,7 @@ class _TransactionListSummaryContent extends ConsumerWidget {
           ),
           const SizedBox(height: 8),
           _buildBalanceRow(
+            key: const ValueKey('tx-summary-net-receivable-payable'),
             theme: theme,
             currencySymbol: currencySymbol,
             decimalPlaces: decimalPlaces,
@@ -1278,6 +1354,7 @@ class _TransactionListSummaryContent extends ConsumerWidget {
           ),
           const SizedBox(height: 8),
           _buildBalanceRow(
+            key: const ValueKey('tx-summary-net-income-expense'),
             theme: theme,
             currencySymbol: currencySymbol,
             decimalPlaces: decimalPlaces,
@@ -1290,9 +1367,13 @@ class _TransactionListSummaryContent extends ConsumerWidget {
           ),
         ],
       ),
-      loading: () => const SizedBox(
-        height: 80,
-        child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+      loading: () => SizedBox(
+        key: const ValueKey('tx-list-summary-loading'),
+        height: 4,
+        child: LinearProgressIndicator(
+          minHeight: 4,
+          borderRadius: BorderRadius.circular(2),
+        ),
       ),
       error: (_, __) => const SizedBox.shrink(),
     );
@@ -1350,6 +1431,7 @@ class _SummaryTile extends StatelessWidget {
   final int decimalPlaces;
 
   const _SummaryTile({
+    super.key,
     required this.label,
     required this.amount,
     required this.color,
@@ -1368,10 +1450,12 @@ class _SummaryTile extends StatelessWidget {
         border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Column(
+        key: ValueKey('summary-tile-col-$label'),
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
+            key: ValueKey('summary-tile-label-$label'),
             label,
             style: theme.textTheme.labelSmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
@@ -1380,6 +1464,7 @@ class _SummaryTile extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
+            key: ValueKey('summary-tile-amount-$label'),
             AmountFormatter.formatWithCurrency(
                 amount, currencySymbol, decimalPlaces),
             style: TextStyle(
