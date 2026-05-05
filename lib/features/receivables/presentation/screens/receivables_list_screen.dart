@@ -529,35 +529,10 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
         // Date sections with sticky headers
         for (final dateKey in keys)
           SliverStickyHeader(
-            header: Container(
-              height: 50,
-              color: Colors.transparent,
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              alignment: Alignment.center,
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                decoration: BoxDecoration(
-                  color:
-                      AppColors.receivablesSectionColor.withValues(alpha: 0.7),
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.receivablesSectionColor
-                          .withValues(alpha: 0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Text(
-                  dateKey,
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
+            header: _buildReceivableDateSectionHeader(
+              theme,
+              dateKey,
+              _monthFromReceivableGroup(groupedReceivables[dateKey]!),
             ),
             sliver: SliverList(
               delegate: SliverChildBuilderDelegate(
@@ -642,6 +617,57 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
           ),
         ),
       ],
+    );
+  }
+
+  int? _monthFromReceivableGroup(List<dynamic> items) {
+    if (items.isEmpty) return null;
+    final first = items.first;
+    if (first == null ||
+        first.receivable == null ||
+        first.receivable.date == null) {
+      return null;
+    }
+    return first.receivable.date.month;
+  }
+
+  Widget _buildReceivableDateSectionHeader(
+    ThemeData theme,
+    String dateKey,
+    int? month,
+  ) {
+    final chipBg = AppColors.transactionDateChipBackground(theme, month);
+    final chipFg = AppColors.transactionDateChipForeground(theme, month);
+    final chipShadow = AppColors.transactionDateChipShadow(theme, month);
+    return Container(
+      key: ValueKey('receivable-date-header-$dateKey'),
+      height: 50,
+      color: Colors.transparent,
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      alignment: Alignment.center,
+      child: Container(
+        key: ValueKey('receivable-date-header-inner-$dateKey'),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        decoration: BoxDecoration(
+          color: chipBg,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: chipShadow,
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Text(
+          key: ValueKey('receivable-date-header-text-$dateKey'),
+          dateKey,
+          style: theme.textTheme.titleSmall?.copyWith(
+            color: chipFg,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
     );
   }
 
